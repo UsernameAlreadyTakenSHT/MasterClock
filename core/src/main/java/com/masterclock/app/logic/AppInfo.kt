@@ -13,6 +13,15 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.1",
+            date = "2026-07-20",
+            notes = listOf(
+                "Fixed dark mode not applying to the e-ink navigation bar.",
+                "Refined e-ink design components to match Mudita guidelines.",
+                "Changelog & credits popup now has separate tabs.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.0",
             date = "2026-07-20",
             notes = listOf(

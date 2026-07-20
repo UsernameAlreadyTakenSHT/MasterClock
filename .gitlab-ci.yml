@@ -17,7 +17,7 @@ build_apks:
     - if: '$CI_COMMIT_TAG'
     - if: '$CI_PIPELINE_SOURCE == "web"'
   before_script:
-    - apt-get update -qq && apt-get install -y -qq wget unzip curl
+    - apt-get update -qq && apt-get install -y -qq wget unzip curl gawk
     - mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
     - wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS_VERSION}_latest.zip" -O cmdline-tools.zip
     - unzip -q cmdline-tools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
@@ -54,6 +54,7 @@ build_apks:
           --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
           --upload-file "${paper_apk_path}" \
           "${PACKAGE_REGISTRY_URL}/${paper_target_name}"
+        awk '/^## /{n++} n==1{print}' CHANGELOG.md > release_notes.md
       fi
   after_script:
     - rm -f "$CI_PROJECT_DIR/release.keystore"
@@ -62,6 +63,7 @@ build_apks:
     paths:
       - app/build/outputs/apk/*/release/*.apk
       - paper/build/outputs/apk/release/*.apk
+      - release_notes.md
     expire_in: 90 days
   cache:
     key:
@@ -77,21 +79,15 @@ release_tag:
   rules:
     - if: '$CI_COMMIT_TAG'
   needs:
-    - build_apks
+    - job: build_apks
+      artifacts: true
   script:
-    - echo "Publishing release for $CI_COMMIT_TAG"
-  release:
-    tag_name: "$CI_COMMIT_TAG"
-    description: "MasterClock $CI_COMMIT_TAG — signed release APKs for all 4 flavors + paper attached below."
-    assets:
-      links:
-        - name: "MasterClock complete (APK)"
-          url: "${PACKAGE_REGISTRY_URL}/masterclock-complete-${CI_COMMIT_TAG}.apk"
-        - name: "MasterClock standard (APK)"
-          url: "${PACKAGE_REGISTRY_URL}/masterclock-standard-${CI_COMMIT_TAG}.apk"
-        - name: "MasterClock light (APK)"
-          url: "${PACKAGE_REGISTRY_URL}/masterclock-light-${CI_COMMIT_TAG}.apk"
-        - name: "MasterClock extraLight (APK)"
-          url: "${PACKAGE_REGISTRY_URL}/masterclock-extraLight-${CI_COMMIT_TAG}.apk"
-        - name: "MasterClock paper (APK)"
-          url: "${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk"
+    - |
+      release-cli create \
+        --tag-name "$CI_COMMIT_TAG" \
+        --description "$(cat release_notes.md)" \
+        --assets-link "{\"name\":\"MasterClock complete (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-complete-${CI_COMMIT_TAG}.apk\"}" \
+        --assets-link "{\"name\":\"MasterClock standard (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-standard-${CI_COMMIT_TAG}.apk\"}" \
+        --assets-link "{\"name\":\"MasterClock light (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-light-${CI_COMMIT_TAG}.apk\"}" \
+        --assets-link "{\"name\":\"MasterClock extraLight (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-extraLight-${CI_COMMIT_TAG}.apk\"}" \
+        --assets-link "{\"name\":\"MasterClock paper (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk\"}"
