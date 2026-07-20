@@ -1,0 +1,23 @@
+MasterClock is a chess clock for chess, wargames, and tabletop games. It handles classic time controls as well as more complex multi-phase formats.
+
+This is the Complete build, which includes every feature. Three other builds exist (Standard, Light, ExtraLight) with progressively fewer options, for players who just want a simpler clock.
+
+Classic time controls:
+* Sudden Death, Fischer, Bronstein, US Delay
+* Byoyomi (Japanese, Canadian, Progressive)
+* Hourglass, Gong, Hidden/Random time
+* Move counters, fast-move variants, time banking
+
+Omni mode:
+* Sequential game lists with custom round behavior
+* Multi-phase turns (Think, Move, Resolve)
+* Configurable auto-cutoff per level (Phase, Turn, Round, Game, Session)
+
+Also included:
+* Notebook (text, drawing, audio, photo, video, and board notes)
+* Scoreboard and game history with PGN/PDN/KIF export
+* Mini-games: coin toss, dice roll, short straw, blindfold trainer, and more
+* QR code sharing and Bluetooth chess board support
+* Minimal black-and-white interface
+
+MasterClock collects no data, contains no ads, no trackers, and needs no network connection to work.
