@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.navigation.Route
@@ -61,31 +60,42 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(category.label.uppercase(), fontWeight = FontWeight.Black) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-                },
-            )
+            Column {
+                TopAppBar(
+                    title = { Text(category.label.uppercase(), style = MaterialTheme.typography.titleLarge) },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+                HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outline)
+            }
         },
         bottomBar = {
             val visibleCategories = SettingsCategory.getVisibleCategories()
             if (visibleCategories.size > 1) {
-                NavigationBar(containerColor = androidx.compose.ui.graphics.Color.White) {
-                    visibleCategories.forEach { cat ->
-                        NavigationBarItem(
-                            selected = category == cat,
-                            onClick = { onCategoryChanged(cat) },
-                            icon = { Icon(cat.icon, cat.label) },
-                            label = { Text(cat.label.uppercase(), fontWeight = FontWeight.Bold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = androidx.compose.ui.graphics.Color.Black,
-                                selectedTextColor = androidx.compose.ui.graphics.Color.Black,
-                                unselectedIconColor = androidx.compose.ui.graphics.Color.Gray,
-                                unselectedTextColor = androidx.compose.ui.graphics.Color.Gray,
-                                indicatorColor = androidx.compose.ui.graphics.Color.White
+                Column {
+                    HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outline)
+                    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                        visibleCategories.forEach { cat ->
+                            NavigationBarItem(
+                                selected = category == cat,
+                                onClick = { onCategoryChanged(cat) },
+                                icon = { Icon(cat.icon, cat.label) },
+                                label = { Text(cat.label.uppercase(), style = MaterialTheme.typography.labelMedium) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    indicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
