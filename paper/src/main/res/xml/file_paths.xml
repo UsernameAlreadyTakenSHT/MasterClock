@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path name="pdf_cache" path="pdfs/" />
+    <cache-path name="apk_share" path="apk_share/" />
+    <cache-path name="shares" path="shares/" />
+</paths>

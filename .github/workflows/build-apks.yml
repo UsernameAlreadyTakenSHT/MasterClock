@@ -1,0 +1,79 @@
+name: Build APKs
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses > /dev/null || true
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Decode release keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "${{ github.workspace }}/release.keystore"
+
+      - name: Write local.properties (release signing)
+        run: |
+          cat >> local.properties <<EOF
+          MASTERCLOCK_RELEASE_STORE_FILE=${{ github.workspace }}/release.keystore
+          MASTERCLOCK_RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MASTERCLOCK_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+          MASTERCLOCK_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+      - name: Build all flavors + paper (release)
+        run: ./gradlew buildAllReleaseFlavors
+
+      - name: Remove decoded keystore
+        if: always()
+        run: rm -f "${{ github.workspace }}/release.keystore"
+
+      - name: Upload APKs as build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: masterclock-apks-${{ github.ref_name }}
+          path: |
+            app/build/outputs/apk/*/release/*.apk
+            paper/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app/build/outputs/apk/*/release/*.apk
+            paper/build/outputs/apk/release/*.apk
+          generate_release_notes: true
