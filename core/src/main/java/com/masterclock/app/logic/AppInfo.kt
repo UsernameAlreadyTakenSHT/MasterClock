@@ -13,6 +13,16 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.2",
+            date = "2026-07-20",
+            notes = listOf(
+                "Omni: added optional auto-cutoff per level (Phase/Turn/Round/Game/Session).",
+                "Fixed sound and voice feedback missing on several timer modes.",
+                "Fixed FIDE Periods delay bonus not applying on the US preset.",
+                "Fixed Phases mode getting stuck instead of waiting for confirmation.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.1",
             date = "2026-07-20",
             notes = listOf(
