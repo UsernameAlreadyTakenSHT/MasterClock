@@ -281,14 +281,17 @@ fun PhasesPanel(
     p: PlayerSettings,
     loopPhases: Boolean,
     pauseMs: Long,
+    allowPhaseSkip: Boolean,
     onUpdateP: (PlayerSettings) -> Unit,
-    onUpdateGlobal: (Boolean, Long) -> Unit
+    onUpdateGlobal: (Boolean, Long, Boolean) -> Unit
 ) {
     SettingsSection("Phases Configuration") {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            BehaviorSwitch("Repeat Phases (Loop)", loopPhases) { onUpdateGlobal(it, pauseMs) }
+            BehaviorSwitch("Repeat Phases (Loop)", loopPhases) { onUpdateGlobal(it, pauseMs, allowPhaseSkip) }
 
-            HMSInput("Pause between phases", pauseMs) { onUpdateGlobal(loopPhases, it) }
+            HMSInput("Pause between phases", pauseMs) { onUpdateGlobal(loopPhases, it, allowPhaseSkip) }
+
+            BehaviorSwitch("Allow manual skip (tap to advance early)", allowPhaseSkip) { onUpdateGlobal(loopPhases, pauseMs, it) }
 
             val phases = p.phases
             phases.forEachIndexed { index, phase ->
@@ -880,7 +883,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
 }
 
 @Composable
-fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, onUpdate: (PlayerSettings) -> Unit, onUpdateGlobal: (Boolean, Long) -> Unit) {
+fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, allowPhaseSkip: Boolean, onUpdate: (PlayerSettings) -> Unit, onUpdateGlobal: (Boolean, Long, Boolean) -> Unit) {
     val mode = p.mode
     SettingsSection("Time Parameters") {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -917,7 +920,7 @@ fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, on
             if (mode == TimerMode.MOVE_COUNTS_DOWN) { NumericInput("Max Moves", p.maxMoves) { onUpdate(p.copy(maxMoves = it)) } }
             if (mode == TimerMode.GONG) { GongPanel(p, onUpdate) }
             if (mode == TimerMode.FIDE_PERIODS) { FidePeriodsPanel(p, onUpdate) }
-            if (mode == TimerMode.PHASES) { PhasesPanel(p = p, loopPhases = loopPhases, pauseMs = pauseMs, onUpdateP = onUpdate, onUpdateGlobal = onUpdateGlobal) }
+            if (mode == TimerMode.PHASES) { PhasesPanel(p = p, loopPhases = loopPhases, pauseMs = pauseMs, allowPhaseSkip = allowPhaseSkip, onUpdateP = onUpdate, onUpdateGlobal = onUpdateGlobal) }
             if (mode == TimerMode.RANDOM || mode == TimerMode.HIDDEN) { RandomModePanel(p, onUpdate) }
             if (mode == TimerMode.FAST_MOVE) { FastMovePanel(p, onUpdate) }
         }

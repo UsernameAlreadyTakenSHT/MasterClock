@@ -245,6 +245,9 @@ data class ChessClockSettings(
     val logDurationLimit: LogDurationLimit = LogDurationLimit.INFINITE,
     
     val loopPhases: Boolean = false,
+    // When true, a manual tap can advance/skip the current phase early (before its own timer
+    // expires), on top of the normal auto/manual advance rules -- see AUDIT.md.
+    val allowPhaseSkip: Boolean = false,
     val pauseBetweenPhasesMs: Long = 0,
     val notebookNotes: List<NotebookNote> = emptyList()
 )
@@ -747,7 +750,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         
         if (s.mode == TimerMode.PHASES) {
             if (currentState.isPaused) { resume(); return }
-            _uiState.update { startPhaseTransition(it) }
+            val p1 = currentState.players[0]
+            val canAdvance = p1.isInInterPhasePause || p1.isOutOfTime || settings.value.allowPhaseSkip
+            if (canAdvance) { _uiState.update { startPhaseTransition(it) } }
             return
         }
 
@@ -847,19 +852,24 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     if (newPause <= 0) return@update performPhaseAdvance(state, 1)
                     return@update state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = newPause) })
                 }
-
-                val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
-                if (!p1.isOutOfTime && state.globalTimeMs - delta <= 0 && currentPhase.autoAdvance) {
-                    return@update startPhaseTransition(state)
+                if (p1.isOutOfTime) {
+                    // autoAdvance is off and this phase's time is already up: frozen, waiting for a
+                    // manual tap (startOrSwitch) or allowPhaseSkip -- not a real "out of time"/game-over,
+                    // just a visual + audio cue that this phase is done. See AUDIT.md.
+                    return@update state
                 }
 
-                val (newGlobal, isOut, isNeg) = applyFlagBehaviorDelta(state.globalTimeMs, p1.isOutOfTime, p1.isNegative, delta, settings.flagBehavior)
-                val oldForAudio = p1.copy(timeRemainingMs = state.globalTimeMs)
-                val newForAudio = p1.copy(timeRemainingMs = newGlobal, isOutOfTime = isOut, isNegative = isNeg)
-                handleAudio(oldForAudio, newForAudio, settings, 1)
-                handleVoice(oldForAudio, newForAudio, settings, 1)
-                return@update state.copy(globalTimeMs = newGlobal, players = state.players.toMutableList().apply { this[0] = newForAudio })
+                val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
+                val newGlobal = (state.globalTimeMs - delta).coerceAtLeast(0)
+                if (newGlobal <= 0 && currentPhase.autoAdvance) {
+                    return@update startPhaseTransition(state)
+                }
+                val newP1 = p1.copy(isOutOfTime = newGlobal <= 0)
+                handleAudio(p1.copy(timeRemainingMs = state.globalTimeMs), newP1.copy(timeRemainingMs = newGlobal), settings, 1)
+                handleVoice(p1.copy(timeRemainingMs = state.globalTimeMs), newP1.copy(timeRemainingMs = newGlobal), settings, 1)
+                return@update state.copy(globalTimeMs = newGlobal, players = state.players.toMutableList().apply { this[0] = newP1 })
             }
+
 
             if (s.mode == TimerMode.MOVE_TIMER_SHARED) {
                 val p1 = state.players[0]
