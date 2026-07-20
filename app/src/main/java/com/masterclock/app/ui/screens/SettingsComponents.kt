@@ -5,10 +5,12 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.logic.*
+import com.masterclock.app.BuildConfig
 
 @Composable
 fun SettingsSection(title: String, content: @Composable () -> Unit) {
@@ -994,4 +997,60 @@ fun GongPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
         HMSInput("Reflection Time", p.gongReflectionMs) { onUpdate(p.copy(gongReflectionMs = it)) }
         HMSInput("Time to Move", p.gongMoveMs) { onUpdate(p.copy(gongMoveMs = it)) }
     }
+}
+
+@Composable
+fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column {
+                Text("MasterClock ${BuildConfig.VERSION_NAME}")
+                Text(
+                    AppInfo.BUILD_DATE,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                SettingsSection("Changelog") {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        AppInfo.CHANGELOG.forEach { entry ->
+                            Column {
+                                Text(
+                                    "${entry.version} — ${entry.date}",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                entry.notes.forEach { note ->
+                                    Text("• $note", style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                SettingsSection("Credits") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AppInfo.CREDITS.forEach { credit ->
+                            Column {
+                                Text(credit.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                                Text(credit.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
 }
