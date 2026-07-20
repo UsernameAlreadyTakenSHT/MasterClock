@@ -16,9 +16,7 @@ object AppInfo {
             version = "0.8.0",
             date = "2026-07-20",
             notes = listOf(
-                "Initial versioned release.",
-                "Security and build audit fixes.",
-                "Automated APK builds for all flavors via CI.",
+                "Initial release.",
             ),
         ),
     )
