@@ -30,8 +30,8 @@ android {
         applicationId = "com.masterclock.paper"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.8.0-paper"
+        versionCode = 2
+        versionName = "0.8.1-paper"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

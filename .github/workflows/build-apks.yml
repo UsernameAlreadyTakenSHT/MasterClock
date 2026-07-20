@@ -69,6 +69,10 @@ jobs:
             paper/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
+      - name: Extract changelog section for this tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: awk '/^## /{n++} n==1{print}' CHANGELOG.md > release_notes.md
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
@@ -76,4 +80,4 @@ jobs:
           files: |
             app/build/outputs/apk/*/release/*.apk
             paper/build/outputs/apk/release/*.apk
-          generate_release_notes: true
+          body_path: release_notes.md
