@@ -1,0 +1,1 @@
+A simple chess clock with every timing mode, presets included.

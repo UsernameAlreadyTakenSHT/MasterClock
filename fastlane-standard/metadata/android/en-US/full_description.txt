@@ -1,0 +1,17 @@
+MasterClock Standard is a chess clock for chess, wargames, and tabletop games. It handles classic time controls as well as more complex multi-phase formats.
+
+This is the Standard build: every timing mode plus behavior, display, and audio customization, presets, and arbitre mode. It leaves out the Complete build's extra tools (Notebook, Scoreboard, mini-games, QR sharing, Bluetooth board support). If you want those too, look for MasterClock (Complete) instead.
+
+Classic time controls:
+* Sudden Death, Fischer, Bronstein, US Delay
+* Byoyomi (Japanese, Canadian, Progressive)
+* Hourglass, Gong, Hidden/Random time
+* Move counters, fast-move variants, time banking
+
+Customization:
+* Flag behavior (Freeze, Flag, Negative, Reverse)
+* Display options: time format, decimals, period indicators
+* Sound and haptic feedback for player switches and countdowns
+* Presets and arbitre mode for tournament use
+
+MasterClock collects no data, contains no ads, no trackers, and needs no network connection to work.
