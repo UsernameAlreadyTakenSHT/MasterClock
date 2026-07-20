@@ -46,27 +46,46 @@ jobs:
 
       - name: Write local.properties (release signing)
         run: |
-          cat >> local.properties <<EOF
+          cat >> local.properties <<KEYEOF
           MASTERCLOCK_RELEASE_STORE_FILE=${{ github.workspace }}/release.keystore
           MASTERCLOCK_RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           MASTERCLOCK_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
           MASTERCLOCK_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
-          EOF
+          KEYEOF
 
-      - name: Build all flavors + paper (release)
+      - name: Build all flavors + paper (release APKs)
         run: ./gradlew buildAllReleaseFlavors
+
+      - name: Build all flavors + paper (release AABs)
+        run: ./gradlew buildAllReleaseBundles
 
       - name: Remove decoded keystore
         if: always()
         run: rm -f "${{ github.workspace }}/release.keystore"
 
+      - name: Stage renamed artifacts
+        run: |
+          mkdir -p dist
+          tag="${{ github.ref_name }}"
+          for flavor in complete standard light extraLight; do
+            cp "app/build/outputs/apk/${flavor}/release/"*.apk "dist/masterclock-${flavor}-${tag}.apk"
+            cp "app/build/outputs/bundle/${flavor}Release/"*.aab "dist/masterclock-${flavor}-${tag}.aab"
+          done
+          cp paper/build/outputs/apk/release/*.apk "dist/masterclock-paper-${tag}.apk"
+          cp paper/build/outputs/bundle/release/*.aab "dist/masterclock-paper-${tag}.aab"
+
       - name: Upload APKs as build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: masterclock-apks-${{ github.ref_name }}
-          path: |
-            app/build/outputs/apk/*/release/*.apk
-            paper/build/outputs/apk/release/*.apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Upload AABs as build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: masterclock-aabs-${{ github.ref_name }}
+          path: dist/*.aab
           if-no-files-found: error
 
       - name: Extract changelog section for this tag
@@ -78,6 +97,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            app/build/outputs/apk/*/release/*.apk
-            paper/build/outputs/apk/release/*.apk
+            dist/*.apk
+            dist/*.aab
           body_path: release_notes.md
