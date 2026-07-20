@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -30,17 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-
-/**
- * MMD-style interaction source that disables ripples.
- */
-class NoRippleInteractionSource : MutableInteractionSource {
-    override val interactions: Flow<Interaction> = emptyFlow()
-    override suspend fun emit(interaction: Interaction) {}
-    override fun tryEmit(interaction: Interaction): Boolean = true
-}
 
 object MMDDefaults {
     val CornerRadius = 8.dp
@@ -82,7 +70,7 @@ fun ButtonMMD(
         colors = colors,
         elevation = null,
         enabled = enabled,
-        interactionSource = remember { NoRippleInteractionSource() },
+        interactionSource = remember { MutableInteractionSource() },
         onClick = onClick,
         content = content
     )
@@ -153,7 +141,7 @@ fun SwitchMMD(
                 enabled = enabled,
                 role = Role.Switch,
                 onValueChange = onCheckedChange,
-                interactionSource = remember { NoRippleInteractionSource() },
+                interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ),
         contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart

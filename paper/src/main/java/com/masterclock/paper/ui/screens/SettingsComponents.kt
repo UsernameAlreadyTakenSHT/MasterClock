@@ -4,6 +4,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -79,7 +80,7 @@ fun BehaviorSwitch(
             .fillMaxWidth()
             .clickable(
                 enabled = enabled,
-                interactionSource = remember { NoRippleInteractionSource() },
+                interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onCheckedChange(!checked) }
             .padding(vertical = 12.dp),
@@ -183,7 +184,7 @@ fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
                 shape = CircleShape, 
                 color = Color(colorVal), 
                 border = BorderStroke(width = if (isSelected) 4.dp else 2.dp, color = MaterialTheme.colorScheme.onBackground),
-                interactionSource = remember { NoRippleInteractionSource() }
+                interactionSource = remember { MutableInteractionSource() }
             ) {}
         }
     }

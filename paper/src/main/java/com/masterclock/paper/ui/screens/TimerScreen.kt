@@ -1,6 +1,7 @@
 package com.masterclock.paper.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -131,7 +132,7 @@ fun EInkPlayerArea(
         modifier = Modifier
             .fillMaxSize()
             .clickable(
-                interactionSource = remember { NoRippleInteractionSource() },
+                interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() }
             .padding(vertical = 16.dp),
