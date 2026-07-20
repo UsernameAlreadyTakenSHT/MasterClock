@@ -4,9 +4,13 @@
     android:height="108dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- Scaled to ~73% around the center so the glyph (circle + hands) sits within the
+         66dp adaptive-icon safe zone instead of being clipped by the mandatory 25% OS inset. -->
     <group
-        android:translateX="0"
-        android:translateY="0">
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.73"
+        android:scaleY="0.73">
         <!-- The circle -->
         <path
             android:strokeColor="#000000"
