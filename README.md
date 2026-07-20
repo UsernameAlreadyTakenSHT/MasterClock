@@ -2,6 +2,9 @@
 
 A chess clock app for chess, wargames, and tabletop games. Handles classic time controls as well as more complex multi-phase formats (Omni mode).
 
+[![Get it on GitHub](https://img.shields.io/badge/Get_it_on-GitHub-181717?logo=github&logoColor=white)](https://github.com/UsernameAlreadyTakenSHT/MasterClock/releases/latest)
+[![Get it on GitLab](https://img.shields.io/badge/Get_it_on-GitLab-FC6D26?logo=gitlab&logoColor=white)](https://gitlab.com/UsernameAlreadyTakenSHT/masterclock/-/releases)
+
 ## Features
 
 - Classic time controls: Sudden Death, Fischer, Bronstein, US Delay, Byoyomi (Japanese/Canadian/Progressive), Hourglass, Gong, Hidden/Random time, move counters, time banking.
@@ -10,6 +13,18 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
 - QR code sharing and Bluetooth board support.
 - Four build flavors (Complete, Standard, Light, ExtraLight), plus a dedicated E-Ink version for Mudita devices.
 - Minimal black-and-white UI.
+
+## Flavors
+
+| | Complete | Standard | Light | ExtraLight | E-Ink |
+|---|---|---|---|---|---|
+| Modes settings | ✅ | ✅ | ✅ | ✅ (3 modes) | ✅ (3 modes) |
+| Behavior / Display / Audio settings | ✅ | ✅ | ❌ | ❌ | ❌ |
+| More (tools, backup, notebook…) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Presets | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Arbitre mode | ✅ | ✅ | ✅ | ❌ | ❌ |
+
+"3 modes" means Sudden Death, Fischer, and Move Timer Standard only — everything else supports the full set of timing modes.
 
 ## Credits & Licensing
 
