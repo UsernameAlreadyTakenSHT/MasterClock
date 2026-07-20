@@ -13,6 +13,14 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.3",
+            date = "2026-07-20",
+            notes = listOf(
+                "App ID renamed (io.github.usernamealreadytakensht.masterclock.*) for store submission — reinstall needed if updating from an older version.",
+                "Added a privacy policy page.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.2",
             date = "2026-07-20",
             notes = listOf(

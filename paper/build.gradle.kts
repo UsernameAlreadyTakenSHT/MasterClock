@@ -27,11 +27,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.masterclock.paper"
+        applicationId = "io.github.usernamealreadytakensht.masterclock.paper"
         minSdk = 24
         targetSdk = 37
-        versionCode = 3
-        versionName = "0.8.2-paper"
+        versionCode = 4
+        versionName = "0.8.3-paper"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
