@@ -147,14 +147,12 @@ fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
         else -> 0 
     }
 
-    // Mode selection pills in a single row
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ModeCard("Timer", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
         ModeCard("Fischer", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
         ModeCard("Move", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
     }
     
-    // Inputs follow directly based on logic
     Spacer(Modifier.height(8.dp))
     
     if (mainMode != 2) { // NO Initial Time for Move Timer

@@ -259,7 +259,6 @@ fun MMDAlertDialog(
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Official MMD Dialog: Centered Title and Body
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -280,7 +279,6 @@ fun MMDAlertDialog(
                     )
                 }
 
-                // Official MMD Dialog: Vertically Stacked Full-Width Buttons
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)

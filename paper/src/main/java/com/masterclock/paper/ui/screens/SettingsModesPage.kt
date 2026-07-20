@@ -15,15 +15,13 @@ import com.masterclock.paper.BuildConfig
 
 @Composable
 fun ModesSettingsPage(
-    currentSettings: ChessClockSettings, 
-    onSettingsChanged: (ChessClockSettings) -> Unit, 
-    onOmniClick: () -> Unit
+    currentSettings: ChessClockSettings,
+    onSettingsChanged: (ChessClockSettings) -> Unit
 ) {
     var selectedPlayerTab by remember { mutableIntStateOf(0) }
     var showChangelog by remember { mutableStateOf(false) }
     
     Column(modifier = Modifier.fillMaxSize()) {
-        // Scrollable Top Content
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -76,7 +74,6 @@ fun ModesSettingsPage(
             Spacer(Modifier.height(32.dp))
         }
 
-        // Fixed Bottom Content (E-Ink Options)
         if (FlavorConfig.isEInk()) {
             Column(
                 modifier = Modifier
