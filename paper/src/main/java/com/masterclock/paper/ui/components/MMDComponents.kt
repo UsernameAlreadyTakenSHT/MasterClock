@@ -1,9 +1,11 @@
 package com.masterclock.paper.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -14,6 +16,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -173,34 +176,43 @@ fun MMDTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    isError: Boolean = false,
     placeholder: String = "",
     suffix: String = "",
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val borderColor = colorScheme.outline
     val textColor = colorScheme.onSurface
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val indicatorColor by animateColorAsState(
+        targetValue = when {
+            !enabled -> colorScheme.onSurface.copy(alpha = 0.25f)
+            isError -> colorScheme.error
+            isFocused -> colorScheme.onSurface
+            else -> colorScheme.outline
+        },
+        label = "MMDTextFieldIndicator"
+    )
+    val indicatorThickness = if (isFocused) MMDDefaults.BorderWidth else 1.dp
 
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         enabled = enabled,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp),
+        interactionSource = interactionSource,
+        modifier = modifier.defaultMinSize(minWidth = 280.dp, minHeight = 56.dp),
         textStyle = textStyle.copy(color = textColor),
         keyboardOptions = keyboardOptions,
         cursorBrush = SolidColor(textColor),
         decorationBox = { innerTextField ->
-            Surface(
-                shape = RoundedCornerShape(MMDDefaults.CornerRadius),
-                border = BorderStroke(MMDDefaults.BorderWidth, borderColor),
-                color = Color.Transparent,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
@@ -223,13 +235,13 @@ fun MMDTextField(
                         )
                     }
                 }
+                HorizontalDivider(thickness = indicatorThickness, color = indicatorColor)
             }
         }
     )
 }
 
 // --- DIALOGS ---
-
 @Composable
 fun MMDAlertDialog(
     onDismissRequest: () -> Unit,
