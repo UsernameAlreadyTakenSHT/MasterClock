@@ -578,6 +578,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             var nextTime = p.timeRemainingMs
             var periodIdx = p.currentPeriodIndex
             var flagged = p.hasFlagged
+            var activePeriod = currentPeriod
             if (currentPeriod.isFischer) nextTime += currentPeriod.incrementMs
             if (settings.forcedMoveCounter && currentPeriod.movesToNext > 0 && tempP.moveCount >= currentPeriod.movesToNext && p.currentPeriodIndex < s.fidePeriods.size - 1) {
                 val nextIdx = p.currentPeriodIndex + 1
@@ -585,8 +586,13 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
                 nextTime += nextPeriod.timeMs
                 periodIdx = nextIdx
                 flagged = true
+                activePeriod = nextPeriod
             }
-            tempP.copy(timeRemainingMs = nextTime, currentPeriodIndex = periodIdx, hasFlagged = flagged)
+            // Non-Fischer periods can still carry a per-move delay (US Chess Delay-style), reusing the
+            // same generic delayRemainingMs mechanism US_DELAY uses -- see AUDIT.md, this incrementMs
+            // value existed on FidePeriod already but was only ever read for the Fischer branch above.
+            val nextDelay = if (!activePeriod.isFischer) activePeriod.incrementMs else 0L
+            tempP.copy(timeRemainingMs = nextTime, currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay)
         }
         TimerMode.FAST_MOVE -> {
             // TRANSFER is handled above (needs to update the opponent too); only SHRINK/ACCELERATE reach here.
