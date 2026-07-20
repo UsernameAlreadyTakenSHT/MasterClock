@@ -23,7 +23,7 @@ val LatoFontFamily = FontFamily(
 val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
@@ -32,57 +32,59 @@ val Typography = Typography(
 
 /**
  * Official Mudita E-Ink Typography (MMD)
- * All roles explicitly use Lato with Medium-level clarity (Bold/Regular mapping).
+ * All roles use FontWeight.Medium, matching the real MMD type scale. No Lato Medium
+ * weight file is bundled (only Thin/Light/Regular/Bold/Black exist), so this renders
+ * via the closest matched weight (Regular) until a Medium .ttf is added.
  */
 val EInkTypography = Typography(
     headlineLarge = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 28.sp,
     ),
     titleLarge = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 24.sp,
     ),
     titleMedium = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 20.sp,
     ),
     titleSmall = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
     ),
     bodyLarge = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 20.sp,
     ),
     bodyMedium = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
     ),
     bodySmall = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 15.sp,
     ),
     labelLarge = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
     ),
     labelMedium = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 15.sp,
     ),
     labelSmall = TextStyle(
         fontFamily = LatoFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
     )
 )
