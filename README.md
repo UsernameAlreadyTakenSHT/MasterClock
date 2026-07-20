@@ -4,6 +4,7 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
 
 [![Get it on GitHub](https://img.shields.io/badge/Get_it_on-GitHub-181717?logo=github&logoColor=white)](https://github.com/UsernameAlreadyTakenSHT/MasterClock/releases/latest)
 [![Get it on GitLab](https://img.shields.io/badge/Get_it_on-GitLab-FC6D26?logo=gitlab&logoColor=white)](https://gitlab.com/UsernameAlreadyTakenSHT/masterclock/-/releases)
+[![Get it on Obtainium](https://img.shields.io/badge/Get_it_on-Obtainium-9C27B0)](obtainium://add/https%3A%2F%2Fgithub.com%2FUsernameAlreadyTakenSHT%2FMasterClock)
 
 ## Features
 
