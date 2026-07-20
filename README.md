@@ -2,9 +2,9 @@
 
 A chess clock app for chess, wargames, and tabletop games. Handles classic time controls as well as more complex multi-phase formats (Omni mode).
 
-[![Get it on GitHub](https://raw.githubusercontent.com/UsernameAlreadyTakenSHT/MasterClock/master/branding/get-it-on-github.png)](https://github.com/UsernameAlreadyTakenSHT/MasterClock/releases/latest)
-[![Get it on GitLab](https://raw.githubusercontent.com/UsernameAlreadyTakenSHT/MasterClock/master/branding/get-it-on-gitlab.svg)](https://gitlab.com/UsernameAlreadyTakenSHT/masterclock/-/releases)
-[![Get it on Obtainium](https://raw.githubusercontent.com/UsernameAlreadyTakenSHT/MasterClock/master/branding/get-it-on-obtainium.png)](obtainium://add/https%3A%2F%2Fgithub.com%2FUsernameAlreadyTakenSHT%2FMasterClock)
+[![Get it on GitHub](branding/get-it-on-github.png)](https://github.com/UsernameAlreadyTakenSHT/MasterClock/releases/latest)
+[![Get it on GitLab](branding/get-it-on-gitlab.svg)](https://gitlab.com/UsernameAlreadyTakenSHT/masterclock/-/releases)
+[![Get it on Obtainium](branding/get-it-on-obtainium.png)](obtainium://add/https%3A%2F%2Fgithub.com%2FUsernameAlreadyTakenSHT%2FMasterClock)
 
 ## Features
 
