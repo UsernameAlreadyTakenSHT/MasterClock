@@ -1,5 +1,8 @@
 # MasterClock
 
+> [!WARNING]
+> This project is developed with the help of AI (Claude Code). Review the code accordingly before relying on it.
+
 A chess clock app for chess, wargames, and tabletop games. Handles classic time controls as well as more complex multi-phase formats (Omni mode).
 
 <a href="https://github.com/UsernameAlreadyTakenSHT/MasterClock/releases/latest"><img src="branding/get-it-on-github.png" alt="Get it on GitHub" height="55"></a>
