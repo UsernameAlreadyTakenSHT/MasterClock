@@ -426,6 +426,34 @@ private fun sanitizeImportedContentUri(uri: String?): String? {
  * previous test file duplicated this logic instead of exercising it, so a real bug here could drift
  * undetected).
  */
+/**
+ * Shared countdown + flag logic used both by [tickPlayer]'s default branch and by every mode that
+ * has its own early-return in [ChessTimerViewModel.tick] (PHASES, MOVE_TIMER_SHARED,
+ * MOVE_TIMER_GLOBAL_SHARED, HOURGLASS, CHRONO_COUNTDOWN, CHRONO_COUNTUP) -- see AUDIT.md, these modes
+ * used to bypass FlagBehavior/audio/voice entirely by never calling tickPlayer at all.
+ */
+internal fun applyFlagBehaviorDelta(currentTime: Long, isOut: Boolean, isNegative: Boolean, delta: Long, flagBehavior: FlagBehavior): Triple<Long, Boolean, Boolean> {
+    var newTime = currentTime
+    var out = isOut
+    var neg = isNegative
+    if (out) {
+        if (flagBehavior == FlagBehavior.NEGATIVE || flagBehavior == FlagBehavior.REVERSE) {
+            newTime += delta
+        }
+    } else {
+        newTime -= delta
+        if (newTime <= 0) {
+            out = true
+            when (flagBehavior) {
+                FlagBehavior.NEGATIVE -> { neg = true; newTime = -newTime }
+                FlagBehavior.REVERSE -> { neg = false; newTime = -newTime }
+                else -> { newTime = 0 }
+            }
+        }
+    }
+    return Triple(newTime, out, neg)
+}
+
 internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
     if (p.delayRemainingMs > 0) return p.copy(delayRemainingMs = (p.delayRemainingMs - delta).coerceAtLeast(0))
     return when (s.mode) {
@@ -494,22 +522,7 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             }
         }
         else -> {
-            var newTime = p.timeRemainingMs; var isNeg = p.isNegative; var isOut = p.isOutOfTime
-            if (isOut) {
-                if (settings.flagBehavior == FlagBehavior.NEGATIVE || settings.flagBehavior == FlagBehavior.REVERSE) {
-                    newTime += delta
-                }
-            } else {
-                newTime -= delta
-                if (newTime <= 0) {
-                    isOut = true
-                    when (settings.flagBehavior) {
-                        FlagBehavior.NEGATIVE -> { isNeg = true; newTime = -newTime }
-                        FlagBehavior.REVERSE -> { isNeg = false; newTime = -newTime }
-                        else -> { newTime = 0 }
-                    }
-                }
-            }
+            val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(p.timeRemainingMs, p.isOutOfTime, p.isNegative, delta, settings.flagBehavior)
             p.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
         }
     }
@@ -828,14 +841,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     if (newPause <= 0) return@update performPhaseAdvance(state, 1)
                     return@update state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = newPause) })
                 }
-                
-                val newGlobal = (state.globalTimeMs - delta).coerceAtLeast(0)
-                if (newGlobal <= 0) {
-                    val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
-                    if (currentPhase.autoAdvance) return@update startPhaseTransition(state)
-                    return@update state.copy(globalTimeMs = 0, players = state.players.toMutableList().apply { this[0] = p1.copy(isOutOfTime = true) })
+
+                val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
+                if (!p1.isOutOfTime && state.globalTimeMs - delta <= 0 && currentPhase.autoAdvance) {
+                    return@update startPhaseTransition(state)
                 }
-                return@update state.copy(globalTimeMs = newGlobal)
+
+                val (newGlobal, isOut, isNeg) = applyFlagBehaviorDelta(state.globalTimeMs, p1.isOutOfTime, p1.isNegative, delta, settings.flagBehavior)
+                val oldForAudio = p1.copy(timeRemainingMs = state.globalTimeMs)
+                val newForAudio = p1.copy(timeRemainingMs = newGlobal, isOutOfTime = isOut, isNegative = isNeg)
+                handleAudio(oldForAudio, newForAudio, settings, 1)
+                handleVoice(oldForAudio, newForAudio, settings, 1)
+                return@update state.copy(globalTimeMs = newGlobal, players = state.players.toMutableList().apply { this[0] = newForAudio })
             }
 
             if (s.mode == TimerMode.MOVE_TIMER_SHARED) {
@@ -844,8 +861,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 return@update if (newTime <= 0) {
                     val next = (active % settings.numberOfPlayers) + 1
                     val resetPlayers = state.players.map { it.copy(timeRemainingMs = s.moveTimeMs) }
+                    val flaggedP = p1.copy(timeRemainingMs = 0, isOutOfTime = true)
+                    handleAudio(p1, flaggedP, settings, active)
+                    handleVoice(p1, flaggedP, settings, active)
                     state.copy(players = resetPlayers, activePlayer = next, cycleCount = if (next == 1) state.cycleCount + 1 else state.cycleCount)
                 } else {
+                    handleAudio(p1, p1.copy(timeRemainingMs = newTime), settings, active)
                     state.copy(players = state.players.map { it.copy(timeRemainingMs = newTime) })
                 }
             }
@@ -858,25 +879,30 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, secondaryTimeMs = newGlobalTime, isOutOfTime = out)
                     else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = out)
                 }
+                handleAudio(pActive, newPlayers[active - 1], settings, active)
+                handleVoice(pActive, newPlayers[active - 1], settings, active)
                 return@update state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && out)
             }
             if (s.mode == TimerMode.HOURGLASS) {
                 val share = delta / (settings.numberOfPlayers - 1).coerceAtLeast(1)
+                val activeP = state.players[active - 1]
+                val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(activeP.timeRemainingMs, activeP.isOutOfTime, activeP.isNegative, delta, settings.flagBehavior)
+                val newActiveP = activeP.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
+                handleAudio(activeP, newActiveP, settings, active)
+                handleVoice(activeP, newActiveP, settings, active)
                 val newPlayers = state.players.mapIndexed { idx, p ->
-                    if (idx + 1 == active) {
-                        val nt = p.timeRemainingMs - delta
-                        p.copy(timeRemainingMs = nt.coerceAtLeast(0), isOutOfTime = nt <= 0)
-                    } else {
-                        p.copy(timeRemainingMs = p.timeRemainingMs + share)
-                    }
+                    if (idx + 1 == active) newActiveP else p.copy(timeRemainingMs = p.timeRemainingMs + share)
                 }
-                val isOut = newPlayers[active - 1].isOutOfTime
                 return@update state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut)
             }
-            if (s.mode == TimerMode.CHRONO_COUNTDOWN) { 
-                val newGlobal = (state.globalTimeMs - delta).coerceAtLeast(0)
-                val out = newGlobal <= 0
-                return@update state.copy(globalTimeMs = newGlobal, players = state.players.map { it.copy(isOutOfTime = out) }, isPaused = out) 
+            if (s.mode == TimerMode.CHRONO_COUNTDOWN) {
+                val p1 = state.players[0]
+                val (newGlobal, isOut, isNeg) = applyFlagBehaviorDelta(state.globalTimeMs, p1.isOutOfTime, p1.isNegative, delta, settings.flagBehavior)
+                val oldForAudio = p1.copy(timeRemainingMs = state.globalTimeMs)
+                val newForAudio = p1.copy(timeRemainingMs = newGlobal, isOutOfTime = isOut, isNegative = isNeg)
+                handleAudio(oldForAudio, newForAudio, settings, 1)
+                handleVoice(oldForAudio, newForAudio, settings, 1)
+                return@update state.copy(globalTimeMs = newGlobal, players = state.players.map { it.copy(isOutOfTime = isOut, isNegative = isNeg) }, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut)
             }
             if (s.mode == TimerMode.CHRONO_COUNTUP) return@update state.copy(globalTimeMs = state.globalTimeMs + delta)
 
