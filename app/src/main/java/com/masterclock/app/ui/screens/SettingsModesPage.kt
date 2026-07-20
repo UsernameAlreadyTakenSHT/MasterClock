@@ -1,17 +1,21 @@
 package com.masterclock.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.masterclock.app.BuildConfig
 import com.masterclock.app.logic.*
 
 @Composable
 fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (ChessClockSettings) -> Unit, onOmniClick: () -> Unit) {
     var selectedPlayerTab by remember { mutableIntStateOf(0) }
+    var showChangelog by remember { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         if (currentSettings.differentSettingsPerPlayer) {
             PrimaryTabRow(selectedTabIndex = selectedPlayerTab, modifier = Modifier.padding(vertical = 4.dp)) {
@@ -75,6 +79,24 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
             }
         }
 
+        if (!FlavorConfig.hasMoreTab()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showChangelog = true }
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+            }
+        }
+
         Spacer(Modifier.height(64.dp))
+    }
+
+    if (showChangelog) {
+        ChangelogCreditsDialog(onDismiss = { showChangelog = false })
     }
 }
