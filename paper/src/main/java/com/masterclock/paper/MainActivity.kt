@@ -252,30 +252,27 @@ class MainActivity : ComponentActivity() {
                                 onExportMedia = { mediaExportLauncher.launch("master_clock_full_backup.zip") },
                                 onImportSettings = { importLauncher.launch(arrayOf("application/json")) },
                                 onImportMedia = { mediaImportLauncher.launch(arrayOf("application/zip")) },
-                                onShareSettings = { includeLogs, useQr ->
-                                    if (useQr) {
-                                        // val pkg = SharePackage(settings = settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null)
-                                        // val shareJson = json.encodeToString(pkg)
-                                        // navigator.navigate(Route.QRShare(shareJson))
+                                onShareSettings = { includeLogs, _ ->
+                                    // paper has no QRShareScreen/QRReceiveScreen (see the note below on
+                                    // missing screens), so useQr is ignored -- always falls back to a
+                                    // file share, matching the app module's non-QR path.
+                                    val pkg = if (includeLogs) {
+                                        SharePackage(
+                                            settings = settings.copy(
+                                                notebookNotes = settings.notebookNotes.filter { it.type == NotebookNoteType.TEXT }
+                                            ),
+                                            logs = gameHistory,
+                                            scoreboard = timerViewModel.scoreboard.value
+                                        )
                                     } else {
-                                        val pkg = if (includeLogs) {
-                                            SharePackage(
-                                                settings = settings.copy(
-                                                    notebookNotes = settings.notebookNotes.filter { it.type == NotebookNoteType.TEXT }
-                                                ),
-                                                logs = gameHistory,
-                                                scoreboard = timerViewModel.scoreboard.value
-                                            )
-                                        } else {
-                                            SharePackage(
-                                                settings = settings.copy(notebookNotes = emptyList()),
-                                                logs = null,
-                                                scoreboard = null
-                                            )
-                                        }
-                                        val shareJson = json.encodeToString(pkg)
-                                        shareData(context, shareJson)
+                                        SharePackage(
+                                            settings = settings.copy(notebookNotes = emptyList()),
+                                            logs = null,
+                                            scoreboard = null
+                                        )
                                     }
+                                    val shareJson = json.encodeToString(pkg)
+                                    shareData(context, shareJson)
                                 },
                                 onToolClick = { routeToNavigate -> /* navigator.navigate(routeToNavigate) */ },
                                 onBackClick = { 
