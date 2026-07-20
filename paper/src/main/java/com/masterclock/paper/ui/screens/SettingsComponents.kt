@@ -190,6 +190,9 @@ fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
 
 @Composable
 fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Changelog", "Credits")
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
@@ -205,17 +208,13 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
             shadowElevation = 0.dp
         ) {
             Column(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .heightIn(max = 480.dp)
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         "MasterClock ${BuildConfig.VERSION_NAME}",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -225,14 +224,32 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                     )
                 }
 
-                SettingsSection("Changelog") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                PrimaryTabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ) {
+                    tabs.forEachIndexed { index, label ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(label) }
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (selectedTab == 0) {
                         AppInfo.CHANGELOG.forEach { entry ->
                             Column {
                                 Text(
                                     "${entry.version} — ${entry.date}",
                                     style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 entry.notes.forEach { note ->
@@ -240,14 +257,10 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                                 }
                             }
                         }
-                    }
-                }
-
-                SettingsSection("Credits") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    } else {
                         AppInfo.CREDITS.forEach { credit ->
                             Column {
-                                Text(credit.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(credit.title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
                                 Text(credit.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
@@ -255,7 +268,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                 }
 
                 ButtonMMD(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text("Close", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text("Close", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
