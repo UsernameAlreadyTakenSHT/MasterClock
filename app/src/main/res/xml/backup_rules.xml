@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Covers API 23-30 (below API 31, android:dataExtractionRules doesn't apply — see
+  data_extraction_rules.xml for 31+). Same intent as allowBackup="false": nothing leaves the device.
+  See AUDIT.md §3 (M2).
+-->
+<full-backup-content>
+    <exclude domain="root" />
+</full-backup-content>

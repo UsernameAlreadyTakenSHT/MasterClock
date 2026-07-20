@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">MasterClock</string>
+
+    <!-- Common -->
+    <string name="common_cancel">Cancel</string>
+    <string name="common_reset">Reset</string>
+    <string name="common_player_n">Player %d</string>
+    <string name="common_back_to_game">Back to Game</string>
+
+    <!-- Timer Screen -->
+    <string name="timer_reset_title">Reset Game?</string>
+    <string name="timer_reset_message">The current state will be lost.</string>
+    <string name="timer_arbitre_control">Arbitre Control</string>
+    <string name="timer_save_clock">Save Clock</string>
+    <string name="timer_resume">Resume</string>
+    <string name="timer_byoyomi">BYOYOMI</string>
+    <string name="timer_cycle">CYCLE: %d</string>
+    <string name="timer_moves">MOVES: %d</string>
+    <string name="timer_delay">DELAY: %s</string>
+    <string name="timer_flagged">FLAGGED</string>
+    <string name="timer_period_flag">PERIOD FLAG</string>
+    <string name="timer_reflect">REFLECT</string>
+    <string name="timer_move_alert">MOVE!</string>
+    <string name="timer_pause_label">PAUSE</string>
+</resources>

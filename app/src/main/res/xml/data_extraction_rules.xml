@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  allowBackup="false" alone doesn't fully cover Android 12+, where cloud backup and device-to-device
+  transfer are governed separately by this file. Excluding the whole app (domain="root") makes both
+  behave the same as allowBackup="false" on older versions: nothing — notebook notes (text, voice
+  recordings, photos), game history, and settings — ever leaves the device via backup or transfer.
+  See AUDIT.md §3 (M2).
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+    </device-transfer>
+</data-extraction-rules>

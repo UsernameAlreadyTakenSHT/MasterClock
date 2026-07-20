@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See app/src/main/res/xml/backup_rules.xml and AUDIT.md §3 (M2). -->
+<full-backup-content>
+    <exclude domain="root" />
+</full-backup-content>

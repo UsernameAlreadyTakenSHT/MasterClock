@@ -1,0 +1,24 @@
+*.iml
+.gradle
+/local.properties
+.idea/
+.DS_Store
+# Was "/build" (root-anchored only) -- missed app/build, core/build, paper/build entirely
+# (~2.6 GB of build artifacts/APKs). Unanchored so it matches a "build" dir at any depth.
+build/
+/captures
+.externalNativeBuild
+.cxx
+.kotlin/
+local.properties
+
+# Release signing material must never be committed (see F3 in AUDIT.md).
+*.jks
+*.keystore
+
+# Claude Code: personal/local settings and runtime lock files, not shared team config.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Rapport d'audit interne, non destiné au repo public
+/AUDIT.md

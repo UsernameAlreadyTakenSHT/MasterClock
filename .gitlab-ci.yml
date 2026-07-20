@@ -1,0 +1,97 @@
+image: eclipse-temurin:21-jdk-jammy
+
+variables:
+  ANDROID_SDK_ROOT: "$CI_PROJECT_DIR/android-sdk"
+  ANDROID_HOME: "$CI_PROJECT_DIR/android-sdk"
+  ANDROID_CMDLINE_TOOLS_VERSION: "11076708"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/masterclock/${CI_COMMIT_TAG}"
+
+stages:
+  - build
+  - release
+
+build_apks:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq wget unzip curl
+    - mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+    - wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS_VERSION}_latest.zip" -O cmdline-tools.zip
+    - unzip -q cmdline-tools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
+    - mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+    - export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
+    - yes | sdkmanager --licenses > /dev/null || true
+    - echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$CI_PROJECT_DIR/release.keystore"
+    - |
+      cat >> local.properties <<EOF
+      MASTERCLOCK_RELEASE_STORE_FILE=$CI_PROJECT_DIR/release.keystore
+      MASTERCLOCK_RELEASE_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
+      MASTERCLOCK_RELEASE_KEY_ALIAS=$ANDROID_KEY_ALIAS
+      MASTERCLOCK_RELEASE_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
+      EOF
+    - chmod +x gradlew
+  script:
+    - export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
+    - ./gradlew buildAllReleaseFlavors
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        for flavor in complete standard light extraLight; do
+          apk_path=$(find "app/build/outputs/apk/${flavor}/release" -name "*.apk" | head -n1)
+          target_name="masterclock-${flavor}-${CI_COMMIT_TAG}.apk"
+          echo "Uploading ${apk_path} as ${target_name}..."
+          curl --silent --show-error --fail \
+            --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+            --upload-file "${apk_path}" \
+            "${PACKAGE_REGISTRY_URL}/${target_name}"
+        done
+        paper_apk_path=$(find "paper/build/outputs/apk/release" -name "*.apk" | head -n1)
+        paper_target_name="masterclock-paper-${CI_COMMIT_TAG}.apk"
+        echo "Uploading ${paper_apk_path} as ${paper_target_name}..."
+        curl --silent --show-error --fail \
+          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file "${paper_apk_path}" \
+          "${PACKAGE_REGISTRY_URL}/${paper_target_name}"
+      fi
+  after_script:
+    - rm -f "$CI_PROJECT_DIR/release.keystore"
+  artifacts:
+    name: "masterclock-apks-$CI_COMMIT_REF_NAME"
+    paths:
+      - app/build/outputs/apk/*/release/*.apk
+      - paper/build/outputs/apk/release/*.apk
+    expire_in: 90 days
+  cache:
+    key:
+      files:
+        - gradle/wrapper/gradle-wrapper.properties
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+
+release_tag:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  needs:
+    - build_apks
+  script:
+    - echo "Publishing release for $CI_COMMIT_TAG"
+  release:
+    tag_name: "$CI_COMMIT_TAG"
+    description: "MasterClock $CI_COMMIT_TAG — signed release APKs for all 4 flavors + paper attached below."
+    assets:
+      links:
+        - name: "MasterClock complete (APK)"
+          url: "${PACKAGE_REGISTRY_URL}/masterclock-complete-${CI_COMMIT_TAG}.apk"
+        - name: "MasterClock standard (APK)"
+          url: "${PACKAGE_REGISTRY_URL}/masterclock-standard-${CI_COMMIT_TAG}.apk"
+        - name: "MasterClock light (APK)"
+          url: "${PACKAGE_REGISTRY_URL}/masterclock-light-${CI_COMMIT_TAG}.apk"
+        - name: "MasterClock extraLight (APK)"
+          url: "${PACKAGE_REGISTRY_URL}/masterclock-extraLight-${CI_COMMIT_TAG}.apk"
+        - name: "MasterClock paper (APK)"
+          url: "${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk"

@@ -1,0 +1,213 @@
+<!--
+  BACKLOG I18N — MasterClock
+
+  Ce fichier N'EST PAS un dossier de ressources Android (il est hors de src/main/res),
+  donc il n'est jamais compilé ni scanné par AAPT/Lint. Il sert uniquement de mémoire :
+  ces 158 chaînes existaient dans app/src/main/res/values/strings.xml mais n'étaient
+  référencées nulle part dans le code Kotlin (tout le texte de l'UI est actuellement en
+  dur, inline dans les Composables) — Android Lint les signalait donc comme
+  `UnusedResources` (166 warnings au total avec colors.xml, cf. AUDIT.md §2.4).
+
+  Elles ont été retirées de strings.xml le 2026-07-19 pour obtenir 0 warning lint, MAIS
+  elles avaient été préparées en amont pour la traduction (i18n) de l'app. Ce fichier les
+  conserve donc intactes pour réintégration progressive :
+
+  Pour remettre une chaîne en service :
+    1. Copier sa ligne <string> depuis ce fichier vers app/src/main/res/values/strings.xml
+       (dans la bonne section, indiquée par les commentaires ci-dessous).
+    2. Remplacer le texte en dur correspondant dans le Composable Kotlin par
+       `stringResource(R.string.NOM_DE_LA_CHAINE)`.
+    3. Supprimer la ligne de ce fichier une fois migrée (ou laisser, elle est inerte).
+
+  Tant qu'une chaîne n'est pas réellement référencée depuis le code, ne PAS la remettre
+  directement dans strings.xml : Lint la re-signalera comme UnusedResources.
+-->
+<resources>
+
+    <!-- Common -->
+    <string name="common_back">Back</string>
+    <string name="common_save">Save</string>
+    <string name="common_close">Close</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_share">Share</string>
+    <string name="common_error">Error</string>
+    <string name="common_ok">OK</string>
+    <string name="common_move">Move</string>
+    <string name="common_generate">GENERATE</string>
+    <string name="common_start">START</string>
+    <string name="common_stop">STOP</string>
+    <string name="common_record">Record</string>
+    <string name="common_play">Play</string>
+    <string name="common_share_log">Share Log</string>
+
+    <!-- Settings Categories -->
+    <string name="settings_cat_modes">Modes</string>
+    <string name="settings_cat_behavior">Behavior</string>
+    <string name="settings_cat_display">Display</string>
+    <string name="settings_cat_audio">Audio</string>
+    <string name="settings_cat_more">More</string>
+    <string name="settings_cat_omni">Omni</string>
+
+    <!-- Settings Screens -->
+    <string name="settings_reset_all_title">Reset all settings?</string>
+    <string name="settings_reset_all_message">This action cannot be undone.</string>
+    <string name="settings_clear_logs_title">Clear all game logs?</string>
+    <string name="settings_clear_logs_message">All recorded history will be permanently deleted.</string>
+    <string name="settings_export_share">Export &amp; Share</string>
+    <string name="settings_import_data">Import Data</string>
+    <string name="settings_version">Version 0.8.0</string>
+    <string name="settings_clear_logs_btn">Clear logs</string>
+    <string name="settings_reset_settings_btn">Reset settings</string>
+
+    <!-- Omni Timer Wizard -->
+    <string name="omni_wizard_step">Step %1$d/%2$d</string>
+    <string name="omni_prev">Previous</string>
+    <string name="omni_next">Next Step</string>
+    <string name="omni_launch">Launch Game</string>
+    <string name="omni_players_order">Players &amp; Order</string>
+    <string name="omni_session_games">Session &amp; Games</string>
+    <string name="omni_rounds">Rounds</string>
+    <string name="omni_turns">Turns</string>
+    <string name="omni_phases">Phases</string>
+    <string name="omni_advanced_rules">Advanced Rules</string>
+    <string name="omni_ready_to_play">Ready to Play</string>
+    <string name="omni_reset_session_title">Reset Session?</string>
+    <string name="omni_reset_session_message">All progress across rounds and games will be lost.</string>
+    <string name="omni_turn_disabled">Turn clock disabled.</string>
+    <string name="omni_phase_disabled">Phase clock disabled.</string>
+    <string name="omni_add_phase">Add Phase</string>
+    <string name="omni_launch_btn">LAUNCH STATION</string>
+
+    <!-- Tools -->
+    <string name="tools_game_logs">Game Logs</string>
+    <string name="tools_no_logs">No games recorded yet.</string>
+    <string name="tools_log_details">Log Details</string>
+    <string name="tools_coin_toss">Coin Toss</string>
+    <string name="tools_dice_roll">Dice Roll</string>
+    <string name="tools_short_straw">Short Straw</string>
+    <string name="tools_random_card">Random Card</string>
+    <string name="tools_blindfold_trainer">Blindfold Trainer</string>
+    <string name="tools_knight_path">Knight\'s Path</string>
+    <string name="tools_stop_precision">Stop Precision</string>
+    <string name="tools_name_square">Name the Square</string>
+    <string name="tools_variant_generator">Variant Generator</string>
+    <string name="tools_scoreboard">Scoreboard</string>
+    <string name="tools_notebook">Notebook</string>
+    <string name="tools_presets">Presets</string>
+
+    <!-- Game Logs -->
+    <string name="tools_match_summary">Match Summary</string>
+    <string name="tools_detailed_moves">Detailed Moves</string>
+    <string name="tools_copy_pgn">Copy PGN</string>
+
+    <!-- Coin / Dice / Straw -->
+    <string name="tools_heads">HEADS</string>
+    <string name="tools_tails">TAILS</string>
+    <string name="tools_straws_count">Straws: %d</string>
+    <string name="tools_straw_prepare">PREPARE</string>
+
+    <!-- Trainers -->
+    <string name="tools_score">Score: %d</string>
+    <string name="tools_seconds_left">%ds</string>
+    <string name="tools_game_over">GAME OVER</string>
+    <string name="tools_final_score">Final Score: %d</string>
+    <string name="tools_start_trial">START TRIAL</string>
+    <string name="tools_white">WHITE</string>
+    <string name="tools_dark">DARK</string>
+    <string name="tools_start">START</string>
+    <string name="tools_target">TARGET</string>
+    <string name="tools_min_moves">Min moves?</string>
+    <string name="tools_target_time">Target: %s</string>
+    <string name="tools_offset">Offset: %1$s%2$dms</string>
+
+    <!-- Scoreboard -->
+    <string name="tools_reset_scoreboard">Reset Scoreboard</string>
+    <string name="tools_no_games">No games recorded yet.</string>
+    <string name="tools_add_result_hint">Add result or note…</string>
+
+    <!-- Notebook -->
+    <string name="tools_new_note">New Note</string>
+    <string name="tools_no_notes">No notes yet. Tap + to create one.</string>
+    <string name="tools_note_shred">Shred</string>
+    <string name="tools_type_text">Text</string>
+    <string name="tools_type_draw">Draw</string>
+    <string name="tools_type_audio">Audio</string>
+    <string name="tools_type_image">Image</string>
+    <string name="tools_type_video">Video</string>
+    <string name="tools_type_board">Board</string>
+    <string name="tools_new_text_note">New Note</string>
+    <string name="tools_new_draw_note">New Draw Note</string>
+    <string name="tools_new_audio_note">New Audio Note</string>
+    <string name="tools_new_image_note">New Image Note</string>
+    <string name="tools_new_video_note">New Video Note</string>
+    <string name="tools_new_board_note">New Board Note</string>
+    <string name="tools_edit_note">Edit Note</string>
+    <string name="tools_note_title">Title</string>
+    <string name="tools_format_bold">Bold</string>
+    <string name="tools_format_italic">Italic</string>
+    <string name="tools_format_underline">Underline</string>
+    <string name="tools_format_large">Large</string>
+    <string name="tools_format_normal">Normal</string>
+    <string name="tools_format_checkbox">Checkbox</string>
+    <string name="tools_format_color">Color</string>
+    <string name="tools_select_text_color">Select Text Color</string>
+    <string name="tools_note_placeholder">Select text and use toolbar to format…</string>
+    <string name="tools_undo">Undo</string>
+    <string name="tools_clear">Clear</string>
+    <string name="tools_eraser">Eraser</string>
+    <string name="tools_clear_board">Clear Board</string>
+    <string name="tools_select_piece">Select Piece</string>
+    <string name="tools_delete_recording">Delete Recording</string>
+    <string name="tools_no_photo">No photo yet</string>
+    <string name="tools_take_photo">Take Photo</string>
+    <string name="tools_retake_photo">Retake Photo</string>
+    <string name="tools_no_video">No video yet (Max 1 min)</string>
+    <string name="tools_record_video">Record Video</string>
+    <string name="tools_retake_video">Retake Video</string>
+
+    <!-- Presets -->
+    <string name="presets_all">All Presets</string>
+    <string name="presets_last">Last Games</string>
+    <string name="presets_none">No games played yet.</string>
+
+    <!-- Variants -->
+    <string name="variant_chess960">Chess960</string>
+    <string name="variant_shuffle">Shuffle</string>
+    <string name="variant_transcendental">Transcendental</string>
+    <string name="variant_chess2880">Chess2880</string>
+    <string name="variant_double_960">Double 960</string>
+    <string name="variant_desc_960">Symmetric, Opposite Bishops, King between Rooks (Castling).</string>
+    <string name="variant_desc_shuffle">Symmetric, King and Bishops anywhere (Wild randomness).</string>
+    <string name="variant_desc_trans">Asymmetric, Opposite Bishops, King anywhere (High tactics).</string>
+    <string name="variant_desc_2880">Symmetric, Opposite Bishops, King anywhere (No castling).</string>
+    <string name="variant_desc_double">Asymmetric, Opposite Bishops, King between Rooks (Pro tactics).</string>
+    <string name="tools_copy_fen">COPY FEN</string>
+
+    <!-- Toasts -->
+    <string name="toast_backup_success">Backup successful!</string>
+    <string name="toast_export_failed">Failed to export: %s</string>
+    <string name="toast_import_success">Import successful!</string>
+    <string name="toast_import_failed">Failed to import: %s</string>
+    <string name="toast_pgn_copied">PGN copied to clipboard</string>
+    <string name="toast_fen_copied">FEN copied</string>
+    <string name="toast_note_deleted">Note deleted</string>
+    <string name="toast_permission_mic">Microphone permission is required.</string>
+    <string name="toast_permission_mic_granted">Permission granted. Tap Record again.</string>
+    <string name="toast_permission_camera">Camera permission required</string>
+    <string name="toast_failed_start_audio">Failed to start recording</string>
+    <string name="toast_failed_play_audio">Failed to play audio</string>
+    <string name="toast_preparing_apk">Preparing application file…</string>
+    <string name="toast_error_apk">Error: Could not prepare file</string>
+
+    <!-- Mode Names (Non-translatable) -->
+    <string name="mode_sudden_death" translatable="false">Sudden Death</string>
+    <string name="mode_fischer" translatable="false">Fischer</string>
+    <string name="mode_bronstein" translatable="false">Bronstein</string>
+    <string name="mode_us_delay" translatable="false">US Delay</string>
+    <string name="mode_byoyomi_japanese" translatable="false">Japanese Byoyomi</string>
+    <string name="mode_byoyomi_canadian" translatable="false">Canadian Byoyomi</string>
+    <string name="mode_byoyomi_progressive" translatable="false">Progressive Byoyomi</string>
+    <string name="mode_hourglass" translatable="false">Hourglass</string>
+    <string name="mode_gong" translatable="false">Gong Mode</string>
+
+</resources>
