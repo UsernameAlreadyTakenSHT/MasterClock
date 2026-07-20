@@ -1001,6 +1001,9 @@ fun GongPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 
 @Composable
 fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Changelog", "Credits")
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -1014,12 +1017,25 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
             }
         },
         text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                SettingsSection("Changelog") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column {
+                PrimaryTabRow(selectedTabIndex = selectedTab) {
+                    tabs.forEachIndexed { index, label ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(label) }
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (selectedTab == 0) {
                         AppInfo.CHANGELOG.forEach { entry ->
                             Column {
                                 Text(
@@ -1032,13 +1048,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                                 }
                             }
                         }
-                    }
-                }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                SettingsSection("Credits") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    } else {
                         AppInfo.CREDITS.forEach { credit ->
                             Column {
                                 Text(credit.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
