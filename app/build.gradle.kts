@@ -184,3 +184,34 @@ tasks.register("buildAllReleaseFlavors") {
         println("==========================================")
     }
 }
+
+tasks.register("buildAllReleaseBundles") {
+    group = "build"
+    description = "Builds all release AABs (Android App Bundles) for all flavors (+ paper) and prints their sizes"
+
+    val flavors = listOf("complete", "standard", "light", "extraLight")
+    val buildTasks = flavors.map { "bundle${it.replaceFirstChar { c -> c.uppercase() }}Release" }
+    dependsOn(buildTasks)
+    dependsOn(":paper:bundleRelease")
+
+    doLast {
+        println("\n==========================================")
+        println("       BUILD ALL BUNDLES SUMMARY")
+        println("==========================================")
+        println(String.format("%-15s | %-15s", "Flavor", "Size (KB)"))
+        println("------------------------------------------")
+
+        flavors.forEach { flavor ->
+            val aabDir = layout.buildDirectory.dir("outputs/bundle/${flavor}Release").get().asFile
+            val aab = aabDir.listFiles()?.find { it.name.endsWith(".aab") }
+            val size = if (aab != null) String.format("%.2f", aab.length() / 1024.0) else "N/A"
+            println(String.format("%-15s | %-15s", flavor, size))
+        }
+
+        val paperAabDir = project(":paper").layout.buildDirectory.dir("outputs/bundle/release").get().asFile
+        val paperAab = paperAabDir.listFiles()?.find { it.name.endsWith(".aab") }
+        val paperSize = if (paperAab != null) String.format("%.2f", paperAab.length() / 1024.0) else "N/A"
+        println(String.format("%-15s | %-15s", "paper", paperSize))
+        println("==========================================")
+    }
+}
