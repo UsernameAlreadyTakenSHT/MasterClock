@@ -126,9 +126,18 @@ fun SwitchMMD(
     enabled: Boolean = true
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val trackColor = if (checked) colorScheme.primaryContainer else colorScheme.background
-    val thumbColor = if (checked) colorScheme.onPrimaryContainer else colorScheme.primaryContainer
-    val borderColor = colorScheme.primaryContainer
+    val disabledColor = colorScheme.onSurface.copy(alpha = 0.25f)
+    val trackColor = when {
+        !enabled -> disabledColor
+        checked -> colorScheme.primaryContainer
+        else -> colorScheme.background
+    }
+    val thumbColor = when {
+        !enabled -> disabledColor
+        checked -> colorScheme.onPrimaryContainer
+        else -> colorScheme.primaryContainer
+    }
+    val borderColor = if (enabled) colorScheme.primaryContainer else disabledColor
 
     Box(
         modifier = modifier
