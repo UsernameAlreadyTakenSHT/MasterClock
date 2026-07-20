@@ -8,6 +8,162 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.time.Duration.Companion.milliseconds
 
+/** GLOBAL_RESERVE shares one pool across every player instead of one bank per player. */
+internal fun bankKeyFor(settings: OmniSettings, playerIndex: Int): Int =
+    if (settings.timeBankMode == TimeBankMode.GLOBAL_RESERVE) OMNI_GLOBAL_TIME_BANK_KEY else playerIndex
+
+internal fun applyOmniTimeBanking(state: OmniState, settings: OmniSettings, playerIndex: Int, timeRemainingInTurn: Long): Map<Int, Long> {
+    if (settings.timeBankMode == TimeBankMode.NONE || timeRemainingInTurn <= 0) return state.playerTimeBanks
+    val key = bankKeyFor(settings, playerIndex)
+    val currentBanks = state.playerTimeBanks.toMutableMap()
+    currentBanks[key] = (currentBanks[key] ?: 0L) + timeRemainingInTurn
+    return currentBanks
+}
+
+/**
+ * Draws whatever is banked for the player about to start their turn into that turn's time, and
+ * clears just that entry so it is not re-applied on every subsequent turn. Previously the whole
+ * time-banking system computed playerTimeBanks but nothing ever read it back into a clock or
+ * displayed it -- purely cosmetic. See AUDIT.md section 7.1.
+ */
+internal fun drawOmniBank(banks: Map<Int, Long>, settings: OmniSettings, nextPlayerIndex: Int): Pair<Map<Int, Long>, Long> {
+    if (settings.timeBankMode == TimeBankMode.NONE) return banks to 0L
+    val key = bankKeyFor(settings, nextPlayerIndex)
+    val banked = banks[key] ?: 0L
+    if (banked <= 0L) return banks to 0L
+    return (banks + (key to 0L)) to banked
+}
+
+internal fun handleTimeBankScope(currentBanks: Map<Int, Long>, scope: TimeBankScope, event: String): Map<Int, Long> {
+    return when (scope) {
+        TimeBankScope.TURN_TO_TURN -> emptyMap()
+        TimeBankScope.ROUND_TO_ROUND -> if (event == "ROUND" || event == "GAME" || event == "SESSION") emptyMap() else currentBanks
+        TimeBankScope.GAME_TO_GAME -> if (event == "GAME" || event == "SESSION") emptyMap() else currentBanks
+        TimeBankScope.SESSION_WIDE -> currentBanks
+    }
+}
+
+internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int = 0, roundIdx: Int = 0, playerIdx: Int = 0, phaseIdx: Int = 0): Long {
+    // Was always settings.games.firstOrNull(), so any per-game duration/structure was silently
+    // ignored from Game 2 onward -- see AUDIT.md section 7.1.
+    val game = settings.games.getOrNull(gameIdx) ?: settings.games.lastOrNull() ?: OmniGameSettings()
+    val round = game.rounds.getOrNull(roundIdx) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
+    return when (level) {
+        "ROUND" -> round.durationMs
+        "TURN" -> if (round.turnLogic == RoundTurnLogic.SEQUENCE) { val turn = round.customTurns.getOrNull(playerIdx); turn?.durationMs ?: round.turnDurationMs } else round.turnDurationMs
+        "PHASE" -> {
+            val turnsList = if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns else List(settings.numberOfPlayers) { OmniTurnSettings(durationMs = round.turnDurationMs) }
+            val turn = turnsList.getOrNull(playerIdx); val phaseList = turn?.phases ?: listOf(OmniPhaseSettings())
+            phaseList.getOrNull(phaseIdx)?.durationMs ?: 60_000L
+        }
+        else -> 0L
+    }
+}
+
+internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int {
+    val numPlayers = settings.numberOfPlayers
+    return when (settings.playerOrderType) {
+        PlayerOrderType.LINEAR -> turnIndex % numPlayers
+        PlayerOrderType.SNAKE -> if (roundIndex % 2 == 0) turnIndex % numPlayers else (numPlayers - 1) - (turnIndex % numPlayers)
+        PlayerOrderType.ROTATE -> (turnIndex + roundIndex) % numPlayers
+        PlayerOrderType.RANDOM -> (0 until numPlayers).random()
+    }
+}
+
+/**
+ * Advances the Omni session by exactly one step (phase, or turn/round/game/session if the current
+ * one is exhausted), normally called from the manual Next button.
+ *
+ * forceLevel lets a level's own clock reaching zero (see OmniSettings *ForcesCutoff fields) cut
+ * short whatever is happening inside that level instead of waiting for it to finish naturally:
+ * TURN/ROUND/GAME treat the phase/turn/round respectively as exhausted regardless of how much of
+ * it is actually left, cascading exactly like the natural-exhaustion path already does. SESSION
+ * ends the whole session immediately. Phase-level cutoff needs no special case: advancing by one
+ * phase (the default, forceLevel = null) already is "cut this phase short".
+ */
+internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceLevel: String? = null): OmniState {
+    val updatedBanks = applyOmniTimeBanking(state, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
+
+    if (state.isInTransition) {
+        return state.copy(isInTransition = false, transitionTimeRemainingMs = 0, playerTimeBanks = updatedBanks)
+    }
+
+    if (forceLevel == "SESSION") {
+        return state.copy(isRunning = false, isInTransition = true, transitionLabel = "SESSION", playerTimeBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "SESSION"))
+    }
+
+    var nextPhaseIdx = state.currentPhaseIndex + 1
+    // Raw, ever-incrementing turn count within the round -- NOT currentPlayerIndex, which is
+    // already reduced to [0, numberOfPlayers) by calculateNextPlayerIndex() below and would
+    // double-apply the player-order transform for ROTATE/SNAKE (see OmniState.turnCounterInRound
+    // and AUDIT.md section 7.1).
+    var nextTurnIdx = state.turnCounterInRound
+
+    val currentGameIdx = state.currentGameIndex
+    val currentGame = settings.games.getOrNull(currentGameIdx) ?: settings.games.firstOrNull() ?: OmniGameSettings()
+    val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
+    val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else List(currentRound.customTurns.size.coerceAtLeast(settings.numberOfPlayers)) { OmniTurnSettings(durationMs = currentRound.turnDurationMs) }
+    val currentTurn = turnsList.getOrNull(nextTurnIdx) ?: OmniTurnSettings(durationMs = currentRound.turnDurationMs)
+
+    var nextRoundIdx = state.currentRoundIndex
+
+    val phaseDone = !settings.usePhaseClock || nextPhaseIdx >= currentTurn.phases.size ||
+        forceLevel == "TURN" || forceLevel == "ROUND" || forceLevel == "GAME"
+    if (phaseDone) {
+        nextPhaseIdx = 0
+        nextTurnIdx++
+
+        val turnDone = nextTurnIdx >= turnsList.size || forceLevel == "ROUND" || forceLevel == "GAME"
+        if (turnDone) {
+            if (currentRound.roundEndBehavior == RoundEndBehavior.LOOP && forceLevel != "GAME" && forceLevel != "ROUND") {
+                nextTurnIdx = 0
+            } else {
+                nextTurnIdx = 0
+                nextRoundIdx++
+                val roundDone = nextRoundIdx >= currentGame.rounds.size || forceLevel == "GAME"
+                if (roundDone) {
+                    val nextFinalGameIdx = state.currentGameIndex + 1
+                    if (nextFinalGameIdx >= settings.games.size) {
+                        return state.copy(isRunning = false, isInTransition = true, transitionLabel = "SESSION", playerTimeBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "SESSION"))
+                    }
+                    val gameBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "GAME")
+                    val nextGamePlayerIdx = calculateNextPlayerIndex(0, 0, settings)
+                    val (drawnBanks, bankedMs) = drawOmniBank(gameBanks, settings, nextGamePlayerIdx)
+                    return state.copy(
+                        currentGameIndex = nextFinalGameIdx, currentRoundIndex = 0, currentPlayerIndex = nextGamePlayerIdx,
+                        currentPhaseIndex = 0, turnCounterInRound = 0, isInTransition = true, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME",
+                        currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = nextFinalGameIdx, roundIdx = 0),
+                        currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
+                        currentGameTimeMs = settings.games.getOrNull(nextFinalGameIdx)?.durationMs ?: settings.gameDurationMs,
+                        playerTimeBanks = drawnBanks
+                    )
+                }
+                val roundBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "ROUND")
+                val nextPlayerIdx = calculateNextPlayerIndex(nextTurnIdx, nextRoundIdx, settings)
+                val (drawnBanks, bankedMs) = drawOmniBank(roundBanks, settings, nextPlayerIdx)
+                return state.copy(
+                    currentRoundIndex = nextRoundIdx, currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx,
+                    turnCounterInRound = nextTurnIdx,
+                    isInTransition = true, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND",
+                    currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
+                    currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
+                    playerTimeBanks = drawnBanks
+                )
+            }
+        }
+        val turnBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "TURN")
+        val nextPlayerIdx = calculateNextPlayerIndex(nextTurnIdx, nextRoundIdx, settings)
+        val (drawnBanks, bankedMs) = drawOmniBank(turnBanks, settings, nextPlayerIdx)
+        return state.copy(
+            currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx, turnCounterInRound = nextTurnIdx, isInTransition = true,
+            transitionTimeRemainingMs = settings.interTurnPauseMs, transitionLabel = "TURN",
+            currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
+            playerTimeBanks = drawnBanks
+        )
+    }
+    return state.copy(currentPhaseIndex = nextPhaseIdx, currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = nextPhaseIdx), playerTimeBanks = updatedBanks)
+}
+
 class OmniTimerViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepo = SettingsRepository(application)
     private val soundManager = SoundManager(application)
@@ -23,13 +179,12 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         viewModelScope.launch {
-            // Load Omni-Timer settings
             val savedOmni = settingsRepo.omniSettingsFlow.first()
             _omniSettings.value = savedOmni
             _omniState.value = createInitialOmniState(savedOmni)
 
             // soundManager.loadSounds() was never called here, so the SoundPool stayed null forever
-            // and playTripleBeep()/playGong()/playShortBeep() were silent no-ops -- see AUDIT.md §7.1.
+            // and playTripleBeep()/playGong()/playShortBeep() were silent no-ops -- see AUDIT.md section 7.1.
             // Reuses the classic clock's own audio prefs (custom sounds/volume) rather than adding a
             // separate Omni-specific audio settings page.
             soundManager.loadSounds(settingsRepo.settingsFlow.first())
@@ -71,7 +226,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
 
                     val needsFastTick = state.currentTurnTimeMs < 10_000 || state.currentPhaseTimeMs < 10_000
                     val delayMs = if (needsFastTick) 10L else 100L
-                    
+
                     delay(delayMs.milliseconds)
                     val now = System.currentTimeMillis()
                     tickOmni(now - lastTickTime)
@@ -83,14 +238,12 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun pauseOmni() {
-        // Temporary halt: hasStarted stays true, so a later startOmni() resumes instead of restarting.
         _omniState.update { it.copy(isRunning = false) }
     }
 
     fun stopOmni() {
         timerJob?.cancel()
         timerJob = null
-        // Unlike pauseOmni(), Stop ends the current session: the next startOmni() begins a fresh one.
         _omniState.update { it.copy(isRunning = false, hasStarted = false) }
     }
 
@@ -101,82 +254,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun advanceOmni() {
-        _omniState.update { state ->
-            val settings = _omniSettings.value
-            val updatedBanks = applyOmniTimeBanking(state, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
-
-            if (state.isInTransition) {
-                return@update state.copy(isInTransition = false, transitionTimeRemainingMs = 0, playerTimeBanks = updatedBanks)
-            }
-
-            var nextPhaseIdx = state.currentPhaseIndex + 1
-            // Raw, ever-incrementing turn count within the round -- NOT currentPlayerIndex, which is
-            // already reduced to [0, numberOfPlayers) by calculateNextPlayerIndex() below and would
-            // double-apply the player-order transform for ROTATE/SNAKE (see OmniState.turnCounterInRound
-            // and AUDIT.md §7.1).
-            var nextTurnIdx = state.turnCounterInRound
-
-            val currentGameIdx = state.currentGameIndex
-            val currentGame = settings.games.getOrNull(currentGameIdx) ?: settings.games.firstOrNull() ?: OmniGameSettings()
-            val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
-            val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else List(currentRound.customTurns.size.coerceAtLeast(settings.numberOfPlayers)) { OmniTurnSettings(durationMs = currentRound.turnDurationMs) }
-            val currentTurn = turnsList.getOrNull(nextTurnIdx) ?: OmniTurnSettings(durationMs = currentRound.turnDurationMs)
-
-            var nextRoundIdx = state.currentRoundIndex
-
-            if (!settings.usePhaseClock || nextPhaseIdx >= currentTurn.phases.size) {
-                nextPhaseIdx = 0
-                nextTurnIdx++
-
-                if (nextTurnIdx >= turnsList.size) {
-                    if (currentRound.roundEndBehavior == RoundEndBehavior.LOOP) {
-                        nextTurnIdx = 0
-                    } else {
-                        nextTurnIdx = 0
-                        nextRoundIdx++
-                        if (nextRoundIdx >= currentGame.rounds.size) {
-                            val nextFinalGameIdx = state.currentGameIndex + 1
-                            if (nextFinalGameIdx >= settings.games.size) {
-                                return@update state.copy(isRunning = false, isInTransition = true, transitionLabel = "SESSION", playerTimeBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "SESSION"))
-                            }
-                            val gameBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "GAME")
-                            val nextGamePlayerIdx = calculateNextPlayerIndex(0, 0, settings)
-                            val (drawnBanks, bankedMs) = drawOmniBank(gameBanks, settings, nextGamePlayerIdx)
-                            return@update state.copy(
-                                currentGameIndex = nextFinalGameIdx, currentRoundIndex = 0, currentPlayerIndex = nextGamePlayerIdx,
-                                currentPhaseIndex = 0, turnCounterInRound = 0, isInTransition = true, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME",
-                                // Per-game durations (index by the game we're entering, not always game 0) -- see AUDIT.md §7.1.
-                                currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = nextFinalGameIdx, roundIdx = 0),
-                                currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
-                                currentGameTimeMs = settings.games.getOrNull(nextFinalGameIdx)?.durationMs ?: settings.gameDurationMs,
-                                playerTimeBanks = drawnBanks
-                            )
-                        }
-                        val roundBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "ROUND")
-                        val nextPlayerIdx = calculateNextPlayerIndex(nextTurnIdx, nextRoundIdx, settings)
-                        val (drawnBanks, bankedMs) = drawOmniBank(roundBanks, settings, nextPlayerIdx)
-                        return@update state.copy(
-                            currentRoundIndex = nextRoundIdx, currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx,
-                            turnCounterInRound = nextTurnIdx,
-                            isInTransition = true, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND",
-                            currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
-                            currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
-                            playerTimeBanks = drawnBanks
-                        )
-                    }
-                }
-                val turnBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "TURN")
-                val nextPlayerIdx = calculateNextPlayerIndex(nextTurnIdx, nextRoundIdx, settings)
-                val (drawnBanks, bankedMs) = drawOmniBank(turnBanks, settings, nextPlayerIdx)
-                return@update state.copy(
-                    currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx, turnCounterInRound = nextTurnIdx, isInTransition = true,
-                    transitionTimeRemainingMs = settings.interTurnPauseMs, transitionLabel = "TURN",
-                    currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
-                    playerTimeBanks = drawnBanks
-                )
-            }
-            state.copy(currentPhaseIndex = nextPhaseIdx, currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = nextPhaseIdx), playerTimeBanks = updatedBanks)
-        }
+        _omniState.update { state -> computeOmniAdvance(state, _omniSettings.value) }
     }
 
     fun confirmOmniReady() {
@@ -194,58 +272,6 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
             turnCounterInRound = 0,
             playerTimeBanks = emptyMap()
         )
-    }
-
-    /** GLOBAL_RESERVE shares one pool across every player instead of one bank per player -- see [bankKeyFor]. */
-    private fun bankKeyFor(settings: OmniSettings, playerIndex: Int): Int =
-        if (settings.timeBankMode == TimeBankMode.GLOBAL_RESERVE) OMNI_GLOBAL_TIME_BANK_KEY else playerIndex
-
-    private fun applyOmniTimeBanking(state: OmniState, settings: OmniSettings, playerIndex: Int, timeRemainingInTurn: Long): Map<Int, Long> {
-        if (settings.timeBankMode == TimeBankMode.NONE || timeRemainingInTurn <= 0) return state.playerTimeBanks
-        val key = bankKeyFor(settings, playerIndex)
-        val currentBanks = state.playerTimeBanks.toMutableMap()
-        currentBanks[key] = (currentBanks[key] ?: 0L) + timeRemainingInTurn
-        return currentBanks
-    }
-
-    /**
-     * Draws whatever is banked for the player about to start their turn into that turn's time, and
-     * clears just that entry so it isn't re-applied on every subsequent turn. Previously the whole
-     * time-banking system computed `playerTimeBanks` but nothing ever read it back into a clock or
-     * displayed it -- purely cosmetic. See AUDIT.md §7.1.
-     */
-    private fun drawOmniBank(banks: Map<Int, Long>, settings: OmniSettings, nextPlayerIndex: Int): Pair<Map<Int, Long>, Long> {
-        if (settings.timeBankMode == TimeBankMode.NONE) return banks to 0L
-        val key = bankKeyFor(settings, nextPlayerIndex)
-        val banked = banks[key] ?: 0L
-        if (banked <= 0L) return banks to 0L
-        return (banks + (key to 0L)) to banked
-    }
-
-    private fun handleTimeBankScope(currentBanks: Map<Int, Long>, scope: TimeBankScope, event: String): Map<Int, Long> {
-        return when (scope) {
-            TimeBankScope.TURN_TO_TURN -> emptyMap()
-            TimeBankScope.ROUND_TO_ROUND -> if (event == "ROUND" || event == "GAME" || event == "SESSION") emptyMap() else currentBanks
-            TimeBankScope.GAME_TO_GAME -> if (event == "GAME" || event == "SESSION") emptyMap() else currentBanks
-            TimeBankScope.SESSION_WIDE -> currentBanks
-        }
-    }
-
-    private fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int = 0, roundIdx: Int = 0, playerIdx: Int = 0, phaseIdx: Int = 0): Long {
-        // Was always settings.games.firstOrNull(), so any per-game duration/structure was silently
-        // ignored from Game 2 onward -- see AUDIT.md §7.1.
-        val game = settings.games.getOrNull(gameIdx) ?: settings.games.lastOrNull() ?: OmniGameSettings()
-        val round = game.rounds.getOrNull(roundIdx) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
-        return when (level) {
-            "ROUND" -> round.durationMs
-            "TURN" -> if (round.turnLogic == RoundTurnLogic.SEQUENCE) { val turn = round.customTurns.getOrNull(playerIdx); turn?.durationMs ?: round.turnDurationMs } else round.turnDurationMs
-            "PHASE" -> {
-                val turnsList = if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns else List(settings.numberOfPlayers) { OmniTurnSettings(durationMs = round.turnDurationMs) }
-                val turn = turnsList.getOrNull(playerIdx); val phaseList = turn?.phases ?: listOf(OmniPhaseSettings())
-                phaseList.getOrNull(phaseIdx)?.durationMs ?: 60_000L
-            }
-            else -> 0L
-        }
     }
 
     private fun tickOmni(delta: Long) {
@@ -285,17 +311,22 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
             if (oldTurn > 0 && newState.currentTurnTimeMs <= 0 && settings.soundTurnEnd) soundManager.playShortBeep()
             if (oldPhase > 0 && newState.currentPhaseTimeMs <= 0 && settings.soundTurnEnd) soundManager.playShortBeep()
 
-            newState
-        }
-    }
+            // Whichever level with *ForcesCutoff enabled crossed to zero this tick forces an advance,
+            // outermost first (a session/game/round cutoff already implies whatever is nested inside
+            // it is being cut short too, so there is never a need to apply more than one per tick).
+            val forceLevel = when {
+                settings.globalForcesCutoff && oldGlobal > 0 && newState.currentGlobalTimeMs <= 0 -> "SESSION"
+                settings.gameForcesCutoff && oldGame > 0 && newState.currentGameTimeMs <= 0 -> "GAME"
+                settings.roundForcesCutoff && oldRound > 0 && newState.currentRoundTimeMs <= 0 -> "ROUND"
+                settings.turnForcesCutoff && oldTurn > 0 && newState.currentTurnTimeMs <= 0 -> "TURN"
+                settings.phaseForcesCutoff && oldPhase > 0 && newState.currentPhaseTimeMs <= 0 -> "PHASE"
+                else -> null
+            }
+            if (forceLevel != null) {
+                newState = computeOmniAdvance(newState, settings, if (forceLevel == "PHASE") null else forceLevel)
+            }
 
-    private fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int {
-        val numPlayers = settings.numberOfPlayers
-        return when (settings.playerOrderType) {
-            PlayerOrderType.LINEAR -> turnIndex % numPlayers
-            PlayerOrderType.SNAKE -> if (roundIndex % 2 == 0) turnIndex % numPlayers else (numPlayers - 1) - (turnIndex % numPlayers)
-            PlayerOrderType.ROTATE -> (turnIndex + roundIndex) % numPlayers
-            PlayerOrderType.RANDOM -> (0 until numPlayers).random()
+            newState
         }
     }
 

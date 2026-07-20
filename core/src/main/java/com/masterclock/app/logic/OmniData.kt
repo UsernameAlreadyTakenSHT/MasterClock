@@ -98,7 +98,16 @@ data class OmniSettings(
 
     val soundTurnEnd: Boolean = true,
     val soundRoundEnd: Boolean = true,
-    val soundGameEnd: Boolean = true
+    val soundGameEnd: Boolean = true,
+
+    // When true, this level's own clock reaching zero forces an immediate advance to the next
+    // unit at that level (cutting short whatever turn/phase is in progress inside it) instead of the
+    // default -- freeze at zero, beep, and wait for the manual Next tap. See AUDIT.md 7.1.
+    val phaseForcesCutoff: Boolean = false,
+    val turnForcesCutoff: Boolean = false,
+    val roundForcesCutoff: Boolean = false,
+    val gameForcesCutoff: Boolean = false,
+    val globalForcesCutoff: Boolean = false
 )
 
 /**

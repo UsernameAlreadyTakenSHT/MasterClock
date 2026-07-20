@@ -235,20 +235,23 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
 @Composable
 fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
     Text("Session & Games", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-
     SettingsSection("Session") {
         Column {
             BehaviorSwitch("Enable Session Timer", settings.useGlobalClock, topRounded = true, bottomRounded = !settings.useGlobalClock) { onSettingsChanged(settings.copy(useGlobalClock = it)) }
             if (settings.useGlobalClock) {
-                Surface(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(12.dp), color = Color.Transparent) {
+                Surface(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(12.dp), color = Color.Transparent) {
                     HMSInput("Total Duration", settings.globalDurationMs) { onSettingsChanged(settings.copy(globalDurationMs = it)) }
                 }
+                BehaviorSwitch("Force cutoff when session time runs out", settings.globalForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(globalForcesCutoff = it)) }
             }
         }
     }
 
     SettingsSection("Game Timer") {
-        BehaviorSwitch("Enable Game Timer", settings.useGameClock, topRounded = true, bottomRounded = true) { onSettingsChanged(settings.copy(useGameClock = it)) }
+        BehaviorSwitch("Enable Game Timer", settings.useGameClock, topRounded = true, bottomRounded = !settings.useGameClock) { onSettingsChanged(settings.copy(useGameClock = it)) }
+        if (settings.useGameClock) {
+            BehaviorSwitch("Force cutoff when game time runs out", settings.gameForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(gameForcesCutoff = it)) }
+        }
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -308,7 +311,10 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
     Text("Rounds", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
     SettingsSection("Round Timer") {
-        BehaviorSwitch("Enable Round Timer", settings.useRoundClock, topRounded = true, bottomRounded = true) { onSettingsChanged(settings.copy(useRoundClock = it)) }
+        BehaviorSwitch("Enable Round Timer", settings.useRoundClock, topRounded = true, bottomRounded = !settings.useRoundClock) { onSettingsChanged(settings.copy(useRoundClock = it)) }
+        if (settings.useRoundClock) {
+            BehaviorSwitch("Force cutoff when round time runs out", settings.roundForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(roundForcesCutoff = it)) }
+        }
     }
 
     var selectedGameIdx by remember { mutableIntStateOf(0) }
@@ -387,7 +393,10 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
     Text("Turns", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
     SettingsSection("Turn Timer") {
-        BehaviorSwitch("Enable Turn Timer", settings.useTurnClock, topRounded = true, bottomRounded = true) { onSettingsChanged(settings.copy(useTurnClock = it)) }
+        BehaviorSwitch("Enable Turn Timer", settings.useTurnClock, topRounded = true, bottomRounded = !settings.useTurnClock) { onSettingsChanged(settings.copy(useTurnClock = it)) }
+        if (settings.useTurnClock) {
+            BehaviorSwitch("Force cutoff when turn time runs out", settings.turnForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(turnForcesCutoff = it)) }
+        }
     }
 
     if (!settings.useTurnClock) {
@@ -499,7 +508,10 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
     Text("Phases", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
     SettingsSection("Phase Timer") {
-        BehaviorSwitch("Enable Phase Timer", settings.usePhaseClock, topRounded = true, bottomRounded = true) { onSettingsChanged(settings.copy(usePhaseClock = it)) }
+        BehaviorSwitch("Enable Phase Timer", settings.usePhaseClock, topRounded = true, bottomRounded = !settings.usePhaseClock) { onSettingsChanged(settings.copy(usePhaseClock = it)) }
+        if (settings.usePhaseClock) {
+            BehaviorSwitch("Force cutoff when phase time runs out", settings.phaseForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(phaseForcesCutoff = it)) }
+        }
     }
 
     if (!settings.usePhaseClock) {
