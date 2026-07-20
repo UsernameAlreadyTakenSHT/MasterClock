@@ -26,9 +26,12 @@ enum class SettingsCategory(val label: String, val icon: ImageVector) {
             // Omni has no navbar tab -- it's reached only via the "Omni-Timer" ModeCard in the
             // Modes page (SettingsComponents.kt), which switches the category directly.
             return entries.filter { category ->
-                if (category == OMNI) false
-                else if (category == MORE) FlavorConfig.hasMoreTab()
-                else FlavorConfig.hasAdvancedSettings()
+                when (category) {
+                    OMNI -> false
+                    MORE -> FlavorConfig.hasMoreTab()
+                    MODES -> true
+                    BEHAVIOR, DISPLAY, AUDIO -> FlavorConfig.hasFullSettingsTabs()
+                }
             }
         }
     }

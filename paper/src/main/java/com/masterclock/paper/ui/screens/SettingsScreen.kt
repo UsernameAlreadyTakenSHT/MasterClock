@@ -26,9 +26,12 @@ enum class SettingsCategory(val label: String, val icon: ImageVector) {
         fun getVisibleCategories(): List<SettingsCategory> {
             // Omni has no navbar tab -- see app module's SettingsScreen.kt for the equivalent fix.
             return entries.filter { category ->
-                if (category == OMNI) false
-                else if (category == MORE) FlavorConfig.hasMoreTab()
-                else FlavorConfig.hasAdvancedSettings()
+                when (category) {
+                    OMNI -> false
+                    MORE -> FlavorConfig.hasMoreTab()
+                    MODES -> true
+                    BEHAVIOR, DISPLAY, AUDIO -> FlavorConfig.hasFullSettingsTabs()
+                }
             }
         }
     }
