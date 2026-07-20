@@ -1,7 +1,5 @@
 package com.masterclock.paper.ui.screens
 
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
