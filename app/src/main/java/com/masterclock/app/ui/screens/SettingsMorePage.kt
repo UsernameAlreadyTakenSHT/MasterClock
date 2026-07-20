@@ -310,7 +310,6 @@ fun MoreSettingsPage(
                                 val appInfo = pm.getApplicationInfo(localContext.packageName, 0)
                                 val apkFile = File(appInfo.publicSourceDir)
 
-                                // Create a subfolder in cache for the shared APK
                                 val shareFolder = File(localContext.cacheDir, "apk_share")
                                 if (!shareFolder.exists()) shareFolder.mkdirs()
 

@@ -105,8 +105,7 @@ fun SettingsScreen(
             when (category) {
                 SettingsCategory.MODES -> ModesSettingsPage(
                     currentSettings = currentSettings, 
-                    onSettingsChanged = onSettingsChanged,
-                    onOmniClick = { onCategoryChanged(SettingsCategory.OMNI) }
+                    onSettingsChanged = onSettingsChanged
                 )
                 else -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
