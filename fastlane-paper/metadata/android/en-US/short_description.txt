@@ -1,0 +1,1 @@
+A high-contrast chess clock for E-Ink devices.

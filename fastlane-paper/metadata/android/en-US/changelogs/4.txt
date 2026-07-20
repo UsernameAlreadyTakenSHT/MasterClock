@@ -1,0 +1,2 @@
+App ID changed to io.github.usernamealreadytakensht.masterclock.paper for store submission — if updating from an older version, uninstall it first.
+Added a privacy policy page.
