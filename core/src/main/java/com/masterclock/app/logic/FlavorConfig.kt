@@ -10,14 +10,14 @@ object FlavorConfig {
     fun isEInk(): Boolean = currentFlavor == AppFlavor.E_INK
 
     fun hasMoreTab(): Boolean {
-        return currentFlavor != AppFlavor.EXTRA_LIGHT && currentFlavor != AppFlavor.E_INK
+        return currentFlavor == AppFlavor.COMPLETE
+    }
+
+    fun hasFullSettingsTabs(): Boolean {
+        return currentFlavor == AppFlavor.COMPLETE || currentFlavor == AppFlavor.STANDARD
     }
 
     fun hasArbitre(): Boolean {
-        return currentFlavor != AppFlavor.EXTRA_LIGHT && currentFlavor != AppFlavor.E_INK
-    }
-
-    fun hasAdvancedSettings(): Boolean {
         return currentFlavor != AppFlavor.EXTRA_LIGHT && currentFlavor != AppFlavor.E_INK
     }
 
