@@ -13,6 +13,13 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.4",
+            date = "2026-07-20",
+            notes = listOf(
+                "Light and ExtraLight now have Sound/Haptic/Keep-screen-awake toggles.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.3",
             date = "2026-07-20",
             notes = listOf(

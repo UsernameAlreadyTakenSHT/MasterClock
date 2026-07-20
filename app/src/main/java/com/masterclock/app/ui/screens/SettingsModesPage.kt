@@ -66,16 +66,26 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
             onUpdateGlobal = { loop: Boolean, pause: Long, allowSkip: Boolean -> onSettingsChanged(currentSettings.copy(loopPhases = loop, pauseBetweenPhasesMs = pause, allowPhaseSkip = allowSkip)) }
         )
 
-        if (FlavorConfig.isEInk()) {
+        if (!FlavorConfig.hasFullSettingsTabs()) {
             Spacer(Modifier.height(24.dp))
-            SettingsSection("E-Ink Options") {
+            SettingsSection("System behavior") {
                 BehaviorSwitch(
-                    label = "Reverse Colors (Dark Mode)",
-                    checked = currentSettings.eInkDarkMode,
-                    topRounded = true,
-                    bottomRounded = true
+                    label = "Sound",
+                    checked = currentSettings.playSwitchSound
                 ) {
-                    onSettingsChanged(currentSettings.copy(eInkDarkMode = it))
+                    onSettingsChanged(currentSettings.copy(playSwitchSound = it))
+                }
+                BehaviorSwitch(
+                    label = "Haptic feedback",
+                    checked = currentSettings.hapticFeedback
+                ) {
+                    onSettingsChanged(currentSettings.copy(hapticFeedback = it))
+                }
+                BehaviorSwitch(
+                    label = "Keep screen awake",
+                    checked = currentSettings.forceScreenOn
+                ) {
+                    onSettingsChanged(currentSettings.copy(forceScreenOn = it))
                 }
             }
         }
