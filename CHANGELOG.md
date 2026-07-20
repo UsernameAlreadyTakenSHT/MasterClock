@@ -1,3 +1,8 @@
+## v0.8.4 — 2026-07-20
+
+### Added
+- Light and ExtraLight now show a small "System behavior" section (Sound, Haptic feedback, Keep screen awake) on the Modes page, matching the minimum floor of options the E-Ink (paper) build already had. Previously these two flavors had zero behavior/audio settings at all.
+
 ## v0.8.3 — 2026-07-20
 
 ### Changed
