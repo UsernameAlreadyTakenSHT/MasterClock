@@ -635,6 +635,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val _gameHistory = MutableStateFlow<List<GameLog>>(emptyList())
     val gameHistory: StateFlow<List<GameLog>> = _gameHistory.asStateFlow()
     private var currentLog: GameLog? = null
+    private var lastRandomRoll: Pair<Long, Long>? = null
 
     private val _hasSavedClock = MutableStateFlow(false)
     val hasSavedClock: StateFlow<Boolean> = _hasSavedClock.asStateFlow()
@@ -656,29 +657,37 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    private fun createInitialState(settings: ChessClockSettings): ChessClockState {
+    private fun createInitialState(settings: ChessClockSettings, reuseRandomRoll: Boolean = false): ChessClockState {
         val sharedRandomBase: Long
         val sharedRandomInc: Long
         val s1 = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
-        
+
         if (((s1.mode == TimerMode.RANDOM) || (s1.mode == TimerMode.HIDDEN))) {
-            sharedRandomBase = try {
-                if (s1.roundedTime) {
-                    (s1.randomMinTimeMs / 10_000..s1.randomMaxTimeMs / 10_000).random() * 10_000L
-                } else {
-                    (s1.randomMinTimeMs / 1000..s1.randomMaxTimeMs / 1000).random() * 1000L
-                }
-            } catch (_: Exception) { 600_000L }
-            sharedRandomInc = try {
-                if (s1.roundedTime) {
-                    (s1.randomMinIncMs / 1000..s1.randomMaxIncMs / 1000).random() * 1000L
-                } else {
-                    (s1.randomMinIncMs / 100..s1.randomMaxIncMs / 100).random() * 100L
-                }
-            } catch (_: Exception) { 0L }
+            val reused = lastRandomRoll
+            if (reuseRandomRoll && reused != null) {
+                sharedRandomBase = reused.first
+                sharedRandomInc = reused.second
+            } else {
+                sharedRandomBase = try {
+                    if (s1.roundedTime) {
+                        (s1.randomMinTimeMs / 10_000..s1.randomMaxTimeMs / 10_000).random() * 10_000L
+                    } else {
+                        (s1.randomMinTimeMs / 1000..s1.randomMaxTimeMs / 1000).random() * 1000L
+                    }
+                } catch (_: Exception) { 600_000L }
+                sharedRandomInc = try {
+                    if (s1.roundedTime) {
+                        (s1.randomMinIncMs / 1000..s1.randomMaxIncMs / 1000).random() * 1000L
+                    } else {
+                        (s1.randomMinIncMs / 100..s1.randomMaxIncMs / 100).random() * 100L
+                    }
+                } catch (_: Exception) { 0L }
+                lastRandomRoll = sharedRandomBase to sharedRandomInc
+            }
         } else {
             sharedRandomBase = 0
             sharedRandomInc = 0
+            lastRandomRoll = null
         }
 
         fun initP(pSettings: PlayerSettings): PlayerState {
@@ -1115,7 +1124,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
         currentLog = null
         lastAnnouncedThreshold.clear()
-        _uiState.update { createInitialState(_settings.value) } 
+        _uiState.update { createInitialState(_settings.value, reuseRandomRoll = true) }
     }
     fun updateSettings(
         newSettings: ChessClockSettings,
