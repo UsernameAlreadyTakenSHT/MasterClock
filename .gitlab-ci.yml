@@ -36,7 +36,6 @@ build_apks:
   script:
     - export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
     - ./gradlew buildAllReleaseFlavors
-    - ./gradlew buildAllReleaseBundles
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
         for flavor in complete standard light extraLight; do
@@ -47,14 +46,6 @@ build_apks:
             --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
             --upload-file "${apk_path}" \
             "${PACKAGE_REGISTRY_URL}/${target_name}"
-
-          aab_path=$(find "app/build/outputs/bundle/${flavor}Release" -name "*.aab" | head -n1)
-          aab_target_name="masterclock-${flavor}-${CI_COMMIT_TAG}.aab"
-          echo "Uploading ${aab_path} as ${aab_target_name}..."
-          curl --silent --show-error --fail \
-            --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
-            --upload-file "${aab_path}" \
-            "${PACKAGE_REGISTRY_URL}/${aab_target_name}"
         done
         paper_apk_path=$(find "paper/build/outputs/apk/release" -name "*.apk" | head -n1)
         paper_target_name="masterclock-paper-${CI_COMMIT_TAG}.apk"
@@ -63,14 +54,6 @@ build_apks:
           --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
           --upload-file "${paper_apk_path}" \
           "${PACKAGE_REGISTRY_URL}/${paper_target_name}"
-
-        paper_aab_path=$(find "paper/build/outputs/bundle/release" -name "*.aab" | head -n1)
-        paper_aab_target_name="masterclock-paper-${CI_COMMIT_TAG}.aab"
-        echo "Uploading ${paper_aab_path} as ${paper_aab_target_name}..."
-        curl --silent --show-error --fail \
-          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
-          --upload-file "${paper_aab_path}" \
-          "${PACKAGE_REGISTRY_URL}/${paper_aab_target_name}"
 
         awk '/^## /{n++} n==1{print}' CHANGELOG.md > release_notes.md
       fi
@@ -81,8 +64,6 @@ build_apks:
     paths:
       - app/build/outputs/apk/*/release/*.apk
       - paper/build/outputs/apk/release/*.apk
-      - app/build/outputs/bundle/*/*.aab
-      - paper/build/outputs/bundle/release/*.aab
       - release_notes.md
     expire_in: 90 days
   cache:
@@ -107,12 +88,7 @@ release_tag:
         --tag-name "$CI_COMMIT_TAG" \
         --description "$(cat release_notes.md)" \
         --assets-link "{\"name\":\"MasterClock complete (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-complete-${CI_COMMIT_TAG}.apk\"}" \
-        --assets-link "{\"name\":\"MasterClock complete (AAB)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-complete-${CI_COMMIT_TAG}.aab\"}" \
         --assets-link "{\"name\":\"MasterClock standard (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-standard-${CI_COMMIT_TAG}.apk\"}" \
-        --assets-link "{\"name\":\"MasterClock standard (AAB)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-standard-${CI_COMMIT_TAG}.aab\"}" \
         --assets-link "{\"name\":\"MasterClock light (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-light-${CI_COMMIT_TAG}.apk\"}" \
-        --assets-link "{\"name\":\"MasterClock light (AAB)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-light-${CI_COMMIT_TAG}.aab\"}" \
         --assets-link "{\"name\":\"MasterClock extraLight (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-extraLight-${CI_COMMIT_TAG}.apk\"}" \
-        --assets-link "{\"name\":\"MasterClock extraLight (AAB)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-extraLight-${CI_COMMIT_TAG}.aab\"}" \
-        --assets-link "{\"name\":\"MasterClock paper (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk\"}" \
-        --assets-link "{\"name\":\"MasterClock paper (AAB)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.aab\"}"
+        --assets-link "{\"name\":\"MasterClock paper (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk\"}"

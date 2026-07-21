@@ -15,8 +15,7 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
 - Omni mode: sequential game lists, custom round behavior, multi-phase turns (Think > Move > Resolve).
 - Notebook, scoreboard, mini-games, game history with PGN/PDN/KIF export.
 - QR code sharing and Bluetooth board support.
-- Four build flavors (Complete, Standard, Light, ExtraLight), plus a dedicated E-Ink version for Mudita devices.
-- Minimal black-and-white UI.
+- Four build flavors (Complete, Standard, Light, ExtraLight), plus a dedicated E-Ink version for Mudita devices with a minimal black-and-white UI.
 
 ## Flavors
 
