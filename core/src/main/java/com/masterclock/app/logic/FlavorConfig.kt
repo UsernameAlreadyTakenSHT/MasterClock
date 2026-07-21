@@ -25,6 +25,10 @@ object FlavorConfig {
         return currentFlavor != AppFlavor.EXTRA_LIGHT && currentFlavor != AppFlavor.E_INK
     }
 
+    fun hasOmni(): Boolean {
+        return currentFlavor == AppFlavor.COMPLETE || currentFlavor == AppFlavor.STANDARD || currentFlavor == AppFlavor.LIGHT
+    }
+
     fun isModeAllowed(mode: TimerMode): Boolean {
         if (currentFlavor == AppFlavor.E_INK) {
             return mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISHER, TimerMode.MOVE_TIMER_STANDARD)
