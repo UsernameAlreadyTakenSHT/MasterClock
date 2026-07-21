@@ -179,9 +179,6 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
 
                 Text("Gong: Reflection background", style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.reflectionColor) { onSettingsChanged(currentSettings.copy(reflectionColor = it)) }
-
-                Text("Gong: Action background", style = MaterialTheme.typography.labelMedium)
-                ColorRow(currentSettings.actionColor) { onSettingsChanged(currentSettings.copy(actionColor = it)) }
             }
         }
         Spacer(Modifier.height(64.dp))

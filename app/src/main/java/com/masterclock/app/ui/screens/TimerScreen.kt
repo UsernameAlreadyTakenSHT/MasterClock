@@ -275,7 +275,6 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val inactiveColor = Color(settings.inactiveColor)
     val lossColor = Color(settings.lossColor) 
     val reflectionColor = Color(settings.reflectionColor)
-    val actionColor = Color(settings.actionColor)
 
     val backgroundColor by animateColorAsState(
         targetValue = when { 
@@ -288,7 +287,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             isGong -> if (state.isPaused || !(pSettings.gongSimultaneous || isActive)) {
                 inactiveColor
             } else {
-                if (playerState.isGongReflectionPhase) reflectionColor else actionColor
+                if (playerState.isGongReflectionPhase) reflectionColor else activeColor
             }
             isActive || (isChrono && settings.isOneForAll && !state.isPaused) -> activeColor 
             else -> inactiveColor 
