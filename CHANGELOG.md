@@ -1,3 +1,17 @@
+## v0.8.5 — 2026-07-21
+
+### Added
+- Each flavor (Complete/Standard/Light/ExtraLight) now shows its own name in the launcher (e.g. "MasterClock Light") instead of all four sharing the plain "MasterClock" label.
+- Standard and Light now have access to Omni-Timer, like Complete already did.
+
+### Fixed
+- Move Timer (Global Shared) no longer flags every player out of time just because one player's own move timer expired — only the shared pool running out affects everyone now.
+- Games played in Gong, Phases, Move Timer (Shared), and Chrono (one-for-all) modes are now correctly saved to game history — they were silently never logged before.
+- Gong's "time to move" background now uses the same active-player green as every other mode instead of its own separate color.
+- Random/Hidden: hitting Reset now keeps the time already rolled for the current session instead of picking a new random value; switching modes away and back still rerolls, as intended.
+- ExtraLight's Bonus and Move Timer submenus no longer expose Bronstein/US Delay or Save & Cap/Overtime/Global/Shared — only Fisher and Standard, matching the flavor's intended scope.
+- Labeled the Bluetooth board link as untested, since it can't yet receive real moves from a connected board.
+
 ## v0.8.4 — 2026-07-20
 
 ### Added
