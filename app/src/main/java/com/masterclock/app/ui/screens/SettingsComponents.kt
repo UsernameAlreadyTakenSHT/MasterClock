@@ -814,7 +814,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ModeCard("Fast Move", mainMode == 13, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FAST_MOVE)) }
-                    if (FlavorConfig.hasMoreTab()) {
+                    if (FlavorConfig.hasOmni()) {
                         ModeCard("Omni-Timer", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
                     } else {
                         Spacer(Modifier.weight(1f))
@@ -827,24 +827,44 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
     when (mainMode) {
         1 -> SettingsSection("Bonus Type") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ModeCard("Fisher", p.mode == TimerMode.FISHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
-                ModeCard("Bronstein", p.mode == TimerMode.BRONSTEIN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BRONSTEIN)) }
-                ModeCard("US Delay", p.mode == TimerMode.US_DELAY, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.US_DELAY)) }
+                if (FlavorConfig.isModeAllowed(TimerMode.FISHER)) {
+                    ModeCard("Fisher", p.mode == TimerMode.FISHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
+                }
+                if (FlavorConfig.isModeAllowed(TimerMode.BRONSTEIN)) {
+                    ModeCard("Bronstein", p.mode == TimerMode.BRONSTEIN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BRONSTEIN)) }
+                }
+                if (FlavorConfig.isModeAllowed(TimerMode.US_DELAY)) {
+                    ModeCard("US Delay", p.mode == TimerMode.US_DELAY, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.US_DELAY)) }
+                }
             }
         }
         2 -> SettingsSection("Move Timer Type") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ModeCard("Standard", p.mode == TimerMode.MOVE_TIMER_STANDARD, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
-                    ModeCard("Save & Cap", p.mode == TimerMode.MOVE_TIMER_SAVE_CAP, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_SAVE_CAP)) }
+                    if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_SAVE_CAP)) {
+                        ModeCard("Save & Cap", p.mode == TimerMode.MOVE_TIMER_SAVE_CAP, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_SAVE_CAP)) }
+                    }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ModeCard("Overtime", p.mode == TimerMode.MOVE_TIMER_OVERTIME, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_OVERTIME)) }
-                    ModeCard("Global", p.mode == TimerMode.MOVE_TIMER_GLOBAL, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_GLOBAL)) }
+                if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_OVERTIME) || FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_GLOBAL)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_OVERTIME)) {
+                            ModeCard("Overtime", p.mode == TimerMode.MOVE_TIMER_OVERTIME, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_OVERTIME)) }
+                        }
+                        if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_GLOBAL)) {
+                            ModeCard("Global", p.mode == TimerMode.MOVE_TIMER_GLOBAL, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_GLOBAL)) }
+                        }
+                    }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ModeCard("Shared (Auto)", p.mode == TimerMode.MOVE_TIMER_SHARED, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_SHARED)) }
-                    ModeCard("Global Shared", p.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED)) }
+                if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_SHARED) || FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_GLOBAL_SHARED)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_SHARED)) {
+                            ModeCard("Shared (Auto)", p.mode == TimerMode.MOVE_TIMER_SHARED, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_SHARED)) }
+                        }
+                        if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_GLOBAL_SHARED)) {
+                            ModeCard("Global Shared", p.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED)) }
+                        }
+                    }
                 }
             }
         }
