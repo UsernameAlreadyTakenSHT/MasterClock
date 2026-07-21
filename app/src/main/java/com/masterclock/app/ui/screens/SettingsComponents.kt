@@ -795,7 +795,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     ModeCard("Byoyomi", mainMode == 4, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
                 }
             }
-            if (FlavorConfig.currentFlavor != AppFlavor.EXTRA_LIGHT) {
+            if (FlavorConfig.currentFlavor != AppFlavor.MINI) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
                     ModeCard("Chronos", mainMode == 5, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }

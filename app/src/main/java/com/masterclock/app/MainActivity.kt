@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
             BuildConfig.FLAVOR.equals("complete", ignoreCase = true) -> AppFlavor.COMPLETE
             BuildConfig.FLAVOR.equals("standard", ignoreCase = true) -> AppFlavor.STANDARD
             BuildConfig.FLAVOR.equals("light", ignoreCase = true) -> AppFlavor.LIGHT
-            BuildConfig.FLAVOR.equals("extraLight", ignoreCase = true) -> AppFlavor.EXTRA_LIGHT
+            BuildConfig.FLAVOR.equals("mini", ignoreCase = true) -> AppFlavor.MINI
             else -> AppFlavor.COMPLETE
         }
 

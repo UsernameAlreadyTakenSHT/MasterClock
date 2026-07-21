@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Scaled to ~73% around the center so the glyph (circle + hands) sits within the
+         66dp adaptive-icon safe zone instead of being clipped by the mandatory 25% OS inset. -->
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.73"
+        android:scaleY="0.73">
+        <!-- The circle -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M3,12a9,9 0 1,0 18,0a9,9 0 0,0 -18,0" />
+        <!-- The clock hands -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M12,7v5l3,3" />
+        <!-- Flavor word, small, sitting in the empty space inside the circle below the hands
+             (path outlines via Inkscape text-to-path — VectorDrawable has no <text> element).
+             Nested in the same group as the clock so it scales/positions with it exactly. -->
+        <group
+            android:translateX="4"
+            android:translateY="16.12"
+            android:scaleX="0.04"
+            android:scaleY="0.04">
+            <path
+                android:fillColor="#000000"
+                android:pathData="M 107.33984,72 V 20.460937 h 35.33203 v 8.71875 h -24.92578 v 12.199219 h 21.51563 v 8.71875 H 117.74609 V 72 Z m 47.83985,-51.539063 h 10.40625 V 48.375 q 0,6.644531 0.38672,8.613281 0.66796,3.164063 3.16406,5.097656 2.53125,1.898438 6.89062,1.898438 4.42969,0 6.67969,-1.792969 2.25,-1.828125 2.70703,-4.464844 0.45703,-2.636718 0.45703,-8.753906 V 20.460937 h 10.40625 V 47.53125 q 0,9.28125 -0.84375,13.113281 -0.84375,3.832031 -3.1289,6.46875 -2.25,2.636719 -6.04688,4.21875 -3.79687,1.546875 -9.91406,1.546875 -7.38281,0 -11.21484,-1.6875 -3.79688,-1.722656 -6.01172,-4.429687 -2.21485,-2.742188 -2.91797,-5.730469 -1.01953,-4.429688 -1.01953,-13.078125 z M 211.52734,72 V 20.882812 h 10.40625 v 42.433594 h 25.875 V 72 Z m 47.98047,0 V 20.882812 h 10.40625 v 42.433594 h 25.875 V 72 Z" />
+        </group>
+    </group>
+</vector>

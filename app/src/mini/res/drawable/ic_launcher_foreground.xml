@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Scaled to ~73% around the center so the glyph (circle + hands) sits within the
+         66dp adaptive-icon safe zone instead of being clipped by the mandatory 25% OS inset. -->
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.73"
+        android:scaleY="0.73">
+        <!-- The circle -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M3,12a9,9 0 1,0 18,0a9,9 0 0,0 -18,0" />
+        <!-- The clock hands -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M12,7v5l3,3" />
+        <!-- Flavor word, small, sitting in the empty space inside the circle below the hands
+             (path outlines via Inkscape text-to-path — VectorDrawable has no <text> element).
+             Nested in the same group as the clock so it scales/positions with it exactly. -->
+        <group
+            android:translateX="4"
+            android:translateY="16.12"
+            android:scaleX="0.04"
+            android:scaleY="0.04">
+            <path
+                android:fillColor="#000000"
+                android:pathData="M 123.10742,72 V 20.460937 h 15.57422 l 9.35156,35.15625 9.2461,-35.15625 h 15.60937 V 72 H 163.2207 V 31.429687 L 152.99023,72 H 142.9707 L 132.77539,31.429687 V 72 Z m 63.80078,0 V 20.460937 h 10.40625 V 72 Z m 24.42578,0 V 20.460937 h 10.125 l 21.09375,34.417969 V 20.460937 h 9.66797 V 72 H 241.7793 L 221.00195,38.390625 V 72 Z m 55.57422,0 V 20.460937 h 10.40625 V 72 Z" />
+        </group>
+    </group>
+</vector>

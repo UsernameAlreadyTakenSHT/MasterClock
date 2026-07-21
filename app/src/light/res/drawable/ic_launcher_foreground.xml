@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Scaled to ~73% around the center so the glyph (circle + hands) sits within the
+         66dp adaptive-icon safe zone instead of being clipped by the mandatory 25% OS inset. -->
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.73"
+        android:scaleY="0.73">
+        <!-- The circle -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M3,12a9,9 0 1,0 18,0a9,9 0 0,0 -18,0" />
+        <!-- The clock hands -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M12,7v5l3,3" />
+        <!-- Flavor word, small, sitting in the empty space inside the circle below the hands
+             (path outlines via Inkscape text-to-path — VectorDrawable has no <text> element).
+             Nested in the same group as the clock so it scales/positions with it exactly. -->
+        <group
+            android:translateX="4"
+            android:translateY="16.12"
+            android:scaleX="0.04"
+            android:scaleY="0.04">
+            <path
+                android:fillColor="#000000"
+                android:pathData="M 121.52539,72 V 20.882812 h 10.40625 v 42.433594 h 25.875 V 72 Z m 47.38281,0 V 20.460937 h 10.40625 V 72 Z m 35.92188,0 V 29.179687 h -15.29297 v -8.71875 h 40.95703 v 8.71875 H 215.23633 V 72 Z m 36.3789,0 V 20.460937 h 38.21485 v 8.71875 h -27.8086 v 11.425782 h 25.875 v 8.683593 h -25.875 V 63.316406 H 280.4082 V 72 Z" />
+        </group>
+    </group>
+</vector>

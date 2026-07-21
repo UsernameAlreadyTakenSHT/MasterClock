@@ -13,6 +13,14 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.6",
+            date = "2026-07-21",
+            notes = listOf(
+                "Each flavor's launcher icon now prints its own word (FULL/STD/LITE/MINI) inside the clock face.",
+                "ExtraLight renamed to Mini everywhere, including the package ID — reinstall needed if updating from ExtraLight.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.5",
             date = "2026-07-21",
             notes = listOf(

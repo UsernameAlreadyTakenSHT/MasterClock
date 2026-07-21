@@ -1,0 +1,2 @@
+Renamed from ExtraLight to Mini, including the package ID — if you had ExtraLight installed, uninstall it and install this one fresh; it won't update in place.
+The launcher icon now prints "MINI" inside the clock face, so this flavor is visually distinct from the others when several are installed at once.

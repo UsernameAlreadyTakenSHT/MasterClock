@@ -1,7 +1,7 @@
 package com.masterclock.app.logic
 
 enum class AppFlavor {
-    COMPLETE, STANDARD, LIGHT, EXTRA_LIGHT, E_INK
+    COMPLETE, STANDARD, LIGHT, MINI, E_INK
 }
 
 object FlavorConfig {
@@ -18,11 +18,11 @@ object FlavorConfig {
     }
 
     fun hasArbitre(): Boolean {
-        return currentFlavor != AppFlavor.EXTRA_LIGHT && currentFlavor != AppFlavor.E_INK
+        return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
     }
 
     fun hasPresets(): Boolean {
-        return currentFlavor != AppFlavor.EXTRA_LIGHT && currentFlavor != AppFlavor.E_INK
+        return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
     }
 
     fun hasOmni(): Boolean {
@@ -33,7 +33,7 @@ object FlavorConfig {
         if (currentFlavor == AppFlavor.E_INK) {
             return mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISHER, TimerMode.MOVE_TIMER_STANDARD)
         }
-        if (currentFlavor == AppFlavor.EXTRA_LIGHT) {
+        if (currentFlavor == AppFlavor.MINI) {
             return mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISHER, TimerMode.MOVE_TIMER_STANDARD)
         }
         return true

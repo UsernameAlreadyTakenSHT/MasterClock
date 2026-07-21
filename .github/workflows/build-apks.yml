@@ -64,7 +64,7 @@ jobs:
         run: |
           mkdir -p dist
           tag="${{ github.ref_name }}"
-          for flavor in complete standard light extraLight; do
+          for flavor in complete standard light mini; do
             cp "app/build/outputs/apk/${flavor}/release/"*.apk "dist/masterclock-${flavor}-${tag}.apk"
           done
           cp paper/build/outputs/apk/release/*.apk "dist/masterclock-paper-${tag}.apk"

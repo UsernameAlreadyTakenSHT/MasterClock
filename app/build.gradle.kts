@@ -32,8 +32,8 @@ android {
         applicationId = "io.github.usernamealreadytakensht.masterclock.app"
         minSdk = 24
         targetSdk = 37
-        versionCode = 6
-        versionName = "0.8.5"
+        versionCode = 7
+        versionName = "0.8.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -91,10 +91,10 @@ android {
             applicationIdSuffix = ".light"
             versionNameSuffix = "-light"
         }
-        create("extraLight") {
+        create("mini") {
             dimension = "version"
-            applicationIdSuffix = ".extra_light"
-            versionNameSuffix = "-extralight"
+            applicationIdSuffix = ".mini"
+            versionNameSuffix = "-mini"
         }
     }
 
@@ -158,7 +158,7 @@ tasks.register("buildAllReleaseFlavors") {
     group = "build"
     description = "Builds all release APKs for all flavors (+ paper) and prints their sizes"
 
-    val flavors = listOf("complete", "standard", "light", "extraLight")
+    val flavors = listOf("complete", "standard", "light", "mini")
     val buildTasks = flavors.map { "assemble${it.replaceFirstChar { c -> c.uppercase() }}Release" }
     dependsOn(buildTasks)
     dependsOn(":paper:assembleRelease")
@@ -189,7 +189,7 @@ tasks.register("buildAllReleaseBundles") {
     group = "build"
     description = "Builds all release AABs (Android App Bundles) for all flavors (+ paper) and prints their sizes"
 
-    val flavors = listOf("complete", "standard", "light", "extraLight")
+    val flavors = listOf("complete", "standard", "light", "mini")
     val buildTasks = flavors.map { "bundle${it.replaceFirstChar { c -> c.uppercase() }}Release" }
     dependsOn(buildTasks)
     dependsOn(":paper:bundleRelease")

@@ -1,0 +1,5 @@
+MasterClock Mini is the bare-essentials build of MasterClock, a chess clock for chess, wargames, and tabletop games.
+
+This build sticks to three timing modes: Sudden Death, Bonus (Fischer increment), and Move Timer (Standard). No extra settings screens, no presets library, no arbitre mode — just a clock you can set up in a few taps. If you want more timing modes or extra tools, look for MasterClock Light, Standard, or Complete instead.
+
+MasterClock collects no data, contains no ads, no trackers, and needs no network connection to work.
