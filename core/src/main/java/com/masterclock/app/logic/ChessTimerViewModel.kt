@@ -741,13 +741,23 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun startOrSwitch(playerIndex: Int, boardNotation: String? = null) {
         val currentState = _uiState.value
         if (currentState.isArbitreMode) return
-        
+
         val s = getPlayerSettings(playerIndex)
+
+        if (currentLog == null) {
+            val playersInitialStates = _uiState.value.players.map { it.toProxy() }
+            currentLog = GameLog(
+                settings = settings.value,
+                initialPlayerStates = playersInitialStates
+            )
+            addEvent(GameEvent(eventType = "START", detail = "Game started by P$playerIndex"))
+        }
+
         if (s.mode == TimerMode.GONG) {
             if (currentState.isPaused) resume()
             return
         }
-        
+
         if (s.mode == TimerMode.PHASES) {
             if (currentState.isPaused) { resume(); return }
             val p1 = currentState.players[0]
@@ -773,15 +783,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (s.mode == TimerMode.MOVE_TIMER_SHARED) return
         if (s.mode.name.startsWith("CHRONO") && settings.value.isOneForAll) return
         if (currentState.activePlayer != null && currentState.activePlayer != playerIndex) return
-        
-        if (currentLog == null) {
-            val playersInitialStates = _uiState.value.players.map { it.toProxy() }
-            currentLog = GameLog(
-                settings = settings.value,
-                initialPlayerStates = playersInitialStates
-            )
-            addEvent(GameEvent(eventType = "START", detail = "Game started by P$playerIndex"))
-        }
 
         if (currentState.isPaused && currentState.activePlayer != null) { resume(); return }
         
@@ -1062,8 +1063,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         addEvent(GameEvent(eventType = "PAUSE"))
     }
     fun resume() {
+        val active = _uiState.value.activePlayer ?: 1
+        if (currentLog == null) {
+            val playersInitialStates = _uiState.value.players.map { it.toProxy() }
+            currentLog = GameLog(
+                settings = settings.value,
+                initialPlayerStates = playersInitialStates
+            )
+            addEvent(GameEvent(eventType = "START", detail = "Game started by P$active"))
+        }
         addEvent(GameEvent(eventType = "RESUME"))
-        val s = _settings.value; val active = _uiState.value.activePlayer ?: 1
+        val s = _settings.value
         val mode = getPlayerSettings(active).mode
         if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll) || mode == TimerMode.PHASES) { startClock(active); return }
         if (_uiState.value.players.none { it.isOutOfTime }) startClock(active)
