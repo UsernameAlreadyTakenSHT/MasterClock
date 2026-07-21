@@ -237,7 +237,6 @@ data class ChessClockSettings(
     val alertTextColor: Long = 0xFFFFFFFF,    // White for critical alerts
     val lossColor: Long = 0xFFF44336,          // Red for loss
     val reflectionColor: Long = 0xFF2196F3,    // Default to blue for Gong reflection
-    val actionColor: Long = 0xFFFFFFFF,        // White for Gong move
     val eInkDarkMode: Boolean = false,         // E-Ink Color Reversal
 
     // Logs
