@@ -80,13 +80,13 @@ internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings:
  * it is actually left, cascading exactly like the natural-exhaustion path already does. SESSION
  * ends the whole session immediately. Phase-level cutoff needs no special case: advancing by one
  * phase (the default, forceLevel = null) already is "cut this phase short".
+ *
+ * Callers must ensure `!state.isInTransition` — the only caller (OmniTimerScreen's manual Next
+ * button) is wired to render `TransitionOverlay`/`confirmOmniReady()` instead while a transition
+ * is showing, so this is never invoked mid-transition.
  */
 internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceLevel: String? = null): OmniState {
     val updatedBanks = applyOmniTimeBanking(state, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
-
-    if (state.isInTransition) {
-        return state.copy(isInTransition = false, transitionTimeRemainingMs = 0, playerTimeBanks = updatedBanks)
-    }
 
     if (forceLevel == "SESSION") {
         return state.copy(isRunning = false, isInTransition = true, transitionLabel = "SESSION", playerTimeBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "SESSION"))
