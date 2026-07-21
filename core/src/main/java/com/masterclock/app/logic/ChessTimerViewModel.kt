@@ -890,14 +890,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 val pActive = state.players[active - 1]
                 val newMoveTime = pActive.timeRemainingMs - delta
                 val newGlobalTime = (pActive.secondaryTimeMs - delta).coerceAtLeast(0)
-                val out = newMoveTime <= 0 || newGlobalTime <= 0
+                val outMove = newMoveTime <= 0
+                val outGlobal = newGlobalTime <= 0
                 val newPlayers = state.players.mapIndexed { idx, p ->
-                    if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, secondaryTimeMs = newGlobalTime, isOutOfTime = out)
-                    else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = out)
+                    if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
+                    else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = outGlobal)
                 }
                 handleAudio(pActive, newPlayers[active - 1], settings, active)
                 handleVoice(pActive, newPlayers[active - 1], settings, active)
-                return@update state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && out)
+                return@update state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && (outMove || outGlobal))
             }
             if (s.mode == TimerMode.HOURGLASS) {
                 val share = delta / (settings.numberOfPlayers - 1).coerceAtLeast(1)
