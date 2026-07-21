@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-07-20"
+    const val BUILD_DATE = "2026-07-21"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,19 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.5",
+            date = "2026-07-21",
+            notes = listOf(
+                "Each flavor now shows its own name in the launcher.",
+                "Standard and Light now have access to Omni-Timer.",
+                "Fixed Move Timer (Global Shared) flagging every player out on a single move-timer expiry.",
+                "Fixed Gong/Phases/Move Timer (Shared)/Chrono (one-for-all) games never being saved to history.",
+                "Gong's move-phase background now matches the classic active-player green.",
+                "Random/Hidden: Reset keeps the already-rolled time instead of re-rolling.",
+                "ExtraLight's Bonus/Move Timer submenus restricted to Fisher/Standard only.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.4",
             date = "2026-07-20",
