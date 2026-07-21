@@ -1,0 +1,1 @@
+The launcher icon now prints "STD" inside the clock face, so this flavor is visually distinct from the others when several are installed at once.

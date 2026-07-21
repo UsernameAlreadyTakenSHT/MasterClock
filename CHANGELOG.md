@@ -1,3 +1,9 @@
+## v0.8.6 — 2026-07-21
+
+### Changed
+- Each flavor's launcher icon now prints its own short word (FULL/STD/LITE/MINI) in small black text inside the clock face, so the icons are visually distinct too, not just the label.
+- **ExtraLight renamed to Mini** everywhere, including the package ID (`...app.extra_light` → `...app.mini`). Like the `io.github.*` rename in v0.8.3, this is a one-time break in the update path: existing ExtraLight installs won't upgrade in place and need a fresh install.
+
 ## v0.8.5 — 2026-07-21
 
 ### Added

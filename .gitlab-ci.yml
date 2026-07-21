@@ -38,7 +38,7 @@ build_apks:
     - ./gradlew buildAllReleaseFlavors
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        for flavor in complete standard light extraLight; do
+        for flavor in complete standard light mini; do
           apk_path=$(find "app/build/outputs/apk/${flavor}/release" -name "*.apk" | head -n1)
           target_name="masterclock-${flavor}-${CI_COMMIT_TAG}.apk"
           echo "Uploading ${apk_path} as ${target_name}..."
@@ -90,5 +90,5 @@ release_tag:
         --assets-link "{\"name\":\"MasterClock complete (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-complete-${CI_COMMIT_TAG}.apk\"}" \
         --assets-link "{\"name\":\"MasterClock standard (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-standard-${CI_COMMIT_TAG}.apk\"}" \
         --assets-link "{\"name\":\"MasterClock light (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-light-${CI_COMMIT_TAG}.apk\"}" \
-        --assets-link "{\"name\":\"MasterClock extraLight (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-extraLight-${CI_COMMIT_TAG}.apk\"}" \
+        --assets-link "{\"name\":\"MasterClock mini (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-mini-${CI_COMMIT_TAG}.apk\"}" \
         --assets-link "{\"name\":\"MasterClock paper (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk\"}"

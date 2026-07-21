@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Scaled to ~73% around the center so the glyph (circle + hands) sits within the
+         66dp adaptive-icon safe zone instead of being clipped by the mandatory 25% OS inset. -->
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.73"
+        android:scaleY="0.73">
+        <!-- The circle -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M3,12a9,9 0 1,0 18,0a9,9 0 0,0 -18,0" />
+        <!-- The clock hands -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M12,7v5l3,3" />
+        <!-- Flavor word, small, sitting in the empty space inside the circle below the hands
+             (path outlines via Inkscape text-to-path — VectorDrawable has no <text> element).
+             Nested in the same group as the clock so it scales/positions with it exactly. -->
+        <group
+            android:translateX="4"
+            android:translateY="16.12"
+            android:scaleX="0.04"
+            android:scaleY="0.04">
+            <path
+                android:fillColor="#000000"
+                android:pathData="m 126.60156,55.230469 10.125,-0.984375 q 0.91406,5.097656 3.69141,7.488281 2.8125,2.390625 7.55859,2.390625 5.02735,0 7.5586,-2.109375 2.5664,-2.144531 2.5664,-4.992188 0,-1.828125 -1.08984,-3.09375 -1.05469,-1.300781 -3.72656,-2.25 -1.82813,-0.632812 -8.33204,-2.25 -8.36718,-2.074218 -11.74218,-5.097656 -4.7461,-4.253906 -4.7461,-10.371094 0,-3.9375 2.21485,-7.347656 2.25,-3.445312 6.43359,-5.238281 4.21875,-1.792969 10.16016,-1.792969 9.70312,0 14.58984,4.253906 4.92188,4.253907 5.16797,11.355469 L 156.625,35.648437 q -0.66797,-3.972656 -2.88281,-5.695312 -2.17969,-1.757813 -6.57422,-1.757813 -4.53516,0 -7.10156,1.863282 -1.65235,1.195312 -1.65235,3.199218 0,1.828125 1.54688,3.128907 1.96875,1.652343 9.5625,3.445312 7.59375,1.792969 11.21484,3.726563 3.65625,1.898437 5.69531,5.238281 2.07422,3.304687 2.07422,8.191406 0,4.429688 -2.46094,8.296875 -2.46093,3.867188 -6.96093,5.765625 -4.5,1.863281 -11.21485,1.863281 -9.77343,0 -15.01172,-4.5 -5.23828,-4.535156 -6.25781,-13.183593 z M 192.86328,72 V 29.179687 h -15.29297 v -8.71875 h 40.95703 v 8.71875 H 203.26953 V 72 Z m 36.34375,-51.539063 h 19.01953 q 6.4336,0 9.8086,0.984375 4.53515,1.335938 7.76953,4.746094 3.23437,3.410156 4.92187,8.367188 1.6875,4.921875 1.6875,12.164062 0,6.363281 -1.58203,10.96875 -1.93359,5.625 -5.51953,9.105469 Q 262.60547,69.433594 258,70.910156 254.55469,72 248.78906,72 h -19.58203 z m 10.40625,8.71875 v 34.136719 h 7.76953 q 4.35938,0 6.29297,-0.492187 2.53125,-0.632813 4.18359,-2.144532 1.6875,-1.511718 2.74219,-4.957031 1.05469,-3.480469 1.05469,-9.457031 0,-5.976563 -1.05469,-9.175781 -1.05469,-3.199219 -2.95312,-4.992188 -1.89844,-1.792969 -4.81641,-2.425781 -2.17969,-0.492188 -8.54297,-0.492188 z" />
+        </group>
+    </group>
+</vector>
