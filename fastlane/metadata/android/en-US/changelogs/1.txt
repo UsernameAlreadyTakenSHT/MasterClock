@@ -1,0 +1,1 @@
+Initial release. Full timer mode library (Sudden Death, Fischer, Bronstein, US Delay, Byoyomi, FIDE Periods, Hourglass, Gong, Random/Hidden, move counters, fast-move variants) plus the Omni multi-phase engine, Notebook, Scoreboard, mini-games, game history with PGN/PDN/KIF export, QR share, ZIP backup/restore, Bluetooth board connectivity, presets, and a mode guide.

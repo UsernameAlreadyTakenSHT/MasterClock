@@ -1,0 +1,5 @@
+Omni: configurable auto-cutoff per level (Phase/Turn/Round/Game/Session) — that level's own clock reaching zero can now cut short whatever is still in progress instead of only advancing on a manual tap.
+FIDE Periods now supports a per-move delay (US Chess Delay-style) on non-Fischer periods, fixing the "US 80'/40 + 30' + 30s" preset's bonus, which never applied before.
+Phases gained an "Allow manual skip" setting; without it, tapping only confirms a phase once its own time is already up.
+Fixed several timer modes (Phases, Move Timer Shared, Move Timer Global Shared, Hourglass, Chrono Countdown, Chrono Countup) that bypassed audio/voice feedback entirely.
+Fixed Phases ending the game outright instead of freezing and waiting for confirmation when a non-auto-advancing phase reached zero.

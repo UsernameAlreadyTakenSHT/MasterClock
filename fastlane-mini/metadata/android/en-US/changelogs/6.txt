@@ -1,0 +1,2 @@
+Now shows its own name in the launcher (still as "MasterClock ExtraLight" here; renamed to Mini in the following release).
+Bonus and Move Timer submenus no longer expose Bronstein/US Delay or Save & Cap/Overtime/Global/Shared — only Fisher and Standard, matching this flavor's intended scope.

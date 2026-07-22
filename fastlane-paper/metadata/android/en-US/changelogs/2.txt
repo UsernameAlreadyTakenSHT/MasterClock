@@ -1,0 +1,5 @@
+Dark mode ("Reverse colors") now applies to the navigation and top bar too, not just the screen content.
+Disabled switches are now visibly dimmed instead of looking identical to enabled ones.
+Typography now uses one consistent weight across all text, and the color scheme matches the official Mudita Mindful Design spec.
+Text fields redesigned with an animated focus/error indicator line.
+The version/changelog/credits popup now uses separate Changelog and Credits tabs instead of one long scroll.

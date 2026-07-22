@@ -1,0 +1,1 @@
+Now shows a small "System behavior" section (Sound, Haptic feedback, Keep screen awake) on the Modes page — previously this flavor (then ExtraLight) had zero behavior/audio settings at all.
