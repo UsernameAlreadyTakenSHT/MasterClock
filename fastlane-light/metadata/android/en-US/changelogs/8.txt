@@ -1,0 +1,2 @@
+FIDE Periods now has a real "US Delay" option, distinct from Sudden Death — previously the delay was invisible and uneditable.
+Fixed Reset reverting to a stale random roll after loading a Random/Hidden game from Last Games.

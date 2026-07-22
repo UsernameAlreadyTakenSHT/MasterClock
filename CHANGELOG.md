@@ -1,3 +1,10 @@
+## v0.8.7 — 2026-07-22
+
+### Fixed
+- FIDE Periods now has a real "US Delay" option, distinct from Sudden Death — previously non-Fischer periods silently applied a per-move delay with no way to see or edit it; the editor only offered Sudden Death/Fischer and hid the delay field entirely.
+- Mini no longer shows a Bonus Type or Move Timer Type sub-panel with a single, unchangeable option (Fisher-only / Standard-only) — those panels now only appear when there's an actual choice.
+- Loading a "Last Games" preset for a Random/Hidden game, then hitting Reset, no longer reverts to a stale random roll from an unrelated earlier game — it now keeps the loaded game's own roll.
+
 ## v0.8.6 — 2026-07-21
 
 ### Changed
