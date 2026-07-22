@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-07-21"
+    const val BUILD_DATE = "2026-07-22"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,15 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.7",
+            date = "2026-07-22",
+            notes = listOf(
+                "FIDE Periods now has a real \"US Delay\" option, distinct from Sudden Death.",
+                "Mini no longer shows a Bonus/Move Timer sub-panel with a single, unchangeable option.",
+                "Fixed Reset reverting to a stale random roll after loading a Random/Hidden game from Last Games.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.6",
             date = "2026-07-21",
