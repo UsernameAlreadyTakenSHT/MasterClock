@@ -163,7 +163,7 @@ fun MoreSettingsPage(
         SettingsSection("Board Connection") {
             Column {
                 ToolCard(
-                    title = "Link board (untested yet)",
+                    title = "Link board (not implemented yet)",
                     icon = Icons.Default.Bluetooth,
                     topRounded = true
                 ) {
