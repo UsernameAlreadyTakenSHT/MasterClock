@@ -76,6 +76,12 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
                     onSettingsChanged(currentSettings.copy(playSwitchSound = it))
                 }
                 BehaviorSwitch(
+                    label = "Time's up sound",
+                    checked = currentSettings.tripleBeepTimeUp
+                ) {
+                    onSettingsChanged(currentSettings.copy(tripleBeepTimeUp = it))
+                }
+                BehaviorSwitch(
                     label = "Haptic feedback",
                     checked = currentSettings.hapticFeedback
                 ) {
