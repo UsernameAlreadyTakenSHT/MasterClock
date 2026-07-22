@@ -824,8 +824,13 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         }
     }
     Spacer(Modifier.height(12.dp))
+    val bonusOptionsAllowed = listOf(TimerMode.FISHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY).count { FlavorConfig.isModeAllowed(it) }
+    val moveTimerOptionsAllowed = listOf(
+        TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_SAVE_CAP, TimerMode.MOVE_TIMER_OVERTIME,
+        TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_SHARED, TimerMode.MOVE_TIMER_GLOBAL_SHARED
+    ).count { FlavorConfig.isModeAllowed(it) }
     when (mainMode) {
-        1 -> SettingsSection("Bonus Type") {
+        1 -> if (bonusOptionsAllowed > 1) SettingsSection("Bonus Type") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (FlavorConfig.isModeAllowed(TimerMode.FISHER)) {
                     ModeCard("Fisher", p.mode == TimerMode.FISHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
@@ -838,7 +843,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                 }
             }
         }
-        2 -> SettingsSection("Move Timer Type") {
+        2 -> if (moveTimerOptionsAllowed > 1) SettingsSection("Move Timer Type") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ModeCard("Standard", p.mode == TimerMode.MOVE_TIMER_STANDARD, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
