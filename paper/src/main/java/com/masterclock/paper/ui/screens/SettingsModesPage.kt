@@ -102,13 +102,7 @@ fun ModesSettingsPage(
                         label = "Sound",
                         checked = currentSettings.playSwitchSound
                     ) {
-                        onSettingsChanged(currentSettings.copy(playSwitchSound = it))
-                    }
-                    BehaviorSwitch(
-                        label = "Time's up sound",
-                        checked = currentSettings.tripleBeepTimeUp
-                    ) {
-                        onSettingsChanged(currentSettings.copy(tripleBeepTimeUp = it))
+                        onSettingsChanged(currentSettings.copy(playSwitchSound = it, tripleBeepTimeUp = it))
                     }
                     BehaviorSwitch(
                         label = "Haptic feedback",
