@@ -1170,6 +1170,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             timerJob?.cancel()
             timerJob = null
             if (initialStates != null) {
+                // A "Last Games" preset carries its own already-rolled RANDOM/HIDDEN time in
+                // initialStates -- without updating the cache reset() reuses, Reset would silently
+                // revert to whatever RANDOM/HIDDEN roll was cached from an earlier, unrelated game.
+                val s1 = if (newSettings.differentSettingsPerPlayer) newSettings.p1Custom else newSettings.main
+                if ((s1.mode == TimerMode.RANDOM || s1.mode == TimerMode.HIDDEN) && initialStates.isNotEmpty()) {
+                    val first = initialStates.first()
+                    lastRandomRoll = first.initialTotalTimeMs to first.secondaryTimeMs
+                }
                 _uiState.value = ChessClockState(players = initialStates.map { it.toState() })
             } else {
                 _uiState.value = createInitialState(newSettings)
