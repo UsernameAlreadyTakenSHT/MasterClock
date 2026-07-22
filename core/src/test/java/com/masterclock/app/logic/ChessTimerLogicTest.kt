@@ -189,7 +189,7 @@ class ChessTimerLogicTest {
 
     @Test
     fun `FIDE_PERIODS non-Fischer period applies a per-move delay instead of an increment`() {
-        val period = FidePeriod(timeMs = 100_000, incrementMs = 30_000, movesToNext = 0, isFischer = false)
+        val period = FidePeriod(timeMs = 100_000, incrementMs = 30_000, movesToNext = 0, isFischer = false, hasDelay = true)
         val s = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(period))
         val settings = ChessClockSettings(main = s)
         val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 50_000, currentPeriodIndex = 0)), activePlayer = 1)
@@ -203,8 +203,8 @@ class ChessTimerLogicTest {
     fun `FIDE_PERIODS delay carries over using the new period's own incrementMs after a forced transition`() {
         // Mirrors the "US 80'/40 + 30' + 30s" preset: both periods are non-Fischer with a 30s delay,
         // so the delay should apply from move 1, not only after entering period 2.
-        val period1 = FidePeriod(timeMs = 100_000, incrementMs = 30_000, movesToNext = 1, isFischer = false)
-        val period2 = FidePeriod(timeMs = 5000, incrementMs = 30_000, isFischer = false)
+        val period1 = FidePeriod(timeMs = 100_000, incrementMs = 30_000, movesToNext = 1, isFischer = false, hasDelay = true)
+        val period2 = FidePeriod(timeMs = 5000, incrementMs = 30_000, isFischer = false, hasDelay = true)
         val s = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(period1, period2))
         val settings = ChessClockSettings(main = s, forcedMoveCounter = true)
         val state = ChessClockState(

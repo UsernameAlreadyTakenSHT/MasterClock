@@ -103,6 +103,7 @@ data class FidePeriod(
     val incrementMs: Long = 30_000,
     val movesToNext: Int = 40,
     val isFischer: Boolean = true,
+    val hasDelay: Boolean = false,
 )
 
 @Serializable
@@ -590,10 +591,10 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
                 flagged = true
                 activePeriod = nextPeriod
             }
-            // Non-Fischer periods can still carry a per-move delay (US Chess Delay-style), reusing the
-            // same generic delayRemainingMs mechanism US_DELAY uses -- see AUDIT.md, this incrementMs
-            // value existed on FidePeriod already but was only ever read for the Fischer branch above.
-            val nextDelay = if (!activePeriod.isFischer) activePeriod.incrementMs else 0L
+            // Non-Fischer periods can optionally carry a per-move delay (US Chess Delay-style), reusing the
+            // same generic delayRemainingMs mechanism US_DELAY uses. hasDelay distinguishes plain Sudden
+            // Death (no delay) from US Delay -- both are non-Fischer, only the latter reads incrementMs.
+            val nextDelay = if (!activePeriod.isFischer && activePeriod.hasDelay) activePeriod.incrementMs else 0L
             tempP.copy(timeRemainingMs = nextTime, currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay)
         }
         TimerMode.FAST_MOVE -> {

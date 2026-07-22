@@ -201,22 +201,31 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             SegmentedButton(
-                                selected = !period.isFischer,
+                                selected = !period.isFischer && !period.hasDelay,
                                 onClick = {
-                                    val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = false) }
+                                    val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = false, hasDelay = false) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
-                                shape = SegmentedButtonDefaults.itemShape(0, 2),
+                                shape = SegmentedButtonDefaults.itemShape(0, 3),
                                 label = { Text("Sudden Death") }
                             )
                             SegmentedButton(
                                 selected = period.isFischer,
                                 onClick = {
-                                    val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = true) }
+                                    val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = true, hasDelay = false) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
-                                shape = SegmentedButtonDefaults.itemShape(1, 2),
+                                shape = SegmentedButtonDefaults.itemShape(1, 3),
                                 label = { Text("Fischer") }
+                            )
+                            SegmentedButton(
+                                selected = !period.isFischer && period.hasDelay,
+                                onClick = {
+                                    val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = false, hasDelay = true) }
+                                    onUpdate(p.copy(fidePeriods = newList))
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(2, 3),
+                                label = { Text("US Delay") }
                             )
                         }
 
@@ -227,6 +236,11 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 
                         if (period.isFischer) {
                             HMSInput("Increment", period.incrementMs) { inc ->
+                                val newList = periods.toMutableList().apply { this[index] = period.copy(incrementMs = inc) }
+                                onUpdate(p.copy(fidePeriods = newList))
+                            }
+                        } else if (period.hasDelay) {
+                            HMSInput("Delay", period.incrementMs) { inc ->
                                 val newList = periods.toMutableList().apply { this[index] = period.copy(incrementMs = inc) }
                                 onUpdate(p.copy(fidePeriods = newList))
                             }
