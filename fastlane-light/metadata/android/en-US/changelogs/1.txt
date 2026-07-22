@@ -1,0 +1,1 @@
+Initial release. Full timer mode library (Sudden Death, Fischer, Bronstein, US Delay, Byoyomi, FIDE Periods, Hourglass, Gong, Random/Hidden, move counters, fast-move variants) and a mode guide.

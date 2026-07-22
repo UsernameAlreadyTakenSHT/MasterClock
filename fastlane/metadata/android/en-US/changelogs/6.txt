@@ -1,0 +1,6 @@
+Each flavor now shows its own name in the launcher (e.g. "MasterClock Light") instead of all sharing the plain "MasterClock" label.
+Fixed Move Timer (Global Shared) flagging every player out of time just because one player's own move timer expired — only the shared pool running out affects everyone now.
+Fixed games played in Gong, Phases, Move Timer (Shared), and Chrono (one-for-all) modes silently never being saved to game history.
+Fixed Gong's "time to move" background to use the same active-player green as every other mode.
+Fixed Random/Hidden: hitting Reset now keeps the time already rolled instead of picking a new random value.
+Labeled the Bluetooth board link as untested, since it can't yet receive real moves from a connected board.

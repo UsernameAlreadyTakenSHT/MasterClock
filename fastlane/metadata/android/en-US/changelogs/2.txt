@@ -1,0 +1,1 @@
+The version/changelog/credits popup now uses separate Changelog and Credits tabs instead of one long scroll.
