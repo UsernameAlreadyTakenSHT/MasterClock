@@ -328,10 +328,16 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
             // Whichever level with *ForcesCutoff enabled crossed to zero this tick forces an advance,
             // outermost first (a session/game/round cutoff already implies whatever is nested inside
             // it is being cut short too, so there is never a need to apply more than one per tick).
+            // A LOOP round has no natural turn-exhaustion end (computeOmniAdvance keeps cycling its
+            // turns), so its round clock expiring IS its end — without this, a LOOP round could
+            // literally never finish unless roundForcesCutoff happened to be enabled.
+            val tickGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
+            val tickRound = tickGame.rounds.getOrNull(state.currentRoundIndex) ?: tickGame.rounds.lastOrNull() ?: OmniRoundSettings()
+            val loopRoundEnds = tickRound.roundEndBehavior == RoundEndBehavior.LOOP
             val forceLevel = when {
                 settings.globalForcesCutoff && oldGlobal > 0 && newState.currentGlobalTimeMs <= 0 -> "SESSION"
                 settings.gameForcesCutoff && oldGame > 0 && newState.currentGameTimeMs <= 0 -> "GAME"
-                settings.roundForcesCutoff && oldRound > 0 && newState.currentRoundTimeMs <= 0 -> "ROUND"
+                (settings.roundForcesCutoff || loopRoundEnds) && oldRound > 0 && newState.currentRoundTimeMs <= 0 -> "ROUND"
                 settings.turnForcesCutoff && oldTurn > 0 && newState.currentTurnTimeMs <= 0 -> "TURN"
                 // Either the global phase cutoff or the current phase's own wizard "Auto Advance"
                 // toggle moves to the next phase when this one's clock runs out; without the
