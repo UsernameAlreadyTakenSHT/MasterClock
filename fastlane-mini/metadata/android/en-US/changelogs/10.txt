@@ -1,0 +1,1 @@
+System behavior toggles reordered to match the paper flavor, and the card now has rounded corners like the Complete/Standard flavors.

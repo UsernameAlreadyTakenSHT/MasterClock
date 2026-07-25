@@ -1,3 +1,8 @@
+## v0.8.9 — 2026-07-25
+
+### Fixed
+- Light/Mini's System behavior toggles (Keep screen awake/Sound/Haptic feedback) are now in the same order as paper's, and their card now has rounded corners matching Complete/Standard's style instead of a flat rectangle.
+
 ## v0.8.8 — 2026-07-25
 
 ### Changed
