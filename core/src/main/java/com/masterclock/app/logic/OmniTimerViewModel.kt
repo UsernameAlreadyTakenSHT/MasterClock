@@ -320,7 +320,25 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                     currentGameTimeMs = if (settings.pauseDeductsFromGame) (state.currentGameTimeMs - delta).coerceAtLeast(0) else state.currentGameTimeMs,
                     currentRoundTimeMs = if (settings.pauseDeductsFromRound) (state.currentRoundTimeMs - delta).coerceAtLeast(0) else state.currentRoundTimeMs
                 )
-                if (newTransition <= 0 && settings.transitionType == TransitionType.AUTOMATIC) { newState = newState.copy(isInTransition = false) }
+                // A clock drained to zero by pauseDeductsFrom* during the pause still owes its
+                // end-of-level sound and cutoff; without these checks the crossing happened
+                // outside the main tick path and was never noticed (oldX > 0 was already false
+                // by the time the transition ended).
+                val oldG = state.currentGlobalTimeMs; val oldGa = state.currentGameTimeMs; val oldR = state.currentRoundTimeMs
+                if (oldG > 0 && newState.currentGlobalTimeMs <= 0 && settings.soundGameEnd) soundManager.playTripleBeep()
+                if (oldGa > 0 && newState.currentGameTimeMs <= 0 && settings.soundGameEnd) soundManager.playTripleBeep()
+                if (oldR > 0 && newState.currentRoundTimeMs <= 0 && settings.soundRoundEnd) soundManager.playGong()
+                val pausedGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
+                val pausedRound = pausedGame.rounds.getOrNull(state.currentRoundIndex) ?: pausedGame.rounds.lastOrNull() ?: OmniRoundSettings()
+                val pausedForce = when {
+                    settings.globalForcesCutoff && oldG > 0 && newState.currentGlobalTimeMs <= 0 -> "SESSION"
+                    settings.gameForcesCutoff && oldGa > 0 && newState.currentGameTimeMs <= 0 -> "GAME"
+                    (settings.roundForcesCutoff || pausedRound.roundEndBehavior == RoundEndBehavior.LOOP) && oldR > 0 && newState.currentRoundTimeMs <= 0 -> "ROUND"
+                    else -> null
+                }
+                if (pausedForce != null) {
+                    newState = computeOmniAdvance(newState, settings, pausedForce)
+                } else if (newTransition <= 0 && settings.transitionType == TransitionType.AUTOMATIC) { newState = newState.copy(isInTransition = false) }
                 return@update newState
             }
 
