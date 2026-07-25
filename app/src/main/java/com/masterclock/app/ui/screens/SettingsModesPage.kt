@@ -70,6 +70,12 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
             Spacer(Modifier.height(24.dp))
             SettingsSection("System behavior") {
                 BehaviorSwitch(
+                    label = "Keep screen awake",
+                    checked = currentSettings.forceScreenOn
+                ) {
+                    onSettingsChanged(currentSettings.copy(forceScreenOn = it))
+                }
+                BehaviorSwitch(
                     label = "Sound",
                     checked = currentSettings.playSwitchSound
                 ) {
@@ -80,12 +86,6 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
                     checked = currentSettings.hapticFeedback
                 ) {
                     onSettingsChanged(currentSettings.copy(hapticFeedback = it))
-                }
-                BehaviorSwitch(
-                    label = "Keep screen awake",
-                    checked = currentSettings.forceScreenOn
-                ) {
-                    onSettingsChanged(currentSettings.copy(forceScreenOn = it))
                 }
             }
         }
