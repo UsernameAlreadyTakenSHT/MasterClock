@@ -100,6 +100,10 @@ internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings:
  * is showing, so this is never invoked mid-transition.
  */
 internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceLevel: String? = null): OmniState {
+    // Leftover turn time is banked only on the paths where the turn actually ends
+    // (turn/round/game/session advance). The pure phase-advance return below must NOT apply
+    // this: the turn keeps its remaining time, so crediting it there banked the full remainder
+    // again at every phase boundary — banks ballooned with phases + time bank enabled.
     val updatedBanks = applyOmniTimeBanking(state, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
 
     if (forceLevel == "SESSION") {
@@ -184,7 +188,7 @@ internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceL
             playerTimeBanks = drawnBanks
         )
     }
-    return state.copy(currentPhaseIndex = nextPhaseIdx, currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = nextPhaseIdx), playerTimeBanks = updatedBanks)
+    return state.copy(currentPhaseIndex = nextPhaseIdx, currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = nextPhaseIdx))
 }
 
 class OmniTimerViewModel(application: Application) : AndroidViewModel(application) {
