@@ -201,12 +201,13 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
         }
 
         if (settings.timeBankMode != TimeBankMode.NONE) {
-            // playerTimeBanks used to be computed and never read back or shown anywhere -- see AUDIT.md §7.1.
-            val bankKey = if (settings.timeBankMode == TimeBankMode.GLOBAL_RESERVE) OMNI_GLOBAL_TIME_BANK_KEY else pIdx
-            val bankedMs = state.playerTimeBanks[bankKey] ?: 0L
+            // The current player's own bank is always drawn into their turn clock as the turn
+            // starts, so showing just their entry was permanently 0. Show the total still held
+            // in reserve (other players' banks / the shared pool) instead.
+            val bankedMs = state.playerTimeBanks.values.sum()
             if (bankedMs > 0) {
                 Text(
-                    "+${formatTime(bankedMs)} banked",
+                    "+${formatTime(bankedMs)} in reserve",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = pColor,
