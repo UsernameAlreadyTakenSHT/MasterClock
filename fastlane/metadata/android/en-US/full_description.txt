@@ -21,3 +21,5 @@ Also included:
 * Minimal black-and-white interface
 
 MasterClock collects no data, contains no ads, no trackers, and needs no network connection to work.
+
+For transparency: this app is developed with the help of AI (Claude Code). Review the code accordingly before relying on it.
