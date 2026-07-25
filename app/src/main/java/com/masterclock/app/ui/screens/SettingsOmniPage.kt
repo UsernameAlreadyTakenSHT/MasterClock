@@ -204,7 +204,17 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
     }
 
     SettingsSection("Player Colors") {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        // One row per player would push the rest of the step (Turn Order and its own settings)
+        // far off-screen at high player counts, so the list caps at four visible rows and
+        // scrolls on its own inside the page's scroll.
+        val visibleRows = 4
+        val rowHeight = 40.dp
+        Column(
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .heightIn(max = rowHeight * visibleRows)
+                .verticalScroll(rememberScrollState())
+        ) {
             repeat(settings.numberOfPlayers) { i ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
