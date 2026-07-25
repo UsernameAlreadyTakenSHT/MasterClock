@@ -793,20 +793,28 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
 
     SettingsSection("Select Game Mode") {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (FlavorConfig.isModeAllowed(TimerMode.SUDDEN_DEATH)) {
+            if (FlavorConfig.currentFlavor == AppFlavor.MINI) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
-                }
-                if (FlavorConfig.isModeAllowed(TimerMode.FISHER)) {
                     ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_STANDARD)) {
                     ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                 }
-                if (FlavorConfig.isModeAllowed(TimerMode.BYOYOMI_JAPANESE)) {
-                    ModeCard("Byoyomi", mainMode == 4, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (FlavorConfig.isModeAllowed(TimerMode.SUDDEN_DEATH)) {
+                        ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
+                    }
+                    if (FlavorConfig.isModeAllowed(TimerMode.FISHER)) {
+                        ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_STANDARD)) {
+                        ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
+                    }
+                    if (FlavorConfig.isModeAllowed(TimerMode.BYOYOMI_JAPANESE)) {
+                        ModeCard("Byoyomi", mainMode == 4, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
+                    }
                 }
             }
             if (FlavorConfig.currentFlavor != AppFlavor.MINI) {
