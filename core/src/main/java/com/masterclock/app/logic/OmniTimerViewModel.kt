@@ -60,6 +60,20 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
     }
 }
 
+/**
+ * The current phase's per-phase "Auto Advance" wizard toggle. Resolved with the same
+ * game/round/turn/phase lookup as getOmniDuration's PHASE branch (turns indexed by the raw
+ * turnCounterInRound); defaults to true, matching OmniPhaseSettings, when no phase is configured.
+ */
+internal fun omniPhaseAutoAdvances(settings: OmniSettings, state: OmniState): Boolean {
+    val game = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
+    val round = game.rounds.getOrNull(state.currentRoundIndex) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
+    val turnsList = if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns else List(settings.numberOfPlayers) { OmniTurnSettings(durationMs = round.turnDurationMs) }
+    val turn = turnsList.getOrNull(state.turnCounterInRound)
+    val phaseList = turn?.phases ?: listOf(OmniPhaseSettings())
+    return phaseList.getOrNull(state.currentPhaseIndex)?.autoAdvance ?: true
+}
+
 internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int {
     val numPlayers = settings.numberOfPlayers
     return when (settings.playerOrderType) {
@@ -319,7 +333,11 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                 settings.gameForcesCutoff && oldGame > 0 && newState.currentGameTimeMs <= 0 -> "GAME"
                 settings.roundForcesCutoff && oldRound > 0 && newState.currentRoundTimeMs <= 0 -> "ROUND"
                 settings.turnForcesCutoff && oldTurn > 0 && newState.currentTurnTimeMs <= 0 -> "TURN"
-                settings.phaseForcesCutoff && oldPhase > 0 && newState.currentPhaseTimeMs <= 0 -> "PHASE"
+                // Either the global phase cutoff or the current phase's own wizard "Auto Advance"
+                // toggle moves to the next phase when this one's clock runs out; without the
+                // latter, the per-phase toggle was never read by the engine at all.
+                (settings.phaseForcesCutoff || omniPhaseAutoAdvances(settings, state)) &&
+                    oldPhase > 0 && newState.currentPhaseTimeMs <= 0 -> "PHASE"
                 else -> null
             }
             if (forceLevel != null) {
