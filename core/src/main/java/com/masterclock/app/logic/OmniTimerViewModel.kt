@@ -116,7 +116,10 @@ internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceL
     val currentGameIdx = state.currentGameIndex
     val currentGame = settings.games.getOrNull(currentGameIdx) ?: settings.games.firstOrNull() ?: OmniGameSettings()
     val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
-    val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else List(currentRound.customTurns.size.coerceAtLeast(settings.numberOfPlayers)) { OmniTurnSettings(durationMs = currentRound.turnDurationMs) }
+    // FIXED rounds always have exactly numberOfPlayers turns; customTurns left over from a
+    // previous SEQUENCE configuration must not inflate the count (getOmniDuration, the UI and
+    // omniPhaseAutoAdvances all already assume numberOfPlayers for FIXED).
+    val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else List(settings.numberOfPlayers) { OmniTurnSettings(durationMs = currentRound.turnDurationMs) }
     val currentTurn = turnsList.getOrNull(nextTurnIdx) ?: OmniTurnSettings(durationMs = currentRound.turnDurationMs)
 
     var nextRoundIdx = state.currentRoundIndex
