@@ -210,11 +210,24 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
             _omniSettings.value = savedOmni
             _omniState.value = createInitialOmniState(savedOmni)
 
-            // soundManager.loadSounds() was never called here, so the SoundPool stayed null forever
-            // and playTripleBeep()/playGong()/playShortBeep() were silent no-ops -- see AUDIT.md section 7.1.
-            // Reuses the classic clock's own audio prefs (custom sounds/volume) rather than adding a
-            // separate Omni-specific audio settings page.
-            soundManager.loadSounds(settingsRepo.settingsFlow.first())
+            // Reuses the classic clock's own audio prefs (custom sounds/volume) rather than adding
+            // a separate Omni-specific audio settings page — and keeps following them: loading them
+            // once meant a volume or custom-sound change made in the Audio tab only reached Omni
+            // after an app restart. Same reload-vs-setVolume split as ChessTimerViewModel's
+            // updateSettings (volume alone must not reload samples on every slider drag frame).
+            var prev: ChessClockSettings? = null
+            settingsRepo.settingsFlow.collect { s ->
+                val p = prev
+                if (p == null ||
+                    p.customBeepUri != s.customBeepUri || p.customGongUri != s.customGongUri ||
+                    p.customFinalBeepUri != s.customFinalBeepUri || p.customSwitchUri != s.customSwitchUri ||
+                    p.audioOutputMedia != s.audioOutputMedia) {
+                    soundManager.loadSounds(s)
+                } else if (p.soundsVolume != s.soundsVolume) {
+                    soundManager.setVolume(s.soundsVolume)
+                }
+                prev = s
+            }
         }
     }
 
