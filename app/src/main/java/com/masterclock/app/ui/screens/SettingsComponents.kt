@@ -829,7 +829,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ModeCard("Fast Move", mainMode == 13, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FAST_MOVE)) }
                     if (FlavorConfig.hasOmni()) {
-                        ModeCard("Omni-Timer", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
+                        ModeCard("Omni-Timer (alpha)", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
                     } else {
                         Spacer(Modifier.weight(1f))
                     }
