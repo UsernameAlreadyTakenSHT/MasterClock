@@ -106,7 +106,10 @@ fun OmniHeader(state: OmniState, settings: OmniSettings, onBack: () -> Unit) {
                 OmniProgressBar(label = "Session", timeMs = state.currentGlobalTimeMs, totalMs = settings.globalDurationMs, color = Color(0xFF2196F3))
             }
             if (settings.useGameClock) {
-                OmniProgressBar(label = "Game ${state.currentGameIndex + 1}/${settings.games.size}", timeMs = state.currentGameTimeMs, totalMs = settings.gameDurationMs, color = Color(0xFF4CAF50))
+                // Each game has its own duration (editable per game in the wizard); using the
+                // global gameDurationMs default here made the fraction wrong whenever they differ.
+                val gameTotal = settings.games.getOrNull(state.currentGameIndex)?.durationMs ?: settings.gameDurationMs
+                OmniProgressBar(label = "Game ${state.currentGameIndex + 1}/${settings.games.size}", timeMs = state.currentGameTimeMs, totalMs = gameTotal, color = Color(0xFF4CAF50))
             }
             if (settings.useRoundClock) {
                 val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
