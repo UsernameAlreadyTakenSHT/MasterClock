@@ -1,7 +1,7 @@
 # MasterClock
 
 > [!WARNING]
-> This project is developed with the help of AI (Claude Code). Review the code accordingly before relying on it.
+> For transparency: this project is developed with the help of AI (Claude Code). Review the code accordingly before relying on it.
 
 > [!NOTE]
 > The app is still in testing. Expect bugs, and please report anything you run into.
