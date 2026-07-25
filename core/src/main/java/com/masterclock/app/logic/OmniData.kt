@@ -106,6 +106,15 @@ data class OmniSettings(
     val playerOrderType: PlayerOrderType = PlayerOrderType.LINEAR,
     val playerColors: List<Long> = OMNI_DEFAULT_PLAYER_COLORS,
 
+    // RANDOM turn-order sub-options (ignored by the other order types).
+    // false: shuffle the players once per round, so everyone plays exactly once per round.
+    // true: draw a fresh (weighted) player every turn, so repeats and skipped players happen.
+    val randomEachTurn: Boolean = false,
+    /** Never hand two turns in a row to the same player (ignored with a single player). */
+    val randomAvoidBackToBack: Boolean = true,
+    /** Relative draw weight per player, only used when [randomEachTurn] is on. 0 sits a player out. */
+    val playerWeights: List<Int> = List(OMNI_DEFAULT_PLAYER_COLORS.size) { 1 },
+
     // Base Durations (Defaults)
     val globalDurationMs: Long = 18_000_000L, // 5h
     val gameDurationMs: Long = 2_700_000L,   // 45 min
@@ -172,6 +181,11 @@ data class OmniState(
     // as if it were this raw counter, double-applying the player-order transform for
     // ROTATE/SNAKE (a player could get skipped or replayed). See AUDIT.md §7.1.
     val turnCounterInRound: Int = 0,
+    // The player index to use for each turn of the current round, drawn once when the round
+    // starts (RANDOM order only; empty for the deterministic orders, which compute their player
+    // from the turn/round indices). Keeping the draw in state rather than rolling inside
+    // computeOmniAdvance keeps that function reproducible for a given state.
+    val roundPlayerOrder: List<Int> = emptyList(),
 
     // Buffer States
     val isInTransition: Boolean = false,

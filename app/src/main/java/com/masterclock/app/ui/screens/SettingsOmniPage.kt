@@ -263,7 +263,9 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
                 PlayerOrderType.LINEAR -> "Pattern (3 players): 123, 123, 123"
                 PlayerOrderType.SNAKE -> "Pattern (3 players): 123, 321, 123"
                 PlayerOrderType.ROTATE -> "Pattern (3 players): 123, 231, 312"
-                PlayerOrderType.RANDOM -> "Pattern: Completely random every round"
+                PlayerOrderType.RANDOM ->
+                    if (settings.randomEachTurn) "Pattern: a fresh weighted draw every turn — a player can be skipped or picked twice"
+                    else "Pattern (3 players): 231, 312, 123 — everyone plays once per round"
             }
             Text(
                 text = exampleText,
@@ -271,6 +273,98 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
+
+            if (settings.playerOrderType == PlayerOrderType.RANDOM) {
+                Spacer(Modifier.height(12.dp))
+                RandomOrderOptions(settings, onSettingsChanged)
+            }
+        }
+    }
+}
+
+/** RANDOM-only sub-options, shown under the Turn Order row when that order is selected. */
+@Composable
+private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
+    Column {
+        val drawModes = listOf(false to "Shuffle per round", true to "Draw per turn")
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            drawModes.forEachIndexed { index, (eachTurn, label) ->
+                SegmentedButton(
+                    selected = settings.randomEachTurn == eachTurn,
+                    onClick = { onSettingsChanged(settings.copy(randomEachTurn = eachTurn)) },
+                    shape = SegmentedButtonDefaults.itemShape(index, drawModes.size),
+                    label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                )
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+        BehaviorSwitch(
+            label = "Never the same player twice in a row",
+            checked = settings.randomAvoidBackToBack,
+            enabled = settings.numberOfPlayers > 1,
+            topRounded = true,
+            bottomRounded = true
+        ) { onSettingsChanged(settings.copy(randomAvoidBackToBack = it)) }
+
+        // Weights only mean something when each turn is its own draw: a per-round shuffle gives
+        // everyone exactly one turn regardless of weight.
+        if (settings.randomEachTurn) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Draw weight",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            Text(
+                "Higher means picked more often; 0 sits the player out.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+            )
+            Column(
+                // Taller rows than the color list: these are sized by their +/- IconButtons.
+                modifier = Modifier
+                    .heightIn(max = 56.dp * 4)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                repeat(settings.numberOfPlayers) { i ->
+                    val weight = (settings.playerWeights.getOrNull(i) ?: 1).coerceAtLeast(0)
+                    fun setWeight(newWeight: Int) {
+                        val weights = settings.playerWeights.toMutableList()
+                        while (weights.size < OMNI_DEFAULT_PLAYER_COLORS.size) weights.add(1)
+                        weights[i] = newWeight.coerceIn(0, 9)
+                        onSettingsChanged(settings.copy(playerWeights = weights))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "P${i + 1}",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color(omniPlayerColor(settings, i)),
+                            modifier = Modifier.width(36.dp)
+                        )
+                        IconButton(onClick = { setWeight(weight - 1) }, enabled = weight > 0) {
+                            Icon(Icons.Default.Remove, "Lower P${i + 1} weight")
+                        }
+                        Text(
+                            "$weight",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (weight == 0) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f) else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.width(24.dp)
+                        )
+                        IconButton(onClick = { setWeight(weight + 1) }, enabled = weight < 9) {
+                            Icon(Icons.Default.Add, "Raise P${i + 1} weight")
+                        }
+                    }
+                }
+            }
         }
     }
 }
