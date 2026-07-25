@@ -63,8 +63,6 @@ data class OmniGameSettings(
  */
 @Serializable
 data class OmniSettings(
-    val isEnabled: Boolean = false,
-    
     // Hierarchy activation
     val useGlobalClock: Boolean = false,
     val useGameClock: Boolean = true,
