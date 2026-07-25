@@ -1143,14 +1143,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         _settings.value = newSettings
         
         scoreboardToImport?.let { _scoreboard.value = it }
+        // Volume changes only need the play() volume updated, not a full sample reload:
+        // the Slider fires per drag-frame, and reloading on every frame accumulated
+        // duplicate samples in the SoundPool until load() started failing silently.
+        // (voiceVolume needs nothing at all — it's passed per-speak call.)
         if (oldSettings.customBeepUri != newSettings.customBeepUri ||
             oldSettings.customGongUri != newSettings.customGongUri ||
             oldSettings.customFinalBeepUri != newSettings.customFinalBeepUri ||
             oldSettings.customSwitchUri != newSettings.customSwitchUri ||
-            oldSettings.soundsVolume != newSettings.soundsVolume ||
-            oldSettings.voiceVolume != newSettings.voiceVolume ||
             oldSettings.audioOutputMedia != newSettings.audioOutputMedia) {
             soundManager.loadSounds(newSettings)
+        } else if (oldSettings.soundsVolume != newSettings.soundsVolume) {
+            soundManager.setVolume(newSettings.soundsVolume)
         }
 
         val coreChanged = oldSettings.main != newSettings.main ||

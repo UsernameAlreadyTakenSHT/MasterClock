@@ -47,16 +47,38 @@ class SoundManager(private val context: Context) {
                 if (pendingPlayIds.remove(sampleId)) {
                     pool.play(sampleId, currentVolume, currentVolume, 1, 0, 1f)
                 }
+            } else {
+                // A failed load leaves its id permanently unplayable; without this branch the
+                // failure is invisible (play() just defers forever on an id that never loads).
+                pendingPlayIds.remove(sampleId)
+                Log.e("SoundManager", "Sound load failed: sampleId=$sampleId status=$status")
             }
         }
 
         currentMediaStream = useMedia
     }
 
+    fun setVolume(volume: Float) {
+        currentVolume = volume
+    }
+
     fun loadSounds(settings: ChessClockSettings) {
         initSoundPool(settings.audioOutputMedia)
         currentVolume = settings.soundsVolume
-        
+
+        // If the pool survived initSoundPool's early return, the previous samples are still
+        // loaded in it; unload them or repeated loadSounds() calls accumulate duplicates until
+        // SoundPool.load() starts failing.
+        soundPool?.let { pool ->
+            for (oldId in intArrayOf(beepId, gongId, finalBeepId, switchId)) {
+                if (oldId > 0) {
+                    pool.unload(oldId)
+                    loadedIds.remove(oldId)
+                    pendingPlayIds.remove(oldId)
+                }
+            }
+        }
+
         beepId = loadSound(settings.customBeepUri, R.raw.beep)
         gongId = loadSound(settings.customGongUri, R.raw.gong)
         finalBeepId = loadSound(settings.customFinalBeepUri, R.raw.finalbeep)
@@ -83,7 +105,7 @@ class SoundManager(private val context: Context) {
     fun playTripleBeep() = play(finalBeepId)
     fun playGong() = play(gongId)
     fun playSwitch() {
-        if (switchId == -1) {
+        if (switchId <= 0) {
             Log.w("SoundManager", "Switch sound not loaded, attempting reload...")
             switchId = loadSound(null, R.raw.switch_sound)
         }
@@ -92,7 +114,8 @@ class SoundManager(private val context: Context) {
 
     private fun play(soundId: Int) {
         val pool = soundPool
-        if (pool != null && soundId != -1) {
+        // SoundPool.load() returns 0 on failure, not -1, so both are invalid ids here.
+        if (pool != null && soundId > 0) {
             if (soundId !in loadedIds) {
                 // Still decoding; play it as soon as onLoadComplete fires instead of dropping it.
                 pendingPlayIds.add(soundId)

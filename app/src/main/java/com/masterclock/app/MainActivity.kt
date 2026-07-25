@@ -3,6 +3,7 @@ package com.masterclock.app
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
@@ -47,7 +48,12 @@ import kotlin.time.Duration.Companion.milliseconds
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
+        // Sounds play on the media stream (USAGE_MEDIA) by default; without this the hardware
+        // volume rocker adjusts the ring stream while in the app, so a muted media stream
+        // silences every sound with no way to notice or fix it from inside the app.
+        volumeControlStream = AudioManager.STREAM_MUSIC
+
         // Initialize Core Flavor
         FlavorConfig.currentFlavor = when {
             BuildConfig.FLAVOR.equals("complete", ignoreCase = true) -> AppFlavor.COMPLETE
