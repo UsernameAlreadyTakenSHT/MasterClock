@@ -80,7 +80,11 @@ fun SettingsOmniPage(
                 }
             )
         },
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
+        // This Scaffold is nested inside SettingsScreen's, which already applied the status-bar
+        // and top-app-bar insets; without this it applies the top inset a second time and leaves
+        // a large empty gap between the "Omni" title and the step progress bar.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             WizardProgressBar(currentStep, totalSteps)
@@ -191,47 +195,52 @@ fun WizardNavigationButtons(
 fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
     Text("Players & Order", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
-    SettingsSection("Players Count") {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) {
-            Text("Count: ${settings.numberOfPlayers}", fontWeight = FontWeight.Bold)
-            Slider(
-                value = settings.numberOfPlayers.toFloat(),
-                onValueChange = { onSettingsChanged(settings.copy(numberOfPlayers = it.toInt())) },
-                valueRange = 1f..20f,
-                steps = 19
-            )
-        }
+    // No "Players Count"/"Player Colors" section headers: the count line and the P1..Pn color
+    // rows say what they are. The count doubles as the heading, so it takes the section-title
+    // style SettingsSection would have used.
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(
+            "Count: ${settings.numberOfPlayers}",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+        Slider(
+            value = settings.numberOfPlayers.toFloat(),
+            onValueChange = { onSettingsChanged(settings.copy(numberOfPlayers = it.toInt())) },
+            valueRange = 1f..20f,
+            steps = 19
+        )
     }
 
-    SettingsSection("Player Colors") {
-        // One row per player would push the rest of the step (Turn Order and its own settings)
-        // far off-screen at high player counts, so the list caps at four visible rows and
-        // scrolls on its own inside the page's scroll.
-        val visibleRows = 4
-        val rowHeight = 40.dp
-        Column(
-            modifier = Modifier
-                .padding(vertical = 4.dp)
-                .heightIn(max = rowHeight * visibleRows)
-                .verticalScroll(rememberScrollState())
-        ) {
-            repeat(settings.numberOfPlayers) { i ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "P${i + 1}",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color(omniPlayerColor(settings, i)),
-                        modifier = Modifier.width(36.dp)
-                    )
-                    ColorRow(omniPlayerColor(settings, i), compact = true) { newColor ->
-                        // Older stored settings may hold a shorter list than the defaults; pad
-                        // from the defaults before writing the picked index.
-                        val colors = settings.playerColors.toMutableList()
-                        while (colors.size < OMNI_DEFAULT_PLAYER_COLORS.size) colors.add(OMNI_DEFAULT_PLAYER_COLORS[colors.size])
-                        colors[i] = newColor
-                        onSettingsChanged(settings.copy(playerColors = colors))
-                    }
+    // One row per player would push the rest of the step (Turn Order and its own settings) far
+    // off-screen at high player counts, so the list caps at four visible rows and scrolls on its
+    // own inside the page's scroll.
+    val visibleColorRows = 4
+    val colorRowHeight = 40.dp
+    Column(
+        modifier = Modifier
+            .padding(vertical = 4.dp)
+            .heightIn(max = colorRowHeight * visibleColorRows)
+            .verticalScroll(rememberScrollState())
+    ) {
+        repeat(settings.numberOfPlayers) { i ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "P${i + 1}",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color(omniPlayerColor(settings, i)),
+                    modifier = Modifier.width(36.dp)
+                )
+                ColorRow(omniPlayerColor(settings, i), compact = true) { newColor ->
+                    // Older stored settings may hold a shorter list than the defaults; pad
+                    // from the defaults before writing the picked index.
+                    val colors = settings.playerColors.toMutableList()
+                    while (colors.size < OMNI_DEFAULT_PLAYER_COLORS.size) colors.add(OMNI_DEFAULT_PLAYER_COLORS[colors.size])
+                    colors[i] = newColor
+                    onSettingsChanged(settings.copy(playerColors = colors))
                 }
             }
         }
