@@ -230,7 +230,6 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun startOmni() {
         val settings = _omniSettings.value
-        _omniSettings.update { it.copy(isEnabled = true) }
 
         if (!_omniState.value.hasStarted) {
             val initial = createInitialOmniState(settings)
