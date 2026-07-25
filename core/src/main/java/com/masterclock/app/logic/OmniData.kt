@@ -108,12 +108,11 @@ data class OmniSettings(
 
     // RANDOM turn-order sub-options (ignored by the other order types).
     // false: shuffle the players once per round, so everyone plays exactly once per round.
-    // true: draw a fresh (weighted) player every turn, so repeats and skipped players happen.
+    // true: draw a fresh player every turn -- repeats and skipped players happen, but the draw
+    // self-balances (see generateOmniRoundOrder) so gaps close instead of accumulating.
     val randomEachTurn: Boolean = false,
     /** Never hand two turns in a row to the same player (ignored with a single player). */
     val randomAvoidBackToBack: Boolean = true,
-    /** Relative draw weight per player, only used when [randomEachTurn] is on. 0 sits a player out. */
-    val playerWeights: List<Int> = List(OMNI_DEFAULT_PLAYER_COLORS.size) { 1 },
 
     // Base Durations (Defaults)
     val globalDurationMs: Long = 18_000_000L, // 5h

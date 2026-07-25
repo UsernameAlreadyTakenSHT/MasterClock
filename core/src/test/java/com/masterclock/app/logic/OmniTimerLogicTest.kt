@@ -226,13 +226,11 @@ class OmniTimerLogicTest {
         players: Int,
         eachTurn: Boolean = false,
         avoidBackToBack: Boolean = true,
-        weights: List<Int> = List(20) { 1 },
     ) = OmniSettings(
         numberOfPlayers = players,
         playerOrderType = PlayerOrderType.RANDOM,
         randomEachTurn = eachTurn,
         randomAvoidBackToBack = avoidBackToBack,
-        playerWeights = weights,
     )
 
     @Test
@@ -291,34 +289,52 @@ class OmniTimerLogicTest {
     }
 
     @Test
-    fun `per-turn draw respects weights`() {
-        // P0 weighted 9, P1 and P2 weighted 1: P0 must clearly dominate. Back-to-back is off so
-        // the weights alone drive the draw.
-        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, weights = listOf(9, 1, 1))
-        val order = generateOmniRoundOrder(settings, turnCount = 600, previousPlayer = null, random = Random(7))
-        val p0 = order.count { it == 0 }
-        assertTrue("P0 drawn $p0/600 times, expected well over half", p0 > 360)
-        assertTrue(order.contains(1) && order.contains(2))
+    fun `per-turn draw self-balances instead of letting gaps accumulate`() {
+        // A plain uniform draw over 300 turns would routinely spread the counts by 30+; the
+        // deficit weighting has to hold them far tighter than that.
+        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false)
+        repeat(20) { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 300, previousPlayer = null, random = Random(seed))
+            val counts = (0 until 3).map { p -> order.count { it == p } }
+            assertTrue("seed $seed spread counts as $counts", counts.max() - counts.min() <= 6)
+        }
     }
 
     @Test
-    fun `a zero weight sits that player out`() {
-        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, weights = listOf(0, 1, 1))
-        val order = generateOmniRoundOrder(settings, turnCount = 200, previousPlayer = null, random = Random(3))
-        assertFalse(order.contains(0))
+    fun `per-turn draw still allows the repeats and skips a shuffle cannot produce`() {
+        // The point of this mode: a player may take two turns in a row (with back-to-back
+        // blocking off) and another may sit a short round out entirely.
+        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false)
+        val sawRepeat = (0 until 200).any { seed ->
+            generateOmniRoundOrder(settings, turnCount = 6, previousPlayer = null, random = Random(seed))
+                .zipWithNext().any { (a, b) -> a == b }
+        }
+        val sawSkip = (0 until 200).any { seed ->
+            generateOmniRoundOrder(settings, turnCount = 3, previousPlayer = null, random = Random(seed)).toSet().size < 3
+        }
+        assertTrue(sawRepeat)
+        assertTrue(sawSkip)
     }
 
     @Test
-    fun `all-zero weights fall back to an even draw instead of drawing nothing`() {
-        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, weights = listOf(0, 0, 0))
-        val order = generateOmniRoundOrder(settings, turnCount = 90, previousPlayer = null, random = Random(5))
-        assertEquals(90, order.size)
-        assertEquals((0 until 3).toSet(), order.toSet())
+    fun `a player who just played is less likely to be drawn again`() {
+        // First turn is even, so P0 leading after it must make P0 the rarest pick on turn two.
+        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false)
+        var p0Twice = 0
+        val trials = 3000
+        repeat(trials) { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 2, previousPlayer = null, random = Random(seed))
+            if (order[0] == 0 && order[1] == 0) p0Twice++
+        }
+        // P0 opens ~1/3 of the time, and is then weighted 1 against 2+2 for the others, so a
+        // double is ~1/3 * 1/5 ≈ 6.7% -- well under the 1/9 ≈ 11% an unweighted draw would give.
+        val rate = p0Twice.toDouble() / trials
+        assertTrue("P0 doubled $rate of the time, expected around 0.067", rate in 0.04..0.09)
     }
 
     @Test
     fun `per-turn draw still honours avoidBackToBack`() {
-        val settings = randomSettings(players = 3, eachTurn = true, weights = listOf(9, 1, 1))
+        val settings = randomSettings(players = 3, eachTurn = true)
         repeat(20) { seed ->
             val order = generateOmniRoundOrder(settings, turnCount = 60, previousPlayer = null, random = Random(seed))
             order.zipWithNext { a, b -> assertNotEquals(a, b) }
