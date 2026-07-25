@@ -151,16 +151,9 @@ fun LaunchCountdownOverlay(timeRemainingMs: Long) {
 
 @Composable
 fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () -> Unit) {
-    val playerColors = listOf(
-        Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF673AB7), Color(0xFF3F51B5),
-        Color(0xFF2196F3), Color(0xFF03A9F4), Color(0xFF00BCD4), Color(0xFF009688),
-        Color(0xFF4CAF50), Color(0xFF8BC34A), Color(0xFFCDDC39), Color(0xFFFFEB3B),
-        Color(0xFFFFC107), Color(0xFFFF9800), Color(0xFFFF5722), Color(0xFF795548),
-        Color(0xFF9E9E9E), Color(0xFF607D8B), Color(0xFF333333), Color(0xFF000000)
-    )
     val numPlayers = settings.numberOfPlayers.coerceAtLeast(1)
     val pIdx = state.currentPlayerIndex % numPlayers
-    val pColor = playerColors.getOrElse(pIdx) { MaterialTheme.colorScheme.primary }
+    val pColor = Color(omniPlayerColor(settings, pIdx))
 
     // turnCounterInRound is the raw, ever-incrementing turn count within the round; currentPlayerIndex
     // is always already in [0, numPlayers) so dividing it here was always 0 ("TURN 1" forever) -- see
