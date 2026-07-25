@@ -888,12 +888,10 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
             }
         }
         4 -> SettingsSection("Byoyomi Type") {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ModeCard("Japanese", p.mode == TimerMode.BYOYOMI_JAPANESE, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
-                    ModeCard("Canadian", p.mode == TimerMode.BYOYOMI_CANADIAN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_CANADIAN)) }
-                }
-                ModeCard("Progressive", p.mode == TimerMode.BYOYOMI_PROGRESSIVE, compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_PROGRESSIVE)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ModeCard("Japanese", p.mode == TimerMode.BYOYOMI_JAPANESE, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
+                ModeCard("Canadian", p.mode == TimerMode.BYOYOMI_CANADIAN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_CANADIAN)) }
+                ModeCard("Progressive", p.mode == TimerMode.BYOYOMI_PROGRESSIVE, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_PROGRESSIVE)) }
             }
         }
         5 -> SettingsSection("Chrono Type") {
