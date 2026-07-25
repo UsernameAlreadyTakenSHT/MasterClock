@@ -1,0 +1,3 @@
+The "Sound" toggle now also controls the time's-up/flag sound, not just the player-switch sound.
+Omni-Timer is now labeled "(alpha)" in the mode picker.
+Fixed Byoyomi's Japanese/Canadian/Progressive sub-modes splitting onto two rows instead of one.

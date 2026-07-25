@@ -1,0 +1,3 @@
+Omni-Timer is now labeled "(alpha)" in the mode picker.
+Fixed Byoyomi's Japanese/Canadian/Progressive sub-modes splitting onto two rows instead of one.
+"Link board" now reads "not implemented yet" instead of "untested yet".
