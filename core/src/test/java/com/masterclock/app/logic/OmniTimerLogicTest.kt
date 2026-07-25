@@ -2,6 +2,7 @@ package com.masterclock.app.logic
 
 import org.junit.Test
 import org.junit.Assert.*
+import kotlin.random.Random
 
 /**
  * Exercises [computeOmniAdvance], the pure state-transition function extracted from
@@ -218,6 +219,149 @@ class OmniTimerLogicTest {
     }
 
     // --- Per-phase Auto Advance wizard toggle resolution ---
+
+    // --- RANDOM turn order ---
+
+    private fun randomSettings(
+        players: Int,
+        eachTurn: Boolean = false,
+        avoidBackToBack: Boolean = true,
+        weights: List<Int> = List(20) { 1 },
+    ) = OmniSettings(
+        numberOfPlayers = players,
+        playerOrderType = PlayerOrderType.RANDOM,
+        randomEachTurn = eachTurn,
+        randomAvoidBackToBack = avoidBackToBack,
+        playerWeights = weights,
+    )
+
+    @Test
+    fun `shuffle mode gives every player exactly one turn per round`() {
+        val settings = randomSettings(players = 5)
+        repeat(50) { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 5, previousPlayer = null, random = Random(seed))
+            assertEquals(5, order.size)
+            assertEquals((0 until 5).toSet(), order.toSet())
+        }
+    }
+
+    @Test
+    fun `shuffle mode fills rounds holding more turns than players with whole fresh passes`() {
+        val settings = randomSettings(players = 3)
+        val order = generateOmniRoundOrder(settings, turnCount = 7, previousPlayer = null, random = Random(1))
+        assertEquals(7, order.size)
+        // Two complete passes plus one turn of a third.
+        assertEquals((0 until 3).toSet(), order.subList(0, 3).toSet())
+        assertEquals((0 until 3).toSet(), order.subList(3, 6).toSet())
+    }
+
+    @Test
+    fun `avoidBackToBack keeps the round from opening on the player who just played`() {
+        val settings = randomSettings(players = 4)
+        repeat(100) { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 4, previousPlayer = 2, random = Random(seed))
+            assertNotEquals(2, order.first())
+            assertEquals((0 until 4).toSet(), order.toSet())
+        }
+    }
+
+    @Test
+    fun `avoidBackToBack also holds between the passes filling a longer round`() {
+        val settings = randomSettings(players = 3)
+        repeat(100) { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 9, previousPlayer = null, random = Random(seed))
+            order.zipWithNext { a, b -> assertNotEquals(a, b) }
+        }
+    }
+
+    @Test
+    fun `avoidBackToBack off allows a repeat across the boundary`() {
+        val settings = randomSettings(players = 3, avoidBackToBack = false)
+        val opensOnPreviousPlayer = (0 until 200).any { seed ->
+            generateOmniRoundOrder(settings, turnCount = 3, previousPlayer = 1, random = Random(seed)).first() == 1
+        }
+        assertTrue(opensOnPreviousPlayer)
+    }
+
+    @Test
+    fun `a single player is unaffected by avoidBackToBack`() {
+        val settings = randomSettings(players = 1)
+        val order = generateOmniRoundOrder(settings, turnCount = 3, previousPlayer = 0, random = Random(0))
+        assertEquals(listOf(0, 0, 0), order)
+    }
+
+    @Test
+    fun `per-turn draw respects weights`() {
+        // P0 weighted 9, P1 and P2 weighted 1: P0 must clearly dominate. Back-to-back is off so
+        // the weights alone drive the draw.
+        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, weights = listOf(9, 1, 1))
+        val order = generateOmniRoundOrder(settings, turnCount = 600, previousPlayer = null, random = Random(7))
+        val p0 = order.count { it == 0 }
+        assertTrue("P0 drawn $p0/600 times, expected well over half", p0 > 360)
+        assertTrue(order.contains(1) && order.contains(2))
+    }
+
+    @Test
+    fun `a zero weight sits that player out`() {
+        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, weights = listOf(0, 1, 1))
+        val order = generateOmniRoundOrder(settings, turnCount = 200, previousPlayer = null, random = Random(3))
+        assertFalse(order.contains(0))
+    }
+
+    @Test
+    fun `all-zero weights fall back to an even draw instead of drawing nothing`() {
+        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, weights = listOf(0, 0, 0))
+        val order = generateOmniRoundOrder(settings, turnCount = 90, previousPlayer = null, random = Random(5))
+        assertEquals(90, order.size)
+        assertEquals((0 until 3).toSet(), order.toSet())
+    }
+
+    @Test
+    fun `per-turn draw still honours avoidBackToBack`() {
+        val settings = randomSettings(players = 3, eachTurn = true, weights = listOf(9, 1, 1))
+        repeat(20) { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 60, previousPlayer = null, random = Random(seed))
+            order.zipWithNext { a, b -> assertNotEquals(a, b) }
+        }
+    }
+
+    @Test
+    fun `advancing a turn follows the order drawn for the round`() {
+        val settings = randomSettings(players = 4)
+        val order = listOf(2, 0, 3, 1)
+        val state = OmniState(turnCounterInRound = 0, currentPlayerIndex = 2, roundPlayerOrder = order)
+
+        val next = computeOmniAdvance(state, settings)
+        assertEquals(1, next.turnCounterInRound)
+        assertEquals(0, next.currentPlayerIndex)
+        // Same round, so the drawn order carries over untouched.
+        assertEquals(order, next.roundPlayerOrder)
+    }
+
+    @Test
+    fun `advancing a round draws a new order and starts on its first player`() {
+        val settings = randomSettings(players = 3).copy(
+            games = listOf(OmniGameSettings(rounds = listOf(OmniRoundSettings(), OmniRoundSettings())))
+        )
+        val state = OmniState(turnCounterInRound = 2, currentPlayerIndex = 1, roundPlayerOrder = listOf(1, 0, 2))
+
+        val next = computeOmniAdvance(state, settings, random = Random(11))
+        assertEquals("ROUND", next.transitionLabel)
+        assertEquals(3, next.roundPlayerOrder.size)
+        assertEquals((0 until 3).toSet(), next.roundPlayerOrder.toSet())
+        assertEquals(next.roundPlayerOrder.first(), next.currentPlayerIndex)
+        assertNotEquals(1, next.currentPlayerIndex) // avoidBackToBack across the round boundary
+    }
+
+    @Test
+    fun `the deterministic orders keep no drawn order`() {
+        val settings = OmniSettings(numberOfPlayers = 3, playerOrderType = PlayerOrderType.LINEAR)
+        val state = OmniState(turnCounterInRound = 0, currentPlayerIndex = 0)
+
+        val next = computeOmniAdvance(state, settings)
+        assertTrue(next.roundPlayerOrder.isEmpty())
+        assertEquals(1, next.currentPlayerIndex)
+    }
 
     @Test
     fun `omniPhaseAutoAdvances reads the configured phase's toggle and defaults to true`() {
