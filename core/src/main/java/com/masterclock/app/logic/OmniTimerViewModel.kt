@@ -151,6 +151,7 @@ internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceL
                         currentPhaseIndex = 0, turnCounterInRound = 0, isInTransition = true, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME",
                         currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = nextFinalGameIdx, roundIdx = 0),
                         currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
+                        currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0, phaseIdx = 0),
                         currentGameTimeMs = settings.games.getOrNull(nextFinalGameIdx)?.durationMs ?: settings.gameDurationMs,
                         playerTimeBanks = drawnBanks
                     )
@@ -164,6 +165,7 @@ internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceL
                     isInTransition = true, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND",
                     currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
                     currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
+                    currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = 0),
                     playerTimeBanks = drawnBanks
                 )
             }
@@ -175,6 +177,10 @@ internal fun computeOmniAdvance(state: OmniState, settings: OmniSettings, forceL
             currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx, turnCounterInRound = nextTurnIdx, isInTransition = true,
             transitionTimeRemainingMs = settings.interTurnPauseMs, transitionLabel = "TURN",
             currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
+            // Without this, the new turn inherited the old turn's spent phase clock (usually 0):
+            // the phase display froze at 00:00 for the rest of the session and the <10s
+            // fast-tick path kept the ticker at 10ms permanently.
+            currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = 0),
             playerTimeBanks = drawnBanks
         )
     }
