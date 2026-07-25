@@ -57,7 +57,16 @@ fun OmniTimerScreen(
                         LaunchCountdownOverlay(state.launchTimeRemainingMs)
                     }
                     state.isInTransition -> {
-                        TransitionOverlay(state, settings, onReady = { viewModel.confirmOmniReady() })
+                        TransitionOverlay(state, settings, onReady = {
+                            if (state.transitionLabel == "SESSION") {
+                                // "CLOSE SESSION": the session is over — reset to a fresh initial
+                                // state so Play starts a new session, instead of just clearing the
+                                // overlay and letting Play "resume" a dead one with all clocks at 0.
+                                viewModel.resetOmni()
+                            } else {
+                                viewModel.confirmOmniReady()
+                            }
+                        })
                     }
                     else -> {
                         ActiveTimerLayout(
