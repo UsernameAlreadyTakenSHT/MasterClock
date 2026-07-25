@@ -101,7 +101,7 @@ internal fun omniTurnCount(settings: OmniSettings, gameIdx: Int, roundIdx: Int):
  * dropping, so gaps close instead of accumulating over a long round.
  */
 private fun adaptivePick(turnsTaken: IntArray, exclude: Int?, random: Random): Int {
-    val candidates = turnsTaken.indices.filter { it != exclude }.ifEmpty { turnsTaken.indices.toList() }
+    val candidates = drawCandidates(turnsTaken.size, exclude)
     val mostPlayed = turnsTaken.max()
     val weights = candidates.map { 1 + (mostPlayed - turnsTaken[it]) }
     var ticket = random.nextInt(weights.sum())
@@ -112,14 +112,24 @@ private fun adaptivePick(turnsTaken: IntArray, exclude: Int?, random: Random): I
     return candidates.last()
 }
 
+/** An even draw: every eligible player equally likely, however much they have already played. */
+private fun uniformPick(numPlayers: Int, exclude: Int?, random: Random): Int {
+    val candidates = drawCandidates(numPlayers, exclude)
+    return candidates[random.nextInt(candidates.size)]
+}
+
+/** Excluding the previous player must never empty the pool (it would at a single player). */
+private fun drawCandidates(numPlayers: Int, exclude: Int?): List<Int> =
+    (0 until numPlayers).filter { it != exclude }.ifEmpty { (0 until numPlayers).toList() }
+
 /**
  * Draws the player for each turn of one round under [PlayerOrderType.RANDOM].
  *
  * Two shapes, per [OmniSettings.randomEachTurn]: a shuffled permutation (everyone plays once per
- * round, repeated in fresh blocks if the round holds more turns than there are players), or a
- * self-balancing draw per turn (see [adaptivePick]), whose turn counts start fresh each round.
- * [previousPlayer] is the player who just played, used to honour
- * [OmniSettings.randomAvoidBackToBack] across the round boundary.
+ * round, repeated in fresh blocks if the round holds more turns than there are players), or a draw
+ * per turn -- self-balancing via [adaptivePick] (turn counts start fresh each round) or an even
+ * [uniformPick], per [OmniSettings.randomAutoBalance]. [previousPlayer] is the player who just
+ * played, used to honour [OmniSettings.randomAvoidBackToBack] across the round boundary.
  */
 internal fun generateOmniRoundOrder(
     settings: OmniSettings,
@@ -136,7 +146,10 @@ internal fun generateOmniRoundOrder(
     if (settings.randomEachTurn) {
         val turnsTaken = IntArray(numPlayers)
         repeat(turnCount) {
-            val pick = adaptivePick(turnsTaken, if (avoidRepeat) last else null, random)
+            val exclude = if (avoidRepeat) last else null
+            val pick =
+                if (settings.randomAutoBalance) adaptivePick(turnsTaken, exclude, random)
+                else uniformPick(numPlayers, exclude, random)
             order.add(pick)
             turnsTaken[pick]++
             last = pick

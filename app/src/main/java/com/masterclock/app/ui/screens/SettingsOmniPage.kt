@@ -304,12 +304,24 @@ private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniS
             checked = settings.randomAvoidBackToBack,
             enabled = settings.numberOfPlayers > 1,
             topRounded = true,
-            bottomRounded = true
+            bottomRounded = !settings.randomEachTurn
         ) { onSettingsChanged(settings.copy(randomAvoidBackToBack = it)) }
 
+        // Balancing only applies to the per-turn draw: a per-round shuffle is already even by
+        // construction, everyone taking exactly one turn.
         if (settings.randomEachTurn) {
+            BehaviorSwitch(
+                label = "Balance the draw",
+                checked = settings.randomAutoBalance,
+                bottomRounded = true
+            ) { onSettingsChanged(settings.copy(randomAutoBalance = it)) }
+
             Text(
-                "The draw balances itself: whoever is behind on turns is likelier to come up next.",
+                text = if (settings.randomAutoBalance) {
+                    "Whoever is behind on turns is likelier to come up next, so gaps close instead of piling up."
+                } else {
+                    "Every player is equally likely every turn — one of them really can take most of a round."
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(start = 4.dp, top = 8.dp)

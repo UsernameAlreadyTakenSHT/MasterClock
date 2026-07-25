@@ -108,11 +108,16 @@ data class OmniSettings(
 
     // RANDOM turn-order sub-options (ignored by the other order types).
     // false: shuffle the players once per round, so everyone plays exactly once per round.
-    // true: draw a fresh player every turn -- repeats and skipped players happen, but the draw
-    // self-balances (see generateOmniRoundOrder) so gaps close instead of accumulating.
+    // true: draw a fresh player every turn -- repeats and skipped players happen.
     val randomEachTurn: Boolean = false,
     /** Never hand two turns in a row to the same player (ignored with a single player). */
     val randomAvoidBackToBack: Boolean = true,
+    /**
+     * Only for [randomEachTurn]: tilt each draw towards whoever is behind on turns, so gaps close
+     * instead of accumulating. Off gives an even draw every turn, where one player really can take
+     * most of a round.
+     */
+    val randomAutoBalance: Boolean = true,
 
     // Base Durations (Defaults)
     val globalDurationMs: Long = 18_000_000L, // 5h
