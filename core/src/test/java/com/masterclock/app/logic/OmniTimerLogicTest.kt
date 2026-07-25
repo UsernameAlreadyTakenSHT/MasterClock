@@ -226,11 +226,13 @@ class OmniTimerLogicTest {
         players: Int,
         eachTurn: Boolean = false,
         avoidBackToBack: Boolean = true,
+        autoBalance: Boolean = true,
     ) = OmniSettings(
         numberOfPlayers = players,
         playerOrderType = PlayerOrderType.RANDOM,
         randomEachTurn = eachTurn,
         randomAvoidBackToBack = avoidBackToBack,
+        randomAutoBalance = autoBalance,
     )
 
     @Test
@@ -335,6 +337,40 @@ class OmniTimerLogicTest {
     @Test
     fun `per-turn draw still honours avoidBackToBack`() {
         val settings = randomSettings(players = 3, eachTurn = true)
+        repeat(20) { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 60, previousPlayer = null, random = Random(seed))
+            order.zipWithNext { a, b -> assertNotEquals(a, b) }
+        }
+    }
+
+    @Test
+    fun `balancing off leaves the draw even and free to drift`() {
+        val balanced = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, autoBalance = true)
+        val even = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, autoBalance = false)
+
+        fun worstSpread(settings: OmniSettings) = (0 until 40).maxOf { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 300, previousPlayer = null, random = Random(seed))
+            val counts = (0 until 3).map { p -> order.count { it == p } }
+            counts.max() - counts.min()
+        }
+
+        // The whole point of the toggle: turning balancing off must visibly let the counts drift.
+        assertTrue(worstSpread(even) > worstSpread(balanced))
+    }
+
+    @Test
+    fun `an even draw can hand one player most of a short round`() {
+        val settings = randomSettings(players = 3, eachTurn = true, avoidBackToBack = false, autoBalance = false)
+        val sawLandslide = (0 until 300).any { seed ->
+            val order = generateOmniRoundOrder(settings, turnCount = 6, previousPlayer = null, random = Random(seed))
+            (0 until 3).any { p -> order.count { it == p } >= 4 }
+        }
+        assertTrue(sawLandslide)
+    }
+
+    @Test
+    fun `an even draw still honours avoidBackToBack`() {
+        val settings = randomSettings(players = 3, eachTurn = true, autoBalance = false)
         repeat(20) { seed ->
             val order = generateOmniRoundOrder(settings, turnCount = 60, previousPlayer = null, random = Random(seed))
             order.zipWithNext { a, b -> assertNotEquals(a, b) }
