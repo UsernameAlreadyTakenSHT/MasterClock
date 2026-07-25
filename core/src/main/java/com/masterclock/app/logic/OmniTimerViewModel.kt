@@ -94,16 +94,20 @@ internal fun omniTurnCount(settings: OmniSettings, gameIdx: Int, roundIdx: Int):
     return if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns.size else settings.numberOfPlayers
 }
 
-private fun weightedPick(weights: List<Int>, exclude: Int?, random: Random): Int {
-    val candidates = weights.indices.filter { it != exclude }.ifEmpty { weights.indices.toList() }
-    val total = candidates.sumOf { weights[it] }
-    // Every candidate weighted 0 (or all weights left at 0) would make the draw impossible;
-    // fall back to an even draw rather than sitting the whole session out.
-    if (total <= 0) return candidates[random.nextInt(candidates.size)]
-    var ticket = random.nextInt(total)
-    for (i in candidates) {
+/**
+ * Draws one player, favouring whoever is behind: a player's weight is its shortfall against the
+ * most-played player so far, plus one so nobody is ever excluded outright. The draw stays
+ * genuinely random -- taking two turns in a row is allowed -- but the odds of a third keep
+ * dropping, so gaps close instead of accumulating over a long round.
+ */
+private fun adaptivePick(turnsTaken: IntArray, exclude: Int?, random: Random): Int {
+    val candidates = turnsTaken.indices.filter { it != exclude }.ifEmpty { turnsTaken.indices.toList() }
+    val mostPlayed = turnsTaken.max()
+    val weights = candidates.map { 1 + (mostPlayed - turnsTaken[it]) }
+    var ticket = random.nextInt(weights.sum())
+    candidates.forEachIndexed { i, player ->
         ticket -= weights[i]
-        if (ticket < 0) return i
+        if (ticket < 0) return player
     }
     return candidates.last()
 }
@@ -112,9 +116,10 @@ private fun weightedPick(weights: List<Int>, exclude: Int?, random: Random): Int
  * Draws the player for each turn of one round under [PlayerOrderType.RANDOM].
  *
  * Two shapes, per [OmniSettings.randomEachTurn]: a shuffled permutation (everyone plays once per
- * round, repeated in fresh blocks if the round holds more turns than there are players), or an
- * independent weighted draw per turn. [previousPlayer] is the player who just played, used to
- * honour [OmniSettings.randomAvoidBackToBack] across the round boundary.
+ * round, repeated in fresh blocks if the round holds more turns than there are players), or a
+ * self-balancing draw per turn (see [adaptivePick]), whose turn counts start fresh each round.
+ * [previousPlayer] is the player who just played, used to honour
+ * [OmniSettings.randomAvoidBackToBack] across the round boundary.
  */
 internal fun generateOmniRoundOrder(
     settings: OmniSettings,
@@ -129,10 +134,11 @@ internal fun generateOmniRoundOrder(
     var last = previousPlayer
 
     if (settings.randomEachTurn) {
-        val weights = List(numPlayers) { (settings.playerWeights.getOrNull(it) ?: 1).coerceAtLeast(0) }
+        val turnsTaken = IntArray(numPlayers)
         repeat(turnCount) {
-            val pick = weightedPick(weights, if (avoidRepeat) last else null, random)
+            val pick = adaptivePick(turnsTaken, if (avoidRepeat) last else null, random)
             order.add(pick)
+            turnsTaken[pick]++
             last = pick
         }
     } else {
