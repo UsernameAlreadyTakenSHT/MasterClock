@@ -203,6 +203,30 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
         }
     }
 
+    SettingsSection("Player Colors") {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            repeat(settings.numberOfPlayers) { i ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "P${i + 1}",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color(omniPlayerColor(settings, i)),
+                        modifier = Modifier.width(36.dp)
+                    )
+                    ColorRow(omniPlayerColor(settings, i), compact = true) { newColor ->
+                        // Older stored settings may hold a shorter list than the defaults; pad
+                        // from the defaults before writing the picked index.
+                        val colors = settings.playerColors.toMutableList()
+                        while (colors.size < OMNI_DEFAULT_PLAYER_COLORS.size) colors.add(OMNI_DEFAULT_PLAYER_COLORS[colors.size])
+                        colors[i] = newColor
+                        onSettingsChanged(settings.copy(playerColors = colors))
+                    }
+                }
+            }
+        }
+    }
+
     SettingsSection("Turn Order") {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {

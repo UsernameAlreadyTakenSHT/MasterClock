@@ -590,12 +590,17 @@ private fun ExportOptionItem(
 }
 
 @Composable
-fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
+fun ColorRow(selectedColor: Long, compact: Boolean = false, onColorSelected: (Long) -> Unit) {
     val colors = remember { listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF) }
     var showPicker by remember { mutableStateOf(false) }
+    // compact keeps the row narrow enough to share its line with a leading label (Omni's
+    // per-player color list) instead of overflowing the last swatch off-screen.
+    val pickerSize = if (compact) 32.dp else 36.dp
+    val swatchSize = if (compact) 28.dp else 32.dp
+    val gap = if (compact) 6.dp else 8.dp
 
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(onClick = { showPicker = true }, modifier = Modifier.size(36.dp), shape = CircleShape, color = Color.Transparent, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
+        Surface(onClick = { showPicker = true }, modifier = Modifier.size(pickerSize), shape = CircleShape, color = Color.Transparent, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
             val gradient = remember { androidx.compose.ui.graphics.Brush.sweepGradient(listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)) }
             Box(modifier = Modifier.fillMaxSize().background(brush = gradient), contentAlignment = Alignment.Center) {
                 Icon(Icons.Default.ColorLens, null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -605,10 +610,10 @@ fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
         colors.forEach { colorVal ->
             val isSelected = selectedColor == colorVal
             Surface(
-                onClick = { if (!isSelected) onColorSelected(colorVal) }, 
-                modifier = Modifier.size(32.dp), 
-                shape = CircleShape, 
-                color = Color(colorVal), 
+                onClick = { if (!isSelected) onColorSelected(colorVal) },
+                modifier = Modifier.size(swatchSize),
+                shape = CircleShape,
+                color = Color(colorVal),
                 border = BorderStroke(width = if (isSelected) 2.dp else 1.dp, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
             ) {}
         }

@@ -5,6 +5,39 @@ import kotlinx.serialization.Serializable
 /** Key used in [OmniState.playerTimeBanks] for the shared TimeBankMode.GLOBAL_RESERVE pool (real player indices are always >= 0). */
 const val OMNI_GLOBAL_TIME_BANK_KEY = -1
 
+/**
+ * Default per-player colors. P1-P6 reuse the Display tab's quick palette (blue, red, yellow,
+ * green, orange) plus a Material purple; P7+ continue with distinct Material hues up to the
+ * 20-player maximum.
+ */
+val OMNI_DEFAULT_PLAYER_COLORS: List<Long> = listOf(
+    0xFF2196F3, // P1  blue
+    0xFFF44336, // P2  red
+    0xFFFFEB3B, // P3  yellow
+    0xFF4CAF50, // P4  green
+    0xFFFF9800, // P5  orange
+    0xFF9C27B0, // P6  purple
+    0xFF00BCD4, // P7  cyan
+    0xFFE91E63, // P8  pink
+    0xFF009688, // P9  teal
+    0xFF3F51B5, // P10 indigo
+    0xFFCDDC39, // P11 lime
+    0xFF795548, // P12 brown
+    0xFF607D8B, // P13 blue grey
+    0xFFFF5722, // P14 deep orange
+    0xFF8BC34A, // P15 light green
+    0xFF673AB7, // P16 deep purple
+    0xFFFFC107, // P17 amber
+    0xFF03A9F4, // P18 light blue
+    0xFF9E9E9E, // P19 grey
+    0xFF000000, // P20 black
+)
+
+/** The configured color for a player index, falling back to the defaults for indices the (possibly shorter, older) stored list doesn't cover. */
+fun omniPlayerColor(settings: OmniSettings, playerIndex: Int): Long =
+    settings.playerColors.getOrNull(playerIndex)
+        ?: OMNI_DEFAULT_PLAYER_COLORS[playerIndex.mod(OMNI_DEFAULT_PLAYER_COLORS.size)]
+
 @Serializable
 data class OmniPhaseSettings(
     val id: String = java.util.UUID.randomUUID().toString(),
@@ -71,6 +104,7 @@ data class OmniSettings(
     val usePhaseClock: Boolean = false,
     val numberOfPlayers: Int = 2,
     val playerOrderType: PlayerOrderType = PlayerOrderType.LINEAR,
+    val playerColors: List<Long> = OMNI_DEFAULT_PLAYER_COLORS,
 
     // Base Durations (Defaults)
     val globalDurationMs: Long = 18_000_000L, // 5h
