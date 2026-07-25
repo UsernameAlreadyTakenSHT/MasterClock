@@ -1,0 +1,2 @@
+The "Sound" toggle now also controls the time's-up/flag sound, not just the player-switch sound.
+Fixed Sudden Death/Bonus/Move Timer mode cards splitting onto two rows instead of one.

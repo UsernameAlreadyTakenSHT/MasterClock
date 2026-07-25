@@ -1,0 +1,1 @@
+The "Sound" toggle now also controls the time's-up/flag sound, not just the player-switch sound.

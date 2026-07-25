@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-07-22"
+    const val BUILD_DATE = "2026-07-25"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,15 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.8",
+            date = "2026-07-25",
+            notes = listOf(
+                "Light/Mini/paper's \"Sound\" toggle now also controls the time's-up/flag sound.",
+                "Omni-Timer is now labeled \"(alpha)\" in the mode picker.",
+                "Byoyomi's 3 sub-modes and Mini's 3 mode cards are now all on one row instead of splitting one onto its own line.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.7",
             date = "2026-07-22",

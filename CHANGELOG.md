@@ -1,3 +1,14 @@
+## v0.8.8 — 2026-07-25
+
+### Changed
+- Light/Mini/paper's "Sound" toggle now also controls the time's-up/flag sound, not just the player-switch sound.
+- Omni-Timer is now labeled "(alpha)" in the mode picker.
+- "Link board" now reads "not implemented yet" instead of "untested yet".
+
+### Fixed
+- Byoyomi's Japanese/Canadian/Progressive sub-modes are now all on one row instead of Progressive being split onto its own line below.
+- Mini's Sudden Death/Bonus/Move Timer mode cards are now all on one row instead of Move Timer being split onto its own line below, matching paper's layout.
+
 ## v0.8.7 — 2026-07-22
 
 ### Fixed
