@@ -71,7 +71,8 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
             SettingsSection("System behavior") {
                 BehaviorSwitch(
                     label = "Keep screen awake",
-                    checked = currentSettings.forceScreenOn
+                    checked = currentSettings.forceScreenOn,
+                    topRounded = true
                 ) {
                     onSettingsChanged(currentSettings.copy(forceScreenOn = it))
                 }
@@ -83,7 +84,8 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
                 }
                 BehaviorSwitch(
                     label = "Haptic feedback",
-                    checked = currentSettings.hapticFeedback
+                    checked = currentSettings.hapticFeedback,
+                    bottomRounded = true
                 ) {
                     onSettingsChanged(currentSettings.copy(hapticFeedback = it))
                 }
