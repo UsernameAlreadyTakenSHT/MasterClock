@@ -13,6 +13,13 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.9",
+            date = "2026-07-25",
+            notes = listOf(
+                "Light/Mini's System behavior toggles reordered to match paper's, and the card now has rounded corners like Complete/Standard.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.8",
             date = "2026-07-25",
             notes = listOf(
