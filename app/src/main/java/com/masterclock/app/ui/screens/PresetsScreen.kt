@@ -219,8 +219,9 @@ fun PresetsScreen(
 }
 
 /**
- * A preset tile. [onEdit]/[onDelete] are only supplied by the user's own presets; leaving them null
- * keeps the built-in and Last Games grids exactly as they were.
+ * A preset tile. [onEdit]/[onDelete] are only supplied by the user's own presets, and are offered
+ * behind a single edit button rather than two cramped icons; leaving them null keeps the built-in
+ * and Last Games grids exactly as they were.
  */
 @Composable
 fun PresetCard(
@@ -249,15 +250,27 @@ fun PresetCard(
                 lineHeight = 14.sp
             )
             if (onEdit != null || onDelete != null) {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    onEdit?.let {
-                        IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Edit, "Rename", Modifier.size(16.dp))
-                        }
+                var menuOpen by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.Edit, "Edit preset", Modifier.size(18.dp))
                     }
-                    onDelete?.let {
-                        IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Delete, "Delete", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        onEdit?.let { edit ->
+                            DropdownMenuItem(
+                                text = { Text("Rename") },
+                                leadingIcon = { Icon(Icons.Default.Edit, null, Modifier.size(18.dp)) },
+                                onClick = { menuOpen = false; edit() }
+                            )
+                        }
+                        onDelete?.let { delete ->
+                            DropdownMenuItem(
+                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                                },
+                                onClick = { menuOpen = false; delete() }
+                            )
                         }
                     }
                 }
