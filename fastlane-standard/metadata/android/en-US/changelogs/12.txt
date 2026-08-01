@@ -1,0 +1,2 @@
+New Licenses tab listing the open-source libraries the app ships, with their copyright and license.
+Credits now name the author or publisher of every bundled rules document.

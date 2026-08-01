@@ -1,3 +1,15 @@
+## v0.8.11 — 2026-08-01
+
+### Added
+- The bundled rulebooks now open **offline**. Six buttons on the "Some rules" screen (Morris, Tafl, Quoridor, Abalone, Hex, Santorini) did nothing at all when tapped; they now open their document, and the four federation documents (chess, draughts ×2, shogi) open without a network connection too.
+- Every rules document is credited — author or publisher, and a link where there is one — in the credits popup and in the README.
+- New **Licenses** tab in the credits popup, listing the open-source libraries the app ships, with their copyright and license.
+
+### Changed
+- Replaced the Abalone, Hex, Morris, Quoridor, Santorini and Tafl documents with better sources; Abalone alone drops from 7.4 MB to 192 KB.
+- Removed an unused Google Play Services declaration left over from the project template.
+- Fixed the project's MIT LICENSE file, which was missing a clause and contained a typo.
+
 ## v0.8.10 — 2026-07-25
 
 ### Added
