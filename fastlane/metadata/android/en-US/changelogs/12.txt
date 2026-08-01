@@ -1,0 +1,4 @@
+The bundled rulebooks now open offline — six buttons on the "Some rules" screen did nothing at all when tapped, and the four federation documents no longer need a network connection.
+Every rules document is credited to its author or publisher, in the app and in the README.
+New Licenses tab listing the open-source libraries the app ships.
+Replaced several rules documents with better sources.
