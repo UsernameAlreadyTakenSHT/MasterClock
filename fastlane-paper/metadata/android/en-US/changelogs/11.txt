@@ -1,0 +1,1 @@
+Fixed no sound at all on some phones: the volume rocker now adjusts the media stream while in the app.

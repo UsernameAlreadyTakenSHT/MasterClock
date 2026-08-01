@@ -1,0 +1,4 @@
+Fixed no sound at all on some phones: the volume rocker now adjusts the media stream while in the app.
+Omni: pick each player's own color in the wizard.
+Omni: the Random turn order gained real options — shuffle once per round or draw every turn, never the same player twice in a row, and a self-balancing draw.
+Omni: fixed the phase clock freezing at 00:00, banked time counted twice, looping rounds that never ended, and "Close session" not ending the session.
