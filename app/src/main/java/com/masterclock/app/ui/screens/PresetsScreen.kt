@@ -85,7 +85,7 @@ fun PresetsScreen(
         Column(Modifier.fillMaxSize().padding(pad)) {
             PrimaryTabRow(selectedTabIndex = selectedTab) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) { Text("All Presets", Modifier.padding(12.dp), maxLines = 1) }
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text("Mine", Modifier.padding(12.dp), maxLines = 1) }
+                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text("My Presets", Modifier.padding(12.dp), maxLines = 1) }
                 Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) { Text("Last Games", Modifier.padding(12.dp), maxLines = 1) }
             }
 
