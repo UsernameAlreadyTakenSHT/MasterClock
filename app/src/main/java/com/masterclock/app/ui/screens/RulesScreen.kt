@@ -1,6 +1,10 @@
 package com.masterclock.app.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import com.masterclock.core.R as CoreR
 import java.io.File
 import java.io.FileOutputStream
 
@@ -36,12 +41,12 @@ fun RulesScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text("Reference documents for offline use.", style = MaterialTheme.typography.bodyMedium)
+            Text("Reference documents, readable offline.", style = MaterialTheme.typography.bodyMedium)
 
             // --- CHESS ---
             RulesGroup("Chess (official doc)") {
                 RuleButton("FIDE Laws", Modifier.fillMaxWidth()) {
-                    openPdf(context, "https://rcc.fide.com/wp-content/uploads/2022/12/20230101Laws-of-Chess.pdf")
+                    openBundledPdf(context, CoreR.raw.rules_chess, "chess.pdf")
                 }
             }
 
@@ -49,10 +54,10 @@ fun RulesScreen(onBack: () -> Unit) {
             RulesGroup("Draughts (official doc)") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RuleButton("FMJD Annexes", Modifier.weight(1f)) {
-                        openPdf(context, "https://www.fmjd.org/downloads/FMJD_Annexes_2024_8-sig.pdf")
+                        openBundledPdf(context, CoreR.raw.rules_draughts_fmjd, "draughts_fmjd.pdf")
                     }
                     RuleButton("IDF Rules", Modifier.weight(1f)) {
-                        openPdf(context, "https://idf64.org/wp-content/uploads/2016/09/Official-Rules-of-the-game.pdf")
+                        openBundledPdf(context, CoreR.raw.rules_draughts_idf, "draughts_idf.pdf")
                     }
                 }
             }
@@ -60,24 +65,36 @@ fun RulesScreen(onBack: () -> Unit) {
             // --- SHOGI ---
             RulesGroup("Shogi (official doc)") {
                 RuleButton("FESA Rules", Modifier.fillMaxWidth()) {
-                    openPdf(context, "https://fesashogi.eu/wp-content/uploads/2025/05/FESA-Rules-ver-2024-09-23.pdf")
+                    openBundledPdf(context, CoreR.raw.rules_shogi, "shogi.pdf")
                 }
             }
 
             // --- MORE GAMES ---
-            RulesGroup("More Games (unofficial docs)") {
+            RulesGroup("More Games") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RuleButton("Morris", Modifier.weight(1f)) { openPdf(context, "") }
-                        RuleButton("Tablut", Modifier.weight(1f)) { openPdf(context, "") }
+                        RuleButton("Morris", Modifier.weight(1f)) {
+                            openBundledPdf(context, CoreR.raw.rules_morris, "morris.pdf")
+                        }
+                        RuleButton("Tafl", Modifier.weight(1f)) {
+                            openBundledPdf(context, CoreR.raw.rules_tafl, "tafl.pdf")
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RuleButton("Quoridor", Modifier.weight(1f)) { openPdf(context, "") }
-                        RuleButton("Abalone", Modifier.weight(1f)) { openPdf(context, "") }
+                        RuleButton("Quoridor", Modifier.weight(1f)) {
+                            openBundledPdf(context, CoreR.raw.rules_quoridor, "quoridor.pdf")
+                        }
+                        RuleButton("Abalone", Modifier.weight(1f)) {
+                            openBundledPdf(context, CoreR.raw.rules_abalone, "abalone.pdf")
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RuleButton("Hex", Modifier.weight(1f)) { openPdf(context, "") }
-                        RuleButton("Santorini", Modifier.weight(1f)) { openPdf(context, "") }
+                        RuleButton("Hex", Modifier.weight(1f)) {
+                            openBundledPdf(context, CoreR.raw.rules_hex, "hex.pdf")
+                        }
+                        RuleButton("Santorini", Modifier.weight(1f)) {
+                            openBundledPdf(context, CoreR.raw.rules_santorini, "santorini.pdf")
+                        }
                     }
                 }
             }
@@ -141,12 +158,35 @@ private fun RuleButton(
     }
 }
 
-private fun openPdf(context: android.content.Context, url: String) {
+/**
+ * Opens a rules document bundled in `core`'s `res/raw`.
+ *
+ * The raw resource is copied into `cacheDir/pdfs/` on first use and handed to a viewer through the
+ * FileProvider both apps already declare (authority `${applicationId}.fileprovider`, with `pdfs/`
+ * whitelisted in `res/xml/file_paths.xml`) -- a raw resource has no path a viewer could open on its
+ * own. Serving from the APK is what makes this screen's "offline use" promise true.
+ */
+private fun openBundledPdf(context: Context, rawResId: Int, fileName: String) {
     try {
-        if (url.isBlank()) return
-        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, url.toUri())
-        context.startActivity(intent)
+        val file = File(File(context.cacheDir, "pdfs").apply { mkdirs() }, fileName)
+        if (!file.exists() || file.length() == 0L) {
+            context.resources.openRawResource(rawResId).use { input ->
+                FileOutputStream(file).use { output -> input.copyTo(output) }
+            }
+        }
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        context.startActivity(
+            Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        )
+    } catch (e: ActivityNotFoundException) {
+        // Failing silently here is exactly the bug this screen used to have.
+        Log.w("RulesScreen", "No PDF viewer available for $fileName", e)
+        Toast.makeText(context, "No PDF viewer installed", Toast.LENGTH_LONG).show()
     } catch (e: Exception) {
-        Log.w("RulesScreen", "Failed to open document: $url", e)
+        Log.w("RulesScreen", "Failed to open bundled document: $fileName", e)
+        Toast.makeText(context, "Could not open this document", Toast.LENGTH_SHORT).show()
     }
 }

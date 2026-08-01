@@ -114,36 +114,188 @@ object AppInfo {
     data class CreditEntry(
         val title: String,
         val detail: String,
+        /** Shown under the detail line when set; the README already carried these links. */
+        val url: String? = null,
     )
 
     val CREDITS = listOf(
         CreditEntry(
             title = "Logo icon",
             detail = "Paweł Kuna (opensvg.dev, v3.44.0) — MIT License",
+            url = "https://opensvg.dev/icons",
         ),
         CreditEntry(
             title = "Chess pieces",
             detail = "\"Cburnett\" style, Wikimedia Commons — GFDL and CC BY-SA 3.0",
+            url = "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
         ),
         CreditEntry(
             title = "Audio — Gong",
             detail = "Zen Gong, Alex_Jauk (Pixabay)",
+            url = "https://pixabay.com/sound-effects/film-special-effects-zen-gong-199844/",
         ),
         CreditEntry(
             title = "Audio — Beep",
             detail = "Beep, u_edtmwfwu7c (Pixabay)",
+            url = "https://pixabay.com/sound-effects/film-special-effects-beep-329314/",
         ),
         CreditEntry(
             title = "Audio — Final Beep",
             detail = "Public Domain Beep Sound, qubodup (Pixabay)",
+            url = "https://pixabay.com/sound-effects/public-domain-beep-sound-100267/",
         ),
         CreditEntry(
             title = "Audio — Switch",
             detail = "Light Switch (Pixabay)",
+            url = "https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/",
         ),
         CreditEntry(
             title = "License",
             detail = "Project licensed under the MIT License.",
         ),
     )
+
+    /**
+     * The rules documents bundled in `core`'s `res/raw` and opened from the Rules screen.
+     * Each credit is the attribution printed in, or embedded in, that document itself.
+     */
+    val RULES_CREDITS = listOf(
+        CreditEntry(
+            title = "Chess — Laws of Chess",
+            detail = "FIDE, compiled by Alex Holowczak",
+            url = "https://www.fide.com/",
+        ),
+        CreditEntry(
+            title = "Draughts — FMJD Annexes 2024",
+            detail = "Fédération Mondiale du Jeu de Dames — Ada Dorgelo, Frank Teer, Jacek Pawlicki",
+            url = "https://www.fmjd.org/",
+        ),
+        CreditEntry(
+            title = "Draughts (64) — Official Rules",
+            detail = "International Draughts Federation",
+            url = "https://idf64.org/",
+        ),
+        CreditEntry(
+            title = "Shogi — FESA Rules",
+            detail = "Federation of European Shogi Associations",
+            url = "https://fesashogi.eu/",
+        ),
+        CreditEntry(
+            title = "Nine Men's Morris",
+            detail = "The game is in the public domain. Rulebook and \"Stacking Morris\" © 2022 Kanare Kato",
+        ),
+        CreditEntry(
+            title = "Tafl — Historical Hnefatafl",
+            detail = "World Tafl Federation",
+            url = "https://aagenielsen.dk/",
+        ),
+        CreditEntry(
+            title = "Quoridor",
+            detail = "© & ® 1997 Gigamic, from a concept by Mirko Marchesi",
+            url = "https://www.gigamic.com/",
+        ),
+        CreditEntry(
+            title = "Abalone",
+            detail = "© Abalone S.A., France — registered trademark, patent DM/012362. Distributed by FoxMind. All rights reserved",
+            url = "https://www.foxmind.com/",
+        ),
+        CreditEntry(
+            title = "Hex",
+            detail = "David Beckwith, June 2021",
+        ),
+        CreditEntry(
+            title = "Santorini",
+            detail = "© 2007 Dr. Gordon Hamilton — may be reproduced for non-commercial purposes",
+        ),
+    )
+
+    /**
+     * A third-party library shipped in the app.
+     *
+     * Hand-maintained on purpose: Google's play-services-oss-licenses plugin would drag Play
+     * Services into an app distributed on F-Droid. [appOnly] marks libraries the E-Ink build does
+     * not ship, so it does not claim credit for code it does not contain.
+     */
+    data class OssLicense(
+        val name: String,
+        val copyright: String,
+        val license: String,
+        val url: String,
+        val appOnly: Boolean = false,
+    )
+
+    val OSS_LICENSES = listOf(
+        OssLicense(
+            name = "AndroidX / Jetpack Compose",
+            copyright = "The Android Open Source Project",
+            license = "Apache License 2.0",
+            url = "https://developer.android.com/jetpack",
+        ),
+        OssLicense(
+            name = "Kotlin & kotlinx",
+            copyright = "JetBrains s.r.o. and Kotlin contributors",
+            license = "Apache License 2.0",
+            url = "https://github.com/JetBrains/kotlin",
+        ),
+        OssLicense(
+            name = "Material Components for Android",
+            copyright = "Google LLC",
+            license = "Apache License 2.0",
+            url = "https://github.com/material-components/material-components-android",
+        ),
+        OssLicense(
+            name = "Coil",
+            copyright = "Coil Contributors",
+            license = "Apache License 2.0",
+            url = "https://github.com/coil-kt/coil",
+        ),
+        OssLicense(
+            name = "Accompanist Drawable Painter",
+            copyright = "Google LLC",
+            license = "Apache License 2.0",
+            url = "https://github.com/google/accompanist",
+        ),
+        OssLicense(
+            name = "AndroidSVG",
+            copyright = "Paul LeBeau",
+            license = "Apache License 2.0",
+            url = "https://github.com/BigBadaboom/androidsvg",
+        ),
+        OssLicense(
+            name = "OkHttp",
+            copyright = "Square, Inc.",
+            license = "Apache License 2.0",
+            url = "https://square.github.io/okhttp/",
+        ),
+        OssLicense(
+            name = "Okio",
+            copyright = "Square, Inc.",
+            license = "Apache License 2.0",
+            url = "https://square.github.io/okio/",
+        ),
+        OssLicense(
+            name = "ZXing Core",
+            copyright = "ZXing Authors",
+            license = "Apache License 2.0",
+            url = "https://github.com/zxing/zxing",
+        ),
+        OssLicense(
+            name = "Accompanist Permissions",
+            copyright = "Google LLC",
+            license = "Apache License 2.0",
+            url = "https://github.com/google/accompanist",
+            appOnly = true,
+        ),
+        OssLicense(
+            name = "ZXing Android Embedded",
+            copyright = "JourneyApps",
+            license = "Apache License 2.0",
+            url = "https://github.com/journeyapps/zxing-android-embedded",
+            appOnly = true,
+        ),
+    )
+
+    /** The libraries actually shipped by the running build. */
+    fun ossLicenses(): List<OssLicense> =
+        OSS_LICENSES.filter { !it.appOnly || !FlavorConfig.isEInk() }
 }

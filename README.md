@@ -41,4 +41,37 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
   - Final beep: [Public Domain Beep Sound – qubodup](https://pixabay.com/sound-effects/public-domain-beep-sound-100267/)
   - Switch: [Light Switch – Pixabay](https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/)
 
+### Rules documents
+
+The Complete build bundles these rulebooks so they can be read offline from the "Some rules" screen. Each remains the property of its author or publisher; credit below is the attribution carried by the document itself. If you hold rights to one of these and would like it removed, open an issue and it will be taken out.
+
+- **Chess** — Laws of Chess, [FIDE](https://www.fide.com/), compiled by Alex Holowczak.
+- **Draughts (international)** — FMJD Annexes 2024, [Fédération Mondiale du Jeu de Dames](https://www.fmjd.org/), by Ada Dorgelo, Frank Teer and Jacek Pawlicki.
+- **Draughts (64)** — Official Rules of the Game, [International Draughts Federation](https://idf64.org/).
+- **Shogi** — FESA Rules, [Federation of European Shogi Associations](https://fesashogi.eu/).
+- **Nine Men's Morris** — the game is in the public domain; the rulebook and "Stacking Morris" are © 2022 Kanare Kato.
+- **Tafl** — Historical Hnefatafl rules, [World Tafl Federation](https://aagenielsen.dk/).
+- **Quoridor** — © & ® 1997 [Gigamic](https://www.gigamic.com/), from a concept by Mirko Marchesi.
+- **Abalone** — © Abalone S.A., France (registered trademark, patent DM/012362), distributed by [FoxMind](https://www.foxmind.com/). All rights reserved.
+- **Hex** — David Beckwith, June 2021.
+- **Santorini** — © 2007 Dr. Gordon Hamilton; the document states it may be reproduced for non-commercial purposes.
+
+### Open-source licenses
+
+Also listed in-app under the version footer → Licenses tab.
+
+| Library | Copyright | License |
+|---|---|---|
+| [AndroidX / Jetpack Compose](https://developer.android.com/jetpack) | The Android Open Source Project | Apache-2.0 |
+| [Kotlin & kotlinx](https://github.com/JetBrains/kotlin) | JetBrains s.r.o. and Kotlin contributors | Apache-2.0 |
+| [Material Components for Android](https://github.com/material-components/material-components-android) | Google LLC | Apache-2.0 |
+| [Coil](https://github.com/coil-kt/coil) | Coil Contributors | Apache-2.0 |
+| [Accompanist](https://github.com/google/accompanist) (Drawable Painter, Permissions) | Google LLC | Apache-2.0 |
+| [AndroidSVG](https://github.com/BigBadaboom/androidsvg) | Paul LeBeau | Apache-2.0 |
+| [OkHttp](https://square.github.io/okhttp/) · [Okio](https://square.github.io/okio/) | Square, Inc. | Apache-2.0 |
+| [ZXing Core](https://github.com/zxing/zxing) | ZXing Authors | Apache-2.0 |
+| [ZXing Android Embedded](https://github.com/journeyapps/zxing-android-embedded) | JourneyApps | Apache-2.0 |
+
+Accompanist Permissions and ZXing Android Embedded ship only in the phone builds, not in the E-Ink build.
+
 Project licensed under the MIT License.

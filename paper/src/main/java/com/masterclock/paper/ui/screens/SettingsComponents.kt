@@ -186,10 +186,22 @@ fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
     }
 }
 
+/** One credit/licence row. Flat e-ink styling: no dimmed variant, everything on onSurface. */
+@Composable
+private fun CreditRow(entry: AppInfo.CreditEntry) {
+    Column {
+        Text(entry.title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+        Text(entry.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+        entry.url?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+        }
+    }
+}
+
 @Composable
 fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Changelog", "Credits")
+    val tabs = listOf("Changelog", "Credits", "Licenses")
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -242,8 +254,8 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (selectedTab == 0) {
-                        AppInfo.CHANGELOG.forEach { entry ->
+                    when (selectedTab) {
+                        0 -> AppInfo.CHANGELOG.forEach { entry ->
                             Column {
                                 Text(
                                     "${entry.version} — ${entry.date}",
@@ -255,11 +267,29 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                                 }
                             }
                         }
-                    } else {
-                        AppInfo.CREDITS.forEach { credit ->
-                            Column {
-                                Text(credit.title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
-                                Text(credit.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                        1 -> {
+                            AppInfo.CREDITS.forEach { CreditRow(it) }
+                            Text(
+                                "Rules documents",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            AppInfo.RULES_CREDITS.forEach { CreditRow(it) }
+                        }
+                        else -> {
+                            Text(
+                                "MasterClock is built with these open-source libraries.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            AppInfo.ossLicenses().forEach { lib ->
+                                CreditRow(
+                                    AppInfo.CreditEntry(
+                                        title = lib.name,
+                                        detail = "${lib.copyright} — ${lib.license}",
+                                        url = lib.url,
+                                    )
+                                )
                             }
                         }
                     }
