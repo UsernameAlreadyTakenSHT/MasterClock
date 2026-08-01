@@ -1127,6 +1127,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         lastAnnouncedThreshold.clear()
         _uiState.update { createInitialState(_settings.value, reuseRandomRoll = true) }
     }
+
+    /**
+     * Resets with a brand new random time, for RANDOM/HIDDEN.
+     *
+     * [reset] deliberately reuses the roll so restarting a game does not change the time under the
+     * players; that left no way at all to get a fresh one short of toggling a setting to invalidate
+     * the cache. Dropping [lastRandomRoll] first makes createInitialState draw again.
+     */
+    fun rerollRandomTime() {
+        lastRandomRoll = null
+        currentLog = null
+        lastAnnouncedThreshold.clear()
+        _uiState.update { createInitialState(_settings.value) }
+    }
+
     fun updateSettings(
         newSettings: ChessClockSettings,
         initialStates: List<PlayerStateProxy>? = null,

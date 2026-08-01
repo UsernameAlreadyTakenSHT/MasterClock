@@ -46,6 +46,7 @@ fun TimerScreen(
     val state by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState()
     var showResetDialog by remember { mutableStateOf(value = false) }
+    var showRerollDialog by remember { mutableStateOf(value = false) }
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val showPresets = remember { FlavorConfig.hasPresets() }
@@ -201,19 +202,42 @@ fun TimerScreen(
         } else if (isGlobalMode) 0.85f else 0f
 
         Box(Modifier.fillMaxSize(), contentAlignment = BiasAlignment(0f, bias)) {
-            ControlBar(
-                isPaused = state.isPaused,
-                isStarted = state.activePlayer != null || (isGlobalMode && !state.isPaused) || (settings.main.mode.name.startsWith("CHRONO") && settings.isOneForAll && !state.isPaused),
-                isArbitreMode = state.isArbitreMode,
-                iconRotation = iconRotation,
-                showPresets = showPresets,
-                showArbitre = showArbitre,
-                onPauseResume = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
-                onReset = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
-                onPresets = onPresetsClick,
-                onSettings = onSettingsClick,
-                onToggleArbitre = { viewModel.toggleArbitreMode() }
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                ControlBar(
+                    isPaused = state.isPaused,
+                    isStarted = state.activePlayer != null || (isGlobalMode && !state.isPaused) || (settings.main.mode.name.startsWith("CHRONO") && settings.isOneForAll && !state.isPaused),
+                    isArbitreMode = state.isArbitreMode,
+                    iconRotation = iconRotation,
+                    showPresets = showPresets,
+                    showArbitre = showArbitre,
+                    onPauseResume = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
+                    onReset = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
+                    onPresets = onPresetsClick,
+                    onSettings = onSettingsClick,
+                    onToggleArbitre = { viewModel.toggleArbitreMode() }
+                )
+
+                // Random/Hidden only. It floats under the bar rather than sitting in it: a sixth
+                // item would leave the bar lopsided around its centre button (3 / 1 / 2). Reset
+                // deliberately keeps the drawn time, so this is the only way to ask for a new one.
+                if (settings.main.mode == TimerMode.RANDOM || settings.main.mode == TimerMode.HIDDEN) {
+                    Surface(
+                        modifier = Modifier.clip(CircleShape),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        tonalElevation = 12.dp,
+                        shadowElevation = 8.dp
+                    ) {
+                        Box(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+                            ControlBarItem(
+                                // Drawing a new time restarts the game, so it asks what Reset asks.
+                                onClick = { if (settings.confirmReset && state.activePlayer != null) showRerollDialog = true else viewModel.rerollRandomTime() },
+                                rotation = iconRotation
+                            ) { Icon(Icons.Default.Casino, stringResource(R.string.timer_reroll)) }
+                        }
+                    }
+                }
+            }
         }
 
         AnimatedVisibility(visible = state.isArbitreMode, enter = fadeIn(tween()), exit = fadeOut(tween())) { 
@@ -242,8 +266,30 @@ fun TimerScreen(
                     Text(stringResource(R.string.timer_reset_message), style = MaterialTheme.typography.bodyMedium)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.common_cancel)) }
-                        TextButton(onClick = { viewModel.reset(); showResetDialog = false }) { 
-                            Text(stringResource(R.string.common_reset), color = MaterialTheme.colorScheme.error) 
+                        TextButton(onClick = { viewModel.reset(); showResetDialog = false }) {
+                            Text(stringResource(R.string.common_reset), color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showRerollDialog) {
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)), contentAlignment = Alignment.Center) {
+            Surface(
+                modifier = Modifier.padding(32.dp).graphicsLayer { rotationZ = iconRotation },
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp
+            ) {
+                Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(stringResource(R.string.timer_reroll_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.timer_reroll_message), style = MaterialTheme.typography.bodyMedium)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = { showRerollDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                        TextButton(onClick = { viewModel.rerollRandomTime(); showRerollDialog = false }) {
+                            Text(stringResource(R.string.timer_reroll), color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -385,10 +431,10 @@ fun ControlBar(
     iconRotation: Float, 
     showPresets: Boolean,
     showArbitre: Boolean,
-    onPauseResume: () -> Unit, 
-    onReset: () -> Unit, 
-    onPresets: () -> Unit, 
-    onSettings: () -> Unit, 
+    onPauseResume: () -> Unit,
+    onReset: () -> Unit,
+    onPresets: () -> Unit,
+    onSettings: () -> Unit,
     onToggleArbitre: () -> Unit
 ) {
     Surface(
