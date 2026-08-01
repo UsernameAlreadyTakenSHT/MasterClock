@@ -346,10 +346,21 @@ class MainActivity : ComponentActivity() {
                         entry<Route.Presets> { _ ->
                             PresetsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
-                                onPresetSelected = { set, states -> 
-                                    timerViewModel.updateSettings(set, states)
+                                customPresets = timerViewModel.customPresets.collectAsState().value,
+                                // Only the time control is taken from a preset. The built-in ones
+                                // are each a fresh ChessClockSettings() with a field or two
+                                // overridden, so applying them wholesale used to reset the user's
+                                // colours, sounds and other preferences on every tap.
+                                onPresetSelected = { set, states ->
+                                    timerViewModel.updateSettings(
+                                        applyPresetTimeControl(timerViewModel.settings.value, set),
+                                        states
+                                    )
                                     navigator.goBack()
                                 },
+                                onSavePreset = { timerViewModel.saveCurrentAsPreset(it) },
+                                onRenamePreset = { id, name -> timerViewModel.renamePreset(id, name) },
+                                onDeletePreset = { timerViewModel.deletePreset(it) },
                                 onBack = { navigator.goBack() }
                             )
                         }

@@ -306,4 +306,68 @@ class ChessTimerLogicTest {
         assertEquals(20_000, next.players[0].timeRemainingMs)
         assertEquals(35_000, next.players[1].timeRemainingMs) // gains half of P1's loss
     }
+
+    // --- applyPresetTimeControl: presets carry a time control, not a whole app configuration ---
+
+    @Test
+    fun `applying a preset takes its time control`() {
+        val current = ChessClockSettings(main = PlayerSettings(initialTimeMs = 600_000, mode = TimerMode.SUDDEN_DEATH))
+        val preset = ChessClockSettings(
+            main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISHER),
+            numberOfPlayers = 4,
+            differentSettingsPerPlayer = true,
+            flagBehavior = FlagBehavior.NEGATIVE,
+        )
+
+        val applied = applyPresetTimeControl(current, preset)
+        assertEquals(TimerMode.FISHER, applied.main.mode)
+        assertEquals(180_000, applied.main.initialTimeMs)
+        assertEquals(2_000, applied.main.incrementMs)
+        assertEquals(4, applied.numberOfPlayers)
+        assertTrue(applied.differentSettingsPerPlayer)
+        assertEquals(FlagBehavior.NEGATIVE, applied.flagBehavior)
+    }
+
+    @Test
+    fun `applying a preset leaves appearance, audio and behaviour alone`() {
+        // The built-in presets are each a fresh ChessClockSettings(), so before this merge existed
+        // tapping one silently reset every preference below to its default.
+        val current = ChessClockSettings(
+            activeColor = 0xFF123456,
+            inactiveColor = 0xFF654321,
+            soundsVolume = 0.25f,
+            playSwitchSound = true,
+            hapticFeedback = true,
+            themeMode = AppThemeMode.DARK,
+            clockOrientation = ClockOrientation.HORIZONTAL_LEFT,
+            confirmReset = false,
+            logHistoryLimit = 42,
+            customBeepUri = "content://kept",
+        )
+        val preset = ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000, mode = TimerMode.SUDDEN_DEATH))
+
+        val applied = applyPresetTimeControl(current, preset)
+        assertEquals(0xFF123456, applied.activeColor)
+        assertEquals(0xFF654321, applied.inactiveColor)
+        assertEquals(0.25f, applied.soundsVolume, 0.0001f)
+        assertTrue(applied.playSwitchSound)
+        assertTrue(applied.hapticFeedback)
+        assertEquals(AppThemeMode.DARK, applied.themeMode)
+        assertEquals(ClockOrientation.HORIZONTAL_LEFT, applied.clockOrientation)
+        assertFalse(applied.confirmReset)
+        assertEquals(42, applied.logHistoryLimit)
+        assertEquals("content://kept", applied.customBeepUri)
+        // and the time control did change
+        assertEquals(60_000, applied.main.initialTimeMs)
+    }
+
+    @Test
+    fun `applying a preset keeps the user's notebook`() {
+        val current = ChessClockSettings(notebookNotes = listOf(NotebookNote(title = "My opening prep")))
+        val preset = ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000))
+
+        val applied = applyPresetTimeControl(current, preset)
+        assertEquals(1, applied.notebookNotes.size)
+        assertEquals("My opening prep", applied.notebookNotes.first().title)
+    }
 }
