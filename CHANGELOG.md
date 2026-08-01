@@ -1,3 +1,20 @@
+## v0.8.10 — 2026-07-25
+
+### Added
+- Omni: each player's color is now yours to pick, in the wizard's Players & Order step (P1 blue, P2 red, P3 yellow, P4 green, P5 orange, P6 purple by default). The running session uses your colors instead of a fixed palette that never matched.
+- Omni: the Random turn order gained real sub-options — shuffle once per round (new default, everyone plays exactly once) or draw a fresh player every turn, a "never the same player twice in a row" block, and for the per-turn draw a "balance the draw" toggle that favors whoever is behind on turns.
+
+### Fixed
+- **No sound at all on some phones**: the volume rocker now adjusts the media stream while in the app. Sounds already played on that stream, but the rocker controlled the ringer instead, so a muted media volume silenced everything with no way to notice or fix it from inside the app.
+- Sound loading failures are no longer silent, the sample pool no longer leaks on every volume-slider drag, and Omni now follows the Audio tab's volume and custom sounds live instead of only at app start.
+- Omni: the phase clock is reset on every turn, round and game change — it used to freeze at 00:00 from the second turn onwards.
+- Omni: leftover turn time is banked only when the turn actually ends, instead of being re-banked at every phase change.
+- Omni: a round set to loop now ends when its own clock runs out, instead of looping forever.
+- Omni: "Close session" now really ends the session, so Play starts a fresh one instead of resuming a finished one with every clock at zero.
+- Omni: the per-phase "Auto advance" toggle is now honored — a phase whose time ran out used to freeze regardless.
+- Omni: the Game progress bar uses the current game's own duration, and rounds set to a fixed turn count no longer run extra turns left over from an earlier custom-sequence setup.
+- Omni: end-of-level sounds and cutoffs also fire for clocks that run out during a pause between turns, rounds or games.
+
 ## v0.8.9 — 2026-07-25
 
 ### Fixed

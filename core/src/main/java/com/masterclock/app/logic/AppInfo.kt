@@ -13,6 +13,16 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.10",
+            date = "2026-07-25",
+            notes = listOf(
+                "Fixed no sound at all on some phones: the volume rocker now adjusts the media stream in the app.",
+                "Omni: pick each player's color in the wizard.",
+                "Omni: Random turn order now has real sub-options (shuffle per round or draw per turn, no repeats, balanced draw).",
+                "Omni: fixed the phase clock freezing at 00:00, time banking counted twice, endless looping rounds, and Close session not ending the session.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.9",
             date = "2026-07-25",
             notes = listOf(
