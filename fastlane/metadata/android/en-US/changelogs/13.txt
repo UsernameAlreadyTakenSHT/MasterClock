@@ -1,0 +1,4 @@
+Custom presets: save your current time control under a name from the new "My Presets" tab, then load, rename or delete it.
+Random/Hidden: a dice button draws a new time, without having to switch modes away and back. It hides while the clock runs.
+Presets no longer reset your colours, sounds and other preferences — they change the time control only.
+The credits popup no longer cuts its first tab label.

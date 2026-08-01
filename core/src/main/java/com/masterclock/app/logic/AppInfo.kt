@@ -13,6 +13,15 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.12",
+            date = "2026-08-01",
+            notes = listOf(
+                "Custom presets: save your time control under a name, then load, rename or delete it.",
+                "Random/Hidden: a dice button draws a new time without switching modes away and back.",
+                "Presets no longer reset your colours, sounds and other preferences — they change the time control only.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.11",
             date = "2026-08-01",
             notes = listOf(
