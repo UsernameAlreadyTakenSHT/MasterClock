@@ -10,6 +10,9 @@
     <!-- Timer Screen -->
     <string name="timer_reset_title">Reset Game?</string>
     <string name="timer_reset_message">The current state will be lost.</string>
+    <string name="timer_reroll">New random time</string>
+    <string name="timer_reroll_title">Draw a new time?</string>
+    <string name="timer_reroll_message">The game restarts with a new random time.</string>
     <string name="timer_arbitre_control">Arbitre Control</string>
     <string name="timer_save_clock">Save Clock</string>
     <string name="timer_resume">Resume</string>
