@@ -1,5 +1,6 @@
 package com.masterclock.app.ui.screens
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -14,6 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -123,6 +127,13 @@ fun PresetsScreen(
                             )
                         }
                     } else {
+                        Text(
+                            "Long-press a preset to rename or delete it.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+                        )
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             modifier = Modifier.fillMaxSize(),
@@ -219,9 +230,9 @@ fun PresetsScreen(
 }
 
 /**
- * A preset tile. [onEdit]/[onDelete] are only supplied by the user's own presets, and are offered
- * behind a single edit button rather than two cramped icons; leaving them null keeps the built-in
- * and Last Games grids exactly as they were.
+ * A preset tile. [onEdit]/[onDelete] are only supplied by the user's own presets and are reached by
+ * long-pressing the tile, so the card stays the same size as the built-in ones; leaving them null
+ * keeps the built-in and Last Games grids exactly as they were.
  */
 @Composable
 fun PresetCard(
@@ -230,49 +241,62 @@ fun PresetCard(
     onDelete: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(6.dp).heightIn(min = 36.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    val hasActions = onEdit != null || onDelete != null
+    var menuOpen by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+    val shape = RoundedCornerShape(12.dp)
+
+    Box {
+        Surface(
+            shape = shape,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = if (hasActions) {
+                        {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            menuOpen = true
+                        }
+                    } else null,
+                    onLongClickLabel = if (hasActions) "Rename or delete" else null
+                )
         ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 3,
-                lineHeight = 14.sp
-            )
-            if (onEdit != null || onDelete != null) {
-                var menuOpen by remember { mutableStateOf(false) }
-                Box {
-                    IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(40.dp)) {
-                        Icon(Icons.Default.Edit, "Edit preset", Modifier.size(18.dp))
-                    }
-                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        onEdit?.let { edit ->
-                            DropdownMenuItem(
-                                text = { Text("Rename") },
-                                leadingIcon = { Icon(Icons.Default.Edit, null, Modifier.size(18.dp)) },
-                                onClick = { menuOpen = false; edit() }
-                            )
-                        }
-                        onDelete?.let { delete ->
-                            DropdownMenuItem(
-                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
-                                },
-                                onClick = { menuOpen = false; delete() }
-                            )
-                        }
-                    }
+            Column(
+                modifier = Modifier.padding(6.dp).heightIn(min = 36.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 3,
+                    lineHeight = 14.sp
+                )
+            }
+        }
+
+        if (hasActions) {
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                onEdit?.let { edit ->
+                    DropdownMenuItem(
+                        text = { Text("Rename") },
+                        leadingIcon = { Icon(Icons.Default.Edit, null, Modifier.size(18.dp)) },
+                        onClick = { menuOpen = false; edit() }
+                    )
+                }
+                onDelete?.let { delete ->
+                    DropdownMenuItem(
+                        text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                        },
+                        onClick = { menuOpen = false; delete() }
+                    )
                 }
             }
         }
