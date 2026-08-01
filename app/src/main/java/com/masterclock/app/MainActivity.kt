@@ -63,17 +63,37 @@ class MainActivity : ComponentActivity() {
             else -> AppFlavor.COMPLETE
         }
 
+        // The activity has no launchMode, so it defaults to "standard" and a shortcut launch always
+        // arrives through onCreate with a fresh intent -- no onNewIntent needed.
+        val launchShortcutId = intent?.getStringExtra(PresetShortcuts.EXTRA_SHORTCUT_ID)
+
         enableEdgeToEdge()
         setContent {
             val timerViewModel: ChessTimerViewModel = viewModel()
             val omniViewModel: OmniTimerViewModel = viewModel()
             val settings by timerViewModel.settings.collectAsState()
             val gameHistory by timerViewModel.gameHistory.collectAsState()
+            val customPresets by timerViewModel.customPresets.collectAsState()
             val json = remember { Json { ignoreUnknownKeys = true } }
             val context = LocalContext.current
             var shouldIncludeLogs by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
+
+            // A shortcut only applies once per launch. The ViewModel holds the id until its own
+            // async load finishes, so this does not race the DataStore read.
+            LaunchedEffect(Unit) {
+                launchShortcutId?.let {
+                    timerViewModel.applyShortcut(it)
+                    PresetShortcuts.reportUsed(context, it)
+                }
+            }
+
+            // Republish whenever the sources change: saving, renaming or deleting a preset moves
+            // customPresets, and finishing a game moves gameHistory.
+            LaunchedEffect(customPresets, gameHistory) {
+                PresetShortcuts.publish(context, buildShortcutTargets(gameHistory, customPresets))
+            }
 
             // Force Screen Awake, Brightness & Fullscreen logic
             LaunchedEffect(settings.forceScreenOn, settings.forceFullBrightness, settings.fullscreenMode) {

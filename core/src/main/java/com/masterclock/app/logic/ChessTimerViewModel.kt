@@ -287,6 +287,98 @@ fun applyPresetTimeControl(current: ChessClockSettings, preset: ChessClockSettin
         fischerFideFirstMove = preset.fischerFideFirstMove,
     )
 
+/**
+ * A time control reachable from a launcher shortcut.
+ *
+ * [id] carries its own source so the intent handler resolves one without guessing: "preset:<uuid>"
+ * for the player's own presets, "game:<startTime>" for a recent game, "builtin:<key>" for the
+ * blitz fallbacks below.
+ */
+data class ShortcutTarget(val id: String, val label: String, val settings: ChessClockSettings)
+
+/**
+ * Blitz fallbacks that pad the shortcut list on a fresh install, where there is neither a saved
+ * preset nor any game history yet.
+ *
+ * These duplicate two of the 21 built-ins in PresetsScreen rather than reusing them, because those
+ * are constructed inline in the composable and have no stable identity to key a shortcut on.
+ */
+val BUILTIN_SHORTCUT_PRESETS: List<ShortcutTarget> = listOf(
+    ShortcutTarget(
+        id = "builtin:fischer_3_2",
+        label = "3 + 2",
+        settings = ChessClockSettings(
+            main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISHER)
+        ),
+    ),
+    ShortcutTarget(
+        id = "builtin:fischer_15_10",
+        label = "15 + 10",
+        settings = ChessClockSettings(
+            main = PlayerSettings(initialTimeMs = 900_000, incrementMs = 10_000, mode = TimerMode.FISHER)
+        ),
+    ),
+)
+
+/** Short "5 min" / "3 min + 2s" label for a shortcut, falling back to the mode name. */
+private fun shortcutLabelFor(settings: ChessClockSettings): String {
+    val s = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
+
+    // A drawn mode gets a fresh roll on every launch, so naming its configured base time would
+    // promise a number the player will not actually see.
+    if (s.mode == TimerMode.RANDOM || s.mode == TimerMode.HIDDEN) {
+        val name = if (s.mode == TimerMode.RANDOM) "Random" else "Hidden"
+        val low = s.randomMinTimeMs / 60_000
+        val high = s.randomMaxTimeMs / 60_000
+        return if (high > 0) "$name $low-$high min" else name
+    }
+
+    // The move-timer family ignores initialTimeMs entirely.
+    if (s.mode == TimerMode.MOVE_TIMER_STANDARD ||
+        s.mode == TimerMode.MOVE_TIMER_SHARED ||
+        s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED
+    ) {
+        if (s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move"
+    }
+
+    if (s.initialTimeMs <= 0L) {
+        return s.mode.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+    }
+    val minutes = s.initialTimeMs / 60_000
+    val seconds = (s.initialTimeMs % 60_000) / 1000
+    val base = when {
+        minutes == 0L -> "${seconds}s"
+        seconds == 0L -> "$minutes min"
+        else -> "${minutes}m${seconds}s"
+    }
+    val increment = s.incrementMs / 1000
+    return if (increment > 0) "$base + ${increment}s" else base
+}
+
+/**
+ * Picks the at most [max] time controls worth a launcher shortcut.
+ *
+ * Recent games come first because "same as last time" is the common case, the player's own presets
+ * follow, and the blitz built-ins pad whatever is left so the list is never short. Recent games
+ * contribute their settings only -- never their initialPlayerStates, which hold a pre-rolled RANDOM
+ * time that would otherwise be replayed identically on every launch.
+ */
+fun buildShortcutTargets(
+    history: List<GameLog>,
+    presets: List<SavedPreset>,
+    max: Int = 4,
+): List<ShortcutTarget> {
+    val targets = mutableListOf<ShortcutTarget>()
+    history.sortedByDescending { it.startTime }.take(2).forEach { log ->
+        targets += ShortcutTarget("game:${log.startTime}", shortcutLabelFor(log.settings), log.settings)
+    }
+    presets.sortedByDescending { it.createdAt }.forEach { preset ->
+        targets += ShortcutTarget("preset:${preset.id}", preset.name, preset.settings)
+    }
+    targets += BUILTIN_SHORTCUT_PRESETS
+    return targets.filter { it.label.isNotBlank() }.distinctBy { it.id }.take(max)
+}
+
 @Serializable
 data class GameEvent(
     val timestamp: Long = System.currentTimeMillis(),
@@ -682,6 +774,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val _customPresets = MutableStateFlow<List<SavedPreset>>(emptyList())
     val customPresets: StateFlow<List<SavedPreset>> = _customPresets.asStateFlow()
 
+    /** Set once the init block below has finished; see [applyShortcut]. */
+    private var isLoaded = false
+    private var pendingShortcutId: String? = null
+
     init {
         viewModelScope.launch {
             val savedSettings = settingsRepo.settingsFlow.first()
@@ -694,7 +790,41 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
             _hasSavedClock.value = gameDao.getSavedClock() != null
             _customPresets.value = settingsRepo.customPresetsFlow.first()
+
+            isLoaded = true
+            pendingShortcutId?.let { id ->
+                pendingShortcutId = null
+                applyShortcutNow(id)
+            }
         }
+    }
+
+    /**
+     * Applies the time control behind a launcher shortcut.
+     *
+     * The init block above loads settings, history and presets asynchronously and nothing exposes a
+     * readiness flag, so a shortcut arriving at startup would be applied against defaults and then
+     * silently overwritten when DataStore resolves. Holding the id until the load finishes makes
+     * that ordering explicit rather than leaving it to composition timing.
+     */
+    fun applyShortcut(id: String) {
+        if (!isLoaded) {
+            pendingShortcutId = id
+            return
+        }
+        applyShortcutNow(id)
+    }
+
+    private fun applyShortcutNow(id: String) {
+        val target = resolveShortcut(id) ?: return
+        updateSettings(applyPresetTimeControl(_settings.value, target))
+    }
+
+    /** A shortcut can outlive the preset or game it points at, hence the nullable result. */
+    private fun resolveShortcut(id: String): ChessClockSettings? = when {
+        id.startsWith("preset:") -> _customPresets.value.firstOrNull { "preset:${it.id}" == id }?.settings
+        id.startsWith("game:") -> _gameHistory.value.firstOrNull { "game:${it.startTime}" == id }?.settings
+        else -> BUILTIN_SHORTCUT_PRESETS.firstOrNull { it.id == id }?.settings
     }
 
     private fun persistCustomPresets(presets: List<SavedPreset>) {
