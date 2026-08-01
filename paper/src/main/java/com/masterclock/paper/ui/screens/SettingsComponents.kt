@@ -201,7 +201,7 @@ private fun CreditRow(entry: AppInfo.CreditEntry) {
 @Composable
 fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Changelog", "Credits", "Licenses")
+    val tabs = listOf("Changes", "Credits", "Licenses")
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -243,7 +243,16 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                         Tab(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { Text(label) }
+                            // A third tab leaves each one about a third of the dialog, where the
+                            // default label size wrapped "Changelog" onto a second line.
+                            text = {
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
                         )
                     }
                 }
