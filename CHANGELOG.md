@@ -1,3 +1,15 @@
+## v0.8.12 — 2026-08-01
+
+### Added
+- **Custom presets.** Save your current time control under a name from the new "My Presets" tab, then load, rename or delete it. Your presets survive restarts.
+- **Re-roll button for Random and Hidden.** Reset deliberately keeps the drawn time so restarting a game does not move it under the players; a dice button now draws a fresh one, without having to switch modes away and back. It hides while the clock runs and returns on pause.
+
+### Changed
+- **Presets no longer reset your other settings.** Tapping a built-in preset used to silently restore colours, sounds, theme and every other preference to their defaults. Presets now change the time control only.
+
+### Fixed
+- The credits popup's first tab no longer cut its own label.
+
 ## v0.8.11 — 2026-08-01
 
 ### Added
