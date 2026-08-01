@@ -252,6 +252,41 @@ data class ChessClockSettings(
     val notebookNotes: List<NotebookNote> = emptyList()
 )
 
+/** A time control the player saved themselves, listed alongside the built-in presets. */
+@Serializable
+data class SavedPreset(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val settings: ChessClockSettings,
+)
+
+/**
+ * Copies just the time control from [preset] onto [current], leaving colours, sounds, display and
+ * behaviour alone.
+ *
+ * Presets describe *how long players get*, not how the app should look or sound. Applying the
+ * stored settings wholesale would drag a snapshot of every preference along with them — which is
+ * what the built-in presets used to do, each being a fresh ChessClockSettings() with two fields
+ * overridden, silently resetting the user's colours and audio on every tap.
+ */
+fun applyPresetTimeControl(current: ChessClockSettings, preset: ChessClockSettings): ChessClockSettings =
+    current.copy(
+        gameType = preset.gameType,
+        main = preset.main,
+        p1Custom = preset.p1Custom,
+        p2Custom = preset.p2Custom,
+        p3Custom = preset.p3Custom,
+        p4Custom = preset.p4Custom,
+        differentSettingsPerPlayer = preset.differentSettingsPerPlayer,
+        numberOfPlayers = preset.numberOfPlayers,
+        playerMapping = preset.playerMapping,
+        multiPlayerLayout = preset.multiPlayerLayout,
+        isOneForAll = preset.isOneForAll,
+        flagBehavior = preset.flagBehavior,
+        fischerFideFirstMove = preset.fischerFideFirstMove,
+    )
+
 @Serializable
 data class GameEvent(
     val timestamp: Long = System.currentTimeMillis(),
@@ -644,18 +679,53 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val _scoreboard = MutableStateFlow(ScoreboardSession())
     val scoreboard: StateFlow<ScoreboardSession> = _scoreboard.asStateFlow()
 
+    private val _customPresets = MutableStateFlow<List<SavedPreset>>(emptyList())
+    val customPresets: StateFlow<List<SavedPreset>> = _customPresets.asStateFlow()
+
     init {
         viewModelScope.launch {
             val savedSettings = settingsRepo.settingsFlow.first()
             _settings.value = savedSettings
             soundManager.loadSounds(savedSettings)
             _uiState.value = createInitialState(savedSettings)
-            
+
             val entities = gameDao.getRecentLogs(savedSettings.logHistoryLimit)
             _gameHistory.value = entities.map { converters.toGameLog(it) }
 
             _hasSavedClock.value = gameDao.getSavedClock() != null
+            _customPresets.value = settingsRepo.customPresetsFlow.first()
         }
+    }
+
+    private fun persistCustomPresets(presets: List<SavedPreset>) {
+        _customPresets.value = presets
+        viewModelScope.launch { settingsRepo.saveCustomPresets(presets) }
+    }
+
+    /**
+     * Snapshots the current time control under [name].
+     *
+     * notebookNotes holds paths to media in the app sandbox and the custom*Uri fields are content
+     * URI grants -- neither means anything in a preset, and both would be dead weight to carry
+     * around, so they are dropped here the same way the share path drops them.
+     */
+    fun saveCurrentAsPreset(name: String) {
+        val snapshot = _settings.value.copy(
+            notebookNotes = emptyList(),
+            customGongUri = null,
+            customBeepUri = null,
+            customFinalBeepUri = null,
+            customSwitchUri = null,
+        )
+        persistCustomPresets(_customPresets.value + SavedPreset(name = name.trim(), settings = snapshot))
+    }
+
+    fun renamePreset(id: String, name: String) {
+        persistCustomPresets(_customPresets.value.map { if (it.id == id) it.copy(name = name.trim()) else it })
+    }
+
+    fun deletePreset(id: String) {
+        persistCustomPresets(_customPresets.value.filterNot { it.id == id })
     }
 
     private fun createInitialState(settings: ChessClockSettings, reuseRandomRoll: Boolean = false): ChessClockState {

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.masterclock.app.logic.ChessClockSettings
 import com.masterclock.app.logic.OmniSettings
+import com.masterclock.app.logic.SavedPreset
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
@@ -19,6 +20,7 @@ class SettingsRepository(private val context: Context) {
     private val json = Json { ignoreUnknownKeys = true }
     private val SETTINGS_KEY = stringPreferencesKey("chess_clock_settings")
     private val OMNI_SETTINGS_KEY = stringPreferencesKey("omni_timer_settings")
+    private val CUSTOM_PRESETS_KEY = stringPreferencesKey("custom_presets")
 
     val settingsFlow: Flow<ChessClockSettings> = context.dataStore.data.map { preferences ->
         val settingsJson = preferences[SETTINGS_KEY]
@@ -43,6 +45,25 @@ class SettingsRepository(private val context: Context) {
             }
         } else {
             OmniSettings()
+        }
+    }
+
+    val customPresetsFlow: Flow<List<SavedPreset>> = context.dataStore.data.map { preferences ->
+        val jsonStr = preferences[CUSTOM_PRESETS_KEY]
+        if (jsonStr != null) {
+            try {
+                json.decodeFromString<List<SavedPreset>>(jsonStr)
+            } catch (_: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+    }
+
+    suspend fun saveCustomPresets(presets: List<SavedPreset>) {
+        context.dataStore.edit { preferences ->
+            preferences[CUSTOM_PRESETS_KEY] = json.encodeToString(presets)
         }
     }
 

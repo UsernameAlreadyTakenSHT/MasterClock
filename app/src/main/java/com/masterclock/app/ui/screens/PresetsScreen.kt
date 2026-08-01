@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,10 +32,17 @@ data class ClockPreset(
 @Composable
 fun PresetsScreen(
     history: List<GameLog>,
+    customPresets: List<SavedPreset>,
     onPresetSelected: (ChessClockSettings, List<PlayerStateProxy>?) -> Unit,
+    onSavePreset: (String) -> Unit,
+    onRenamePreset: (String, String) -> Unit,
+    onDeletePreset: (String) -> Unit,
     onBack: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var presetBeingRenamed by remember { mutableStateOf<SavedPreset?>(null) }
+    var presetBeingDeleted by remember { mutableStateOf<SavedPreset?>(null) }
     
     val presets = listOf(
         ClockPreset("1 min", "Sudden Death 1:00", ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000, mode = TimerMode.SUDDEN_DEATH))),
@@ -74,8 +84,9 @@ fun PresetsScreen(
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
             PrimaryTabRow(selectedTabIndex = selectedTab) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) { Text("All Presets", Modifier.padding(12.dp)) }
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text("Last Games", Modifier.padding(12.dp)) }
+                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) { Text("All Presets", Modifier.padding(12.dp), maxLines = 1) }
+                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text("Mine", Modifier.padding(12.dp), maxLines = 1) }
+                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) { Text("Last Games", Modifier.padding(12.dp), maxLines = 1) }
             }
 
             if (selectedTab == 0) {
@@ -88,6 +99,46 @@ fun PresetsScreen(
                 ) {
                     items(presets, key = { it.name }) { preset ->
                         PresetCard(preset.name) { onPresetSelected(preset.settings, null) }
+                    }
+                }
+            } else if (selectedTab == 1) {
+                Column(Modifier.fillMaxSize()) {
+                    Button(
+                        onClick = { showSaveDialog = true },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Add, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Save current time control")
+                    }
+
+                    if (customPresets.isEmpty()) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                "Set up a time control, then save it here.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(24.dp)
+                            )
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(customPresets, key = { it.id }) { preset ->
+                                PresetCard(
+                                    text = preset.name,
+                                    onEdit = { presetBeingRenamed = preset },
+                                    onDelete = { presetBeingDeleted = preset },
+                                    onClick = { onPresetSelected(preset.settings, null) }
+                                )
+                            }
+                        }
                     }
                 }
             } else {
@@ -130,19 +181,64 @@ fun PresetsScreen(
             }
         }
     }
+
+    if (showSaveDialog) {
+        PresetNameDialog(
+            title = "Save time control",
+            initialName = "",
+            confirmLabel = "Save",
+            onDismiss = { showSaveDialog = false },
+            onConfirm = { onSavePreset(it); showSaveDialog = false }
+        )
+    }
+
+    presetBeingRenamed?.let { preset ->
+        PresetNameDialog(
+            title = "Rename preset",
+            initialName = preset.name,
+            confirmLabel = "Rename",
+            onDismiss = { presetBeingRenamed = null },
+            onConfirm = { onRenamePreset(preset.id, it); presetBeingRenamed = null }
+        )
+    }
+
+    presetBeingDeleted?.let { preset ->
+        AlertDialog(
+            onDismissRequest = { presetBeingDeleted = null },
+            title = { Text("Delete \"${preset.name}\"?") },
+            text = { Text("This preset will be permanently removed.") },
+            confirmButton = {
+                TextButton(
+                    onClick = { onDeletePreset(preset.id); presetBeingDeleted = null },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { presetBeingDeleted = null }) { Text("Cancel") } }
+        )
+    }
 }
 
+/**
+ * A preset tile. [onEdit]/[onDelete] are only supplied by the user's own presets; leaving them null
+ * keeps the built-in and Last Games grids exactly as they were.
+ */
 @Composable
-fun PresetCard(text: String, onClick: () -> Unit) {
+fun PresetCard(
+    text: String,
+    onEdit: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
+    onClick: () -> Unit
+) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
+        Column(
             modifier = Modifier.padding(6.dp).heightIn(min = 36.dp),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = text,
@@ -152,6 +248,50 @@ fun PresetCard(text: String, onClick: () -> Unit) {
                 maxLines = 3,
                 lineHeight = 14.sp
             )
+            if (onEdit != null || onDelete != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    onEdit?.let {
+                        IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Edit, "Rename", Modifier.size(16.dp))
+                        }
+                    }
+                    onDelete?.let {
+                        IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Delete, "Delete", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
         }
     }
+}
+
+/** Shared by "save current" and "rename": a single named text field in a dialog. */
+@Composable
+private fun PresetNameDialog(
+    title: String,
+    initialName: String,
+    confirmLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) { Text(confirmLabel) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
 }
