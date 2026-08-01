@@ -220,7 +220,10 @@ fun TimerScreen(
                 // Random/Hidden only. It floats under the bar rather than sitting in it: a sixth
                 // item would leave the bar lopsided around its centre button (3 / 1 / 2). Reset
                 // deliberately keeps the drawn time, so this is the only way to ask for a new one.
-                if (settings.main.mode == TimerMode.RANDOM || settings.main.mode == TimerMode.HIDDEN) {
+                // Hidden while the clock runs -- drawing a new time restarts the game, which is not
+                // something to offer a thumb mid-move; it comes back on pause.
+                val isRandomMode = settings.main.mode == TimerMode.RANDOM || settings.main.mode == TimerMode.HIDDEN
+                if (isRandomMode && (state.activePlayer == null || state.isPaused)) {
                     Surface(
                         modifier = Modifier.clip(CircleShape),
                         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
