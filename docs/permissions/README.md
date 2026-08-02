@@ -17,18 +17,21 @@ their document removed in the next release.
 
 | Document | Rights holder | Contact | Sent | Reply |
 |---|---|---|---|---|
-| Abalone | Abalone S.A. / FoxMind | `info@FoxMind.com` (printed in the PDF) | — | — |
-| Quoridor | Gigamic | contact form, gigamic.com | — | — |
-| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | kanare-abstract.com | — | — |
-| Tafl | World Tafl Federation (Aage Nielsen) | aagenielsen.dk | — | — |
+| Abalone | Abalone S.A. / FoxMind | `info@FoxMind.com` (printed in the PDF) | 2026-08-02 | — |
+| Quoridor | Gigamic | contact form, gigamic.com | 2026-08-02 | — |
+| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | kanare-abstract.com | 2026-08-02 | — |
+| Tafl | World Tafl Federation (Aage Nielsen) | aagenielsen.dk | 2026-08-02 | — |
 | Hex | David Beckwith | *to find* | — | — |
-| Chess | FIDE | fide.com | — | — |
-| Draughts (international) | FMJD | fmjd.org | — | — |
-| Draughts (64) | IDF | idf64.org | — | — |
-| Shogi | FESA | fesashogi.eu | — | — |
-| Santorini | Dr. Gordon Hamilton | `gamesbygord@gmail.com` | — | **Already granted** — the document states it "may be reproduced for non-commercial purposes". A courtesy note only. |
+| Chess | FIDE | fide.com | 2026-08-02 | — |
+| Draughts (international) | FMJD | fmjd.org | 2026-08-02 | — |
+| Draughts (64) | IDF | idf64.org | 2026-08-02 | — |
+| Shogi | FESA | fesashogi.eu | 2026-08-02 | — |
+| Santorini | Dr. Gordon Hamilton | `gamesbygord@gmail.com` | 2026-08-02 | **Already granted** — the document states it "may be reproduced for non-commercial purposes". A courtesy note only. |
 
-Fill in *Sent* and *Reply* as you go, and keep any written permission (email text, date) alongside
+Nine of the ten went out on 2026-08-02. Hex is the exception: the document is signed but names no
+contact, so there is nobody to write to yet.
+
+Fill in *Reply* as answers arrive, and keep any written permission (email text, date) alongside
 this file.
 
 ## Template — English
@@ -87,8 +90,9 @@ this file.
   looks. Contact via kanare-abstract.com.
 - **World Tafl Federation** — a hobbyist federation; the document carries no notice at all, so ask
   rather than assume.
-- **David Beckwith** — the document is signed "David Beckwith, June 2021" but names no site.
-  Contact still to be found.
+- **David Beckwith** — the document is signed "David Beckwith, June 2021" but names no site, so
+  this is the one request that could not be sent. Until a contact turns up, the options are to
+  leave it as is, or to swap the file for one of the several freely licensed Hex rule sheets.
 - **FIDE, FMJD, IDF, FESA** — these are rule sets published for the world to use, and distributing
   them is normal practice. A short note is still worth sending: cheap, and it puts the four biggest
   documents beyond question.
