@@ -28,6 +28,81 @@
     <string name="preset_delete_title">Delete \"%s\"?</string>
     <string name="preset_delete_message">This preset will be permanently removed.</string>
 
+    <!--
+      Timing engines manual. Long-form prose, the most expensive part of the app to translate, so
+      it is fine for this section to lag behind the interface chrome.
+    -->
+    <string name="guide_intro">Exhaustive documentation of MasterClock timing engines and sub-modes, following the interface sequence.</string>
+
+    <string name="guide_section_sudden_death">Sudden Death</string>
+    <string name="guide_sudden_death_standard">Standard</string>
+    <string name="guide_sudden_death_standard_desc">Pure countdown. The first player to reach 0:00 loses or flags.</string>
+
+    <string name="guide_section_bonus">Bonus Engines</string>
+    <!-- Named after the people and systems they come from; these stay as they are. -->
+    <string name="guide_bonus_fischer" translatable="false">Fischer</string>
+    <string name="guide_bonus_bronstein" translatable="false">Bronstein</string>
+    <string name="guide_omni" translatable="false">Omni-Timer</string>
+    <string name="guide_move_standard">Standard</string>
+    <string name="guide_bonus_fischer_desc">Adds a fixed amount of time (increment) AFTER every move.</string>
+    <string name="guide_bonus_bronstein_desc">Adds back time spent on the move, but never more than the delay setting. Non-cumulative.</string>
+    <string name="guide_bonus_us_delay">US Delay</string>
+    <string name="guide_bonus_us_delay_desc">A countdown delay. The clock waits for the delay duration before starting to tick.</string>
+
+    <string name="guide_section_move_timer">Move Timer</string>
+    <string name="guide_move_standard_desc">Resets to a fixed duration for every single move.</string>
+    <string name="guide_move_save_cap">Save &amp; Cap</string>
+    <string name="guide_move_save_cap_desc">Unused move time is stored in a bank, limited by a maximum capacity.</string>
+    <string name="guide_move_overtime">Overtime</string>
+    <string name="guide_move_overtime_desc">Adds unused move time to a secondary global reserve.</string>
+    <string name="guide_move_global">Global</string>
+    <string name="guide_move_global_desc">Move time and global time tick down simultaneously. Both must stay above zero.</string>
+    <string name="guide_move_shared">Shared (Auto)</string>
+    <string name="guide_move_shared_desc">A single timer for all players. Automatically switches at 0:00.</string>
+    <string name="guide_move_global_shared">Global Shared</string>
+    <string name="guide_move_global_shared_desc">All players share a global reserve while having a personal move timer.</string>
+
+    <string name="guide_section_byoyomi">Byoyomi</string>
+    <string name="guide_byoyomi_japanese">Japanese</string>
+    <string name="guide_byoyomi_japanese_desc">After main time, players get a series of short periods. Reset period on move.</string>
+    <string name="guide_byoyomi_canadian">Canadian</string>
+    <string name="guide_byoyomi_canadian_desc">Players must complete a specific number of moves within a single longer period.</string>
+    <string name="guide_byoyomi_progressive">Progressive</string>
+    <string name="guide_byoyomi_progressive_desc">The number of required moves increases every time a period is completed.</string>
+
+    <string name="guide_section_chronos">Chronos</string>
+    <string name="guide_chrono_countdown">Countdown</string>
+    <string name="guide_chrono_countdown_desc">Master timer counting down for the whole game.</string>
+    <string name="guide_chrono_countup">Countup</string>
+    <string name="guide_chrono_countup_desc">Stopwatch mode tracking total time elapsed.</string>
+    <string name="guide_chrono_one_for_all">One for All</string>
+    <string name="guide_chrono_one_for_all_desc">System-wide timer that doesn\'t switch when players press buttons.</string>
+
+    <string name="guide_section_move_counts">Move Counts</string>
+    <string name="guide_counts_up">Count Up</string>
+    <string name="guide_counts_up_desc">Displays the total number of moves made since the start.</string>
+    <string name="guide_counts_down">Count Down</string>
+    <string name="guide_counts_down_desc">Starts at a limit and counts down to zero moves remaining.</string>
+
+    <string name="guide_section_specialty">Specialty Engines</string>
+    <string name="guide_hourglass">Hourglass</string>
+    <string name="guide_hourglass_desc">One player\'s time loss is added to the opponent. Total time is constant.</string>
+    <string name="guide_gong">Gong Mode</string>
+    <string name="guide_gong_desc">Forced moves at fixed intervals (Simultaneous or Turn-based).</string>
+    <string name="guide_fide">FIDE Periods</string>
+    <string name="guide_fide_desc">Multi-stage tournament timing (e.g., 40 moves in 90m + 30m bonus).</string>
+    <string name="guide_phases">Phases</string>
+    <string name="guide_phases_desc">Sequence of different timers (e.g., Prep 5m -&gt; Game 20m -&gt; Sudden Death).</string>
+
+    <string name="guide_section_advanced">Advanced &amp; Experimental</string>
+    <string name="guide_random">Random</string>
+    <string name="guide_random_desc">Base time and increments are randomized within a set range.</string>
+    <string name="guide_hidden">Hidden</string>
+    <string name="guide_hidden_desc">Masks the clock digits at specific thresholds to increase tension.</string>
+    <string name="guide_fast_move">Fast Move</string>
+    <string name="guide_fast_move_desc">Dynamic speed adjustments based on move frequency or cumulative penalty.</string>
+    <string name="guide_omni_desc">6-layer professional station for complex game structures (Games &gt; Rounds &gt; Turns &gt; Phases).</string>
+
     <!-- Settings: More tab -->
     <string name="settings_more_help">Help and Support</string>
     <string name="settings_more_manual">Timing Engines Manual</string>
