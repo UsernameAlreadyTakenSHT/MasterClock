@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">MasterClock</string>
 
     <!-- Common -->
@@ -27,6 +27,38 @@
     <string name="preset_empty_history">No games played yet.</string>
     <string name="preset_delete_title">Delete \"%s\"?</string>
     <string name="preset_delete_message">This preset will be permanently removed.</string>
+
+    <!--
+      Omni station. The ALL-CAPS wording is the screen's own styling, kept in the string rather
+      than forced in code so a translator can drop it where shouting reads badly.
+    -->
+    <string name="omni_reset_title">Reset Session?</string>
+    <string name="omni_reset_message">All progress across rounds and games will be lost.</string>
+    <string name="omni_reset_confirm">RESET</string>
+    <!--
+      Lint wants "Cancel" here. Kept shouting because this screen shouts throughout (GET READY,
+      I AM READY, RUNNING) and a single sentence-case button would look like a mistake.
+    -->
+    <string name="omni_cancel" tools:ignore="ButtonCase">CANCEL</string>
+    <string name="omni_progress_session">Session</string>
+    <string name="omni_get_ready">GET READY</string>
+    <string name="omni_phase_default">Phase</string>
+    <string name="omni_next">Next</string>
+    <string name="omni_pause">Pause</string>
+    <string name="omni_stop_session">Stop the session</string>
+    <string name="omni_reset_session">Reset the session</string>
+    <string name="omni_running">RUNNING</string>
+    <string name="omni_paused">PAUSED</string>
+    <string name="omni_round_finished">ROUND FINISHED</string>
+    <string name="omni_game_finished">GAME FINISHED</string>
+    <string name="omni_session_complete">SESSION COMPLETE</string>
+    <string name="omni_turn_finished">TURN FINISHED</string>
+    <string name="omni_prepare_round">Prepare for Round %d</string>
+    <string name="omni_prepare_game">Prepare for Game %d</string>
+    <string name="omni_thanks">Thank you for playing!</string>
+    <string name="omni_next_player">Next: Player %d</string>
+    <string name="omni_i_am_ready">I AM READY</string>
+    <string name="omni_close_session">CLOSE SESSION</string>
 
     <!-- Statistics -->
     <string name="stats_title">Statistics</string>
