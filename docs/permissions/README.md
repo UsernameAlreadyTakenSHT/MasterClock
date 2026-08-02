@@ -15,15 +15,15 @@ their document removed in the next release.
 
 ## Status
 
-| Document | Rights holder | Contact | Sent | Reply |
-|---|---|---|---|---|
-| Abalone | Abalone S.A. / FoxMind | `info@FoxMind.com` (printed in the PDF) | 2026-08-02 | — |
-| Quoridor | Gigamic | contact form, gigamic.com | 2026-08-02 | — |
-| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | kanare-abstract.com | 2026-08-02 | — |
-| Tafl | World Tafl Federation (Aage Nielsen) | aagenielsen.dk | 2026-08-02 | — |
-| Hex | David Beckwith | *not recorded* | 2026-08-02 | — |
-| Chess | FIDE | fide.com | 2026-08-02 | — |
-| Draughts (international) | FMJD | fmjd.org | 2026-08-02 | — |
-| Draughts (64) | IDF | idf64.org | 2026-08-02 | — |
-| Shogi | FESA | fesashogi.eu | 2026-08-02 | — |
-| Santorini | Dr. Gordon Hamilton | `gamesbygord@gmail.com` | 2026-08-02 | **Already granted** — the document states it "may be reproduced for non-commercial purposes". A courtesy note only. |
+| Document | Rights holder | Sent | Reply |
+|---|---|---|---|
+| Abalone | Abalone S.A. / FoxMind | 2026-08-02 | — |
+| Quoridor | Gigamic | 2026-08-02 | — |
+| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | 2026-08-02 | — |
+| Tafl | World Tafl Federation (Aage Nielsen) | 2026-08-02 | — |
+| Hex | David Beckwith | 2026-08-02 | — |
+| Chess | FIDE | 2026-08-02 | — |
+| Draughts (international) | FMJD | 2026-08-02 | — |
+| Draughts (64) | IDF | 2026-08-02 | — |
+| Shogi | FESA | 2026-08-02 | — |
+| Santorini | Dr. Gordon Hamilton | 2026-08-02 | **Already granted** — the document states it "may be reproduced for non-commercial purposes". A courtesy note only. |
