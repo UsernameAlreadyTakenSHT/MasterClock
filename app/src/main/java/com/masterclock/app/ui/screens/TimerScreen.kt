@@ -25,6 +25,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -357,13 +363,37 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val alertTextColor = Color(settings.alertTextColor)
 
     val enabled = !state.isArbitreMode && (settings.flagBehavior != FlagBehavior.FREEZE || !playerState.isOutOfTime) && pSettings.mode != TimerMode.MOVE_TIMER_SHARED && !(isChrono && settings.isOneForAll)
-    
+
+    // Rebuilt only when the displayed second changes, not on every 100ms tick.
+    val secondsRemaining = playerState.timeRemainingMs / 1000
+    val a11yLabel = remember(playerIndex, secondsRemaining, isActive, playerState.isOutOfTime) {
+        val time = if (playerState.isOutOfTime) "out of time" else spokenDuration(playerState.timeRemainingMs)
+        if (isActive) "Player $playerIndex, $time, your turn" else "Player $playerIndex, $time"
+    }
+
     Surface(
         modifier = modifier.fillMaxSize().pointerInput(settings.triggerOnPress, enabled) {
                 if (!enabled) return@pointerInput
                 detectTapGestures(onPress = { if (settings.triggerOnPress) { if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() } },
                                   onTap = { if (!settings.triggerOnPress) { if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() } })
-            }, 
+            }
+            // detectTapGestures publishes no semantics node at all, so without this the whole player
+            // area is invisible to TalkBack -- the clock could be read but the turn could never be
+            // passed. Declaring the action here rather than switching to Modifier.clickable keeps
+            // the touch path untouched: triggerOnPress deliberately fires on the down event, which
+            // touch exploration would otherwise swallow.
+            //
+            // clearAndSetSemantics collapses the digits, which are separate Text nodes ("10", ":",
+            // "00"), into this single labelled target instead of several unhelpful focus stops.
+            .clearAndSetSemantics {
+                contentDescription = a11yLabel
+                role = Role.Button
+                if (enabled) {
+                    onClick(label = "Switch turn") { onClick(); true }
+                } else {
+                    disabled()
+                }
+            },
         color = if (isLowTime) backgroundColor.copy(alpha = flashAlpha) else backgroundColor, contentColor = contentColor
     ) {
         val isGlobal = pSettings.mode == TimerMode.PHASES

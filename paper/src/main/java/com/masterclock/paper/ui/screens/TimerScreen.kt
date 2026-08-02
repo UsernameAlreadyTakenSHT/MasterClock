@@ -13,6 +13,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -123,7 +128,14 @@ fun EInkPlayerArea(
     val playerState = state.players.getOrNull(playerIndex - 1) ?: PlayerState(0)
     val isActive = state.activePlayer == playerIndex && !state.isPaused
     val isOutOfTime = playerState.isOutOfTime
-    
+
+    // Rebuilt only when the displayed second changes, not on every tick.
+    val secondsRemaining = playerState.timeRemainingMs / 1000
+    val a11yLabel = remember(playerIndex, secondsRemaining, isActive, isOutOfTime) {
+        val time = if (isOutOfTime) "out of time" else spokenDuration(playerState.timeRemainingMs)
+        if (isActive) "Player $playerIndex, $time, your turn" else "Player $playerIndex, $time"
+    }
+
     // Arrangement.SpaceEvenly pushes elements apart and centers them relative to empty space.
     // Placing Indicator FIRST in both areas:
     // P1 (rotated): Indicator ends up at screen bottom of area (near center).
@@ -133,8 +145,17 @@ fun EInkPlayerArea(
             .fillMaxSize()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
+                indication = null,
+                onClickLabel = "Switch turn",
+                role = Role.Button
             ) { onClick() }
+            // Unlike the main app this area was already reachable, but it announced as an unlabelled
+            // clickable wrapping loose digits; collapsing it gives one target that names the player.
+            .clearAndSetSemantics {
+                contentDescription = a11yLabel
+                role = Role.Button
+                onClick(label = "Switch turn") { onClick(); true }
+            }
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly

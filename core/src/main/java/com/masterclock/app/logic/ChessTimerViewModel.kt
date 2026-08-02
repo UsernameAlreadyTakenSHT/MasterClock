@@ -79,6 +79,30 @@ enum class TimerMode {
 }
 
 /**
+ * A duration in words, for screen readers: "5 minutes 3 seconds".
+ *
+ * Clock faces are formatted as "05:03", which TalkBack reads out digit by digit -- hard to follow
+ * when the number changes every second. Zero components are dropped so a long game does not open
+ * with "0 hours".
+ *
+ * English-only for now, like the rest of the UI; it gets extracted with everything else when the
+ * app is localised.
+ */
+fun spokenDuration(ms: Long): String {
+    if (ms <= 0L) return "no time left"
+    val totalSeconds = ms / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+
+    val parts = mutableListOf<String>()
+    if (hours > 0) parts += if (hours == 1L) "1 hour" else "$hours hours"
+    if (minutes > 0) parts += if (minutes == 1L) "1 minute" else "$minutes minutes"
+    if (seconds > 0 || parts.isEmpty()) parts += if (seconds == 1L) "1 second" else "$seconds seconds"
+    return parts.joinToString(" ")
+}
+
+/**
  * The name to show players for a mode.
  *
  * Deriving it from the constant mangles initialisms ("Us delay", "Fide periods"), so those are
