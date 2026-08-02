@@ -7,14 +7,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.masterclock.app.R
 
 @Composable
 fun ModeGuideScreen(onBack: () -> Unit) {
     ToolScaffold(
-        title = "Timing Engines Manual",
+        title = stringResource(R.string.settings_more_manual),
         onBack = onBack
     ) { pad ->
         Column(
@@ -28,67 +30,67 @@ fun ModeGuideScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             
             Text(
-                "Exhaustive documentation of MasterClock timing engines and sub-modes, following the interface sequence.",
+                stringResource(R.string.guide_intro),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // 1. SUDDEN DEATH
-            EngineSection("Sudden Death") {
-                EngineItem("Standard", "Pure countdown. The first player to reach 0:00 loses or flags.")
+            EngineSection(stringResource(R.string.guide_section_sudden_death)) {
+                EngineItem(stringResource(R.string.guide_sudden_death_standard), stringResource(R.string.guide_sudden_death_standard_desc))
             }
 
             // 2. BONUS (FISCHER / BRONSTEIN / US DELAY)
-            EngineSection("Bonus Engines") {
-                EngineItem("Fischer", "Adds a fixed amount of time (increment) AFTER every move.")
-                EngineItem("Bronstein", "Adds back time spent on the move, but never more than the delay setting. Non-cumulative.")
-                EngineItem("US Delay", "A countdown delay. The clock waits for the delay duration before starting to tick.")
+            EngineSection(stringResource(R.string.guide_section_bonus)) {
+                EngineItem(stringResource(R.string.guide_bonus_fischer), stringResource(R.string.guide_bonus_fischer_desc))
+                EngineItem(stringResource(R.string.guide_bonus_bronstein), stringResource(R.string.guide_bonus_bronstein_desc))
+                EngineItem(stringResource(R.string.guide_bonus_us_delay), stringResource(R.string.guide_bonus_us_delay_desc))
             }
 
             // 3. MOVE TIMER
-            EngineSection("Move Timer") {
-                EngineItem("Standard", "Resets to a fixed duration for every single move.")
-                EngineItem("Save & Cap", "Unused move time is stored in a bank, limited by a maximum capacity.")
-                EngineItem("Overtime", "Adds unused move time to a secondary global reserve.")
-                EngineItem("Global", "Move time and global time tick down simultaneously. Both must stay above zero.")
-                EngineItem("Shared (Auto)", "A single timer for all players. Automatically switches at 0:00.")
-                EngineItem("Global Shared", "All players share a global reserve while having a personal move timer.")
+            EngineSection(stringResource(R.string.guide_section_move_timer)) {
+                EngineItem(stringResource(R.string.guide_move_standard), stringResource(R.string.guide_move_standard_desc))
+                EngineItem(stringResource(R.string.guide_move_save_cap), stringResource(R.string.guide_move_save_cap_desc))
+                EngineItem(stringResource(R.string.guide_move_overtime), stringResource(R.string.guide_move_overtime_desc))
+                EngineItem(stringResource(R.string.guide_move_global), stringResource(R.string.guide_move_global_desc))
+                EngineItem(stringResource(R.string.guide_move_shared), stringResource(R.string.guide_move_shared_desc))
+                EngineItem(stringResource(R.string.guide_move_global_shared), stringResource(R.string.guide_move_global_shared_desc))
             }
 
             // 4. BYOYOMI
-            EngineSection("Byoyomi") {
-                EngineItem("Japanese", "After main time, players get a series of short periods. Reset period on move.")
-                EngineItem("Canadian", "Players must complete a specific number of moves within a single longer period.")
-                EngineItem("Progressive", "The number of required moves increases every time a period is completed.")
+            EngineSection(stringResource(R.string.guide_section_byoyomi)) {
+                EngineItem(stringResource(R.string.guide_byoyomi_japanese), stringResource(R.string.guide_byoyomi_japanese_desc))
+                EngineItem(stringResource(R.string.guide_byoyomi_canadian), stringResource(R.string.guide_byoyomi_canadian_desc))
+                EngineItem(stringResource(R.string.guide_byoyomi_progressive), stringResource(R.string.guide_byoyomi_progressive_desc))
             }
 
             // 5. CHRONOS
-            EngineSection("Chronos") {
-                EngineItem("Countdown", "Master timer counting down for the whole game.")
-                EngineItem("Countup", "Stopwatch mode tracking total time elapsed.")
-                EngineItem("One for All", "System-wide timer that doesn't switch when players press buttons.")
+            EngineSection(stringResource(R.string.guide_section_chronos)) {
+                EngineItem(stringResource(R.string.guide_chrono_countdown), stringResource(R.string.guide_chrono_countdown_desc))
+                EngineItem(stringResource(R.string.guide_chrono_countup), stringResource(R.string.guide_chrono_countup_desc))
+                EngineItem(stringResource(R.string.guide_chrono_one_for_all), stringResource(R.string.guide_chrono_one_for_all_desc))
             }
 
             // 6. MOVE COUNTS
-            EngineSection("Move Counts") {
-                EngineItem("Count Up", "Displays the total number of moves made since the start.")
-                EngineItem("Count Down", "Starts at a limit and counts down to zero moves remaining.")
+            EngineSection(stringResource(R.string.guide_section_move_counts)) {
+                EngineItem(stringResource(R.string.guide_counts_up), stringResource(R.string.guide_counts_up_desc))
+                EngineItem(stringResource(R.string.guide_counts_down), stringResource(R.string.guide_counts_down_desc))
             }
 
             // 7. SPECIALTY ENGINES
-            EngineSection("Specialty Engines") {
-                EngineItem("Hourglass", "One player's time loss is added to the opponent. Total time is constant.")
-                EngineItem("Gong Mode", "Forced moves at fixed intervals (Simultaneous or Turn-based).")
-                EngineItem("FIDE Periods", "Multi-stage tournament timing (e.g., 40 moves in 90m + 30m bonus).")
-                EngineItem("Phases", "Sequence of different timers (e.g., Prep 5m -> Game 20m -> Sudden Death).")
+            EngineSection(stringResource(R.string.guide_section_specialty)) {
+                EngineItem(stringResource(R.string.guide_hourglass), stringResource(R.string.guide_hourglass_desc))
+                EngineItem(stringResource(R.string.guide_gong), stringResource(R.string.guide_gong_desc))
+                EngineItem(stringResource(R.string.guide_fide), stringResource(R.string.guide_fide_desc))
+                EngineItem(stringResource(R.string.guide_phases), stringResource(R.string.guide_phases_desc))
             }
 
             // 8. EXPERIMENTAL & OMNI
-            EngineSection("Advanced & Experimental") {
-                EngineItem("Random", "Base time and increments are randomized within a set range.")
-                EngineItem("Hidden", "Masks the clock digits at specific thresholds to increase tension.")
-                EngineItem("Fast Move", "Dynamic speed adjustments based on move frequency or cumulative penalty.")
-                EngineItem("Omni-Timer", "6-layer professional station for complex game structures (Games > Rounds > Turns > Phases).")
+            EngineSection(stringResource(R.string.guide_section_advanced)) {
+                EngineItem(stringResource(R.string.guide_random), stringResource(R.string.guide_random_desc))
+                EngineItem(stringResource(R.string.guide_hidden), stringResource(R.string.guide_hidden_desc))
+                EngineItem(stringResource(R.string.guide_fast_move), stringResource(R.string.guide_fast_move_desc))
+                EngineItem(stringResource(R.string.guide_omni), stringResource(R.string.guide_omni_desc))
             }
 
             Spacer(Modifier.height(64.dp))
