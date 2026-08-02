@@ -200,6 +200,96 @@
     <string name="toast_audio_failed">Failed to play audio</string>
     <string name="toast_start_failed">Failed to start</string>
 
+    <!-- Settings tabs and dialogs -->
+    <string name="settings_tab_modes">Modes</string>
+    <string name="settings_tab_behavior">Behavior</string>
+    <string name="settings_tab_display">Display</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_more">More</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_clear_logs_title">Clear all game logs?</string>
+    <string name="settings_clear_logs_message">All recorded history will be permanently deleted.</string>
+    <string name="settings_reset_title">Reset all settings?</string>
+    <string name="settings_reset_message">This action cannot be undone.</string>
+
+    <!-- Settings: Display -->
+    <string name="settings_theme">Theme</string>
+    <string name="settings_orientation">Orientation</string>
+    <string name="settings_vert">Vert</string>
+    <string name="settings_layout_scale">Layout &amp; Scale</string>
+    <string name="settings_active_side_bigger">Active side bigger</string>
+    <string name="settings_fullscreen">Fullscreen</string>
+    <string name="settings_keep_awake">Keep screen awake</string>
+    <string name="settings_force_brightness">Force full brightness</string>
+    <string name="settings_primary_colors">Primary Colors</string>
+    <string name="settings_active_bg">Active side background</string>
+    <string name="settings_inactive_bg">Inactive side background</string>
+    <string name="settings_active_text">Active clock text</string>
+    <string name="settings_inactive_text">Inactive clock text</string>
+    <string name="settings_secondary_info">Secondary Information</string>
+    <string name="settings_label_text_color">Label text color (Moves, Periods, Delay)</string>
+    <string name="settings_alert_text_color">Alert text color (FLAGGED, MOVE!)</string>
+    <string name="settings_special_states">Special States</string>
+    <string name="settings_loss_bg">Loss state background</string>
+    <string name="settings_gong_reflection_bg">Gong: Reflection background</string>
+    <string name="settings_time_format">Time Format</string>
+    <string name="settings_always_hours">Always show hours</string>
+    <string name="settings_always_minutes">Always show minutes</string>
+    <string name="settings_show_tenths">Show tenths of seconds</string>
+    <string name="settings_show_hundredths">Show hundredths</string>
+    <string name="settings_like_tenths">Like tenths</string>
+    <string name="settings_under_10s">Under 10s</string>
+    <string name="settings_threshold">Threshold</string>
+    <string name="settings_all">All</string>
+    <string name="settings_information">Information</string>
+    <string name="settings_always_show_moves">Always show moves</string>
+    <!-- Not the fraction one third: it reads "period 1 of 3", so ⅓ would be wrong. -->
+    <string name="settings_show_period" tools:ignore="TypographyFractions">Show period (1/3)</string>
+
+    <!-- Settings: Audio -->
+    <string name="settings_sound">Sound</string>
+    <string name="settings_voice_announcements">Voice announcements</string>
+    <string name="settings_timer_alerts">Timer Alerts</string>
+    <string name="settings_countdown_beep">Countdown beep</string>
+    <string name="settings_triple_beep">Triple beep when times up</string>
+    <string name="settings_play_switch_sound">Play sound on player switch</string>
+    <string name="settings_haptics">Haptics</string>
+    <string name="settings_haptic_countdown">Haptic countdown</string>
+    <string name="settings_haptic_switch">Haptic feedback on switch</string>
+    <string name="settings_haptic_feedback">Haptic feedback</string>
+    <string name="settings_output_volume">Output &amp; Volume</string>
+    <string name="settings_sounds_volume">Sounds Volume</string>
+    <string name="settings_voice_volume">Voice Volume</string>
+    <string name="settings_voice_announcement">Voice Announcement</string>
+    <string name="settings_use_media_output">Use Media Output (Stream)</string>
+    <string name="settings_custom_sounds">Custom Sounds</string>
+    <string name="settings_sound_previews">Sound Previews</string>
+    <string name="settings_gong_mode_sound">Gong (mode gong)</string>
+    <string name="settings_beep_countdown_sound">Beep (countdown)</string>
+    <string name="settings_final_beep_sound">Final beep (Time up)</string>
+    <string name="settings_switch_sound">Switch (player move)</string>
+    <string name="settings_gong">Gong</string>
+    <string name="settings_beep">Beep</string>
+    <string name="settings_final">Final</string>
+    <string name="settings_switch">Switch</string>
+
+    <!-- Settings: Behavior -->
+    <string name="settings_flag_behavior">Flag Behavior</string>
+    <string name="settings_tournament_rules">Tournament Rules</string>
+    <string name="settings_fischer_fide">Fischer FIDE (Bonus on move 0)</string>
+    <string name="settings_forced_move_counter">Forced move counter</string>
+    <string name="settings_interaction">Interaction</string>
+    <string name="settings_confirm_reset">Confirm reset</string>
+    <string name="settings_trigger_on_press">Trigger on Press (else on Release)</string>
+    <string name="settings_pause_background">Pause when in background</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_different_per_player">Different settings per player</string>
+    <string name="settings_more_players">Enable more players (experimental)</string>
+    <string name="settings_players">Players</string>
+    <string name="settings_visuals">Visuals</string>
+    <string name="settings_single_player_top">Single player at top</string>
+    <string name="settings_system_behavior">System behavior</string>
+
     <!-- Export / import dialogs -->
     <string name="share_export_title">Export &amp; Share</string>
     <string name="share_export_intro">Choose how you want to share or backup your data.</string>

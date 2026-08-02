@@ -7,12 +7,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.masterclock.app.R
 import com.masterclock.app.logic.*
 
 @Composable
@@ -20,14 +22,14 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Spacer(Modifier.height(8.dp))
 
-        SettingsSection("Time Format") {
+        SettingsSection(stringResource(R.string.settings_time_format)) {
             val showTenths = currentSettings.showTenthsThresholdMs != 0L
             Column {
-                BehaviorSwitch("Always show hours", currentSettings.alwaysShowHours, topRounded = true) { onSettingsChanged(currentSettings.copy(alwaysShowHours = it)) }
-                BehaviorSwitch("Always show minutes", currentSettings.alwaysShowMinutes) { onSettingsChanged(currentSettings.copy(alwaysShowMinutes = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_always_hours), currentSettings.alwaysShowHours, topRounded = true) { onSettingsChanged(currentSettings.copy(alwaysShowHours = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_always_minutes), currentSettings.alwaysShowMinutes) { onSettingsChanged(currentSettings.copy(alwaysShowMinutes = it)) }
 
                 BehaviorSwitch(
-                    label = "Show tenths of seconds",
+                    label = stringResource(R.string.settings_show_tenths),
                     checked = showTenths
                 ) { enabled ->
                     onSettingsChanged(currentSettings.copy(
@@ -46,7 +48,7 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
 
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             options.forEachIndexed { i, s ->
-                                val label = if (s == -1) "All" else "${s}s"
+                                val label = if (s == -1) stringResource(R.string.settings_all) else "${s}s"
                                 SegmentedButton(
                                     selected = currentVal == s,
                                     onClick = {
@@ -62,7 +64,7 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                 }
 
                 BehaviorSwitch(
-                    label = "Show hundredths",
+                    label = stringResource(R.string.settings_show_hundredths),
                     checked = currentSettings.showHundredths,
                     enabled = showTenths,
                     bottomRounded = !currentSettings.showHundredths || !showTenths
@@ -74,19 +76,19 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Threshold", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.settings_threshold), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
                             SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(2f)) {
                                 SegmentedButton(
                                     selected = !currentSettings.showHundredthsOnlyUnder10s,
                                     onClick = { onSettingsChanged(currentSettings.copy(showHundredthsOnlyUnder10s = false)) },
                                     shape = SegmentedButtonDefaults.itemShape(0, 2),
-                                    label = { Text("Like tenths", style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(stringResource(R.string.settings_like_tenths), style = MaterialTheme.typography.labelSmall) }
                                 )
                                 SegmentedButton(
                                     selected = currentSettings.showHundredthsOnlyUnder10s,
                                     onClick = { onSettingsChanged(currentSettings.copy(showHundredthsOnlyUnder10s = true)) },
                                     shape = SegmentedButtonDefaults.itemShape(1, 2),
-                                    label = { Text("Under 10s", style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text(stringResource(R.string.settings_under_10s), style = MaterialTheme.typography.labelSmall) }
                                 )
                             }
                         }
@@ -95,25 +97,25 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
             }
         }
 
-        SettingsSection("Information") {
+        SettingsSection(stringResource(R.string.settings_information)) {
             Column {
-                BehaviorSwitch("Show period (1/3)", currentSettings.showCurrentPeriod, topRounded = true) { onSettingsChanged(currentSettings.copy(showCurrentPeriod = it)) }
-                BehaviorSwitch("Always show moves", currentSettings.alwaysShowMoveCount, bottomRounded = true) { onSettingsChanged(currentSettings.copy(alwaysShowMoveCount = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_show_period), currentSettings.showCurrentPeriod, topRounded = true) { onSettingsChanged(currentSettings.copy(showCurrentPeriod = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_always_show_moves), currentSettings.alwaysShowMoveCount, bottomRounded = true) { onSettingsChanged(currentSettings.copy(alwaysShowMoveCount = it)) }
             }
         }
 
-        SettingsSection("Layout & Scale") {
+        SettingsSection(stringResource(R.string.settings_layout_scale)) {
             Column {
-                BehaviorSwitch("Active side bigger", currentSettings.activePlayerSideBigger, topRounded = true) { onSettingsChanged(currentSettings.copy(activePlayerSideBigger = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_active_side_bigger), currentSettings.activePlayerSideBigger, topRounded = true) { onSettingsChanged(currentSettings.copy(activePlayerSideBigger = it)) }
                 Row(
                     modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Orientation", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.settings_orientation), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                     SingleChoiceSegmentedButtonRow {
                         ClockOrientation.entries.forEachIndexed { i, o ->
                             val label = when(o) {
-                                ClockOrientation.VERTICAL -> "Vert"
+                                ClockOrientation.VERTICAL -> stringResource(R.string.settings_vert)
                                 ClockOrientation.HORIZONTAL_LEFT -> "L"
                                 ClockOrientation.HORIZONTAL_RIGHT -> "R"
                             }
@@ -127,13 +129,13 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                     }
                 }
                 BehaviorSwitch("Flash on low time (<10s)", currentSettings.flashOnLowTime) { onSettingsChanged(currentSettings.copy(flashOnLowTime = it)) }
-                BehaviorSwitch("Keep screen awake", currentSettings.forceScreenOn) { onSettingsChanged(currentSettings.copy(forceScreenOn = it)) }
-                BehaviorSwitch("Force full brightness", currentSettings.forceFullBrightness) { onSettingsChanged(currentSettings.copy(forceFullBrightness = it)) }
-                BehaviorSwitch("Fullscreen", currentSettings.fullscreenMode, bottomRounded = true) { onSettingsChanged(currentSettings.copy(fullscreenMode = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_keep_awake), currentSettings.forceScreenOn) { onSettingsChanged(currentSettings.copy(forceScreenOn = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_force_brightness), currentSettings.forceFullBrightness) { onSettingsChanged(currentSettings.copy(forceFullBrightness = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_fullscreen), currentSettings.fullscreenMode, bottomRounded = true) { onSettingsChanged(currentSettings.copy(fullscreenMode = it)) }
             }
         }
 
-        SettingsSection("Theme") {
+        SettingsSection(stringResource(R.string.settings_theme)) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 AppThemeMode.entries.forEachIndexed { i, t ->
                     SegmentedButton(
@@ -146,38 +148,38 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
             }
         }
 
-        SettingsSection("Primary Colors") {
+        SettingsSection(stringResource(R.string.settings_primary_colors)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Active side background", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_active_bg), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.activeColor) { onSettingsChanged(currentSettings.copy(activeColor = it)) }
 
-                Text("Inactive side background", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_inactive_bg), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.inactiveColor) { onSettingsChanged(currentSettings.copy(inactiveColor = it)) }
 
-                Text("Active clock text", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_active_text), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.activeTextColor) { onSettingsChanged(currentSettings.copy(activeTextColor = it)) }
 
-                Text("Inactive clock text", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_inactive_text), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.inactiveTextColor) { onSettingsChanged(currentSettings.copy(inactiveTextColor = it)) }
             }
         }
 
-        SettingsSection("Secondary Information") {
+        SettingsSection(stringResource(R.string.settings_secondary_info)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Label text color (Moves, Periods, Delay)", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_label_text_color), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.secondaryTextColor) { onSettingsChanged(currentSettings.copy(secondaryTextColor = it)) }
 
-                Text("Alert text color (FLAGGED, MOVE!)", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_alert_text_color), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.alertTextColor) { onSettingsChanged(currentSettings.copy(alertTextColor = it)) }
             }
         }
 
-        SettingsSection("Special States") {
+        SettingsSection(stringResource(R.string.settings_special_states)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Loss state background", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_loss_bg), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.lossColor) { onSettingsChanged(currentSettings.copy(lossColor = it)) }
 
-                Text("Gong: Reflection background", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_gong_reflection_bg), style = MaterialTheme.typography.labelMedium)
                 ColorRow(currentSettings.reflectionColor) { onSettingsChanged(currentSettings.copy(reflectionColor = it)) }
             }
         }

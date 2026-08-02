@@ -6,10 +6,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.BuildConfig
+import com.masterclock.app.R
 import com.masterclock.app.logic.*
 
 @Composable
@@ -68,22 +70,22 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
 
         if (!FlavorConfig.hasFullSettingsTabs()) {
             Spacer(Modifier.height(24.dp))
-            SettingsSection("System behavior") {
+            SettingsSection(stringResource(R.string.settings_system_behavior)) {
                 BehaviorSwitch(
-                    label = "Keep screen awake",
+                    label = stringResource(R.string.settings_keep_awake),
                     checked = currentSettings.forceScreenOn,
                     topRounded = true
                 ) {
                     onSettingsChanged(currentSettings.copy(forceScreenOn = it))
                 }
                 BehaviorSwitch(
-                    label = "Sound",
+                    label = stringResource(R.string.settings_sound),
                     checked = currentSettings.playSwitchSound
                 ) {
                     onSettingsChanged(currentSettings.copy(playSwitchSound = it, tripleBeepTimeUp = it))
                 }
                 BehaviorSwitch(
-                    label = "Haptic feedback",
+                    label = stringResource(R.string.settings_haptic_feedback),
                     checked = currentSettings.hapticFeedback,
                     bottomRounded = true
                 ) {
