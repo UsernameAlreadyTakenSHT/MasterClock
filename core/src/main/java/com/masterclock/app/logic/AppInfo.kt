@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-01"
+    const val BUILD_DATE = "2026-08-02"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,20 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.13",
+            date = "2026-08-02",
+            notes = listOf(
+                "The clock now works with a screen reader. The player areas were invisible to TalkBack, so the turn could never be passed; they are labelled buttons, and flags, turns and pauses are spoken.",
+                "Statistics: average and slowest move, time under pressure, and a time-per-move chart for each recorded game.",
+                "Long-press the app icon to start from a recent game or a saved preset.",
+                "Rename or delete a saved preset by long-pressing it, instead of a button crowding the tile.",
+                "The clock no longer gets cut off when the system font size is turned up.",
+                "The chess, shogi and both draughts rulebooks opened blank. Replaced with the real documents.",
+                "Groundwork for translation: the interface now lives in resource files, and French, Spanish, Portuguese, Italian, German and Dutch are ready to be filled in. On Android 13 and later the language can be picked per app.",
+                "The Fischer mode was misspelled internally. Correcting it resets your settings and clears the moves from older Fischer games.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.12",
             date = "2026-08-01",
