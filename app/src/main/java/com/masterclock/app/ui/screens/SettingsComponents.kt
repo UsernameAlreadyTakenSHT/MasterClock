@@ -603,7 +603,7 @@ fun ColorRow(selectedColor: Long, compact: Boolean = false, onColorSelected: (Lo
         Surface(onClick = { showPicker = true }, modifier = Modifier.size(pickerSize), shape = CircleShape, color = Color.Transparent, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
             val gradient = remember { androidx.compose.ui.graphics.Brush.sweepGradient(listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)) }
             Box(modifier = Modifier.fillMaxSize().background(brush = gradient), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.ColorLens, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.ColorLens, "Pick a custom colour", tint = Color.White, modifier = Modifier.size(20.dp))
             }
         }
         VerticalDivider(modifier = Modifier.height(24.dp))
@@ -764,7 +764,10 @@ fun CustomSoundItem(
                 }
             }
             IconButton(onClick = onPick) {
-                Icon(if (uri != null) Icons.Default.Edit else Icons.Default.Add, null)
+                Icon(
+                    if (uri != null) Icons.Default.Edit else Icons.Default.Add,
+                    if (uri != null) "Change custom sound" else "Choose a custom sound"
+                )
             }
         }
         if (showDivider) {

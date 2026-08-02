@@ -366,7 +366,7 @@ fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings
                             IconButton(onClick = {
                                 val newList = settings.games.toMutableList().apply { removeAt(index) }
                                 onSettingsChanged(settings.copy(games = newList))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, "Delete game ${index + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
@@ -444,7 +444,7 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                                 onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                                     this[selectedGameIdx] = currentGame.copy(rounds = newList)
                                 }))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, "Delete round ${index + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
@@ -565,7 +565,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
                                         this[selectedRoundIdx] = currentRound.copy(customTurns = newList, turnLogic = if (newList.size <= 1) RoundTurnLogic.FIXED else RoundTurnLogic.SEQUENCE)
                                     })
                                 }))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, "Delete turn ${tIdx + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
@@ -704,7 +704,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                                 IconButton(onClick = {
                                     val newPhases = phases.toMutableList().apply { removeAt(pIdx) }
                                     updateReplicatedPhases(settings, selectedGameIdx, selectedRoundIdx, selectedTurnIdx, newPhases, onSettingsChanged)
-                                }) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                                }) { Icon(Icons.Default.Delete, "Delete phase ${pIdx + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                             }
                         }
                         HMSInput("", phase.durationMs) { duration ->
