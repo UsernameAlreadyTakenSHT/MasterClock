@@ -67,6 +67,22 @@ constantly:
 **Some things stay in English on purpose.** Anything marked `translatable="false"` is a proper
 noun or an internal token — `Fischer`, `Bronstein`, `Byoyomi`. Leave those alone.
 
+**Counted things are `<plurals>`, not `<string>`.** Anything that varies with a number lives in a
+`<plurals>` block, and you add or remove `<item>` elements to match your own language — English
+needs two, French treats 0 as singular, Russian and Polish need three or four.
+
+```xml
+<plurals name="stats_chart_moves">
+    <item quantity="one">%d move</item>
+    <item quantity="other">%d moves</item>
+</plurals>
+```
+
+Valid `quantity` values are `zero`, `one`, `two`, `few`, `many` and `other`. Use only the ones your
+language actually distinguishes; `other` is always required. If you are unsure, the
+[Unicode plural rules](https://cldr.unicode.org/index/cldr-spec/plural-rules) list them per
+language.
+
 **Watch the length.** Several labels sit in very tight spaces: the buttons under the clock, the
 tabs in the credits dialog, the labels on the clock face itself. French and German commonly run
 40–80% longer than English. If a natural translation is much longer, prefer a shorter wording — a

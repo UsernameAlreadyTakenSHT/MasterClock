@@ -15,12 +15,15 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.masterclock.app.R
 import com.masterclock.app.logic.*
 
 /** Fixed player identity colours, shared with the Omni wizard so a player keeps one colour. */
@@ -51,6 +54,8 @@ fun MoveDurationChart(
     val slowest = durations.maxOf { it.durationMs }.coerceAtLeast(1L)
     val players = durations.map { it.playerIndex }.distinct().sorted()
     val axisColor = MaterialTheme.colorScheme.outlineVariant
+    // Hoisted: stringResource is @Composable and cannot be called inside the semantics lambda.
+    val chartDescription = pluralStringResource(R.plurals.stats_chart_description, durations.size, formatDuration(slowest), durations.size)
 
     Column(modifier) {
         Row(
@@ -63,7 +68,7 @@ fun MoveDurationChart(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "${durations.size} moves",
+                pluralStringResource(R.plurals.stats_chart_moves, durations.size, durations.size),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -74,10 +79,7 @@ fun MoveDurationChart(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(height)
-                .semantics {
-                    contentDescription = "Time per move. Slowest ${formatDuration(slowest)} " +
-                        "over ${durations.size} moves."
-                }
+                .semantics { contentDescription = chartDescription }
         ) {
             val gap = 2.dp.toPx()
             val slotWidth = size.width / durations.size
@@ -115,7 +117,7 @@ fun MoveDurationChart(
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        "Player $player",
+                        stringResource(R.string.common_player_n, player),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -155,15 +157,14 @@ fun StatisticsScreen(history: List<GameLog>, onBack: () -> Unit) {
         history.maxByOrNull { it.startTime }?.let { moveDurations(it) }.orEmpty()
     }
 
-    ToolScaffold(title = "Statistics", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.stats_title), onBack = onBack) { padding ->
         if (stats.isEmpty) {
             Box(
                 Modifier.fillMaxSize().padding(padding).padding(32.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "No finished games yet.\n\nA game is recorded when you reset it, so play a game " +
-                        "and press Reset to see your statistics here.",
+                    stringResource(R.string.stats_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -180,22 +181,22 @@ fun StatisticsScreen(history: List<GameLog>, onBack: () -> Unit) {
                 .padding(16.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatTile("Games played", "${stats.gamesPlayed}", Modifier.weight(1f))
-                StatTile("Moves", "${stats.totalMoves}", Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_games_played), "${stats.gamesPlayed}", Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_moves), "${stats.totalMoves}", Modifier.weight(1f))
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatTile("Average move", formatDuration(stats.averageMoveMs), Modifier.weight(1f))
-                StatTile("Median move", formatDuration(stats.medianMoveMs), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_average_move), formatDuration(stats.averageMoveMs), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_median_move), formatDuration(stats.medianMoveMs), Modifier.weight(1f))
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatTile("Slowest move", formatDuration(stats.slowestMoveMs), Modifier.weight(1f))
-                StatTile("Time on clock", formatDuration(stats.totalThinkTimeMs), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_slowest_move), formatDuration(stats.slowestMoveMs), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_time_on_clock), formatDuration(stats.totalThinkTimeMs), Modifier.weight(1f))
             }
             Spacer(Modifier.height(8.dp))
             StatTile(
-                "Moves played under 10% of the starting clock",
+                stringResource(R.string.stats_time_pressure),
                 "${(stats.timePressureShare * 100).toInt()}%",
                 Modifier.fillMaxWidth(),
             )
@@ -203,7 +204,7 @@ fun StatisticsScreen(history: List<GameLog>, onBack: () -> Unit) {
             if (recentDurations.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    "Most recent game",
+                    stringResource(R.string.stats_recent_game),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
@@ -215,7 +216,7 @@ fun StatisticsScreen(history: List<GameLog>, onBack: () -> Unit) {
             if (stats.perMode.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    "Modes played",
+                    stringResource(R.string.stats_modes_played),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,

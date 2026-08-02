@@ -19,10 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -83,16 +85,16 @@ fun PresetsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Presets", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } }
+                title = { Text(stringResource(R.string.preset_title), fontWeight = FontWeight.Bold) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } }
             )
         }
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
             PrimaryTabRow(selectedTabIndex = selectedTab) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) { Text("All Presets", Modifier.padding(12.dp), maxLines = 1) }
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text("My Presets", Modifier.padding(12.dp), maxLines = 1) }
-                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) { Text("Last Games", Modifier.padding(12.dp), maxLines = 1) }
+                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) { Text(stringResource(R.string.preset_tab_all), Modifier.padding(12.dp), maxLines = 1) }
+                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text(stringResource(R.string.preset_tab_mine), Modifier.padding(12.dp), maxLines = 1) }
+                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) { Text(stringResource(R.string.preset_tab_last_games), Modifier.padding(12.dp), maxLines = 1) }
             }
 
             if (selectedTab == 0) {
@@ -116,13 +118,13 @@ fun PresetsScreen(
                     ) {
                         Icon(Icons.Default.Add, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Save current time control")
+                        Text(stringResource(R.string.preset_save_current))
                     }
 
                     if (customPresets.isEmpty()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                "Set up a time control, then save it here.",
+                                stringResource(R.string.preset_empty_custom),
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(24.dp)
@@ -130,7 +132,7 @@ fun PresetsScreen(
                         }
                     } else {
                         Text(
-                            "Long-press a preset to rename or delete it.",
+                            stringResource(R.string.preset_long_press_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -164,14 +166,14 @@ fun PresetsScreen(
                     ) {
                         Icon(Icons.Default.BarChart, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("View statistics")
+                        Text(stringResource(R.string.preset_view_statistics))
                     }
                 }
 
                 val lastTen = remember(history) { history.take(10) }
                 if (lastTen.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No games played yet.", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.preset_empty_history), style = MaterialTheme.typography.bodyLarge)
                     }
                 } else {
                     LazyVerticalGrid(
@@ -210,9 +212,9 @@ fun PresetsScreen(
 
     if (showSaveDialog) {
         PresetNameDialog(
-            title = "Save time control",
+            title = stringResource(R.string.preset_save_title),
             initialName = "",
-            confirmLabel = "Save",
+            confirmLabel = stringResource(R.string.common_save),
             onDismiss = { showSaveDialog = false },
             onConfirm = { onSavePreset(it); showSaveDialog = false }
         )
@@ -220,9 +222,9 @@ fun PresetsScreen(
 
     presetBeingRenamed?.let { preset ->
         PresetNameDialog(
-            title = "Rename preset",
+            title = stringResource(R.string.preset_rename_title),
             initialName = preset.name,
-            confirmLabel = "Rename",
+            confirmLabel = stringResource(R.string.common_rename),
             onDismiss = { presetBeingRenamed = null },
             onConfirm = { onRenamePreset(preset.id, it); presetBeingRenamed = null }
         )
@@ -231,15 +233,15 @@ fun PresetsScreen(
     presetBeingDeleted?.let { preset ->
         AlertDialog(
             onDismissRequest = { presetBeingDeleted = null },
-            title = { Text("Delete \"${preset.name}\"?") },
-            text = { Text("This preset will be permanently removed.") },
+            title = { Text(stringResource(R.string.preset_delete_title, preset.name)) },
+            text = { Text(stringResource(R.string.preset_delete_message)) },
             confirmButton = {
                 TextButton(
                     onClick = { onDeletePreset(preset.id); presetBeingDeleted = null },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) { Text("Delete") }
+                ) { Text(stringResource(R.string.common_delete)) }
             },
-            dismissButton = { TextButton(onClick = { presetBeingDeleted = null }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { presetBeingDeleted = null }) { Text(stringResource(R.string.common_cancel)) } }
         )
     }
 }
@@ -257,6 +259,7 @@ fun PresetCard(
     onClick: () -> Unit
 ) {
     val hasActions = onEdit != null || onDelete != null
+    val manageLabel = stringResource(R.string.preset_manage_action)
     var menuOpen by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val shape = RoundedCornerShape(12.dp)
@@ -276,7 +279,7 @@ fun PresetCard(
                             menuOpen = true
                         }
                     } else null,
-                    onLongClickLabel = if (hasActions) "Rename or delete" else null
+                    onLongClickLabel = if (hasActions) manageLabel else null
                 )
         ) {
             Column(
@@ -299,14 +302,14 @@ fun PresetCard(
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 onEdit?.let { edit ->
                     DropdownMenuItem(
-                        text = { Text("Rename") },
+                        text = { Text(stringResource(R.string.common_rename)) },
                         leadingIcon = { Icon(Icons.Default.Edit, null, Modifier.size(18.dp)) },
                         onClick = { menuOpen = false; edit() }
                     )
                 }
                 onDelete?.let { delete ->
                     DropdownMenuItem(
-                        text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                        text = { Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error) },
                         leadingIcon = {
                             Icon(Icons.Default.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
                         },
@@ -335,7 +338,7 @@ private fun PresetNameDialog(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text(stringResource(R.string.common_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
@@ -344,6 +347,6 @@ private fun PresetNameDialog(
         confirmButton = {
             TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) { Text(confirmLabel) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } }
     )
 }

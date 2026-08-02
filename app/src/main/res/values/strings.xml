@@ -6,6 +6,54 @@
     <string name="common_reset">Reset</string>
     <string name="common_player_n">Player %d</string>
     <string name="common_back_to_game">Back to Game</string>
+    <string name="common_back">Back</string>
+    <string name="common_save">Save</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_rename">Rename</string>
+    <string name="common_name">Name</string>
+
+    <!-- Presets -->
+    <string name="preset_title">Presets</string>
+    <string name="preset_tab_all">All Presets</string>
+    <string name="preset_tab_mine">My Presets</string>
+    <string name="preset_tab_last_games">Last Games</string>
+    <string name="preset_save_current">Save current time control</string>
+    <string name="preset_save_title">Save time control</string>
+    <string name="preset_rename_title">Rename preset</string>
+    <string name="preset_empty_custom">Set up a time control, then save it here.</string>
+    <string name="preset_long_press_hint">Long-press a preset to rename or delete it.</string>
+    <string name="preset_manage_action">Rename or delete</string>
+    <string name="preset_view_statistics">View statistics</string>
+    <string name="preset_empty_history">No games played yet.</string>
+    <string name="preset_delete_title">Delete \"%s\"?</string>
+    <string name="preset_delete_message">This preset will be permanently removed.</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">Statistics</string>
+    <string name="stats_empty">No finished games yet.\n\nA game is recorded when you reset it, so play a game and press Reset to see your statistics here.</string>
+    <string name="stats_games_played">Games played</string>
+    <string name="stats_moves">Moves</string>
+    <string name="stats_average_move">Average move</string>
+    <string name="stats_median_move">Median move</string>
+    <string name="stats_slowest_move">Slowest move</string>
+    <string name="stats_time_on_clock">Time on clock</string>
+    <string name="stats_time_pressure">Moves played under 10% of the starting clock</string>
+    <string name="stats_recent_game">Most recent game</string>
+    <string name="stats_modes_played">Modes played</string>
+    <!--
+      Counted strings are plurals, not plain strings with a %d in them: English only needs two
+      forms, but French treats 0 as singular and Russian or Polish need three or four. Translators
+      add or drop <item> elements to match their own language.
+    -->
+    <plurals name="stats_chart_moves">
+        <item quantity="one">%d move</item>
+        <item quantity="other">%d moves</item>
+    </plurals>
+
+    <plurals name="stats_chart_description">
+        <item quantity="one">Time per move. Slowest %1$s over %2$d move.</item>
+        <item quantity="other">Time per move. Slowest %1$s over %2$d moves.</item>
+    </plurals>
 
     <!-- Timer Screen -->
     <string name="timer_reset_title">Reset Game?</string>
