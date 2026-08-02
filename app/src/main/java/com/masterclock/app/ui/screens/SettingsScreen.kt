@@ -1,25 +1,29 @@
 package com.masterclock.app.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import com.masterclock.app.ui.navigation.Route
 
-enum class SettingsCategory(val label: String, val icon: ImageVector) {
-    MODES("Modes", Icons.Default.Timer),
-    BEHAVIOR("Behavior", Icons.Default.SettingsSuggest),
-    DISPLAY("Display", Icons.Default.Palette),
-    AUDIO("Audio", Icons.AutoMirrored.Filled.VolumeUp),
-    MORE("More", Icons.Default.Menu),
-    OMNI("Omni", Icons.Default.Dataset);
+/** [labelRes] rather than a String: an enum cannot call stringResource, so it carries the id. */
+enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector) {
+    MODES(R.string.settings_tab_modes, Icons.Default.Timer),
+    BEHAVIOR(R.string.settings_tab_behavior, Icons.Default.SettingsSuggest),
+    DISPLAY(R.string.settings_tab_display, Icons.Default.Palette),
+    AUDIO(R.string.settings_tab_audio, Icons.AutoMirrored.Filled.VolumeUp),
+    MORE(R.string.settings_tab_more, Icons.Default.Menu),
+    OMNI(R.string.settings_tab_omni, Icons.Default.Dataset);
 
     companion object {
         fun getVisibleCategories(): List<SettingsCategory> {
@@ -62,7 +66,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(category.label, fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(category.labelRes), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
                 },
@@ -76,8 +80,8 @@ fun SettingsScreen(
                         NavigationBarItem(
                             selected = category == cat,
                             onClick = { onCategoryChanged(cat) },
-                            icon = { Icon(cat.icon, cat.label) },
-                            label = { Text(cat.label) }
+                            icon = { Icon(cat.icon, stringResource(cat.labelRes)) },
+                            label = { Text(stringResource(cat.labelRes)) }
                         )
                     }
                 }
@@ -133,8 +137,8 @@ fun SettingsScreen(
     if (showResetSettingsDialog) {
         AlertDialog(
             onDismissRequest = { showResetSettingsDialog = false },
-            title = { Text("Reset all settings?") },
-            text = { Text("This action cannot be undone.") },
+            title = { Text(stringResource(R.string.settings_reset_title)) },
+            text = { Text(stringResource(R.string.settings_reset_message)) },
             confirmButton = {
                 TextButton(onClick = { onResetSettings(); showResetSettingsDialog = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
                     Text("Reset")
@@ -149,8 +153,8 @@ fun SettingsScreen(
     if (showClearLogsDialog) {
         AlertDialog(
             onDismissRequest = { showClearLogsDialog = false },
-            title = { Text("Clear all game logs?") },
-            text = { Text("All recorded history will be permanently deleted.") },
+            title = { Text(stringResource(R.string.settings_clear_logs_title)) },
+            text = { Text(stringResource(R.string.settings_clear_logs_message)) },
             confirmButton = {
                 TextButton(onClick = { onClearLogs(); showClearLogsDialog = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
                     Text("Clear")
