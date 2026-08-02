@@ -13,11 +13,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +49,8 @@ fun TimerScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        ClockAnnouncer(state)
+
         // Player 1 Block (Upside down for opponent, floating)
         Box(modifier = Modifier.weight(1f).graphicsLayer { rotationZ = 180f }) {
             EInkPlayerArea(
@@ -117,6 +122,25 @@ fun TimerScreen(
             onDismiss = { showResetDialog = false }
         )
     }
+}
+
+/**
+ * A zero-content live region that speaks state changes. It sits outside the player areas because
+ * those collapse their subtree with clearAndSetSemantics; see the app module for the full note.
+ */
+@Composable
+private fun ClockAnnouncer(state: ChessClockState) {
+    val message = clockAnnouncement(state) ?: return
+    val urgent = isUrgentAnnouncement(state)
+
+    Box(
+        Modifier
+            .size(1.dp)
+            .semantics {
+                liveRegion = if (urgent) LiveRegionMode.Assertive else LiveRegionMode.Polite
+                contentDescription = message
+            }
+    )
 }
 
 @Composable

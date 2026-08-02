@@ -25,12 +25,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import com.masterclock.app.ui.theme.MasterClockTheme
@@ -112,6 +116,8 @@ fun TimerScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        ClockAnnouncer(state)
+
         if (isGlobalMode) {
             Box(Modifier.fillMaxSize()) {
                 PlayerButton(Modifier.fillMaxSize(), state, 1, settings, contentRotation = iconRotation) { 
@@ -305,6 +311,34 @@ fun TimerScreen(
             }
         }
     }
+}
+
+/**
+ * A zero-content live region that speaks state changes: a flag, a new turn, a pause, a byoyomi
+ * period.
+ *
+ * It has to sit outside the player areas rather than on the FLAGGED label itself, because those
+ * areas use clearAndSetSemantics to collapse into one target and that wipes the semantics of
+ * everything inside them.
+ *
+ * Nothing here reacts to the countdown, only to transitions -- see clockAnnouncement.
+ */
+@Composable
+private fun ClockAnnouncer(state: ChessClockState) {
+    val message = clockAnnouncement(state) ?: return
+    val urgent = isUrgentAnnouncement(state)
+
+    Box(
+        Modifier
+            // The player areas fill the screen and are drawn after this, which would leave the
+            // announcer obscured -- and an obscured node is dropped from the accessibility tree.
+            .zIndex(1f)
+            .size(1.dp)
+            .semantics {
+                liveRegion = if (urgent) LiveRegionMode.Assertive else LiveRegionMode.Polite
+                contentDescription = message
+            }
+    )
 }
 
 @Composable
