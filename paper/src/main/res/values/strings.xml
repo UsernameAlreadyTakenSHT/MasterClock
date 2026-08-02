@@ -49,4 +49,31 @@
     <string name="share_settings">Share Settings</string>
     <string name="toast_backup_ok">Backup successful!</string>
     <string name="toast_import_ok">Import successful!</string>
+    <!-- Screen-reader wording; core reports the state as data, the sentence is built here. -->
+    <string name="a11y_player_clock">Player %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Player %1$d, %2$s, your turn</string>
+    <string name="a11y_out_of_time">out of time</string>
+    <string name="a11y_no_time_left">no time left</string>
+    <string name="a11y_announce_out_of_time">Player %d is out of time</string>
+    <string name="a11y_announce_paused">Paused</string>
+    <string name="a11y_announce_to_move">Player %d to move</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <plurals name="a11y_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">%d period left</item>
+        <item quantity="other">%d periods left</item>
+    </plurals>
 </resources>

@@ -6,9 +6,12 @@ import org.junit.Assert.*
 /**
  * Covers [clockAnnouncement] and [isUrgentAnnouncement], which drive the timer screen's live region.
  *
- * The property that matters most is the negative one: the message must NOT change as time runs
- * down. A live region re-announces whenever its text changes, so a message that tracked the
+ * The property that matters most is the negative one: the announcement must NOT change as time
+ * runs down. A live region re-announces whenever its text changes, so one that tracked the
  * countdown would make a screen reader recite the seconds and bury everything else.
+ *
+ * It reports an event rather than a sentence; the wording lives in the UI modules, so these tests
+ * stay pure Kotlin.
  */
 class ClockAnnouncementTest {
 
@@ -37,12 +40,12 @@ class ClockAnnouncementTest {
     )
 
     @Test
-    fun `the message does not change as the clock ticks down`() {
+    fun `the announcement does not change as the clock ticks down`() {
         val before = clockAnnouncement(state(listOf(player(timeMs = 600_000), player()), activePlayer = 1))
         val after = clockAnnouncement(state(listOf(player(timeMs = 12_345), player()), activePlayer = 1))
 
         assertEquals(before, after)
-        assertEquals("Player 1 to move", before)
+        assertEquals(ClockAnnouncement.ToMove(1, null), before)
     }
 
     @Test
@@ -51,12 +54,15 @@ class ClockAnnouncementTest {
     }
 
     @Test
-    fun `passing the turn changes the message`() {
-        val p1 = clockAnnouncement(state(listOf(player(), player()), activePlayer = 1))
-        val p2 = clockAnnouncement(state(listOf(player(), player()), activePlayer = 2))
-
-        assertEquals("Player 1 to move", p1)
-        assertEquals("Player 2 to move", p2)
+    fun `passing the turn changes the announcement`() {
+        assertEquals(
+            ClockAnnouncement.ToMove(1, null),
+            clockAnnouncement(state(listOf(player(), player()), activePlayer = 1)),
+        )
+        assertEquals(
+            ClockAnnouncement.ToMove(2, null),
+            clockAnnouncement(state(listOf(player(), player()), activePlayer = 2)),
+        )
     }
 
     @Test
@@ -67,7 +73,7 @@ class ClockAnnouncementTest {
             firstToFlag = 2,
         )
 
-        assertEquals("Player 2 is out of time", clockAnnouncement(flagged))
+        assertEquals(ClockAnnouncement.OutOfTime(2), clockAnnouncement(flagged))
         assertTrue(isUrgentAnnouncement(flagged))
     }
 
@@ -78,7 +84,7 @@ class ClockAnnouncementTest {
             activePlayer = 1,
         )
 
-        assertEquals("Player 2 is out of time", clockAnnouncement(flagged))
+        assertEquals(ClockAnnouncement.OutOfTime(2), clockAnnouncement(flagged))
         assertTrue(isUrgentAnnouncement(flagged))
     }
 
@@ -91,37 +97,34 @@ class ClockAnnouncementTest {
     fun `pausing is announced`() {
         val paused = state(listOf(player(), player()), activePlayer = 1, isPaused = true)
 
-        assertEquals("Paused", clockAnnouncement(paused))
+        assertEquals(ClockAnnouncement.Paused, clockAnnouncement(paused))
         assertFalse(isUrgentAnnouncement(paused))
     }
 
     @Test
-    fun `byoyomi is announced with the periods left, pluralised`() {
+    fun `byoyomi carries the periods left`() {
         val three = state(
             players = listOf(player(inByoyomi = true, periodsLeft = 3), player()),
             activePlayer = 1,
         )
-        val one = state(
-            players = listOf(player(inByoyomi = true, periodsLeft = 1), player()),
-            activePlayer = 1,
-        )
 
-        assertEquals("Player 1 to move, byoyomi, 3 periods left", clockAnnouncement(three))
-        assertEquals("Player 1 to move, byoyomi, 1 period left", clockAnnouncement(one))
+        assertEquals(ClockAnnouncement.ToMove(1, 3), clockAnnouncement(three))
     }
 
     @Test
-    fun `byoyomi with no periods left does not trail an empty count`() {
-        val state = state(
+    fun `byoyomi with no periods left is distinct from not being in byoyomi at all`() {
+        val inByoyomi = state(
             players = listOf(player(inByoyomi = true, periodsLeft = 0), player()),
             activePlayer = 1,
         )
+        val notInByoyomi = state(listOf(player(), player()), activePlayer = 1)
 
-        assertEquals("Player 1 to move, byoyomi", clockAnnouncement(state))
+        assertEquals(ClockAnnouncement.ToMove(1, 0), clockAnnouncement(inByoyomi))
+        assertEquals(ClockAnnouncement.ToMove(1, null), clockAnnouncement(notInByoyomi))
     }
 
     @Test
-    fun `consuming a byoyomi period changes the message so it is re-announced`() {
+    fun `consuming a byoyomi period changes the announcement so it is re-spoken`() {
         val three = clockAnnouncement(
             state(listOf(player(inByoyomi = true, periodsLeft = 3), player()), activePlayer = 1)
         )

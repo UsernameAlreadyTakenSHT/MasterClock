@@ -237,6 +237,37 @@
     <string name="qr_align">Align code within the camera view</string>
     <string name="qr_camera_permission">Camera permission is required to scan codes.</string>
 
+    <!--
+      Screen-reader wording. core reports the state as data and the sentence is built here, because
+      core has no resources of its own.
+    -->
+    <string name="a11y_player_clock">Player %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Player %1$d, %2$s, your turn</string>
+    <string name="a11y_out_of_time">out of time</string>
+    <string name="a11y_no_time_left">no time left</string>
+    <string name="a11y_announce_out_of_time">Player %d is out of time</string>
+    <string name="a11y_announce_paused">Paused</string>
+    <string name="a11y_announce_to_move">Player %d to move</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <plurals name="a11y_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">%d period left</item>
+        <item quantity="other">%d periods left</item>
+    </plurals>
+
     <!-- Timer chips -->
     <string name="timer_bank">BANK</string>
     <string name="timer_global">GLOBAL</string>
@@ -663,6 +694,7 @@
     <string name="timer_reroll_title">Draw a new time?</string>
     <string name="timer_reroll_message">The game restarts with a new random time.</string>
     <string name="timer_arbitre_control">Arbitre Control</string>
+    <string name="timer_arbitre">Arbitre</string>
     <string name="timer_save_clock">Save Clock</string>
     <string name="timer_resume">Resume</string>
     <string name="timer_byoyomi">BYOYOMI</string>

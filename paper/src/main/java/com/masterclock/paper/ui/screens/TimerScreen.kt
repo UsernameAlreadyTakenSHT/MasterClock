@@ -130,7 +130,8 @@ fun TimerScreen(
  */
 @Composable
 private fun ClockAnnouncer(state: ChessClockState) {
-    val message = clockAnnouncement(state) ?: return
+    val announcement = clockAnnouncement(state) ?: return
+    val message = clockAnnouncementText(announcement)
     val urgent = isUrgentAnnouncement(state)
 
     Box(
@@ -153,14 +154,14 @@ fun EInkPlayerArea(
     val isActive = state.activePlayer == playerIndex && !state.isPaused
     val isOutOfTime = playerState.isOutOfTime
 
-    // Rebuilt only when the displayed second changes, not on every tick.
-    val secondsRemaining = playerState.timeRemainingMs / 1000
     // Hoisted: the semantics lambda is not composable scope.
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
-    val a11yLabel = remember(playerIndex, secondsRemaining, isActive, isOutOfTime) {
-        val time = if (isOutOfTime) "out of time" else spokenDuration(playerState.timeRemainingMs)
-        if (isActive) "Player $playerIndex, $time, your turn" else "Player $playerIndex, $time"
-    }
+    val spokenTime = if (isOutOfTime) {
+        stringResource(R.string.a11y_out_of_time)
+    } else spokenDurationText(playerState.timeRemainingMs)
+    val a11yLabel = if (isActive) {
+        stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
+    } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 
     // Arrangement.SpaceEvenly pushes elements apart and centers them relative to empty space.
     // Placing Indicator FIRST in both areas:
