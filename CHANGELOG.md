@@ -1,3 +1,19 @@
+## v0.8.13 — 2026-08-02
+
+### Added
+- **Screen reader support.** The player areas published no accessibility node at all, so with TalkBack running the clock could be read but the turn could never be passed — the app's central function was unreachable. They are labelled buttons now, and flags, turn changes and pauses are announced aloud.
+- **Statistics screen.** Games played, total time on the clock, average and median move, slowest move, and the share of moves made under time pressure. Every recorded game also gets a time-per-move chart and a per-move time column in its log.
+- **Launcher shortcuts.** Long-press the app icon to start straight from one of your two most recent games or a saved preset; 3+2 and 15+10 pad the list on a fresh install.
+- **Groundwork for translation.** The interface now lives in resource files instead of being hardcoded, and French, Spanish, Portuguese, Italian, German and Dutch are ready for contributors to fill in — see TRANSLATING.md. On Android 13 and later the language can be picked per app. No translations ship yet, so every locale still shows English.
+
+### Changed
+- **Rename or delete a saved preset by long-pressing it**, instead of two cramped icon buttons crowding the tile.
+- **The Fischer mode was misspelled internally.** Correcting it changes a stored value, which **resets your settings to their defaults and clears the recorded moves of older Fischer games.** The games themselves are kept.
+
+### Fixed
+- The clock digits no longer get cut off when the system font size is turned up.
+- The chess, shogi and both draughts rulebooks opened as blank pages. Replaced with the real federation documents.
+
 ## v0.8.12 — 2026-08-01
 
 ### Added
