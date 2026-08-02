@@ -127,6 +127,16 @@
 
     <string name="tools_stop_precision">Stop Precision</string>
     <string name="tools_target_time">Target: 5.000s</string>
+    <string name="tools_score">Score: %d</string>
+    <string name="tools_final_score">Final Score: %d</string>
+    <string name="tools_no_notes">No notes yet. Tap + to create one.</string>
+    <string name="tools_offset">Offset: %1$s%2$dms</string>
+    <string name="tools_pick_straw">Pick straw %d</string>
+    <string name="tools_copy_format">Copy %s</string>
+    <string name="tools_player_short">P%d</string>
+    <string name="board_connected_to">Connected: %s</string>
+    <string name="board_error">Error: %s</string>
+    <string name="board_last_move">Last Move: %s</string>
     <string name="tools_start">START</string>
     <string name="tools_stop">STOP</string>
     <string name="tools_prepare">PREPARE</string>
@@ -704,7 +714,12 @@
         <item quantity="other">• %d Rounds per Game</item>
     </plurals>
 
-    <plurals name="stats_chart_moves">
+<plurals name="tools_straws">
+        <item quantity="one">Straws: %d</item>
+        <item quantity="other">Straws: %d</item>
+    </plurals>
+
+        <plurals name="stats_chart_moves">
         <item quantity="one">%d move</item>
         <item quantity="other">%d moves</item>
     </plurals>
