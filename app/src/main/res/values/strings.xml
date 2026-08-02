@@ -80,6 +80,22 @@
     <string name="settings_fide_config">FIDE Periods Configuration</string>
     <string name="settings_add_period">Add Period</string>
     <string name="settings_actions">Actions</string>
+    <string name="settings_period_n">Period %d</string>
+    <string name="settings_moves_unlock">Moves to unlock next (0 = Final)</string>
+    <!-- The number is a period index, not a count, so plurals would be wrong here. -->
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Moves until period %d</string>
+    <!-- Also an index, not a count: "Phase 2 Name". -->
+    <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Phase %d Name</string>
+    <string name="settings_phase_n">Phase %d</string>
+    <string name="settings_color_red">Red: %d</string>
+    <string name="settings_color_green">Green: %d</string>
+    <string name="settings_color_blue">Blue: %d</string>
+    <string name="settings_fast_accel_rate">Fast Acceleration Rate (+%s sec/sec)</string>
+    <string name="settings_full_fast_accel_rate">Full Fast Accel Rate (+%s sec/sec)</string>
+    <string name="settings_version">Version %s</string>
+    <string name="settings_app_version">MasterClock %s</string>
+    <string name="share_settings">Share Settings</string>
+    <string name="share_restore_full_desc">Restore everything (settings + media) from a .zip archive.</string>
     <string name="settings_final_period">This will be the final period of the game.</string>
     <string name="settings_flag_on_end">Flag on end (Defeat)</string>
     <string name="settings_phases_config">Phases Configuration</string>
@@ -668,6 +684,9 @@
     -->
     <string name="omni_cancel" tools:ignore="ButtonCase">CANCEL</string>
     <string name="omni_progress_session">Session</string>
+    <string name="omni_header">Omni: %s</string>
+    <string name="omni_progress_game">Game %1$d/%2$d</string>
+    <string name="omni_progress_round">Round %1$d/%2$d</string>
     <string name="omni_get_ready">GET READY</string>
     <string name="omni_phase_default">Phase</string>
     <string name="omni_next">Next</string>

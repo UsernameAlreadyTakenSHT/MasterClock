@@ -425,7 +425,7 @@ class MainActivity : ComponentActivity() {
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(intent, "Share Settings"))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_settings)))
         } catch (e: Exception) {
             Log.e("MainActivity", "Failed to share settings", e)
         }

@@ -226,7 +226,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "MasterClock ${BuildConfig.VERSION_NAME}",
+                        stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )

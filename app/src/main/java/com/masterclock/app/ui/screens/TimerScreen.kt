@@ -466,7 +466,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                         }
                         pSettings.mode == TimerMode.PHASES -> {
                             val phase = pSettings.phases.getOrNull(playerState.currentPhaseIndex)
-                            val name = phase?.name?.takeIf { it.isNotBlank() } ?: "Phase ${playerState.currentPhaseIndex + 1}"
+                            val name = phase?.name?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_phase_n, playerState.currentPhaseIndex + 1)
                             val label = if (playerState.isInInterPhasePause) stringResource(R.string.timer_pause_label) else name
                             Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
