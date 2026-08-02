@@ -122,6 +122,7 @@
     <string name="tools_draw_again">Draw again</string>
     <string name="tools_shred">Shred</string>
     <string name="tools_random_card">Random Card</string>
+    <string name="tools_dice_roll">Dice Roll</string>
     <string name="tools_draw">Draw</string>
 
     <string name="tools_stop_precision">Stop Precision</string>
@@ -199,6 +200,8 @@
     <string name="toast_permission_granted">Permission granted. Tap Record again.</string>
     <string name="toast_audio_failed">Failed to play audio</string>
     <string name="toast_start_failed">Failed to start</string>
+    <string name="toast_backup_ok">Backup successful!</string>
+    <string name="toast_import_ok">Import successful!</string>
 
     <!--
       Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,
@@ -290,6 +293,29 @@
     <string name="settings_reset_title">Reset all settings?</string>
     <string name="settings_reset_message">This action cannot be undone.</string>
 
+    <!--
+      Labels for enum-backed option rows. These were the last hardcoded text in the app and the
+      hardest to spot: nothing in the sources says "Freeze" or "Snake", the label was derived from
+      the constant name, so no search for string literals could find them.
+    -->
+    <string name="flag_freeze">Freeze</string>
+    <string name="flag_flag">Flag</string>
+    <string name="flag_negative">Negative</string>
+    <string name="flag_reverse">Reverse</string>
+
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_auto">Auto</string>
+
+    <string name="game_chess">Chess</string>
+    <string name="game_draughts">Draughts</string>
+    <string name="game_shogi">Shogi</string>
+
+    <string name="order_linear">Linear</string>
+    <string name="order_snake">Snake</string>
+    <string name="order_rotate">Rotate</string>
+    <string name="order_random">Random</string>
+
     <!-- Settings: Display -->
     <string name="settings_theme">Theme</string>
     <string name="settings_orientation">Orientation</string>
@@ -297,6 +323,7 @@
     <string name="settings_layout_scale">Layout &amp; Scale</string>
     <string name="settings_active_side_bigger">Active side bigger</string>
     <string name="settings_fullscreen">Fullscreen</string>
+    <string name="settings_flash_low_time">Flash on low time (&lt;10s)</string>
     <string name="settings_keep_awake">Keep screen awake</string>
     <string name="settings_force_brightness">Force full brightness</string>
     <string name="settings_primary_colors">Primary Colors</string>

@@ -266,7 +266,7 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
                         selected = settings.playerOrderType == type,
                         onClick = { onSettingsChanged(settings.copy(playerOrderType = type)) },
                         shape = SegmentedButtonDefaults.itemShape(index, PlayerOrderType.entries.size),
-                        label = { Text(type.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) }
+                        label = { Text(type.label(), style = MaterialTheme.typography.labelSmall) }
                     )
                 }
             }

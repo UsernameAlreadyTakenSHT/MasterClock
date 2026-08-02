@@ -37,10 +37,10 @@ fun ModesSettingsPage(
                     contentColor = MaterialTheme.colorScheme.onBackground
                 ) {
                     Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) { 
-                        Text("Player 1", Modifier.padding(12.dp), fontWeight = FontWeight.Bold) 
+                        Text(stringResource(R.string.common_player_n, 1), Modifier.padding(12.dp), fontWeight = FontWeight.Bold) 
                     }
                     Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) { 
-                        Text("Player 2", Modifier.padding(12.dp), fontWeight = FontWeight.Bold) 
+                        Text(stringResource(R.string.common_player_n, 2), Modifier.padding(12.dp), fontWeight = FontWeight.Bold) 
                     }
                 }
             }
