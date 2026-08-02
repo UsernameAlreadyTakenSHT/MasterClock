@@ -47,6 +47,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
@@ -275,7 +277,8 @@ fun CoinTossScreen(onBack: () -> Unit) {
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
-                        enabled = !isSpinning
+                        enabled = !isSpinning,
+                        onClickLabel = "Toss the coin",
                     ) {
                         isSpinning = true
                         scope.launch {
@@ -357,7 +360,8 @@ fun DiceRollScreen(onBack: () -> Unit) {
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
-                        enabled = !isRolling
+                        enabled = !isRolling,
+                        onClickLabel = "Roll the dice",
                     ) {
                         isRolling = true
                         scope.launch {
@@ -486,7 +490,8 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                         .fillMaxHeight()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null
+                            indication = null,
+                            onClickLabel = "Draw again"
                         ) {
                             if (revealedIndices.contains(shortStrawIndex)) {
                                 shortStrawIndex = -1
@@ -522,7 +527,8 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                                     .clickable(
                                         interactionSource = interactionSource,
                                         indication = null,
-                                        enabled = !isRevealed && !revealedIndices.contains(shortStrawIndex)
+                                        enabled = !isRevealed && !revealedIndices.contains(shortStrawIndex),
+                                        onClickLabel = "Pick straw ${i + 1}"
                                     ) {
                                         revealedIndices.add(i)
                                     }
@@ -776,7 +782,7 @@ fun NameSquareScreen(onBack: () -> Unit) {
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(target.uppercase(Locale.US), style = MaterialTheme.typography.displayLarge.copy(fontSize = 110.sp), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(32.dp))
-                        Column(Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(6.dp).shadow(4.dp, RoundedCornerShape(12.dp))) { for (r in 8 downTo 1) { Row { for (f in 1..8) { val square = files[f-1] + ranks[r-1]; val isDark = (r + f) % 2 == 0; Box(modifier = Modifier.size(42.dp).background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2)).clickable { if (square == target) { score++; nextRound() } }) } } } }
+                        Column(Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(6.dp).shadow(4.dp, RoundedCornerShape(12.dp))) { for (r in 8 downTo 1) { Row { for (f in 1..8) { val square = files[f-1] + ranks[r-1]; val isDark = (r + f) % 2 == 0; Box(modifier = Modifier.size(42.dp).background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2)).semantics { contentDescription = square }.clickable { if (square == target) { score++; nextRound() } }) } } } }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -927,7 +933,7 @@ fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 if (session.games.isEmpty()) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No games recorded yet.", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
                 else { LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(sortedGames, key = { it.timestamp }) { game -> Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)) { Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(game.result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold); Text(SimpleDateFormat("HH:mm", locale).format(Date(game.timestamp)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } }
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it }, placeholder = { Text("Add result or note...") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, null) } }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it }, placeholder = { Text("Add result or note...") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, "Add result") } }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { viewModel.addScoreboardGame("1 - 0") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("1 - 0") }; Button(onClick = { viewModel.addScoreboardGame("½ - ½") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("½ - ½") }; Button(onClick = { viewModel.addScoreboardGame("0 - 1") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("0 - 1") } }
         }
     }
