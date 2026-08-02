@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -1098,7 +1099,11 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                                     label,
                                     style = MaterialTheme.typography.labelMedium,
                                     maxLines = 1,
-                                    softWrap = false
+                                    // softWrap = false used to clip mid-glyph once the label no
+                                    // longer fit, which is how "Changelog" lost its tail. An
+                                    // ellipsis degrades readably instead -- it matters more once
+                                    // the labels are translated, since most languages are longer.
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         )

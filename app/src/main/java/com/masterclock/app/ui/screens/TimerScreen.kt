@@ -19,7 +19,10 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -479,7 +482,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     val flagText = if (pSettings.mode == TimerMode.FIDE_PERIODS && playerState.timeRemainingMs > 0) stringResource(R.string.timer_period_flag) else stringResource(R.string.timer_flagged)
                     Text(flagText, style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = alertTextColor, fontWeight = FontWeight.ExtraBold)
                 } else {
-                    Box(modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center) {
+                    // heightIn rather than height: at the default font scale this still reserves
+                    // the same 48dp, but a larger scale can grow instead of clipping the label.
+                    Box(modifier = Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
                         if (playerState.isInByoyomi) Text(stringResource(R.string.timer_byoyomi), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f))
                         else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll)) { Text("P$playerIndex " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                         else if (settings.numberOfPlayers > 2) { Text(stringResource(R.string.common_player_n, playerIndex), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
@@ -625,6 +630,46 @@ fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, onAdjust:
     }
 }
 
+/**
+ * Shrinks [content] just enough to fit the width it is given, and does nothing at all when it
+ * already fits.
+ *
+ * The clock digits are hardcoded at up to 140.sp with no overflow handling, so at a large system
+ * font scale a reading like "1:59:59" runs past the edge and gets cut. Autosizing the individual
+ * Text nodes is not an option here: the clock is a row of separate ones -- hours, colon, minutes,
+ * a half-size fraction -- and each would pick its own size and break the alignment.
+ *
+ * Measuring the row unbounded and scaling the whole thing keeps every proportion intact. The
+ * scale is exactly 1 whenever the content fits, and the layer is skipped in that case, so at the
+ * default font scale nothing about the rendering changes.
+ */
+@Composable
+private fun ScaleToFitWidth(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content = content, modifier = modifier) { measurables, constraints ->
+        val placeable = measurables.first().measure(
+            constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity, minHeight = 0, maxHeight = Constraints.Infinity)
+        )
+        val scale = if (constraints.hasBoundedWidth && placeable.width > constraints.maxWidth && placeable.width > 0) {
+            constraints.maxWidth.toFloat() / placeable.width
+        } else 1f
+
+        val width = (placeable.width * scale).toInt().coerceIn(constraints.minWidth, if (constraints.hasBoundedWidth) constraints.maxWidth else placeable.width)
+        val height = (placeable.height * scale).toInt()
+
+        layout(width, height) {
+            if (scale == 1f) {
+                placeable.place(0, 0)
+            } else {
+                placeable.placeWithLayer(0, 0) {
+                    scaleX = scale
+                    scaleY = scale
+                    transformOrigin = TransformOrigin(0f, 0f)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun TimerDisplay(timeMs: Long, style: TextStyle, settings: ChessClockSettings, isNegative: Boolean = false) {
     val absTimeMs = kotlin.math.abs(timeMs)
@@ -648,6 +693,7 @@ fun TimerDisplay(timeMs: Long, style: TextStyle, settings: ChessClockSettings, i
         letterSpacing = (-1).sp
     )
 
+    ScaleToFitWidth {
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center, modifier = Modifier.wrapContentWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (isNegative) Text(text = "-", style = tightStyle)
@@ -663,6 +709,7 @@ fun TimerDisplay(timeMs: Long, style: TextStyle, settings: ChessClockSettings, i
             Text(text = ".", style = fractionalStyle)
             Text(text = tenths.toString(), style = fractionalStyle, textAlign = TextAlign.Center)
         }
+    }
     }
 }
 
