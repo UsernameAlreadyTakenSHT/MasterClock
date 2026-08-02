@@ -28,6 +28,111 @@
     <string name="preset_delete_title">Delete \"%s\"?</string>
     <string name="preset_delete_message">This preset will be permanently removed.</string>
 
+    <!-- Omni wizard (settings) -->
+    <string name="omni_cfg_previous">Previous</string>
+    <string name="omni_cfg_next_step">Next Step</string>
+    <string name="omni_cfg_launch_game">Launch Game</string>
+    <string name="omni_cfg_launch_station">LAUNCH STATION</string>
+    <string name="omni_cfg_ready">Ready to Play</string>
+    <string name="omni_cfg_summary">Summary</string>
+
+    <string name="omni_cfg_session_games">Session &amp; Games</string>
+    <string name="omni_cfg_enable_session_timer">Enable Session Timer</string>
+    <string name="omni_cfg_enable_game_timer">Enable Game Timer</string>
+    <string name="omni_cfg_enable_round_timer">Enable Round Timer</string>
+    <string name="omni_cfg_enable_turn_timer">Enable Turn Timer</string>
+    <string name="omni_cfg_enable_phase_timer">Enable Phase Timer</string>
+    <string name="omni_cfg_session_timer">Session</string>
+    <string name="omni_cfg_game_timer">Game Timer</string>
+    <string name="omni_cfg_round_timer">Round Timer</string>
+    <string name="omni_cfg_turn_timer">Turn Timer</string>
+    <string name="omni_cfg_phase_timer">Phase Timer</string>
+    <string name="omni_cfg_cutoff_session">Force cutoff when session time runs out</string>
+    <string name="omni_cfg_cutoff_game">Force cutoff when game time runs out</string>
+    <string name="omni_cfg_cutoff_round">Force cutoff when round time runs out</string>
+    <string name="omni_cfg_cutoff_turn">Force cutoff when turn time runs out</string>
+    <string name="omni_cfg_cutoff_phase">Force cutoff when phase time runs out</string>
+    <string name="omni_cfg_turn_disabled">Turn clock disabled.</string>
+    <string name="omni_cfg_phase_disabled">Phase clock disabled.</string>
+
+    <string name="omni_cfg_game">Game</string>
+    <string name="omni_cfg_round">Round</string>
+    <string name="omni_cfg_rounds">Rounds</string>
+    <string name="omni_cfg_turn">Turn</string>
+    <string name="omni_cfg_turn_n">Turn %d</string>
+    <string name="omni_cfg_step">Step %1$d/%2$d</string>
+    <string name="omni_cfg_count">Count: %d</string>
+    <string name="omni_cfg_player_short">P%d</string>
+    <string name="omni_cfg_game_n">Game %d</string>
+    <string name="omni_cfg_round_n">Round %d</string>
+    <string name="omni_cfg_phase_n">Phase %d</string>
+    <string name="omni_cfg_game_short">G%d</string>
+    <string name="omni_cfg_round_short">R%d</string>
+    <string name="omni_cfg_turn_short">T%d</string>
+    <string name="omni_cfg_delete_game">Delete game %d</string>
+    <string name="omni_cfg_delete_round">Delete round %d</string>
+    <string name="omni_cfg_delete_turn">Delete turn %d</string>
+    <string name="omni_cfg_delete_phase">Delete phase %d</string>
+    <string name="omni_cfg_phase_budget">Total: %1$ds / Limit: %2$ds</string>
+    <string name="omni_cfg_summary_rounds_varied">• Rounds per Game: %s</string>
+    <string name="omni_cfg_summary_order">• Order: %s</string>
+    <string name="omni_cfg_phases_exceed">Game \'%1$s\', Round \'%2$s\', %3$s: Phases exceed Turn time!</string>
+    <string name="omni_cfg_turns">Turns</string>
+    <string name="omni_cfg_phases">Phases</string>
+    <string name="omni_cfg_game_name">Game Name</string>
+    <string name="omni_cfg_round_name">Round Name</string>
+    <string name="omni_cfg_phase_name">Phase Name</string>
+    <string name="omni_cfg_add_game">Add Game</string>
+    <string name="omni_cfg_add_round">Add Round</string>
+    <string name="omni_cfg_add_turn">Add Turn</string>
+    <string name="omni_cfg_add_phase">Add Phase</string>
+    <string name="omni_cfg_duration">Duration</string>
+    <string name="omni_cfg_total_duration">Total Duration</string>
+    <string name="omni_cfg_loop_turns">Loop Turns</string>
+    <string name="omni_cfg_end_round">End Round</string>
+
+    <string name="omni_cfg_players_order">Players &amp; Order</string>
+    <string name="omni_cfg_turn_order">Turn Order</string>
+    <string name="omni_cfg_pattern_linear">Pattern (3 players): 123, 123, 123</string>
+    <string name="omni_cfg_pattern_snake">Pattern (3 players): 123, 321, 123</string>
+    <string name="omni_cfg_pattern_rotate">Pattern (3 players): 123, 231, 312</string>
+    <string name="omni_cfg_shuffle_per_round">Shuffle per round</string>
+    <string name="omni_cfg_draw_per_turn">Draw per turn</string>
+    <string name="omni_cfg_balance_draw">Balance the draw</string>
+    <string name="omni_cfg_balance_explain">Whoever is behind on turns is likelier to come up next, so gaps close instead of piling up.</string>
+    <string name="omni_cfg_no_repeat">Never the same player twice in a row</string>
+
+    <string name="omni_cfg_transitions">Transitions &amp; Pauses</string>
+    <string name="omni_cfg_enable_pauses">Enable Pauses (Buffers)</string>
+    <string name="omni_cfg_pauses_durations">Pauses Durations</string>
+    <string name="omni_cfg_turn_pause">Turn Pause</string>
+    <string name="omni_cfg_round_pause">Round Pause</string>
+    <string name="omni_cfg_game_pause">Game Pause</string>
+    <string name="omni_cfg_pause_deducts_round">Pause deducts Round</string>
+    <string name="omni_cfg_pause_deducts_game">Pause deducts Game</string>
+    <string name="omni_cfg_pause_deducts_global">Pause deducts Global</string>
+    <string name="omni_cfg_launch_countdown">Launch Countdown</string>
+    <string name="omni_cfg_auto_restart">Automatic Restart</string>
+
+    <string name="omni_cfg_pressure">Pressure &amp; Economy</string>
+    <string name="omni_cfg_advanced_rules">Advanced Rules</string>
+    <string name="omni_cfg_time_bank">Time Bank</string>
+    <string name="omni_cfg_bank_per_player">Per-player</string>
+    <string name="omni_cfg_bank_shared">Shared pool</string>
+    <string name="omni_cfg_bank_clear">Clear Bank at end of:</string>
+
+    <string name="omni_cfg_audio">Audio Alerts</string>
+    <string name="omni_cfg_turn_beep">Turn Beep</string>
+    <string name="omni_cfg_final_beep">Final Beep</string>
+    <string name="omni_cfg_round_gong">Round Gong</string>
+
+    <string name="common_off">Off</string>
+    <string name="dur_10s">10s</string>
+    <string name="dur_30s">30s</string>
+    <string name="dur_1m">1m</string>
+    <string name="dur_2m">2m</string>
+    <string name="dur_5m">5m</string>
+
     <!--
       Timing engines manual. Long-form prose, the most expensive part of the app to translate, so
       it is fine for this section to lag behind the interface chrome.
@@ -195,6 +300,16 @@
       forms, but French treats 0 as singular and Russian or Polish need three or four. Translators
       add or drop <item> elements to match their own language.
     -->
+    <plurals name="omni_cfg_summary_games">
+        <item quantity="one">• %1$d Players | %2$d Game</item>
+        <item quantity="other">• %1$d Players | %2$d Games</item>
+    </plurals>
+
+    <plurals name="omni_cfg_summary_rounds_uniform">
+        <item quantity="one">• %d Round per Game</item>
+        <item quantity="other">• %d Rounds per Game</item>
+    </plurals>
+
     <plurals name="stats_chart_moves">
         <item quantity="one">%d move</item>
         <item quantity="other">%d moves</item>
