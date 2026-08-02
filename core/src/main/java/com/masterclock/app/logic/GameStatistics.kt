@@ -16,6 +16,8 @@ data class MoveDuration(
     val durationMs: Long,
     /** Clock left when the move was made, *before* any increment was applied. */
     val timeRemainingMs: Long,
+    /** SAN/USI/PDN notation when the game type records one. */
+    val moveNotation: String? = null,
 )
 
 data class ModeTally(val mode: TimerMode, val games: Int)
@@ -80,6 +82,7 @@ fun moveDurations(log: GameLog): List<MoveDuration> {
                     moveNumber = number,
                     durationMs = event.timeSpentMs ?: reconstructed,
                     timeRemainingMs = event.timeRemainingMs ?: 0L,
+                    moveNotation = event.moveNotation,
                 )
 
                 turnStart = event.timestamp

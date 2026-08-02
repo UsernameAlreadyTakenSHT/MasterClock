@@ -639,6 +639,48 @@ private fun sanitizeImportedContentUri(uri: String?): String? {
 }
 
 /**
+ * The longest recorded competitive chess game ran 269 moves, so a log carrying more than this many
+ * events is not a game anyone played. The cap matters because the log detail screen renders one
+ * composable Row per move inside a scrolling Column rather than a lazy list: without it, a crafted
+ * backup with a hundred thousand MOVE events freezes the app the moment the log is opened.
+ */
+const val MAX_IMPORTED_EVENTS_PER_LOG = 2_000
+
+/** A month per move is already absurd; anything past it is a crafted value, not a slow player. */
+private const val MAX_IMPORTED_DURATION_MS = 30L * 24 * 60 * 60 * 1000
+
+/** Long enough for any real SAN/USI/PDN move, short enough not to be a payload. */
+private const val MAX_MOVE_NOTATION_CHARS = 32
+
+/**
+ * Bounds the parts of an imported [GameLog] that [sanitizeImportedSettings] does not reach.
+ *
+ * Only `settings` used to be sanitized, which was the right call for the finding it answered (raw
+ * file paths and note ids). But `events` and `initialPlayerStates` were passed through to Room
+ * verbatim, and they now feed the statistics screen and its chart. Nothing there can escape the
+ * sandbox -- [GameEvent] holds no path or URI -- so the exposure is denial of service and nonsense
+ * arithmetic rather than data theft, which is why the limits below are generous rather than strict.
+ */
+internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
+    events = log.events.take(MAX_IMPORTED_EVENTS_PER_LOG).map { event ->
+        event.copy(
+            // moveDurations() drops a MOVE with a null playerIndex while the log screen used to
+            // keep it, so an out-of-range index desynchronised the two lists. Normalising here
+            // means the display never has to guess.
+            playerIndex = event.playerIndex?.takeIf { it in 1..4 },
+            timeRemainingMs = event.timeRemainingMs?.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+            timeSpentMs = event.timeSpentMs?.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+            moveCount = event.moveCount?.coerceIn(0, MAX_IMPORTED_EVENTS_PER_LOG),
+            moveNotation = event.moveNotation?.take(MAX_MOVE_NOTATION_CHARS),
+        )
+    },
+    // The app supports at most four players, so a longer list can only come from outside it.
+    initialPlayerStates = log.initialPlayerStates.take(4).map { state ->
+        state.copy(timeRemainingMs = state.timeRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS))
+    },
+)
+
+/**
  * Pure per-player time-transition function: given the current [PlayerState] and how much time
  * elapsed, returns the next [PlayerState] for every timer mode except the multi-player-coupled ones
  * (PHASES/GONG/HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED, handled inline in
@@ -1506,7 +1548,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // false there) -- silently reopening the AUDIT.md §3 HIGH finding. See AUDIT.md §6.
                 val app = getApplication<Application>()
                 logs.forEach { log ->
-                    val sanitizedLog = log.copy(settings = sanitizeImportedSettings(app, log.settings))
+                    val sanitizedLog = sanitizeImportedLog(log)
+                        .copy(settings = sanitizeImportedSettings(app, log.settings))
                     gameDao.insertLog(converters.fromGameLog(sanitizedLog))
                 }
                 val limit = _settings.value.logHistoryLimit
