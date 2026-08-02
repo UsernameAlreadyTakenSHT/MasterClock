@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.*
 import com.masterclock.paper.BuildConfig
+import com.masterclock.paper.R
 
 @Composable
 fun SettingsSection(title: String, content: @Composable () -> Unit) {
@@ -157,14 +159,14 @@ fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
     Spacer(Modifier.height(8.dp))
     
     if (mainMode != 2) { // NO Initial Time for Move Timer
-        MSInput("Initial time", p.initialTimeMs) { onUpdateP(p.copy(initialTimeMs = it)) }
+        MSInput(stringResource(R.string.settings_initial_time), p.initialTimeMs) { onUpdateP(p.copy(initialTimeMs = it)) }
     }
     
     if (mainMode == 1) { 
-        MSInput("Increment", p.incrementMs) { onUpdateP(p.copy(incrementMs = it)) } 
+        MSInput(stringResource(R.string.settings_increment), p.incrementMs) { onUpdateP(p.copy(incrementMs = it)) } 
     }
     if (mainMode == 2) { 
-        MSInput("Move time", p.moveTimeMs) { onUpdateP(p.copy(moveTimeMs = it)) }
+        MSInput(stringResource(R.string.settings_move_time), p.moveTimeMs) { onUpdateP(p.copy(moveTimeMs = it)) }
     }
 }
 
@@ -202,7 +204,7 @@ private fun CreditRow(entry: AppInfo.CreditEntry) {
 @Composable
 fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Changes", "Credits", "Licenses")
+    val tabs = listOf(stringResource(R.string.credits_tab_changes), stringResource(R.string.credits_tab_credits), stringResource(R.string.credits_tab_licenses))
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -282,7 +284,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                         1 -> {
                             AppInfo.CREDITS.forEach { CreditRow(it) }
                             Text(
-                                "Rules documents",
+                                stringResource(R.string.credits_rules_documents),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -290,7 +292,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                         }
                         else -> {
                             Text(
-                                "MasterClock is built with these open-source libraries.",
+                                stringResource(R.string.credits_libraries),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -308,7 +310,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                 }
 
                 ButtonMMD(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text("Close", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.common_close), style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

@@ -80,7 +80,7 @@ fun TimerScreen(
                 onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
                 modifier = Modifier.weight(1f)
             ) {
-                val label = if (state.isPaused || state.activePlayer == null) "Resume" else "Pause"
+                val label = if (state.isPaused || state.activePlayer == null) stringResource(R.string.timer_resume) else stringResource(R.string.timer_pause)
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelLarge
@@ -92,7 +92,7 @@ fun TimerScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "Settings",
+                    text = stringResource(R.string.timer_settings),
                     style = MaterialTheme.typography.labelLarge
                 )
             }
@@ -155,6 +155,8 @@ fun EInkPlayerArea(
 
     // Rebuilt only when the displayed second changes, not on every tick.
     val secondsRemaining = playerState.timeRemainingMs / 1000
+    // Hoisted: the semantics lambda is not composable scope.
+    val switchTurnLabel = stringResource(R.string.timer_switch_turn)
     val a11yLabel = remember(playerIndex, secondsRemaining, isActive, isOutOfTime) {
         val time = if (isOutOfTime) "out of time" else spokenDuration(playerState.timeRemainingMs)
         if (isActive) "Player $playerIndex, $time, your turn" else "Player $playerIndex, $time"
@@ -170,7 +172,7 @@ fun EInkPlayerArea(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClickLabel = "Switch turn",
+                onClickLabel = switchTurnLabel,
                 role = Role.Button
             ) { onClick() }
             // Unlike the main app this area was already reachable, but it announced as an unlabelled
@@ -178,7 +180,7 @@ fun EInkPlayerArea(
             .clearAndSetSemantics {
                 contentDescription = a11yLabel
                 role = Role.Button
-                onClick(label = "Switch turn") { onClick(); true }
+                onClick(label = switchTurnLabel) { onClick(); true }
             }
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

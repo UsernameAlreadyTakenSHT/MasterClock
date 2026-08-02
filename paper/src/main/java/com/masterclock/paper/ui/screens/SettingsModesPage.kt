@@ -6,12 +6,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.BuildConfig
+import com.masterclock.paper.R
 
 @Composable
 fun ModesSettingsPage(
@@ -85,27 +87,27 @@ fun ModesSettingsPage(
                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                 )
                 
-                SettingsSection("System behavior") {
+                SettingsSection(stringResource(R.string.settings_system_behavior)) {
                     BehaviorSwitch(
-                        label = "Reverse colors",
+                        label = stringResource(R.string.settings_reverse_colors),
                         checked = currentSettings.eInkDarkMode
                     ) {
                         onSettingsChanged(currentSettings.copy(eInkDarkMode = it))
                     }
                     BehaviorSwitch(
-                        label = "Keep screen awake",
+                        label = stringResource(R.string.settings_keep_awake),
                         checked = currentSettings.forceScreenOn
                     ) {
                         onSettingsChanged(currentSettings.copy(forceScreenOn = it))
                     }
                     BehaviorSwitch(
-                        label = "Sound",
+                        label = stringResource(R.string.settings_sound),
                         checked = currentSettings.playSwitchSound
                     ) {
                         onSettingsChanged(currentSettings.copy(playSwitchSound = it, tripleBeepTimeUp = it))
                     }
                     BehaviorSwitch(
-                        label = "Haptic feedback",
+                        label = stringResource(R.string.settings_haptic_feedback),
                         checked = currentSettings.hapticFeedback
                     ) {
                         onSettingsChanged(currentSettings.copy(hapticFeedback = it))
