@@ -79,6 +79,42 @@ enum class TimerMode {
 }
 
 /**
+ * The one line a screen reader should hear when the clock changes state, or null when there is
+ * nothing worth saying yet.
+ *
+ * Deliberately a function of *state transitions only* -- whose turn it is, a flag, a pause, a
+ * byoyomi period -- and never of the remaining time. A live region announces whenever its text
+ * changes, so including the countdown would make the reader recite the seconds and drown out
+ * everything else.
+ *
+ * English-only for now, like the rest of the UI.
+ */
+fun clockAnnouncement(state: ChessClockState): String? {
+    val flagged = state.firstToFlag
+        ?: state.players.indexOfFirst { it.isOutOfTime }.takeIf { it >= 0 }?.plus(1)
+    if (flagged != null) return "Player $flagged is out of time"
+
+    val active = state.activePlayer ?: return null
+    if (state.isPaused) return "Paused"
+
+    val player = state.players.getOrNull(active - 1) ?: return null
+    return buildString {
+        append("Player $active to move")
+        if (player.isInByoyomi) {
+            append(", byoyomi")
+            if (player.byoyomiPeriodsRemaining > 0) {
+                append(", ${player.byoyomiPeriodsRemaining} ")
+                append(if (player.byoyomiPeriodsRemaining == 1) "period left" else "periods left")
+            }
+        }
+    }
+}
+
+/** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
+fun isUrgentAnnouncement(state: ChessClockState): Boolean =
+    state.firstToFlag != null || state.players.any { it.isOutOfTime }
+
+/**
  * A duration in words, for screen readers: "5 minutes 3 seconds".
  *
  * Clock faces are formatted as "05:03", which TalkBack reads out digit by digit -- hard to follow
