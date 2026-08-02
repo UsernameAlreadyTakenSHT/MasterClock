@@ -15,10 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.masterclock.app.logic.*
+import com.masterclock.app.R
 import com.masterclock.app.BuildConfig
 import com.masterclock.app.ui.navigation.Route
 import kotlinx.coroutines.CoroutineScope
@@ -50,9 +52,9 @@ fun MoreSettingsPage(
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Spacer(Modifier.height(8.dp))
 
-        SettingsSection("Help and Support") {
+        SettingsSection(stringResource(R.string.settings_more_help)) {
             ToolCard(
-                title = "Timing Engines Manual",
+                title = stringResource(R.string.settings_more_manual),
                 icon = Icons.AutoMirrored.Filled.HelpCenter,
                 topRounded = true,
                 bottomRounded = true
@@ -62,10 +64,10 @@ fun MoreSettingsPage(
             }
         }
 
-        SettingsSection("Game Tools") {
+        SettingsSection(stringResource(R.string.settings_more_game_tools)) {
             Column {
                 ToolCard(
-                    title = "Chess variants generator",
+                    title = stringResource(R.string.settings_more_variants),
                     icon = Icons.Default.Shuffle,
                     topRounded = true
                 ) {
@@ -73,21 +75,21 @@ fun MoreSettingsPage(
                     onToolClick(Route.Chess960)
                 }
                 ToolCard(
-                    title = "Some rules",
+                    title = stringResource(R.string.settings_more_rules),
                     icon = Icons.AutoMirrored.Filled.MenuBook
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.Rules)
                 }
                 ToolCard(
-                    title = "Scoreboard",
+                    title = stringResource(R.string.settings_more_scoreboard),
                     icon = Icons.Default.Leaderboard
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.Scoreboard)
                 }
                 ToolCard(
-                    title = "Notebook",
+                    title = stringResource(R.string.settings_more_notebook),
                     icon = Icons.AutoMirrored.Filled.NoteAdd,
                     bottomRounded = true
                 ) {
@@ -97,10 +99,10 @@ fun MoreSettingsPage(
             }
         }
 
-        SettingsSection("More Tools") {
+        SettingsSection(stringResource(R.string.settings_more_more_tools)) {
             Column {
                 ToolCard(
-                    title = "Coin Toss",
+                    title = stringResource(R.string.settings_more_coin_toss),
                     icon = Icons.Default.MonetizationOn,
                     topRounded = true
                 ) {
@@ -108,49 +110,49 @@ fun MoreSettingsPage(
                     onToolClick(Route.CoinToss)
                 }
                 ToolCard(
-                    title = "Dice roll",
+                    title = stringResource(R.string.settings_more_dice),
                     icon = Icons.Default.Casino
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.DiceRoll)
                 }
                 ToolCard(
-                    title = "Short straw",
+                    title = stringResource(R.string.settings_more_straw),
                     icon = Icons.Default.HorizontalRule
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.ShortStraw)
                 }
                 ToolCard(
-                    title = "Random card",
+                    title = stringResource(R.string.settings_more_card),
                     icon = Icons.Default.Style
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.RandomCard)
                 }
                 ToolCard(
-                    title = "Stop at right moment",
+                    title = stringResource(R.string.settings_more_stop),
                     icon = Icons.Default.Timer10
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.StopPrecision)
                 }
                 ToolCard(
-                    title = "Blindfold Trainer",
+                    title = stringResource(R.string.settings_more_blindfold),
                     icon = Icons.Default.VisibilityOff
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.BlindfoldTrainer)
                 }
                 ToolCard(
-                    title = "Knight's Path",
+                    title = stringResource(R.string.settings_more_knight),
                     icon = Icons.Default.Extension
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.KnightPath)
                 }
                 ToolCard(
-                    title = "Name the square",
+                    title = stringResource(R.string.settings_more_name_square),
                     icon = Icons.Default.Grid4x4,
                     bottomRounded = true
                 ) {
@@ -160,22 +162,22 @@ fun MoreSettingsPage(
             }
         }
 
-        SettingsSection("Board Connection") {
+        SettingsSection(stringResource(R.string.settings_more_board)) {
             Column {
                 ToolCard(
-                    title = "Link board (not implemented yet)",
+                    title = stringResource(R.string.settings_more_link_board),
                     icon = Icons.Default.Bluetooth,
                     topRounded = true
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
                     onToolClick(Route.BluetoothBoard)
                 }
-                BehaviorSwitch("Auto switch turn on move", currentSettings.autoSwitchOnBoardMove) { onSettingsChanged(currentSettings.copy(autoSwitchOnBoardMove = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_more_auto_switch), currentSettings.autoSwitchOnBoardMove) { onSettingsChanged(currentSettings.copy(autoSwitchOnBoardMove = it)) }
                 Row(
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Game", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.settings_more_game), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                     SingleChoiceSegmentedButtonRow {
                         GameType.entries.forEachIndexed { i, gt ->
                             SegmentedButton(
@@ -190,10 +192,10 @@ fun MoreSettingsPage(
             }
         }
 
-        SettingsSection("Game Data") {
+        SettingsSection(stringResource(R.string.settings_more_game_data)) {
             Column {
                 ToolCard(
-                    title = "Games logs & history",
+                    title = stringResource(R.string.settings_more_logs),
                     icon = Icons.Default.History,
                     topRounded = true
                 ) {
@@ -202,7 +204,7 @@ fun MoreSettingsPage(
                 }
 
                 ToolCard(
-                    title = "Statistics",
+                    title = stringResource(R.string.stats_title),
                     icon = Icons.Default.BarChart
                 ) {
                     onCategoryChanged(SettingsCategory.MORE)
@@ -213,7 +215,7 @@ fun MoreSettingsPage(
                 val limitByAge = currentSettings.logDurationLimit != LogDurationLimit.INFINITE
 
                 BehaviorSwitch(
-                    label = "Limit history by count",
+                    label = stringResource(R.string.settings_more_limit_count),
                     checked = limitByCount
                 ) { enabled ->
                     val newLimit = if (enabled) 100 else -1
@@ -241,7 +243,7 @@ fun MoreSettingsPage(
                 }
 
                 BehaviorSwitch(
-                    label = "Limit history by age",
+                    label = stringResource(R.string.settings_more_limit_age),
                     checked = limitByAge,
                     bottomRounded = !limitByAge
                 ) { enabled ->
@@ -258,11 +260,11 @@ fun MoreSettingsPage(
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             durationOptions.forEachIndexed { i, d ->
                                 val text = when(d) {
-                                    LogDurationLimit.ONE_DAY -> "1d"
-                                    LogDurationLimit.ONE_WEEK -> "1w"
-                                    LogDurationLimit.ONE_MONTH -> "1m"
-                                    LogDurationLimit.SIX_MONTHS -> "6m"
-                                    LogDurationLimit.ONE_YEAR -> "1y"
+                                    LogDurationLimit.ONE_DAY -> stringResource(R.string.age_one_day)
+                                    LogDurationLimit.ONE_WEEK -> stringResource(R.string.age_one_week)
+                                    LogDurationLimit.ONE_MONTH -> stringResource(R.string.age_one_month)
+                                    LogDurationLimit.SIX_MONTHS -> stringResource(R.string.age_six_months)
+                                    LogDurationLimit.ONE_YEAR -> stringResource(R.string.age_one_year)
                                     else -> ""
                                 }
                                 SegmentedButton(
@@ -278,7 +280,7 @@ fun MoreSettingsPage(
             }
         }
 
-        SettingsSection("Data & Sharing") {
+        SettingsSection(stringResource(R.string.settings_more_data_sharing)) {
             Column(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -292,7 +294,7 @@ fun MoreSettingsPage(
                     ) {
                         Icon(Icons.Default.FileUpload, null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Export / Share")
+                        Text(stringResource(R.string.settings_more_export))
                     }
                     Button(
                         onClick = { showImportPopup = true },
@@ -302,16 +304,21 @@ fun MoreSettingsPage(
                     ) {
                         Icon(Icons.Default.FileDownload, null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Import / Scan")
+                        Text(stringResource(R.string.settings_more_import))
                     }
                 }
+
+                // Hoisted out of the coroutine: lint forbids reading resources off LocalContext there.
+                val preparingApkText = stringResource(R.string.toast_preparing_apk)
+                val shareApkViaText = stringResource(R.string.settings_more_share_apk_via)
+                val apkErrorText = stringResource(R.string.toast_apk_error)
 
                 OutlinedButton(
                     onClick = {
                         scope.launch(Dispatchers.IO) {
                             try {
                                 withContext(Dispatchers.Main) {
-                                    Toast.makeText(localContext, "Preparing application file...", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(localContext, preparingApkText, Toast.LENGTH_SHORT).show()
                                 }
 
                                 val pm = localContext.packageManager
@@ -341,12 +348,12 @@ fun MoreSettingsPage(
                                 }
 
                                 withContext(Dispatchers.Main) {
-                                    localContext.startActivity(Intent.createChooser(intent, "Share APK via"))
+                                    localContext.startActivity(Intent.createChooser(intent, shareApkViaText))
                                 }
                             } catch (e: Exception) {
                                 android.util.Log.e("SettingsScreen", "Failed to share APK", e)
                                 withContext(Dispatchers.Main) {
-                                    Toast.makeText(localContext, "Error: Could not prepare file", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(localContext, apkErrorText, Toast.LENGTH_LONG).show()
                                 }
                             }
                         }
@@ -357,7 +364,7 @@ fun MoreSettingsPage(
                 ) {
                     Icon(Icons.Default.Android, null, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Share Application (APK)", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.settings_more_share_apk), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -398,7 +405,7 @@ fun MoreSettingsPage(
             }
         }
 
-        SettingsSection("Danger Zone") {
+        SettingsSection(stringResource(R.string.settings_more_danger)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
                     onClick = { onClearLogs() },
@@ -407,7 +414,7 @@ fun MoreSettingsPage(
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("Clear logs", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.settings_more_clear_logs), style = MaterialTheme.typography.labelMedium)
                 }
 
                 OutlinedButton(
@@ -417,7 +424,7 @@ fun MoreSettingsPage(
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("Reset settings", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.settings_more_reset_settings), style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

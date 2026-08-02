@@ -28,6 +28,49 @@
     <string name="preset_delete_title">Delete \"%s\"?</string>
     <string name="preset_delete_message">This preset will be permanently removed.</string>
 
+    <!-- Settings: More tab -->
+    <string name="settings_more_help">Help and Support</string>
+    <string name="settings_more_manual">Timing Engines Manual</string>
+    <string name="settings_more_game_tools">Game Tools</string>
+    <string name="settings_more_variants">Chess variants generator</string>
+    <string name="settings_more_rules">Some rules</string>
+    <string name="settings_more_scoreboard">Scoreboard</string>
+    <string name="settings_more_notebook">Notebook</string>
+    <string name="settings_more_more_tools">More Tools</string>
+    <string name="settings_more_coin_toss">Coin Toss</string>
+    <string name="settings_more_dice">Dice roll</string>
+    <string name="settings_more_straw">Short straw</string>
+    <string name="settings_more_card">Random card</string>
+    <string name="settings_more_stop">Stop at right moment</string>
+    <string name="settings_more_blindfold">Blindfold Trainer</string>
+    <string name="settings_more_knight">Knight\'s Path</string>
+    <string name="settings_more_name_square">Name the square</string>
+    <string name="settings_more_board">Board Connection</string>
+    <string name="settings_more_link_board">Link board (not implemented yet)</string>
+    <string name="settings_more_auto_switch">Auto switch turn on move</string>
+    <string name="settings_more_game">Game</string>
+    <string name="settings_more_game_data">Game Data</string>
+    <string name="settings_more_logs">Games logs &amp; history</string>
+    <string name="settings_more_limit_count">Limit history by count</string>
+    <string name="settings_more_limit_age">Limit history by age</string>
+    <string name="settings_more_data_sharing">Data &amp; Sharing</string>
+    <string name="settings_more_export">Export / Share</string>
+    <string name="settings_more_import">Import / Scan</string>
+    <string name="settings_more_share_apk">Share Application (APK)</string>
+    <string name="settings_more_share_apk_via">Share APK via</string>
+    <string name="settings_more_danger">Danger Zone</string>
+    <string name="settings_more_clear_logs">Clear logs</string>
+    <string name="settings_more_reset_settings">Reset settings</string>
+    <string name="toast_preparing_apk">Preparing application file…</string>
+    <string name="toast_apk_error">Error: Could not prepare file</string>
+
+    <!-- Compact age limits; every language abbreviates its own units differently. -->
+    <string name="age_one_day">1d</string>
+    <string name="age_one_week">1w</string>
+    <string name="age_one_month">1m</string>
+    <string name="age_six_months">6m</string>
+    <string name="age_one_year">1y</string>
+
     <!--
       Omni station. The ALL-CAPS wording is the screen's own styling, kept in the string rather
       than forced in code so a translator can drop it where shouting reads badly.
