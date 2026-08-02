@@ -105,8 +105,8 @@ fun BluetoothBoardScreen(
                             ConnectionState.Idle -> stringResource(R.string.board_disconnected)
                             ConnectionState.Scanning -> stringResource(R.string.board_scanning)
                             ConnectionState.Connecting -> stringResource(R.string.board_connecting)
-                            is ConnectionState.Connected -> "Connected: ${s.deviceName}"
-                            is ConnectionState.Error -> "Error: ${s.message}"
+                            is ConnectionState.Connected -> stringResource(R.string.board_connected_to, s.deviceName)
+                            is ConnectionState.Error -> stringResource(R.string.board_error, s.message)
                         }
                         Text(statusText, fontWeight = FontWeight.Bold)
                         if (connectionState is ConnectionState.Connected) {
@@ -125,7 +125,7 @@ fun BluetoothBoardScreen(
             Spacer(Modifier.height(24.dp))
 
             if (lastMove != null) {
-                Text("Last Move: $lastMove", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.board_last_move, lastMove.orEmpty()), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(16.dp))
             }
 

@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -183,7 +184,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         log.initialPlayerStates.forEachIndexed { i, p ->
                             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                                Text("Player ${i+1}", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.common_player_n, i + 1), fontWeight = FontWeight.Bold)
                                 Text(formatHms(p.timeRemainingMs, locale))
                             }
                         }
@@ -217,7 +218,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("P${event.playerIndex}", modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.tools_player_short, event.playerIndex ?: 0), modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(event.moveNotation ?: stringResource(R.string.tools_move), modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
                         Text(
                             formatMoveSpent(duration.durationMs),
@@ -249,7 +250,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                 ) {
                     Icon(Icons.AutoMirrored.Filled.OpenInNew, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Copy ${moveExportFormatLabel(log.settings.gameType)}")
+                    Text(stringResource(R.string.tools_copy_format, moveExportFormatLabel(log.settings.gameType)))
                 }
             }
         }
@@ -461,7 +462,7 @@ fun ShortStrawScreen(onBack: () -> Unit) {
             if (shortStrawIndex == -1) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Straws: $strawCount",
+                        pluralStringResource(R.plurals.tools_straws, strawCount, strawCount),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.primary
@@ -532,7 +533,7 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                                         interactionSource = interactionSource,
                                         indication = null,
                                         enabled = !isRevealed && !revealedIndices.contains(shortStrawIndex),
-                                        onClickLabel = "Pick straw ${i + 1}"
+                                        onClickLabel = stringResource(R.string.tools_pick_straw, i + 1)
                                     ) {
                                         revealedIndices.add(i)
                                     }
@@ -665,7 +666,7 @@ fun BlindfoldTrainerScreen(onBack: () -> Unit) {
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Score: $score", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.tools_score, score), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                     Text("${timeLeft}s", color = if (timeLeft < 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                 }
 
@@ -673,7 +674,7 @@ fun BlindfoldTrainerScreen(onBack: () -> Unit) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (timeLeft == 0) {
                             Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black)
-                            Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
+                            Text(stringResource(R.string.tools_final_score, score), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
                             Spacer(Modifier.height(32.dp))
                         }
                         Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) {
@@ -724,12 +725,12 @@ fun KnightPathScreen(onBack: () -> Unit) {
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Score: $score", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.tools_score, score), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                     Text("${timeLeft}s", color = if (timeLeft < 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                 }
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
+                        if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text(stringResource(R.string.tools_final_score, score), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
                         Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                     }
                 } else {
@@ -760,7 +761,7 @@ fun StopPrecisionScreen(onBack: () -> Unit) {
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.tools_target_time), modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.Center) { if (!isRunning && displayTime > 0) { val diff = Math.abs(displayTime - 5000L); val color = when { diff <= 10 -> Color(0xFF2196F3); diff <= 20 -> Color(0xFF4CAF50); diff <= 50 -> Color(0xFFFFEB3B); diff <= 100 -> Color(0xFFFF9800); else -> MaterialTheme.colorScheme.error }; Text(text = "Offset: ${if (displayTime > 5000) "+" else "-"}${diff}ms", color = color, fontWeight = FontWeight.Black, style = MaterialTheme.typography.headlineSmall) } }
+                Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.Center) { if (!isRunning && displayTime > 0) { val diff = Math.abs(displayTime - 5000L); val color = when { diff <= 10 -> Color(0xFF2196F3); diff <= 20 -> Color(0xFF4CAF50); diff <= 50 -> Color(0xFFFFEB3B); diff <= 100 -> Color(0xFFFF9800); else -> MaterialTheme.colorScheme.error }; Text(text = stringResource(R.string.tools_offset, if (displayTime > 5000) "+" else "-", diff), color = color, fontWeight = FontWeight.Black, style = MaterialTheme.typography.headlineSmall) } }
                 Text(text = String.format(locale, "%.3fs", displayTime / 1000f), style = MaterialTheme.typography.displayLarge.copy(fontSize = 90.sp), fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(72.dp)); Surface(onClick = { if (isRunning) isRunning = false else { displayTime = 0; isRunning = true } }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(if (isRunning) stringResource(R.string.tools_stop) else stringResource(R.string.tools_start), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                 Spacer(Modifier.height(48.dp))
@@ -777,10 +778,10 @@ fun NameSquareScreen(onBack: () -> Unit) {
     ToolScaffold(title = stringResource(R.string.tools_name_square_title), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Score: $score", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Text("${timeLeft}s", color = if (timeLeft < 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(stringResource(R.string.tools_score, score), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Text("${timeLeft}s", color = if (timeLeft < 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
+                        if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text(stringResource(R.string.tools_final_score, score), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
                         Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                     }
                 } else {
@@ -931,7 +932,7 @@ fun Chess960Screen(onBack: () -> Unit) {
 fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
     val session by viewModel.scoreboard.collectAsState(); var newResultText by remember { mutableStateOf("") }; val sortedGames = remember(session.games) { session.games.asReversed() }
-    ToolScaffold(title = "Scoreboard", onBack = onBack, actions = { IconButton(onClick = { viewModel.resetScoreboard() }) { Icon(Icons.Default.Refresh, stringResource(R.string.tools_reset_scoreboard)) } }) { padding ->
+    ToolScaffold(title = stringResource(R.string.settings_more_scoreboard), onBack = onBack, actions = { IconButton(onClick = { viewModel.resetScoreboard() }) { Icon(Icons.Default.Refresh, stringResource(R.string.tools_reset_scoreboard)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { OutlinedTextField(value = session.player1Name, onValueChange = { viewModel.updateScoreboardNames(it, session.player2Name) }, label = { Text(stringResource(R.string.common_player_n, 1)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); OutlinedTextField(value = session.player2Name, onValueChange = { viewModel.updateScoreboardNames(session.player1Name, it) }, label = { Text(stringResource(R.string.common_player_n, 2)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true) }
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
@@ -964,7 +965,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     if (selectedNote == null) {
         val sortedNotes = remember(settings.notebookNotes) { settings.notebookNotes.sortedByDescending { it.timestamp } }
         ToolScaffold(title = stringResource(R.string.settings_more_notebook), onBack = onBack, actions = { IconButton(onClick = { showTypeSelection = true }) { Icon(Icons.Default.Add, stringResource(R.string.tools_new_note)) } }) { padding ->
-            if (sortedNotes.isEmpty()) { Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text("No notes yet. Tap + to create one.", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+            if (sortedNotes.isEmpty()) { Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_no_notes), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             else { 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(padding), 
