@@ -177,8 +177,13 @@ class MainActivity : ComponentActivity() {
             val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 uri?.let {
                     context.contentResolver.openInputStream(it)?.use { stream ->
-                        val reader = BufferedReader(InputStreamReader(stream))
-                        val content = reader.readText()
+                        // Bounded: readText() would pull a file of any size straight into the heap.
+                        val content = try {
+                            readImportText(stream)
+                        } catch (e: Exception) {
+                            Log.w("MainActivity", "Failed to read settings file", e)
+                            return@use
+                        }
                         try {
                             val pkg = json.decodeFromString<SharePackage>(content)
                             timerViewModel.updateSettings(

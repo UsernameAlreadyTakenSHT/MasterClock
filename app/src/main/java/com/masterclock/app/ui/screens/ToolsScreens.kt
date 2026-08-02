@@ -191,8 +191,9 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                     }
                 }
 
-                // Both derive from the same chronologically sorted MOVE sequence, so they line up.
-                val moveEvents = remember(log) { log.events.sortedBy { it.timestamp }.filter { it.eventType == "MOVE" } }
+                // One source for both the chart and the table below. These used to be two lists
+                // zipped together, which silently misaligned every following row's time whenever
+                // moveDurations() skipped a MOVE the display list kept.
                 val durations = remember(log) { moveDurations(log) }
 
                 if (durations.isNotEmpty()) {
@@ -213,13 +214,13 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                     Text(stringResource(R.string.tools_left), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
-                moveEvents.zip(durations).forEach { (event, duration) ->
+                durations.forEach { duration ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.tools_player_short, event.playerIndex ?: 0), modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(event.moveNotation ?: stringResource(R.string.tools_move), modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
+                        Text(stringResource(R.string.tools_player_short, duration.playerIndex), modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(duration.moveNotation ?: stringResource(R.string.tools_move), modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
                         Text(
                             formatMoveSpent(duration.durationMs),
                             modifier = Modifier.width(64.dp),
@@ -228,7 +229,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            formatHms(event.timeRemainingMs ?: 0, locale),
+                            formatHms(duration.timeRemainingMs, locale),
                             modifier = Modifier.width(64.dp),
                             textAlign = TextAlign.End,
                             fontFamily = FontFamily.Monospace
