@@ -296,13 +296,16 @@ fun OmniControls(state: OmniState, onPauseResume: () -> Unit, onStop: () -> Unit
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         actions = {
             IconButton(onClick = onPauseResume) {
-                Icon(if (state.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                Icon(
+                    if (state.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    if (state.isRunning) "Pause" else "Resume"
+                )
             }
             IconButton(onClick = onStop) {
-                Icon(Icons.Default.Stop, null)
+                Icon(Icons.Default.Stop, "Stop the session")
             }
             IconButton(onClick = onReset) {
-                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Refresh, "Reset the session", tint = MaterialTheme.colorScheme.error)
             }
             
             Spacer(Modifier.weight(1f))
