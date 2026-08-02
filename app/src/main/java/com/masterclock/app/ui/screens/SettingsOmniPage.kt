@@ -17,9 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.masterclock.app.R
 import com.masterclock.app.logic.*
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,6 +41,12 @@ fun SettingsOmniPage(
         viewModel.updateOmniSettings(newSettings)
     }
 
+    // Hoisted: validatePhases is a plain local function, so it cannot call stringResource itself.
+    // Fetching the raw templates here and formatting them below keeps the text translatable.
+    val turnLabelSingle = stringResource(R.string.omni_cfg_turn)
+    val turnLabelNumbered = stringResource(R.string.omni_cfg_turn_n)
+    val phasesExceedTemplate = stringResource(R.string.omni_cfg_phases_exceed)
+
     fun validatePhases(): Boolean {
         if (!settings.usePhaseClock) return true
         
@@ -46,10 +56,12 @@ fun SettingsOmniPage(
                 turns.forEachIndexed { tIdx, turn ->
                     val totalPhasesMs = turn.phases.sumOf { it.durationMs }
                     if (totalPhasesMs > turn.durationMs) {
-                        val turnLabel = if (turns.size > 1) "Turn ${tIdx + 1}" else "Turn"
+                        val turnLabel = if (turns.size > 1) {
+                            String.format(Locale.getDefault(), turnLabelNumbered, tIdx + 1)
+                        } else turnLabelSingle
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                message = "Game '${game.name}', Round '${round.name}', $turnLabel: Phases exceed Turn time!",
+                                message = String.format(Locale.getDefault(), phasesExceedTemplate, game.name, round.name, turnLabel),
                                 duration = SnackbarDuration.Short
                             )
                         }
@@ -131,7 +143,7 @@ fun WizardProgressBar(currentStep: Int, totalSteps: Int) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Step $currentStep/$totalSteps", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black)
+            Text(stringResource(R.string.omni_cfg_step, currentStep, totalSteps), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black)
             Text("${(currentStep * 100 / totalSteps)}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(Modifier.height(4.dp))
@@ -164,7 +176,7 @@ fun WizardNavigationButtons(
                 OutlinedButton(onClick = onBack, shape = RoundedCornerShape(12.dp)) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Previous")
+                    Text(stringResource(R.string.omni_cfg_previous))
                 }
             } else {
                 Spacer(Modifier.width(1.dp))
@@ -172,7 +184,7 @@ fun WizardNavigationButtons(
 
             if (currentStep < totalSteps) {
                 Button(onClick = onNext, shape = RoundedCornerShape(12.dp)) {
-                    Text("Next Step")
+                    Text(stringResource(R.string.omni_cfg_next_step))
                     Spacer(Modifier.width(8.dp))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
                 }
@@ -184,7 +196,7 @@ fun WizardNavigationButtons(
                 ) {
                     Icon(Icons.Default.PlayArrow, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Launch Game")
+                    Text(stringResource(R.string.omni_cfg_launch_game))
                 }
             }
         }
@@ -193,14 +205,14 @@ fun WizardNavigationButtons(
 
 @Composable
 fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
-    Text("Players & Order", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    Text(stringResource(R.string.omni_cfg_players_order), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
     // No "Players Count"/"Player Colors" section headers: the count line and the P1..Pn color
     // rows say what they are. The count doubles as the heading, so it takes the section-title
     // style SettingsSection would have used.
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Text(
-            "Count: ${settings.numberOfPlayers}",
+            stringResource(R.string.omni_cfg_count, settings.numberOfPlayers),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
@@ -228,7 +240,7 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
         repeat(settings.numberOfPlayers) { i ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "P${i + 1}",
+                    stringResource(R.string.omni_cfg_player_short, i + 1),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelLarge,
                     color = Color(omniPlayerColor(settings, i)),
@@ -246,7 +258,7 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
         }
     }
 
-    SettingsSection("Turn Order") {
+    SettingsSection(stringResource(R.string.omni_cfg_turn_order)) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 PlayerOrderType.entries.forEachIndexed { index, type ->
@@ -260,9 +272,9 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
             }
             Spacer(Modifier.height(8.dp))
             val exampleText = when(settings.playerOrderType) {
-                PlayerOrderType.LINEAR -> "Pattern (3 players): 123, 123, 123"
-                PlayerOrderType.SNAKE -> "Pattern (3 players): 123, 321, 123"
-                PlayerOrderType.ROTATE -> "Pattern (3 players): 123, 231, 312"
+                PlayerOrderType.LINEAR -> stringResource(R.string.omni_cfg_pattern_linear)
+                PlayerOrderType.SNAKE -> stringResource(R.string.omni_cfg_pattern_snake)
+                PlayerOrderType.ROTATE -> stringResource(R.string.omni_cfg_pattern_rotate)
                 PlayerOrderType.RANDOM ->
                     if (settings.randomEachTurn) "Pattern (3 players): 132, 312, 231 — a player can be skipped or picked twice"
                     else "Pattern (3 players): 231, 312, 123 — everyone plays once per round"
@@ -286,7 +298,7 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
 @Composable
 private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
     Column {
-        val drawModes = listOf(false to "Shuffle per round", true to "Draw per turn")
+        val drawModes = listOf(false to stringResource(R.string.omni_cfg_shuffle_per_round), true to stringResource(R.string.omni_cfg_draw_per_turn))
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
             drawModes.forEachIndexed { index, (eachTurn, label) ->
                 SegmentedButton(
@@ -300,7 +312,7 @@ private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniS
 
         Spacer(Modifier.height(8.dp))
         BehaviorSwitch(
-            label = "Never the same player twice in a row",
+            label = stringResource(R.string.omni_cfg_no_repeat),
             checked = settings.randomAvoidBackToBack,
             enabled = settings.numberOfPlayers > 1,
             topRounded = true,
@@ -311,14 +323,14 @@ private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniS
         // construction, everyone taking exactly one turn.
         if (settings.randomEachTurn) {
             BehaviorSwitch(
-                label = "Balance the draw",
+                label = stringResource(R.string.omni_cfg_balance_draw),
                 checked = settings.randomAutoBalance,
                 bottomRounded = true
             ) { onSettingsChanged(settings.copy(randomAutoBalance = it)) }
 
             Text(
                 text = if (settings.randomAutoBalance) {
-                    "Whoever is behind on turns is likelier to come up next, so gaps close instead of piling up."
+                    stringResource(R.string.omni_cfg_balance_explain)
                 } else {
                     "Every player is equally likely every turn — one of them really can take most of a round."
                 },
@@ -332,23 +344,25 @@ private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniS
 
 @Composable
 fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
-    Text("Session & Games", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-    SettingsSection("Session") {
+    // Default name for a newly created game; hoisted because it is used from an onClick lambda.
+    val newGameNameTemplate = stringResource(R.string.omni_cfg_game_n)
+    Text(stringResource(R.string.omni_cfg_session_games), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    SettingsSection(stringResource(R.string.omni_cfg_session_timer)) {
         Column {
-            BehaviorSwitch("Enable Session Timer", settings.useGlobalClock, topRounded = true, bottomRounded = !settings.useGlobalClock) { onSettingsChanged(settings.copy(useGlobalClock = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_enable_session_timer), settings.useGlobalClock, topRounded = true, bottomRounded = !settings.useGlobalClock) { onSettingsChanged(settings.copy(useGlobalClock = it)) }
             if (settings.useGlobalClock) {
                 Surface(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(12.dp), color = Color.Transparent) {
-                    HMSInput("Total Duration", settings.globalDurationMs) { onSettingsChanged(settings.copy(globalDurationMs = it)) }
+                    HMSInput(stringResource(R.string.omni_cfg_total_duration), settings.globalDurationMs) { onSettingsChanged(settings.copy(globalDurationMs = it)) }
                 }
-                BehaviorSwitch("Force cutoff when session time runs out", settings.globalForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(globalForcesCutoff = it)) }
+                BehaviorSwitch(stringResource(R.string.omni_cfg_cutoff_session), settings.globalForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(globalForcesCutoff = it)) }
             }
         }
     }
 
-    SettingsSection("Game Timer") {
-        BehaviorSwitch("Enable Game Timer", settings.useGameClock, topRounded = true, bottomRounded = !settings.useGameClock) { onSettingsChanged(settings.copy(useGameClock = it)) }
+    SettingsSection(stringResource(R.string.omni_cfg_game_timer)) {
+        BehaviorSwitch(stringResource(R.string.omni_cfg_enable_game_timer), settings.useGameClock, topRounded = true, bottomRounded = !settings.useGameClock) { onSettingsChanged(settings.copy(useGameClock = it)) }
         if (settings.useGameClock) {
-            BehaviorSwitch("Force cutoff when game time runs out", settings.gameForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(gameForcesCutoff = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_cutoff_game), settings.gameForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(gameForcesCutoff = it)) }
         }
     }
 
@@ -361,26 +375,26 @@ fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings
             ) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Game ${index + 1}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.omni_cfg_game_n, index + 1), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         if (settings.games.size > 1) {
                             IconButton(onClick = {
                                 val newList = settings.games.toMutableList().apply { removeAt(index) }
                                 onSettingsChanged(settings.copy(games = newList))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, "Delete game ${index + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_game, index + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
                     OutlinedTextField(
                         value = game.name,
                         onValueChange = { onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply { this[index] = game.copy(name = it) })) },
-                        placeholder = { Text("Game Name") },
+                        placeholder = { Text(stringResource(R.string.omni_cfg_game_name)) },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(8.dp),
                         textStyle = MaterialTheme.typography.bodySmall
                     )
 
                     if (settings.useGameClock) {
-                        HMSInput("Duration", game.durationMs) { duration ->
+                        HMSInput(stringResource(R.string.omni_cfg_duration), game.durationMs) { duration ->
                             onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply { this[index] = game.copy(durationMs = duration) }))
                         }
                     }
@@ -391,7 +405,7 @@ fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings
         Button(
             onClick = {
                 val last = settings.games.lastOrNull() ?: OmniGameSettings()
-                val nextGame = last.copy(id = java.util.UUID.randomUUID().toString(), name = "Game ${settings.games.size + 1}")
+                val nextGame = last.copy(id = java.util.UUID.randomUUID().toString(), name = String.format(Locale.getDefault(), newGameNameTemplate, settings.games.size + 1))
                 onSettingsChanged(settings.copy(games = settings.games + nextGame))
             },
             modifier = Modifier.fillMaxWidth(),
@@ -399,19 +413,20 @@ fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings
         ) {
             Icon(Icons.Default.Add, null)
             Spacer(Modifier.width(8.dp))
-            Text("Add Game")
+            Text(stringResource(R.string.omni_cfg_add_game))
         }
     }
 }
 
 @Composable
 fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
-    Text("Rounds", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    val newRoundNameTemplate = stringResource(R.string.omni_cfg_round_n)
+    Text(stringResource(R.string.omni_cfg_rounds), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
-    SettingsSection("Round Timer") {
-        BehaviorSwitch("Enable Round Timer", settings.useRoundClock, topRounded = true, bottomRounded = !settings.useRoundClock) { onSettingsChanged(settings.copy(useRoundClock = it)) }
+    SettingsSection(stringResource(R.string.omni_cfg_round_timer)) {
+        BehaviorSwitch(stringResource(R.string.omni_cfg_enable_round_timer), settings.useRoundClock, topRounded = true, bottomRounded = !settings.useRoundClock) { onSettingsChanged(settings.copy(useRoundClock = it)) }
         if (settings.useRoundClock) {
-            BehaviorSwitch("Force cutoff when round time runs out", settings.roundForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(roundForcesCutoff = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_cutoff_round), settings.roundForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(roundForcesCutoff = it)) }
         }
     }
 
@@ -423,7 +438,7 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
             PrimaryScrollableTabRow(selectedTabIndex = selectedGameIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 settings.games.forEachIndexed { index, game ->
                     Tab(selected = selectedGameIdx == index, onClick = { selectedGameIdx = index }) {
-                        Text(game.name.ifBlank { "G${index + 1}" }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+                        Text(game.name.ifBlank { stringResource(R.string.omni_cfg_game_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -437,14 +452,14 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
             ) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Round ${index + 1}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.omni_cfg_round_n, index + 1), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         if (currentGame.rounds.size > 1) {
                             IconButton(onClick = {
                                 val newList = currentGame.rounds.toMutableList().apply { removeAt(index) }
                                 onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                                     this[selectedGameIdx] = currentGame.copy(rounds = newList)
                                 }))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, "Delete round ${index + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_round, index + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
@@ -453,7 +468,7 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                         onValueChange = { onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                             this[selectedGameIdx] = currentGame.copy(rounds = currentGame.rounds.toMutableList().apply { this[index] = round.copy(name = it) })
                         })) },
-                        placeholder = { Text("Round Name") },
+                        placeholder = { Text(stringResource(R.string.omni_cfg_round_name)) },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(8.dp),
                         textStyle = MaterialTheme.typography.bodySmall
@@ -471,7 +486,7 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         Button(
             onClick = {
                 val last = currentGame.rounds.lastOrNull() ?: OmniRoundSettings()
-                val nextRound = last.copy(id = java.util.UUID.randomUUID().toString(), name = "Round ${currentGame.rounds.size + 1}")
+                val nextRound = last.copy(id = java.util.UUID.randomUUID().toString(), name = String.format(Locale.getDefault(), newRoundNameTemplate, currentGame.rounds.size + 1))
                 onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                     this[selectedGameIdx] = currentGame.copy(rounds = currentGame.rounds + nextRound)
                 }))
@@ -481,25 +496,25 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         ) {
             Icon(Icons.Default.Add, null)
             Spacer(Modifier.width(8.dp))
-            Text("Add Round")
+            Text(stringResource(R.string.omni_cfg_add_round))
         }
     }
 }
 
 @Composable
 fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
-    Text("Turns", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    Text(stringResource(R.string.omni_cfg_turns), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
-    SettingsSection("Turn Timer") {
-        BehaviorSwitch("Enable Turn Timer", settings.useTurnClock, topRounded = true, bottomRounded = !settings.useTurnClock) { onSettingsChanged(settings.copy(useTurnClock = it)) }
+    SettingsSection(stringResource(R.string.omni_cfg_turn_timer)) {
+        BehaviorSwitch(stringResource(R.string.omni_cfg_enable_turn_timer), settings.useTurnClock, topRounded = true, bottomRounded = !settings.useTurnClock) { onSettingsChanged(settings.copy(useTurnClock = it)) }
         if (settings.useTurnClock) {
-            BehaviorSwitch("Force cutoff when turn time runs out", settings.turnForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(turnForcesCutoff = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_cutoff_turn), settings.turnForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(turnForcesCutoff = it)) }
         }
     }
 
     if (!settings.useTurnClock) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Turn clock disabled.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.omni_cfg_turn_disabled), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         return
     }
@@ -514,7 +529,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
             PrimaryScrollableTabRow(selectedTabIndex = selectedGameIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 settings.games.forEachIndexed { index, game ->
                     Tab(selected = selectedGameIdx == index, onClick = { selectedGameIdx = index }) {
-                        Text(game.name.ifBlank { "G${index + 1}" }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+                        Text(game.name.ifBlank { stringResource(R.string.omni_cfg_game_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -523,7 +538,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
             PrimaryScrollableTabRow(selectedTabIndex = selectedRoundIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 currentGame.rounds.forEachIndexed { index, round ->
                     Tab(selected = selectedRoundIdx == index, onClick = { selectedRoundIdx = index }) {
-                        Text(round.name.ifBlank { "R${index + 1}" }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+                        Text(round.name.ifBlank { stringResource(R.string.omni_cfg_round_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -541,7 +556,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
                         }))
                     },
                     shape = SegmentedButtonDefaults.itemShape(index, 2),
-                    label = { Text(if (behavior == RoundEndBehavior.ADVANCE) "End Round" else "Loop Turns", style = MaterialTheme.typography.labelSmall) }
+                    label = { Text(if (behavior == RoundEndBehavior.ADVANCE) stringResource(R.string.omni_cfg_end_round) else stringResource(R.string.omni_cfg_loop_turns), style = MaterialTheme.typography.labelSmall) }
                 )
             }
         }
@@ -556,7 +571,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
             ) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Turn ${tIdx + 1}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.omni_cfg_turn_n, tIdx + 1), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         if (turns.size > 1) {
                             IconButton(onClick = {
                                 val newList = turns.toMutableList().apply { removeAt(tIdx) }
@@ -565,7 +580,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
                                         this[selectedRoundIdx] = currentRound.copy(customTurns = newList, turnLogic = if (newList.size <= 1) RoundTurnLogic.FIXED else RoundTurnLogic.SEQUENCE)
                                     })
                                 }))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, "Delete turn ${tIdx + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_turn, tIdx + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
@@ -596,25 +611,26 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
         ) {
             Icon(Icons.Default.Add, null)
             Spacer(Modifier.width(8.dp))
-            Text("Add Turn")
+            Text(stringResource(R.string.omni_cfg_add_turn))
         }
     }
 }
 
 @Composable
 fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
-    Text("Phases", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    val newPhaseNameTemplate = stringResource(R.string.omni_cfg_phase_n)
+    Text(stringResource(R.string.omni_cfg_phases), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
-    SettingsSection("Phase Timer") {
-        BehaviorSwitch("Enable Phase Timer", settings.usePhaseClock, topRounded = true, bottomRounded = !settings.usePhaseClock) { onSettingsChanged(settings.copy(usePhaseClock = it)) }
+    SettingsSection(stringResource(R.string.omni_cfg_phase_timer)) {
+        BehaviorSwitch(stringResource(R.string.omni_cfg_enable_phase_timer), settings.usePhaseClock, topRounded = true, bottomRounded = !settings.usePhaseClock) { onSettingsChanged(settings.copy(usePhaseClock = it)) }
         if (settings.usePhaseClock) {
-            BehaviorSwitch("Force cutoff when phase time runs out", settings.phaseForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(phaseForcesCutoff = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_cutoff_phase), settings.phaseForcesCutoff, bottomRounded = true) { onSettingsChanged(settings.copy(phaseForcesCutoff = it)) }
         }
     }
 
     if (!settings.usePhaseClock) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Phase clock disabled.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.omni_cfg_phase_disabled), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         return
     }
@@ -633,7 +649,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
             PrimaryScrollableTabRow(selectedTabIndex = selectedGameIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 settings.games.forEachIndexed { index, game ->
                     Tab(selected = selectedGameIdx == index, onClick = { selectedGameIdx = index }) {
-                        Text(game.name.ifBlank { "G${index + 1}" }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+                        Text(game.name.ifBlank { stringResource(R.string.omni_cfg_game_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -642,7 +658,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
             PrimaryScrollableTabRow(selectedTabIndex = selectedRoundIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 currentGame.rounds.forEachIndexed { index, round ->
                     Tab(selected = selectedRoundIdx == index, onClick = { selectedRoundIdx = index }) {
-                        Text(round.name.ifBlank { "R${index + 1}" }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+                        Text(round.name.ifBlank { stringResource(R.string.omni_cfg_round_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -651,7 +667,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
             PrimaryScrollableTabRow(selectedTabIndex = selectedTurnIdx, edgePadding = 0.dp, containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), divider = {}) {
                 turnsList.forEachIndexed { index, _ ->
                     Tab(selected = selectedTurnIdx == index, onClick = { selectedTurnIdx = index }) {
-                        Text("T${index + 1}", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(R.string.omni_cfg_turn_short, index + 1), modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -672,7 +688,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                         Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            "Total: ${totalPhasesMs/1000}s / Limit: ${currentTurn.durationMs/1000}s",
+                            stringResource(R.string.omni_cfg_phase_budget, totalPhasesMs / 1000, currentTurn.durationMs / 1000),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold
@@ -695,7 +711,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                                     val newPhases = phases.toMutableList().apply { this[pIdx] = phase.copy(name = name) }
                                     updateReplicatedPhases(settings, selectedGameIdx, selectedRoundIdx, selectedTurnIdx, newPhases, onSettingsChanged)
                                 },
-                                placeholder = { Text("Phase Name") },
+                                placeholder = { Text(stringResource(R.string.omni_cfg_phase_name)) },
                                 modifier = Modifier.weight(1f).height(48.dp),
                                 shape = RoundedCornerShape(8.dp),
                                 textStyle = MaterialTheme.typography.bodySmall
@@ -704,7 +720,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                                 IconButton(onClick = {
                                     val newPhases = phases.toMutableList().apply { removeAt(pIdx) }
                                     updateReplicatedPhases(settings, selectedGameIdx, selectedRoundIdx, selectedTurnIdx, newPhases, onSettingsChanged)
-                                }) { Icon(Icons.Default.Delete, "Delete phase ${pIdx + 1}", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                                }) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_phase, pIdx + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                             }
                         }
                         HMSInput("", phase.durationMs) { duration ->
@@ -717,7 +733,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
 
             Button(
                 onClick = {
-                    val newPhase = OmniPhaseSettings(id = java.util.UUID.randomUUID().toString(), name = "Phase ${phases.size + 1}")
+                    val newPhase = OmniPhaseSettings(id = java.util.UUID.randomUUID().toString(), name = String.format(Locale.getDefault(), newPhaseNameTemplate, phases.size + 1))
                     updateReplicatedPhases(settings, selectedGameIdx, selectedRoundIdx, selectedTurnIdx, phases + newPhase, onSettingsChanged)
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -725,7 +741,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
             ) {
                 Icon(Icons.Default.Add, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Add Phase", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.omni_cfg_add_phase), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -770,13 +786,13 @@ private fun updateReplicatedPhases(
 
 @Composable
 fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
-    Text("Advanced Rules", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    Text(stringResource(R.string.omni_cfg_advanced_rules), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
-    SettingsSection("Transitions & Pauses") {
+    SettingsSection(stringResource(R.string.omni_cfg_transitions)) {
         Column {
             val pausesEnabled = settings.interTurnPauseMs > 0 || settings.interRoundPauseMs > 0 || settings.interGamePauseMs > 0
             BehaviorSwitch(
-                label = "Enable Pauses (Buffers)",
+                label = stringResource(R.string.omni_cfg_enable_pauses),
                 checked = pausesEnabled,
                 topRounded = true,
                 bottomRounded = !pausesEnabled
@@ -798,7 +814,7 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
 
             if (pausesEnabled) {
                 BehaviorSwitch(
-                    label = "Automatic Restart",
+                    label = stringResource(R.string.omni_cfg_auto_restart),
                     checked = settings.transitionType == TransitionType.AUTOMATIC,
                     topRounded = false,
                     bottomRounded = true
@@ -812,35 +828,35 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
     }
 
     if (settings.interTurnPauseMs > 0 || settings.interRoundPauseMs > 0 || settings.interGamePauseMs > 0) {
-        SettingsSection("Pauses Durations") {
+        SettingsSection(stringResource(R.string.omni_cfg_pauses_durations)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                HMSInput("Turn Pause", settings.interTurnPauseMs) { onSettingsChanged(settings.copy(interTurnPauseMs = it)) }
-                HMSInput("Round Pause", settings.interRoundPauseMs) { onSettingsChanged(settings.copy(interRoundPauseMs = it)) }
-                HMSInput("Game Pause", settings.interGamePauseMs) { onSettingsChanged(settings.copy(interGamePauseMs = it)) }
+                HMSInput(stringResource(R.string.omni_cfg_turn_pause), settings.interTurnPauseMs) { onSettingsChanged(settings.copy(interTurnPauseMs = it)) }
+                HMSInput(stringResource(R.string.omni_cfg_round_pause), settings.interRoundPauseMs) { onSettingsChanged(settings.copy(interRoundPauseMs = it)) }
+                HMSInput(stringResource(R.string.omni_cfg_game_pause), settings.interGamePauseMs) { onSettingsChanged(settings.copy(interGamePauseMs = it)) }
             }
         }
     }
 
-    SettingsSection("Pressure & Economy") {
+    SettingsSection(stringResource(R.string.omni_cfg_pressure)) {
         Column {
-            BehaviorSwitch("Pause deducts Global", settings.pauseDeductsFromGlobal, topRounded = true) { onSettingsChanged(settings.copy(pauseDeductsFromGlobal = it)) }
-            BehaviorSwitch("Pause deducts Game", settings.pauseDeductsFromGame) { onSettingsChanged(settings.copy(pauseDeductsFromGame = it)) }
-            BehaviorSwitch("Pause deducts Round", settings.pauseDeductsFromRound) { onSettingsChanged(settings.copy(pauseDeductsFromRound = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_pause_deducts_global), settings.pauseDeductsFromGlobal, topRounded = true) { onSettingsChanged(settings.copy(pauseDeductsFromGlobal = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_pause_deducts_game), settings.pauseDeductsFromGame) { onSettingsChanged(settings.copy(pauseDeductsFromGame = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_pause_deducts_round), settings.pauseDeductsFromRound) { onSettingsChanged(settings.copy(pauseDeductsFromRound = it)) }
             
             Column(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Time Bank", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.omni_cfg_time_bank), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 // Was a boolean switch that could only reach NONE/ACCUMULATIVE -- GLOBAL_RESERVE (a
                 // single pool shared by every player, instead of one bank per player) was unreachable
                 // from the UI. See AUDIT.md §7.1.
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     TimeBankMode.entries.forEachIndexed { index, mode ->
                         val label = when (mode) {
-                            TimeBankMode.NONE -> "Off"
-                            TimeBankMode.ACCUMULATIVE -> "Per-player"
-                            TimeBankMode.GLOBAL_RESERVE -> "Shared pool"
+                            TimeBankMode.NONE -> stringResource(R.string.common_off)
+                            TimeBankMode.ACCUMULATIVE -> stringResource(R.string.omni_cfg_bank_per_player)
+                            TimeBankMode.GLOBAL_RESERVE -> stringResource(R.string.omni_cfg_bank_shared)
                         }
                         SegmentedButton(
                             selected = settings.timeBankMode == mode,
@@ -855,14 +871,14 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
     }
 
     if (settings.timeBankMode != TimeBankMode.NONE) {
-        SettingsSection("Clear Bank at end of:") {
+        SettingsSection(stringResource(R.string.omni_cfg_bank_clear)) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 TimeBankScope.entries.forEachIndexed { index, scope ->
                     val label = when(scope) {
-                        TimeBankScope.TURN_TO_TURN -> "Turn"
-                        TimeBankScope.ROUND_TO_ROUND -> "Round"
-                        TimeBankScope.GAME_TO_GAME -> "Game"
-                        TimeBankScope.SESSION_WIDE -> "Session"
+                        TimeBankScope.TURN_TO_TURN -> stringResource(R.string.omni_cfg_turn)
+                        TimeBankScope.ROUND_TO_ROUND -> stringResource(R.string.omni_cfg_round)
+                        TimeBankScope.GAME_TO_GAME -> stringResource(R.string.omni_cfg_game)
+                        TimeBankScope.SESSION_WIDE -> stringResource(R.string.omni_cfg_session_timer)
                     }
                     SegmentedButton(
                         selected = settings.timeBankScope == scope,
@@ -875,27 +891,27 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
         }
     }
 
-    SettingsSection("Audio Alerts") {
+    SettingsSection(stringResource(R.string.omni_cfg_audio)) {
         Column {
-            BehaviorSwitch("Turn Beep", settings.soundTurnEnd, topRounded = true) { onSettingsChanged(settings.copy(soundTurnEnd = it)) }
-            BehaviorSwitch("Round Gong", settings.soundRoundEnd) { onSettingsChanged(settings.copy(soundRoundEnd = it)) }
-            BehaviorSwitch("Final Beep", settings.soundGameEnd, bottomRounded = true) { onSettingsChanged(settings.copy(soundGameEnd = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_turn_beep), settings.soundTurnEnd, topRounded = true) { onSettingsChanged(settings.copy(soundTurnEnd = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_round_gong), settings.soundRoundEnd) { onSettingsChanged(settings.copy(soundRoundEnd = it)) }
+            BehaviorSwitch(stringResource(R.string.omni_cfg_final_beep), settings.soundGameEnd, bottomRounded = true) { onSettingsChanged(settings.copy(soundGameEnd = it)) }
         }
     }
 }
 
 @Composable
 fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit, onPlay: () -> Unit) {
-    Text("Ready to Play", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+    Text(stringResource(R.string.omni_cfg_ready), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
-    SettingsSection("Launch Countdown") {
+    SettingsSection(stringResource(R.string.omni_cfg_launch_countdown)) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             val options = listOf(0L, 10_000L, 30_000L, 60_000L, 120_000L, 300_000L)
             val currentMs = settings.launchCountdownMs
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 options.forEachIndexed { index, ms ->
                     val label = when(ms) {
-                        0L -> "Off"; 10_000L -> "10s"; 30_000L -> "30s"; 60_000L -> "1m"; 120_000L -> "2m"; 300_000L -> "5m"; else -> ""
+                        0L -> stringResource(R.string.common_off); 10_000L -> stringResource(R.string.dur_10s); 30_000L -> stringResource(R.string.dur_30s); 60_000L -> stringResource(R.string.dur_1m); 120_000L -> stringResource(R.string.dur_2m); 300_000L -> stringResource(R.string.dur_5m); else -> ""
                     }
                     SegmentedButton(
                         selected = currentMs == ms,
@@ -910,17 +926,17 @@ fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) ->
 
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Summary", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
-            Text("• ${settings.numberOfPlayers} Players | ${settings.games.size} Games")
+            Text(stringResource(R.string.omni_cfg_summary), fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+            Text(pluralStringResource(R.plurals.omni_cfg_summary_games, settings.games.size, settings.numberOfPlayers, settings.games.size))
             // Was always games.firstOrNull()?.rounds?.size, presented as if every game were the same
             // even when games have different round counts -- see AUDIT.md §7.1.
             val roundCounts = settings.games.map { it.rounds.size }
-            Text("• " + if (roundCounts.distinct().size <= 1) "${roundCounts.firstOrNull() ?: 0} Rounds per Game" else "Rounds per Game: ${roundCounts.joinToString(", ")}")
-            Text("• Order: ${settings.playerOrderType}")
+            Text(if (roundCounts.distinct().size <= 1) pluralStringResource(R.plurals.omni_cfg_summary_rounds_uniform, roundCounts.firstOrNull() ?: 0, roundCounts.firstOrNull() ?: 0) else stringResource(R.string.omni_cfg_summary_rounds_varied, roundCounts.joinToString(", ")))
+            Text(stringResource(R.string.omni_cfg_summary_order, settings.playerOrderType.toString()))
         }
     }
 
     Button(onClick = onPlay, modifier = Modifier.fillMaxWidth().height(64.dp), shape = RoundedCornerShape(16.dp)) {
-        Icon(Icons.Default.PlayArrow, null); Spacer(Modifier.width(12.dp)); Text("LAUNCH STATION", fontWeight = FontWeight.Black)
+        Icon(Icons.Default.PlayArrow, null); Spacer(Modifier.width(12.dp)); Text(stringResource(R.string.omni_cfg_launch_station), fontWeight = FontWeight.Black)
     }
 }
