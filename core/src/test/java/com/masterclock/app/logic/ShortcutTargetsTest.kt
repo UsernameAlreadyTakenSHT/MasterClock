@@ -13,7 +13,7 @@ import org.junit.Assert.*
 class ShortcutTargetsTest {
 
     private fun settings(timeMs: Long, incMs: Long = 0) = ChessClockSettings(
-        main = PlayerSettings(initialTimeMs = timeMs, incrementMs = incMs, mode = TimerMode.FISHER)
+        main = PlayerSettings(initialTimeMs = timeMs, incrementMs = incMs, mode = TimerMode.FISCHER)
     )
 
     private fun log(startTime: Long, timeMs: Long = 300_000) =

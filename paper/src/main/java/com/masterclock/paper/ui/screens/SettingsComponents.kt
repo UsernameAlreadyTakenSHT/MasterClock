@@ -142,14 +142,14 @@ fun TimeField(value: String, suffix: String, modifier: Modifier = Modifier, onVa
 fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
     val mainMode = when (p.mode) { 
         TimerMode.SUDDEN_DEATH -> 0
-        TimerMode.FISHER -> 1
+        TimerMode.FISCHER -> 1
         TimerMode.MOVE_TIMER_STANDARD -> 2
         else -> 0 
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ModeCard("Timer", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
-        ModeCard("Fischer", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
+        ModeCard("Fischer", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
         ModeCard("Move", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
     }
     

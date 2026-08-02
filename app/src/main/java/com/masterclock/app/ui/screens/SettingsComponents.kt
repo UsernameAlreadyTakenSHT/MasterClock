@@ -781,7 +781,7 @@ fun CustomSoundItem(
 fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (PlayerSettings) -> Unit, onUpdateOneForAll: (Boolean) -> Unit, onOmniClick: () -> Unit) {
     val mainMode = when { 
         p.mode == TimerMode.SUDDEN_DEATH -> 0
-        p.mode in listOf(TimerMode.FISHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY) -> 1
+        p.mode in listOf(TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY) -> 1
         p.mode.name.startsWith("MOVE_TIMER") -> 2
         p.mode == TimerMode.HOURGLASS -> 3
         p.mode.name.startsWith("BYOYOMI") -> 4
@@ -801,7 +801,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
             if (FlavorConfig.currentFlavor == AppFlavor.MINI) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
-                    ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
+                    ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
                     ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                 }
             } else {
@@ -809,8 +809,8 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     if (FlavorConfig.isModeAllowed(TimerMode.SUDDEN_DEATH)) {
                         ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
                     }
-                    if (FlavorConfig.isModeAllowed(TimerMode.FISHER)) {
-                        ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
+                    if (FlavorConfig.isModeAllowed(TimerMode.FISCHER)) {
+                        ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -851,7 +851,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         }
     }
     Spacer(Modifier.height(12.dp))
-    val bonusOptionsAllowed = listOf(TimerMode.FISHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY).count { FlavorConfig.isModeAllowed(it) }
+    val bonusOptionsAllowed = listOf(TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY).count { FlavorConfig.isModeAllowed(it) }
     val moveTimerOptionsAllowed = listOf(
         TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_SAVE_CAP, TimerMode.MOVE_TIMER_OVERTIME,
         TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_SHARED, TimerMode.MOVE_TIMER_GLOBAL_SHARED
@@ -859,8 +859,8 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
     when (mainMode) {
         1 -> if (bonusOptionsAllowed > 1) SettingsSection("Bonus Type") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (FlavorConfig.isModeAllowed(TimerMode.FISHER)) {
-                    ModeCard("Fischer", p.mode == TimerMode.FISHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
+                if (FlavorConfig.isModeAllowed(TimerMode.FISCHER)) {
+                    ModeCard("Fischer", p.mode == TimerMode.FISCHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
                 }
                 if (FlavorConfig.isModeAllowed(TimerMode.BRONSTEIN)) {
                     ModeCard("Bronstein", p.mode == TimerMode.BRONSTEIN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BRONSTEIN)) }
@@ -939,7 +939,7 @@ fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, al
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val mainModeIdx = when { 
                 mode == TimerMode.SUDDEN_DEATH -> 0
-                mode in listOf(TimerMode.FISHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY) -> 1
+                mode in listOf(TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY) -> 1
                 mode.name.startsWith("MOVE_TIMER") -> 2
                 mode == TimerMode.HOURGLASS -> 3
                 mode.name.startsWith("BYOYOMI") -> 4
