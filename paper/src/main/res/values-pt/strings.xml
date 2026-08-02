@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock — pt
+
+  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
+  fully usable while this file is being filled in.
+
+  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
+  the name attribute alone. See TRANSLATING.md at the repository root.
+
+  tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
+  partial; it does not hide anything you need to see.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+</resources>

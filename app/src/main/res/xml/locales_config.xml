@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Languages MasterClock is prepared for.
+
+  Declaring them here is what makes Android 13+ offer "App language" in the system settings for
+  this app, with no code on our side. A locale listed here but not yet translated simply falls back
+  to English string by string, so a partially translated language is usable rather than broken.
+
+  Add a locale here at the same time as its values-XX/strings.xml (see TRANSLATING.md).
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="fr" />
+    <locale android:name="es" />
+    <locale android:name="pt" />
+    <locale android:name="it" />
+    <locale android:name="de" />
+    <locale android:name="nl" />
+</locale-config>

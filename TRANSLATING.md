@@ -1,0 +1,105 @@
+# Translating MasterClock
+
+Translations are welcome, and you do not need to be able to build the app to contribute one — the
+files are plain XML.
+
+The app currently ships in **English**. Seven languages are prepared: English, French, Spanish,
+Portuguese, Italian, German and Dutch. Their files exist but are still empty, so everything falls
+back to English until someone fills them in.
+
+Partial translations are fine. Android falls back **string by string**, so a file with ten lines
+translated works perfectly — those ten are shown in your language, the rest stay English. There is
+no need to finish a language before it is useful.
+
+## Where the files are
+
+| Module | What it covers | English source |
+|---|---|---|
+| `app` | the phone/tablet app | `app/src/main/res/values/strings.xml` |
+| `paper` | the separate E-Ink app | `paper/src/main/res/values/strings.xml` |
+
+Your language goes in the folder next to it, named after its code:
+
+```
+app/src/main/res/values-fr/strings.xml      ← French
+app/src/main/res/values-de/strings.xml      ← German
+…
+```
+
+Those files already exist, with a header comment and nothing else.
+
+## How to translate
+
+Copy a line from `values/strings.xml` into your language's file and translate **only the text
+between the tags**. Never change the `name`.
+
+```xml
+<!-- values/strings.xml (English, the source — do not edit) -->
+<string name="timer_resume">Resume</string>
+
+<!-- values-fr/strings.xml (yours) -->
+<string name="timer_resume">Reprendre</string>
+```
+
+Keep the lines inside the existing `<resources …>` element.
+
+## Rules that matter
+
+**Placeholders must survive.** `%d` is a number, `%s` is a piece of text. They have to appear in
+your translation, or the app crashes when it tries to fill them in.
+
+```xml
+<string name="timer_moves">MOVES: %d</string>
+<string name="timer_moves">COUPS : %d</string>     <!-- fine -->
+<string name="timer_moves">COUPS</string>          <!-- crashes -->
+```
+
+If a string has **more than one** placeholder, they are numbered (`%1$s`, `%2$d`) and you may
+reorder them freely — that is what the numbers are for.
+
+**Apostrophes must be escaped** as `\'`, otherwise the file will not compile. This bites French
+constantly:
+
+```xml
+<string name="example">Fin de l\'échange</string>
+```
+
+**Some things stay in English on purpose.** Anything marked `translatable="false"` is a proper
+noun or an internal token — `Fischer`, `Bronstein`, `Byoyomi`. Leave those alone.
+
+**Watch the length.** Several labels sit in very tight spaces: the buttons under the clock, the
+tabs in the credits dialog, the labels on the clock face itself. French and German commonly run
+40–80% longer than English. If a natural translation is much longer, prefer a shorter wording — a
+truncated label helps nobody.
+
+## Testing it, if you can build
+
+Install the app, then either switch your phone's language, or on Android 13+ go to
+**Settings › Apps › MasterClock › Language** and pick yours directly. The languages listed there
+come from `res/xml/locales_config.xml`.
+
+If you cannot build, send the file anyway — it will be checked before merging.
+
+## Adding a language that is not listed
+
+1. Create `app/src/main/res/values-XX/strings.xml`, copying the header from an existing one.
+2. Add `<locale android:name="XX" />` to **both** `app/src/main/res/xml/locales_config.xml` and
+   the identical file in `paper`.
+
+Use the plain language code (`pt`, not `pt-BR`) unless the difference genuinely matters for your
+language.
+
+## Sending it in
+
+Open a pull request on [GitHub](https://github.com/UsernameAlreadyTakenSHT/MasterClock) or
+[GitLab](https://gitlab.com/UsernameAlreadyTakenSHT/masterclock), or simply open an issue and
+attach the file.
+
+Please say whether you are a native speaker — not a requirement, just useful context for review.
+
+## A note on scale
+
+Most of the interface is still hardcoded English inside the Kotlin sources and is being moved into
+`strings.xml` screen by screen. So `values/strings.xml` will keep growing for a while, and a
+language that looks complete today will have new strings to pick up later. Nothing breaks in the
+meantime: new strings simply appear in English until translated.
