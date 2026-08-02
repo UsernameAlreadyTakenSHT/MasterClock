@@ -516,6 +516,8 @@
     <string name="omni_cfg_pattern_linear">Pattern (3 players): 123, 123, 123</string>
     <string name="omni_cfg_pattern_snake">Pattern (3 players): 123, 321, 123</string>
     <string name="omni_cfg_pattern_rotate">Pattern (3 players): 123, 231, 312</string>
+    <string name="omni_cfg_pattern_random_turn">Pattern (3 players): 132, 312, 231 — a player can be skipped or picked twice</string>
+    <string name="omni_cfg_pattern_random_round">Pattern (3 players): 231, 312, 123 — everyone plays once per round</string>
     <string name="omni_cfg_shuffle_per_round">Shuffle per round</string>
     <string name="omni_cfg_draw_per_turn">Draw per turn</string>
     <string name="omni_cfg_balance_draw">Balance the draw</string>

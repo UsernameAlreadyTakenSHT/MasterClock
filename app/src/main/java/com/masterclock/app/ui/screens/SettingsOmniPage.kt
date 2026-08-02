@@ -276,8 +276,8 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
                 PlayerOrderType.SNAKE -> stringResource(R.string.omni_cfg_pattern_snake)
                 PlayerOrderType.ROTATE -> stringResource(R.string.omni_cfg_pattern_rotate)
                 PlayerOrderType.RANDOM ->
-                    if (settings.randomEachTurn) "Pattern (3 players): 132, 312, 231 — a player can be skipped or picked twice"
-                    else "Pattern (3 players): 231, 312, 123 — everyone plays once per round"
+                    if (settings.randomEachTurn) stringResource(R.string.omni_cfg_pattern_random_turn)
+                    else stringResource(R.string.omni_cfg_pattern_random_round)
             }
             Text(
                 text = exampleText,
