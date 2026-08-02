@@ -263,7 +263,7 @@ fun CoinTossScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
 
-    ToolScaffold(title = "Coin Toss", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.settings_more_coin_toss), onBack = onBack) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -344,7 +344,7 @@ fun DiceRollScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
 
-    ToolScaffold(title = "Dice Roll", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_dice_roll), onBack = onBack) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -661,7 +661,7 @@ fun BlindfoldTrainerScreen(onBack: () -> Unit) {
         nextRound()
     }
 
-    ToolScaffold(title = "Blindfold Trainer", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.settings_more_blindfold), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -720,7 +720,7 @@ fun KnightPathScreen(onBack: () -> Unit) {
     }
     fun checkAnswer(ans: Int) { if (!isPlaying) return; if (ans == getMinMoves(startPos, targetPos)) score++; nextRound() }
 
-    ToolScaffold(title = "Knight's Path", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.settings_more_knight), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -933,7 +933,7 @@ fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val session by viewModel.scoreboard.collectAsState(); var newResultText by remember { mutableStateOf("") }; val sortedGames = remember(session.games) { session.games.asReversed() }
     ToolScaffold(title = "Scoreboard", onBack = onBack, actions = { IconButton(onClick = { viewModel.resetScoreboard() }) { Icon(Icons.Default.Refresh, stringResource(R.string.tools_reset_scoreboard)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { OutlinedTextField(value = session.player1Name, onValueChange = { viewModel.updateScoreboardNames(it, session.player2Name) }, label = { Text("Player 1") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); OutlinedTextField(value = session.player2Name, onValueChange = { viewModel.updateScoreboardNames(session.player1Name, it) }, label = { Text("Player 2") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { OutlinedTextField(value = session.player1Name, onValueChange = { viewModel.updateScoreboardNames(it, session.player2Name) }, label = { Text(stringResource(R.string.common_player_n, 1)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); OutlinedTextField(value = session.player2Name, onValueChange = { viewModel.updateScoreboardNames(session.player1Name, it) }, label = { Text(stringResource(R.string.common_player_n, 2)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true) }
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
                 if (session.games.isEmpty()) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_no_games), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
                 else { LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(sortedGames, key = { it.timestamp }) { game -> Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)) { Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(game.result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold); Text(SimpleDateFormat("HH:mm", locale).format(Date(game.timestamp)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } }
@@ -963,7 +963,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val selectedNote = remember(selectedNoteId, settings.notebookNotes) { settings.notebookNotes.find { it.id == selectedNoteId } }
     if (selectedNote == null) {
         val sortedNotes = remember(settings.notebookNotes) { settings.notebookNotes.sortedByDescending { it.timestamp } }
-        ToolScaffold(title = "Notebook", onBack = onBack, actions = { IconButton(onClick = { showTypeSelection = true }) { Icon(Icons.Default.Add, stringResource(R.string.tools_new_note)) } }) { padding ->
+        ToolScaffold(title = stringResource(R.string.settings_more_notebook), onBack = onBack, actions = { IconButton(onClick = { showTypeSelection = true }) { Icon(Icons.Default.Add, stringResource(R.string.tools_new_note)) } }) { padding ->
             if (sortedNotes.isEmpty()) { Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text("No notes yet. Tap + to create one.", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             else { 
                 LazyColumn(

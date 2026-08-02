@@ -184,7 +184,7 @@ fun MoreSettingsPage(
                                 selected = currentSettings.gameType == gt,
                                 onClick = { onSettingsChanged(currentSettings.copy(gameType = gt)) },
                                 shape = SegmentedButtonDefaults.itemShape(i, GameType.entries.size),
-                                label = { Text(gt.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) }
+                                label = { Text(gt.label(), style = MaterialTheme.typography.labelSmall) }
                             )
                         }
                     }

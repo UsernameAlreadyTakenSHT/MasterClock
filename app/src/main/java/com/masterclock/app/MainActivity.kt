@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -76,6 +77,9 @@ class MainActivity : ComponentActivity() {
             val customPresets by timerViewModel.customPresets.collectAsState()
             val json = remember { Json { ignoreUnknownKeys = true } }
             val context = LocalContext.current
+            // Hoisted: these fire from document-picker callbacks, outside composable scope.
+            val backupOkText = stringResource(R.string.toast_backup_ok)
+            val importOkText = stringResource(R.string.toast_import_ok)
             var shouldIncludeLogs by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
@@ -154,7 +158,7 @@ class MainActivity : ComponentActivity() {
                             }
                             zipFile.delete()
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Backup successful!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, backupOkText, Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
                             withContext(Dispatchers.Main) {
@@ -183,7 +187,7 @@ class MainActivity : ComponentActivity() {
                                     scoreboardToImport = pkg.scoreboard,
                                     isImport = true
                                 )
-                                Toast.makeText(context, "Import successful!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
                             }
                             tempFile.delete()
                         } catch (e: Exception) {

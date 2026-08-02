@@ -128,7 +128,7 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                         }
                     }
                 }
-                BehaviorSwitch("Flash on low time (<10s)", currentSettings.flashOnLowTime) { onSettingsChanged(currentSettings.copy(flashOnLowTime = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_flash_low_time), currentSettings.flashOnLowTime) { onSettingsChanged(currentSettings.copy(flashOnLowTime = it)) }
                 BehaviorSwitch(stringResource(R.string.settings_keep_awake), currentSettings.forceScreenOn) { onSettingsChanged(currentSettings.copy(forceScreenOn = it)) }
                 BehaviorSwitch(stringResource(R.string.settings_force_brightness), currentSettings.forceFullBrightness) { onSettingsChanged(currentSettings.copy(forceFullBrightness = it)) }
                 BehaviorSwitch(stringResource(R.string.settings_fullscreen), currentSettings.fullscreenMode, bottomRounded = true) { onSettingsChanged(currentSettings.copy(fullscreenMode = it)) }
@@ -142,7 +142,7 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                         selected = currentSettings.themeMode == t,
                         onClick = { onSettingsChanged(currentSettings.copy(themeMode = t)) },
                         shape = SegmentedButtonDefaults.itemShape(i, AppThemeMode.entries.size),
-                        label = { Text(t.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) }
+                        label = { Text(t.label(), style = MaterialTheme.typography.labelSmall) }
                     )
                 }
             }

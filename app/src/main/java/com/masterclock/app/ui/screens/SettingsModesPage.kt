@@ -21,8 +21,8 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         if (currentSettings.differentSettingsPerPlayer) {
             PrimaryTabRow(selectedTabIndex = selectedPlayerTab, modifier = Modifier.padding(vertical = 4.dp)) {
-                Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) { Text("Player 1", Modifier.padding(12.dp)) }
-                Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) { Text("Player 2", Modifier.padding(12.dp)) }
+                Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) { Text(stringResource(R.string.common_player_n, 1), Modifier.padding(12.dp)) }
+                Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) { Text(stringResource(R.string.common_player_n, 2), Modifier.padding(12.dp)) }
             }
         }
 

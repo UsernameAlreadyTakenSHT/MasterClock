@@ -125,7 +125,7 @@ fun SettingsScreen(
             onDismissRequest = { showResetSettingsDialog = false },
             title = stringResource(R.string.settings_reset_settings),
             text = stringResource(R.string.settings_reset_message),
-            confirmButtonText = "Reset",
+            confirmButtonText = stringResource(R.string.common_reset),
             onConfirm = { 
                 onResetSettings()
                 showResetSettingsDialog = false 

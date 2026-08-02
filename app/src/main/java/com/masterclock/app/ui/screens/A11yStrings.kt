@@ -4,7 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.masterclock.app.R
+import com.masterclock.app.logic.AppThemeMode
 import com.masterclock.app.logic.ClockAnnouncement
+import com.masterclock.app.logic.FlagBehavior
+import com.masterclock.app.logic.GameType
+import com.masterclock.app.logic.PlayerOrderType
 import com.masterclock.app.logic.spokenDuration
 
 /**
@@ -55,4 +59,41 @@ fun clockAnnouncementText(announcement: ClockAnnouncement): String = when (annou
             else -> stringResource(R.string.a11y_announce_byoyomi, base)
         }
     }
+}
+
+/**
+ * Labels for the enum-backed option rows.
+ *
+ * These used to be derived with `name.lowercase().replaceFirstChar { it.uppercase() }`, which put
+ * user-visible English in places where no string literal existed -- invisible to any search for
+ * quoted text, and impossible to translate.
+ */
+@Composable
+fun FlagBehavior.label(): String = when (this) {
+    FlagBehavior.FREEZE -> stringResource(R.string.flag_freeze)
+    FlagBehavior.FLAG -> stringResource(R.string.flag_flag)
+    FlagBehavior.NEGATIVE -> stringResource(R.string.flag_negative)
+    FlagBehavior.REVERSE -> stringResource(R.string.flag_reverse)
+}
+
+@Composable
+fun AppThemeMode.label(): String = when (this) {
+    AppThemeMode.LIGHT -> stringResource(R.string.theme_light)
+    AppThemeMode.DARK -> stringResource(R.string.theme_dark)
+    AppThemeMode.AUTO -> stringResource(R.string.theme_auto)
+}
+
+@Composable
+fun GameType.label(): String = when (this) {
+    GameType.CHESS -> stringResource(R.string.game_chess)
+    GameType.DRAUGHTS -> stringResource(R.string.game_draughts)
+    GameType.SHOGI -> stringResource(R.string.game_shogi)
+}
+
+@Composable
+fun PlayerOrderType.label(): String = when (this) {
+    PlayerOrderType.LINEAR -> stringResource(R.string.order_linear)
+    PlayerOrderType.SNAKE -> stringResource(R.string.order_snake)
+    PlayerOrderType.ROTATE -> stringResource(R.string.order_rotate)
+    PlayerOrderType.RANDOM -> stringResource(R.string.order_random)
 }

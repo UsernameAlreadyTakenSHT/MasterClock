@@ -68,7 +68,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = { Text(stringResource(category.labelRes), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
             )
         },
@@ -145,7 +145,7 @@ fun SettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showResetSettingsDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showResetSettingsDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }
@@ -157,11 +157,11 @@ fun SettingsScreen(
             text = { Text(stringResource(R.string.settings_clear_logs_message)) },
             confirmButton = {
                 TextButton(onClick = { onClearLogs(); showClearLogsDialog = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                    Text("Clear")
+                    Text(stringResource(R.string.common_clear))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearLogsDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showClearLogsDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             }
         )
     }

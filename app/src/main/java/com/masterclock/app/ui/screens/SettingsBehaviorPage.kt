@@ -29,7 +29,7 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                         selected = currentSettings.flagBehavior == b,
                         onClick = { onSettingsChanged(currentSettings.copy(flagBehavior = b)) },
                         shape = SegmentedButtonDefaults.itemShape(i, FlagBehavior.entries.size),
-                        label = { Text(b.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) }
+                        label = { Text(b.label(), style = MaterialTheme.typography.labelSmall) }
                     )
                 }
             }
