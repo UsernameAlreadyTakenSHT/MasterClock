@@ -24,6 +24,8 @@ sealed interface Route : NavKey {
     @Serializable
     data object GameLogs : Route
     @Serializable
+    data object Statistics : Route
+    @Serializable
     data object Chess960 : Route
     @Serializable
     data object BluetoothBoard : Route

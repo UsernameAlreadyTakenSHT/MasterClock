@@ -78,6 +78,27 @@ enum class TimerMode {
     FIDE_PERIODS, PHASES, RANDOM, HIDDEN, GONG, FAST_MOVE
 }
 
+/**
+ * The name to show players for a mode.
+ *
+ * Fischer's enum constant is misspelled FISHER, but renaming it is not worth the risk: TimerMode is
+ * @Serializable, so the constant name *is* the wire format inside every stored settings blob, every
+ * game log and every export or QR share ever produced. Correcting the spelling here fixes what
+ * players read without rewriting persisted data.
+ *
+ * The generic fallback also mangles initialisms ("Us delay", "Fide periods"), so those are spelled
+ * out too rather than derived.
+ */
+fun TimerMode.displayName(): String = when (this) {
+    TimerMode.FISHER -> "Fischer"
+    TimerMode.US_DELAY -> "US delay"
+    TimerMode.FIDE_PERIODS -> "FIDE periods"
+    TimerMode.BYOYOMI_JAPANESE -> "Byoyomi (Japanese)"
+    TimerMode.BYOYOMI_CANADIAN -> "Byoyomi (Canadian)"
+    TimerMode.BYOYOMI_PROGRESSIVE -> "Byoyomi (progressive)"
+    else -> name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+}
+
 @Serializable
 enum class FlagBehavior { FREEZE, FLAG, NEGATIVE, REVERSE }
 @Serializable
@@ -342,7 +363,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
     }
 
     if (s.initialTimeMs <= 0L) {
-        return s.mode.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+        return s.mode.displayName()
     }
     val minutes = s.initialTimeMs / 60_000
     val seconds = (s.initialTimeMs % 60_000) / 1000
@@ -387,7 +408,15 @@ data class GameEvent(
     val timeRemainingMs: Long? = null,
     val moveCount: Int? = null,
     val detail: String? = null,
-    val moveNotation: String? = null // For PGN (e.g., "e2e4")
+    val moveNotation: String? = null, // For PGN (e.g., "e2e4")
+    /**
+     * Wall-clock time the player actually spent on this move.
+     *
+     * Only set on MOVE events, and only on games recorded from v0.8.13 onwards -- [moveDurations]
+     * falls back to timestamp differences for older logs. Adding it here needs no Room migration
+     * because events live in a JSON blob read with ignoreUnknownKeys.
+     */
+    val timeSpentMs: Long? = null
 )
 
 @Serializable
@@ -1003,8 +1032,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             addEvent(GameEvent(eventType = "INITIAL_PRESS", playerIndex = playerIndex, detail = "P$nextPlayer clock started"))
         } else {
             val p = currentState.players.getOrNull(playerIndex - 1) ?: return
-            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.timeRemainingMs, moveCount = p.moveCount + 1, moveNotation = boardNotation))
-            applyPostMoveLogic(playerIndex, System.currentTimeMillis() - moveStartTime)
+            val timeSpentOnMove = System.currentTimeMillis() - moveStartTime
+            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.timeRemainingMs, moveCount = p.moveCount + 1, moveNotation = boardNotation, timeSpentMs = timeSpentOnMove))
+            applyPostMoveLogic(playerIndex, timeSpentOnMove)
             moveStartTime = System.currentTimeMillis(); startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
         }

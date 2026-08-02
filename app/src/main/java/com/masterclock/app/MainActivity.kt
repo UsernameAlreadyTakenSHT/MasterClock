@@ -329,7 +329,13 @@ class MainActivity : ComponentActivity() {
                         entry<Route.KnightPath> { _ -> KnightPathScreen(onBack = { navigator.goBack() }) }
                         entry<Route.NameSquare> { _ -> NameSquareScreen(onBack = { navigator.goBack() }) }
                         entry<Route.Chess960> { _ -> Chess960Screen(onBack = { navigator.goBack() }) }
-                        entry<Route.GameLogs> { _ -> 
+                        entry<Route.Statistics> { _ ->
+                            StatisticsScreen(
+                                history = timerViewModel.gameHistory.collectAsState().value,
+                                onBack = { navigator.goBack() }
+                            )
+                        }
+                        entry<Route.GameLogs> { _ ->
                             GameLogsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
                                 onBack = { navigator.goBack() }
@@ -381,6 +387,7 @@ class MainActivity : ComponentActivity() {
                                 onSavePreset = { timerViewModel.saveCurrentAsPreset(it) },
                                 onRenamePreset = { id, name -> timerViewModel.renamePreset(id, name) },
                                 onDeletePreset = { timerViewModel.deletePreset(it) },
+                                onStatisticsClick = { navigator.navigate(Route.Statistics) },
                                 onBack = { navigator.goBack() }
                             )
                         }

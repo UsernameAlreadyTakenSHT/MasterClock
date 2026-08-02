@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -41,6 +42,7 @@ fun PresetsScreen(
     onSavePreset: (String) -> Unit,
     onRenamePreset: (String, String) -> Unit,
     onDeletePreset: (String) -> Unit,
+    onStatisticsClick: () -> Unit,
     onBack: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -153,6 +155,19 @@ fun PresetsScreen(
                     }
                 }
             } else {
+                // Standard and Light have no More tab, so this is their only route to the
+                // statistics screen; Complete additionally lists it under More > Game Data.
+                if (FlavorConfig.hasStatistics()) {
+                    TextButton(
+                        onClick = onStatisticsClick,
+                        modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp)
+                    ) {
+                        Icon(Icons.Default.BarChart, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("View statistics")
+                    }
+                }
+
                 val lastTen = remember(history) { history.take(10) }
                 if (lastTen.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -171,7 +186,7 @@ fun PresetsScreen(
                                 SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(log.startTime))
                             }
                             val modeName = remember(log.settings.main.mode) {
-                                log.settings.main.mode.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+                                log.settings.main.mode.displayName()
                             }
                             
                             val timeInfo = remember(log.initialPlayerStates) {

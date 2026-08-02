@@ -184,18 +184,48 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                     }
                 }
 
+                // Both derive from the same chronologically sorted MOVE sequence, so they line up.
+                val moveEvents = remember(log) { log.events.sortedBy { it.timestamp }.filter { it.eventType == "MOVE" } }
+                val durations = remember(log) { moveDurations(log) }
+
+                if (durations.isNotEmpty()) {
+                    Spacer(Modifier.height(24.dp))
+                    Text("Time per Move", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                    MoveDurationChart(durations, Modifier.fillMaxWidth())
+                }
+
                 Spacer(Modifier.height(24.dp))
                 Text("Detailed Moves", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
 
-                log.events.filter { it.eventType == "MOVE" }.forEach { event ->
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
+                    Text("", modifier = Modifier.width(28.dp))
+                    Text("Move", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Spent", modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Left", modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
+                moveEvents.zip(durations).forEach { (event, duration) ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("P${event.playerIndex}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(event.moveNotation ?: "Move", modifier = Modifier.weight(1f).padding(horizontal = 16.dp))
-                        Text(formatHms(event.timeRemainingMs ?: 0, locale), fontFamily = FontFamily.Monospace)
+                        Text("P${event.playerIndex}", modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(event.moveNotation ?: "Move", modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
+                        Text(
+                            formatMoveSpent(duration.durationMs),
+                            modifier = Modifier.width(64.dp),
+                            textAlign = TextAlign.End,
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            formatHms(event.timeRemainingMs ?: 0, locale),
+                            modifier = Modifier.width(64.dp),
+                            textAlign = TextAlign.End,
+                            fontFamily = FontFamily.Monospace
+                        )
                     }
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
@@ -1313,6 +1343,11 @@ fun generateFen(white: List<String>, black: List<String>): String {
     val w = white.joinToString("")
     return "$b/pppppppp/8/8/8/8/PPPPPPPP/$w w KQkq - 0 1"
 }
+
+/** Compact think-time for one move: "8.4s" below a minute, "2m05s" above it. */
+fun formatMoveSpent(ms: Long): String =
+    if (ms >= 60_000) String.format(Locale.US, "%dm%02ds", ms / 60_000, (ms % 60_000) / 1000)
+    else String.format(Locale.US, "%.1fs", ms / 1000f)
 
 fun formatHms(ms: Long, locale: Locale = Locale.US): String {
     val s = (ms / 1000) % 60; val m = (ms / 60000) % 60; val h = ms / 3600000
