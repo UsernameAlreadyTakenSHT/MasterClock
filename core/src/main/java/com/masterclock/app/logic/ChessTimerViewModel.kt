@@ -79,35 +79,40 @@ enum class TimerMode {
 }
 
 /**
- * The one line a screen reader should hear when the clock changes state, or null when there is
- * nothing worth saying yet.
+ * What a screen reader should hear when the clock changes state.
+ *
+ * A description of the event rather than a sentence: core has no Context and therefore no
+ * resources, so the wording belongs to whichever UI renders it. Keeping it structured also lets
+ * the announcement logic stay covered by plain unit tests, with no Android on the classpath.
+ */
+sealed interface ClockAnnouncement {
+    data class OutOfTime(val playerIndex: Int) : ClockAnnouncement
+    data object Paused : ClockAnnouncement
+    /** [byoyomiPeriodsRemaining] is null outside byoyomi, and 0 when in it but out of periods. */
+    data class ToMove(val playerIndex: Int, val byoyomiPeriodsRemaining: Int?) : ClockAnnouncement
+}
+
+/**
+ * The state change worth announcing, or null when there is nothing to say yet.
  *
  * Deliberately a function of *state transitions only* -- whose turn it is, a flag, a pause, a
  * byoyomi period -- and never of the remaining time. A live region announces whenever its text
  * changes, so including the countdown would make the reader recite the seconds and drown out
  * everything else.
- *
- * English-only for now, like the rest of the UI.
  */
-fun clockAnnouncement(state: ChessClockState): String? {
+fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
     val flagged = state.firstToFlag
         ?: state.players.indexOfFirst { it.isOutOfTime }.takeIf { it >= 0 }?.plus(1)
-    if (flagged != null) return "Player $flagged is out of time"
+    if (flagged != null) return ClockAnnouncement.OutOfTime(flagged)
 
     val active = state.activePlayer ?: return null
-    if (state.isPaused) return "Paused"
+    if (state.isPaused) return ClockAnnouncement.Paused
 
     val player = state.players.getOrNull(active - 1) ?: return null
-    return buildString {
-        append("Player $active to move")
-        if (player.isInByoyomi) {
-            append(", byoyomi")
-            if (player.byoyomiPeriodsRemaining > 0) {
-                append(", ${player.byoyomiPeriodsRemaining} ")
-                append(if (player.byoyomiPeriodsRemaining == 1) "period left" else "periods left")
-            }
-        }
-    }
+    return ClockAnnouncement.ToMove(
+        playerIndex = active,
+        byoyomiPeriodsRemaining = if (player.isInByoyomi) player.byoyomiPeriodsRemaining else null,
+    )
 }
 
 /** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
@@ -115,27 +120,30 @@ fun isUrgentAnnouncement(state: ChessClockState): Boolean =
     state.firstToFlag != null || state.players.any { it.isOutOfTime }
 
 /**
- * A duration in words, for screen readers: "5 minutes 3 seconds".
+ * A duration split into the parts a screen reader should say, for the same reason as
+ * [ClockAnnouncement]: the words live in the UI, the arithmetic lives here.
  *
  * Clock faces are formatted as "05:03", which TalkBack reads out digit by digit -- hard to follow
- * when the number changes every second. Zero components are dropped so a long game does not open
- * with "0 hours".
- *
- * English-only for now, like the rest of the UI; it gets extracted with everything else when the
- * app is localised.
+ * when the number changes every second. Components that are zero are reported as such so the UI
+ * can drop them and avoid opening with "0 hours".
  */
-fun spokenDuration(ms: Long): String {
-    if (ms <= 0L) return "no time left"
-    val totalSeconds = ms / 1000
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
+data class SpokenDuration(
+    val hours: Long,
+    val minutes: Long,
+    val seconds: Long,
+    /** True once the clock has run out, where there is no duration left to say. */
+    val isExpired: Boolean,
+)
 
-    val parts = mutableListOf<String>()
-    if (hours > 0) parts += if (hours == 1L) "1 hour" else "$hours hours"
-    if (minutes > 0) parts += if (minutes == 1L) "1 minute" else "$minutes minutes"
-    if (seconds > 0 || parts.isEmpty()) parts += if (seconds == 1L) "1 second" else "$seconds seconds"
-    return parts.joinToString(" ")
+fun spokenDuration(ms: Long): SpokenDuration {
+    if (ms <= 0L) return SpokenDuration(0, 0, 0, isExpired = true)
+    val totalSeconds = ms / 1000
+    return SpokenDuration(
+        hours = totalSeconds / 3600,
+        minutes = (totalSeconds % 3600) / 60,
+        seconds = totalSeconds % 60,
+        isExpired = false,
+    )
 }
 
 /**

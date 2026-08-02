@@ -328,7 +328,8 @@ fun TimerScreen(
  */
 @Composable
 private fun ClockAnnouncer(state: ChessClockState) {
-    val message = clockAnnouncement(state) ?: return
+    val announcement = clockAnnouncement(state) ?: return
+    val message = clockAnnouncementText(announcement)
     val urgent = isUrgentAnnouncement(state)
 
     Box(
@@ -401,14 +402,14 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
 
     val enabled = !state.isArbitreMode && (settings.flagBehavior != FlagBehavior.FREEZE || !playerState.isOutOfTime) && pSettings.mode != TimerMode.MOVE_TIMER_SHARED && !(isChrono && settings.isOneForAll)
 
-    // Rebuilt only when the displayed second changes, not on every 100ms tick.
-    val secondsRemaining = playerState.timeRemainingMs / 1000
     // Hoisted: the semantics lambda is not composable scope.
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
-    val a11yLabel = remember(playerIndex, secondsRemaining, isActive, playerState.isOutOfTime) {
-        val time = if (playerState.isOutOfTime) "out of time" else spokenDuration(playerState.timeRemainingMs)
-        if (isActive) "Player $playerIndex, $time, your turn" else "Player $playerIndex, $time"
-    }
+    val spokenTime = if (playerState.isOutOfTime) {
+        stringResource(R.string.a11y_out_of_time)
+    } else spokenDurationText(playerState.timeRemainingMs)
+    val a11yLabel = if (isActive) {
+        stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
+    } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 
     Surface(
         modifier = modifier.fillMaxSize().pointerInput(settings.triggerOnPress, enabled) {
@@ -533,7 +534,7 @@ fun ControlBar(
                 Icon(imageVector = if (isPaused || !isStarted) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = if (isPaused) "Resume" else stringResource(R.string.timer_pause), modifier = Modifier.size(36.dp)) 
             }
             if (showArbitre) {
-                ControlBarItem(onClick = onToggleArbitre, rotation = iconRotation, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer, contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)) { Icon(imageVector = if (isArbitreMode) Icons.Default.Gavel else Icons.Default.Edit, contentDescription = stringResource(R.string.timer_arbitre_control), tint = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else LocalContentColor.current) }
+                ControlBarItem(onClick = onToggleArbitre, rotation = iconRotation, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer, contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)) { Icon(imageVector = if (isArbitreMode) Icons.Default.Gavel else Icons.Default.Edit, contentDescription = stringResource(R.string.timer_arbitre), tint = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else LocalContentColor.current) }
             }
             ControlBarItem(onClick = onSettings, rotation = iconRotation) { Icon(Icons.Default.Settings, stringResource(R.string.timer_settings)) }
         }

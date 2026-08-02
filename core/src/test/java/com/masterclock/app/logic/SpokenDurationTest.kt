@@ -4,50 +4,65 @@ import org.junit.Test
 import org.junit.Assert.*
 
 /**
- * Covers [spokenDuration], the screen-reader rendering of a clock face.
+ * Covers [spokenDuration], which splits a clock face into the parts a screen reader should say.
  *
- * The cases that matter are the ones a naive "Xh Ym Zs" formatter gets wrong: empty components a
- * reader should not hear at all, and singulars.
+ * It reports numbers rather than words: the wording lives in the UI modules, where resources and
+ * plural rules are available. These tests therefore stay pure Kotlin, with no Android on the
+ * classpath.
  */
 class SpokenDurationTest {
 
     @Test
-    fun `minutes and seconds are both spoken`() {
-        assertEquals("5 minutes 3 seconds", spokenDuration(303_000))
+    fun `minutes and seconds are split out`() {
+        val d = spokenDuration(303_000)
+
+        assertEquals(0L, d.hours)
+        assertEquals(5L, d.minutes)
+        assertEquals(3L, d.seconds)
+        assertFalse(d.isExpired)
     }
 
     @Test
     fun `hours appear only once the clock is that long`() {
-        assertEquals("1 hour 5 minutes 3 seconds", spokenDuration(3_903_000))
-        assertEquals("2 hours 1 minute 1 second", spokenDuration(7_261_000))
+        assertEquals(0L, spokenDuration(600_000).hours)
+        assertEquals(1L, spokenDuration(3_903_000).hours)
+        assertEquals(2L, spokenDuration(7_261_000).hours)
     }
 
     @Test
-    fun `empty components are dropped rather than spoken as zero`() {
-        assertEquals("10 minutes", spokenDuration(600_000))
-        assertEquals("1 hour", spokenDuration(3_600_000))
+    fun `an exact hour leaves the smaller components at zero, for the UI to drop`() {
+        val d = spokenDuration(3_600_000)
+
+        assertEquals(1L, d.hours)
+        assertEquals(0L, d.minutes)
+        assertEquals(0L, d.seconds)
     }
 
     @Test
-    fun `under a minute only seconds are spoken`() {
-        assertEquals("45 seconds", spokenDuration(45_000))
-        assertEquals("1 second", spokenDuration(1_000))
+    fun `under a minute only seconds are set`() {
+        val d = spokenDuration(45_000)
+
+        assertEquals(0L, d.minutes)
+        assertEquals(45L, d.seconds)
     }
 
     @Test
-    fun `a fresh clock does not read as an empty string`() {
-        assertEquals("0 seconds", spokenDuration(500))
+    fun `a fresh clock is not expired even below one second`() {
+        val d = spokenDuration(500)
+
+        assertFalse(d.isExpired)
+        assertEquals(0L, d.seconds)
     }
 
     @Test
-    fun `an expired clock says so instead of counting nothing`() {
-        assertEquals("no time left", spokenDuration(0))
-        assertEquals("no time left", spokenDuration(-5_000))
+    fun `an expired clock is flagged rather than reported as zero`() {
+        assertTrue(spokenDuration(0).isExpired)
+        assertTrue(spokenDuration(-5_000).isExpired)
     }
 
     @Test
     fun `sub-second remainders are truncated, never rounded up past the displayed time`() {
         // The clock face still shows 03, so the reader must not announce 4 seconds.
-        assertEquals("3 seconds", spokenDuration(3_999))
+        assertEquals(3L, spokenDuration(3_999).seconds)
     }
 }
