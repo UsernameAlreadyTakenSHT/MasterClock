@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboard
@@ -72,6 +73,7 @@ import androidx.core.graphics.toColorInt
 import coil.compose.AsyncImage
 import coil.ImageLoader
 import coil.decode.SvgDecoder
+import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -100,7 +102,7 @@ fun ToolScaffold(
             TopAppBar(
                 title = { Text(title, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
                 actions = actions
             )
@@ -111,6 +113,8 @@ fun ToolScaffold(
 
 @Composable
 fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
+    // Hoisted: used from the share button callback, outside composable scope.
+    val shareLogTitle = stringResource(R.string.tools_share_log)
     val context = LocalContext.current
     val clipboardManager = remember { context.getSystemService(AndroidContext.CLIPBOARD_SERVICE) as ClipboardManager }
     val locale = LocalConfiguration.current.locales[0]
@@ -118,10 +122,10 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
 
     if (selectedLog == null) {
         val sortedHistory = remember(history) { history.sortedByDescending { it.startTime } }
-        ToolScaffold(title = "Game Logs", onBack = onBack) { padding ->
+        ToolScaffold(title = stringResource(R.string.tools_game_logs), onBack = onBack) { padding ->
             if (sortedHistory.isEmpty()) {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("No games recorded yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.tools_no_games), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
                 LazyColumn(
@@ -154,7 +158,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
     } else {
         val log = selectedLog!!
         ToolScaffold(
-            title = "Log Details", 
+            title = stringResource(R.string.tools_log_details), 
             onBack = { selectedLog = null },
             actions = {
                 IconButton(onClick = { 
@@ -163,12 +167,12 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, shareText)
                     }
-                    context.startActivity(Intent.createChooser(intent, "Share Log"))
-                }) { Icon(Icons.Default.Share, "Share") }
+                    context.startActivity(Intent.createChooser(intent, shareLogTitle))
+                }) { Icon(Icons.Default.Share, stringResource(R.string.common_share)) }
             }
         ) { padding ->
             Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-                Text("Match Summary", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.tools_match_summary), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 
                 Surface(
@@ -192,20 +196,20 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
 
                 if (durations.isNotEmpty()) {
                     Spacer(Modifier.height(24.dp))
-                    Text("Time per Move", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.tools_time_per_move), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     MoveDurationChart(durations, Modifier.fillMaxWidth())
                 }
 
                 Spacer(Modifier.height(24.dp))
-                Text("Detailed Moves", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.tools_detailed_moves), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
 
                 Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
                     Text("", modifier = Modifier.width(28.dp))
-                    Text("Move", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Spent", modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Left", modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.tools_move), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.tools_spent), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.tools_left), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
                 moveEvents.zip(durations).forEach { (event, duration) ->
@@ -214,7 +218,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("P${event.playerIndex}", modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(event.moveNotation ?: "Move", modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
+                        Text(event.moveNotation ?: stringResource(R.string.tools_move), modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
                         Text(
                             formatMoveSpent(duration.durationMs),
                             modifier = Modifier.width(64.dp),
@@ -278,7 +282,7 @@ fun CoinTossScreen(onBack: () -> Unit) {
                         interactionSource = interactionSource,
                         indication = null,
                         enabled = !isSpinning,
-                        onClickLabel = "Toss the coin",
+                        onClickLabel = stringResource(R.string.tools_toss_coin),
                     ) {
                         isSpinning = true
                         scope.launch {
@@ -318,7 +322,7 @@ fun CoinTossScreen(onBack: () -> Unit) {
                             }
                     ) {
                         Text(
-                            text = if (isHeadsSide) "HEADS" else "TAILS",
+                            text = if (isHeadsSide) stringResource(R.string.tools_heads) else stringResource(R.string.tools_tails),
                             fontWeight = FontWeight.Black,
                             fontSize = 36.sp,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -361,7 +365,7 @@ fun DiceRollScreen(onBack: () -> Unit) {
                         interactionSource = interactionSource,
                         indication = null,
                         enabled = !isRolling,
-                        onClickLabel = "Roll the dice",
+                        onClickLabel = stringResource(R.string.tools_roll_dice),
                     ) {
                         isRolling = true
                         scope.launch {
@@ -446,7 +450,7 @@ fun ShortStrawScreen(onBack: () -> Unit) {
     val revealedIndices = remember { mutableStateListOf<Int>() }
     val interactionSource = remember { MutableInteractionSource() }
 
-    ToolScaffold(title = "Short Straw", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_short_straw), onBack = onBack) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -479,7 +483,7 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                         shadowElevation = 8.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text("PREPARE", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp)
+                            Text(stringResource(R.string.tools_prepare), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp)
                         }
                     }
                 }
@@ -491,7 +495,7 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClickLabel = "Draw again"
+                            onClickLabel = stringResource(R.string.tools_draw_again)
                         ) {
                             if (revealedIndices.contains(shortStrawIndex)) {
                                 shortStrawIndex = -1
@@ -558,7 +562,7 @@ fun RandomCardScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
 
-    ToolScaffold(title = "Random Card", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_random_card), onBack = onBack) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -668,12 +672,12 @@ fun BlindfoldTrainerScreen(onBack: () -> Unit) {
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (timeLeft == 0) {
-                            Text("GAME OVER", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black)
+                            Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black)
                             Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
                             Spacer(Modifier.height(32.dp))
                         }
                         Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) {
-                            Box(contentAlignment = Alignment.Center) { Text("START TRIAL", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) }
+                            Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) }
                         }
                     }
                 } else {
@@ -682,10 +686,10 @@ fun BlindfoldTrainerScreen(onBack: () -> Unit) {
                         Spacer(Modifier.height(48.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             Surface(onClick = { checkColor(true) }, modifier = Modifier.weight(1f).height(100.dp), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.secondaryContainer, border = BorderStroke(4.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)), shadowElevation = 8.dp) {
-                                Box(contentAlignment = Alignment.Center) { Text("WHITE", color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Black, fontSize = 22.sp) }
+                                Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_white_square), color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Black, fontSize = 22.sp) }
                             }
                             Surface(onClick = { checkColor(false) }, modifier = Modifier.weight(1f).height(100.dp), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primary, border = BorderStroke(4.dp, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)), shadowElevation = 8.dp) {
-                                Box(contentAlignment = Alignment.Center) { Text("DARK", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black, fontSize = 22.sp) }
+                                Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_dark_square), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Black, fontSize = 22.sp) }
                             }
                         }
                     }
@@ -725,17 +729,17 @@ fun KnightPathScreen(onBack: () -> Unit) {
                 }
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (timeLeft == 0) { Text("GAME OVER", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
-                        Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text("START TRIAL", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
+                        if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
+                        Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("START", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary); Text(startPos.uppercase(Locale.US), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black) }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.tools_start), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary); Text(startPos.uppercase(Locale.US), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black) }
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("TARGET", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error); Text(targetPos.uppercase(Locale.US), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black) }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.tools_target), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error); Text(targetPos.uppercase(Locale.US), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black) }
                         }
-                        Spacer(Modifier.height(32.dp)); Text("Min moves?", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant); Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(32.dp)); Text(stringResource(R.string.tools_min_moves), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant); Spacer(Modifier.height(16.dp))
                         FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalArrangement = Arrangement.spacedBy(16.dp)) { (1..6).forEach { n -> Surface(onClick = { checkAnswer(n) }, modifier = Modifier.size(60.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary), shadowElevation = 4.dp) { Box(contentAlignment = Alignment.Center) { Text(n.toString(), fontWeight = FontWeight.Black, fontSize = 24.sp) } } } }
                     }
                 }
@@ -752,13 +756,13 @@ fun StopPrecisionScreen(onBack: () -> Unit) {
     var startTime by remember { mutableLongStateOf(0L) }
     var displayTime by remember { mutableLongStateOf(0L) }
     LaunchedEffect(isRunning) { if (isRunning) { startTime = System.currentTimeMillis(); while (isRunning) { displayTime = System.currentTimeMillis() - startTime; delay(5) } } }
-    ToolScaffold(title = "Stop Precision", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_stop_precision), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
-            Text("Target: 5.000s", modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.tools_target_time), modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.Center) { if (!isRunning && displayTime > 0) { val diff = Math.abs(displayTime - 5000L); val color = when { diff <= 10 -> Color(0xFF2196F3); diff <= 20 -> Color(0xFF4CAF50); diff <= 50 -> Color(0xFFFFEB3B); diff <= 100 -> Color(0xFFFF9800); else -> MaterialTheme.colorScheme.error }; Text(text = "Offset: ${if (displayTime > 5000) "+" else "-"}${diff}ms", color = color, fontWeight = FontWeight.Black, style = MaterialTheme.typography.headlineSmall) } }
                 Text(text = String.format(locale, "%.3fs", displayTime / 1000f), style = MaterialTheme.typography.displayLarge.copy(fontSize = 90.sp), fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(72.dp)); Surface(onClick = { if (isRunning) isRunning = false else { displayTime = 0; isRunning = true } }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(if (isRunning) "STOP" else "START", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
+                Spacer(Modifier.height(72.dp)); Surface(onClick = { if (isRunning) isRunning = false else { displayTime = 0; isRunning = true } }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(if (isRunning) stringResource(R.string.tools_stop) else stringResource(R.string.tools_start), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                 Spacer(Modifier.height(48.dp))
             }
         }
@@ -770,14 +774,14 @@ fun NameSquareScreen(onBack: () -> Unit) {
     val ranks = listOf("1", "2", "3", "4", "5", "6", "7", "8"); val files = listOf("a", "b", "c", "d", "e", "f", "g", "h"); var target by remember { mutableStateOf("e4") }; var score by remember { mutableIntStateOf(0) }; var timeLeft by remember { mutableIntStateOf(30) }; var isPlaying by remember { mutableStateOf(false) }
     fun nextRound() { target = files.random() + ranks.random() }
     LaunchedEffect(isPlaying) { if (isPlaying) { timeLeft = 30; while (timeLeft > 0) { delay(1000); timeLeft-- }; isPlaying = false } }
-    ToolScaffold(title = "Name the Square", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_name_square_title), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Score: $score", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Text("${timeLeft}s", color = if (timeLeft < 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (timeLeft == 0) { Text("GAME OVER", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
-                        Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text("START TRIAL", fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
+                        if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text("Final Score: $score", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
+                        Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -807,6 +811,7 @@ enum class ChessVariant(
 
 @Composable
 fun Chess960Screen(onBack: () -> Unit) {
+    val fenCopiedText = stringResource(R.string.toast_fen_copied)
     var variant by remember { mutableStateOf(ChessVariant.CHESS960) }
     var whitePos by remember { mutableStateOf(generateChessPosition(ChessVariant.CHESS960)) }
     var blackPos by remember { mutableStateOf(generateChessPosition(ChessVariant.CHESS960)) }
@@ -819,7 +824,7 @@ fun Chess960Screen(onBack: () -> Unit) {
     val context = LocalContext.current
     val clipboardManager = remember { context.getSystemService(AndroidContext.CLIPBOARD_SERVICE) as ClipboardManager }
 
-    ToolScaffold(title = "Variant Generator", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_variant_generator), onBack = onBack) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -872,11 +877,11 @@ fun Chess960Screen(onBack: () -> Unit) {
             ) {
                 Text(
                     text = when(variant) { 
-                        ChessVariant.CHESS960 -> "Symmetric, Opposite Bishops, King between Rooks (Castling)."
-                        ChessVariant.SHUFFLE -> "Symmetric, King and Bishops anywhere (Wild randomness)."
-                        ChessVariant.TRANSCENDENTAL -> "Asymmetric, Opposite Bishops, King anywhere (High tactics)."
-                        ChessVariant.CHESS2880 -> "Symmetric, Opposite Bishops, King anywhere (No castling)."
-                        ChessVariant.DOUBLE_CHESS960 -> "Asymmetric, Opposite Bishops, King between Rooks (Pro tactics)."
+                        ChessVariant.CHESS960 -> stringResource(R.string.variant_chess960_desc)
+                        ChessVariant.SHUFFLE -> stringResource(R.string.variant_shuffle_desc)
+                        ChessVariant.TRANSCENDENTAL -> stringResource(R.string.variant_transcendental_desc)
+                        ChessVariant.CHESS2880 -> stringResource(R.string.variant_chess2880_desc)
+                        ChessVariant.DOUBLE_CHESS960 -> stringResource(R.string.variant_double960_desc)
                     }, 
                     style = MaterialTheme.typography.bodySmall, 
                     color = MaterialTheme.colorScheme.onSurfaceVariant, 
@@ -899,14 +904,14 @@ fun Chess960Screen(onBack: () -> Unit) {
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("GENERATE", fontWeight = FontWeight.Black, fontSize = 20.sp)
+                    Text(stringResource(R.string.tools_generate), fontWeight = FontWeight.Black, fontSize = 20.sp)
                 }
                 
                 Surface(
                     onClick = { 
                         val clip = ClipData.newPlainText("Chess FEN", generateFen(whitePos, blackPos))
                         clipboardManager.setPrimaryClip(clip)
-                        Toast.makeText(context, "FEN copied", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, fenCopiedText, Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.weight(1f).height(64.dp),
                     shape = RoundedCornerShape(20.dp),
@@ -914,7 +919,7 @@ fun Chess960Screen(onBack: () -> Unit) {
                     border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("COPY FEN", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.tools_copy_fen), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -926,14 +931,14 @@ fun Chess960Screen(onBack: () -> Unit) {
 fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
     val session by viewModel.scoreboard.collectAsState(); var newResultText by remember { mutableStateOf("") }; val sortedGames = remember(session.games) { session.games.asReversed() }
-    ToolScaffold(title = "Scoreboard", onBack = onBack, actions = { IconButton(onClick = { viewModel.resetScoreboard() }) { Icon(Icons.Default.Refresh, "Reset Scoreboard") } }) { padding ->
+    ToolScaffold(title = "Scoreboard", onBack = onBack, actions = { IconButton(onClick = { viewModel.resetScoreboard() }) { Icon(Icons.Default.Refresh, stringResource(R.string.tools_reset_scoreboard)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { OutlinedTextField(value = session.player1Name, onValueChange = { viewModel.updateScoreboardNames(it, session.player2Name) }, label = { Text("Player 1") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); OutlinedTextField(value = session.player2Name, onValueChange = { viewModel.updateScoreboardNames(session.player1Name, it) }, label = { Text("Player 2") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true) }
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
-                if (session.games.isEmpty()) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No games recorded yet.", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+                if (session.games.isEmpty()) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_no_games), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
                 else { LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(sortedGames, key = { it.timestamp }) { game -> Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)) { Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(game.result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold); Text(SimpleDateFormat("HH:mm", locale).format(Date(game.timestamp)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } }
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it }, placeholder = { Text("Add result or note...") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, "Add result") } }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it }, placeholder = { Text(stringResource(R.string.tools_add_result_placeholder)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, stringResource(R.string.tools_add_result)) } }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { viewModel.addScoreboardGame("1 - 0") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("1 - 0") }; Button(onClick = { viewModel.addScoreboardGame("½ - ½") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("½ - ½") }; Button(onClick = { viewModel.addScoreboardGame("0 - 1") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("0 - 1") } }
         }
     }
@@ -941,6 +946,14 @@ fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
 
 @Composable
 fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
+    // Hoisted: the note titles are assigned inside onClick, the toast inside a callback.
+    val noteDeletedText = stringResource(R.string.toast_note_deleted)
+    val newTextNoteTitle = stringResource(R.string.tools_new_note)
+    val newDrawNoteTitle = stringResource(R.string.tools_new_draw_note)
+    val newAudioNoteTitle = stringResource(R.string.tools_new_audio_note)
+    val newImageNoteTitle = stringResource(R.string.tools_new_image_note)
+    val newVideoNoteTitle = stringResource(R.string.tools_new_video_note)
+    val newBoardNoteTitle = stringResource(R.string.tools_new_board_note)
     val locale = LocalConfiguration.current.locales[0]
     val settings by viewModel.settings.collectAsState()
     val context = LocalContext.current
@@ -950,7 +963,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val selectedNote = remember(selectedNoteId, settings.notebookNotes) { settings.notebookNotes.find { it.id == selectedNoteId } }
     if (selectedNote == null) {
         val sortedNotes = remember(settings.notebookNotes) { settings.notebookNotes.sortedByDescending { it.timestamp } }
-        ToolScaffold(title = "Notebook", onBack = onBack, actions = { IconButton(onClick = { showTypeSelection = true }) { Icon(Icons.Default.Add, "New Note") } }) { padding ->
+        ToolScaffold(title = "Notebook", onBack = onBack, actions = { IconButton(onClick = { showTypeSelection = true }) { Icon(Icons.Default.Add, stringResource(R.string.tools_new_note)) } }) { padding ->
             if (sortedNotes.isEmpty()) { Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text("No notes yet. Tap + to create one.", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             else { 
                 LazyColumn(
@@ -1001,11 +1014,11 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                                         }
                                         withContext(Dispatchers.Main) {
                                             viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes.filter { it.id != note.id }))
-                                            Toast.makeText(context, "Note deleted", Toast.LENGTH_SHORT).show() 
+                                            Toast.makeText(context, noteDeletedText, Toast.LENGTH_SHORT).show() 
                                         } 
                                     } 
                                 }) { 
-                                    Icon(Icons.Default.DeleteForever, "Shred", tint = MaterialTheme.colorScheme.error) 
+                                    Icon(Icons.Default.DeleteForever, stringResource(R.string.tools_shred), tint = MaterialTheme.colorScheme.error) 
                                 } 
                             } 
                         } 
@@ -1013,19 +1026,19 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 } 
             }
         }
-        if (showTypeSelection) { Dialog(onDismissRequest = { showTypeSelection = false }) { Surface(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) { Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) { Text(text = "New Note", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold);                         FlowRow(
+        if (showTypeSelection) { Dialog(onDismissRequest = { showTypeSelection = false }) { Surface(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) { Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) { Text(text = stringResource(R.string.tools_new_note), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold);                         FlowRow(
                             modifier = Modifier.fillMaxWidth(), 
                             horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally), 
                             verticalArrangement = Arrangement.spacedBy(24.dp), 
                             maxItemsInEachRow = 3
                         ) { 
-                            TypeButton("Text", Icons.Default.Description) { val newNote = NotebookNote(type = NotebookNoteType.TEXT); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
-                            TypeButton("Draw", Icons.Default.Brush) { val newNote = NotebookNote(type = NotebookNoteType.DRAWING, title = "New Draw Note"); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
-                            TypeButton("Audio", Icons.Default.Mic) { val newNote = NotebookNote(type = NotebookNoteType.VOICE, title = "New Audio Note"); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
-                            TypeButton("Image", Icons.Default.PhotoCamera) { val newNote = NotebookNote(type = NotebookNoteType.IMAGE, title = "New Image Note"); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
-                            TypeButton("Video", Icons.Default.Videocam) { val newNote = NotebookNote(type = NotebookNoteType.VIDEO, title = "New Video Note"); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
-                            TypeButton("Board", Icons.Default.Grid4x4) { val newNote = NotebookNote(type = NotebookNoteType.BOARD, title = "New Board Note"); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false } 
-                        }; TextButton(onClick = { showTypeSelection = false }, modifier = Modifier.align(Alignment.End)) { Text("Cancel") } } } } }
+                            TypeButton(stringResource(R.string.tools_text), Icons.Default.Description) { val newNote = NotebookNote(type = NotebookNoteType.TEXT); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
+                            TypeButton(stringResource(R.string.tools_draw), Icons.Default.Brush) { val newNote = NotebookNote(type = NotebookNoteType.DRAWING, title = newDrawNoteTitle); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
+                            TypeButton(stringResource(R.string.tools_audio), Icons.Default.Mic) { val newNote = NotebookNote(type = NotebookNoteType.VOICE, title = newAudioNoteTitle); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
+                            TypeButton(stringResource(R.string.tools_image), Icons.Default.PhotoCamera) { val newNote = NotebookNote(type = NotebookNoteType.IMAGE, title = newImageNoteTitle); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
+                            TypeButton(stringResource(R.string.tools_video), Icons.Default.Videocam) { val newNote = NotebookNote(type = NotebookNoteType.VIDEO, title = newVideoNoteTitle); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false }; 
+                            TypeButton(stringResource(R.string.tools_board), Icons.Default.Grid4x4) { val newNote = NotebookNote(type = NotebookNoteType.BOARD, title = newBoardNoteTitle); viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes + newNote)); selectedNoteId = newNote.id; showTypeSelection = false } 
+                        }; TextButton(onClick = { showTypeSelection = false }, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.common_cancel)) } } } } }
     } else {
         when (selectedNote.type) {
             NotebookNoteType.DRAWING -> DrawingNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
@@ -1037,16 +1050,16 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 var title by remember(selectedNoteId) { mutableStateOf(selectedNote.title) }; var rawText by remember(selectedNoteId) { mutableStateOf(selectedNote.content) }; var contentValue by remember(selectedNoteId) { mutableStateOf(TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(selectedNote.content), selection = TextRange(selectedNote.content.length))) }; var showColorPicker by remember { mutableStateOf(false) }
                 LaunchedEffect(title, rawText) { val newList = settings.notebookNotes.map { if (it.id == selectedNoteId) it.copy(title = title, content = rawText) else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }
                 fun applyFormat(prefix: String, suffix: String = prefix) { val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.start, selection.end); val newText = text.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.start + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
-                ToolScaffold(title = "Edit Note", onBack = { selectedNoteId = null }) { padding ->
+                ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = { selectedNoteId = null }) { padding ->
                     Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true, textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true, textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                         Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)) {
                             Row(modifier = Modifier.padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = { applyFormat("**") }) { Icon(Icons.Default.FormatBold, "Bold") }; IconButton(onClick = { applyFormat("*") }) { Icon(Icons.Default.FormatItalic, "Italic") }; IconButton(onClick = { applyFormat("<u>", "</u>") }) { Icon(Icons.Default.FormatUnderlined, "Underline") }; VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp)); IconButton(onClick = { applyFormat("\n# ", "\n") }) { Icon(Icons.Default.FormatSize, "Large") }; IconButton(onClick = { applyFormat("\n## ", "\n") }) { Icon(Icons.Default.Title, "Normal") }; IconButton(onClick = { applyFormat("\n[ ] ", "") }) { Icon(Icons.Default.CheckBoxOutlineBlank, "Checkbox") }; VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp)); IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, "Color", tint = MaterialTheme.colorScheme.primary) }
+                                IconButton(onClick = { applyFormat("**") }) { Icon(Icons.Default.FormatBold, stringResource(R.string.tools_bold)) }; IconButton(onClick = { applyFormat("*") }) { Icon(Icons.Default.FormatItalic, stringResource(R.string.tools_italic)) }; IconButton(onClick = { applyFormat("<u>", "</u>") }) { Icon(Icons.Default.FormatUnderlined, stringResource(R.string.tools_underline)) }; VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp)); IconButton(onClick = { applyFormat("\n# ", "\n") }) { Icon(Icons.Default.FormatSize, stringResource(R.string.tools_large)) }; IconButton(onClick = { applyFormat("\n## ", "\n") }) { Icon(Icons.Default.Title, stringResource(R.string.tools_normal)) }; IconButton(onClick = { applyFormat("\n[ ] ", "") }) { Icon(Icons.Default.CheckBoxOutlineBlank, stringResource(R.string.tools_checkbox)) }; VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp)); IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
                             }
                         }
-                        if (showColorPicker) { Dialog(onDismissRequest = { showColorPicker = false }) { Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) { Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text("Select Text Color", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold); Spacer(Modifier.height(16.dp)); val colors = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF); FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { colors.forEach { colorVal -> Surface(modifier = Modifier.size(40.dp).clickable { val hex = String.format("%08X", colorVal); applyFormat("<color:$hex>", "</color>"); showColorPicker = false }, shape = CircleShape, color = Color(colorVal), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {} } }; Spacer(Modifier.height(16.dp)); TextButton(onClick = { showColorPicker = false }) { Text("Cancel") } } } } }
-                        OutlinedTextField(value = contentValue, onValueChange = { contentValue = it; rawText = it.text; contentValue = it.copy(annotatedString = parseMarkdownToAnnotatedString(it.text)) }, modifier = Modifier.fillMaxWidth().weight(1f), placeholder = { Text("Select text and use toolbar to format...") }, shape = RoundedCornerShape(12.dp))
+                        if (showColorPicker) { Dialog(onDismissRequest = { showColorPicker = false }) { Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) { Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.tools_select_text_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold); Spacer(Modifier.height(16.dp)); val colors = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF); FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { colors.forEach { colorVal -> Surface(modifier = Modifier.size(40.dp).clickable { val hex = String.format("%08X", colorVal); applyFormat("<color:$hex>", "</color>"); showColorPicker = false }, shape = CircleShape, color = Color(colorVal), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {} } }; Spacer(Modifier.height(16.dp)); TextButton(onClick = { showColorPicker = false }) { Text(stringResource(R.string.common_cancel)) } } } } }
+                        OutlinedTextField(value = contentValue, onValueChange = { contentValue = it; rawText = it.text; contentValue = it.copy(annotatedString = parseMarkdownToAnnotatedString(it.text)) }, modifier = Modifier.fillMaxWidth().weight(1f), placeholder = { Text(stringResource(R.string.tools_format_hint)) }, shape = RoundedCornerShape(12.dp))
                     }
                 }
             }
@@ -1071,6 +1084,11 @@ fun parseMarkdownToAnnotatedString(text: String): AnnotatedString {
 
 @Composable
 fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+    // Hoisted: these are used from permission and player callbacks, not composable scope.
+    val permissionGrantedText = stringResource(R.string.toast_permission_granted)
+    val micPermissionText = stringResource(R.string.toast_mic_permission)
+    val startFailedText = stringResource(R.string.toast_start_failed)
+    val audioFailedText = stringResource(R.string.toast_audio_failed)
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     var title by remember { mutableStateOf(note.title) }; var isRecording by remember { mutableStateOf(false) }; var isPlaying by remember { mutableStateOf(false) }; var recorder by remember { mutableStateOf<MediaRecorder?>(null) }; var player by remember { mutableStateOf<MediaPlayer?>(null) }; var recordingTime by remember { mutableIntStateOf(0) }; var playbackTime by remember { mutableIntStateOf(0) }
@@ -1079,7 +1097,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // onBack lambda, so a title edit followed by a system back used to be silently lost (AUDIT.md §7.3).
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
     val scope = rememberCoroutineScope()
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, "Permission granted. Tap Record again.", Toast.LENGTH_SHORT).show() else Toast.makeText(context, "Microphone permission is required.", Toast.LENGTH_SHORT).show() }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else Toast.makeText(context, micPermissionText, Toast.LENGTH_SHORT).show() }
     LaunchedEffect(isRecording) { if (isRecording) { recordingTime = 0; while (isRecording && recordingTime < 60) { delay(1000); recordingTime++; if (recordingTime >= 60) isRecording = false } } }
     DisposableEffect(Unit) { onDispose { recorder?.release(); player?.release() } }
     fun startRecording() {
@@ -1106,61 +1124,63 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             recorder = newRecorder
             isRecording = true
         } catch (_: Exception) {
-            Toast.makeText(context, "Failed to start", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, startFailedText, Toast.LENGTH_SHORT).show()
         }
     }
     fun stopRecording() { try { recorder?.apply { stop(); release() }; recorder = null; isRecording = false; val file = File(context.filesDir, "audio_${note.id}.mp4"); onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L)) } catch (_: Exception) { isRecording = false } }
-    fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { isPlaying = false } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, "Failed to play audio", Toast.LENGTH_SHORT).show() } }
+    fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { isPlaying = false } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
     fun stopPlayback() { player?.stop(); player?.release(); player = null; isPlaying = false; playbackTime = 0 }
 
-    ToolScaffold(title = "Audio Note", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_audio_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true); Spacer(Modifier.weight(1f))
+            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true); Spacer(Modifier.weight(1f))
             Box(modifier = Modifier.size(160.dp).clip(CircleShape).background(if (isRecording) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(imageVector = if (isRecording) Icons.Default.Mic else Icons.Default.MicNone, contentDescription = null, modifier = Modifier.size(64.dp).scale(if (isRecording) 1.2f else 1f), tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
             if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
             else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else String.format(locale, "%02d:%02d", (note.audioDurationMs / 1000) / 60, (note.audioDurationMs / 1000) % 60), style = MaterialTheme.typography.headlineMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) { if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(if (isRecording) "Stop" else "Record") }; if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) "Stop" else "Play") } }
-            if (note.audioPath != null && !isRecording && !isPlaying) TextButton(onClick = { onUpdate(note.copy(audioPath = null, audioDurationMs = 0)) }) { Icon(Icons.Default.Delete, null); Spacer(Modifier.width(8.dp)); Text("Delete Recording") }; Spacer(Modifier.weight(1f))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) { if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(if (isRecording) "Stop" else stringResource(R.string.tools_record)) }; if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) "Stop" else stringResource(R.string.tools_play)) } }
+            if (note.audioPath != null && !isRecording && !isPlaying) TextButton(onClick = { onUpdate(note.copy(audioPath = null, audioDurationMs = 0)) }) { Icon(Icons.Default.Delete, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.tools_delete_recording)) }; Spacer(Modifier.weight(1f))
         }
     }
 }
 
 @Composable
 fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+    val cameraPermissionText = stringResource(R.string.toast_camera_permission)
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor (AUDIT.md §7.3).
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success -> if (success) onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show() }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
 
-    ToolScaffold(title = "Image Note", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_image_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
+            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) ) {
-                if (note.imagePath != null) AsyncImage(model = note.imagePath, contentDescription = "Note image", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text("No photo yet", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+                if (note.imagePath != null) AsyncImage(model = note.imagePath, contentDescription = stringResource(R.string.tools_note_image), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_photo), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
-            Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(photoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.imagePath == null) "Take Photo" else "Retake Photo") }
+            Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(photoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.imagePath == null) stringResource(R.string.tools_take_photo) else stringResource(R.string.tools_retake_photo)) }
         }
     }
 }
 
 @Composable
 fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+    val cameraPermissionText = stringResource(R.string.toast_camera_permission)
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }; val videoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor (AUDIT.md §7.3).
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
     val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success -> if (success) onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show() }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
 
-    ToolScaffold(title = "Video Note", onBack = onBack) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_video_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
+            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                 if (note.videoPath != null) AndroidView(factory = { ctx -> VideoView(ctx).apply { setVideoPath(note.videoPath); val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller); start() } }, modifier = Modifier.fillMaxSize())
-                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text("No video yet (Max 1 min)", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_video), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
-            Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) videoLauncher.launch(videoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.videoPath == null) Icons.Default.Videocam else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.videoPath == null) "Record Video" else "Retake Video") }
+            Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) videoLauncher.launch(videoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.videoPath == null) Icons.Default.Videocam else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.videoPath == null) stringResource(R.string.tools_record_video) else stringResource(R.string.tools_retake_video)) }
         }
     }
 }
@@ -1169,9 +1189,9 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
 fun DrawingNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     var title by remember { mutableStateOf(note.title) }; var currentPaths by remember { mutableStateOf(note.drawingPaths) }; var currentColor by remember { mutableLongStateOf(0xFF000000L) }; var currentWidth by remember { mutableFloatStateOf(8f) }; var isEraser by remember { mutableStateOf(false) }; var activePoints by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
     LaunchedEffect(title, currentPaths) { onUpdate(note.copy(title = title, drawingPaths = currentPaths)) }
-    ToolScaffold(title = "Draw Note", onBack = onBack, actions = { IconButton(onClick = { if (currentPaths.isNotEmpty()) currentPaths = currentPaths.dropLast(1) }) { Icon(Icons.AutoMirrored.Filled.Undo, "Undo") }; IconButton(onClick = { currentPaths = emptyList() }) { Icon(Icons.Default.DeleteSweep, "Clear") } }) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_draw_note), onBack = onBack, actions = { IconButton(onClick = { if (currentPaths.isNotEmpty()) currentPaths = currentPaths.dropLast(1) }) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }; IconButton(onClick = { currentPaths = emptyList() }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
+            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1180,7 +1200,7 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBa
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         listOf(2f, 8f, 20f).forEach { size -> IconButton(onClick = { currentWidth = size }, modifier = Modifier.size(32.dp).background(if (currentWidth == size) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent, CircleShape)) { Box(Modifier.size((size / 2 + 4).dp).background(MaterialTheme.colorScheme.onSurface, CircleShape)) } }
-                        VerticalDivider(Modifier.height(24.dp)); IconButton(onClick = { isEraser = !isEraser }, modifier = Modifier.background(if (isEraser) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent, CircleShape)) { Icon(imageVector = if (isEraser) Icons.Default.AutoFixHigh else Icons.Default.AutoFixOff, contentDescription = "Eraser") }
+                        VerticalDivider(Modifier.height(24.dp)); IconButton(onClick = { isEraser = !isEraser }, modifier = Modifier.background(if (isEraser) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent, CircleShape)) { Icon(imageVector = if (isEraser) Icons.Default.AutoFixHigh else Icons.Default.AutoFixOff, contentDescription = stringResource(R.string.tools_eraser)) }
                     }
                 }
             }
@@ -1205,9 +1225,9 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     }
     
     LaunchedEffect(title, board) { onUpdate(note.copy(title = title, boardPosition = board)) }
-    ToolScaffold(title = "Edit Board", onBack = onBack, actions = { IconButton(onClick = { board = List(64) { "" } }) { Icon(Icons.Default.DeleteSweep, "Clear Board") } }) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_edit_board), onBack = onBack, actions = { IconButton(onClick = { board = List(64) { "" } }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.tools_clear_board)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
+            OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                 Column(Modifier.padding(8.dp)) {
                     for (rank in 7 downTo 0) {
@@ -1243,7 +1263,7 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             }
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Select Piece", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.tools_select_piece), style = MaterialTheme.typography.labelMedium)
                     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                         piecesList.subList(0, 6).forEach { p ->
                             IconButton(

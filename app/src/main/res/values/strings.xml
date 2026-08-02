@@ -28,6 +28,8 @@
     <string name="preset_delete_title">Delete \"%s\"?</string>
     <string name="preset_delete_message">This preset will be permanently removed.</string>
 
+    <string name="common_clear">Clear</string>
+    <string name="common_share">Share</string>
     <string name="common_close">Close</string>
     <string name="common_remove">Remove</string>
     <string name="common_select">Select</string>
@@ -97,6 +99,106 @@
     <string name="settings_sound_clear">Clear custom sound</string>
     <string name="settings_sound_change">Change custom sound</string>
     <string name="settings_sound_choose">Choose a custom sound</string>
+
+    <!--
+      Game tools. Chess variant names (Chess960, Transcendental, Shuffle…) stay as Kotlin literals
+      for the same reason as the timing modes; their descriptions are translated.
+    -->
+    <string name="tools_game_logs">Game Logs</string>
+    <string name="tools_log_details">Log Details</string>
+    <string name="tools_no_games">No games recorded yet.</string>
+    <string name="tools_match_summary">Match Summary</string>
+    <string name="tools_detailed_moves">Detailed Moves</string>
+    <string name="tools_move">Move</string>
+    <string name="tools_spent">Spent</string>
+    <string name="tools_left">Left</string>
+    <string name="tools_share_log">Share Log</string>
+
+    <string name="tools_toss_coin">Toss the coin</string>
+    <string name="tools_heads">HEADS</string>
+    <string name="tools_tails">TAILS</string>
+    <string name="tools_roll_dice">Roll the dice</string>
+    <string name="tools_short_straw">Short Straw</string>
+    <string name="tools_draw_again">Draw again</string>
+    <string name="tools_shred">Shred</string>
+    <string name="tools_random_card">Random Card</string>
+    <string name="tools_draw">Draw</string>
+
+    <string name="tools_stop_precision">Stop Precision</string>
+    <string name="tools_target_time">Target: 5.000s</string>
+    <string name="tools_start">START</string>
+    <string name="tools_stop">STOP</string>
+    <string name="tools_prepare">PREPARE</string>
+    <string name="tools_start_trial">START TRIAL</string>
+    <string name="tools_game_over">GAME OVER</string>
+    <string name="tools_name_square_title">Name the Square</string>
+    <string name="tools_min_moves">Min moves?</string>
+    <string name="tools_target">TARGET</string>
+    <string name="tools_time_per_move">Time per Move</string>
+
+    <string name="tools_variant_generator">Variant Generator</string>
+    <string name="tools_generate">GENERATE</string>
+    <string name="tools_copy_fen">COPY FEN</string>
+    <string name="toast_fen_copied">FEN copied</string>
+    <string name="variant_chess960_desc">Symmetric, Opposite Bishops, King between Rooks (Castling).</string>
+    <string name="variant_shuffle_desc">Symmetric, King and Bishops anywhere (Wild randomness).</string>
+    <string name="variant_transcendental_desc">Asymmetric, Opposite Bishops, King anywhere (High tactics).</string>
+    <string name="variant_chess2880_desc">Symmetric, Opposite Bishops, King anywhere (No castling).</string>
+    <string name="variant_double960_desc">Asymmetric, Opposite Bishops, King between Rooks (Pro tactics).</string>
+
+    <string name="tools_add_result">Add result</string>
+    <string name="tools_add_result_placeholder">Add result or note…</string>
+    <string name="tools_reset_scoreboard">Reset Scoreboard</string>
+
+    <string name="tools_new_note">New Note</string>
+    <string name="tools_edit_note">Edit Note</string>
+    <string name="tools_new_audio_note">New Audio Note</string>
+    <string name="tools_new_board_note">New Board Note</string>
+    <string name="tools_new_draw_note">New Draw Note</string>
+    <string name="tools_new_image_note">New Image Note</string>
+    <string name="tools_new_video_note">New Video Note</string>
+    <string name="tools_audio_note">Audio Note</string>
+    <string name="tools_draw_note">Draw Note</string>
+    <string name="tools_image_note">Image Note</string>
+    <string name="tools_video_note">Video Note</string>
+    <string name="tools_text">Text</string>
+    <string name="tools_audio">Audio</string>
+    <string name="tools_image">Image</string>
+    <string name="tools_video">Video</string>
+    <string name="tools_board">Board</string>
+    <string name="tools_title">Title</string>
+    <string name="tools_bold">Bold</string>
+    <string name="tools_italic">Italic</string>
+    <string name="tools_underline">Underline</string>
+    <string name="tools_checkbox">Checkbox</string>
+    <string name="tools_color">Color</string>
+    <string name="tools_select_text_color">Select Text Color</string>
+    <string name="tools_format_hint">Select text and use toolbar to format…</string>
+    <string name="tools_record">Record</string>
+    <string name="tools_play">Play</string>
+    <string name="tools_delete_recording">Delete Recording</string>
+    <string name="tools_take_photo">Take Photo</string>
+    <string name="tools_retake_photo">Retake Photo</string>
+    <string name="tools_record_video">Record Video</string>
+    <string name="tools_retake_video">Retake Video</string>
+    <string name="tools_no_photo">No photo yet</string>
+    <string name="tools_no_video">No video yet (Max 1 min)</string>
+    <string name="tools_note_image">Note image</string>
+    <string name="tools_edit_board">Edit Board</string>
+    <string name="tools_clear_board">Clear Board</string>
+    <string name="tools_select_piece">Select Piece</string>
+    <string name="tools_undo">Undo</string>
+    <string name="tools_eraser">Eraser</string>
+    <string name="tools_normal">Normal</string>
+    <string name="tools_large">Large</string>
+    <string name="tools_white_square">WHITE</string>
+    <string name="tools_dark_square">DARK</string>
+    <string name="toast_note_deleted">Note deleted</string>
+    <string name="toast_camera_permission">Camera permission required</string>
+    <string name="toast_mic_permission">Microphone permission is required.</string>
+    <string name="toast_permission_granted">Permission granted. Tap Record again.</string>
+    <string name="toast_audio_failed">Failed to play audio</string>
+    <string name="toast_start_failed">Failed to start</string>
 
     <!-- Export / import dialogs -->
     <string name="share_export_title">Export &amp; Share</string>
