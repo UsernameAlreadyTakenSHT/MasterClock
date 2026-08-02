@@ -860,7 +860,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         1 -> if (bonusOptionsAllowed > 1) SettingsSection("Bonus Type") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (FlavorConfig.isModeAllowed(TimerMode.FISHER)) {
-                    ModeCard("Fisher", p.mode == TimerMode.FISHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
+                    ModeCard("Fischer", p.mode == TimerMode.FISHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISHER)) }
                 }
                 if (FlavorConfig.isModeAllowed(TimerMode.BRONSTEIN)) {
                     ModeCard("Bronstein", p.mode == TimerMode.BRONSTEIN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BRONSTEIN)) }

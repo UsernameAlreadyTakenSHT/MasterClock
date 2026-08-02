@@ -40,7 +40,7 @@ fun ModeGuideScreen(onBack: () -> Unit) {
 
             // 2. BONUS (FISHER / BRONSTEIN / US DELAY)
             EngineSection("Bonus Engines") {
-                EngineItem("Fisher", "Adds a fixed amount of time (increment) AFTER every move.")
+                EngineItem("Fischer", "Adds a fixed amount of time (increment) AFTER every move.")
                 EngineItem("Bronstein", "Adds back time spent on the move, but never more than the delay setting. Non-cumulative.")
                 EngineItem("US Delay", "A countdown delay. The clock waits for the delay duration before starting to tick.")
             }

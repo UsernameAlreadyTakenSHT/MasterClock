@@ -201,6 +201,14 @@ fun MoreSettingsPage(
                     onToolClick(Route.GameLogs)
                 }
 
+                ToolCard(
+                    title = "Statistics",
+                    icon = Icons.Default.BarChart
+                ) {
+                    onCategoryChanged(SettingsCategory.MORE)
+                    onToolClick(Route.Statistics)
+                }
+
                 val limitByCount = currentSettings.logHistoryLimit != -1
                 val limitByAge = currentSettings.logDurationLimit != LogDurationLimit.INFINITE
 

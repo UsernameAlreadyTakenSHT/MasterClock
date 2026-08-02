@@ -97,7 +97,7 @@ class ShortcutTargetsTest {
             presets = emptyList(),
         )
 
-        assertEquals("Fide periods", targets.first().label)
+        assertEquals("FIDE periods", targets.first().label)
     }
 
     @Test

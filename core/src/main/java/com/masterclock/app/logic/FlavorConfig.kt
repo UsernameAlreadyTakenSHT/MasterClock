@@ -25,6 +25,15 @@ object FlavorConfig {
         return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
     }
 
+    /**
+     * Deliberately wider than [hasMoreTab]: the game-log screen it complements lives behind the
+     * More tab and is therefore COMPLETE-only, but statistics are worth having anywhere games are
+     * recorded at all.
+     */
+    fun hasStatistics(): Boolean {
+        return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
+    }
+
     fun hasOmni(): Boolean {
         return currentFlavor == AppFlavor.COMPLETE || currentFlavor == AppFlavor.STANDARD || currentFlavor == AppFlavor.LIGHT
     }
