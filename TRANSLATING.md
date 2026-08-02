@@ -64,8 +64,16 @@ constantly:
 <string name="example">Fin de l\'échange</string>
 ```
 
-**Some things stay in English on purpose.** Anything marked `translatable="false"` is a proper
-noun or an internal token — `Fischer`, `Bronstein`, `Byoyomi`. Leave those alone.
+**Some things stay in English on purpose.** Anything marked `translatable="false"` is left alone.
+That covers two groups.
+
+*Timing mode names* — `Sudden Death`, `Fischer`, `Bronstein`, `Byoyomi`, `Hourglass`, `Gong`,
+`FIDE Periods` and the rest. These are the vocabulary of clock settings, recognised in English by
+players everywhere, and they have to match what is printed on physical tournament clocks and
+written in federation rulebooks. Their *descriptions* are translated; their names are not.
+
+*Preset names* — `Fisch. 3 + 2s`, `Jap. Byo 20'`, `Armag. 5 / 4`. Same reasoning, and they are
+mostly numbers and abbreviations anyway.
 
 **Counted things are `<plurals>`, not `<string>`.** Anything that varies with a number lives in a
 `<plurals>` block, and you add or remove `<item>` elements to match your own language — English
