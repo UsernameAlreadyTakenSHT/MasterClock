@@ -28,6 +28,103 @@
     <string name="preset_delete_title">Delete \"%s\"?</string>
     <string name="preset_delete_message">This preset will be permanently removed.</string>
 
+    <string name="common_close">Close</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_select">Select</string>
+    <string name="common_optional">Optional</string>
+
+    <!--
+      Mode settings. The mode names themselves (Fischer, Byoyomi, Sudden Death…) stay as Kotlin
+      literals: they are fixed vocabulary, so there is nothing for a translator to do with them.
+    -->
+    <string name="settings_select_mode">Select Game Mode</string>
+    <string name="settings_bonus_type">Bonus Type</string>
+    <string name="settings_move_timer_type">Move Timer Type</string>
+    <string name="settings_byoyomi_type">Byoyomi Type</string>
+    <string name="settings_chrono_type">Chrono Type</string>
+    <string name="settings_move_counts_type">Move Counts Type</string>
+    <string name="settings_fast_move_type">Fast Move Type</string>
+    <string name="settings_time_parameters">Time Parameters</string>
+    <string name="settings_initial_time">Initial Time</string>
+    <string name="settings_increment">Increment</string>
+    <string name="settings_increment_bonus">Increment / Bonus</string>
+    <string name="settings_delay">Delay</string>
+    <string name="settings_move_time">Move Time</string>
+    <string name="settings_time_per_move">Time Per Move</string>
+    <string name="settings_time_to_move">Time to Move</string>
+    <string name="settings_starting_move_time">Starting Move Time</string>
+    <string name="settings_time_cap">Time Cap</string>
+    <string name="settings_byoyomi_time">Byoyomi Time</string>
+    <string name="settings_periods_goal">Periods / Moves Goal</string>
+    <string name="settings_progression">Progression (moves)</string>
+    <string name="settings_max_moves">Max Moves</string>
+    <string name="settings_decrement_per_move">Decrement per move</string>
+    <string name="settings_min_time_floor">Minimum Time Floor</string>
+    <string name="settings_grace_period">Grace Period (Standard speed)</string>
+    <string name="settings_full_fast_starts">Full Fast Period starts at</string>
+    <string name="settings_reflection_time">Reflection Time</string>
+    <string name="settings_simultaneous">Simultaneous Play</string>
+    <string name="settings_duration">Duration</string>
+    <string name="settings_base_duration_range">Base Duration Range</string>
+    <string name="settings_increment_range">Increment Range (Fischer)</string>
+    <string name="settings_min_duration">Minimum Duration</string>
+    <string name="settings_max_duration">Maximum Duration</string>
+    <string name="settings_min_increment">Minimum Increment</string>
+    <string name="settings_max_increment">Maximum Increment</string>
+    <string name="settings_rounded_time">Rounded Time (minutes/seconds)</string>
+    <string name="settings_random_config">Random Mode Configuration</string>
+    <string name="settings_hidden_config">Hidden Mode Configuration</string>
+    <string name="settings_show_percentage">Show Percentage Alerts</string>
+    <string name="settings_fide_config">FIDE Periods Configuration</string>
+    <string name="settings_add_period">Add Period</string>
+    <string name="settings_actions">Actions</string>
+    <string name="settings_final_period">This will be the final period of the game.</string>
+    <string name="settings_flag_on_end">Flag on end (Defeat)</string>
+    <string name="settings_phases_config">Phases Configuration</string>
+    <string name="settings_repeat_phases">Repeat Phases (Loop)</string>
+    <string name="settings_pause_between_phases">Pause between phases</string>
+    <string name="settings_auto_advance">Auto Advance</string>
+    <string name="settings_allow_skip">Allow manual skip (tap to advance early)</string>
+    <string name="settings_phase_placeholder">Preparation, Round X…</string>
+    <string name="settings_cumulative_transfer">Cumulative Transfer</string>
+    <string name="settings_cumulative_explain">If off, only the time spent on the very last move is given to the opponent.</string>
+    <string name="settings_one_for_all">One for All (no clicks)</string>
+
+    <string name="settings_select_custom_color">Select Custom Color</string>
+    <string name="settings_pick_colour">Pick a custom colour</string>
+    <string name="settings_sound_custom">Custom sound selected</string>
+    <string name="settings_sound_default">Using default sound</string>
+    <string name="settings_sound_clear">Clear custom sound</string>
+    <string name="settings_sound_change">Change custom sound</string>
+    <string name="settings_sound_choose">Choose a custom sound</string>
+
+    <!-- Export / import dialogs -->
+    <string name="share_export_title">Export &amp; Share</string>
+    <string name="share_export_intro">Choose how you want to share or backup your data.</string>
+    <string name="share_file">Share File</string>
+    <string name="share_file_desc">Send a .json configuration file to a friend.</string>
+    <string name="share_qr">Share as QR Code</string>
+    <string name="share_qr_desc">Instant scan for another device (Settings only).</string>
+    <string name="share_export_storage">Export to Storage</string>
+    <string name="share_export_storage_desc">Save the .json file to your device\'s storage.</string>
+    <string name="share_export_full">Export All (Full Backup)</string>
+    <string name="share_export_full_desc">Includes all settings, history, AND custom audio/images files in a .zip archive.</string>
+    <string name="share_include_history">Include history &amp; notes</string>
+    <string name="share_import_title">Import Data</string>
+    <string name="share_import_json">Import JSON File</string>
+    <string name="share_import_json_desc">Load a previously exported .json configuration file.</string>
+    <string name="share_scan_qr">Scan QR Code</string>
+    <string name="share_scan_qr_desc">Quickly import settings by scanning another screen.</string>
+    <string name="share_import_full">Import Full Backup</string>
+    <string name="share_import_full_desc">Restore your settings or import from another device.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Credits</string>
+    <string name="credits_tab_changes">Changes</string>
+    <string name="credits_tab_licenses">Licenses</string>
+    <string name="credits_rules_documents">Rules documents</string>
+    <string name="credits_libraries">MasterClock is built with these open-source libraries.</string>
+
     <!-- Omni wizard (settings) -->
     <string name="omni_cfg_previous">Previous</string>
     <string name="omni_cfg_next_step">Next Step</string>
