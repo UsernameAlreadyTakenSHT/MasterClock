@@ -200,6 +200,53 @@
     <string name="toast_audio_failed">Failed to play audio</string>
     <string name="toast_start_failed">Failed to start</string>
 
+    <!--
+      Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,
+      IDF Rules) since that is how they are cited; only the headings around them are translated.
+    -->
+    <string name="rules_title">Some rules</string>
+    <string name="rules_intro">Reference documents, readable offline.</string>
+    <string name="rules_group_chess">Chess (official doc)</string>
+    <string name="rules_group_draughts">Draughts (official doc)</string>
+    <string name="rules_group_shogi">Shogi (official doc)</string>
+    <string name="rules_group_more_games">More Games</string>
+    <string name="rules_group_more_resources">More Resources</string>
+    <string name="toast_pdf_open_failed">Could not open this document</string>
+    <string name="toast_no_pdf_viewer">No PDF viewer installed</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_title">Chessboard Connection</string>
+    <string name="board_nearby">Nearby Devices</string>
+    <string name="board_scan">Scan</string>
+    <string name="board_scanning">Scanning for boards…</string>
+    <string name="board_looking">Looking for boards…</string>
+    <string name="board_none_found">No devices found. Tap refresh to scan.</string>
+    <string name="board_unknown_device">Unknown Device</string>
+    <string name="board_connecting">Connecting…</string>
+    <string name="board_connected">Ready to receive moves</string>
+    <string name="board_disconnected">Disconnected</string>
+    <string name="board_disconnect">Disconnect</string>
+
+    <!-- QR sharing -->
+    <string name="qr_share_title">Share via QR Code</string>
+    <string name="qr_code">QR Code</string>
+    <string name="qr_share_hint">Scan this code on another device to import configuration.</string>
+    <string name="qr_share_includes">Includes: Chess Clock Configuration</string>
+    <string name="qr_too_large">Could not generate a QR code — the data is likely too large. Try sharing without game logs.</string>
+    <string name="qr_scan_title">Scan QR Code</string>
+    <string name="qr_align">Align code within the camera view</string>
+    <string name="qr_camera_permission">Camera permission is required to scan codes.</string>
+
+    <!-- Timer chips -->
+    <string name="timer_bank">BANK</string>
+    <string name="timer_global">GLOBAL</string>
+    <string name="timer_total">TOTAL</string>
+    <string name="timer_overtime">OT</string>
+    <string name="timer_switch_turn">Switch turn</string>
+    <string name="timer_presets">Presets</string>
+    <string name="timer_settings">Settings</string>
+    <string name="timer_pause">Pause</string>
+
     <!-- Settings tabs and dialogs -->
     <string name="settings_tab_modes">Modes</string>
     <string name="settings_tab_behavior">Behavior</string>
