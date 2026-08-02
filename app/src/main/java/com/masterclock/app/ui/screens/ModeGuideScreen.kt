@@ -38,7 +38,7 @@ fun ModeGuideScreen(onBack: () -> Unit) {
                 EngineItem("Standard", "Pure countdown. The first player to reach 0:00 loses or flags.")
             }
 
-            // 2. BONUS (FISHER / BRONSTEIN / US DELAY)
+            // 2. BONUS (FISCHER / BRONSTEIN / US DELAY)
             EngineSection("Bonus Engines") {
                 EngineItem("Fischer", "Adds a fixed amount of time (increment) AFTER every move.")
                 EngineItem("Bronstein", "Adds back time spent on the move, but never more than the delay setting. Non-cumulative.")

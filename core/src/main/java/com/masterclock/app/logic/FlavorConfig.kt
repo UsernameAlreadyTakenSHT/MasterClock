@@ -40,10 +40,10 @@ object FlavorConfig {
 
     fun isModeAllowed(mode: TimerMode): Boolean {
         if (currentFlavor == AppFlavor.E_INK) {
-            return mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISHER, TimerMode.MOVE_TIMER_STANDARD)
+            return mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISCHER, TimerMode.MOVE_TIMER_STANDARD)
         }
         if (currentFlavor == AppFlavor.MINI) {
-            return mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISHER, TimerMode.MOVE_TIMER_STANDARD)
+            return mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISCHER, TimerMode.MOVE_TIMER_STANDARD)
         }
         return true
     }

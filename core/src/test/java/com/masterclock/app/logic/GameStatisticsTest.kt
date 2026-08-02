@@ -274,11 +274,11 @@ class GameStatisticsTest {
 
     @Test
     fun `modes are tallied most played first`() {
-        val fischer = log(listOf(GameEvent(timestamp = 0, eventType = "START")), mode = TimerMode.FISHER)
+        val fischer = log(listOf(GameEvent(timestamp = 0, eventType = "START")), mode = TimerMode.FISCHER)
         val sudden = log(listOf(GameEvent(timestamp = 0, eventType = "START")), mode = TimerMode.SUDDEN_DEATH)
         val stats = computeStatistics(listOf(fischer, sudden, fischer))
 
-        assertEquals(TimerMode.FISHER, stats.perMode.first().mode)
+        assertEquals(TimerMode.FISCHER, stats.perMode.first().mode)
         assertEquals(2, stats.perMode.first().games)
         assertEquals(2, stats.perMode.size)
     }

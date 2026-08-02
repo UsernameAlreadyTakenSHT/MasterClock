@@ -130,8 +130,8 @@ class ChessTimerLogicTest {
     // --- computePostMoveState: what happens to the mover (and possibly the opponent) after a move ---
 
     @Test
-    fun `FISHER adds the increment after a move`() {
-        val s = PlayerSettings(mode = TimerMode.FISHER, incrementMs = 2000)
+    fun `FISCHER adds the increment after a move`() {
+        val s = PlayerSettings(mode = TimerMode.FISCHER, incrementMs = 2000)
         val settings = ChessClockSettings(main = s)
         val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 10_000)), activePlayer = 1)
         val next = computePostMoveState(state, playerIndex = 1, timeSpentOnMove = 0, settings = settings, s = s)
@@ -241,7 +241,7 @@ class ChessTimerLogicTest {
     fun `per-player settings pick each player's own mode independently`() {
         val settings = ChessClockSettings(
             differentSettingsPerPlayer = true,
-            p1Custom = PlayerSettings(mode = TimerMode.FISHER, initialTimeMs = 10_000, incrementMs = 2000),
+            p1Custom = PlayerSettings(mode = TimerMode.FISCHER, initialTimeMs = 10_000, incrementMs = 2000),
             p2Custom = PlayerSettings(mode = TimerMode.MOVE_COUNTS_UP)
         )
         var state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 10_000), PlayerState(timeRemainingMs = 0)), activePlayer = 1)
@@ -313,14 +313,14 @@ class ChessTimerLogicTest {
     fun `applying a preset takes its time control`() {
         val current = ChessClockSettings(main = PlayerSettings(initialTimeMs = 600_000, mode = TimerMode.SUDDEN_DEATH))
         val preset = ChessClockSettings(
-            main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISHER),
+            main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISCHER),
             numberOfPlayers = 4,
             differentSettingsPerPlayer = true,
             flagBehavior = FlagBehavior.NEGATIVE,
         )
 
         val applied = applyPresetTimeControl(current, preset)
-        assertEquals(TimerMode.FISHER, applied.main.mode)
+        assertEquals(TimerMode.FISCHER, applied.main.mode)
         assertEquals(180_000, applied.main.initialTimeMs)
         assertEquals(2_000, applied.main.incrementMs)
         assertEquals(4, applied.numberOfPlayers)

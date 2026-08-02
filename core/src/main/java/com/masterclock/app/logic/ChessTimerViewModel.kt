@@ -71,7 +71,7 @@ fun ChessClockStateProxy.toState() = ChessClockState(
 
 @Serializable
 enum class TimerMode {
-    SUDDEN_DEATH, FISHER, BRONSTEIN, US_DELAY,
+    SUDDEN_DEATH, FISCHER, BRONSTEIN, US_DELAY,
     MOVE_TIMER_STANDARD, MOVE_TIMER_SAVE_CAP, MOVE_TIMER_OVERTIME, MOVE_TIMER_GLOBAL, MOVE_TIMER_SHARED, MOVE_TIMER_GLOBAL_SHARED,
     HOURGLASS, BYOYOMI_JAPANESE, BYOYOMI_CANADIAN, BYOYOMI_PROGRESSIVE,
     CHRONO_COUNTDOWN, CHRONO_COUNTUP, MOVE_COUNTS_UP, MOVE_COUNTS_DOWN,
@@ -81,16 +81,10 @@ enum class TimerMode {
 /**
  * The name to show players for a mode.
  *
- * Fischer's enum constant is misspelled FISHER, but renaming it is not worth the risk: TimerMode is
- * @Serializable, so the constant name *is* the wire format inside every stored settings blob, every
- * game log and every export or QR share ever produced. Correcting the spelling here fixes what
- * players read without rewriting persisted data.
- *
- * The generic fallback also mangles initialisms ("Us delay", "Fide periods"), so those are spelled
- * out too rather than derived.
+ * Deriving it from the constant mangles initialisms ("Us delay", "Fide periods"), so those are
+ * spelled out rather than computed; everything else falls through to the generic prettifier.
  */
 fun TimerMode.displayName(): String = when (this) {
-    TimerMode.FISHER -> "Fischer"
     TimerMode.US_DELAY -> "US delay"
     TimerMode.FIDE_PERIODS -> "FIDE periods"
     TimerMode.BYOYOMI_JAPANESE -> "Byoyomi (Japanese)"
@@ -329,14 +323,14 @@ val BUILTIN_SHORTCUT_PRESETS: List<ShortcutTarget> = listOf(
         id = "builtin:fischer_3_2",
         label = "3 + 2",
         settings = ChessClockSettings(
-            main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISHER)
+            main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISCHER)
         ),
     ),
     ShortcutTarget(
         id = "builtin:fischer_15_10",
         label = "15 + 10",
         settings = ChessClockSettings(
-            main = PlayerSettings(initialTimeMs = 900_000, incrementMs = 10_000, mode = TimerMode.FISHER)
+            main = PlayerSettings(initialTimeMs = 900_000, incrementMs = 10_000, mode = TimerMode.FISCHER)
         ),
     ),
 )
@@ -724,7 +718,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     }
 
     val newP = when (s.mode) {
-        TimerMode.FISHER -> tempP.copy(timeRemainingMs = p.timeRemainingMs + s.incrementMs)
+        TimerMode.FISCHER -> tempP.copy(timeRemainingMs = p.timeRemainingMs + s.incrementMs)
         TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.copy(timeRemainingMs = p.timeRemainingMs + p.secondaryTimeMs)
         TimerMode.BRONSTEIN -> tempP.copy(timeRemainingMs = p.timeRemainingMs + timeSpentOnMove.coerceAtMost(s.incrementMs))
         TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> tempP.copy(timeRemainingMs = s.moveTimeMs)
@@ -929,7 +923,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 )
             }
 
-            val bonus = if (pSettings.mode == TimerMode.FISHER && settings.fischerFideFirstMove) pSettings.incrementMs else 0
+            val bonus = if (pSettings.mode == TimerMode.FISCHER && settings.fischerFideFirstMove) pSettings.incrementMs else 0
             return when (pSettings.mode) {
                 TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_SHARED -> PlayerState(timeRemainingMs = pSettings.moveTimeMs)
                 TimerMode.MOVE_TIMER_SAVE_CAP -> PlayerState(timeRemainingMs = pSettings.moveTimeMs, secondaryTimeMs = 0)
