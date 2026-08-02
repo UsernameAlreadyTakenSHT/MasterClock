@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -250,7 +251,9 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                                     label,
                                     style = MaterialTheme.typography.labelMedium,
                                     maxLines = 1,
-                                    softWrap = false
+                                    // See the app module: clipping mid-glyph is how "Changelog"
+                                    // lost its tail; an ellipsis degrades readably instead.
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         )
