@@ -20,6 +20,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
@@ -44,6 +45,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.*
 import kotlin.time.Duration.Companion.milliseconds
+import com.masterclock.paper.R
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +67,9 @@ class MainActivity : ComponentActivity() {
             val gameHistory by timerViewModel.gameHistory.collectAsState()
             val json = remember { Json { ignoreUnknownKeys = true } }
             val context = LocalContext.current
+            // Hoisted: these fire from launcher callbacks, outside composable scope.
+            val backupOkText = stringResource(R.string.toast_backup_ok)
+            val importOkText = stringResource(R.string.toast_import_ok)
             var shouldIncludeLogs by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
@@ -128,7 +133,7 @@ class MainActivity : ComponentActivity() {
                             }
                             zipFile.delete()
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Backup successful!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, backupOkText, Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
                             withContext(Dispatchers.Main) {
@@ -157,7 +162,7 @@ class MainActivity : ComponentActivity() {
                                     scoreboardToImport = pkg.scoreboard,
                                     isImport = true
                                 )
-                                Toast.makeText(context, "Import successful!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
                             }
                             tempFile.delete()
                         } catch (e: Exception) {
@@ -314,7 +319,7 @@ class MainActivity : ComponentActivity() {
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(intent, "Share Settings"))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_settings)))
         } catch (e: Exception) {
             Log.e("MainActivity", "Failed to share settings", e)
         }

@@ -4,4 +4,49 @@
     <string name="common_reset">Reset</string>
     <string name="timer_reset_title">Reset game?</string>
     <string name="timer_reset_message">The current state will be lost.</string>
+    <string name="common_back">Back</string>
+    <string name="common_close">Close</string>
+    <string name="common_clear">Clear</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Switch turn</string>
+    <string name="timer_pause">Pause</string>
+    <string name="timer_resume">Resume</string>
+    <string name="timer_settings">Settings</string>
+
+    <!--
+      Settings. Mode names (Timer, Fischer, Move) stay as Kotlin literals, matching the app module:
+      they are fixed clock vocabulary rather than something to translate.
+    -->
+    <string name="settings_tab_modes">Modes</string>
+    <string name="settings_tab_behavior">Behavior</string>
+    <string name="settings_tab_display">Display</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_more">More</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_not_optimized">This setting page is not yet optimized for E-Ink.</string>
+    <string name="settings_initial_time">Initial time</string>
+    <string name="settings_increment">Increment</string>
+    <string name="settings_move_time">Move time</string>
+    <string name="settings_system_behavior">System behavior</string>
+    <string name="settings_sound">Sound</string>
+    <string name="settings_haptic_feedback">Haptic feedback</string>
+    <string name="settings_keep_awake">Keep screen awake</string>
+    <string name="settings_reverse_colors">Reverse colors</string>
+    <string name="settings_clear_logs">Clear Logs</string>
+    <string name="settings_clear_logs_title">Permanently delete all game history?</string>
+    <string name="settings_reset_settings">Reset Settings</string>
+    <string name="settings_reset_message">Are you sure you want to reset all settings to default? This action cannot be undone.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Credits</string>
+    <string name="credits_tab_changes">Changes</string>
+    <string name="credits_tab_licenses">Licenses</string>
+    <string name="credits_rules_documents">Rules documents</string>
+    <string name="credits_libraries">MasterClock is built with these open-source libraries.</string>
+
+    <!-- Sharing -->
+    <string name="share_settings">Share Settings</string>
+    <string name="toast_backup_ok">Backup successful!</string>
+    <string name="toast_import_ok">Import successful!</string>
 </resources>

@@ -1,25 +1,29 @@
 package com.masterclock.paper.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.navigation.Route
 import com.masterclock.paper.ui.components.*
+import com.masterclock.paper.R
 
-enum class SettingsCategory(val label: String, val icon: ImageVector) {
-    MODES("Modes", Icons.Default.Timer),
-    BEHAVIOR("Behavior", Icons.Default.SettingsSuggest),
-    DISPLAY("Display", Icons.Default.Palette),
-    AUDIO("Audio", Icons.AutoMirrored.Filled.VolumeUp),
-    MORE("More", Icons.Default.Menu),
-    OMNI("Omni", Icons.Default.Dataset);
+/** [labelRes] rather than a String: an enum cannot call stringResource, so it carries the id. */
+enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector) {
+    MODES(R.string.settings_tab_modes, Icons.Default.Timer),
+    BEHAVIOR(R.string.settings_tab_behavior, Icons.Default.SettingsSuggest),
+    DISPLAY(R.string.settings_tab_display, Icons.Default.Palette),
+    AUDIO(R.string.settings_tab_audio, Icons.AutoMirrored.Filled.VolumeUp),
+    MORE(R.string.settings_tab_more, Icons.Default.Menu),
+    OMNI(R.string.settings_tab_omni, Icons.Default.Dataset);
 
     companion object {
         fun getVisibleCategories(): List<SettingsCategory> {
@@ -62,9 +66,9 @@ fun SettingsScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text(category.label.uppercase(), style = MaterialTheme.typography.titleLarge) },
+                    title = { Text(stringResource(category.labelRes).uppercase(), style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = {
-                        IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                        IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -85,8 +89,8 @@ fun SettingsScreen(
                             NavigationBarItem(
                                 selected = category == cat,
                                 onClick = { onCategoryChanged(cat) },
-                                icon = { Icon(cat.icon, cat.label) },
-                                label = { Text(cat.label.uppercase(), style = MaterialTheme.typography.labelMedium) },
+                                icon = { Icon(cat.icon, stringResource(cat.labelRes)) },
+                                label = { Text(stringResource(cat.labelRes).uppercase(), style = MaterialTheme.typography.labelMedium) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = MaterialTheme.colorScheme.onSurface,
                                     selectedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -109,7 +113,7 @@ fun SettingsScreen(
                 )
                 else -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                        Text("This setting page is not yet optimized for E-Ink.", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.settings_not_optimized), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
@@ -119,14 +123,14 @@ fun SettingsScreen(
     if (showResetSettingsDialog) {
         MMDAlertDialog(
             onDismissRequest = { showResetSettingsDialog = false },
-            title = "Reset Settings",
-            text = "Are you sure you want to reset all settings to default? This action cannot be undone.",
+            title = stringResource(R.string.settings_reset_settings),
+            text = stringResource(R.string.settings_reset_message),
             confirmButtonText = "Reset",
             onConfirm = { 
                 onResetSettings()
                 showResetSettingsDialog = false 
             },
-            dismissButtonText = "Cancel",
+            dismissButtonText = stringResource(R.string.common_cancel),
             onDismiss = { showResetSettingsDialog = false }
         )
     }
@@ -134,14 +138,14 @@ fun SettingsScreen(
     if (showClearLogsDialog) {
         MMDAlertDialog(
             onDismissRequest = { showClearLogsDialog = false },
-            title = "Clear Logs",
-            text = "Permanently delete all game history?",
-            confirmButtonText = "Clear",
+            title = stringResource(R.string.settings_clear_logs),
+            text = stringResource(R.string.settings_clear_logs_title),
+            confirmButtonText = stringResource(R.string.common_clear),
             onConfirm = { 
                 onClearLogs()
                 showClearLogsDialog = false 
             },
-            dismissButtonText = "Cancel",
+            dismissButtonText = stringResource(R.string.common_cancel),
             onDismiss = { showClearLogsDialog = false }
         )
     }
