@@ -11,12 +11,14 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.masterclock.app.R
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -38,7 +40,7 @@ fun QRReceiveScreen(
     }
 
     ToolScaffold(
-        title = "Scan QR Code",
+        title = stringResource(R.string.qr_scan_title),
         onBack = onBack
     ) { pad ->
         if (cameraPermissionState.status.isGranted) {
@@ -116,7 +118,7 @@ fun QRReceiveScreen(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
                 ) {
                     Text(
-                        "Align code within the camera view",
+                        stringResource(R.string.qr_align),
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -124,7 +126,7 @@ fun QRReceiveScreen(
             }
         } else {
             Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) {
-                Text("Camera permission is required to scan codes.")
+                Text(stringResource(R.string.qr_camera_permission))
             }
         }
     }

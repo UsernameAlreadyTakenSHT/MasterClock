@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,12 +26,13 @@ import androidx.core.net.toUri
 import com.masterclock.core.R as CoreR
 import java.io.File
 import java.io.FileOutputStream
+import com.masterclock.app.R
 
 @Composable
 fun RulesScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     ToolScaffold(
-        title = "Some rules",
+        title = stringResource(R.string.rules_title),
         onBack = onBack
     ) { pad ->
         Column(
@@ -41,17 +43,17 @@ fun RulesScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text("Reference documents, readable offline.", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.rules_intro), style = MaterialTheme.typography.bodyMedium)
 
             // --- CHESS ---
-            RulesGroup("Chess (official doc)") {
+            RulesGroup(stringResource(R.string.rules_group_chess)) {
                 RuleButton("FIDE Laws", Modifier.fillMaxWidth()) {
                     openBundledPdf(context, CoreR.raw.rules_chess, "chess.pdf")
                 }
             }
 
             // --- DRAUGHTS ---
-            RulesGroup("Draughts (official doc)") {
+            RulesGroup(stringResource(R.string.rules_group_draughts)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RuleButton("FMJD Annexes", Modifier.weight(1f)) {
                         openBundledPdf(context, CoreR.raw.rules_draughts_fmjd, "draughts_fmjd.pdf")
@@ -63,14 +65,14 @@ fun RulesScreen(onBack: () -> Unit) {
             }
 
             // --- SHOGI ---
-            RulesGroup("Shogi (official doc)") {
+            RulesGroup(stringResource(R.string.rules_group_shogi)) {
                 RuleButton("FESA Rules", Modifier.fillMaxWidth()) {
                     openBundledPdf(context, CoreR.raw.rules_shogi, "shogi.pdf")
                 }
             }
 
             // --- MORE GAMES ---
-            RulesGroup("More Games") {
+            RulesGroup(stringResource(R.string.rules_group_more_games)) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RuleButton("Morris", Modifier.weight(1f)) {
@@ -100,7 +102,7 @@ fun RulesScreen(onBack: () -> Unit) {
             }
 
             // --- RESOURCES ---
-            RulesGroup("More Resources") {
+            RulesGroup(stringResource(R.string.rules_group_more_resources)) {
                 RuleButton(
                     text = "Wiki Strategy Games", 
                     modifier = Modifier.fillMaxWidth(),
@@ -184,9 +186,9 @@ private fun openBundledPdf(context: Context, rawResId: Int, fileName: String) {
     } catch (e: ActivityNotFoundException) {
         // Failing silently here is exactly the bug this screen used to have.
         Log.w("RulesScreen", "No PDF viewer available for $fileName", e)
-        Toast.makeText(context, "No PDF viewer installed", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, context.getString(R.string.toast_no_pdf_viewer), Toast.LENGTH_LONG).show()
     } catch (e: Exception) {
         Log.w("RulesScreen", "Failed to open bundled document: $fileName", e)
-        Toast.makeText(context, "Could not open this document", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.toast_pdf_open_failed), Toast.LENGTH_SHORT).show()
     }
 }

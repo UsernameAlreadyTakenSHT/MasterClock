@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
+import com.masterclock.app.R
 
 @Composable
 fun QRShareScreen(
@@ -29,7 +31,7 @@ fun QRShareScreen(
     }
 
     ToolScaffold(
-        title = "Share via QR Code",
+        title = stringResource(R.string.qr_share_title),
         onBack = onBack
     ) { pad ->
         Column(
@@ -41,7 +43,7 @@ fun QRShareScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                "Scan this code on another device to import configuration.",
+                stringResource(R.string.qr_share_hint),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold
@@ -60,7 +62,7 @@ fun QRShareScreen(
                 qrBitmap?.let {
                     Image(
                         bitmap = it.asImageBitmap(),
-                        contentDescription = "QR Code",
+                        contentDescription = stringResource(R.string.qr_code),
                         modifier = Modifier.fillMaxSize().padding(12.dp)
                     )
                 } ?: Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -72,7 +74,7 @@ fun QRShareScreen(
                         Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Could not generate a QR code -- the data is likely too large. Try sharing without game logs.",
+                            stringResource(R.string.qr_too_large),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center
@@ -84,7 +86,7 @@ fun QRShareScreen(
             Spacer(Modifier.height(32.dp))
             
             Text(
-                "Includes: Chess Clock Configuration",
+                stringResource(R.string.qr_share_includes),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -15,12 +15,14 @@ import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.masterclock.app.R
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.ConnectionState
 
@@ -57,7 +59,7 @@ fun BluetoothBoardScreen(
     }
 
     ToolScaffold(
-        title = "Chessboard Connection",
+        title = stringResource(R.string.board_title),
         onBack = onBack,
         actions = {
             if (connectionState is ConnectionState.Scanning) {
@@ -75,7 +77,7 @@ fun BluetoothBoardScreen(
                         permissionLauncher.launch(missing.toTypedArray())
                     }
                 }) {
-                    Icon(Icons.Default.Refresh, "Scan")
+                    Icon(Icons.Default.Refresh, stringResource(R.string.board_scan))
                 }
             }
         }
@@ -100,21 +102,21 @@ fun BluetoothBoardScreen(
                     Spacer(Modifier.width(16.dp))
                     Column {
                         val statusText = when (val s = connectionState) {
-                            ConnectionState.Idle -> "Disconnected"
-                            ConnectionState.Scanning -> "Scanning for boards..."
-                            ConnectionState.Connecting -> "Connecting..."
+                            ConnectionState.Idle -> stringResource(R.string.board_disconnected)
+                            ConnectionState.Scanning -> stringResource(R.string.board_scanning)
+                            ConnectionState.Connecting -> stringResource(R.string.board_connecting)
                             is ConnectionState.Connected -> "Connected: ${s.deviceName}"
                             is ConnectionState.Error -> "Error: ${s.message}"
                         }
                         Text(statusText, fontWeight = FontWeight.Bold)
                         if (connectionState is ConnectionState.Connected) {
-                            Text("Ready to receive moves", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.board_connected), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                     if (connectionState is ConnectionState.Connected) {
                         Spacer(Modifier.weight(1f))
                         TextButton(onClick = { manager.disconnect() }) {
-                            Text("Disconnect")
+                            Text(stringResource(R.string.board_disconnect))
                         }
                     }
                 }
@@ -127,7 +129,7 @@ fun BluetoothBoardScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            Text("Nearby Devices", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.board_nearby), style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
 
             if (scannedDevices.isEmpty() && connectionState is ConnectionState.Scanning) {
@@ -135,12 +137,12 @@ fun BluetoothBoardScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(Modifier.height(16.dp))
-                        Text("Looking for boards...")
+                        Text(stringResource(R.string.board_looking))
                     }
                 }
             } else if (scannedDevices.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("No devices found. Tap refresh to scan.", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.board_none_found), style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
                 LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -154,7 +156,7 @@ fun BluetoothBoardScreen(
                                 Icon(Icons.AutoMirrored.Filled.BluetoothSearching, null)
                                 Spacer(Modifier.width(16.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(device.device.name ?: "Unknown Device", fontWeight = FontWeight.Bold)
+                                    Text(device.device.name ?: stringResource(R.string.board_unknown_device), fontWeight = FontWeight.Bold)
                                     Text(device.device.address, style = MaterialTheme.typography.bodySmall)
                                 }
                                 Text("${device.rssi} dBm", style = MaterialTheme.typography.labelSmall)

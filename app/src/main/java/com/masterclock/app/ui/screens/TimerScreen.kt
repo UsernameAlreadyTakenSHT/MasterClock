@@ -403,6 +403,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
 
     // Rebuilt only when the displayed second changes, not on every 100ms tick.
     val secondsRemaining = playerState.timeRemainingMs / 1000
+    // Hoisted: the semantics lambda is not composable scope.
+    val switchTurnLabel = stringResource(R.string.timer_switch_turn)
     val a11yLabel = remember(playerIndex, secondsRemaining, isActive, playerState.isOutOfTime) {
         val time = if (playerState.isOutOfTime) "out of time" else spokenDuration(playerState.timeRemainingMs)
         if (isActive) "Player $playerIndex, $time, your turn" else "Player $playerIndex, $time"
@@ -426,7 +428,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                 contentDescription = a11yLabel
                 role = Role.Button
                 if (enabled) {
-                    onClick(label = "Switch turn") { onClick(); true }
+                    onClick(label = switchTurnLabel) { onClick(); true }
                 } else {
                     disabled()
                 }
@@ -458,7 +460,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
-                            val label = when(pSettings.mode) { TimerMode.MOVE_TIMER_OVERTIME -> "OT"; TimerMode.MOVE_TIMER_GLOBAL -> "TOTAL"; TimerMode.MOVE_TIMER_GLOBAL_SHARED -> "GLOBAL"; else -> "BANK" }
+                            val label = when(pSettings.mode) { TimerMode.MOVE_TIMER_OVERTIME -> stringResource(R.string.timer_overtime); TimerMode.MOVE_TIMER_GLOBAL -> stringResource(R.string.timer_total); TimerMode.MOVE_TIMER_GLOBAL_SHARED -> stringResource(R.string.timer_global); else -> stringResource(R.string.timer_bank) }
                             Text("$label: ${formatSecondaryTime(playerState.secondaryTimeMs)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.PHASES -> {
@@ -518,7 +520,7 @@ fun ControlBar(
     ) {
         Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             if (showPresets) {
-                ControlBarItem(onClick = onPresets, rotation = iconRotation) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, "Presets") }
+                ControlBarItem(onClick = onPresets, rotation = iconRotation) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.timer_presets)) }
             }
             ControlBarItem(onClick = onReset, rotation = iconRotation) { Icon(Icons.Default.Refresh, stringResource(R.string.common_reset)) }
             LargeFloatingActionButton(
@@ -528,12 +530,12 @@ fun ControlBar(
                 contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary, 
                 modifier = Modifier.size(64.dp).graphicsLayer { rotationZ = iconRotation }
             ) { 
-                Icon(imageVector = if (isPaused || !isStarted) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = if (isPaused) "Resume" else "Pause", modifier = Modifier.size(36.dp)) 
+                Icon(imageVector = if (isPaused || !isStarted) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = if (isPaused) "Resume" else stringResource(R.string.timer_pause), modifier = Modifier.size(36.dp)) 
             }
             if (showArbitre) {
-                ControlBarItem(onClick = onToggleArbitre, rotation = iconRotation, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer, contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)) { Icon(imageVector = if (isArbitreMode) Icons.Default.Gavel else Icons.Default.Edit, contentDescription = "Arbitre", tint = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else LocalContentColor.current) }
+                ControlBarItem(onClick = onToggleArbitre, rotation = iconRotation, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer, contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)) { Icon(imageVector = if (isArbitreMode) Icons.Default.Gavel else Icons.Default.Edit, contentDescription = stringResource(R.string.timer_arbitre_control), tint = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else LocalContentColor.current) }
             }
-            ControlBarItem(onClick = onSettings, rotation = iconRotation) { Icon(Icons.Default.Settings, "Settings") }
+            ControlBarItem(onClick = onSettings, rotation = iconRotation) { Icon(Icons.Default.Settings, stringResource(R.string.timer_settings)) }
         }
     }
 }
