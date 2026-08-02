@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
+import java.util.Locale
 import com.masterclock.app.BuildConfig
 
 @Composable
@@ -191,7 +192,7 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Period ${index + 1}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.settings_period_n, index + 1), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             if (periods.size > 1) {
                                 IconButton(
                                     onClick = {
@@ -259,7 +260,7 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
                                 label = {
-                                    Text(if (isLast) "Moves to unlock next (0 = Final)" else "Moves until period ${index + 2}")
+                                    Text(if (isLast) stringResource(R.string.settings_moves_unlock) else stringResource(R.string.settings_moves_until_period, index + 2))
                                 },
                                 placeholder = { Text(if (isLast) stringResource(R.string.common_optional) else "40") },
                                 modifier = Modifier.fillMaxWidth(),
@@ -302,6 +303,8 @@ fun PhasesPanel(
     onUpdateP: (PlayerSettings) -> Unit,
     onUpdateGlobal: (Boolean, Long, Boolean) -> Unit
 ) {
+    // Hoisted: the default name is assigned inside onClick.
+    val newPhaseNameTemplate = stringResource(R.string.settings_phase_n)
     SettingsSection(stringResource(R.string.settings_phases_config)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             BehaviorSwitch(stringResource(R.string.settings_repeat_phases), loopPhases) { onUpdateGlobal(it, pauseMs, allowPhaseSkip) }
@@ -325,7 +328,7 @@ fun PhasesPanel(
                                     val newList = phases.toMutableList().apply { this[index] = phase.copy(name = name) }
                                     onUpdateP(p.copy(phases = newList))
                                 },
-                                label = { Text("Phase ${index + 1} Name") },
+                                label = { Text(stringResource(R.string.settings_phase_n_name, index + 1)) },
                                 placeholder = { Text(stringResource(R.string.settings_phase_placeholder)) },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp),
@@ -362,7 +365,7 @@ fun PhasesPanel(
             if (phases.size < 10) {
                 Button(
                     onClick = {
-                        val newList = phases + GamePhase("Phase ${phases.size + 1}")
+                        val newList = phases + GamePhase(String.format(Locale.getDefault(), newPhaseNameTemplate, phases.size + 1))
                         onUpdateP(p.copy(phases = newList))
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -553,7 +556,7 @@ fun ImportDataDialog(
 
                     ExportOptionItem(
                         title = stringResource(R.string.share_import_full),
-                        description = "Restore everything (settings + media) from a .zip archive.",
+                        description = stringResource(R.string.share_restore_full_desc),
                         icon = Icons.Default.UploadFile
                     ) { onImportAll() }
                 }
@@ -646,11 +649,11 @@ fun ColorPickerDialog(initialColor: Color, onDismiss: () -> Unit, onColorSelecte
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.fillMaxWidth().height(60.dp).clip(RoundedCornerShape(8.dp)).background(Color(r, g, b)))
-                Text("Red: ${(r * 255).toInt()}")
+                Text(stringResource(R.string.settings_color_red, (r * 255).toInt()))
                 Slider(value = r, onValueChange = { r = it })
-                Text("Green: ${(g * 255).toInt()}")
+                Text(stringResource(R.string.settings_color_green, (g * 255).toInt()))
                 Slider(value = g, onValueChange = { g = it })
-                Text("Blue: ${(b * 255).toInt()}")
+                Text(stringResource(R.string.settings_color_blue, (b * 255).toInt()))
                 Slider(value = b, onValueChange = { b = it })
             }
         },
@@ -991,7 +994,7 @@ fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
             
             Column {
                 val rateDisplay = String.format(java.util.Locale.US, "%.1f", p.fastMoveAccelRate)
-                Text("Fast Acceleration Rate (+$rateDisplay sec/sec)", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_fast_accel_rate, rateDisplay), style = MaterialTheme.typography.labelMedium)
                 Slider(
                     value = p.fastMoveAccelRate,
                     onValueChange = { onUpdate(p.copy(fastMoveAccelRate = it)) },
@@ -1005,7 +1008,7 @@ fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 
             Column {
                 val fullRateDisplay = String.format(java.util.Locale.US, "%.1f", p.fastMoveFullAccelRate)
-                Text("Full Fast Accel Rate (+$fullRateDisplay sec/sec)", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_full_fast_accel_rate, fullRateDisplay), style = MaterialTheme.typography.labelMedium)
                 Slider(
                     value = p.fastMoveFullAccelRate,
                     onValueChange = { onUpdate(p.copy(fastMoveFullAccelRate = it)) },
@@ -1079,7 +1082,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = {
             Column {
-                Text("MasterClock ${BuildConfig.VERSION_NAME}")
+                Text(stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME))
                 Text(
                     AppInfo.BUILD_DATE,
                     style = MaterialTheme.typography.bodySmall,

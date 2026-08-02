@@ -77,4 +77,6 @@
         <item quantity="one">%d period left</item>
         <item quantity="other">%d periods left</item>
     </plurals>
+    <string name="settings_version">Version %s</string>
+    <string name="settings_app_version">MasterClock %s</string>
 </resources>

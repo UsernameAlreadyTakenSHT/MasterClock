@@ -101,7 +101,7 @@ fun OmniHeader(state: OmniState, settings: OmniSettings, onBack: () -> Unit) {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
                 val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
-                Text("Omni: ${currentRound.name}", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.omni_header, currentRound.name), fontWeight = FontWeight.Bold)
             }
             
             if (settings.useGlobalClock) {
@@ -111,12 +111,12 @@ fun OmniHeader(state: OmniState, settings: OmniSettings, onBack: () -> Unit) {
                 // Each game has its own duration (editable per game in the wizard); using the
                 // global gameDurationMs default here made the fraction wrong whenever they differ.
                 val gameTotal = settings.games.getOrNull(state.currentGameIndex)?.durationMs ?: settings.gameDurationMs
-                OmniProgressBar(label = "Game ${state.currentGameIndex + 1}/${settings.games.size}", timeMs = state.currentGameTimeMs, totalMs = gameTotal, color = Color(0xFF4CAF50))
+                OmniProgressBar(label = stringResource(R.string.omni_progress_game, state.currentGameIndex + 1, settings.games.size), timeMs = state.currentGameTimeMs, totalMs = gameTotal, color = Color(0xFF4CAF50))
             }
             if (settings.useRoundClock) {
                 val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
                 val roundTotal = currentGame.rounds.getOrNull(state.currentRoundIndex)?.durationMs ?: 0L
-                OmniProgressBar(label = "Round ${state.currentRoundIndex + 1}/${currentGame.rounds.size}", timeMs = state.currentRoundTimeMs, totalMs = roundTotal, color = Color(0xFFFF9800))
+                OmniProgressBar(label = stringResource(R.string.omni_progress_round, state.currentRoundIndex + 1, currentGame.rounds.size), timeMs = state.currentRoundTimeMs, totalMs = roundTotal, color = Color(0xFFFF9800))
             }
         }
     }
