@@ -23,10 +23,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -172,49 +170,64 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                 }) { Icon(Icons.Default.Share, stringResource(R.string.common_share)) }
             }
         ) { padding ->
-            Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-                Text(stringResource(R.string.tools_match_summary), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        log.initialPlayerStates.forEachIndexed { i, p ->
-                            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                                Text(stringResource(R.string.common_player_n, i + 1), fontWeight = FontWeight.Bold)
-                                Text(formatHms(p.timeRemainingMs, locale))
+            // One source for both the chart and the table below. These used to be two lists
+            // zipped together, which silently misaligned every following row's time whenever
+            // moveDurations() skipped a MOVE the display list kept. Hoisted out of the lazy
+            // builder below, whose scope is not composable.
+            val durations = remember(log) { moveDurations(log) }
+
+            // A lazy list, not a scrolling Column: this screen composes one Row per move, and a
+            // long game -- or an imported log sitting at the sanitiser's event ceiling -- would
+            // otherwise compose every one of them up front just to show the first screenful.
+            LazyColumn(
+                modifier = Modifier.padding(padding).fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+            ) {
+                item {
+                    Text(stringResource(R.string.tools_match_summary), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            log.initialPlayerStates.forEachIndexed { i, p ->
+                                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                    Text(stringResource(R.string.common_player_n, i + 1), fontWeight = FontWeight.Bold)
+                                    Text(formatHms(p.timeRemainingMs, locale))
+                                }
                             }
                         }
                     }
                 }
 
-                // One source for both the chart and the table below. These used to be two lists
-                // zipped together, which silently misaligned every following row's time whenever
-                // moveDurations() skipped a MOVE the display list kept.
-                val durations = remember(log) { moveDurations(log) }
-
                 if (durations.isNotEmpty()) {
+                    item {
+                        Spacer(Modifier.height(24.dp))
+                        Text(stringResource(R.string.tools_time_per_move), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        MoveDurationChart(durations, Modifier.fillMaxWidth())
+                    }
+                }
+
+                item {
                     Spacer(Modifier.height(24.dp))
-                    Text(stringResource(R.string.tools_time_per_move), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.tools_detailed_moves), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
-                    MoveDurationChart(durations, Modifier.fillMaxWidth())
+
+                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
+                        Text("", modifier = Modifier.width(28.dp))
+                        Text(stringResource(R.string.tools_move), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.tools_spent), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.tools_left), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
 
-                Spacer(Modifier.height(24.dp))
-                Text(stringResource(R.string.tools_detailed_moves), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-
-                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
-                    Text("", modifier = Modifier.width(28.dp))
-                    Text(stringResource(R.string.tools_move), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(stringResource(R.string.tools_spent), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(stringResource(R.string.tools_left), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-
-                durations.forEach { duration ->
+                // (player, moveNumber) is unique by construction: moveDurations() numbers each
+                // player's moves from one, so the key survives any reordering.
+                items(durations, key = { "${it.playerIndex}-${it.moveNumber}" }) { duration ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -238,20 +251,22 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
 
-                Spacer(Modifier.height(24.dp))
-                Button(
-                    onClick = {
-                        val format = moveExportFormatLabel(log.settings.gameType)
-                        val clip = ClipData.newPlainText("Match $format", generateMoveExport(log))
-                        clipboardManager.setPrimaryClip(clip)
-                        Toast.makeText(context, "$format copied to clipboard", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.OpenInNew, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.tools_copy_format, moveExportFormatLabel(log.settings.gameType)))
+                item {
+                    Spacer(Modifier.height(24.dp))
+                    Button(
+                        onClick = {
+                            val format = moveExportFormatLabel(log.settings.gameType)
+                            val clip = ClipData.newPlainText("Match $format", generateMoveExport(log))
+                            clipboardManager.setPrimaryClip(clip)
+                            Toast.makeText(context, "$format copied to clipboard", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.tools_copy_format, moveExportFormatLabel(log.settings.gameType)))
+                    }
                 }
             }
         }
