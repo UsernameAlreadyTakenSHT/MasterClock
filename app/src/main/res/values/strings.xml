@@ -29,7 +29,6 @@
     <string name="preset_delete_message">This preset will be permanently removed.</string>
 
     <string name="common_clear">Clear</string>
-    <string name="common_share">Share</string>
     <string name="common_close">Close</string>
     <string name="common_remove">Remove</string>
     <string name="common_select">Select</string>
@@ -120,112 +119,11 @@
       Game tools. Chess variant names (Chess960, Transcendental, Shuffle…) stay as Kotlin literals
       for the same reason as the timing modes; their descriptions are translated.
     -->
-    <string name="tools_game_logs">Game Logs</string>
-    <string name="tools_log_details">Log Details</string>
-    <string name="tools_no_games">No games recorded yet.</string>
-    <string name="tools_match_summary">Match Summary</string>
-    <string name="tools_detailed_moves">Detailed Moves</string>
-    <string name="tools_move">Move</string>
-    <string name="tools_spent">Spent</string>
-    <string name="tools_left">Left</string>
-    <string name="tools_share_log">Share Log</string>
 
-    <string name="tools_toss_coin">Toss the coin</string>
-    <string name="tools_heads">HEADS</string>
-    <string name="tools_tails">TAILS</string>
-    <string name="tools_roll_dice">Roll the dice</string>
-    <string name="tools_short_straw">Short Straw</string>
-    <string name="tools_draw_again">Draw again</string>
-    <string name="tools_shred">Shred</string>
-    <string name="tools_random_card">Random Card</string>
-    <string name="tools_dice_roll">Dice Roll</string>
-    <string name="tools_draw">Draw</string>
 
-    <string name="tools_stop_precision">Stop Precision</string>
-    <string name="tools_target_time">Target: 5.000s</string>
-    <string name="tools_score">Score: %d</string>
-    <string name="tools_final_score">Final Score: %d</string>
-    <string name="tools_no_notes">No notes yet. Tap + to create one.</string>
-    <string name="tools_offset">Offset: %1$s%2$dms</string>
-    <string name="tools_pick_straw">Pick straw %d</string>
-    <string name="tools_copy_format">Copy %s</string>
-    <string name="tools_player_short">P%d</string>
-    <string name="board_connected_to">Connected: %s</string>
-    <string name="board_error">Error: %s</string>
-    <string name="board_last_move">Last Move: %s</string>
-    <string name="tools_start">START</string>
-    <string name="tools_stop">STOP</string>
-    <string name="tools_prepare">PREPARE</string>
-    <string name="tools_start_trial">START TRIAL</string>
-    <string name="tools_game_over">GAME OVER</string>
-    <string name="tools_name_square_title">Name the Square</string>
-    <string name="tools_min_moves">Min moves?</string>
-    <string name="tools_target">TARGET</string>
-    <string name="tools_time_per_move">Time per Move</string>
 
-    <string name="tools_variant_generator">Variant Generator</string>
-    <string name="tools_generate">GENERATE</string>
-    <string name="tools_copy_fen">COPY FEN</string>
-    <string name="toast_fen_copied">FEN copied</string>
-    <string name="variant_chess960_desc">Symmetric, Opposite Bishops, King between Rooks (Castling).</string>
-    <string name="variant_shuffle_desc">Symmetric, King and Bishops anywhere (Wild randomness).</string>
-    <string name="variant_transcendental_desc">Asymmetric, Opposite Bishops, King anywhere (High tactics).</string>
-    <string name="variant_chess2880_desc">Symmetric, Opposite Bishops, King anywhere (No castling).</string>
-    <string name="variant_double960_desc">Asymmetric, Opposite Bishops, King between Rooks (Pro tactics).</string>
 
-    <string name="tools_add_result">Add result</string>
-    <string name="tools_add_result_placeholder">Add result or note…</string>
-    <string name="tools_reset_scoreboard">Reset Scoreboard</string>
 
-    <string name="tools_new_note">New Note</string>
-    <string name="tools_edit_note">Edit Note</string>
-    <string name="tools_new_audio_note">New Audio Note</string>
-    <string name="tools_new_board_note">New Board Note</string>
-    <string name="tools_new_draw_note">New Draw Note</string>
-    <string name="tools_new_image_note">New Image Note</string>
-    <string name="tools_new_video_note">New Video Note</string>
-    <string name="tools_audio_note">Audio Note</string>
-    <string name="tools_draw_note">Draw Note</string>
-    <string name="tools_image_note">Image Note</string>
-    <string name="tools_video_note">Video Note</string>
-    <string name="tools_text">Text</string>
-    <string name="tools_audio">Audio</string>
-    <string name="tools_image">Image</string>
-    <string name="tools_video">Video</string>
-    <string name="tools_board">Board</string>
-    <string name="tools_title">Title</string>
-    <string name="tools_bold">Bold</string>
-    <string name="tools_italic">Italic</string>
-    <string name="tools_underline">Underline</string>
-    <string name="tools_checkbox">Checkbox</string>
-    <string name="tools_color">Color</string>
-    <string name="tools_select_text_color">Select Text Color</string>
-    <string name="tools_format_hint">Select text and use toolbar to format…</string>
-    <string name="tools_record">Record</string>
-    <string name="tools_play">Play</string>
-    <string name="tools_delete_recording">Delete Recording</string>
-    <string name="tools_take_photo">Take Photo</string>
-    <string name="tools_retake_photo">Retake Photo</string>
-    <string name="tools_record_video">Record Video</string>
-    <string name="tools_retake_video">Retake Video</string>
-    <string name="tools_no_photo">No photo yet</string>
-    <string name="tools_no_video">No video yet (Max 1 min)</string>
-    <string name="tools_note_image">Note image</string>
-    <string name="tools_edit_board">Edit Board</string>
-    <string name="tools_clear_board">Clear Board</string>
-    <string name="tools_select_piece">Select Piece</string>
-    <string name="tools_undo">Undo</string>
-    <string name="tools_eraser">Eraser</string>
-    <string name="tools_normal">Normal</string>
-    <string name="tools_large">Large</string>
-    <string name="tools_white_square">WHITE</string>
-    <string name="tools_dark_square">DARK</string>
-    <string name="toast_note_deleted">Note deleted</string>
-    <string name="toast_camera_permission">Camera permission required</string>
-    <string name="toast_mic_permission">Microphone permission is required.</string>
-    <string name="toast_permission_granted">Permission granted. Tap Record again.</string>
-    <string name="toast_audio_failed">Failed to play audio</string>
-    <string name="toast_start_failed">Failed to start</string>
     <string name="toast_backup_ok">Backup successful!</string>
     <string name="toast_import_ok">Import successful!</string>
 
@@ -235,27 +133,8 @@
     -->
 
     <!-- Bluetooth board -->
-    <string name="board_title">Chessboard Connection</string>
-    <string name="board_nearby">Nearby Devices</string>
-    <string name="board_scan">Scan</string>
-    <string name="board_scanning">Scanning for boards…</string>
-    <string name="board_looking">Looking for boards…</string>
-    <string name="board_none_found">No devices found. Tap refresh to scan.</string>
-    <string name="board_unknown_device">Unknown Device</string>
-    <string name="board_connecting">Connecting…</string>
-    <string name="board_connected">Ready to receive moves</string>
-    <string name="board_disconnected">Disconnected</string>
-    <string name="board_disconnect">Disconnect</string>
 
     <!-- QR sharing -->
-    <string name="qr_share_title">Share via QR Code</string>
-    <string name="qr_code">QR Code</string>
-    <string name="qr_share_hint">Scan this code on another device to import configuration.</string>
-    <string name="qr_share_includes">Includes: Chess Clock Configuration</string>
-    <string name="qr_too_large">Could not generate a QR code — the data is likely too large. Try sharing without game logs.</string>
-    <string name="qr_scan_title">Scan QR Code</string>
-    <string name="qr_align">Align code within the camera view</string>
-    <string name="qr_camera_permission">Camera permission is required to scan codes.</string>
 
     <!--
       Screen-reader wording. core reports the state as data and the sentence is built here, because
@@ -550,76 +429,15 @@
       Timing engines manual. Long-form prose, the most expensive part of the app to translate, so
       it is fine for this section to lag behind the interface chrome.
     -->
-    <string name="guide_intro">Exhaustive documentation of MasterClock timing engines and sub-modes, following the interface sequence.</string>
 
-    <string name="guide_section_sudden_death" translatable="false">Sudden Death</string>
-    <string name="guide_sudden_death_standard" translatable="false">Standard</string>
-    <string name="guide_sudden_death_standard_desc">Pure countdown. The first player to reach 0:00 loses or flags.</string>
 
-    <string name="guide_section_bonus">Bonus Engines</string>
     <!-- Named after the people and systems they come from; these stay as they are. -->
-    <string name="guide_bonus_fischer" translatable="false">Fischer</string>
-    <string name="guide_bonus_bronstein" translatable="false">Bronstein</string>
-    <string name="guide_omni" translatable="false">Omni-Timer</string>
-    <string name="guide_move_standard" translatable="false">Standard</string>
-    <string name="guide_bonus_fischer_desc">Adds a fixed amount of time (increment) AFTER every move.</string>
-    <string name="guide_bonus_bronstein_desc">Adds back time spent on the move, but never more than the delay setting. Non-cumulative.</string>
-    <string name="guide_bonus_us_delay" translatable="false">US Delay</string>
-    <string name="guide_bonus_us_delay_desc">A countdown delay. The clock waits for the delay duration before starting to tick.</string>
 
-    <string name="guide_section_move_timer" translatable="false">Move Timer</string>
-    <string name="guide_move_standard_desc">Resets to a fixed duration for every single move.</string>
-    <string name="guide_move_save_cap" translatable="false">Save &amp; Cap</string>
-    <string name="guide_move_save_cap_desc">Unused move time is stored in a bank, limited by a maximum capacity.</string>
-    <string name="guide_move_overtime" translatable="false">Overtime</string>
-    <string name="guide_move_overtime_desc">Adds unused move time to a secondary global reserve.</string>
-    <string name="guide_move_global" translatable="false">Global</string>
-    <string name="guide_move_global_desc">Move time and global time tick down simultaneously. Both must stay above zero.</string>
-    <string name="guide_move_shared" translatable="false">Shared (Auto)</string>
-    <string name="guide_move_shared_desc">A single timer for all players. Automatically switches at 0:00.</string>
-    <string name="guide_move_global_shared" translatable="false">Global Shared</string>
-    <string name="guide_move_global_shared_desc">All players share a global reserve while having a personal move timer.</string>
 
-    <string name="guide_section_byoyomi" translatable="false">Byoyomi</string>
-    <string name="guide_byoyomi_japanese" translatable="false">Japanese</string>
-    <string name="guide_byoyomi_japanese_desc">After main time, players get a series of short periods. Reset period on move.</string>
-    <string name="guide_byoyomi_canadian" translatable="false">Canadian</string>
-    <string name="guide_byoyomi_canadian_desc">Players must complete a specific number of moves within a single longer period.</string>
-    <string name="guide_byoyomi_progressive" translatable="false">Progressive</string>
-    <string name="guide_byoyomi_progressive_desc">The number of required moves increases every time a period is completed.</string>
 
-    <string name="guide_section_chronos" translatable="false">Chronos</string>
-    <string name="guide_chrono_countdown" translatable="false">Countdown</string>
-    <string name="guide_chrono_countdown_desc">Master timer counting down for the whole game.</string>
-    <string name="guide_chrono_countup" translatable="false">Countup</string>
-    <string name="guide_chrono_countup_desc">Stopwatch mode tracking total time elapsed.</string>
-    <string name="guide_chrono_one_for_all" translatable="false">One for All</string>
-    <string name="guide_chrono_one_for_all_desc">System-wide timer that doesn\'t switch when players press buttons.</string>
 
-    <string name="guide_section_move_counts" translatable="false">Move Counts</string>
-    <string name="guide_counts_up" translatable="false">Count Up</string>
-    <string name="guide_counts_up_desc">Displays the total number of moves made since the start.</string>
-    <string name="guide_counts_down" translatable="false">Count Down</string>
-    <string name="guide_counts_down_desc">Starts at a limit and counts down to zero moves remaining.</string>
 
-    <string name="guide_section_specialty">Specialty Engines</string>
-    <string name="guide_hourglass" translatable="false">Hourglass</string>
-    <string name="guide_hourglass_desc">One player\'s time loss is added to the opponent. Total time is constant.</string>
-    <string name="guide_gong" translatable="false">Gong Mode</string>
-    <string name="guide_gong_desc">Forced moves at fixed intervals (Simultaneous or Turn-based).</string>
-    <string name="guide_fide" translatable="false">FIDE Periods</string>
-    <string name="guide_fide_desc">Multi-stage tournament timing (e.g., 40 moves in 90m + 30m bonus).</string>
-    <string name="guide_phases" translatable="false">Phases</string>
-    <string name="guide_phases_desc">Sequence of different timers (e.g., Prep 5m -&gt; Game 20m -&gt; Sudden Death).</string>
 
-    <string name="guide_section_advanced">Advanced &amp; Experimental</string>
-    <string name="guide_random" translatable="false">Random</string>
-    <string name="guide_random_desc">Base time and increments are randomized within a set range.</string>
-    <string name="guide_hidden" translatable="false">Hidden</string>
-    <string name="guide_hidden_desc">Masks the clock digits at specific thresholds to increase tension.</string>
-    <string name="guide_fast_move" translatable="false">Fast Move</string>
-    <string name="guide_fast_move_desc">Dynamic speed adjustments based on move frequency or cumulative penalty.</string>
-    <string name="guide_omni_desc">6-layer professional station for complex game structures (Games &gt; Rounds &gt; Turns &gt; Phases).</string>
 
     <!-- Settings: More tab -->
     <string name="settings_more_help">Help and Support</string>
@@ -726,10 +544,6 @@
         <item quantity="other">• %d Rounds per Game</item>
     </plurals>
 
-<plurals name="tools_straws">
-        <item quantity="one">Straws: %d</item>
-        <item quantity="other">Straws: %d</item>
-    </plurals>
 
         <plurals name="stats_chart_moves">
         <item quantity="one">%d move</item>

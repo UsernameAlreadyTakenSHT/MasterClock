@@ -88,28 +88,6 @@ import android.content.Context as AndroidContext
 import android.content.ClipData
 import android.content.ClipboardManager
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ToolScaffold(
-    title: String, 
-    onBack: () -> Unit, 
-    actions: @Composable (RowScope.() -> Unit) = {},
-    content: @Composable (PaddingValues) -> Unit
-) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(title, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
-                },
-                actions = actions
-            )
-        },
-        content = content
-    )
-}
-
 @Composable
 fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
     // Hoisted: used from the share button callback, outside composable scope.
