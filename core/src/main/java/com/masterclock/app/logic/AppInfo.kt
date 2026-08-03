@@ -13,6 +13,15 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.14",
+            date = "2026-08-02",
+            notes = listOf(
+                "Standard, Light and Mini no longer ask for the camera, microphone, Bluetooth or location permissions. They never had a feature that could use them; only Complete does.",
+                "Importing a settings or backup file is now bounded, so an oversized or malformed one can no longer freeze the app instead of being rejected.",
+                "A game log could show the wrong time against a move when the recording was incomplete.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.13",
             date = "2026-08-02",
             notes = listOf(
