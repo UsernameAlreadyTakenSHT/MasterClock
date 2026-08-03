@@ -98,6 +98,22 @@ android {
         }
     }
 
+    // Standard, Light and Mini share one extra source set. Gradle gives each flavor its own
+    // directory but has no notion of "every flavor except complete", and duplicating src/reduced
+    // three times would be three copies to keep in step.
+    //
+    // What lives there is the small set of screens COMPLETE alone can reach, stubbed out. The
+    // point is the resource shrinker: it drops a bundled asset only when nothing compiled into the
+    // build references it, so a COMPLETE-only screen sitting in src/main pins its assets into all
+    // four APKs. See src/reduced/.../RulesScreen.kt.
+    // kotlin.srcDir, not java.srcDir: the sources here are .kt, and the Kotlin compilation does not
+    // pick them up from the Java source set.
+    sourceSets {
+        listOf("standard", "light", "mini").forEach { flavor ->
+            getByName(flavor) { kotlin.directories.add("src/reduced/java") }
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21

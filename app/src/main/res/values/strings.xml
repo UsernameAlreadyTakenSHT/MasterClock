@@ -233,15 +233,6 @@
       Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,
       IDF Rules) since that is how they are cited; only the headings around them are translated.
     -->
-    <string name="rules_title">Some rules</string>
-    <string name="rules_intro">Reference documents, readable offline.</string>
-    <string name="rules_group_chess">Chess (official doc)</string>
-    <string name="rules_group_draughts">Draughts (official doc)</string>
-    <string name="rules_group_shogi">Shogi (official doc)</string>
-    <string name="rules_group_more_games">More Games</string>
-    <string name="rules_group_more_resources">More Resources</string>
-    <string name="toast_pdf_open_failed">Could not open this document</string>
-    <string name="toast_no_pdf_viewer">No PDF viewer installed</string>
 
     <!-- Bluetooth board -->
     <string name="board_title">Chessboard Connection</string>
