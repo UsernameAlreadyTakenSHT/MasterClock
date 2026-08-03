@@ -1,0 +1,3 @@
+Standard, Light and Mini no longer ask for the camera, microphone, Bluetooth or location permissions. They never had a feature that could use them; only Complete does.
+Importing a settings or backup file is now bounded, so an oversized or malformed one is rejected instead of freezing the app.
+A game log could show the wrong time against a move when the recording was incomplete.

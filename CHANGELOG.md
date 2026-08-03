@@ -1,3 +1,12 @@
+## v0.8.14 — 2026-08-02
+
+### Changed
+- **Standard, Light and Mini no longer ask for the camera, microphone, Bluetooth or location permissions.** All four builds shared one manifest, so every one of them requested permissions that only Complete has a feature for: the notebook's audio, photo and video notes, the QR scanner and the Bluetooth board are reachable from the More tab, which Complete alone has. Complete is unchanged.
+
+### Fixed
+- Importing a settings or backup file is now bounded. An oversized or malformed file is rejected instead of being read whole into memory, and a recorded game carrying impossible values can no longer freeze the log screen.
+- A game log could show the wrong time against a move when a recording was incomplete.
+
 ## v0.8.13 — 2026-08-02
 
 ### Added
