@@ -50,7 +50,7 @@ fun QRReceiveScreen(
                         // Guards against onResult() firing more than once: setAnalyzer() keeps
                         // delivering frames (and can decode successfully on several in a row) until
                         // the caller actually unbinds the camera in response to the first onResult(),
-                        // which doesn't happen instantly (AUDIT.md §7.3).
+                        // which doesn't happen instantly.
                         val hasScanned = java.util.concurrent.atomic.AtomicBoolean(false)
                         val previewView = PreviewView(ctx).apply {
                             scaleType = PreviewView.ScaleType.FILL_CENTER

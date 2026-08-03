@@ -376,7 +376,6 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             // Turn-based Gong: only the player whose turn it is shows reflect/move color, everyone
             // else is grey (inactive), same convention as every other mode. Simultaneous Gong has no
             // "inactive" player -- everyone ticks together -- so all boxes reflect their own phase.
-            // See AUDIT.md §7.2.
             isGong -> if (state.isPaused || !(pSettings.gongSimultaneous || isActive)) {
                 inactiveColor
             } else {

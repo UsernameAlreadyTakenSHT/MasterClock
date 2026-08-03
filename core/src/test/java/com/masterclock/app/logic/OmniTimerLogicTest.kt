@@ -6,8 +6,8 @@ import kotlin.random.Random
 
 /**
  * Exercises [computeOmniAdvance], the pure state-transition function extracted from
- * OmniTimerViewModel.advanceOmni() / tickOmni() so the *ForcesCutoff settings (see AUDIT.md §7.1)
- * can be tested without an Android runtime or emulator.
+ * OmniTimerViewModel.advanceOmni() / tickOmni() so the *ForcesCutoff settings can be tested
+ * without an Android runtime or emulator.
  */
 class OmniTimerLogicTest {
 

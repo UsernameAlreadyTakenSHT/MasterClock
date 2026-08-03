@@ -20,8 +20,7 @@ object ZipBackupManager {
 
     // Defends against zip bombs: a small compressed file can decompress to gigabytes. entry.size
     // (the declared uncompressed size in the zip header) is attacker-controlled and not trustworthy,
-    // so these limits are enforced by counting actual bytes read during decompression. See AUDIT.md
-    // §3 (M3).
+    // so these limits are enforced by counting actual bytes read during decompression.
     private const val MAX_ENTRY_SIZE_BYTES = 20L * 1024 * 1024 // 20 MB per entry
     private const val MAX_TOTAL_SIZE_BYTES = 50L * 1024 * 1024 // 50 MB across the whole archive
     private const val MAX_ENTRIES = 100

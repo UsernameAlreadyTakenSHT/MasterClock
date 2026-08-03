@@ -147,7 +147,7 @@ data class OmniSettings(
 
     // When true, this level's own clock reaching zero forces an immediate advance to the next
     // unit at that level (cutting short whatever turn/phase is in progress inside it) instead of the
-    // default -- freeze at zero, beep, and wait for the manual Next tap. See AUDIT.md 7.1.
+    // default -- freeze at zero, beep, and wait for the manual Next tap.
     val phaseForcesCutoff: Boolean = false,
     val turnForcesCutoff: Boolean = false,
     val roundForcesCutoff: Boolean = false,
@@ -164,7 +164,7 @@ data class OmniState(
     // Distinguishes "temporarily paused, Play resumes where we left off" from "stopped/never
     // started, Play begins a brand new session". Previously both pauseOmni() and stopOmni() only
     // ever cleared isRunning, so startOmni() (which decided fresh-vs-resume off !isRunning alone)
-    // reset the whole session -- games/rounds/turns/banks -- after a single Pause. See AUDIT.md §7.1.
+    // reset the whole session -- games/rounds/turns/banks -- after a single Pause.
     val hasStarted: Boolean = false,
 
     // Live Clocks
@@ -183,7 +183,7 @@ data class OmniState(
     // round/game change) -- distinct from currentPlayerIndex, which is already reduced to [0,
     // numberOfPlayers) by calculateNextPlayerIndex(). advanceOmni() used to reuse currentPlayerIndex
     // as if it were this raw counter, double-applying the player-order transform for
-    // ROTATE/SNAKE (a player could get skipped or replayed). See AUDIT.md §7.1.
+    // ROTATE/SNAKE (a player could get skipped or replayed).
     val turnCounterInRound: Int = 0,
     // The player index to use for each turn of the current round, drawn once when the round
     // starts (RANDOM order only; empty for the deterministic orders, which compute their player

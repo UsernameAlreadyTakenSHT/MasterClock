@@ -1111,7 +1111,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     var title by remember { mutableStateOf(note.title) }; var isRecording by remember { mutableStateOf(false) }; var isPlaying by remember { mutableStateOf(false) }; var recorder by remember { mutableStateOf<MediaRecorder?>(null) }; var player by remember { mutableStateOf<MediaPlayer?>(null) }; var recordingTime by remember { mutableIntStateOf(0) }; var playbackTime by remember { mutableIntStateOf(0) }
     // Saves the title continuously instead of only on the toolbar back arrow: MainActivity's system
     // back handler (gesture/button) calls navigator.goBack() directly and never runs ToolScaffold's
-    // onBack lambda, so a title edit followed by a system back used to be silently lost (AUDIT.md §7.3).
+    // onBack lambda, so a title edit followed by a system back used to be silently lost.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
     val scope = rememberCoroutineScope()
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else Toast.makeText(context, micPermissionText, Toast.LENGTH_SHORT).show() }
@@ -1164,7 +1164,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
 fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     val cameraPermissionText = stringResource(R.string.toast_camera_permission)
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile) }
-    // Saves the title continuously; see the matching comment in VoiceNoteEditor (AUDIT.md §7.3).
+    // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success -> if (success) onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
@@ -1185,7 +1185,7 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
 fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     val cameraPermissionText = stringResource(R.string.toast_camera_permission)
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }; val videoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile) }
-    // Saves the title continuously; see the matching comment in VoiceNoteEditor (AUDIT.md §7.3).
+    // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
     val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success -> if (success) onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
@@ -1423,7 +1423,7 @@ fun generateKif(log: GameLog): String {
     return sb.toString()
 }
 
-/** Move-list export format for a log's game, matching its [GameType] (was always PGN regardless -- AUDIT.md §7.3). */
+/** Move-list export format for a log's game, matching its [GameType] (was always PGN regardless). */
 fun moveExportFormatLabel(gameType: GameType): String = when (gameType) {
     GameType.CHESS -> "PGN"
     GameType.DRAUGHTS -> "PDN"
@@ -1479,8 +1479,7 @@ fun generateChessPosition(v: ChessVariant): List<String> {
 /**
  * Overwrites [file] with random bytes before deleting it. Bounded to [sandboxRoots] (the app's own
  * filesDir/cacheDir): notebook note paths can originate from an imported settings file, so without
- * this check a crafted path could point the shredder at any file this app can write to. See
- * AUDIT.md §3 (HIGH finding).
+ * this check a crafted path could point the shredder at any file this app can write to.
  */
 private fun shredFile(file: File, sandboxRoots: List<File>) {
     val canonical = try { file.canonicalFile } catch (_: Exception) { return }

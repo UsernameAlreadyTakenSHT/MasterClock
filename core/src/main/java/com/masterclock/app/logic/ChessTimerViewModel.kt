@@ -329,7 +329,7 @@ data class ChessClockSettings(
     
     val loopPhases: Boolean = false,
     // When true, a manual tap can advance/skip the current phase early (before its own timer
-    // expires), on top of the normal auto/manual advance rules -- see AUDIT.md.
+    // expires), on top of the normal auto/manual advance rules.
     val allowPhaseSkip: Boolean = false,
     val pauseBetweenPhasesMs: Long = 0,
     val notebookNotes: List<NotebookNote> = emptyList()
@@ -548,7 +548,7 @@ data class ChessClockState(
  * Imported settings (QR / JSON / ZIP share packages) come from an untrusted source and must never
  * be trusted with raw file paths or note ids: [NotebookNote.id] feeds a `contains(id)` file filter
  * on delete (an empty/crafted id can match every file in `filesDir`), and audioPath/imagePath/
- * videoPath/custom*Uri are read and written to directly. See AUDIT.md §3 (HIGH finding).
+ * videoPath/custom*Uri are read and written to directly.
  */
 private fun sanitizeImportedSettings(context: android.content.Context, settings: ChessClockSettings): ChessClockSettings {
     val sanitizedNotes = settings.notebookNotes.map { note ->
@@ -569,7 +569,7 @@ private fun sanitizeImportedSettings(context: android.content.Context, settings:
         numberOfPlayers = sanitizedNumberOfPlayers,
         // Per-player customization (p3Custom/p4Custom) is only ever offered by the app's own UI for
         // 2 players (SettingsBehaviorPage forces this same rule when toggling "more players"); an
-        // import must not be able to sneak past that restriction. See AUDIT.md §7.4.
+        // import must not be able to sneak past that restriction.
         differentSettingsPerPlayer = settings.differentSettingsPerPlayer && sanitizedNumberOfPlayers <= 2,
         playerMapping = settings.playerMapping.let { mapping ->
             if (mapping.size == 4 && mapping.all { it in 1..4 }) mapping else listOf(1, 2, 3, 4)
@@ -586,7 +586,7 @@ private fun sanitizeImportedSettings(context: android.content.Context, settings:
  * Clamps imported PlayerSettings to sane, non-negative bounds. Without this, a crafted
  * randomMinTimeMs > randomMaxTimeMs crashes the app the moment a RANDOM/HIDDEN-mode game is
  * started: `(min..max).random()` in createInitialState() throws IllegalArgumentException on an
- * empty/inverted range. See AUDIT.md §3 (HIGH finding).
+ * empty/inverted range.
  */
 private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSettings {
     val randomMinTimeMs = settings.randomMinTimeMs.coerceAtLeast(0)
@@ -685,15 +685,14 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
  * elapsed, returns the next [PlayerState] for every timer mode except the multi-player-coupled ones
  * (PHASES/GONG/HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED, handled inline in
  * [ChessTimerViewModel.tick]). Has no dependency on Android or ViewModel state, so it's called
- * directly from both [ChessTimerViewModel.tick] and [ChessTimerLogicTest] -- see AUDIT.md §6 (the
- * previous test file duplicated this logic instead of exercising it, so a real bug here could drift
- * undetected).
+ * directly from both [ChessTimerViewModel.tick] and [ChessTimerLogicTest]: the previous test file
+ * duplicated this logic instead of exercising it, so a real bug here could drift undetected.
  */
 /**
  * Shared countdown + flag logic used both by [tickPlayer]'s default branch and by every mode that
  * has its own early-return in [ChessTimerViewModel.tick] (PHASES, MOVE_TIMER_SHARED,
- * MOVE_TIMER_GLOBAL_SHARED, HOURGLASS, CHRONO_COUNTDOWN, CHRONO_COUNTUP) -- see AUDIT.md, these modes
- * used to bypass FlagBehavior/audio/voice entirely by never calling tickPlayer at all.
+ * MOVE_TIMER_GLOBAL_SHARED, HOURGLASS, CHRONO_COUNTDOWN, CHRONO_COUNTUP). These modes used to
+ * bypass FlagBehavior/audio/voice entirely by never calling tickPlayer at all.
  */
 internal fun applyFlagBehaviorDelta(currentTime: Long, isOut: Boolean, isNegative: Boolean, delta: Long, flagBehavior: FlagBehavior): Triple<Long, Boolean, Boolean> {
     var newTime = currentTime
@@ -794,7 +793,7 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
 /**
  * Pure post-move state transition (increments/resets/period-advances the mover after
  * [ChessTimerViewModel.startOrSwitch] records a move) for every mode driven by [applyPostMoveLogic].
- * Exposed at the top level for the same testability reason as [tickPlayer] -- see AUDIT.md §6.
+ * Exposed at the top level for the same testability reason as [tickPlayer].
  */
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
     val p = state.players[playerIndex - 1]
@@ -808,7 +807,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     // FAST_MOVE/TRANSFER updates two players (the mover resets to moveTimeMs, the opponent receives
     // the transferred time), so it can't fit the single-player `newP` slot below; handled as its own
     // early return. (Previously computed into a local `updatedPlayers` list that nothing ever read, so
-    // the opponent's transferred time was silently discarded -- see AUDIT.md §6.)
+    // the opponent's transferred time was silently discarded.)
     if (s.mode == TimerMode.FAST_MOVE && s.fastMoveMode == FastMoveType.TRANSFER) {
         val opponentIndex = playerIndex % settings.numberOfPlayers
         val opponent = state.players[opponentIndex]
@@ -1199,7 +1198,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 if (p1.isOutOfTime) {
                     // autoAdvance is off and this phase's time is already up: frozen, waiting for a
                     // manual tap (startOrSwitch) or allowPhaseSkip -- not a real "out of time"/game-over,
-                    // just a visual + audio cue that this phase is done. See AUDIT.md.
+                    // just a visual + audio cue that this phase is done.
                     return@update state
                 }
 
@@ -1511,7 +1510,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 oldSettings.p2Custom != newSettings.p2Custom ||
                 // p3Custom/p4Custom were missing here: changing only P4's settings (4-player,
                 // differentSettingsPerPlayer) silently failed to refresh the clock until some other
-                // tracked field also changed. See AUDIT.md §7.2.
+                // tracked field also changed.
                 oldSettings.p3Custom != newSettings.p3Custom ||
                 oldSettings.p4Custom != newSettings.p4Custom ||
                 oldSettings.numberOfPlayers != newSettings.numberOfPlayers ||
@@ -1545,7 +1544,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // GameLog.settings.notebookNotes/custom*Uri survives unsanitized in Room and later becomes
                 // the live settings verbatim the moment the user picks it from PresetsScreen's "Last
                 // Games" tab (onPresetSelected -> updateSettings(set, states), isImport defaults to
-                // false there) -- silently reopening the AUDIT.md §3 HIGH finding. See AUDIT.md §6.
+                // false there) -- silently reopening the path-sanitisation hole this guards against.
                 val app = getApplication<Application>()
                 logs.forEach { log ->
                     val sanitizedLog = sanitizeImportedLog(log)

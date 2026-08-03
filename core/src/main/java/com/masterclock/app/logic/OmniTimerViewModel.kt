@@ -25,7 +25,7 @@ internal fun applyOmniTimeBanking(state: OmniState, settings: OmniSettings, play
  * Draws whatever is banked for the player about to start their turn into that turn's time, and
  * clears just that entry so it is not re-applied on every subsequent turn. Previously the whole
  * time-banking system computed playerTimeBanks but nothing ever read it back into a clock or
- * displayed it -- purely cosmetic. See AUDIT.md section 7.1.
+ * displayed it -- purely cosmetic.
  */
 internal fun drawOmniBank(banks: Map<Int, Long>, settings: OmniSettings, nextPlayerIndex: Int): Pair<Map<Int, Long>, Long> {
     if (settings.timeBankMode == TimeBankMode.NONE) return banks to 0L
@@ -46,7 +46,7 @@ internal fun handleTimeBankScope(currentBanks: Map<Int, Long>, scope: TimeBankSc
 
 internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int = 0, roundIdx: Int = 0, playerIdx: Int = 0, phaseIdx: Int = 0): Long {
     // Was always settings.games.firstOrNull(), so any per-game duration/structure was silently
-    // ignored from Game 2 onward -- see AUDIT.md section 7.1.
+    // ignored from Game 2 onward.
     val game = settings.games.getOrNull(gameIdx) ?: settings.games.lastOrNull() ?: OmniGameSettings()
     val round = game.rounds.getOrNull(roundIdx) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
     return when (level) {
@@ -228,8 +228,7 @@ internal fun computeOmniAdvance(
     var nextPhaseIdx = state.currentPhaseIndex + 1
     // Raw, ever-incrementing turn count within the round -- NOT currentPlayerIndex, which is
     // already reduced to [0, numberOfPlayers) by calculateNextPlayerIndex() below and would
-    // double-apply the player-order transform for ROTATE/SNAKE (see OmniState.turnCounterInRound
-    // and AUDIT.md section 7.1).
+    // double-apply the player-order transform for ROTATE/SNAKE (see OmniState.turnCounterInRound).
     var nextTurnIdx = state.turnCounterInRound
 
     val currentGameIdx = state.currentGameIndex

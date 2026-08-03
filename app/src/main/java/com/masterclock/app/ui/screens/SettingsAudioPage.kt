@@ -26,8 +26,8 @@ import com.masterclock.app.logic.*
  * `ActivityResultContracts.GetContent()` (ACTION_GET_CONTENT) doesn't reliably support persistable
  * URI permissions -- only ACTION_OPEN_DOCUMENT does. Custom sound pickers were using GetContent()
  * with no `takePersistableUriPermission` call at all, so the read grant died with the app process:
- * the stored URI became unreadable on next launch, silently falling back to the default sound (see
- * AUDIT.md §7.4). This helper takes the persistable grant right after picking, so callers only need
+ * the stored URI became unreadable on next launch, silently falling back to the default sound. This
+ * helper takes the persistable grant right after picking, so callers only need
  * to switch their launcher to `ActivityResultContracts.OpenDocument()`.
  */
 private fun persistReadPermission(context: android.content.Context, uri: Uri) {

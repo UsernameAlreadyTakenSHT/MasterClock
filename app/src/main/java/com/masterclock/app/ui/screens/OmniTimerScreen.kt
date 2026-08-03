@@ -158,8 +158,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
     val pColor = Color(omniPlayerColor(settings, pIdx))
 
     // turnCounterInRound is the raw, ever-incrementing turn count within the round; currentPlayerIndex
-    // is always already in [0, numPlayers) so dividing it here was always 0 ("TURN 1" forever) -- see
-    // AUDIT.md §7.1.
+    // is always already in [0, numPlayers) so dividing it here was always 0 ("TURN 1" forever).
     val turnNumber = (state.turnCounterInRound / numPlayers) + 1
     val playerNumber = pIdx + 1
 
@@ -216,7 +215,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
             val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
             val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else List(numPlayers) { OmniTurnSettings(durationMs = currentRound.turnDurationMs) }
             // turnsList (SEQUENCE mode) is indexed by the raw turn count within the round, same as the
-            // engine (OmniTimerViewModel.advanceOmni), not by currentPlayerIndex -- see AUDIT.md §7.1.
+            // engine (OmniTimerViewModel.advanceOmni), not by currentPlayerIndex.
             val currentTurn = turnsList.getOrNull(state.turnCounterInRound)
             val phaseName = currentTurn?.phases?.getOrNull(state.currentPhaseIndex)?.name ?: stringResource(R.string.omni_phase_default)
             

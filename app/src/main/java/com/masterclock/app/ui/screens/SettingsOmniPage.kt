@@ -850,7 +850,7 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
                 Text(stringResource(R.string.omni_cfg_time_bank), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 // Was a boolean switch that could only reach NONE/ACCUMULATIVE -- GLOBAL_RESERVE (a
                 // single pool shared by every player, instead of one bank per player) was unreachable
-                // from the UI. See AUDIT.md §7.1.
+                // from the UI.
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     TimeBankMode.entries.forEachIndexed { index, mode ->
                         val label = when (mode) {
@@ -929,7 +929,7 @@ fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) ->
             Text(stringResource(R.string.omni_cfg_summary), fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
             Text(pluralStringResource(R.plurals.omni_cfg_summary_games, settings.games.size, settings.numberOfPlayers, settings.games.size))
             // Was always games.firstOrNull()?.rounds?.size, presented as if every game were the same
-            // even when games have different round counts -- see AUDIT.md §7.1.
+            // even when games have different round counts.
             val roundCounts = settings.games.map { it.rounds.size }
             Text(if (roundCounts.distinct().size <= 1) pluralStringResource(R.plurals.omni_cfg_summary_rounds_uniform, roundCounts.firstOrNull() ?: 0, roundCounts.firstOrNull() ?: 0) else stringResource(R.string.omni_cfg_summary_rounds_varied, roundCounts.joinToString(", ")))
             Text(stringResource(R.string.omni_cfg_summary_order, settings.playerOrderType.toString()))
