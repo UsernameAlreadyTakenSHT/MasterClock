@@ -1,0 +1,2 @@
+Standard, Light and Mini are about three times smaller: 13.1 MB down to 4.0 MB. They were carrying the ten bundled rulebooks, which only Complete can open.
+The game log's move list is drawn as you scroll instead of all at once, so a long game opens without the wait.
