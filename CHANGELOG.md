@@ -1,3 +1,9 @@
+## v0.8.15 — 2026-08-03
+
+### Changed
+- **Standard, Light and Mini are about three times smaller — 13.1 MB down to 4.0 MB.** All four builds shipped the ten bundled rulebook PDFs, 9.3 MB of documents that only Complete can open: the rules screen is reached from the More tab, which Complete alone has. The three smaller builds no longer carry them. Complete is unchanged and keeps every rulebook.
+- The move list in a game log is now drawn as you scroll rather than all at once, so opening a long game no longer builds every row up front.
+
 ## v0.8.14 — 2026-08-02
 
 ### Changed

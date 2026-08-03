@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-02"
+    const val BUILD_DATE = "2026-08-03"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,14 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.15",
+            date = "2026-08-03",
+            notes = listOf(
+                "Standard, Light and Mini are about three times smaller: 13.1 MB down to 4.0 MB. They were carrying the ten bundled rulebooks, which only Complete can open.",
+                "The game log's move list is drawn as you scroll instead of all at once, so a long game opens without the wait.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.14",
             date = "2026-08-02",
