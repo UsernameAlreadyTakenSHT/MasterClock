@@ -102,12 +102,13 @@ android {
     // directory but has no notion of "every flavor except complete", and duplicating src/reduced
     // three times would be three copies to keep in step.
     //
-    // What lives there is the small set of screens COMPLETE alone can reach, stubbed out. The
-    // point is the resource shrinker: it drops a bundled asset only when nothing compiled into the
-    // build references it, so a COMPLETE-only screen sitting in src/main pins its assets into all
-    // four APKs. See src/reduced/.../RulesScreen.kt.
-    // kotlin.srcDir, not java.srcDir: the sources here are .kt, and the Kotlin compilation does not
-    // pick them up from the Java source set.
+    // What lives there is every screen COMPLETE alone can reach, stubbed out at the same signature
+    // so MainActivity can register the navigation graph unconditionally. That buys two things: the
+    // resource shrinker drops the rulebook PDFs once nothing references them, and the tool screens'
+    // code and libraries stop being compiled into builds that cannot open them.
+    //
+    // kotlin.directories, not java.srcDir: the sources here are .kt, the Kotlin compilation does not
+    // pick them up from the Java source set, and srcDir is deprecated in this AGP.
     sourceSets {
         listOf("standard", "light", "mini").forEach { flavor ->
             getByName(flavor) { kotlin.directories.add("src/reduced/java") }
@@ -144,18 +145,22 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.material)
     
-    // UI specialized utilities
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
-    implementation(libs.zxing.android.embedded)
-    implementation(libs.accompanist.permissions)
     implementation(libs.androidx.compose.adaptive)
     implementation(libs.androidx.compose.adaptive.layout)
     implementation(libs.androidx.compose.adaptive.navigation3)
-    implementation(libs.coil.compose)
-    implementation(libs.coil.svg)
+
+    // Complete only. The QR scanner, the notebook's photo/video notes and the Chess960 board are
+    // the sole users of these, and they all live in src/complete now. Declaring them per flavor
+    // rather than for the whole module is what actually keeps the code out of the other three
+    // builds -- moving the screens alone would leave the libraries linked in.
+    "completeImplementation"(libs.androidx.camera.camera2)
+    "completeImplementation"(libs.androidx.camera.core)
+    "completeImplementation"(libs.androidx.camera.lifecycle)
+    "completeImplementation"(libs.androidx.camera.view)
+    "completeImplementation"(libs.zxing.android.embedded)
+    "completeImplementation"(libs.accompanist.permissions)
+    "completeImplementation"(libs.coil.compose)
+    "completeImplementation"(libs.coil.svg)
 
     testImplementation(libs.androidx.core)
     testImplementation(libs.androidx.junit)
