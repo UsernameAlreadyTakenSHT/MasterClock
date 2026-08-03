@@ -69,7 +69,7 @@ fun QRShareScreen(
                     // generateQRCode() runs synchronously in remember(), so a null result here isn't
                     // "still loading" -- it's a permanent failure (most commonly: the payload is too
                     // large to fit in a QR code's capacity). Previously this showed an infinite,
-                    // misleading spinner (AUDIT.md §7.3).
+                    // misleading spinner.
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.height(8.dp))

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- See app/src/main/res/xml/data_extraction_rules.xml and AUDIT.md §3 (M2). -->
+<!-- See app/src/main/res/xml/data_extraction_rules.xml. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" />

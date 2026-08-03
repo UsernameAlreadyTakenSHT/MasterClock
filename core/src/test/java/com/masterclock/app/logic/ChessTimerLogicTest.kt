@@ -11,12 +11,12 @@ import org.junit.Assert.*
  * `simulateMove` helpers and asserted against that copy -- meaning it never actually ran
  * ChessTimerViewModel's code, and a real bug (FAST_MOVE/TRANSFER computing the opponent's new time
  * into a variable that was then never applied to the state -- fixed in this same change) survived
- * undetected. See AUDIT.md §6.
+ * undetected.
  *
  * [simulateMultiPlayerTick] below is a narrower, still-hand-written duplicate for the handful of
  * modes (HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/PHASES/GONG/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED) that are
  * implemented inline in `ChessTimerViewModel.tick()` rather than in the extracted [tickPlayer]; that
- * remains a known, documented gap (also tracked in AUDIT.md §6) rather than something this change
+ * remains a known, documented gap rather than something this change
  * attempts to fully close.
  */
 class ChessTimerLogicTest {
@@ -217,7 +217,7 @@ class ChessTimerLogicTest {
     }
 
     @Test
-    fun `FAST_MOVE TRANSFER moves the spent time to the opponent (regression test, see AUDIT-md section 6)`() {
+    fun `FAST_MOVE TRANSFER moves the spent time to the opponent (regression test)`() {
         // Previously this computed `updatedOpponent` into a local list that was never merged back
         // into the returned state, so the opponent silently never received the transferred time.
         val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = true, moveTimeMs = 30_000)
@@ -251,7 +251,7 @@ class ChessTimerLogicTest {
         assertEquals(1, state.players[1].moveCount)
     }
 
-    // --- Modes still implemented inline in ChessTimerViewModel.tick(), not yet extracted (AUDIT.md §6) ---
+    // --- Modes still implemented inline in ChessTimerViewModel.tick(), not yet extracted ---
 
     /**
      * Duplicates just the HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/GONG/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED branches of

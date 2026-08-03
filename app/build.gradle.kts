@@ -8,7 +8,7 @@ plugins {
 }
 
 // Release signing credentials live in local.properties (gitignored, never committed) so the
-// keystore path/passwords never end up in source control. See F3 in AUDIT.md.
+// keystore path/passwords never end up in source control.
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {

@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
 }
 
-// Same release keystore as :app — see F3 in AUDIT.md and :app/build.gradle.kts for details.
+// Same release keystore as :app -- see :app/build.gradle.kts for details.
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
