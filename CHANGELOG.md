@@ -1,3 +1,12 @@
+## v0.8.16 — 2026-08-03
+
+### Changed
+- **Standard, Light and Mini shrink again — 4.0 MB down to 2.8 MB.** v0.8.15 stopped shipping them the rulebooks; this release stops shipping them the code behind the tools they cannot open either — the notebook, the QR scanner, the Bluetooth board, the trainers and the mode guide, along with the camera and image libraries those need. The saving is larger on the device than the download suggests: Android compiles an app's code when installing it, so unused code costs several times its own size. Expect roughly a third less space used once installed.
+- Complete is unchanged and keeps every tool, rulebook and setting.
+
+### Fixed
+- Internal cleanup: removed two leftover files and a batch of stale comments referring to a document that was never part of the repository.
+
 ## v0.8.15 — 2026-08-03
 
 ### Changed

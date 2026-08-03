@@ -13,6 +13,14 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.16",
+            date = "2026-08-03",
+            notes = listOf(
+                "Standard, Light and Mini shrink again: 4.0 MB down to 2.8 MB to download, and roughly a third less once installed. They were still carrying the code for tools only Complete can open.",
+                "Complete is unchanged and keeps every tool, rulebook and setting.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.15",
             date = "2026-08-03",
             notes = listOf(
