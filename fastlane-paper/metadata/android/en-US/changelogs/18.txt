@@ -1,0 +1,2 @@
+E-Ink: the row of buttons no longer shifts when you start the clock.
+Light, Mini and E-Ink gain the Fullscreen option, which until now only Complete and Standard could switch on.
