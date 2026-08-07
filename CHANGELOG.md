@@ -1,3 +1,11 @@
+## v0.8.17 — 2026-08-07
+
+### Added
+- **Fullscreen for Light, Mini and E-Ink.** The option existed and worked, but only Complete and Standard had a screen offering it. It now sits in System behavior, just under "Keep screen awake".
+
+### Fixed
+- **E-Ink: the row of buttons no longer shifts when you start the clock.** Starting a game added an invisible element above the clock, which pushed the layout down by a few pixels and moved the buttons under your thumb. Introduced in v0.8.13 alongside the screen reader support.
+
 ## v0.8.16 — 2026-08-03
 
 ### Changed
