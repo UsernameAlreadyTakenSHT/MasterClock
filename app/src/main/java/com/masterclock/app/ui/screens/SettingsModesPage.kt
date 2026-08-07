@@ -79,6 +79,12 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
                     onSettingsChanged(currentSettings.copy(forceScreenOn = it))
                 }
                 BehaviorSwitch(
+                    label = stringResource(R.string.settings_fullscreen),
+                    checked = currentSettings.fullscreenMode
+                ) {
+                    onSettingsChanged(currentSettings.copy(fullscreenMode = it))
+                }
+                BehaviorSwitch(
                     label = stringResource(R.string.settings_sound),
                     checked = currentSettings.playSwitchSound
                 ) {
