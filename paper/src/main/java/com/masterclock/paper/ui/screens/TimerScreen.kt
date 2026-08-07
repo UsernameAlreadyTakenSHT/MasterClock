@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.masterclock.paper.R
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.*
@@ -42,69 +43,75 @@ fun TimerScreen(
     val settings by viewModel.settings.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    // The announcer overlays the clock rather than sitting in the Column below. It emits nothing
+    // until there is something to announce, and the Column spaces its children by 16dp, so as a
+    // child it appeared out of nowhere on the first press and pushed 17dp into the layout: both
+    // player areas are weight(1f), so they absorbed it and the control row between them jumped.
+    Box(modifier = Modifier.fillMaxSize()) {
         ClockAnnouncer(state)
 
-        // Player 1 Block (Upside down for opponent, floating)
-        Box(modifier = Modifier.weight(1f).graphicsLayer { rotationZ = 180f }) {
-            EInkPlayerArea(
-                playerIndex = 1,
-                state = state,
-                onClick = { viewModel.startOrSwitch(1) }
-            )
-        }
-
-        // Control Row (Official MMD Outlined Buttons - Sentence Case)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            OutlinedButtonMMD(
-                onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = stringResource(R.string.common_reset),
-                    style = MaterialTheme.typography.labelLarge
+            // Player 1 Block (Upside down for opponent, floating)
+            Box(modifier = Modifier.weight(1f).graphicsLayer { rotationZ = 180f }) {
+                EInkPlayerArea(
+                    playerIndex = 1,
+                    state = state,
+                    onClick = { viewModel.startOrSwitch(1) }
                 )
             }
-
-            OutlinedButtonMMD(
-                onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
-                modifier = Modifier.weight(1f)
+    
+            // Control Row (Official MMD Outlined Buttons - Sentence Case)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val label = if (state.isPaused || state.activePlayer == null) stringResource(R.string.timer_resume) else stringResource(R.string.timer_pause)
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelLarge
+                OutlinedButtonMMD(
+                    onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.common_reset),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+    
+                OutlinedButtonMMD(
+                    onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    val label = if (state.isPaused || state.activePlayer == null) stringResource(R.string.timer_resume) else stringResource(R.string.timer_pause)
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+    
+                OutlinedButtonMMD(
+                    onClick = onSettingsClick,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.timer_settings),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+    
+            // Player 2 Block (Floating)
+            Box(modifier = Modifier.weight(1f)) {
+                EInkPlayerArea(
+                    playerIndex = 2,
+                    state = state,
+                    onClick = { viewModel.startOrSwitch(2) }
                 )
             }
-
-            OutlinedButtonMMD(
-                onClick = onSettingsClick,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = stringResource(R.string.timer_settings),
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
-
-        // Player 2 Block (Floating)
-        Box(modifier = Modifier.weight(1f)) {
-            EInkPlayerArea(
-                playerIndex = 2,
-                state = state,
-                onClick = { viewModel.startOrSwitch(2) }
-            )
         }
     }
 
@@ -136,6 +143,9 @@ private fun ClockAnnouncer(state: ChessClockState) {
 
     Box(
         Modifier
+            // The clock fills the screen and is drawn after this, which would leave the announcer
+            // obscured -- and an obscured node is dropped from the accessibility tree.
+            .zIndex(1f)
             .size(1.dp)
             .semantics {
                 liveRegion = if (urgent) LiveRegionMode.Assertive else LiveRegionMode.Polite
