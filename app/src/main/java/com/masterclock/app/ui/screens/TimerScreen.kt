@@ -648,24 +648,36 @@ fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, onAdjust:
 @Composable
 private fun ScaleToFitWidth(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Layout(content = content, modifier = modifier) { measurables, constraints ->
-        val placeable = measurables.first().measure(
-            constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity, minHeight = 0, maxHeight = Constraints.Infinity)
+        val unbounded = constraints.copy(
+            minWidth = 0, maxWidth = Constraints.Infinity, minHeight = 0, maxHeight = Constraints.Infinity
         )
-        val scale = if (constraints.hasBoundedWidth && placeable.width > constraints.maxWidth && placeable.width > 0) {
-            constraints.maxWidth.toFloat() / placeable.width
+        // Every child, not just the first: content is a single Row today, but first() alone would
+        // crash on a content block that renders nothing, and silently drop anything added beside
+        // it. They stack at the origin and share one scale, so the clock keeps its proportions.
+        val placeables = measurables.map { it.measure(unbounded) }
+        if (placeables.isEmpty()) {
+            return@Layout layout(constraints.minWidth, constraints.minHeight) {}
+        }
+
+        val contentWidth = placeables.maxOf { it.width }
+        val contentHeight = placeables.maxOf { it.height }
+        val scale = if (constraints.hasBoundedWidth && contentWidth > constraints.maxWidth && contentWidth > 0) {
+            constraints.maxWidth.toFloat() / contentWidth
         } else 1f
 
-        val width = (placeable.width * scale).toInt().coerceIn(constraints.minWidth, if (constraints.hasBoundedWidth) constraints.maxWidth else placeable.width)
-        val height = (placeable.height * scale).toInt()
+        val width = (contentWidth * scale).toInt().coerceIn(constraints.minWidth, if (constraints.hasBoundedWidth) constraints.maxWidth else contentWidth)
+        val height = (contentHeight * scale).toInt()
 
         layout(width, height) {
-            if (scale == 1f) {
-                placeable.place(0, 0)
-            } else {
-                placeable.placeWithLayer(0, 0) {
-                    scaleX = scale
-                    scaleY = scale
-                    transformOrigin = TransformOrigin(0f, 0f)
+            placeables.forEach { placeable ->
+                if (scale == 1f) {
+                    placeable.place(0, 0)
+                } else {
+                    placeable.placeWithLayer(0, 0) {
+                        scaleX = scale
+                        scaleY = scale
+                        transformOrigin = TransformOrigin(0f, 0f)
+                    }
                 }
             }
         }

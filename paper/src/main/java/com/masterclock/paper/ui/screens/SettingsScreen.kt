@@ -26,6 +26,10 @@ enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector)
     OMNI(R.string.settings_tab_omni, Icons.Default.Dataset);
 
     companion object {
+        /** Resolves a category from a navigation route; see the app module for the full note. */
+        fun fromRoute(name: String): SettingsCategory =
+            entries.firstOrNull { it.name == name } ?: MODES
+
         fun getVisibleCategories(): List<SettingsCategory> {
             // Omni has no navbar tab -- see app module's SettingsScreen.kt for the equivalent fix.
             return entries.filter { category ->

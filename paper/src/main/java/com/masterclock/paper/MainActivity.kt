@@ -257,7 +257,7 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(
                                 viewModel = timerViewModel,
                                 currentSettings = settings,
-                                category = SettingsCategory.valueOf(route.category),
+                                category = SettingsCategory.fromRoute(route.category),
                                 onSettingsChanged = { timerViewModel.updateSettings(it) },
                                 onClearLogs = { timerViewModel.clearAllLogs() },
                                 onResetSettings = { timerViewModel.resetAllSettings() },
