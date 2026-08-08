@@ -26,6 +26,17 @@ enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector)
     OMNI(R.string.settings_tab_omni, Icons.Default.Dataset);
 
     companion object {
+        /**
+         * Resolves a category stored in a navigation route, falling back to [MODES].
+         *
+         * valueOf would throw on a name this build does not have. The names only ever come from
+         * this enum today, but a navigation back stack is restored across process death: a stack
+         * saved by an older version, from before a category was renamed or dropped, would crash
+         * the app on the way back in rather than land on the Modes tab.
+         */
+        fun fromRoute(name: String): SettingsCategory =
+            entries.firstOrNull { it.name == name } ?: MODES
+
         fun getVisibleCategories(): List<SettingsCategory> {
             // Omni has no navbar tab -- it's reached only via the "Omni-Timer" ModeCard in the
             // Modes page (SettingsComponents.kt), which switches the category directly.
