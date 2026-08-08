@@ -1,0 +1,1 @@
+The sounds work again. The bundled beep, gong, end-of-time and switch files were corrupt and silently played nothing; they have been replaced.

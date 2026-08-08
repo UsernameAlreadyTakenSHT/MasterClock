@@ -1,3 +1,11 @@
+## v0.8.18 — 2026-08-08
+
+### Fixed
+- **The sounds work again.** The four bundled audio files — beep, gong, end of time and the switch click — were corrupt, so the clock played nothing at all where it should have beeped. They have been replaced with working ones. Custom sounds you picked yourself were never affected.
+
+### Changed
+- Internal hardening: two places that could have crashed after a future change now fall back gracefully instead.
+
 ## v0.8.17 — 2026-08-07
 
 ### Added

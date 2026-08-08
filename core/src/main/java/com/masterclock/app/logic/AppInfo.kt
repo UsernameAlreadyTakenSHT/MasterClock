@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-07"
+    const val BUILD_DATE = "2026-08-08"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,13 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.18",
+            date = "2026-08-08",
+            notes = listOf(
+                "The sounds work again. The bundled beep, gong, end-of-time and switch files were corrupt and silently played nothing; they have been replaced.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.17",
             date = "2026-08-07",
