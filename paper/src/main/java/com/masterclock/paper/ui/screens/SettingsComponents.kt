@@ -17,8 +17,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -192,11 +199,31 @@ fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
 /** One credit/licence row. Flat e-ink styling: no dimmed variant, everything on onSurface. */
 @Composable
 private fun CreditRow(entry: AppInfo.CreditEntry) {
+    val uriHandler = LocalUriHandler.current
     Column {
         Text(entry.title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
         Text(entry.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-        entry.url?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+        entry.url?.let { url ->
+            // A real link, not text that merely looks like one -- LinkAnnotation is also what makes
+            // a screen reader announce it as one. Underlined rather than coloured: e-ink has no
+            // colour to spare, and the flat onSurface styling here is deliberate.
+            // openUri throws when the device has no browser, which is not worth a crash.
+            Text(
+                text = buildAnnotatedString {
+                    withLink(
+                        LinkAnnotation.Url(
+                            url,
+                            TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            )
+                        ) { runCatching { uriHandler.openUri(url) } }
+                    ) { append(url) }
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

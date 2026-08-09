@@ -23,9 +23,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
@@ -1064,11 +1071,31 @@ fun GongPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 /** One credit/licence row: title, detail, and the source link when there is one. */
 @Composable
 private fun CreditRow(entry: AppInfo.CreditEntry) {
+    val uriHandler = LocalUriHandler.current
     Column {
         Text(entry.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         Text(entry.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        entry.url?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+        entry.url?.let { url ->
+            // A real link, not text that merely looks like one. LinkAnnotation is what makes a
+            // screen reader announce it as a link, and the World Tafl Federation's permission to
+            // bundle their rules is conditional on a working link to their site being in the app.
+            // openUri throws when the device has no browser, which is not worth a crash here.
+            Text(
+                text = buildAnnotatedString {
+                    withLink(
+                        LinkAnnotation.Url(
+                            url,
+                            TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            )
+                        ) { runCatching { uriHandler.openUri(url) } }
+                    ) { append(url) }
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }
