@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-08"
+    const val BUILD_DATE = "2026-08-09"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,13 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.19",
+            date = "2026-08-09",
+            notes = listOf(
+                "The web addresses in Credits and Licenses now open when you tap them, instead of just looking like links.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.18",
             date = "2026-08-08",

@@ -1,0 +1,1 @@
+The web addresses in Credits and Licenses now open when you tap them, instead of just looking like links.

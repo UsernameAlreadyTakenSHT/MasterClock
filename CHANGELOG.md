@@ -1,3 +1,12 @@
+## v0.8.19 — 2026-08-09
+
+### Fixed
+- **The web addresses in Credits and Licenses are real links now.** They were printed in the accent colour, so they looked tappable, and nothing happened. Every rulebook source, asset credit and bundled library is now one tap from its page. Screen readers announce them as links too.
+
+### Changed
+- Gradle, KSP and navigation3 updated to their current versions. No change you can see; it clears the last outstanding build warnings.
+- The World Tafl Federation's permission to bundle their Hnefatafl rules is now recorded in `docs/permissions/`, along with the conditions attached to it.
+
 ## v0.8.18 — 2026-08-08
 
 ### Fixed
