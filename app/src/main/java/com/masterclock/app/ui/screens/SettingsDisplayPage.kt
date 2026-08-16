@@ -28,6 +28,34 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                 BehaviorSwitch(stringResource(R.string.settings_always_hours), currentSettings.alwaysShowHours, topRounded = true) { onSettingsChanged(currentSettings.copy(alwaysShowHours = it)) }
                 BehaviorSwitch(stringResource(R.string.settings_always_minutes), currentSettings.alwaysShowMinutes) { onSettingsChanged(currentSettings.copy(alwaysShowMinutes = it)) }
 
+                // Sits with the two switches above because they answer neighbouring questions:
+                // those decide which units appear, this decides how each one is written. Carries
+                // the same surface as the tenths row further down, so the stack stays unbroken --
+                // a bare row here left a gap of bare background between the switches.
+                Surface(
+                    color = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    Column {
+                        Text(
+                            stringResource(R.string.settings_leading_zeros),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                            TimePadding.entries.forEachIndexed { i, p ->
+                                SegmentedButton(
+                                    selected = currentSettings.timePadding == p,
+                                    onClick = { onSettingsChanged(currentSettings.copy(timePadding = p)) },
+                                    shape = SegmentedButtonDefaults.itemShape(i, TimePadding.entries.size),
+                                    label = { Text(p.label(), style = MaterialTheme.typography.labelSmall) }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_show_tenths),
                     checked = showTenths

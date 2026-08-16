@@ -78,8 +78,8 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, on
 
 @Composable
 fun BehaviorSwitch(
-    label: String, 
-    checked: Boolean, 
+    label: String,
+    checked: Boolean,
     enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {

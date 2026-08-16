@@ -461,7 +461,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
                             val label = when(pSettings.mode) { TimerMode.MOVE_TIMER_OVERTIME -> stringResource(R.string.timer_overtime); TimerMode.MOVE_TIMER_GLOBAL -> stringResource(R.string.timer_total); TimerMode.MOVE_TIMER_GLOBAL_SHARED -> stringResource(R.string.timer_global); else -> stringResource(R.string.timer_bank) }
-                            Text("$label: ${formatSecondaryTime(playerState.secondaryTimeMs)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
+                            Text("$label: ${formatSecondaryTime(playerState.secondaryTimeMs, settings.effectiveTimePadding())}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.PHASES -> {
                             val phase = pSettings.phases.getOrNull(playerState.currentPhaseIndex)
@@ -710,10 +710,14 @@ fun TimerDisplay(timeMs: Long, style: TextStyle, settings: ChessClockSettings, i
     ScaleToFitWidth {
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center, modifier = Modifier.wrapContentWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            // Each unit is its own Text so the colons can be spaced independently, so the padding
+            // is applied per unit rather than by formatting the whole reading at once. The leading
+            // unit is whichever largest one is actually shown -- see padTimeUnit.
+            val padding = settings.effectiveTimePadding()
             if (isNegative) Text(text = "-", style = tightStyle)
-            if (showHours) { Text(text = hours.toString(), style = tightStyle, textAlign = TextAlign.Center); Text(text = ":", style = tightStyle) }
-            if (showMinutes) { val text = if (showHours) String.format(Locale.US, "%02d", minutes) else minutes.toString(); Text(text = text, style = tightStyle, textAlign = TextAlign.Center); Text(text = ":", style = tightStyle) }
-            val sText = if (showMinutes) String.format(Locale.US, "%02d", seconds) else seconds.toString(); Text(text = sText, style = tightStyle, textAlign = TextAlign.Center)
+            if (showHours) { Text(text = padTimeUnit(hours, isLeading = true, padding = padding), style = tightStyle, textAlign = TextAlign.Center); Text(text = ":", style = tightStyle) }
+            if (showMinutes) { Text(text = padTimeUnit(minutes, isLeading = !showHours, padding = padding), style = tightStyle, textAlign = TextAlign.Center); Text(text = ":", style = tightStyle) }
+            Text(text = padTimeUnit(seconds, isLeading = !showMinutes, padding = padding), style = tightStyle, textAlign = TextAlign.Center)
         }
         
         if (showHundredths) {
@@ -727,7 +731,13 @@ fun TimerDisplay(timeMs: Long, style: TextStyle, settings: ChessClockSettings, i
     }
 }
 
-fun formatSecondaryTime(timeMs: Long): String { val totalSeconds = timeMs / 1000; return String.format(Locale.US, "%d:%02d", totalSeconds / 60, totalSeconds % 60) }
+fun formatSecondaryTime(timeMs: Long, padding: TimePadding = TimePadding.STANDARD): String {
+    val totalSeconds = timeMs / 1000
+    return formatClockReading(
+        hours = 0, minutes = totalSeconds / 60, seconds = totalSeconds % 60,
+        showHours = false, showMinutes = true, padding = padding,
+    )
+}
 
 @Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
 @Composable

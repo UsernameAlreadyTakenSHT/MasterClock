@@ -236,6 +236,11 @@
     <string name="settings_time_format">Time Format</string>
     <string name="settings_always_hours">Always show hours</string>
     <string name="settings_always_minutes">Always show minutes</string>
+    <string name="settings_leading_zeros">Leading zeros</string>
+    <!-- The three are labelled by the reading they produce; the digits are the label. -->
+    <string name="padding_full" translatable="false">01:09:08</string>
+    <string name="padding_standard" translatable="false">1:09:08</string>
+    <string name="padding_minimal" translatable="false">1:9:8</string>
     <string name="settings_show_tenths">Show tenths of seconds</string>
     <string name="settings_show_hundredths">Show hundredths</string>
     <string name="settings_like_tenths">Like tenths</string>

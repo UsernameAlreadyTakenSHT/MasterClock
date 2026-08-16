@@ -9,6 +9,7 @@ import com.masterclock.app.logic.ClockAnnouncement
 import com.masterclock.app.logic.FlagBehavior
 import com.masterclock.app.logic.GameType
 import com.masterclock.app.logic.PlayerOrderType
+import com.masterclock.app.logic.TimePadding
 import com.masterclock.app.logic.spokenDuration
 
 /**
@@ -74,6 +75,14 @@ fun FlagBehavior.label(): String = when (this) {
     FlagBehavior.FLAG -> stringResource(R.string.flag_flag)
     FlagBehavior.NEGATIVE -> stringResource(R.string.flag_negative)
     FlagBehavior.REVERSE -> stringResource(R.string.flag_reverse)
+}
+
+/** Labelled by the shape produced rather than by the word, so the choice reads at a glance. */
+@Composable
+fun TimePadding.label(): String = when (this) {
+    TimePadding.FULL -> stringResource(R.string.padding_full)
+    TimePadding.STANDARD -> stringResource(R.string.padding_standard)
+    TimePadding.MINIMAL -> stringResource(R.string.padding_minimal)
 }
 
 @Composable
