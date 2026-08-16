@@ -165,6 +165,71 @@ fun TimerMode.displayName(): String = when (this) {
 enum class FlagBehavior { FREEZE, FLAG, NEGATIVE, REVERSE }
 @Serializable
 enum class AppThemeMode { LIGHT, DARK, AUTO }
+
+/**
+ * How wide each unit of a clock reading is written.
+ *
+ * Orthogonal to [ChessClockSettings.alwaysShowHours] and [ChessClockSettings.alwaysShowMinutes]:
+ * those decide which units appear at all, this decides how each one is spelled. With hours forced
+ * on at nine minutes past, the three give "00:09:08", "0:09:08" and "0:9:8".
+ *
+ * MINIMAL is the only one whose width changes as the clock runs -- 10 seconds is two characters
+ * and 9 is one -- so the reading shifts on every crossing. That is the point of offering it, not
+ * an oversight.
+ */
+enum class TimePadding {
+    /** Every unit two digits: 01:09:08. */
+    FULL,
+
+    /** Leading unit as-is, the rest padded: 1:09:08. The usual clock convention. */
+    STANDARD,
+
+    /** Nothing padded: 1:9:8. */
+    MINIMAL,
+}
+
+/**
+ * Formats one unit of a clock reading under [padding].
+ *
+ * [isLeading] marks the largest unit actually being shown, which is the only one STANDARD and FULL
+ * disagree about.
+ */
+/**
+ * The padding a build actually renders with.
+ *
+ * Only Complete and Standard offer the choice; Light, Mini and the E-Ink build are fixed on FULL,
+ * which is what their clocks have always shown. Resolved here rather than by simply leaving the
+ * setting out of their UI, because a settings file or QR share from another device carries the
+ * stored value with it -- without this, importing one could put a Light install into a format it
+ * has no way to leave.
+ */
+fun ChessClockSettings.effectiveTimePadding(): TimePadding =
+    if (FlavorConfig.hasFullSettingsTabs()) timePadding else TimePadding.FULL
+
+fun padTimeUnit(value: Long, isLeading: Boolean, padding: TimePadding): String = when (padding) {
+    TimePadding.MINIMAL -> value.toString()
+    TimePadding.FULL -> value.toString().padStart(2, '0')
+    TimePadding.STANDARD -> if (isLeading) value.toString() else value.toString().padStart(2, '0')
+}
+
+/**
+ * A whole hours/minutes/seconds reading, joined by colons.
+ *
+ * [showHours] and [showMinutes] come from the caller because the two clocks decide them
+ * differently: the main one honours the always-show settings, the log always shows minutes.
+ */
+fun formatClockReading(
+    hours: Long,
+    minutes: Long,
+    seconds: Long,
+    showHours: Boolean,
+    showMinutes: Boolean,
+    padding: TimePadding,
+): String = buildString {
+    if (showHours) append(padTimeUnit(hours, isLeading = true, padding = padding)).append(':')
+    if (showMinutes) append(padTimeUnit(minutes, isLeading = !showHours, padding = padding)).append(':')
+    append(padTimeUnit(seconds, isLeading = !showMinutes && !showHours, padding = padding))
+}
 @Serializable
 enum class BeepCountdownThreshold { OFF, THREE_SEC, TEN_SEC }
 @Serializable
@@ -281,6 +346,7 @@ data class ChessClockSettings(
 
     val alwaysShowHours: Boolean = false,
     val alwaysShowMinutes: Boolean = true,
+    val timePadding: TimePadding = TimePadding.FULL,
     val showTenthsThresholdMs: Long = 10_000,
     val forceScreenOn: Boolean = true,
     val showCurrentPeriod: Boolean = true,

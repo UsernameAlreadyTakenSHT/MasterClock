@@ -62,6 +62,7 @@ fun TimerScreen(
                 EInkPlayerArea(
                     playerIndex = 1,
                     state = state,
+                    padding = settings.effectiveTimePadding(),
                     onClick = { viewModel.startOrSwitch(1) }
                 )
             }
@@ -109,6 +110,7 @@ fun TimerScreen(
                 EInkPlayerArea(
                     playerIndex = 2,
                     state = state,
+                    padding = settings.effectiveTimePadding(),
                     onClick = { viewModel.startOrSwitch(2) }
                 )
             }
@@ -158,6 +160,7 @@ private fun ClockAnnouncer(state: ChessClockState) {
 fun EInkPlayerArea(
     playerIndex: Int,
     state: ChessClockState,
+    padding: TimePadding,
     onClick: () -> Unit
 ) {
     val playerState = state.players.getOrNull(playerIndex - 1) ?: PlayerState(0)
@@ -227,6 +230,7 @@ fun EInkPlayerArea(
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.onBackground
             ),
+            padding = padding,
             isNegative = playerState.isNegative
         )
         
@@ -237,15 +241,17 @@ fun EInkPlayerArea(
 }
 
 @Composable
-fun TimerDisplay(timeMs: Long, style: TextStyle, isNegative: Boolean = false) {
+fun TimerDisplay(timeMs: Long, style: TextStyle, padding: TimePadding = TimePadding.FULL, isNegative: Boolean = false) {
     val absTimeMs = kotlin.math.abs(timeMs)
     val totalSeconds = absTimeMs / 1000
-    val minutes = (totalSeconds / 60).toInt()
-    val seconds = (totalSeconds % 60).toInt()
-    
-    // Always show minutes with 2 digits for perfect alignment (e.g., 09:59)
-    val mText = String.format(Locale.US, "%02d", minutes)
-    val sText = String.format(Locale.US, "%02d", seconds)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+
+    // FULL by default, which is what this clock always did: two digits each, for an alignment that
+    // never shifts. E-ink redraws slowly enough that a reading changing width is worth avoiding,
+    // so the default stays FULL even though the setting can now widen or narrow it.
+    val mText = padTimeUnit(minutes, isLeading = true, padding = padding)
+    val sText = padTimeUnit(seconds, isLeading = false, padding = padding)
     
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
         if (isNegative) Text(text = "-", style = style)

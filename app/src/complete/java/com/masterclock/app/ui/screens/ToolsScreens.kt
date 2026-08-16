@@ -89,7 +89,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 
 @Composable
-fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
+fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () -> Unit) {
     // Hoisted: used from the share button callback, outside composable scope.
     val shareLogTitle = stringResource(R.string.tools_share_log)
     val context = LocalContext.current
@@ -139,7 +139,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
             onBack = { selectedLog = null },
             actions = {
                 IconButton(onClick = { 
-                    val shareText = generateTxtLog(log, locale)
+                    val shareText = generateTxtLog(log, timePadding)
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, shareText)
@@ -174,7 +174,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                             log.initialPlayerStates.forEachIndexed { i, p ->
                                 Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                                     Text(stringResource(R.string.common_player_n, i + 1), fontWeight = FontWeight.Bold)
-                                    Text(formatHms(p.timeRemainingMs, locale))
+                                    Text(formatHms(p.timeRemainingMs, timePadding))
                                 }
                             }
                         }
@@ -186,7 +186,7 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                         Spacer(Modifier.height(24.dp))
                         Text(stringResource(R.string.tools_time_per_move), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
-                        MoveDurationChart(durations, Modifier.fillMaxWidth())
+                        MoveDurationChart(durations, timePadding, Modifier.fillMaxWidth())
                     }
                 }
 
@@ -213,14 +213,14 @@ fun GameLogsScreen(history: List<GameLog>, onBack: () -> Unit) {
                         Text(stringResource(R.string.tools_player_short, duration.playerIndex), modifier = Modifier.width(28.dp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(duration.moveNotation ?: stringResource(R.string.tools_move), modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
                         Text(
-                            formatMoveSpent(duration.durationMs),
+                            formatMoveSpent(duration.durationMs, timePadding),
                             modifier = Modifier.width(64.dp),
                             textAlign = TextAlign.End,
                             fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            formatHms(duration.timeRemainingMs, locale),
+                            formatHms(duration.timeRemainingMs, timePadding),
                             modifier = Modifier.width(64.dp),
                             textAlign = TextAlign.End,
                             fontFamily = FontFamily.Monospace
@@ -1366,18 +1366,28 @@ fun generateFen(white: List<String>, black: List<String>): String {
 }
 
 /** Compact think-time for one move: "8.4s" below a minute, "2m05s" above it. */
-fun formatMoveSpent(ms: Long): String =
-    if (ms >= 60_000) String.format(Locale.US, "%dm%02ds", ms / 60_000, (ms % 60_000) / 1000)
+/**
+ * How long a move took, as a duration rather than a clock reading: "1m05s", "4.2s".
+ *
+ * Only MINIMAL changes anything here. The leading unit is never widened, because "01m05s" is not a
+ * form anyone writes -- the leading zero of [TimePadding.FULL] belongs to clock readings.
+ */
+fun formatMoveSpent(ms: Long, padding: TimePadding = TimePadding.FULL): String =
+    if (ms >= 60_000) "${ms / 60_000}m${padTimeUnit((ms % 60_000) / 1000, isLeading = false, padding = padding)}s"
     else String.format(Locale.US, "%.1fs", ms / 1000f)
 
-fun formatHms(ms: Long, locale: Locale = Locale.US): String {
+/**
+ * A clock reading for the game log. Minutes are always shown, hours only when there are any --
+ * independent of the always-show settings, which govern the live clock rather than the record.
+ */
+fun formatHms(ms: Long, padding: TimePadding = TimePadding.FULL): String {
     val s = (ms / 1000) % 60; val m = (ms / 60000) % 60; val h = ms / 3600000
-    return if (h > 0) String.format(locale, "%d:%02d:%02d", h, m, s) else String.format(locale, "%02d:%02d", m, s)
+    return formatClockReading(h, m, s, showHours = h > 0, showMinutes = true, padding = padding)
 }
 
-fun generateTxtLog(log: GameLog, locale: Locale = Locale.US): String {
+fun generateTxtLog(log: GameLog, padding: TimePadding = TimePadding.FULL): String {
     val sb = StringBuilder("MasterClock Log\nDate: ${Date(log.startTime)}\n\n")
-    log.events.forEach { e -> sb.append("${if (e.playerIndex != null) "P${e.playerIndex}" else "SYSTEM"}: ${e.eventType} ${e.detail ?: ""} at ${formatHms(e.timeRemainingMs ?: 0, locale)}\n") }
+    log.events.forEach { e -> sb.append("${if (e.playerIndex != null) "P${e.playerIndex}" else "SYSTEM"}: ${e.eventType} ${e.detail ?: ""} at ${formatHms(e.timeRemainingMs ?: 0, padding)}\n") }
     return sb.toString()
 }
 

@@ -30,9 +30,15 @@ import com.masterclock.app.logic.*
 private fun playerColor(playerIndex: Int): Color =
     Color(OMNI_DEFAULT_PLAYER_COLORS[(playerIndex - 1).mod(OMNI_DEFAULT_PLAYER_COLORS.size)])
 
-private fun formatDuration(ms: Long): String = when {
-    ms >= 3_600_000 -> "${ms / 3_600_000}h ${(ms % 3_600_000) / 60_000}m"
-    ms >= 60_000 -> "${ms / 60_000}m ${(ms % 60_000) / 1000}s"
+/**
+ * A duration rather than a clock reading: "1h 05m", "2m 30s", "4.2s".
+ *
+ * Only MINIMAL changes anything. The leading unit is never widened -- "01h 05m" is not a form
+ * anyone writes, and the leading zero of [TimePadding.FULL] belongs to clock readings.
+ */
+private fun formatDuration(ms: Long, padding: TimePadding): String = when {
+    ms >= 3_600_000 -> "${ms / 3_600_000}h ${padTimeUnit((ms % 3_600_000) / 60_000, isLeading = false, padding = padding)}m"
+    ms >= 60_000 -> "${ms / 60_000}m ${padTimeUnit((ms % 60_000) / 1000, isLeading = false, padding = padding)}s"
     ms >= 1_000 -> "${ms / 1000}.${(ms % 1000) / 100}s"
     else -> "${ms}ms"
 }
@@ -47,6 +53,7 @@ private fun formatDuration(ms: Long): String = when {
 @Composable
 fun MoveDurationChart(
     durations: List<MoveDuration>,
+    padding: TimePadding,
     modifier: Modifier = Modifier,
     height: androidx.compose.ui.unit.Dp = 140.dp,
 ) {
@@ -55,7 +62,7 @@ fun MoveDurationChart(
     val players = durations.map { it.playerIndex }.distinct().sorted()
     val axisColor = MaterialTheme.colorScheme.outlineVariant
     // Hoisted: stringResource is @Composable and cannot be called inside the semantics lambda.
-    val chartDescription = pluralStringResource(R.plurals.stats_chart_description, durations.size, formatDuration(slowest), durations.size)
+    val chartDescription = pluralStringResource(R.plurals.stats_chart_description, durations.size, formatDuration(slowest, padding), durations.size)
 
     Column(modifier) {
         Row(
@@ -63,7 +70,7 @@ fun MoveDurationChart(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                formatDuration(slowest),
+                formatDuration(slowest, padding),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -151,7 +158,7 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
 }
 
 @Composable
-fun StatisticsScreen(history: List<GameLog>, onBack: () -> Unit) {
+fun StatisticsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () -> Unit) {
     val stats = remember(history) { computeStatistics(history) }
     val recentDurations = remember(history) {
         history.maxByOrNull { it.startTime }?.let { moveDurations(it) }.orEmpty()
@@ -186,13 +193,13 @@ fun StatisticsScreen(history: List<GameLog>, onBack: () -> Unit) {
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatTile(stringResource(R.string.stats_average_move), formatDuration(stats.averageMoveMs), Modifier.weight(1f))
-                StatTile(stringResource(R.string.stats_median_move), formatDuration(stats.medianMoveMs), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_average_move), formatDuration(stats.averageMoveMs, timePadding), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_median_move), formatDuration(stats.medianMoveMs, timePadding), Modifier.weight(1f))
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatTile(stringResource(R.string.stats_slowest_move), formatDuration(stats.slowestMoveMs), Modifier.weight(1f))
-                StatTile(stringResource(R.string.stats_time_on_clock), formatDuration(stats.totalThinkTimeMs), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_slowest_move), formatDuration(stats.slowestMoveMs, timePadding), Modifier.weight(1f))
+                StatTile(stringResource(R.string.stats_time_on_clock), formatDuration(stats.totalThinkTimeMs, timePadding), Modifier.weight(1f))
             }
             Spacer(Modifier.height(8.dp))
             StatTile(
@@ -210,7 +217,7 @@ fun StatisticsScreen(history: List<GameLog>, onBack: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(8.dp))
-                MoveDurationChart(recentDurations, Modifier.fillMaxWidth())
+                MoveDurationChart(recentDurations, timePadding, Modifier.fillMaxWidth())
             }
 
             if (stats.perMode.isNotEmpty()) {

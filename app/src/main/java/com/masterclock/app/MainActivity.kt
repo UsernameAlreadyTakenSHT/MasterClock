@@ -341,12 +341,14 @@ class MainActivity : ComponentActivity() {
                         entry<Route.Statistics> { _ ->
                             StatisticsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
+                                timePadding = settings.effectiveTimePadding(),
                                 onBack = { navigator.goBack() }
                             )
                         }
                         entry<Route.GameLogs> { _ ->
                             GameLogsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
+                                timePadding = settings.effectiveTimePadding(),
                                 onBack = { navigator.goBack() }
                             )
                         }
