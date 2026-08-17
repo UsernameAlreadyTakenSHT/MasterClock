@@ -1,0 +1,2 @@
+The clock now writes 09:56 where it wrote 9:56. Display settings let you choose 01:09:08, 1:09:08 or 1:9:8 instead.
+E-Ink, Light and Mini keep the two-digit reading they have always had.

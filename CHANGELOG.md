@@ -1,3 +1,10 @@
+## v0.8.20 — 2026-08-17
+
+### Changed
+- **The clock pads its numbers now: 09:56 where it used to read 9:56.** Display settings has a new "Leading zeros" choice between `01:09:08`, `1:09:08` and `1:9:8` — the first is the new default, the second is what the clock did before, and the third drops every padding zero. It sits with the "always show hours" and "always show minutes" switches, which decide *which* units appear; this one decides how each is written.
+- E-Ink, Light and Mini are fixed on the two-digit reading they have always shown, and have no setting to change it.
+- Compose, navigation3 and the adaptive layout libraries updated. The last of those had been running on a release candidate; it is on the final release now.
+
 ## v0.8.19 — 2026-08-09
 
 ### Fixed
