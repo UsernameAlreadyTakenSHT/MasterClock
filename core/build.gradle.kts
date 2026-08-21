@@ -17,6 +17,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+
+    testOptions {
+        // Unmocked android.jar methods throw by default, which puts any code path that logs out of
+        // reach of a unit test. ZipBackupManager degrades through android.util.Log when a backup's
+        // logs.json or scoreboard.json will not parse, and those branches are worth pinning.
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 ksp {
