@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-17"
+    const val BUILD_DATE = "2026-08-22"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,16 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.21",
+            date = "2026-08-22",
+            notes = listOf(
+                "The app is now available in French and Spanish, as well as English.",
+                "On Android 13 and later you can pick the language for MasterClock alone, under Settings, Apps, MasterClock, Language. On older versions it follows the phone's language.",
+                "The Spanish has not been checked by a native speaker yet; corrections are welcome.",
+                "Restoring a backup: an archive that is too large is now refused with a message instead of closing the app.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.20",
             date = "2026-08-17",
