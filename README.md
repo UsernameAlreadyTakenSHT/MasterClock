@@ -33,9 +33,10 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
 
 ## Translations
 
-The app is in **English and French**. Files are in place for **Spanish, Portuguese, Italian, German
-and Dutch**, waiting to be filled in — contributions welcome, and you do not need to build the app
-to send one.
+The app is in **English, French and Spanish** — the Spanish is unreviewed by a native speaker, so
+corrections are especially welcome. Files are in place for **Portuguese, Italian, German and
+Dutch**, waiting to be filled in — contributions welcome, and you do not need to build the app to
+send one.
 
 Partial translations are useful: Android falls back string by string, so ten translated lines are
 ten lines in your language and the rest stay English. See **[TRANSLATING.md](TRANSLATING.md)**.
