@@ -10,7 +10,13 @@
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="common_cancel">Annuler</string>
-    <string name="common_reset">Réinitialiser</string>
+    <!--
+      Abbreviated for paper only. This label sits on the narrow button between Reprendre and
+      Réglages on the E-Ink clock, where "Réinitialiser" at 13 characters wraps to two lines and
+      makes that one button taller than its neighbours. "Reprendre" at 9 is what fits. The app
+      module has room and keeps the full word.
+    -->
+    <string name="common_reset">Réinit.</string>
     <string name="timer_reset_title">Réinitialiser la partie ?</string>
     <string name="timer_reset_message">L\'état actuel sera perdu.</string>
     <string name="common_back">Retour</string>
