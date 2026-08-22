@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock Complete — fr
+
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here.
+
+  app_name is left out on purpose — it is the product name.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Rules screen -->
+    <string name="rules_title">Quelques règles</string>
+    <string name="rules_intro">Documents de référence, consultables hors ligne.</string>
+    <string name="rules_group_chess">Échecs (document officiel)</string>
+    <string name="rules_group_draughts">Dames (document officiel)</string>
+    <string name="rules_group_shogi">Shogi (document officiel)</string>
+    <string name="rules_group_more_games">Autres jeux</string>
+    <string name="rules_group_more_resources">Autres ressources</string>
+    <string name="toast_pdf_open_failed">Impossible d\'ouvrir ce document</string>
+    <string name="toast_no_pdf_viewer">Aucun lecteur PDF installé</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_connected">Prêt à recevoir les coups</string>
+    <string name="board_connected_to">Connecté : %s</string>
+    <string name="board_connecting">Connexion…</string>
+    <string name="board_disconnect">Déconnecter</string>
+    <string name="board_disconnected">Déconnecté</string>
+    <string name="board_error">Erreur : %s</string>
+    <string name="board_last_move">Dernier coup : %s</string>
+    <string name="board_looking">Recherche d\'échiquiers…</string>
+    <string name="board_nearby">Appareils à proximité</string>
+    <string name="board_none_found">Aucun appareil trouvé. Appuyez sur actualiser pour lancer une recherche.</string>
+    <string name="board_scan">Rechercher</string>
+    <string name="board_scanning">Recherche d\'échiquiers…</string>
+    <string name="board_title">Connexion à l\'échiquier</string>
+    <string name="board_unknown_device">Appareil inconnu</string>
+    <string name="common_share">Partager</string>
+
+    <!-- Mode guide: names stay English, descriptions are translated -->
+    <string name="guide_intro">Documentation exhaustive des moteurs de temps de MasterClock et de leurs sous-modes, dans l\'ordre de l\'interface.</string>
+    <string name="guide_bonus_bronstein_desc">Restitue le temps passé sur le coup, sans jamais dépasser le délai réglé. Non cumulatif.</string>
+    <string name="guide_bonus_fischer_desc">Ajoute un temps fixe (incrément) APRÈS chaque coup.</string>
+    <string name="guide_bonus_us_delay_desc">Un délai avant décompte. La pendule attend la durée du délai avant de commencer à tourner.</string>
+    <string name="guide_byoyomi_canadian_desc">Les joueurs doivent jouer un nombre déterminé de coups dans une seule période plus longue.</string>
+    <string name="guide_byoyomi_japanese_desc">Après le temps principal, les joueurs disposent d\'une série de périodes courtes, remises à zéro à chaque coup.</string>
+    <string name="guide_byoyomi_progressive_desc">Le nombre de coups exigés augmente à chaque période terminée.</string>
+    <string name="guide_chrono_countdown_desc">Chrono maître décomptant pour toute la partie.</string>
+    <string name="guide_chrono_countup_desc">Mode chronomètre mesurant le temps total écoulé.</string>
+    <string name="guide_chrono_one_for_all_desc">Chrono global qui ne change pas de joueur lorsqu\'on appuie sur les boutons.</string>
+    <string name="guide_counts_down_desc">Part d\'une limite et décompte jusqu\'à zéro coup restant.</string>
+    <string name="guide_counts_up_desc">Affiche le nombre total de coups joués depuis le début.</string>
+    <string name="guide_fast_move_desc">Ajustement dynamique de la vitesse selon la fréquence des coups ou une pénalité cumulée.</string>
+    <string name="guide_fide_desc">Cadence de tournoi à plusieurs étapes (par ex. 40 coups en 90 min + 30 min de bonus).</string>
+    <string name="guide_gong_desc">Coups imposés à intervalles fixes (simultanés ou à tour de rôle).</string>
+    <string name="guide_hidden_desc">Masque les chiffres de la pendule à certains seuils pour faire monter la tension.</string>
+    <string name="guide_hourglass_desc">Le temps perdu par un joueur est ajouté à l\'adversaire. Le temps total reste constant.</string>
+    <string name="guide_move_global_desc">Le temps de coup et le temps global s\'écoulent en même temps. Les deux doivent rester au-dessus de zéro.</string>
+    <string name="guide_move_global_shared_desc">Tous les joueurs partagent une réserve globale tout en ayant un chrono de coup personnel.</string>
+    <string name="guide_move_overtime_desc">Ajoute le temps de coup non utilisé à une réserve globale secondaire.</string>
+    <string name="guide_move_save_cap_desc">Le temps de coup non utilisé est mis en banque, dans la limite d\'un plafond.</string>
+    <string name="guide_move_shared_desc">Un seul chrono pour tous les joueurs. Changement automatique à 0:00.</string>
+    <string name="guide_move_standard_desc">Remise à une durée fixe à chaque coup.</string>
+    <string name="guide_omni_desc">Station professionnelle à 6 niveaux pour les structures de jeu complexes (parties &gt; manches &gt; tours &gt; phases).</string>
+    <string name="guide_phases_desc">Succession de chronos différents (par ex. préparation 5 min -&gt; partie 20 min -&gt; Sudden Death).</string>
+    <string name="guide_random_desc">Le temps de base et les incréments sont tirés au hasard dans une plage définie.</string>
+    <string name="guide_section_advanced">Moteurs avancés et expérimentaux</string>
+    <string name="guide_section_bonus">Moteurs à bonus</string>
+    <string name="guide_section_specialty">Moteurs spécialisés</string>
+    <string name="guide_sudden_death_standard_desc">Décompte pur. Le premier joueur à atteindre 0:00 perd ou tombe.</string>
+
+    <!-- QR sharing -->
+    <string name="qr_align" tools:ignore="Typos">Alignez le code dans le champ de la caméra</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">L\'autorisation d\'accès à la caméra est nécessaire pour scanner des codes.</string>
+    <string name="qr_code">QR code</string>
+    <string name="qr_scan_title">Scanner un QR code</string>
+    <string name="qr_share_hint">Scannez ce code sur un autre appareil pour importer la configuration.</string>
+    <string name="qr_share_includes">Contient : configuration de la pendule</string>
+    <string name="qr_share_title">Partager par QR code</string>
+    <string name="qr_too_large">Impossible de générer un QR code — les données sont probablement trop volumineuses. Essayez de partager sans les journaux de parties.</string>
+
+    <!-- Toasts -->
+    <string name="toast_audio_failed">Échec de la lecture audio</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">Autorisation caméra requise</string>
+    <string name="toast_fen_copied">FEN copiée</string>
+    <string name="toast_mic_permission">L\'autorisation du microphone est nécessaire.</string>
+    <string name="toast_note_deleted">Note supprimée</string>
+    <string name="toast_permission_granted">Autorisation accordée. Appuyez à nouveau sur Enregistrer.</string>
+    <string name="toast_start_failed">Échec du démarrage</string>
+
+    <!-- Tools -->
+    <string name="tools_add_result">Ajouter un résultat</string>
+    <string name="tools_add_result_placeholder">Ajouter un résultat ou une note…</string>
+    <string name="tools_audio">Audio</string>
+    <string name="tools_audio_note">Note audio</string>
+    <string name="tools_board">Échiquier</string>
+    <string name="tools_bold">Gras</string>
+    <string name="tools_checkbox">Case à cocher</string>
+    <string name="tools_clear_board">Vider l\'échiquier</string>
+    <string name="tools_color">Couleur</string>
+    <string name="tools_copy_fen">COPIER LA FEN</string>
+    <string name="tools_copy_format">Copier %s</string>
+    <string name="tools_dark_square">NOIRE</string>
+    <string name="tools_delete_recording">Supprimer l\'enregistrement</string>
+    <string name="tools_detailed_moves">Coups détaillés</string>
+    <string name="tools_dice_roll">Lancer de dés</string>
+    <string name="tools_draw">Dessiner</string>
+    <string name="tools_draw_again">Tirer à nouveau</string>
+    <string name="tools_draw_note">Note dessinée</string>
+    <string name="tools_edit_board">Modifier l\'échiquier</string>
+    <string name="tools_edit_note">Modifier la note</string>
+    <string name="tools_eraser">Gomme</string>
+    <string name="tools_final_score">Score final : %d</string>
+    <string name="tools_format_hint">Sélectionnez du texte et utilisez la barre d\'outils pour le mettre en forme…</string>
+    <string name="tools_game_logs">Journaux de parties</string>
+    <string name="tools_game_over">PARTIE TERMINÉE</string>
+    <string name="tools_generate">GÉNÉRER</string>
+    <!-- In French the coin lands "face" (the effigy) or "pile" — heads is FACE, not PILE. -->
+    <string name="tools_heads">FACE</string>
+    <string name="tools_tails">PILE</string>
+    <string name="tools_image">Image</string>
+    <string name="tools_image_note">Note image</string>
+    <string name="tools_italic">Italique</string>
+    <string name="tools_large">Grand</string>
+    <string name="tools_left">Gauche</string>
+    <string name="tools_log_details">Détail du journal</string>
+    <string name="tools_match_summary">Résumé du match</string>
+    <string name="tools_min_moves">Coups minimum ?</string>
+    <string name="tools_move">Coup</string>
+    <string name="tools_name_square_title">Nommer la case</string>
+    <string name="tools_new_audio_note">Nouvelle note audio</string>
+    <string name="tools_new_board_note">Nouvelle note échiquier</string>
+    <string name="tools_new_draw_note">Nouvelle note dessinée</string>
+    <string name="tools_new_image_note">Nouvelle note image</string>
+    <string name="tools_new_note">Nouvelle note</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Nouvelle note vidéo</string>
+    <string name="tools_no_games">Aucune partie enregistrée pour l\'instant.</string>
+    <string name="tools_no_notes">Aucune note. Appuyez sur + pour en créer une.</string>
+    <string name="tools_no_photo">Aucune photo</string>
+    <string name="tools_no_video" tools:ignore="Typos">Aucune vidéo (1 min max)</string>
+    <string name="tools_normal">Normal</string>
+    <string name="tools_note_image">Image de la note</string>
+    <string name="tools_offset">Écart : %1$s%2$d ms</string>
+    <string name="tools_pick_straw">Tirer la paille %d</string>
+    <string name="tools_play">Lire</string>
+    <string name="tools_player_short">J%d</string>
+    <string name="tools_prepare">PRÉPAREZ-VOUS</string>
+    <string name="tools_random_card">Carte au hasard</string>
+    <string name="tools_record">Enregistrer</string>
+    <string name="tools_record_video" tools:ignore="Typos">Enregistrer une vidéo</string>
+    <string name="tools_reset_scoreboard">Réinitialiser le tableau des scores</string>
+    <string name="tools_retake_photo">Reprendre la photo</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Reprendre la vidéo</string>
+    <string name="tools_roll_dice">Lancer les dés</string>
+    <string name="tools_score">Score : %d</string>
+    <string name="tools_select_piece">Choisir une pièce</string>
+    <string name="tools_select_text_color">Choisir la couleur du texte</string>
+    <string name="tools_share_log">Partager le journal</string>
+    <string name="tools_short_straw">Courte paille</string>
+    <string name="tools_shred">Détruire</string>
+    <string name="tools_spent">Utilisé</string>
+    <string name="tools_start">DÉMARRER</string>
+    <string name="tools_start_trial">LANCER L\'ESSAI</string>
+    <string name="tools_stop">STOP</string>
+    <string name="tools_stop_precision">Précision d\'arrêt</string>
+    <string name="tools_take_photo">Prendre une photo</string>
+    <string name="tools_target">CIBLE</string>
+    <string name="tools_target_time">Cible : 5,000 s</string>
+    <string name="tools_text">Texte</string>
+    <string name="tools_time_per_move">Temps par coup</string>
+    <string name="tools_title">Titre</string>
+    <string name="tools_toss_coin">Lancer la pièce</string>
+    <string name="tools_underline">Souligné</string>
+    <string name="tools_undo">Annuler</string>
+    <string name="tools_variant_generator">Générateur de variantes</string>
+    <string name="tools_video" tools:ignore="Typos">Vidéo</string>
+    <string name="tools_video_note" tools:ignore="Typos">Note vidéo</string>
+    <string name="tools_white_square">BLANCHE</string>
+
+    <!-- Chess variants: names stay English, descriptions are translated -->
+    <string name="variant_chess2880_desc">Symétrique, fous de couleurs opposées, roi n\'importe où (sans roque).</string>
+    <string name="variant_chess960_desc">Symétrique, fous de couleurs opposées, roi entre les tours (roque possible).</string>
+    <string name="variant_double960_desc">Asymétrique, fous de couleurs opposées, roi entre les tours (tactique de haut niveau).</string>
+    <string name="variant_shuffle_desc">Symétrique, roi et fous n\'importe où (hasard total).</string>
+    <string name="variant_transcendental_desc">Asymétrique, fous de couleurs opposées, roi n\'importe où (très tactique).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Pailles : %d</item>
+        <item quantity="many">Pailles : %d</item>
+        <item quantity="other">Pailles : %d</item>
+    </plurals>
+</resources>

@@ -2,14 +2,99 @@
 <!--
   MasterClock — fr
 
-  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
-  fully usable while this file is being filled in.
-
-  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
-  the name attribute alone. See TRANSLATING.md at the repository root.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
 
   tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
   partial; it does not hide anything you need to see.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Annuler</string>
+    <string name="common_reset">Réinitialiser</string>
+    <string name="timer_reset_title">Réinitialiser la partie ?</string>
+    <string name="timer_reset_message">L\'état actuel sera perdu.</string>
+    <string name="common_back">Retour</string>
+    <string name="common_close">Fermer</string>
+    <string name="common_clear">Effacer</string>
+    <string name="common_player_n">Joueur %d</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Changer de tour</string>
+    <string name="timer_pause">Pause</string>
+    <string name="timer_resume">Reprendre</string>
+    <string name="timer_settings">Réglages</string>
+
+    <!-- Settings -->
+    <string name="settings_tab_modes">Modes</string>
+    <!-- Same shortening as the app module: "Comportement" wraps in the tab bar. -->
+    <string name="settings_tab_behavior">Jeu</string>
+    <string name="settings_tab_display">Affichage</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_more">Plus</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_not_optimized">Cette page de réglages n\'est pas encore optimisée pour l\'encre électronique.</string>
+    <string name="settings_initial_time">Temps initial</string>
+    <string name="settings_increment">Incrément</string>
+    <string name="settings_move_time">Temps par coup</string>
+    <string name="settings_system_behavior">Comportement du système</string>
+    <string name="settings_sound">Son</string>
+    <string name="settings_haptic_feedback">Retour haptique</string>
+    <string name="settings_keep_awake">Garder l\'écran allumé</string>
+    <string name="settings_fullscreen">Plein écran</string>
+    <string name="settings_reverse_colors">Inverser les couleurs</string>
+    <string name="settings_clear_logs">Effacer l\'historique</string>
+    <string name="settings_clear_logs_title">Supprimer définitivement tout l\'historique des parties ?</string>
+    <string name="settings_reset_settings">Réinitialiser les réglages</string>
+    <string name="settings_reset_message">Voulez-vous vraiment rétablir tous les réglages par défaut ? Cette action est irréversible.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Crédits</string>
+    <string name="credits_tab_changes">Nouveautés</string>
+    <string name="credits_tab_licenses">Licences</string>
+    <string name="credits_rules_documents">Documents de règles</string>
+    <string name="credits_libraries">MasterClock est construit avec ces bibliothèques open source.</string>
+
+    <!-- Sharing -->
+    <string name="share_settings">Partager les réglages</string>
+    <string name="toast_backup_ok">Sauvegarde réussie !</string>
+    <string name="toast_import_ok">Import réussi !</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Joueur %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Joueur %1$d, %2$s, à vous de jouer</string>
+    <string name="a11y_out_of_time">temps écoulé</string>
+    <string name="a11y_no_time_left">plus de temps</string>
+    <string name="a11y_announce_out_of_time">Le joueur %d n\'a plus de temps</string>
+    <string name="a11y_announce_paused">En pause</string>
+    <string name="a11y_announce_to_move">Au joueur %d de jouer</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!--
+      French counts 0 as singular, so "one" covers both 0 and 1. CLDR also gives French a "many"
+      category for round millions, which takes "de" ("2 000 000 de minutes"). A clock will never
+      reach it, but leaving it out is a lint warning, and the form costs nothing.
+    -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d heure</item>
+        <item quantity="many">%d d\'heures</item>
+        <item quantity="other">%d heures</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="many">%d de minutes</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d seconde</item>
+        <item quantity="many">%d de secondes</item>
+        <item quantity="other">%d secondes</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">%d période restante</item>
+        <item quantity="many">%d de périodes restantes</item>
+        <item quantity="other">%d périodes restantes</item>
+    </plurals>
+
+    <string name="settings_version">Version %s</string>
 </resources>

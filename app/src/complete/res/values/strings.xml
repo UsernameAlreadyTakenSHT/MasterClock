@@ -4,7 +4,13 @@
   tool screens, the mode guide, the rules, the QR pair and the Bluetooth board. Left in src/main
   they would be flagged unused in Standard, Light and Mini, which cannot reach any of them.
 -->
-<resources xmlns:tools="http://schemas.android.com/tools">
+<!--
+  tools:ignore="MissingTranslation" is on the source rather than on the translations, because that
+  is where lint reports it: as soon as one language defines a string, every language that does not
+  is an error against the line below. This project ships partial translations on purpose — Android
+  falls back string by string — so that error would only ever mean "not finished yet".
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">MasterClock Complete</string>
 
     <string name="rules_title">Some rules</string>

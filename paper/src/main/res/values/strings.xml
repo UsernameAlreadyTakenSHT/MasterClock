@@ -1,4 +1,10 @@
-<resources>
+<!--
+  tools:ignore="MissingTranslation" is on the source rather than on the translations, because that
+  is where lint reports it: as soon as one language defines a string, every language that does not
+  is an error against the line below. This project ships partial translations on purpose — Android
+  falls back string by string — so that error would only ever mean "not finished yet".
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">MasterClock Paper</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_reset">Reset</string>
