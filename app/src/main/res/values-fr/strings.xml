@@ -34,7 +34,12 @@
     <string name="preset_title">Préréglages</string>
     <string name="preset_tab_all">Tous</string>
     <string name="preset_tab_mine">Les miens</string>
-    <string name="preset_tab_last_games">Dernières parties</string>
+    <!--
+      "Dernières parties" does not fit the third tab and gets cut down to "Dernières" anyway.
+      Shortened deliberately rather than left to truncation, which reads the same here but would
+      stop doing so the moment the tab row changes.
+    -->
+    <string name="preset_tab_last_games">Dernières</string>
     <string name="preset_save_current">Enregistrer la cadence actuelle</string>
     <string name="preset_save_title">Enregistrer la cadence</string>
     <string name="preset_rename_title">Renommer le préréglage</string>
