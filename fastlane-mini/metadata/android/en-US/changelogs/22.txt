@@ -1,0 +1,5 @@
+MasterClock is now available in French and Spanish, as well as English.
+On Android 13 and later you can pick the language for this app alone, under Settings > Apps > MasterClock > Language. On older versions it follows the phone's language.
+Timing mode names stay in English: they are the vocabulary printed on tournament clocks.
+The Spanish has not been reviewed by a native speaker yet. Corrections are welcome.
+Restoring a backup: an archive that is too large is now refused with a message instead of closing the app.

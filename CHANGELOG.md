@@ -1,3 +1,14 @@
+## v0.8.21 — 2026-08-22
+
+### Added
+- **MasterClock speaks French and Spanish.** Every screen of every build, phone and E-Ink alike: 1281 strings and 26 plural forms. On Android 13 and later you can set the language for this app alone, under Settings › Apps › MasterClock › Language; on older versions the app follows the phone's language, so a French phone already gets a French clock.
+- Timing mode names stay in English on purpose — `Sudden Death`, `Fischer`, `Byoyomi`, `FIDE Periods` and the rest are the vocabulary printed on tournament clocks and written in federation rulebooks. Their descriptions are translated.
+- **The Spanish has not been reviewed by a native speaker.** It was checked by lint, by comparing every format placeholder against the English, and on screen for layout, but the wording has had no native reader. Corrections are the most useful thing anyone can send: see [TRANSLATING.md](TRANSLATING.md).
+- Spanish, Portuguese, Italian, German and Dutch remain open for contributors, and the French and Spanish files are there to copy the shape from. Partial translations work — Android falls back string by string.
+
+### Fixed
+- Restoring a backup no longer closes the app when the archive is too large. It is refused with a message, as it always should have been. Archives are also read more carefully: entries the app has no use for are skipped instead of being loaded into memory, while still counting against the size limits.
+
 ## v0.8.20 — 2026-08-17
 
 ### Changed
