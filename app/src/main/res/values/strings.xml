@@ -1,4 +1,10 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<!--
+  tools:ignore="MissingTranslation" is on the source rather than on the translations, because that
+  is where lint reports it: as soon as one language defines a string, every language that does not
+  is an error against the line below. This project ships partial translations on purpose — Android
+  falls back string by string — so that error would only ever mean "not finished yet".
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">MasterClock</string>
 
     <!-- Common -->
@@ -536,8 +542,9 @@
     <string name="stats_modes_played">Modes played</string>
     <!--
       Counted strings are plurals, not plain strings with a %d in them: English only needs two
-      forms, but French treats 0 as singular and Russian or Polish need three or four. Translators
-      add or drop <item> elements to match their own language.
+      forms, French needs three (0 counts as singular, and round millions take "de"), and Russian
+      or Polish need three or four. Translators add or drop <item> elements to match their own
+      language.
     -->
     <plurals name="omni_cfg_summary_games">
         <item quantity="one">• %1$d Players | %2$d Game</item>

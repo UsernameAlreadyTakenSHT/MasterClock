@@ -3,9 +3,12 @@
 Translations are welcome, and you do not need to be able to build the app to contribute one — the
 files are plain XML.
 
-The app currently ships in **English**. Seven languages are prepared: English, French, Spanish,
-Portuguese, Italian, German and Dutch. Their files exist but are still empty, so everything falls
-back to English until someone fills them in.
+The app ships in **English** and **French**. Five more are prepared — Spanish, Portuguese, Italian,
+German and Dutch — with their files in place but still empty, so those fall back to English until
+someone fills them in.
+
+The French files are a good model to copy from: they cover the same strings you would be starting
+on, in the same order as the English source.
 
 Partial translations are fine. Android falls back **string by string**, so a file with ten lines
 translated works perfectly — those ten are shown in your language, the rest stay English. There is
@@ -77,12 +80,25 @@ mostly numbers and abbreviations anyway.
 
 **Counted things are `<plurals>`, not `<string>`.** Anything that varies with a number lives in a
 `<plurals>` block, and you add or remove `<item>` elements to match your own language — English
-needs two, French treats 0 as singular, Russian and Polish need three or four.
+needs two, Russian and Polish need three or four.
+
+French needs **three**, which surprises most French speakers: `one` (which also covers 0),
+`many` for round millions — "2 000 000 **de** minutes" — and `other` for everything else. A clock
+will never count that high, but lint checks the categories rather than the plausible range, so
+leaving `many` out is a warning on every plural.
 
 ```xml
+<!-- English -->
 <plurals name="stats_chart_moves">
     <item quantity="one">%d move</item>
     <item quantity="other">%d moves</item>
+</plurals>
+
+<!-- French -->
+<plurals name="stats_chart_moves">
+    <item quantity="one">%d coup</item>
+    <item quantity="many">%d de coups</item>
+    <item quantity="other">%d coups</item>
 </plurals>
 ```
 
