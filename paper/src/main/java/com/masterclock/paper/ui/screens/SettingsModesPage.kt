@@ -23,58 +23,67 @@ fun ModesSettingsPage(
     var selectedPlayerTab by remember { mutableIntStateOf(0) }
     var showChangelog by remember { mutableStateOf(false) }
     
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-        ) {
-            if (currentSettings.differentSettingsPerPlayer) {
-                PrimaryTabRow(
-                    selectedTabIndex = selectedPlayerTab, 
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    containerColor = MaterialTheme.colorScheme.background,
-                    contentColor = MaterialTheme.colorScheme.onBackground
-                ) {
-                    Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) { 
-                        Text(stringResource(R.string.common_player_n, 1), Modifier.padding(12.dp), fontWeight = FontWeight.Bold) 
-                    }
-                    Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) { 
-                        Text(stringResource(R.string.common_player_n, 2), Modifier.padding(12.dp), fontWeight = FontWeight.Bold) 
-                    }
+    // One scrolling column for the whole page, deliberately.
+    //
+    // The system-behaviour block and the version footer used to sit outside the scroll area, so
+    // they stayed pinned to the bottom while the modes and the time fields scrolled above them. In
+    // a Column the children without a weight are served first: those two take the roughly 550dp
+    // they ask for, and weight(1f) gets whatever is left. On a 4.3" Mudita screen that leaves about
+    // 95dp for everything else, which is not enough to show the hour/minute/second boxes at all --
+    // the setting became unreachable on the very device this module exists for.
+    //
+    // Pinning traded away the primary content to keep the switches always visible. Scrolling the
+    // lot costs a swipe on a short screen and nothing on a tall one.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        if (currentSettings.differentSettingsPerPlayer) {
+            PrimaryTabRow(
+                selectedTabIndex = selectedPlayerTab,
+                modifier = Modifier.padding(vertical = 4.dp),
+                containerColor = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.onBackground
+            ) {
+                Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) {
+                    Text(stringResource(R.string.common_player_n, 1), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
+                }
+                Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) {
+                    Text(stringResource(R.string.common_player_n, 2), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
                 }
             }
-
-            val targetP = if (!currentSettings.differentSettingsPerPlayer) {
-                currentSettings.main
-            } else {
-                if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.copy(mode = currentSettings.p1Custom.mode)
-            }
-
-            fun updateTarget(newP: PlayerSettings) {
-                val newSettings = if (!currentSettings.differentSettingsPerPlayer) {
-                    currentSettings.copy(main = newP, p1Custom = newP, p2Custom = newP)
-                } else {
-                    if (selectedPlayerTab == 0) {
-                        currentSettings.copy(
-                            p1Custom = newP,
-                            p2Custom = currentSettings.p2Custom.copy(mode = newP.mode)
-                        )
-                    } else {
-                        currentSettings.copy(p2Custom = newP)
-                    }
-                }
-                onSettingsChanged(newSettings)
-            }
-
-            Spacer(Modifier.height(8.dp))
-            ModeSelectionPanel(
-                p = targetP,
-                onUpdateP = { p: PlayerSettings -> updateTarget(p) }
-            )
-            
-            Spacer(Modifier.height(32.dp))
         }
+
+        val targetP = if (!currentSettings.differentSettingsPerPlayer) {
+            currentSettings.main
+        } else {
+            if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.copy(mode = currentSettings.p1Custom.mode)
+        }
+
+        fun updateTarget(newP: PlayerSettings) {
+            val newSettings = if (!currentSettings.differentSettingsPerPlayer) {
+                currentSettings.copy(main = newP, p1Custom = newP, p2Custom = newP)
+            } else {
+                if (selectedPlayerTab == 0) {
+                    currentSettings.copy(
+                        p1Custom = newP,
+                        p2Custom = currentSettings.p2Custom.copy(mode = newP.mode)
+                    )
+                } else {
+                    currentSettings.copy(p2Custom = newP)
+                }
+            }
+            onSettingsChanged(newSettings)
+        }
+
+        Spacer(Modifier.height(8.dp))
+        ModeSelectionPanel(
+            p = targetP,
+            onUpdateP = { p: PlayerSettings -> updateTarget(p) }
+        )
+
+        Spacer(Modifier.height(32.dp))
 
         if (FlavorConfig.isEInk()) {
             Column(
