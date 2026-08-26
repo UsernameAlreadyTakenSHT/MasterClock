@@ -2,14 +2,107 @@
 <!--
   MasterClock — pt
 
-  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
-  fully usable while this file is being filled in.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
 
-  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
-  the name attribute alone. See TRANSLATING.md at the repository root.
+  The three buttons under the E-Ink clock are narrow: "Configurações" does not fit and is "Opções"
+  here, the same shortening German and Italian needed. The app module has room and keeps the full
+  word.
 
-  tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
-  partial; it does not hide anything you need to see.
+  Translated without a native reviewer, like the Spanish, German and Italian.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_reset">Zerar</string>
+    <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="timer_reset_message">O estado atual será perdido.</string>
+    <string name="common_back">Voltar</string>
+    <string name="common_close">Fechar</string>
+    <string name="common_clear">Limpar</string>
+    <string name="common_player_n">Jogador %d</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Trocar de vez</string>
+    <string name="timer_pause">Pausa</string>
+    <string name="timer_resume">Retomar</string>
+    <!-- "Configurações" at 13 characters does not fit beside Zerar and Retomar. -->
+    <string name="timer_settings">Opções</string>
+
+    <!-- Settings -->
+    <string name="settings_tab_modes">Modos</string>
+    <!-- Short like the French "Jeu", Spanish "Juego", German "Spiel" and Italian "Gioco". -->
+    <string name="settings_tab_behavior">Jogo</string>
+    <string name="settings_tab_display">Ecrã</string>
+    <string name="settings_tab_audio">Áudio</string>
+    <string name="settings_tab_more">Mais</string>
+    <string name="settings_tab_omni">Omni</string>
+    <!--
+      "eletrónica" is the European spelling after the 1990 orthographic agreement, which dropped the
+      silent c. Lint's dictionary predates it and offers "electrónica" or the Brazilian "eletrônica".
+    -->
+    <string name="settings_not_optimized" tools:ignore="Typos">Esta página de definições ainda não está otimizada para tinta eletrónica.</string>
+    <string name="settings_initial_time">Tempo inicial</string>
+    <string name="settings_increment">Incremento</string>
+    <string name="settings_move_time">Tempo por lance</string>
+    <string name="settings_system_behavior">Comportamento do sistema</string>
+    <string name="settings_sound">Som</string>
+    <string name="settings_haptic_feedback">Retorno tátil</string>
+    <string name="settings_keep_awake">Manter o ecrã ligado</string>
+    <string name="settings_fullscreen">Ecrã inteiro</string>
+    <string name="settings_reverse_colors">Inverter as cores</string>
+    <string name="settings_clear_logs">Limpar o histórico</string>
+    <string name="settings_clear_logs_title">Eliminar definitivamente todo o histórico de partidas?</string>
+    <string name="settings_reset_settings">Repor as definições</string>
+    <string name="settings_reset_message">Repor mesmo todas as definições? Esta ação não pode ser anulada.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Créditos</string>
+    <string name="credits_tab_changes">Novidades</string>
+    <string name="credits_tab_licenses">Licenças</string>
+    <string name="credits_rules_documents">Documentos de regras</string>
+    <string name="credits_libraries">O MasterClock é feito com estas bibliotecas de código aberto.</string>
+
+    <!-- Sharing -->
+    <string name="share_settings">Partilhar as definições</string>
+    <string name="toast_backup_ok">Cópia de segurança concluída!</string>
+    <string name="toast_import_ok">Importação concluída!</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Jogador %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Jogador %1$d, %2$s, é a sua vez</string>
+    <string name="a11y_out_of_time">sem tempo</string>
+    <string name="a11y_no_time_left">não resta tempo</string>
+    <string name="a11y_announce_out_of_time">O jogador %d ficou sem tempo</string>
+    <string name="a11y_announce_paused">Em pausa</string>
+    <string name="a11y_announce_to_move">É a vez do jogador %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!--
+      CLDR gives Portuguese the same three categories as the other romance languages here: one,
+      many for round millions, and other. A clock will never reach many, but lint checks the
+      categories rather than the plausible range.
+    -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d hora</item>
+        <item quantity="many">%d de horas</item>
+        <item quantity="other">%d horas</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="many">%d de minutos</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d segundo</item>
+        <item quantity="many">%d de segundos</item>
+        <item quantity="other">%d segundos</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">resta %d período</item>
+        <item quantity="many">restam %d de períodos</item>
+        <item quantity="other">restam %d períodos</item>
+    </plurals>
+
+    <string name="settings_version">Versão %s</string>
 </resources>

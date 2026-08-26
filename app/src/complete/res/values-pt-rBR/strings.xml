@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock Complete — pt-BR (Brazilian Portuguese)
+
+  An override, not a translation: only the words that differ from values-pt, which supplies
+  everything else. See that file and the app module's pt-BR override for the recurring pairs.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_share">Compartilhar</string>
+
+    <!-- Files, photos and connection -->
+    <string name="board_connected_to">Conectado: %s</string>
+    <string name="board_connecting">Conectando…</string>
+    <string name="board_disconnect">Desconectar</string>
+    <string name="board_disconnected">Desconectado</string>
+    <string name="board_looking">Procurando tabuleiros…</string>
+    <string name="board_scanning">Procurando tabuleiros…</string>
+    <string name="board_title">Conexão com o tabuleiro</string>
+    <string name="board_none_found">Nenhum dispositivo encontrado. Toque em atualizar para procurar.</string>
+
+    <!-- Reading a QR code is "escanear" in Brazil -->
+    <string name="qr_scan_title">Escanear um código QR</string>
+    <string name="qr_share_hint">Escaneie este código em outro dispositivo para importar a configuração.</string>
+    <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmera</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">É necessária a permissão da câmera para escanear códigos.</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">É necessária a permissão da câmera</string>
+    <string name="qr_too_large">Não foi possível gerar o código QR: os dados são provavelmente grandes demais. Tente compartilhar sem os registros de partidas.</string>
+
+    <!-- Tools -->
+    <string name="tools_checkbox">Caixa de seleção</string>
+    <string name="tools_delete_recording">Excluir a gravação</string>
+    <string name="tools_game_logs">Registros de partidas</string>
+    <string name="tools_log_details">Detalhes do registro</string>
+    <string name="tools_share_log">Compartilhar o registro</string>
+    <string name="tools_no_games">Ainda não há partidas registradas.</string>
+    <string name="tools_no_photo">Ainda não há foto</string>
+    <string name="tools_take_photo">Tirar uma foto</string>
+    <string name="tools_retake_photo">Repetir a foto</string>
+    <string name="tools_pick_straw">Tirar o canudo %d</string>
+    <string name="tools_short_straw">Canudo curto</string>
+    <string name="tools_undo">Desfazer</string>
+    <string name="toast_note_deleted">Nota excluída</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Canudos: %d</item>
+        <item quantity="many">Canudos: %d</item>
+        <item quantity="other">Canudos: %d</item>
+    </plurals>
+</resources>
