@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
+import com.masterclock.paper.ui.components.ScrollbarMMD
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
 
@@ -34,116 +35,127 @@ fun ModesSettingsPage(
     //
     // Pinning traded away the primary content to keep the switches always visible. Scrolling the
     // lot costs a swipe on a short screen and nothing on a tall one.
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        if (currentSettings.differentSettingsPerPlayer) {
-            PrimaryTabRow(
-                selectedTabIndex = selectedPlayerTab,
-                modifier = Modifier.padding(vertical = 4.dp),
-                containerColor = MaterialTheme.colorScheme.background,
-                contentColor = MaterialTheme.colorScheme.onBackground
-            ) {
-                Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) {
-                    Text(stringResource(R.string.common_player_n, 1), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
-                }
-                Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) {
-                    Text(stringResource(R.string.common_player_n, 2), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
+    //
+    // The scrollbar is the other half of that trade: E Ink offers no fling, no overscroll stretch
+    // and no scrollbar that fades in under a finger, so without one there is nothing on screen to
+    // say the page continues. MMD ships one with every scrollable list for exactly this reason.
+    val scrollState = rememberScrollState()
+
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .verticalScroll(scrollState)
+        ) {
+            if (currentSettings.differentSettingsPerPlayer) {
+                PrimaryTabRow(
+                    selectedTabIndex = selectedPlayerTab,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.onBackground
+                ) {
+                    Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) {
+                        Text(stringResource(R.string.common_player_n, 1), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
+                    }
+                    Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) {
+                        Text(stringResource(R.string.common_player_n, 2), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
+                    }
                 }
             }
-        }
 
-        val targetP = if (!currentSettings.differentSettingsPerPlayer) {
-            currentSettings.main
-        } else {
-            if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.copy(mode = currentSettings.p1Custom.mode)
-        }
-
-        fun updateTarget(newP: PlayerSettings) {
-            val newSettings = if (!currentSettings.differentSettingsPerPlayer) {
-                currentSettings.copy(main = newP, p1Custom = newP, p2Custom = newP)
+            val targetP = if (!currentSettings.differentSettingsPerPlayer) {
+                currentSettings.main
             } else {
-                if (selectedPlayerTab == 0) {
-                    currentSettings.copy(
-                        p1Custom = newP,
-                        p2Custom = currentSettings.p2Custom.copy(mode = newP.mode)
-                    )
+                if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.copy(mode = currentSettings.p1Custom.mode)
+            }
+
+            fun updateTarget(newP: PlayerSettings) {
+                val newSettings = if (!currentSettings.differentSettingsPerPlayer) {
+                    currentSettings.copy(main = newP, p1Custom = newP, p2Custom = newP)
                 } else {
-                    currentSettings.copy(p2Custom = newP)
+                    if (selectedPlayerTab == 0) {
+                        currentSettings.copy(
+                            p1Custom = newP,
+                            p2Custom = currentSettings.p2Custom.copy(mode = newP.mode)
+                        )
+                    } else {
+                        currentSettings.copy(p2Custom = newP)
+                    }
                 }
+                onSettingsChanged(newSettings)
             }
-            onSettingsChanged(newSettings)
-        }
 
-        Spacer(Modifier.height(8.dp))
-        ModeSelectionPanel(
-            p = targetP,
-            onUpdateP = { p: PlayerSettings -> updateTarget(p) }
-        )
+            Spacer(Modifier.height(8.dp))
+            ModeSelectionPanel(
+                p = targetP,
+                onUpdateP = { p: PlayerSettings -> updateTarget(p) }
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
 
-        if (FlavorConfig.isEInk()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                HorizontalDivider(
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                )
+            if (FlavorConfig.isEInk()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                    )
                 
-                SettingsSection(stringResource(R.string.settings_system_behavior)) {
-                    BehaviorSwitch(
-                        label = stringResource(R.string.settings_reverse_colors),
-                        checked = currentSettings.eInkDarkMode
-                    ) {
-                        onSettingsChanged(currentSettings.copy(eInkDarkMode = it))
+                    SettingsSection(stringResource(R.string.settings_system_behavior)) {
+                        BehaviorSwitch(
+                            label = stringResource(R.string.settings_reverse_colors),
+                            checked = currentSettings.eInkDarkMode
+                        ) {
+                            onSettingsChanged(currentSettings.copy(eInkDarkMode = it))
+                        }
+                        BehaviorSwitch(
+                            label = stringResource(R.string.settings_keep_awake),
+                            checked = currentSettings.forceScreenOn
+                        ) {
+                            onSettingsChanged(currentSettings.copy(forceScreenOn = it))
+                        }
+                        BehaviorSwitch(
+                            label = stringResource(R.string.settings_fullscreen),
+                            checked = currentSettings.fullscreenMode
+                        ) {
+                            onSettingsChanged(currentSettings.copy(fullscreenMode = it))
+                        }
+                        BehaviorSwitch(
+                            label = stringResource(R.string.settings_sound),
+                            checked = currentSettings.playSwitchSound
+                        ) {
+                            onSettingsChanged(currentSettings.copy(playSwitchSound = it, tripleBeepTimeUp = it))
+                        }
+                        BehaviorSwitch(
+                            label = stringResource(R.string.settings_haptic_feedback),
+                            checked = currentSettings.hapticFeedback
+                        ) {
+                            onSettingsChanged(currentSettings.copy(hapticFeedback = it))
+                        }
                     }
-                    BehaviorSwitch(
-                        label = stringResource(R.string.settings_keep_awake),
-                        checked = currentSettings.forceScreenOn
-                    ) {
-                        onSettingsChanged(currentSettings.copy(forceScreenOn = it))
-                    }
-                    BehaviorSwitch(
-                        label = stringResource(R.string.settings_fullscreen),
-                        checked = currentSettings.fullscreenMode
-                    ) {
-                        onSettingsChanged(currentSettings.copy(fullscreenMode = it))
-                    }
-                    BehaviorSwitch(
-                        label = stringResource(R.string.settings_sound),
-                        checked = currentSettings.playSwitchSound
-                    ) {
-                        onSettingsChanged(currentSettings.copy(playSwitchSound = it, tripleBeepTimeUp = it))
-                    }
-                    BehaviorSwitch(
-                        label = stringResource(R.string.settings_haptic_feedback),
-                        checked = currentSettings.hapticFeedback
-                    ) {
-                        onSettingsChanged(currentSettings.copy(hapticFeedback = it))
-                    }
+                }
+            }
+
+            if (!FlavorConfig.hasMoreTab()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showChangelog = true }
+                        .padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                    Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                 }
             }
         }
 
-        if (!FlavorConfig.hasMoreTab()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showChangelog = true }
-                    .padding(vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-            }
-        }
+        ScrollbarMMD(scrollState)
     }
 
     if (showChangelog) {
