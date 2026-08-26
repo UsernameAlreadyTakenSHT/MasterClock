@@ -2,14 +2,95 @@
 <!--
   MasterClock — nl
 
-  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
-  fully usable while this file is being filled in.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
 
-  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
-  the name attribute alone. See TRANSLATING.md at the repository root.
+  The three buttons under the E-Ink clock are narrow: "Instellingen" does not fit and is "Opties"
+  here, the same shortening German, Italian and Portuguese needed. The app module has room and
+  keeps the full word.
 
-  tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
-  partial; it does not hide anything you need to see.
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Annuleren</string>
+    <string name="common_reset">Reset</string>
+    <string name="timer_reset_title">Partij resetten?</string>
+    <string name="timer_reset_message">De huidige stand gaat verloren.</string>
+    <string name="common_back">Terug</string>
+    <string name="common_close">Sluiten</string>
+    <string name="common_clear">Wissen</string>
+    <string name="common_player_n">Speler %d</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Beurt wisselen</string>
+    <string name="timer_pause">Pauze</string>
+    <string name="timer_resume">Hervatten</string>
+    <!-- "Instellingen" at 12 characters does not fit beside Reset and Hervatten. -->
+    <string name="timer_settings">Opties</string>
+
+    <!-- Settings -->
+    <string name="settings_tab_modes">Modi</string>
+    <!-- Short like the French "Jeu", German "Spiel", Italian "Gioco" and Portuguese "Jogo". -->
+    <string name="settings_tab_behavior">Spel</string>
+    <string name="settings_tab_display">Scherm</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_more">Meer</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_not_optimized">Deze instellingenpagina is nog niet geoptimaliseerd voor e-ink.</string>
+    <string name="settings_initial_time">Starttijd</string>
+    <string name="settings_increment">Increment</string>
+    <string name="settings_move_time">Tijd per zet</string>
+    <string name="settings_system_behavior">Systeemgedrag</string>
+    <string name="settings_sound">Geluid</string>
+    <string name="settings_haptic_feedback">Haptische feedback</string>
+    <string name="settings_keep_awake">Scherm aan houden</string>
+    <string name="settings_fullscreen">Volledig scherm</string>
+    <string name="settings_reverse_colors">Kleuren omkeren</string>
+    <string name="settings_clear_logs">Geschiedenis wissen</string>
+    <string name="settings_clear_logs_title">De volledige partijgeschiedenis definitief verwijderen?</string>
+    <string name="settings_reset_settings">Instellingen resetten</string>
+    <string name="settings_reset_message">Weet je zeker dat je alle instellingen wilt resetten? Dit kan niet ongedaan worden gemaakt.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Met dank aan</string>
+    <string name="credits_tab_changes">Nieuw</string>
+    <string name="credits_tab_licenses">Licenties</string>
+    <string name="credits_rules_documents">Reglementen</string>
+    <string name="credits_libraries">MasterClock is gebouwd met deze opensourcebibliotheken.</string>
+
+    <!-- Sharing -->
+    <string name="share_settings">Instellingen delen</string>
+    <string name="toast_backup_ok">Back-up gelukt!</string>
+    <string name="toast_import_ok">Import gelukt!</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Speler %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Speler %1$d, %2$s, jij bent aan zet</string>
+    <string name="a11y_out_of_time">tijd op</string>
+    <string name="a11y_no_time_left">geen tijd meer</string>
+    <string name="a11y_announce_out_of_time">Speler %d heeft geen tijd meer</string>
+    <string name="a11y_announce_paused">Gepauzeerd</string>
+    <string name="a11y_announce_to_move">Speler %d is aan zet</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Dutch two plural categories, one and other, like German. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d uur</item>
+        <item quantity="other">%d uur</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minuut</item>
+        <item quantity="other">%d minuten</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d seconde</item>
+        <item quantity="other">%d seconden</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">nog %d periode</item>
+        <item quantity="other">nog %d periodes</item>
+    </plurals>
+
+    <string name="settings_version">Versie %s</string>
 </resources>

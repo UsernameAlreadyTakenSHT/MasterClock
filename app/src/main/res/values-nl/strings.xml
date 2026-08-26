@@ -2,14 +2,535 @@
 <!--
   MasterClock — nl
 
-  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
-  fully usable while this file is being filled in.
+  Mode names (Fischer, Byoyomi, Sudden Death…) and chess variant names are Kotlin literals rather
+  than resources, so they stay in English by construction — see the notes in values/strings.xml.
 
-  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
-  the name attribute alone. See TRANSLATING.md at the repository root.
+  app_name and settings_app_version are left out on purpose: they are the product name.
 
-  tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
-  partial; it does not hide anything you need to see.
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Common -->
+    <string name="common_cancel">Annuleren</string>
+    <string name="common_reset">Resetten</string>
+    <string name="common_player_n">Speler %d</string>
+    <string name="common_back_to_game">Terug naar de partij</string>
+    <string name="common_back">Terug</string>
+    <string name="common_save">Opslaan</string>
+    <string name="common_delete">Verwijderen</string>
+    <string name="common_rename">Naam wijzigen</string>
+    <string name="common_name">Naam</string>
+    <string name="common_clear">Wissen</string>
+    <string name="common_close">Sluiten</string>
+    <string name="common_remove">Verwijderen</string>
+    <string name="common_select">Selecteren</string>
+    <string name="common_optional">Optioneel</string>
+    <string name="common_off">Geen</string>
+
+    <!-- Presets -->
+    <string name="preset_title">Presets</string>
+    <string name="preset_tab_all">Alle</string>
+    <string name="preset_tab_mine">Mijne</string>
+    <!-- Short on purpose: the third tab is narrow, as every language before this one found. -->
+    <string name="preset_tab_last_games">Laatste</string>
+    <string name="preset_save_current">Huidig speeltempo opslaan</string>
+    <string name="preset_save_title">Speeltempo opslaan</string>
+    <string name="preset_rename_title">Naam van de preset wijzigen</string>
+    <string name="preset_empty_custom">Stel een speeltempo in en sla het hier op.</string>
+    <string name="preset_long_press_hint">Houd een preset ingedrukt om de naam te wijzigen of hem te verwijderen.</string>
+    <string name="preset_manage_action">Naam wijzigen of verwijderen</string>
+    <string name="preset_view_statistics">Statistieken bekijken</string>
+    <string name="preset_empty_history">Nog geen partij gespeeld.</string>
+    <string name="preset_delete_title">„%s” verwijderen?</string>
+    <string name="preset_delete_message">Deze preset wordt definitief verwijderd.</string>
+
+    <!-- Mode settings -->
+    <string name="settings_select_mode">Spelmodus kiezen</string>
+    <string name="settings_bonus_type">Type bonus</string>
+    <string name="settings_move_timer_type">Type Move Timer</string>
+    <string name="settings_byoyomi_type">Type byoyomi</string>
+    <string name="settings_chrono_type">Type chrono</string>
+    <string name="settings_move_counts_type">Type zettenteller</string>
+    <string name="settings_fast_move_type">Type Fast Move</string>
+    <string name="settings_time_parameters">Tijdparameters</string>
+    <string name="settings_initial_time">Starttijd</string>
+    <string name="settings_increment">Increment</string>
+    <string name="settings_increment_bonus">Increment / bonus</string>
+    <string name="settings_delay">Vertraging</string>
+    <string name="settings_move_time">Tijd per zet</string>
+    <string name="settings_time_per_move">Tijd per zet</string>
+    <string name="settings_time_to_move">Tijd om te zetten</string>
+    <string name="settings_starting_move_time">Begintijd per zet</string>
+    <string name="settings_time_cap">Tijdplafond</string>
+    <string name="settings_byoyomi_time">Byoyomi-tijd</string>
+    <string name="settings_periods_goal">Periodes / zettendoel</string>
+    <string name="settings_progression">Toename (zetten)</string>
+    <string name="settings_max_moves">Maximum aantal zetten</string>
+    <string name="settings_decrement_per_move">Aftrek per zet</string>
+    <string name="settings_min_time_floor">Minimale tijd</string>
+    <string name="settings_grace_period">Respijtperiode (normaal tempo)</string>
+    <string name="settings_full_fast_starts">Volledige versnelling vanaf</string>
+    <string name="settings_reflection_time">Bedenktijd</string>
+    <string name="settings_simultaneous">Gelijktijdig spelen</string>
+    <string name="settings_duration">Duur</string>
+    <string name="settings_base_duration_range">Bereik van de basisduur</string>
+    <string name="settings_increment_range">Incrementbereik (Fischer)</string>
+    <string name="settings_min_duration">Minimale duur</string>
+    <string name="settings_max_duration">Maximale duur</string>
+    <string name="settings_min_increment">Minimaal increment</string>
+    <string name="settings_max_increment">Maximaal increment</string>
+    <string name="settings_rounded_time">Afgeronde tijd (minuten/seconden)</string>
+    <string name="settings_random_config">Configuratie van de Random-modus</string>
+    <string name="settings_hidden_config">Configuratie van de Hidden-modus</string>
+    <string name="settings_show_percentage">Percentagewaarschuwingen tonen</string>
+    <string name="settings_fide_config">Configuratie van de FIDE-periodes</string>
+    <string name="settings_add_period">Periode toevoegen</string>
+    <string name="settings_actions">Acties</string>
+    <string name="settings_period_n">Periode %d</string>
+    <string name="settings_moves_unlock">Zetten om de volgende vrij te spelen (0 = laatste)</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Zetten tot periode %d</string>
+    <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Naam van fase %d</string>
+    <string name="settings_phase_n">Fase %d</string>
+    <string name="settings_color_red">Rood: %d</string>
+    <string name="settings_color_green">Groen: %d</string>
+    <string name="settings_color_blue">Blauw: %d</string>
+    <string name="settings_fast_accel_rate">Snelle versnelling (+%s s/s)</string>
+    <string name="settings_full_fast_accel_rate">Volledige versnelling (+%s s/s)</string>
+    <string name="settings_version">Versie %s</string>
+    <string name="settings_final_period">Dit wordt de laatste periode van de partij.</string>
+    <string name="settings_flag_on_end">Vlagval aan het eind (verlies)</string>
+    <string name="settings_phases_config">Configuratie van de fases</string>
+    <string name="settings_repeat_phases">Fases herhalen (lus)</string>
+    <string name="settings_pause_between_phases">Pauze tussen de fases</string>
+    <string name="settings_auto_advance">Automatisch doorgaan</string>
+    <string name="settings_allow_skip">Handmatig overslaan toestaan (tik om door te gaan)</string>
+    <string name="settings_phase_placeholder">Voorbereiding, ronde X…</string>
+    <string name="settings_cumulative_transfer">Cumulatieve overdracht</string>
+    <string name="settings_cumulative_explain">Staat dit uit, dan gaat alleen de tijd van de allerlaatste zet naar de tegenstander.</string>
+    <string name="settings_one_for_all">One for All (zonder tikken)</string>
+
+    <string name="settings_select_custom_color">Eigen kleur kiezen</string>
+    <string name="settings_pick_colour">Kies een eigen kleur</string>
+    <string name="settings_sound_custom">Eigen geluid geselecteerd</string>
+    <string name="settings_sound_default">Standaardgeluid in gebruik</string>
+    <string name="settings_sound_clear">Eigen geluid wissen</string>
+    <string name="settings_sound_change">Eigen geluid wijzigen</string>
+    <string name="settings_sound_choose">Eigen geluid kiezen</string>
+
+    <string name="toast_backup_ok">Back-up gelukt!</string>
+    <string name="toast_import_ok">Import gelukt!</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Speler %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Speler %1$d, %2$s, jij bent aan zet</string>
+    <string name="a11y_out_of_time">tijd op</string>
+    <string name="a11y_no_time_left">geen tijd meer</string>
+    <string name="a11y_announce_out_of_time">Speler %d heeft geen tijd meer</string>
+    <string name="a11y_announce_paused">Gepauzeerd</string>
+    <string name="a11y_announce_to_move">Speler %d is aan zet</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Dutch two plural categories, one and other, like German. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d uur</item>
+        <item quantity="other">%d uur</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minuut</item>
+        <item quantity="other">%d minuten</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d seconde</item>
+        <item quantity="other">%d seconden</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">nog %d periode</item>
+        <item quantity="other">nog %d periodes</item>
+    </plurals>
+
+    <!-- Timer chips -->
+    <string name="timer_bank">BANK</string>
+    <string name="timer_global">GLOBAAL</string>
+    <string name="timer_total">TOTAAL</string>
+    <!--
+      "OT" holds move time the player did not spend, not extra time granted, so "verlenging" would
+      say the opposite. TEGOED is the credit balance it actually is.
+    -->
+    <string name="timer_overtime">TEGOED</string>
+    <string name="timer_switch_turn">Beurt wisselen</string>
+    <string name="timer_presets">Presets</string>
+    <string name="timer_settings">Instellingen</string>
+    <string name="timer_pause">Pauze</string>
+
+    <!-- Settings tabs and dialogs -->
+    <string name="settings_tab_modes">Modi</string>
+    <!-- Short like the French "Jeu", German "Spiel", Italian "Gioco" and Portuguese "Jogo". -->
+    <string name="settings_tab_behavior">Spel</string>
+    <string name="settings_tab_display">Scherm</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_more">Meer</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_clear_logs_title">De volledige partijgeschiedenis wissen?</string>
+    <string name="settings_clear_logs_message">Alle opgeslagen geschiedenis wordt definitief verwijderd.</string>
+    <string name="settings_reset_title">Alle instellingen resetten?</string>
+    <string name="settings_reset_message">Dit kan niet ongedaan worden gemaakt.</string>
+
+    <!-- Enum-backed option labels -->
+    <string name="flag_freeze">Bevriezen</string>
+    <string name="flag_flag">Vlag</string>
+    <string name="flag_negative">Negatief</string>
+    <string name="flag_reverse">Omgekeerd</string>
+
+    <string name="theme_light">Licht</string>
+    <string name="theme_dark">Donker</string>
+    <string name="theme_auto">Auto</string>
+
+    <string name="game_chess">Schaken</string>
+    <string name="game_draughts">Dammen</string>
+    <string name="game_shogi">Shogi</string>
+
+    <string name="order_linear">Lineair</string>
+    <string name="order_snake">Slang</string>
+    <string name="order_rotate">Rotatie</string>
+    <string name="order_random">Willekeurig</string>
+
+    <!-- Settings: Display -->
+    <string name="settings_theme">Thema</string>
+    <string name="settings_orientation">Oriëntatie</string>
+    <string name="settings_vert">Verticaal</string>
+    <string name="settings_layout_scale">Indeling en grootte</string>
+    <string name="settings_active_side_bigger">Actieve kant groter</string>
+    <string name="settings_fullscreen">Volledig scherm</string>
+    <string name="settings_flash_low_time">Knipperen bij weinig tijd (&lt;10 s)</string>
+    <string name="settings_keep_awake">Scherm aan houden</string>
+    <string name="settings_force_brightness">Volledige helderheid forceren</string>
+    <string name="settings_primary_colors">Hoofdkleuren</string>
+    <string name="settings_active_bg">Achtergrond van de actieve kant</string>
+    <string name="settings_inactive_bg">Achtergrond van de inactieve kant</string>
+    <string name="settings_active_text">Tekst van de actieve klok</string>
+    <string name="settings_inactive_text">Tekst van de inactieve klok</string>
+    <string name="settings_secondary_info">Secundaire informatie</string>
+    <string name="settings_label_text_color">Kleur van de labels (zetten, periodes, vertraging)</string>
+    <string name="settings_alert_text_color">Kleur van de waarschuwingen (GEVALLEN, ZET!)</string>
+    <string name="settings_special_states">Bijzondere toestanden</string>
+    <string name="settings_loss_bg">Achtergrond bij verlies</string>
+    <string name="settings_gong_reflection_bg">Gong: achtergrond van de bedenkfase</string>
+    <string name="settings_time_format">Tijdnotatie</string>
+    <string name="settings_always_hours">Uren altijd tonen</string>
+    <string name="settings_always_minutes">Minuten altijd tonen</string>
+    <string name="settings_leading_zeros">Voorloopnullen</string>
+    <string name="settings_show_tenths">Tienden van seconden tonen</string>
+    <string name="settings_show_hundredths">Honderdsten tonen</string>
+    <string name="settings_like_tenths">Zoals tienden</string>
+    <string name="settings_under_10s">Onder 10 s</string>
+    <string name="settings_threshold">Drempel</string>
+    <string name="settings_all">Alles</string>
+    <string name="settings_information">Informatie</string>
+    <string name="settings_always_show_moves">Zetten altijd tonen</string>
+    <string name="settings_show_period" tools:ignore="TypographyFractions">Periode tonen (1/3)</string>
+
+    <!-- Settings: Audio -->
+    <string name="settings_sound">Geluid</string>
+    <string name="settings_voice_announcements">Gesproken meldingen</string>
+    <string name="settings_timer_alerts">Klokwaarschuwingen</string>
+    <string name="settings_countdown_beep">Aftelpiep</string>
+    <string name="settings_triple_beep">Drievoudige piep bij tijd op</string>
+    <string name="settings_play_switch_sound">Geluid bij spelerwissel</string>
+    <string name="settings_haptics">Haptiek</string>
+    <string name="settings_haptic_countdown">Haptisch aftellen</string>
+    <string name="settings_haptic_switch">Trilling bij wisselen</string>
+    <string name="settings_haptic_feedback">Haptische feedback</string>
+    <string name="settings_output_volume">Uitvoer en volume</string>
+    <string name="settings_sounds_volume">Volume van de geluiden</string>
+    <string name="settings_voice_volume">Volume van de stem</string>
+    <string name="settings_voice_announcement">Gesproken melding</string>
+    <string name="settings_use_media_output">Media-uitvoer gebruiken</string>
+    <string name="settings_custom_sounds">Eigen geluiden</string>
+    <string name="settings_sound_previews">Geluidsvoorbeelden</string>
+    <string name="settings_gong_mode_sound">Gong (gongmodus)</string>
+    <string name="settings_beep_countdown_sound">Piep (aftellen)</string>
+    <string name="settings_final_beep_sound">Slotpiep (tijd op)</string>
+    <string name="settings_switch_sound">Wissel (zet gedaan)</string>
+    <string name="settings_gong">Gong</string>
+    <string name="settings_beep">Piep</string>
+    <string name="settings_final">Slot</string>
+    <string name="settings_switch">Wissel</string>
+
+    <!-- Settings: Behavior -->
+    <string name="settings_flag_behavior">Gedrag bij vlagval</string>
+    <string name="settings_tournament_rules">Toernooiregels</string>
+    <string name="settings_fischer_fide">Fischer FIDE (bonus vanaf zet 0)</string>
+    <string name="settings_forced_move_counter">Zettenteller verplicht</string>
+    <string name="settings_interaction">Bediening</string>
+    <string name="settings_confirm_reset">Resetten bevestigen</string>
+    <string name="settings_trigger_on_press">Activeren bij indrukken (anders bij loslaten)</string>
+    <string name="settings_pause_background">Pauzeren op de achtergrond</string>
+    <string name="settings_advanced">Geavanceerd</string>
+    <string name="settings_different_per_player">Aparte instellingen per speler</string>
+    <string name="settings_more_players">Meer spelers inschakelen (experimenteel)</string>
+    <string name="settings_players">Spelers</string>
+    <string name="settings_visuals">Weergave</string>
+    <string name="settings_single_player_top">Eén speler bovenaan</string>
+    <string name="settings_system_behavior">Systeemgedrag</string>
+
+    <!-- Export / import dialogs -->
+    <string name="share_settings">Instellingen delen</string>
+    <string name="share_export_title">Exporteren en delen</string>
+    <string name="share_export_intro">Kies hoe je je gegevens wilt delen of bewaren.</string>
+    <string name="share_file">Bestand delen</string>
+    <string name="share_file_desc">Stuur een .json-configuratiebestand naar een vriend.</string>
+    <string name="share_qr">Delen via QR-code</string>
+    <string name="share_qr_desc">Direct scannen naar een ander apparaat (alleen instellingen).</string>
+    <string name="share_export_storage">Naar de opslag exporteren</string>
+    <string name="share_export_storage_desc">Het .json-bestand in de opslag van het apparaat bewaren.</string>
+    <string name="share_export_full">Alles exporteren (volledige back-up)</string>
+    <string name="share_export_full_desc">Bevat alle instellingen, de geschiedenis ÉN eigen audio- en afbeeldingsbestanden in een .zip-archief.</string>
+    <string name="share_include_history">Geschiedenis en notities meenemen</string>
+    <string name="share_import_title">Gegevens importeren</string>
+    <string name="share_import_json">JSON-bestand importeren</string>
+    <string name="share_import_json_desc">Een eerder geëxporteerd .json-configuratiebestand laden.</string>
+    <string name="share_scan_qr">QR-code scannen</string>
+    <string name="share_scan_qr_desc">Instellingen snel overnemen door een ander scherm te scannen.</string>
+    <string name="share_import_full">Volledige back-up importeren</string>
+    <string name="share_import_full_desc">Je instellingen herstellen of overnemen van een ander apparaat.</string>
+    <string name="share_restore_full_desc">Alles herstellen (instellingen en bestanden) uit een .zip-archief.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Met dank aan</string>
+    <string name="credits_tab_changes">Nieuw</string>
+    <string name="credits_tab_licenses">Licenties</string>
+    <string name="credits_rules_documents">Reglementen</string>
+    <string name="credits_libraries">MasterClock is gebouwd met deze opensourcebibliotheken.</string>
+
+    <!-- Omni wizard (settings) -->
+    <string name="omni_cfg_previous">Vorige</string>
+    <string name="omni_cfg_next_step">Volgende stap</string>
+    <string name="omni_cfg_launch_game">Partij starten</string>
+    <string name="omni_cfg_launch_station">STARTCENTRALE</string>
+    <string name="omni_cfg_ready">Klaar om te spelen</string>
+    <string name="omni_cfg_summary">Samenvatting</string>
+
+    <string name="omni_cfg_session_games">Sessie en partijen</string>
+    <string name="omni_cfg_enable_session_timer">Sessieklok inschakelen</string>
+    <string name="omni_cfg_enable_game_timer">Partijklok inschakelen</string>
+    <string name="omni_cfg_enable_round_timer">Rondeklok inschakelen</string>
+    <string name="omni_cfg_enable_turn_timer">Beurtklok inschakelen</string>
+    <string name="omni_cfg_enable_phase_timer">Faseklok inschakelen</string>
+    <string name="omni_cfg_session_timer">Sessie</string>
+    <string name="omni_cfg_game_timer">Partijklok</string>
+    <string name="omni_cfg_round_timer">Rondeklok</string>
+    <string name="omni_cfg_turn_timer">Beurtklok</string>
+    <string name="omni_cfg_phase_timer">Faseklok</string>
+    <string name="omni_cfg_cutoff_session">Hard afbreken als de sessietijd op is</string>
+    <string name="omni_cfg_cutoff_game">Hard afbreken als de partijtijd op is</string>
+    <string name="omni_cfg_cutoff_round">Hard afbreken als de rondetijd op is</string>
+    <string name="omni_cfg_cutoff_turn">Hard afbreken als de beurttijd op is</string>
+    <string name="omni_cfg_cutoff_phase">Hard afbreken als de fasetijd op is</string>
+    <string name="omni_cfg_turn_disabled">Beurtklok uitgeschakeld.</string>
+    <string name="omni_cfg_phase_disabled">Faseklok uitgeschakeld.</string>
+
+    <string name="omni_cfg_game">Partij</string>
+    <string name="omni_cfg_round">Ronde</string>
+    <string name="omni_cfg_rounds">Rondes</string>
+    <string name="omni_cfg_turn">Beurt</string>
+    <string name="omni_cfg_turn_n">Beurt %d</string>
+    <string name="omni_cfg_step">Stap %1$d/%2$d</string>
+    <string name="omni_cfg_count">Aantal: %d</string>
+    <string name="omni_cfg_player_short">S%d</string>
+    <string name="omni_cfg_game_n">Partij %d</string>
+    <string name="omni_cfg_round_n">Ronde %d</string>
+    <string name="omni_cfg_phase_n">Fase %d</string>
+    <string name="omni_cfg_game_short">P%d</string>
+    <string name="omni_cfg_round_short">R%d</string>
+    <string name="omni_cfg_turn_short">B%d</string>
+    <string name="omni_cfg_delete_game">Partij %d verwijderen</string>
+    <string name="omni_cfg_delete_round">Ronde %d verwijderen</string>
+    <string name="omni_cfg_delete_turn">Beurt %d verwijderen</string>
+    <string name="omni_cfg_delete_phase">Fase %d verwijderen</string>
+    <string name="omni_cfg_phase_budget">Totaal: %1$d s / limiet: %2$d s</string>
+    <string name="omni_cfg_summary_rounds_varied">• Rondes per partij: %s</string>
+    <string name="omni_cfg_summary_order">• Volgorde: %s</string>
+    <string name="omni_cfg_phases_exceed">Partij „%1$s”, ronde „%2$s”, %3$s: de fases overschrijden de beurttijd!</string>
+    <string name="omni_cfg_turns">Beurten</string>
+    <string name="omni_cfg_phases">Fases</string>
+    <string name="omni_cfg_game_name">Naam van de partij</string>
+    <string name="omni_cfg_round_name">Naam van de ronde</string>
+    <string name="omni_cfg_phase_name">Naam van de fase</string>
+    <string name="omni_cfg_add_game">Partij toevoegen</string>
+    <string name="omni_cfg_add_round">Ronde toevoegen</string>
+    <string name="omni_cfg_add_turn">Beurt toevoegen</string>
+    <string name="omni_cfg_add_phase">Fase toevoegen</string>
+    <string name="omni_cfg_duration">Duur</string>
+    <string name="omni_cfg_total_duration">Totale duur</string>
+    <string name="omni_cfg_loop_turns">Beurten herhalen</string>
+    <string name="omni_cfg_end_round">Einde ronde</string>
+
+    <string name="omni_cfg_players_order">Spelers en volgorde</string>
+    <string name="omni_cfg_turn_order">Beurtvolgorde</string>
+    <string name="omni_cfg_pattern_linear">Patroon (3 spelers): 123, 123, 123</string>
+    <string name="omni_cfg_pattern_snake">Patroon (3 spelers): 123, 321, 123</string>
+    <string name="omni_cfg_pattern_rotate">Patroon (3 spelers): 123, 231, 312</string>
+    <string name="omni_cfg_pattern_random_turn">Patroon (3 spelers): 132, 312, 231 — een speler kan worden overgeslagen of twee keer worden geloot</string>
+    <string name="omni_cfg_pattern_random_round">Patroon (3 spelers): 231, 312, 123 — iedereen speelt één keer per ronde</string>
+    <string name="omni_cfg_shuffle_per_round">Per ronde schudden</string>
+    <string name="omni_cfg_draw_per_turn">Per beurt loten</string>
+    <string name="omni_cfg_balance_draw">De loting in balans brengen</string>
+    <string name="omni_cfg_balance_explain">Wie achterloopt in beurten heeft meer kans om aan de beurt te komen, zodat verschillen kleiner worden in plaats van op te lopen.</string>
+    <string name="omni_cfg_no_repeat">Nooit twee keer dezelfde speler achter elkaar</string>
+
+    <string name="omni_cfg_transitions">Overgangen en pauzes</string>
+    <string name="omni_cfg_enable_pauses">Pauzes inschakelen (buffers)</string>
+    <string name="omni_cfg_pauses_durations">Duur van de pauzes</string>
+    <string name="omni_cfg_turn_pause">Beurtpauze</string>
+    <string name="omni_cfg_round_pause">Rondepauze</string>
+    <string name="omni_cfg_game_pause">Partijpauze</string>
+    <string name="omni_cfg_pause_deducts_round">De pauze gaat van de ronde af</string>
+    <string name="omni_cfg_pause_deducts_game">De pauze gaat van de partij af</string>
+    <string name="omni_cfg_pause_deducts_global">De pauze gaat van het totaal af</string>
+    <string name="omni_cfg_launch_countdown">Aftellen bij de start</string>
+    <string name="omni_cfg_auto_restart">Automatisch herstarten</string>
+
+    <string name="omni_cfg_pressure">Druk en huishouding</string>
+    <string name="omni_cfg_advanced_rules">Geavanceerde regels</string>
+    <string name="omni_cfg_time_bank">Tijdbank</string>
+    <string name="omni_cfg_bank_per_player">Per speler</string>
+    <string name="omni_cfg_bank_shared">Gedeelde voorraad</string>
+    <string name="omni_cfg_bank_clear">Bank legen aan het eind van:</string>
+
+    <string name="omni_cfg_audio">Geluidswaarschuwingen</string>
+    <string name="omni_cfg_turn_beep">Beurtpiep</string>
+    <string name="omni_cfg_final_beep">Slotpiep</string>
+    <string name="omni_cfg_round_gong">Rondegong</string>
+
+    <string name="dur_10s">10 s</string>
+    <string name="dur_30s">30 s</string>
+    <string name="dur_1m">1 min</string>
+    <string name="dur_2m">2 min</string>
+    <string name="dur_5m">5 min</string>
+
+    <!-- Settings: More tab -->
+    <string name="settings_more_help">Hulp en ondersteuning</string>
+    <string name="settings_more_manual">Handboek van de tijdmodi</string>
+    <string name="settings_more_game_tools">Spelhulpmiddelen</string>
+    <string name="settings_more_variants">Generator voor schaakvarianten</string>
+    <string name="settings_more_rules">Enkele regels</string>
+    <string name="settings_more_scoreboard">Scorebord</string>
+    <string name="settings_more_notebook">Notitieboek</string>
+    <string name="settings_more_more_tools">Andere hulpmiddelen</string>
+    <string name="settings_more_coin_toss">Kop of munt</string>
+    <string name="settings_more_dice">Dobbelen</string>
+    <string name="settings_more_straw">Kortste strootje</string>
+    <string name="settings_more_card">Willekeurige kaart</string>
+    <string name="settings_more_stop">Op het juiste moment stoppen</string>
+    <string name="settings_more_blindfold">Blindtraining</string>
+    <string name="settings_more_knight">Paardenpad</string>
+    <string name="settings_more_name_square">Veld benoemen</string>
+    <string name="settings_more_board">Bordverbinding</string>
+    <string name="settings_more_link_board">Bord koppelen (nog niet beschikbaar)</string>
+    <string name="settings_more_auto_switch">Beurt automatisch wisselen</string>
+    <string name="settings_more_game">Partij</string>
+    <string name="settings_more_game_data">Spelgegevens</string>
+    <string name="settings_more_logs">Logboeken en partijgeschiedenis</string>
+    <string name="settings_more_limit_count">Geschiedenis beperken op aantal</string>
+    <string name="settings_more_limit_age">Geschiedenis beperken op ouderdom</string>
+    <string name="settings_more_data_sharing">Gegevens en delen</string>
+    <string name="settings_more_export">Exporteren / delen</string>
+    <string name="settings_more_import">Importeren / scannen</string>
+    <string name="settings_more_share_apk">Applicatie delen (APK)</string>
+    <string name="settings_more_share_apk_via">APK delen via</string>
+    <string name="settings_more_danger">Risicozone</string>
+    <string name="settings_more_clear_logs">Logboeken wissen</string>
+    <string name="settings_more_reset_settings">Instellingen resetten</string>
+    <string name="toast_preparing_apk">Applicatiebestand wordt voorbereid…</string>
+    <string name="toast_apk_error">Fout: het bestand kon niet worden voorbereid</string>
+
+    <!-- Compact age limits -->
+    <string name="age_one_day">1 d</string>
+    <string name="age_one_week">1 wk</string>
+    <string name="age_one_month">1 mnd</string>
+    <string name="age_six_months">6 mnd</string>
+    <string name="age_one_year">1 jr</string>
+
+    <!-- Omni station -->
+    <string name="omni_reset_title">Sessie resetten?</string>
+    <string name="omni_reset_message">Alle voortgang over rondes en partijen gaat verloren.</string>
+    <string name="omni_reset_confirm">RESETTEN</string>
+    <string name="omni_cancel" tools:ignore="ButtonCase">ANNULEREN</string>
+    <string name="omni_progress_session">Sessie</string>
+    <string name="omni_header">Omni: %s</string>
+    <string name="omni_progress_game">Partij %1$d/%2$d</string>
+    <string name="omni_progress_round">Ronde %1$d/%2$d</string>
+    <string name="omni_get_ready">MAAK JE KLAAR</string>
+    <string name="omni_phase_default">Fase</string>
+    <string name="omni_next">Volgende</string>
+    <string name="omni_pause">Pauze</string>
+    <string name="omni_stop_session">Sessie stoppen</string>
+    <string name="omni_reset_session">Sessie resetten</string>
+    <string name="omni_running">BEZIG</string>
+    <string name="omni_paused">GEPAUZEERD</string>
+    <string name="omni_round_finished">RONDE AFGELOPEN</string>
+    <string name="omni_game_finished">PARTIJ AFGELOPEN</string>
+    <string name="omni_session_complete">SESSIE VOLTOOID</string>
+    <string name="omni_turn_finished">BEURT AFGELOPEN</string>
+    <string name="omni_prepare_round">Maak je klaar voor ronde %d</string>
+    <string name="omni_prepare_game">Maak je klaar voor partij %d</string>
+    <string name="omni_thanks">Bedankt voor het spelen!</string>
+    <string name="omni_next_player">Volgende: speler %d</string>
+    <string name="omni_i_am_ready">IK BEN KLAAR</string>
+    <string name="omni_close_session">SESSIE SLUITEN</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">Statistieken</string>
+    <string name="stats_empty">Nog geen afgeronde partijen.\n\nEen partij wordt opgeslagen wanneer je hem reset: speel een partij en tik op Resetten om hier je statistieken te zien.</string>
+    <string name="stats_games_played">Gespeelde partijen</string>
+    <string name="stats_moves">Zetten</string>
+    <string name="stats_average_move">Gemiddelde zet</string>
+    <string name="stats_median_move">Mediane zet</string>
+    <string name="stats_slowest_move">Traagste zet</string>
+    <string name="stats_time_on_clock">Tijd op de klok</string>
+    <string name="stats_time_pressure">Zetten gespeeld onder 10 % van de starttijd</string>
+    <string name="stats_recent_game">Meest recente partij</string>
+    <string name="stats_modes_played">Gespeelde modi</string>
+
+    <plurals name="omni_cfg_summary_games">
+        <item quantity="one">• %1$d spelers | %2$d partij</item>
+        <item quantity="other">• %1$d spelers | %2$d partijen</item>
+    </plurals>
+
+    <plurals name="omni_cfg_summary_rounds_uniform">
+        <item quantity="one">• %d ronde per partij</item>
+        <item quantity="other">• %d rondes per partij</item>
+    </plurals>
+
+    <plurals name="stats_chart_moves">
+        <item quantity="one">%d zet</item>
+        <item quantity="other">%d zetten</item>
+    </plurals>
+
+    <plurals name="stats_chart_description">
+        <item quantity="one">Tijd per zet. Traagste %1$s over %2$d zet.</item>
+        <item quantity="other">Tijd per zet. Traagste %1$s over %2$d zetten.</item>
+    </plurals>
+
+    <!-- Timer Screen -->
+    <string name="timer_reset_title">Partij resetten?</string>
+    <string name="timer_reset_message">De huidige stand gaat verloren.</string>
+    <string name="timer_reroll">Nieuwe willekeurige tijd</string>
+    <string name="timer_reroll_title">Een nieuwe tijd loten?</string>
+    <string name="timer_reroll_message">De partij begint opnieuw met een nieuwe willekeurige tijd.</string>
+    <string name="timer_arbitre_control">Arbiterbediening</string>
+    <string name="timer_arbitre">Arbiter</string>
+    <string name="timer_save_clock">Klok opslaan</string>
+    <string name="timer_resume">Hervatten</string>
+    <string name="timer_byoyomi">BYOYOMI</string>
+    <string name="timer_cycle">CYCLUS: %d</string>
+    <string name="timer_moves">ZETTEN: %d</string>
+    <string name="timer_delay">VERTRAGING: %s</string>
+    <string name="timer_flagged">GEVALLEN</string>
+    <string name="timer_period_flag">EINDE PERIODE</string>
+    <string name="timer_reflect">BEDENKEN</string>
+    <string name="timer_move_alert">ZET!</string>
+    <string name="timer_pause_label">PAUZE</string>
 </resources>

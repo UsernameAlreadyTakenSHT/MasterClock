@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock Complete — nl
+
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here.
+
+  app_name is left out on purpose — it is the product name.
+
+  Translated without a native reviewer, like every language here except the French.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Rules screen -->
+    <string name="rules_title">Enkele regels</string>
+    <string name="rules_intro">Naslagwerken, offline te lezen.</string>
+    <string name="rules_group_chess">Schaken (officieel document)</string>
+    <string name="rules_group_draughts">Dammen (officieel document)</string>
+    <string name="rules_group_shogi">Shogi (officieel document)</string>
+    <string name="rules_group_more_games">Andere spellen</string>
+    <string name="rules_group_more_resources">Andere bronnen</string>
+    <string name="toast_pdf_open_failed">Dit document kon niet worden geopend</string>
+    <string name="toast_no_pdf_viewer">Geen pdf-lezer geïnstalleerd</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_connected">Klaar om zetten te ontvangen</string>
+    <string name="board_connected_to">Verbonden: %s</string>
+    <string name="board_connecting">Verbinden…</string>
+    <string name="board_disconnect">Verbinding verbreken</string>
+    <string name="board_disconnected">Verbinding verbroken</string>
+    <string name="board_error">Fout: %s</string>
+    <string name="board_last_move">Laatste zet: %s</string>
+    <string name="board_looking">Zoeken naar borden…</string>
+    <string name="board_nearby">Apparaten in de buurt</string>
+    <string name="board_none_found">Geen apparaat gevonden. Tik op vernieuwen om te zoeken.</string>
+    <string name="board_scan">Zoeken</string>
+    <string name="board_scanning">Zoeken naar borden…</string>
+    <string name="board_title">Bordverbinding</string>
+    <string name="board_unknown_device">Onbekend apparaat</string>
+    <string name="common_share">Delen</string>
+
+    <!-- Mode guide: names stay English, descriptions are translated -->
+    <string name="guide_intro">Volledige documentatie van de tijdmodi van MasterClock en hun submodi, in de volgorde van de interface.</string>
+    <string name="guide_bonus_bronstein_desc">Geeft de tijd van de zet terug, maar nooit meer dan de ingestelde vertraging. Niet cumulatief.</string>
+    <string name="guide_bonus_fischer_desc">Voegt NA elke zet een vaste tijd (increment) toe.</string>
+    <string name="guide_bonus_us_delay_desc">Een vertraging vóór het aftellen. De klok wacht de vertraging af voordat hij begint te lopen.</string>
+    <string name="guide_byoyomi_canadian_desc">Spelers moeten een vast aantal zetten doen binnen één langere periode.</string>
+    <string name="guide_byoyomi_japanese_desc">Na de hoofdtijd krijgen spelers een reeks korte periodes, die bij elke zet opnieuw beginnen.</string>
+    <string name="guide_byoyomi_progressive_desc">Het aantal vereiste zetten neemt toe bij elke voltooide periode.</string>
+    <string name="guide_chrono_countdown_desc">Hoofdklok die de hele partij aftelt.</string>
+    <string name="guide_chrono_countup_desc">Stopwatchmodus die de totale verstreken tijd meet.</string>
+    <string name="guide_chrono_one_for_all_desc">Globale klok die niet van speler wisselt wanneer op de knoppen wordt gedrukt.</string>
+    <string name="guide_counts_down_desc">Begint bij een limiet en telt af tot nul resterende zetten.</string>
+    <string name="guide_counts_up_desc">Toont het totale aantal zetten sinds het begin.</string>
+    <string name="guide_fast_move_desc">Dynamische aanpassing van het tempo op basis van zetfrequentie of opgebouwde straf.</string>
+    <string name="guide_fide_desc">Toernooitempo in meerdere fases (bijvoorbeeld 40 zetten in 90 min + 30 min bonus).</string>
+    <string name="guide_gong_desc">Verplichte zetten op vaste intervallen (gelijktijdig of om beurten).</string>
+    <string name="guide_hidden_desc">Verbergt de cijfers van de klok bij bepaalde drempels om de spanning op te voeren.</string>
+    <string name="guide_hourglass_desc">De tijd die een speler verliest wordt bij de tegenstander opgeteld. De totale tijd blijft gelijk.</string>
+    <string name="guide_move_global_desc">Zettijd en globale tijd lopen tegelijk. Beide moeten boven nul blijven.</string>
+    <string name="guide_move_global_shared_desc">Alle spelers delen een globale voorraad en hebben daarnaast een eigen zetklok.</string>
+    <string name="guide_move_overtime_desc">Voegt ongebruikte zettijd toe aan een tweede globale voorraad.</string>
+    <string name="guide_move_save_cap_desc">Ongebruikte zettijd gaat naar een bank, met een maximum.</string>
+    <string name="guide_move_shared_desc">Eén klok voor alle spelers. Wisselt automatisch bij 0:00.</string>
+    <string name="guide_move_standard_desc">Gaat bij elke zet terug naar een vaste duur.</string>
+    <string name="guide_omni_desc">Professionele centrale met 6 niveaus voor complexe spelstructuren (partijen &gt; rondes &gt; beurten &gt; fases).</string>
+    <string name="guide_phases_desc">Opeenvolging van verschillende klokken (bijvoorbeeld voorbereiding 5 min -&gt; partij 20 min -&gt; Sudden Death).</string>
+    <string name="guide_random_desc">Basistijd en incrementen worden geloot binnen een ingesteld bereik.</string>
+    <string name="guide_section_advanced">Geavanceerde en experimentele modi</string>
+    <string name="guide_section_bonus">Modi met bonus</string>
+    <string name="guide_section_specialty">Speciale modi</string>
+    <string name="guide_sudden_death_standard_desc">Puur aftellen. De eerste speler die 0:00 bereikt verliest of valt.</string>
+
+    <!-- QR sharing -->
+    <string name="qr_align" tools:ignore="Typos">Lijn de code uit in het camerabeeld</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">Toegang tot de camera is nodig om codes te scannen.</string>
+    <string name="qr_code">QR-code</string>
+    <string name="qr_scan_title">QR-code scannen</string>
+    <string name="qr_share_hint">Scan deze code op een ander apparaat om de configuratie over te nemen.</string>
+    <string name="qr_share_includes">Bevat: configuratie van de klok</string>
+    <string name="qr_share_title">Delen via QR-code</string>
+    <string name="qr_too_large">De QR-code kon niet worden gemaakt — de gegevens zijn waarschijnlijk te groot. Probeer het zonder de partijlogboeken.</string>
+
+    <!-- Toasts -->
+    <string name="toast_audio_failed">Audio kon niet worden afgespeeld</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">Toegang tot de camera is nodig</string>
+    <string name="toast_fen_copied">FEN gekopieerd</string>
+    <string name="toast_mic_permission">Toegang tot de microfoon is nodig.</string>
+    <string name="toast_note_deleted">Notitie verwijderd</string>
+    <string name="toast_permission_granted">Toegang verleend. Tik opnieuw op Opnemen.</string>
+    <string name="toast_start_failed">Starten mislukt</string>
+
+    <!-- Tools -->
+    <string name="tools_add_result">Resultaat toevoegen</string>
+    <string name="tools_add_result_placeholder">Resultaat of notitie toevoegen…</string>
+    <string name="tools_audio">Audio</string>
+    <string name="tools_audio_note">Audionotitie</string>
+    <string name="tools_board">Bord</string>
+    <string name="tools_bold">Vet</string>
+    <string name="tools_checkbox">Selectievakje</string>
+    <string name="tools_clear_board">Bord leegmaken</string>
+    <string name="tools_color">Kleur</string>
+    <string name="tools_copy_fen">FEN KOPIËREN</string>
+    <string name="tools_copy_format">%s kopiëren</string>
+    <string name="tools_dark_square">ZWART</string>
+    <string name="tools_delete_recording">Opname verwijderen</string>
+    <string name="tools_detailed_moves">Zetten in detail</string>
+    <string name="tools_dice_roll">Dobbelworp</string>
+    <string name="tools_draw">Tekenen</string>
+    <string name="tools_draw_again">Opnieuw loten</string>
+    <string name="tools_draw_note">Tekennotitie</string>
+    <string name="tools_edit_board">Bord bewerken</string>
+    <string name="tools_edit_note">Notitie bewerken</string>
+    <string name="tools_eraser">Gum</string>
+    <string name="tools_final_score">Eindstand: %d</string>
+    <string name="tools_format_hint">Selecteer tekst en gebruik de werkbalk om die op te maken…</string>
+    <string name="tools_game_logs">Partijlogboeken</string>
+    <string name="tools_game_over">PARTIJ AFGELOPEN</string>
+    <string name="tools_generate">GENEREREN</string>
+    <!-- Dutch coins land kop or munt; heads is KOP. -->
+    <string name="tools_heads">KOP</string>
+    <string name="tools_tails">MUNT</string>
+    <string name="tools_image">Afbeelding</string>
+    <string name="tools_image_note">Afbeeldingsnotitie</string>
+    <string name="tools_italic">Cursief</string>
+    <string name="tools_large">Groot</string>
+    <string name="tools_left">Links</string>
+    <string name="tools_log_details">Details van het logboek</string>
+    <string name="tools_match_summary">Samenvatting van de wedstrijd</string>
+    <string name="tools_min_moves">Minimaal aantal zetten?</string>
+    <string name="tools_move">Zet</string>
+    <string name="tools_name_square_title">Veld benoemen</string>
+    <string name="tools_new_audio_note">Nieuwe audionotitie</string>
+    <string name="tools_new_board_note">Nieuwe bordnotitie</string>
+    <string name="tools_new_draw_note">Nieuwe tekennotitie</string>
+    <string name="tools_new_image_note">Nieuwe afbeeldingsnotitie</string>
+    <string name="tools_new_note">Nieuwe notitie</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Nieuwe videonotitie</string>
+    <string name="tools_no_games">Nog geen partijen opgeslagen.</string>
+    <string name="tools_no_notes">Nog geen notities. Tik op + om er een te maken.</string>
+    <string name="tools_no_photo">Nog geen foto</string>
+    <string name="tools_no_video" tools:ignore="Typos">Nog geen video (max. 1 min)</string>
+    <string name="tools_normal">Normaal</string>
+    <string name="tools_note_image">Afbeelding van de notitie</string>
+    <string name="tools_offset">Afwijking: %1$s%2$d ms</string>
+    <string name="tools_pick_straw">Strootje %d trekken</string>
+    <string name="tools_play">Afspelen</string>
+    <string name="tools_player_short">S%d</string>
+    <string name="tools_prepare">MAAK JE KLAAR</string>
+    <string name="tools_random_card">Willekeurige kaart</string>
+    <string name="tools_record">Opnemen</string>
+    <string name="tools_record_video" tools:ignore="Typos">Video opnemen</string>
+    <string name="tools_reset_scoreboard">Scorebord resetten</string>
+    <string name="tools_retake_photo">Foto opnieuw maken</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Video opnieuw opnemen</string>
+    <string name="tools_roll_dice">Dobbelen</string>
+    <string name="tools_score">Stand: %d</string>
+    <string name="tools_select_piece">Stuk kiezen</string>
+    <string name="tools_select_text_color">Tekstkleur kiezen</string>
+    <string name="tools_share_log">Logboek delen</string>
+    <string name="tools_short_straw">Kortste strootje</string>
+    <string name="tools_shred">Vernietigen</string>
+    <string name="tools_spent">Gebruikt</string>
+    <string name="tools_start">STARTEN</string>
+    <string name="tools_start_trial">POGING STARTEN</string>
+    <string name="tools_stop">STOP</string>
+    <string name="tools_stop_precision">Nauwkeurigheid bij stoppen</string>
+    <string name="tools_take_photo">Foto maken</string>
+    <string name="tools_target">DOEL</string>
+    <string name="tools_target_time">Doel: 5,000 s</string>
+    <string name="tools_text">Tekst</string>
+    <string name="tools_time_per_move">Tijd per zet</string>
+    <string name="tools_title">Titel</string>
+    <string name="tools_toss_coin">Munt opgooien</string>
+    <string name="tools_underline">Onderstreept</string>
+    <string name="tools_undo">Ongedaan maken</string>
+    <string name="tools_variant_generator">Variantengenerator</string>
+    <string name="tools_video" tools:ignore="Typos">Video</string>
+    <string name="tools_video_note" tools:ignore="Typos">Videonotitie</string>
+    <string name="tools_white_square">WIT</string>
+
+    <!-- Chess variants: names stay English, descriptions are translated -->
+    <string name="variant_chess2880_desc">Symmetrisch, ongelijke lopers, koning op een willekeurig veld (geen rokade).</string>
+    <string name="variant_chess960_desc">Symmetrisch, ongelijke lopers, koning tussen de torens (met rokade).</string>
+    <string name="variant_double960_desc">Asymmetrisch, ongelijke lopers, koning tussen de torens (tactiek op hoog niveau).</string>
+    <string name="variant_shuffle_desc">Symmetrisch, koning en lopers op willekeurige velden (volledig toeval).</string>
+    <string name="variant_transcendental_desc">Asymmetrisch, ongelijke lopers, koning op een willekeurig veld (zeer tactisch).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Strootjes: %d</item>
+        <item quantity="other">Strootjes: %d</item>
+    </plurals>
+</resources>
