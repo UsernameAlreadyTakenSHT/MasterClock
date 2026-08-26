@@ -289,51 +289,59 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                     }
                 }
 
-                Column(
-                    modifier = Modifier
-                        .heightIn(max = 320.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    when (selectedTab) {
-                        0 -> AppInfo.CHANGELOG.forEach { entry ->
-                            Column {
+                // The changelog runs well past the 320dp cap, and inside a dialog there is even
+                // less to hint at it than on a full page. Same scrollbar as the settings page.
+                val entriesScroll = rememberScrollState()
+
+                Row(modifier = Modifier.heightIn(max = 320.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(entriesScroll),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        when (selectedTab) {
+                            0 -> AppInfo.CHANGELOG.forEach { entry ->
+                                Column {
+                                    Text(
+                                        "${entry.version} — ${entry.date}",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    entry.notes.forEach { note ->
+                                        Text("• $note", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                                    }
+                                }
+                            }
+                            1 -> {
+                                AppInfo.CREDITS.forEach { CreditRow(it) }
                                 Text(
-                                    "${entry.version} — ${entry.date}",
-                                    style = MaterialTheme.typography.labelLarge,
+                                    stringResource(R.string.credits_rules_documents),
+                                    style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                entry.notes.forEach { note ->
-                                    Text("• $note", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                                AppInfo.RULES_CREDITS.forEach { CreditRow(it) }
+                            }
+                            else -> {
+                                Text(
+                                    stringResource(R.string.credits_libraries),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                AppInfo.ossLicenses().forEach { lib ->
+                                    CreditRow(
+                                        AppInfo.CreditEntry(
+                                            title = lib.name,
+                                            detail = "${lib.copyright} — ${lib.license}",
+                                            url = lib.url,
+                                        )
+                                    )
                                 }
                             }
                         }
-                        1 -> {
-                            AppInfo.CREDITS.forEach { CreditRow(it) }
-                            Text(
-                                stringResource(R.string.credits_rules_documents),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            AppInfo.RULES_CREDITS.forEach { CreditRow(it) }
-                        }
-                        else -> {
-                            Text(
-                                stringResource(R.string.credits_libraries),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            AppInfo.ossLicenses().forEach { lib ->
-                                CreditRow(
-                                    AppInfo.CreditEntry(
-                                        title = lib.name,
-                                        detail = "${lib.copyright} — ${lib.license}",
-                                        url = lib.url,
-                                    )
-                                )
-                            }
-                        }
                     }
+
+                    ScrollbarMMD(entriesScroll)
                 }
 
                 ButtonMMD(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
