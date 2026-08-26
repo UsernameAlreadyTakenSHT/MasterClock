@@ -1,15 +1,549 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MasterClock — pt
+  MasterClock — pt (European Portuguese)
 
-  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
-  fully usable while this file is being filled in.
+  This file is the European variant. Brazilian devices resolve values-pt-rBR first and fall back
+  here string by string, so that file only carries the words that actually differ — "tela" for
+  "ecrã", "configurações" for "definições", "compartilhar" for "partilhar", and the -ônico
+  spellings. Everything else is shared and lives here.
 
-  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
-  the name attribute alone. See TRANSLATING.md at the repository root.
+  Mode names (Fischer, Byoyomi, Sudden Death…) and chess variant names are Kotlin literals rather
+  than resources, so they stay in English by construction.
 
-  tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
-  partial; it does not hide anything you need to see.
+  app_name and settings_app_version are left out on purpose: they are the product name.
+
+  Translated without a native reviewer, like the Spanish, German and Italian.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Common -->
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_reset">Zerar</string>
+    <string name="common_player_n">Jogador %d</string>
+    <string name="common_back_to_game">Voltar à partida</string>
+    <string name="common_back">Voltar</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="common_rename">Mudar o nome</string>
+    <string name="common_name">Nome</string>
+    <string name="common_clear">Limpar</string>
+    <string name="common_close">Fechar</string>
+    <string name="common_remove">Remover</string>
+    <string name="common_select">Selecionar</string>
+    <string name="common_optional">Opcional</string>
+    <string name="common_off">Nenhum</string>
+
+    <!-- Presets -->
+    <string name="preset_title">Predefinições</string>
+    <string name="preset_tab_all">Todas</string>
+    <string name="preset_tab_mine">As minhas</string>
+    <!-- Short on purpose: the third tab is narrow, as every language before this one found. -->
+    <string name="preset_tab_last_games">Últimas</string>
+    <string name="preset_save_current">Guardar o ritmo atual</string>
+    <string name="preset_save_title">Guardar o ritmo de jogo</string>
+    <string name="preset_rename_title">Mudar o nome da predefinição</string>
+    <string name="preset_empty_custom">Configure um ritmo de jogo e guarde-o aqui.</string>
+    <string name="preset_long_press_hint">Mantenha premida uma predefinição para lhe mudar o nome ou eliminá-la.</string>
+    <string name="preset_manage_action">Mudar o nome ou eliminar</string>
+    <string name="preset_view_statistics">Ver as estatísticas</string>
+    <string name="preset_empty_history">Ainda não foi jogada nenhuma partida.</string>
+    <string name="preset_delete_title">Eliminar «%s»?</string>
+    <string name="preset_delete_message">Esta predefinição será removida definitivamente.</string>
+
+    <!-- Mode settings -->
+    <string name="settings_select_mode">Escolher o modo de jogo</string>
+    <string name="settings_bonus_type">Tipo de bónus</string>
+    <string name="settings_move_timer_type">Tipo de Move Timer</string>
+    <string name="settings_byoyomi_type">Tipo de byoyomi</string>
+    <string name="settings_chrono_type">Tipo de cronómetro</string>
+    <string name="settings_move_counts_type">Tipo de contagem de lances</string>
+    <string name="settings_fast_move_type">Tipo de Fast Move</string>
+    <string name="settings_time_parameters">Parâmetros de tempo</string>
+    <string name="settings_initial_time">Tempo inicial</string>
+    <string name="settings_increment">Incremento</string>
+    <string name="settings_increment_bonus">Incremento / bónus</string>
+    <string name="settings_delay">Atraso</string>
+    <string name="settings_move_time">Tempo por lance</string>
+    <string name="settings_time_per_move">Tempo por lance</string>
+    <string name="settings_time_to_move">Tempo para jogar</string>
+    <string name="settings_starting_move_time">Tempo inicial por lance</string>
+    <string name="settings_time_cap">Limite de tempo</string>
+    <string name="settings_byoyomi_time">Tempo de byoyomi</string>
+    <string name="settings_periods_goal">Períodos / objetivo de lances</string>
+    <string name="settings_progression">Progressão (lances)</string>
+    <string name="settings_max_moves">Lances máximos</string>
+    <string name="settings_decrement_per_move">Decremento por lance</string>
+    <string name="settings_min_time_floor">Tempo mínimo garantido</string>
+    <string name="settings_grace_period">Período de tolerância (velocidade normal)</string>
+    <string name="settings_full_fast_starts">Aceleração máxima a partir de</string>
+    <string name="settings_reflection_time">Tempo de reflexão</string>
+    <string name="settings_simultaneous">Jogo simultâneo</string>
+    <string name="settings_duration">Duração</string>
+    <string name="settings_base_duration_range">Intervalo da duração base</string>
+    <string name="settings_increment_range">Intervalo de incremento (Fischer)</string>
+    <string name="settings_min_duration">Duração mínima</string>
+    <string name="settings_max_duration">Duração máxima</string>
+    <string name="settings_min_increment">Incremento mínimo</string>
+    <string name="settings_max_increment">Incremento máximo</string>
+    <string name="settings_rounded_time">Tempo arredondado (minutos/segundos)</string>
+    <string name="settings_random_config">Configuração do modo Random</string>
+    <string name="settings_hidden_config">Configuração do modo Hidden</string>
+    <string name="settings_show_percentage">Mostrar os alertas de percentagem</string>
+    <string name="settings_fide_config">Configuração dos períodos FIDE</string>
+    <string name="settings_add_period">Adicionar um período</string>
+    <string name="settings_actions">Ações</string>
+    <string name="settings_period_n">Período %d</string>
+    <string name="settings_moves_unlock">Lances para desbloquear o seguinte (0 = final)</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Lances até ao período %d</string>
+    <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nome da fase %d</string>
+    <string name="settings_phase_n">Fase %d</string>
+    <string name="settings_color_red">Vermelho: %d</string>
+    <string name="settings_color_green">Verde: %d</string>
+    <string name="settings_color_blue">Azul: %d</string>
+    <string name="settings_fast_accel_rate">Taxa de aceleração rápida (+%s s/s)</string>
+    <string name="settings_full_fast_accel_rate">Taxa de aceleração máxima (+%s s/s)</string>
+    <string name="settings_version">Versão %s</string>
+    <string name="settings_final_period">Este será o último período da partida.</string>
+    <string name="settings_flag_on_end">Queda da bandeirinha no fim (derrota)</string>
+    <string name="settings_phases_config">Configuração das fases</string>
+    <string name="settings_repeat_phases">Repetir as fases (ciclo)</string>
+    <string name="settings_pause_between_phases">Pausa entre as fases</string>
+    <string name="settings_auto_advance">Avanço automático</string>
+    <string name="settings_allow_skip">Permitir avançar manualmente (tocar para adiantar)</string>
+    <string name="settings_phase_placeholder">Preparação, ronda X…</string>
+    <string name="settings_cumulative_transfer">Transferência cumulativa</string>
+    <string name="settings_cumulative_explain">Se estiver desligado, só o tempo gasto no último lance passa para o adversário.</string>
+    <string name="settings_one_for_all">One for All (sem toques)</string>
+
+    <string name="settings_select_custom_color">Escolher uma cor personalizada</string>
+    <string name="settings_pick_colour">Escolha uma cor personalizada</string>
+    <string name="settings_sound_custom">Som personalizado selecionado</string>
+    <string name="settings_sound_default">A usar o som predefinido</string>
+    <string name="settings_sound_clear">Remover o som personalizado</string>
+    <string name="settings_sound_change">Mudar o som personalizado</string>
+    <string name="settings_sound_choose">Escolher um som personalizado</string>
+
+    <string name="toast_backup_ok">Cópia de segurança concluída!</string>
+    <string name="toast_import_ok">Importação concluída!</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Jogador %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Jogador %1$d, %2$s, é a sua vez</string>
+    <string name="a11y_out_of_time">sem tempo</string>
+    <string name="a11y_no_time_left">não resta tempo</string>
+    <string name="a11y_announce_out_of_time">O jogador %d ficou sem tempo</string>
+    <string name="a11y_announce_paused">Em pausa</string>
+    <string name="a11y_announce_to_move">É a vez do jogador %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Portuguese three categories: one, many for round millions, and other. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d hora</item>
+        <item quantity="many">%d de horas</item>
+        <item quantity="other">%d horas</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="many">%d de minutos</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d segundo</item>
+        <item quantity="many">%d de segundos</item>
+        <item quantity="other">%d segundos</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">resta %d período</item>
+        <item quantity="many">restam %d de períodos</item>
+        <item quantity="other">restam %d períodos</item>
+    </plurals>
+
+    <!-- Timer chips -->
+    <string name="timer_bank">BANCO</string>
+    <string name="timer_global">GLOBAL</string>
+    <string name="timer_total">TOTAL</string>
+    <!--
+      "OT" holds move time the player did not spend, not extra time granted, so "prolongamento"
+      would say the opposite. SOBRA is the leftover it actually is.
+    -->
+    <string name="timer_overtime">SOBRA</string>
+    <string name="timer_switch_turn">Trocar de vez</string>
+    <string name="timer_presets">Predefinições</string>
+    <string name="timer_settings">Definições</string>
+    <string name="timer_pause">Pausa</string>
+
+    <!-- Settings tabs and dialogs -->
+    <string name="settings_tab_modes">Modos</string>
+    <!-- Short like the French "Jeu", Spanish "Juego", German "Spiel" and Italian "Gioco". -->
+    <string name="settings_tab_behavior">Jogo</string>
+    <string name="settings_tab_display">Ecrã</string>
+    <string name="settings_tab_audio">Áudio</string>
+    <string name="settings_tab_more">Mais</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_clear_logs_title">Limpar todo o histórico de partidas?</string>
+    <string name="settings_clear_logs_message">Todo o histórico registado será eliminado definitivamente.</string>
+    <string name="settings_reset_title">Repor todas as definições?</string>
+    <string name="settings_reset_message">Esta ação não pode ser anulada.</string>
+
+    <!-- Enum-backed option labels -->
+    <string name="flag_freeze">Congelar</string>
+    <string name="flag_flag">Bandeirinha</string>
+    <string name="flag_negative">Negativo</string>
+    <string name="flag_reverse">Invertido</string>
+
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="theme_auto">Auto</string>
+
+    <string name="game_chess">Xadrez</string>
+    <string name="game_draughts">Damas</string>
+    <string name="game_shogi">Shogi</string>
+
+    <string name="order_linear">Linear</string>
+    <string name="order_snake">Serpente</string>
+    <string name="order_rotate">Rotação</string>
+    <string name="order_random">Aleatório</string>
+
+    <!-- Settings: Display -->
+    <string name="settings_theme">Tema</string>
+    <string name="settings_orientation">Orientação</string>
+    <string name="settings_vert">Vertical</string>
+    <string name="settings_layout_scale">Disposição e tamanho</string>
+    <string name="settings_active_side_bigger">Lado ativo maior</string>
+    <string name="settings_fullscreen">Ecrã inteiro</string>
+    <string name="settings_flash_low_time">Piscar com pouco tempo (&lt;10 s)</string>
+    <string name="settings_keep_awake">Manter o ecrã ligado</string>
+    <string name="settings_force_brightness">Forçar o brilho máximo</string>
+    <string name="settings_primary_colors">Cores principais</string>
+    <string name="settings_active_bg">Fundo do lado ativo</string>
+    <string name="settings_inactive_bg">Fundo do lado inativo</string>
+    <string name="settings_active_text">Texto do relógio ativo</string>
+    <string name="settings_inactive_text">Texto do relógio inativo</string>
+    <string name="settings_secondary_info">Informações secundárias</string>
+    <string name="settings_label_text_color">Cor das etiquetas (lances, períodos, atraso)</string>
+    <string name="settings_alert_text_color">Cor dos alertas (QUEDA, JOGUE!)</string>
+    <string name="settings_special_states">Estados especiais</string>
+    <string name="settings_loss_bg">Fundo em caso de derrota</string>
+    <string name="settings_gong_reflection_bg">Gong: fundo da reflexão</string>
+    <string name="settings_time_format">Formato do tempo</string>
+    <string name="settings_always_hours">Mostrar sempre as horas</string>
+    <string name="settings_always_minutes">Mostrar sempre os minutos</string>
+    <string name="settings_leading_zeros">Zeros iniciais</string>
+    <string name="settings_show_tenths">Mostrar os décimos de segundo</string>
+    <string name="settings_show_hundredths">Mostrar os centésimos</string>
+    <string name="settings_like_tenths">Como os décimos</string>
+    <string name="settings_under_10s">Abaixo de 10 s</string>
+    <string name="settings_threshold">Limiar</string>
+    <string name="settings_all">Tudo</string>
+    <string name="settings_information">Informações</string>
+    <string name="settings_always_show_moves">Mostrar sempre os lances</string>
+    <string name="settings_show_period" tools:ignore="TypographyFractions">Mostrar o período (1/3)</string>
+
+    <!-- Settings: Audio -->
+    <string name="settings_sound">Som</string>
+    <string name="settings_voice_announcements">Anúncios de voz</string>
+    <string name="settings_timer_alerts">Alertas do relógio</string>
+    <string name="settings_countdown_beep">Apito da contagem decrescente</string>
+    <string name="settings_triple_beep">Apito triplo ao esgotar o tempo</string>
+    <string name="settings_play_switch_sound">Som ao trocar de jogador</string>
+    <string name="settings_haptics">Retorno tátil</string>
+    <string name="settings_haptic_countdown">Contagem decrescente tátil</string>
+    <string name="settings_haptic_switch">Vibração ao trocar</string>
+    <string name="settings_haptic_feedback">Retorno tátil</string>
+    <string name="settings_output_volume">Saída e volume</string>
+    <string name="settings_sounds_volume">Volume dos sons</string>
+    <string name="settings_voice_volume">Volume da voz</string>
+    <string name="settings_voice_announcement">Anúncio de voz</string>
+    <string name="settings_use_media_output">Usar a saída multimédia</string>
+    <string name="settings_custom_sounds">Sons personalizados</string>
+    <string name="settings_sound_previews">Pré-visualização dos sons</string>
+    <string name="settings_gong_mode_sound">Gong (modo gong)</string>
+    <string name="settings_beep_countdown_sound">Apito (contagem decrescente)</string>
+    <string name="settings_final_beep_sound">Apito final (tempo esgotado)</string>
+    <string name="settings_switch_sound">Troca (lance jogado)</string>
+    <string name="settings_gong">Gong</string>
+    <string name="settings_beep">Apito</string>
+    <string name="settings_final">Final</string>
+    <string name="settings_switch">Troca</string>
+
+    <!-- Settings: Behavior -->
+    <string name="settings_flag_behavior">Comportamento na queda da bandeirinha</string>
+    <string name="settings_tournament_rules">Regras de torneio</string>
+    <string name="settings_fischer_fide">Fischer FIDE (bónus a partir do lance 0)</string>
+    <string name="settings_forced_move_counter">Contador de lances obrigatório</string>
+    <string name="settings_interaction">Interação</string>
+    <string name="settings_confirm_reset">Confirmar a reposição</string>
+    <string name="settings_trigger_on_press">Ativar ao premir (caso contrário ao largar)</string>
+    <string name="settings_pause_background">Pausar em segundo plano</string>
+    <string name="settings_advanced">Avançado</string>
+    <string name="settings_different_per_player">Definições diferentes por jogador</string>
+    <string name="settings_more_players">Ativar mais jogadores (experimental)</string>
+    <string name="settings_players">Jogadores</string>
+    <string name="settings_visuals">Aspeto</string>
+    <string name="settings_single_player_top">Jogador único em cima</string>
+    <string name="settings_system_behavior">Comportamento do sistema</string>
+
+    <!-- Export / import dialogs -->
+    <string name="share_settings">Partilhar as definições</string>
+    <string name="share_export_title">Exportar e partilhar</string>
+    <string name="share_export_intro">Escolha como quer partilhar ou guardar os seus dados.</string>
+    <string name="share_file">Partilhar um ficheiro</string>
+    <string name="share_file_desc">Enviar um ficheiro de configuração .json a um amigo.</string>
+    <string name="share_qr">Partilhar por código QR</string>
+    <string name="share_qr_desc">Leitura imediata para outro dispositivo (só definições).</string>
+    <string name="share_export_storage">Exportar para o armazenamento</string>
+    <string name="share_export_storage_desc">Guardar o ficheiro .json no armazenamento do dispositivo.</string>
+    <string name="share_export_full">Exportar tudo (cópia completa)</string>
+    <string name="share_export_full_desc">Inclui todas as definições, o histórico E os ficheiros de áudio e imagem personalizados num arquivo .zip.</string>
+    <string name="share_include_history">Incluir o histórico e as notas</string>
+    <string name="share_import_title">Importar dados</string>
+    <string name="share_import_json">Importar um ficheiro JSON</string>
+    <string name="share_import_json_desc">Carregar um ficheiro de configuração .json já exportado.</string>
+    <string name="share_scan_qr">Ler um código QR</string>
+    <string name="share_scan_qr_desc">Importar rapidamente as definições lendo outro ecrã.</string>
+    <string name="share_import_full">Importar uma cópia completa</string>
+    <string name="share_import_full_desc">Repor as suas definições ou importá-las de outro dispositivo.</string>
+    <string name="share_restore_full_desc">Repor tudo (definições e ficheiros) a partir de um arquivo .zip.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Créditos</string>
+    <string name="credits_tab_changes">Novidades</string>
+    <string name="credits_tab_licenses">Licenças</string>
+    <string name="credits_rules_documents">Documentos de regras</string>
+    <string name="credits_libraries">O MasterClock é feito com estas bibliotecas de código aberto.</string>
+
+    <!-- Omni wizard (settings) -->
+    <string name="omni_cfg_previous">Anterior</string>
+    <string name="omni_cfg_next_step">Passo seguinte</string>
+    <string name="omni_cfg_launch_game">Iniciar a partida</string>
+    <string name="omni_cfg_launch_station">ESTAÇÃO DE LANÇAMENTO</string>
+    <string name="omni_cfg_ready">Pronto a jogar</string>
+    <string name="omni_cfg_summary">Resumo</string>
+
+    <string name="omni_cfg_session_games">Sessão e partidas</string>
+    <string name="omni_cfg_enable_session_timer">Ativar o relógio de sessão</string>
+    <string name="omni_cfg_enable_game_timer">Ativar o relógio de partida</string>
+    <string name="omni_cfg_enable_round_timer">Ativar o relógio de ronda</string>
+    <string name="omni_cfg_enable_turn_timer">Ativar o relógio de vez</string>
+    <string name="omni_cfg_enable_phase_timer">Ativar o relógio de fase</string>
+    <string name="omni_cfg_session_timer">Sessão</string>
+    <string name="omni_cfg_game_timer">Relógio de partida</string>
+    <string name="omni_cfg_round_timer">Relógio de ronda</string>
+    <string name="omni_cfg_turn_timer">Relógio de vez</string>
+    <string name="omni_cfg_phase_timer">Relógio de fase</string>
+    <string name="omni_cfg_cutoff_session">Cortar a direito ao fim do tempo de sessão</string>
+    <string name="omni_cfg_cutoff_game">Cortar a direito ao fim do tempo de partida</string>
+    <string name="omni_cfg_cutoff_round">Cortar a direito ao fim do tempo de ronda</string>
+    <string name="omni_cfg_cutoff_turn">Cortar a direito ao fim do tempo de vez</string>
+    <string name="omni_cfg_cutoff_phase">Cortar a direito ao fim do tempo de fase</string>
+    <string name="omni_cfg_turn_disabled">Relógio de vez desativado.</string>
+    <string name="omni_cfg_phase_disabled">Relógio de fase desativado.</string>
+
+    <string name="omni_cfg_game">Partida</string>
+    <string name="omni_cfg_round">Ronda</string>
+    <string name="omni_cfg_rounds">Rondas</string>
+    <string name="omni_cfg_turn">Vez</string>
+    <string name="omni_cfg_turn_n">Vez %d</string>
+    <string name="omni_cfg_step">Passo %1$d/%2$d</string>
+    <string name="omni_cfg_count">Quantidade: %d</string>
+    <string name="omni_cfg_player_short">J%d</string>
+    <string name="omni_cfg_game_n">Partida %d</string>
+    <string name="omni_cfg_round_n">Ronda %d</string>
+    <string name="omni_cfg_phase_n">Fase %d</string>
+    <string name="omni_cfg_game_short">P%d</string>
+    <string name="omni_cfg_round_short">R%d</string>
+    <string name="omni_cfg_turn_short">V%d</string>
+    <string name="omni_cfg_delete_game">Eliminar a partida %d</string>
+    <string name="omni_cfg_delete_round">Eliminar a ronda %d</string>
+    <string name="omni_cfg_delete_turn">Eliminar a vez %d</string>
+    <string name="omni_cfg_delete_phase">Eliminar a fase %d</string>
+    <string name="omni_cfg_phase_budget">Total: %1$d s / limite: %2$d s</string>
+    <string name="omni_cfg_summary_rounds_varied">• Rondas por partida: %s</string>
+    <string name="omni_cfg_summary_order">• Ordem: %s</string>
+    <string name="omni_cfg_phases_exceed">Partida «%1$s», ronda «%2$s», %3$s: as fases excedem o tempo de vez!</string>
+    <string name="omni_cfg_turns">Vezes</string>
+    <string name="omni_cfg_phases">Fases</string>
+    <string name="omni_cfg_game_name">Nome da partida</string>
+    <string name="omni_cfg_round_name">Nome da ronda</string>
+    <string name="omni_cfg_phase_name">Nome da fase</string>
+    <string name="omni_cfg_add_game">Adicionar uma partida</string>
+    <string name="omni_cfg_add_round">Adicionar uma ronda</string>
+    <string name="omni_cfg_add_turn">Adicionar uma vez</string>
+    <string name="omni_cfg_add_phase">Adicionar uma fase</string>
+    <string name="omni_cfg_duration">Duração</string>
+    <string name="omni_cfg_total_duration">Duração total</string>
+    <string name="omni_cfg_loop_turns">Repetir as vezes</string>
+    <string name="omni_cfg_end_round">Fim de ronda</string>
+
+    <string name="omni_cfg_players_order">Jogadores e ordem</string>
+    <string name="omni_cfg_turn_order">Ordem das vezes</string>
+    <string name="omni_cfg_pattern_linear">Padrão (3 jogadores): 123, 123, 123</string>
+    <string name="omni_cfg_pattern_snake">Padrão (3 jogadores): 123, 321, 123</string>
+    <string name="omni_cfg_pattern_rotate">Padrão (3 jogadores): 123, 231, 312</string>
+    <string name="omni_cfg_pattern_random_turn">Padrão (3 jogadores): 132, 312, 231 — um jogador pode ser saltado ou sorteado duas vezes</string>
+    <string name="omni_cfg_pattern_random_round">Padrão (3 jogadores): 231, 312, 123 — cada um joga uma vez por ronda</string>
+    <string name="omni_cfg_shuffle_per_round">Baralhar em cada ronda</string>
+    <string name="omni_cfg_draw_per_turn">Sorteio em cada vez</string>
+    <string name="omni_cfg_balance_draw">Equilibrar o sorteio</string>
+    <string name="omni_cfg_balance_explain">Quem está atrasado nas vezes tem mais probabilidade de sair, para que as diferenças se fechem em vez de se acumularem.</string>
+    <string name="omni_cfg_no_repeat">Nunca o mesmo jogador duas vezes seguidas</string>
+
+    <string name="omni_cfg_transitions">Transições e pausas</string>
+    <string name="omni_cfg_enable_pauses">Ativar as pausas (margens)</string>
+    <string name="omni_cfg_pauses_durations">Duração das pausas</string>
+    <string name="omni_cfg_turn_pause">Pausa de vez</string>
+    <string name="omni_cfg_round_pause">Pausa de ronda</string>
+    <string name="omni_cfg_game_pause">Pausa de partida</string>
+    <string name="omni_cfg_pause_deducts_round">A pausa desconta da ronda</string>
+    <string name="omni_cfg_pause_deducts_game">A pausa desconta da partida</string>
+    <string name="omni_cfg_pause_deducts_global">A pausa desconta do total</string>
+    <string name="omni_cfg_launch_countdown">Contagem decrescente de arranque</string>
+    <string name="omni_cfg_auto_restart">Reinício automático</string>
+
+    <string name="omni_cfg_pressure">Pressão e economia</string>
+    <string name="omni_cfg_advanced_rules">Regras avançadas</string>
+    <string name="omni_cfg_time_bank">Banco de tempo</string>
+    <string name="omni_cfg_bank_per_player">Por jogador</string>
+    <string name="omni_cfg_bank_shared">Reserva comum</string>
+    <string name="omni_cfg_bank_clear">Esvaziar o banco no fim de:</string>
+
+    <string name="omni_cfg_audio">Alertas sonoros</string>
+    <string name="omni_cfg_turn_beep">Apito de vez</string>
+    <string name="omni_cfg_final_beep">Apito final</string>
+    <string name="omni_cfg_round_gong">Gong de ronda</string>
+
+    <string name="dur_10s">10 s</string>
+    <string name="dur_30s">30 s</string>
+    <string name="dur_1m">1 min</string>
+    <string name="dur_2m">2 min</string>
+    <string name="dur_5m">5 min</string>
+
+    <!-- Settings: More tab -->
+    <string name="settings_more_help">Ajuda e apoio</string>
+    <string name="settings_more_manual">Manual dos motores de tempo</string>
+    <string name="settings_more_game_tools">Ferramentas de jogo</string>
+    <string name="settings_more_variants">Gerador de variantes de xadrez</string>
+    <string name="settings_more_rules">Algumas regras</string>
+    <string name="settings_more_scoreboard">Marcador</string>
+    <string name="settings_more_notebook">Caderno</string>
+    <string name="settings_more_more_tools">Outras ferramentas</string>
+    <string name="settings_more_coin_toss">Cara ou coroa</string>
+    <string name="settings_more_dice">Lançar dados</string>
+    <string name="settings_more_straw">Palhinha curta</string>
+    <string name="settings_more_card">Carta ao acaso</string>
+    <string name="settings_more_stop">Parar no momento certo</string>
+    <string name="settings_more_blindfold">Treino às cegas</string>
+    <string name="settings_more_knight">Percurso do cavalo</string>
+    <string name="settings_more_name_square">Nomear a casa</string>
+    <string name="settings_more_board">Ligação ao tabuleiro</string>
+    <string name="settings_more_link_board">Ligar um tabuleiro (ainda não disponível)</string>
+    <string name="settings_more_auto_switch">Trocar de vez automaticamente</string>
+    <string name="settings_more_game">Partida</string>
+    <string name="settings_more_game_data">Dados de jogo</string>
+    <string name="settings_more_logs">Registos e histórico de partidas</string>
+    <string name="settings_more_limit_count">Limitar o histórico por número</string>
+    <string name="settings_more_limit_age">Limitar o histórico por antiguidade</string>
+    <string name="settings_more_data_sharing">Dados e partilha</string>
+    <string name="settings_more_export">Exportar / partilhar</string>
+    <string name="settings_more_import">Importar / ler</string>
+    <string name="settings_more_share_apk">Partilhar a aplicação (APK)</string>
+    <string name="settings_more_share_apk_via">Partilhar o APK através de</string>
+    <string name="settings_more_danger">Zona de risco</string>
+    <string name="settings_more_clear_logs">Limpar os registos</string>
+    <string name="settings_more_reset_settings">Repor as definições</string>
+    <string name="toast_preparing_apk">A preparar o ficheiro da aplicação…</string>
+    <string name="toast_apk_error">Erro: não foi possível preparar o ficheiro</string>
+
+    <!-- Compact age limits -->
+    <string name="age_one_day">1 d</string>
+    <string name="age_one_week">1 sem</string>
+    <string name="age_one_month">1 mês</string>
+    <string name="age_six_months">6 meses</string>
+    <string name="age_one_year">1 ano</string>
+
+    <!-- Omni station -->
+    <string name="omni_reset_title">Zerar a sessão?</string>
+    <string name="omni_reset_message">Todo o progresso de rondas e partidas será perdido.</string>
+    <string name="omni_reset_confirm">ZERAR</string>
+    <string name="omni_cancel" tools:ignore="ButtonCase">CANCELAR</string>
+    <string name="omni_progress_session">Sessão</string>
+    <string name="omni_header">Omni: %s</string>
+    <string name="omni_progress_game">Partida %1$d/%2$d</string>
+    <string name="omni_progress_round">Ronda %1$d/%2$d</string>
+    <string name="omni_get_ready">PREPAREM-SE</string>
+    <string name="omni_phase_default">Fase</string>
+    <string name="omni_next">Seguinte</string>
+    <string name="omni_pause">Pausa</string>
+    <string name="omni_stop_session">Parar a sessão</string>
+    <string name="omni_reset_session">Zerar a sessão</string>
+    <string name="omni_running">A DECORRER</string>
+    <string name="omni_paused">EM PAUSA</string>
+    <string name="omni_round_finished">RONDA TERMINADA</string>
+    <string name="omni_game_finished">PARTIDA TERMINADA</string>
+    <string name="omni_session_complete">SESSÃO CONCLUÍDA</string>
+    <string name="omni_turn_finished">VEZ TERMINADA</string>
+    <string name="omni_prepare_round">Preparem-se para a ronda %d</string>
+    <string name="omni_prepare_game">Preparem-se para a partida %d</string>
+    <string name="omni_thanks">Obrigado por jogar!</string>
+    <string name="omni_next_player">Seguinte: jogador %d</string>
+    <string name="omni_i_am_ready">ESTOU PRONTO</string>
+    <string name="omni_close_session">FECHAR A SESSÃO</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">Estatísticas</string>
+    <string name="stats_empty">Ainda não há partidas terminadas.\n\nUma partida é registada quando a zera: jogue uma partida e toque em Zerar para ver aqui as suas estatísticas.</string>
+    <string name="stats_games_played">Partidas jogadas</string>
+    <string name="stats_moves">Lances</string>
+    <string name="stats_average_move">Lance médio</string>
+    <string name="stats_median_move">Lance mediano</string>
+    <string name="stats_slowest_move">Lance mais lento</string>
+    <string name="stats_time_on_clock">Tempo no relógio</string>
+    <string name="stats_time_pressure">Lances jogados abaixo de 10 % do tempo inicial</string>
+    <string name="stats_recent_game">Partida mais recente</string>
+    <string name="stats_modes_played">Modos jogados</string>
+
+    <plurals name="omni_cfg_summary_games">
+        <item quantity="one">• %1$d jogadores | %2$d partida</item>
+        <item quantity="many">• %1$d jogadores | %2$d de partidas</item>
+        <item quantity="other">• %1$d jogadores | %2$d partidas</item>
+    </plurals>
+
+    <plurals name="omni_cfg_summary_rounds_uniform">
+        <item quantity="one">• %d ronda por partida</item>
+        <item quantity="many">• %d de rondas por partida</item>
+        <item quantity="other">• %d rondas por partida</item>
+    </plurals>
+
+    <plurals name="stats_chart_moves">
+        <item quantity="one">%d lance</item>
+        <item quantity="many">%d de lances</item>
+        <item quantity="other">%d lances</item>
+    </plurals>
+
+    <plurals name="stats_chart_description">
+        <item quantity="one">Tempo por lance. O mais lento: %1$s em %2$d lance.</item>
+        <item quantity="many">Tempo por lance. O mais lento: %1$s em %2$d de lances.</item>
+        <item quantity="other">Tempo por lance. O mais lento: %1$s em %2$d lances.</item>
+    </plurals>
+
+    <!-- Timer Screen -->
+    <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="timer_reset_message">O estado atual será perdido.</string>
+    <string name="timer_reroll">Novo tempo aleatório</string>
+    <string name="timer_reroll_title">Sortear um novo tempo?</string>
+    <string name="timer_reroll_message">A partida recomeça com um novo tempo aleatório.</string>
+    <string name="timer_arbitre_control">Controlo do árbitro</string>
+    <string name="timer_arbitre">Árbitro</string>
+    <string name="timer_save_clock">Guardar o relógio</string>
+    <string name="timer_resume">Retomar</string>
+    <string name="timer_byoyomi">BYOYOMI</string>
+    <string name="timer_cycle">CICLO: %d</string>
+    <string name="timer_moves">LANCES: %d</string>
+    <string name="timer_delay">ATRASO: %s</string>
+    <string name="timer_flagged">QUEDA</string>
+    <string name="timer_period_flag">FIM DE PERÍODO</string>
+    <string name="timer_reflect">REFLEXÃO</string>
+    <string name="timer_move_alert">JOGUE!</string>
+    <string name="timer_pause_label">PAUSA</string>
 </resources>

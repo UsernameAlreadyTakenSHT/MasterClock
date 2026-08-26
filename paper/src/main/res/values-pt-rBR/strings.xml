@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock — pt-BR (Brazilian Portuguese)
+
+  An override, not a translation. Android resolves pt-BR as values-pt-rBR, then values-pt, then the
+  English default, string by string — so this file carries only the words where Brazilian and
+  European Portuguese actually part company, and everything else comes from values-pt.
+
+  What is here: tela for ecrã, configurações for definições, compartilhar for partilhar, desfeita
+  for anulada, and the -ônico spellings. A string not listed here is shared vocabulary and reads
+  the same on both sides of the Atlantic.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="settings_tab_display">Tela</string>
+    <string name="settings_not_optimized">Esta página de configurações ainda não está otimizada para tinta eletrônica.</string>
+    <string name="settings_keep_awake">Manter a tela ligada</string>
+    <string name="settings_fullscreen">Tela cheia</string>
+    <string name="settings_reset_settings">Redefinir as configurações</string>
+    <string name="settings_reset_message">Redefinir mesmo todas as configurações? Esta ação não pode ser desfeita.</string>
+    <string name="share_settings">Compartilhar as configurações</string>
+    <string name="settings_clear_logs">Limpar o histórico</string>
+</resources>

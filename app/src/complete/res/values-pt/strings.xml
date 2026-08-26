@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock Complete — pt (European Portuguese)
+
+  The Brazilian variant lives in values-pt-rBR and only overrides the words that differ; everything
+  else falls back here.
+
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here.
+
+  app_name is left out on purpose — it is the product name.
+
+  Translated without a native reviewer, like the Spanish, German and Italian.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Rules screen -->
+    <string name="rules_title">Algumas regras</string>
+    <string name="rules_intro">Documentos de referência, consultáveis sem ligação.</string>
+    <string name="rules_group_chess">Xadrez (documento oficial)</string>
+    <string name="rules_group_draughts">Damas (documento oficial)</string>
+    <string name="rules_group_shogi">Shogi (documento oficial)</string>
+    <string name="rules_group_more_games">Outros jogos</string>
+    <string name="rules_group_more_resources">Outros recursos</string>
+    <string name="toast_pdf_open_failed">Não foi possível abrir este documento</string>
+    <string name="toast_no_pdf_viewer">Nenhum leitor de PDF instalado</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_connected">Pronto a receber lances</string>
+    <string name="board_connected_to">Ligado: %s</string>
+    <string name="board_connecting">A ligar…</string>
+    <string name="board_disconnect">Desligar</string>
+    <string name="board_disconnected">Desligado</string>
+    <string name="board_error">Erro: %s</string>
+    <string name="board_last_move">Último lance: %s</string>
+    <string name="board_looking">À procura de tabuleiros…</string>
+    <string name="board_nearby">Dispositivos próximos</string>
+    <string name="board_none_found">Nenhum dispositivo encontrado. Toque em atualizar para procurar.</string>
+    <string name="board_scan">Procurar</string>
+    <string name="board_scanning">À procura de tabuleiros…</string>
+    <string name="board_title">Ligação ao tabuleiro</string>
+    <string name="board_unknown_device">Dispositivo desconhecido</string>
+    <string name="common_share">Partilhar</string>
+
+    <!-- Mode guide: names stay English, descriptions are translated -->
+    <string name="guide_intro">Documentação exaustiva dos motores de tempo do MasterClock e dos seus submodos, pela ordem da interface.</string>
+    <string name="guide_bonus_bronstein_desc">Devolve o tempo gasto no lance, sem nunca exceder o atraso configurado. Não é cumulativo.</string>
+    <string name="guide_bonus_fischer_desc">Acrescenta um tempo fixo (incremento) DEPOIS de cada lance.</string>
+    <string name="guide_bonus_us_delay_desc">Um atraso antes da contagem. O relógio espera a duração do atraso antes de começar a correr.</string>
+    <string name="guide_byoyomi_canadian_desc">Os jogadores têm de completar um número determinado de lances dentro de um único período mais longo.</string>
+    <string name="guide_byoyomi_japanese_desc">Depois do tempo principal, os jogadores dispõem de uma série de períodos curtos, reiniciados a cada lance.</string>
+    <string name="guide_byoyomi_progressive_desc">O número de lances exigidos aumenta a cada período concluído.</string>
+    <string name="guide_chrono_countdown_desc">Relógio principal em contagem decrescente durante toda a partida.</string>
+    <string name="guide_chrono_countup_desc">Modo cronómetro que mede o tempo total decorrido.</string>
+    <string name="guide_chrono_one_for_all_desc">Relógio global que não muda de jogador quando se premem os botões.</string>
+    <string name="guide_counts_down_desc">Parte de um limite e desce até zero lances restantes.</string>
+    <string name="guide_counts_up_desc">Mostra o número total de lances jogados desde o início.</string>
+    <string name="guide_fast_move_desc">Ajuste dinâmico da velocidade conforme a frequência dos lances ou uma penalização acumulada.</string>
+    <string name="guide_fide_desc">Ritmo de torneio por etapas (por exemplo, 40 lances em 90 min + 30 min de bónus).</string>
+    <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou à vez).</string>
+    <string name="guide_hidden_desc">Esconde os dígitos do relógio em certos limiares para aumentar a tensão.</string>
+    <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total mantém-se constante.</string>
+    <string name="guide_move_global_desc">O tempo de lance e o tempo global correm ao mesmo tempo. Ambos têm de ficar acima de zero.</string>
+    <string name="guide_move_global_shared_desc">Todos os jogadores partilham uma reserva global e têm ainda um relógio de lance próprio.</string>
+    <string name="guide_move_overtime_desc">Acrescenta o tempo de lance não usado a uma reserva global secundária.</string>
+    <string name="guide_move_save_cap_desc">O tempo de lance não usado vai para um banco, limitado por um teto máximo.</string>
+    <string name="guide_move_shared_desc">Um único relógio para todos os jogadores. Muda automaticamente às 0:00.</string>
+    <string name="guide_move_standard_desc">Volta a uma duração fixa em cada lance.</string>
+    <string name="guide_omni_desc">Estação profissional de 6 níveis para estruturas de jogo complexas (partidas &gt; rondas &gt; vezes &gt; fases).</string>
+    <string name="guide_phases_desc">Sequência de relógios diferentes (por exemplo, preparação 5 min -&gt; partida 20 min -&gt; Sudden Death).</string>
+    <string name="guide_random_desc">O tempo base e os incrementos são sorteados dentro de um intervalo definido.</string>
+    <string name="guide_section_advanced">Motores avançados e experimentais</string>
+    <string name="guide_section_bonus">Motores com bónus</string>
+    <string name="guide_section_specialty">Motores especiais</string>
+    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou cai.</string>
+
+    <!-- QR sharing -->
+    <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmara</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">É necessária a permissão da câmara para ler códigos.</string>
+    <string name="qr_code">Código QR</string>
+    <string name="qr_scan_title">Ler um código QR</string>
+    <string name="qr_share_hint">Leia este código noutro dispositivo para importar a configuração.</string>
+    <string name="qr_share_includes">Contém: configuração do relógio</string>
+    <string name="qr_share_title">Partilhar por código QR</string>
+    <string name="qr_too_large">Não foi possível gerar o código QR: os dados são provavelmente demasiado grandes. Tente partilhar sem os registos de partidas.</string>
+
+    <!-- Toasts -->
+    <string name="toast_audio_failed">Não foi possível reproduzir o áudio</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">É necessária a permissão da câmara</string>
+    <string name="toast_fen_copied">FEN copiada</string>
+    <string name="toast_mic_permission">É necessária a permissão do microfone.</string>
+    <string name="toast_note_deleted">Nota eliminada</string>
+    <string name="toast_permission_granted">Permissão concedida. Toque novamente em Gravar.</string>
+    <string name="toast_start_failed">Não foi possível iniciar</string>
+
+    <!-- Tools -->
+    <string name="tools_add_result">Adicionar um resultado</string>
+    <string name="tools_add_result_placeholder">Adicionar um resultado ou uma nota…</string>
+    <string name="tools_audio">Áudio</string>
+    <string name="tools_audio_note">Nota de áudio</string>
+    <string name="tools_board">Tabuleiro</string>
+    <string name="tools_bold">Negrito</string>
+    <string name="tools_checkbox">Caixa de seleção</string>
+    <string name="tools_clear_board">Esvaziar o tabuleiro</string>
+    <string name="tools_color">Cor</string>
+    <string name="tools_copy_fen">COPIAR A FEN</string>
+    <string name="tools_copy_format">Copiar %s</string>
+    <string name="tools_dark_square">PRETA</string>
+    <string name="tools_delete_recording">Eliminar a gravação</string>
+    <string name="tools_detailed_moves">Lances em detalhe</string>
+    <string name="tools_dice_roll">Lançamento de dados</string>
+    <string name="tools_draw">Desenhar</string>
+    <string name="tools_draw_again">Sortear de novo</string>
+    <string name="tools_draw_note">Nota desenhada</string>
+    <string name="tools_edit_board">Editar o tabuleiro</string>
+    <string name="tools_edit_note">Editar a nota</string>
+    <string name="tools_eraser">Borracha</string>
+    <string name="tools_final_score">Pontuação final: %d</string>
+    <string name="tools_format_hint">Selecione o texto e use a barra de ferramentas para o formatar…</string>
+    <string name="tools_game_logs">Registos de partidas</string>
+    <string name="tools_game_over">PARTIDA TERMINADA</string>
+    <string name="tools_generate">GERAR</string>
+    <!-- Portuguese coins land cara or coroa; heads is CARA. -->
+    <string name="tools_heads">CARA</string>
+    <string name="tools_tails">COROA</string>
+    <string name="tools_image">Imagem</string>
+    <string name="tools_image_note">Nota de imagem</string>
+    <string name="tools_italic">Itálico</string>
+    <string name="tools_large">Grande</string>
+    <string name="tools_left">Esquerda</string>
+    <string name="tools_log_details">Detalhes do registo</string>
+    <string name="tools_match_summary">Resumo do encontro</string>
+    <string name="tools_min_moves">Lances mínimos?</string>
+    <string name="tools_move">Lance</string>
+    <string name="tools_name_square_title">Nomear a casa</string>
+    <string name="tools_new_audio_note">Nova nota de áudio</string>
+    <string name="tools_new_board_note">Nova nota de tabuleiro</string>
+    <string name="tools_new_draw_note">Nova nota desenhada</string>
+    <string name="tools_new_image_note">Nova nota de imagem</string>
+    <string name="tools_new_note">Nova nota</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Nova nota de vídeo</string>
+    <string name="tools_no_games">Ainda não há partidas registadas.</string>
+    <string name="tools_no_notes">Ainda não há notas. Toque em + para criar uma.</string>
+    <string name="tools_no_photo">Ainda não há fotografia</string>
+    <string name="tools_no_video" tools:ignore="Typos">Ainda não há vídeo (máx. 1 min)</string>
+    <string name="tools_normal">Normal</string>
+    <string name="tools_note_image">Imagem da nota</string>
+    <string name="tools_offset">Desvio: %1$s%2$d ms</string>
+    <string name="tools_pick_straw">Tirar a palhinha %d</string>
+    <string name="tools_play">Reproduzir</string>
+    <string name="tools_player_short">J%d</string>
+    <string name="tools_prepare">PREPAREM-SE</string>
+    <string name="tools_random_card">Carta ao acaso</string>
+    <string name="tools_record">Gravar</string>
+    <string name="tools_record_video" tools:ignore="Typos">Gravar um vídeo</string>
+    <string name="tools_reset_scoreboard">Zerar o marcador</string>
+    <string name="tools_retake_photo">Repetir a fotografia</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Repetir o vídeo</string>
+    <string name="tools_roll_dice">Lançar os dados</string>
+    <string name="tools_score">Pontuação: %d</string>
+    <string name="tools_select_piece">Escolher uma peça</string>
+    <string name="tools_select_text_color">Escolher a cor do texto</string>
+    <string name="tools_share_log">Partilhar o registo</string>
+    <string name="tools_short_straw">Palhinha curta</string>
+    <string name="tools_shred">Destruir</string>
+    <string name="tools_spent">Gasto</string>
+    <string name="tools_start">INICIAR</string>
+    <string name="tools_start_trial">INICIAR A TENTATIVA</string>
+    <string name="tools_stop">PARAR</string>
+    <string name="tools_stop_precision">Precisão ao parar</string>
+    <string name="tools_take_photo">Tirar uma fotografia</string>
+    <string name="tools_target">ALVO</string>
+    <string name="tools_target_time">Alvo: 5,000 s</string>
+    <string name="tools_text">Texto</string>
+    <string name="tools_time_per_move">Tempo por lance</string>
+    <string name="tools_title">Título</string>
+    <string name="tools_toss_coin">Lançar a moeda</string>
+    <string name="tools_underline">Sublinhado</string>
+    <string name="tools_undo">Anular</string>
+    <string name="tools_variant_generator">Gerador de variantes</string>
+    <string name="tools_video" tools:ignore="Typos">Vídeo</string>
+    <string name="tools_video_note" tools:ignore="Typos">Nota de vídeo</string>
+    <string name="tools_white_square">BRANCA</string>
+
+    <!-- Chess variants: names stay English, descriptions are translated -->
+    <string name="variant_chess2880_desc">Simétrica, bispos de cor oposta, rei em qualquer casa (sem roque).</string>
+    <string name="variant_chess960_desc">Simétrica, bispos de cor oposta, rei entre as torres (com roque).</string>
+    <string name="variant_double960_desc">Assimétrica, bispos de cor oposta, rei entre as torres (tática de alto nível).</string>
+    <string name="variant_shuffle_desc">Simétrica, rei e bispos em qualquer casa (acaso total).</string>
+    <string name="variant_transcendental_desc">Assimétrica, bispos de cor oposta, rei em qualquer casa (muito tática).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Palhinhas: %d</item>
+        <item quantity="many">Palhinhas: %d</item>
+        <item quantity="other">Palhinhas: %d</item>
+    </plurals>
+</resources>

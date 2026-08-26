@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock — pt-BR (Brazilian Portuguese)
+
+  An override, not a translation. Android resolves pt-BR as values-pt-rBR, then values-pt, then the
+  English default, string by string — so this file carries only the words where Brazilian and
+  European Portuguese actually part company, and everything else comes from values-pt.
+
+  The recurring pairs are tela/ecrã, configurações/definições, compartilhar/partilhar,
+  arquivo/ficheiro, salvar/guardar, excluir/eliminar, pressionar/premir, rodada/ronda, and the
+  -ônico spellings against -ónico. A string not listed here is shared vocabulary: "lance",
+  "bandeirinha", "relógio" and the rest read the same on both sides of the Atlantic.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Common -->
+    <string name="common_save">Salvar</string>
+    <string name="common_delete">Excluir</string>
+    <string name="common_rename">Renomear</string>
+
+    <!-- Presets -->
+    <string name="preset_save_current">Salvar o ritmo atual</string>
+    <string name="preset_save_title">Salvar o ritmo de jogo</string>
+    <string name="preset_rename_title">Renomear a predefinição</string>
+    <string name="preset_empty_custom">Configure um ritmo de jogo e salve-o aqui.</string>
+    <string name="preset_long_press_hint">Mantenha pressionada uma predefinição para renomeá-la ou excluí-la.</string>
+    <string name="preset_manage_action">Renomear ou excluir</string>
+
+    <!-- Spellings: -ônico rather than -ónico -->
+    <string name="settings_bonus_type">Tipo de bônus</string>
+    <string name="settings_chrono_type">Tipo de cronômetro</string>
+    <string name="settings_increment_bonus">Incremento / bônus</string>
+    <string name="settings_fischer_fide">Fischer FIDE (bônus a partir do lance 0)</string>
+    <string name="settings_show_percentage">Mostrar os alertas de porcentagem</string>
+    <string name="settings_visuals">Aspecto</string>
+
+    <!-- Screen: tela, not ecrã -->
+    <string name="settings_tab_display">Tela</string>
+    <string name="settings_fullscreen">Tela cheia</string>
+    <string name="settings_keep_awake">Manter a tela ligada</string>
+
+    <!-- Settings: configurações, not definições -->
+    <string name="timer_settings">Configurações</string>
+    <string name="settings_reset_title">Redefinir todas as configurações?</string>
+    <string name="settings_reset_message">Esta ação não pode ser desfeita.</string>
+    <string name="settings_confirm_reset">Confirmar a redefinição</string>
+    <string name="settings_different_per_player">Configurações diferentes por jogador</string>
+    <string name="settings_more_reset_settings">Redefinir as configurações</string>
+    <string name="settings_trigger_on_press">Ativar ao pressionar (caso contrário ao soltar)</string>
+    <string name="settings_sound_default">Usando o som padrão</string>
+
+    <!-- Sharing: compartilhar and arquivo -->
+    <string name="share_settings">Compartilhar as configurações</string>
+    <string name="share_export_title">Exportar e compartilhar</string>
+    <string name="share_file">Compartilhar um arquivo</string>
+    <string name="share_file_desc">Enviar um arquivo de configuração .json a um amigo.</string>
+    <string name="share_qr">Compartilhar por código QR</string>
+    <string name="share_qr_desc">Leitura imediata para outro dispositivo (só configurações).</string>
+    <string name="share_export_storage_desc">Salvar o arquivo .json no armazenamento do dispositivo.</string>
+    <string name="share_export_full_desc">Inclui todas as configurações, o histórico E os arquivos de áudio e imagem personalizados em um arquivo .zip.</string>
+    <string name="share_import_json">Importar um arquivo JSON</string>
+    <string name="share_import_json_desc">Carregar um arquivo de configuração .json já exportado.</string>
+    <string name="share_scan_qr">Escanear um código QR</string>
+    <string name="share_scan_qr_desc">Importar rapidamente as configurações escaneando outra tela.</string>
+    <string name="share_import_full_desc">Restaurar as suas configurações ou importá-las de outro dispositivo.</string>
+    <string name="share_restore_full_desc">Restaurar tudo (configurações e arquivos) a partir de um arquivo .zip.</string>
+
+    <!-- More tab -->
+    <string name="settings_more_help">Ajuda e suporte</string>
+    <string name="settings_more_straw">Canudo curto</string>
+    <string name="settings_more_board">Conexão com o tabuleiro</string>
+    <string name="settings_more_link_board">Conectar um tabuleiro (ainda não disponível)</string>
+    <string name="settings_more_logs">Registros e histórico de partidas</string>
+    <string name="settings_more_limit_age">Limitar o histórico por idade</string>
+    <string name="settings_more_data_sharing">Dados e compartilhamento</string>
+    <string name="settings_more_export">Exportar / compartilhar</string>
+    <string name="settings_more_import">Importar / escanear</string>
+    <string name="settings_more_share_apk">Compartilhar o aplicativo (APK)</string>
+    <string name="settings_more_share_apk_via">Compartilhar o APK via</string>
+    <string name="settings_more_clear_logs">Limpar os registros</string>
+    <string name="toast_preparing_apk">Preparando o arquivo do aplicativo…</string>
+    <string name="toast_apk_error">Erro: não foi possível preparar o arquivo</string>
+
+    <!-- Omni: rodada rather than ronda, turno rather than vez -->
+    <string name="omni_cfg_enable_round_timer">Ativar o relógio de rodada</string>
+    <string name="omni_cfg_enable_turn_timer">Ativar o relógio de turno</string>
+    <string name="omni_cfg_round_timer">Relógio de rodada</string>
+    <string name="omni_cfg_turn_timer">Relógio de turno</string>
+    <string name="omni_cfg_cutoff_round">Cortar a direito ao fim do tempo de rodada</string>
+    <string name="omni_cfg_cutoff_turn">Cortar a direito ao fim do tempo de turno</string>
+    <string name="omni_cfg_turn_disabled">Relógio de turno desativado.</string>
+    <string name="omni_cfg_round">Rodada</string>
+    <string name="omni_cfg_rounds">Rodadas</string>
+    <string name="omni_cfg_turn">Turno</string>
+    <string name="omni_cfg_turn_n">Turno %d</string>
+    <string name="omni_cfg_round_n">Rodada %d</string>
+    <string name="omni_cfg_turn_short">T%d</string>
+    <string name="omni_cfg_delete_round">Excluir a rodada %d</string>
+    <string name="omni_cfg_delete_turn">Excluir o turno %d</string>
+    <string name="omni_cfg_delete_game">Excluir a partida %d</string>
+    <string name="omni_cfg_delete_phase">Excluir a fase %d</string>
+    <string name="omni_cfg_summary_rounds_varied">• Rodadas por partida: %s</string>
+    <string name="omni_cfg_phases_exceed">Partida «%1$s», rodada «%2$s», %3$s: as fases excedem o tempo de turno!</string>
+    <string name="omni_cfg_turns">Turnos</string>
+    <string name="omni_cfg_round_name">Nome da rodada</string>
+    <string name="omni_cfg_add_round">Adicionar uma rodada</string>
+    <string name="omni_cfg_add_turn">Adicionar um turno</string>
+    <string name="omni_cfg_loop_turns">Repetir os turnos</string>
+    <string name="omni_cfg_end_round">Fim de rodada</string>
+    <string name="omni_cfg_turn_order">Ordem dos turnos</string>
+    <string name="omni_cfg_pattern_random_round">Padrão (3 jogadores): 231, 312, 123 — cada um joga uma vez por rodada</string>
+    <string name="omni_cfg_shuffle_per_round">Embaralhar em cada rodada</string>
+    <string name="omni_cfg_draw_per_turn">Sorteio em cada turno</string>
+    <string name="omni_cfg_balance_explain">Quem está atrasado nos turnos tem mais probabilidade de sair, para que as diferenças se fechem em vez de se acumularem.</string>
+    <string name="omni_cfg_turn_pause">Pausa de turno</string>
+    <string name="omni_cfg_round_pause">Pausa de rodada</string>
+    <string name="omni_cfg_pause_deducts_round">A pausa desconta da rodada</string>
+    <string name="omni_cfg_turn_beep">Apito de turno</string>
+    <string name="omni_cfg_round_gong">Gong de rodada</string>
+    <string name="omni_progress_round">Rodada %1$d/%2$d</string>
+    <string name="omni_running">EM ANDAMENTO</string>
+    <string name="omni_round_finished">RODADA TERMINADA</string>
+    <string name="omni_turn_finished">TURNO TERMINADO</string>
+    <string name="omni_prepare_round">Preparem-se para a rodada %d</string>
+
+    <plurals name="omni_cfg_summary_rounds_uniform">
+        <item quantity="one">• %d rodada por partida</item>
+        <item quantity="many">• %d de rodadas por partida</item>
+        <item quantity="other">• %d rodadas por partida</item>
+    </plurals>
+
+    <!-- Timer screen -->
+    <string name="timer_switch_turn">Trocar o turno</string>
+</resources>

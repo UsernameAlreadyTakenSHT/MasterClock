@@ -3,19 +3,20 @@
 Translations are welcome, and you do not need to be able to build the app to contribute one — the
 files are plain XML.
 
-The app ships in **English**, **French**, **Spanish**, **German** and **Italian**. Two more are
-prepared — Portuguese and Dutch — with their files in place but still empty, so those fall back to
-English until someone fills them in.
+The app ships in **English**, **French**, **Spanish**, **German**, **Italian** and **Portuguese**,
+the last in both its European and Brazilian forms. One more is prepared — Dutch — with its file in
+place but still empty, so it falls back to English until someone fills it in.
 
 The finished files are a good model to copy from: they cover the same strings you would be starting
 on, in the same order as the English source. The German one is the most useful to read first,
 because German is the longest language here and its file shows which labels had to be shortened to
 fit — see below.
 
-> **The Spanish, German and Italian are unreviewed.** They were translated without a native
-> speaker, and checked only by lint, by a mechanical comparison of the format placeholders, and on
-> screen for layout. The wording is what to look at first — corrections are very welcome, and are
-> the cheapest kind of contribution to make. The French was reviewed by a native speaker.
+> **Everything except the French is unreviewed.** The Spanish, German, Italian and Portuguese were
+> translated without a native speaker, and checked only by lint, by a mechanical comparison of the
+> format placeholders, and on screen for layout. The wording is what to look at first — corrections
+> are very welcome, and are the cheapest kind of contribution to make. The French was reviewed by a
+> native speaker.
 
 ### Three labels that have to stay short
 
@@ -149,6 +150,24 @@ If you cannot build, send the file anyway — it will be checked before merging.
 
 Use the plain language code (`pt`, not `pt-BR`) unless the difference genuinely matters for your
 language.
+
+### When it does matter: regional variants
+
+Portuguese is the one place where it did. `values-pt` holds the full European translation and
+`values-pt-rBR` holds **only the words Brazil says differently** — tela for ecrã, configurações for
+definições, compartilhar for partilhar, and so on. Android resolves a pt-BR device as
+`values-pt-rBR`, then `values-pt`, then English, string by string, so the override is about 130
+lines rather than a second full translation.
+
+Two things to get right, both of which fail silently:
+
+- **The folder and the config file spell the region differently.** The resource folder is
+  `values-pt-rBR`, with the `r` that marks a region qualifier; `locales_config.xml` wants plain
+  BCP-47, `<locale android:name="pt-BR" />`. Swap them and nothing breaks at build time — the
+  strings simply never appear, or the system language picker offers an entry that resolves to
+  nothing.
+- **Every key in the override must already exist in the base file.** A typo in an override key is
+  invisible on a European device and leaves that one string in English on a Brazilian one.
 
 ## Sending it in
 
