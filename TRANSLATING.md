@@ -3,17 +3,33 @@
 Translations are welcome, and you do not need to be able to build the app to contribute one — the
 files are plain XML.
 
-The app ships in **English**, **French** and **Spanish**. Four more are prepared — Portuguese,
-Italian, German and Dutch — with their files in place but still empty, so those fall back to English
-until someone fills them in.
+The app ships in **English**, **French**, **Spanish** and **German**. Three more are prepared —
+Portuguese, Italian and Dutch — with their files in place but still empty, so those fall back to
+English until someone fills them in.
 
-The French and Spanish files are a good model to copy from: they cover the same strings you would be
-starting on, in the same order as the English source.
+The finished files are a good model to copy from: they cover the same strings you would be starting
+on, in the same order as the English source. The German one is the most useful to read first,
+because German is the longest language here and its file shows which labels had to be shortened to
+fit — see below.
 
-> **The Spanish is unreviewed.** It was translated without a native speaker, and checked only by
-> lint, by a mechanical comparison of the format placeholders, and on screen for layout. The
-> wording is what to look at first — corrections are very welcome, and are the cheapest kind of
-> contribution to make. The French was reviewed by a native speaker.
+> **The Spanish and German are unreviewed.** They were translated without a native speaker, and
+> checked only by lint, by a mechanical comparison of the format placeholders, and on screen for
+> layout. The wording is what to look at first — corrections are very welcome, and are the cheapest
+> kind of contribution to make. The French was reviewed by a native speaker.
+
+### Three labels that have to stay short
+
+Every language so far has run into the same three places, and it is worth knowing about them before
+you start rather than after a screenshot:
+
+- **The settings tab for "Behavior".** The bottom tab bar fits about nine characters. "Comportement",
+  "Comportamiento" and "Verhalten" all crowd or wrap it, so French, Spanish and German use "Jeu",
+  "Juego" and "Spiel" instead.
+- **The third presets tab, "Last Games".** It truncates silently, which reads fine until the row
+  changes. Shorten it deliberately: "Dernières", "Últimas", "Letzte".
+- **The three buttons under the E-Ink clock**, in `paper` only. They are narrow, and `paper` has its
+  own copy of these strings so it can be shortened without touching the phone app. German needed
+  both "Reset" for `common_reset` and "Optionen" for `timer_settings`.
 
 Partial translations are fine. Android falls back **string by string**, so a file with ten lines
 translated works perfectly — those ten are shown in your language, the rest stay English. There is

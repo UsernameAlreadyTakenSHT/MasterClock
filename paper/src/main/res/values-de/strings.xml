@@ -2,14 +2,96 @@
 <!--
   MasterClock — de
 
-  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
-  fully usable while this file is being filled in.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
 
-  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
-  the name attribute alone. See TRANSLATING.md at the repository root.
+  German runs long, and this file is where that bites hardest: the three buttons under the E-Ink
+  clock are narrow. "Zurücksetzen" and "Einstellungen" are both too wide for them and are shortened
+  here; the app module has room and uses the full words.
 
-  tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
-  partial; it does not hide anything you need to see.
+  Translated without a native reviewer, like the Spanish.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Abbrechen</string>
+    <!-- "Zurücksetzen" at 12 characters wraps on the narrow clock button; "Reset" is current in German UIs. -->
+    <string name="common_reset">Reset</string>
+    <string name="timer_reset_title">Partie zurücksetzen?</string>
+    <string name="timer_reset_message">Der aktuelle Stand geht verloren.</string>
+    <string name="common_back">Zurück</string>
+    <string name="common_close">Schließen</string>
+    <string name="common_clear">Löschen</string>
+    <string name="common_player_n">Spieler %d</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Zug wechseln</string>
+    <string name="timer_pause">Pause</string>
+    <string name="timer_resume">Weiter</string>
+    <!-- "Einstellungen" at 13 characters does not fit the button beside Reset and Weiter. -->
+    <string name="timer_settings">Optionen</string>
+
+    <!-- Settings -->
+    <string name="settings_tab_modes">Modi</string>
+    <!-- Short like the French "Jeu" and Spanish "Juego": "Verhalten" crowds the tab row. -->
+    <string name="settings_tab_behavior">Spiel</string>
+    <string name="settings_tab_display">Anzeige</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_more">Mehr</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_not_optimized">Diese Einstellungsseite ist noch nicht für E-Ink optimiert.</string>
+    <string name="settings_initial_time">Startzeit</string>
+    <string name="settings_increment">Inkrement</string>
+    <string name="settings_move_time">Zeit pro Zug</string>
+    <string name="settings_system_behavior">Systemverhalten</string>
+    <string name="settings_sound">Ton</string>
+    <string name="settings_haptic_feedback">Haptisches Feedback</string>
+    <string name="settings_keep_awake">Bildschirm anlassen</string>
+    <string name="settings_fullscreen">Vollbild</string>
+    <string name="settings_reverse_colors">Farben umkehren</string>
+    <string name="settings_clear_logs">Verlauf löschen</string>
+    <string name="settings_clear_logs_title">Den gesamten Partieverlauf endgültig löschen?</string>
+    <string name="settings_reset_settings">Einstellungen zurücksetzen</string>
+    <string name="settings_reset_message">Wirklich alle Einstellungen zurücksetzen? Das lässt sich nicht rückgängig machen.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Danksagungen</string>
+    <string name="credits_tab_changes">Neues</string>
+    <string name="credits_tab_licenses">Lizenzen</string>
+    <string name="credits_rules_documents">Regelwerke</string>
+    <string name="credits_libraries">MasterClock ist mit diesen Open-Source-Bibliotheken gebaut.</string>
+
+    <!-- Sharing -->
+    <string name="share_settings">Einstellungen teilen</string>
+    <string name="toast_backup_ok">Sicherung erstellt!</string>
+    <string name="toast_import_ok">Import erfolgreich!</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Spieler %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Spieler %1$d, %2$s, Sie sind am Zug</string>
+    <string name="a11y_out_of_time">Zeit abgelaufen</string>
+    <string name="a11y_no_time_left">keine Zeit mehr</string>
+    <string name="a11y_announce_out_of_time">Spieler %d hat keine Zeit mehr</string>
+    <string name="a11y_announce_paused">Pausiert</string>
+    <string name="a11y_announce_to_move">Spieler %d ist am Zug</string>
+    <string name="a11y_announce_byoyomi">%1$s, Byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, Byoyomi, %2$s</string>
+
+    <!-- CLDR gives German two plural categories, one and other, unlike French and Spanish. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d Stunde</item>
+        <item quantity="other">%d Stunden</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d Minute</item>
+        <item quantity="other">%d Minuten</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d Sekunde</item>
+        <item quantity="other">%d Sekunden</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">noch %d Periode</item>
+        <item quantity="other">noch %d Perioden</item>
+    </plurals>
+
+    <string name="settings_version">Version %s</string>
 </resources>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock Complete — de
+
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here.
+
+  app_name is left out on purpose — it is the product name.
+
+  Translated without a native reviewer, like the Spanish.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Rules screen -->
+    <string name="rules_title">Einige Regeln</string>
+    <string name="rules_intro">Nachschlagewerke, offline lesbar.</string>
+    <string name="rules_group_chess">Schach (offizielles Dokument)</string>
+    <string name="rules_group_draughts">Dame (offizielles Dokument)</string>
+    <string name="rules_group_shogi">Shogi (offizielles Dokument)</string>
+    <string name="rules_group_more_games">Weitere Spiele</string>
+    <string name="rules_group_more_resources">Weitere Quellen</string>
+    <string name="toast_pdf_open_failed">Dieses Dokument konnte nicht geöffnet werden</string>
+    <string name="toast_no_pdf_viewer">Kein PDF-Betrachter installiert</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_connected">Bereit für Züge</string>
+    <string name="board_connected_to">Verbunden: %s</string>
+    <string name="board_connecting">Verbinden…</string>
+    <string name="board_disconnect">Trennen</string>
+    <string name="board_disconnected">Getrennt</string>
+    <string name="board_error">Fehler: %s</string>
+    <string name="board_last_move">Letzter Zug: %s</string>
+    <string name="board_looking">Suche nach Brettern…</string>
+    <string name="board_nearby">Geräte in der Nähe</string>
+    <string name="board_none_found">Kein Gerät gefunden. Zum Suchen auf Aktualisieren tippen.</string>
+    <string name="board_scan">Suchen</string>
+    <string name="board_scanning">Suche nach Brettern…</string>
+    <string name="board_title">Brettverbindung</string>
+    <string name="board_unknown_device">Unbekanntes Gerät</string>
+    <string name="common_share">Teilen</string>
+
+    <!-- Mode guide: names stay English, descriptions are translated -->
+    <string name="guide_intro">Ausführliche Dokumentation der Zeitmodi von MasterClock und ihrer Untermodi, in der Reihenfolge der Oberfläche.</string>
+    <string name="guide_bonus_bronstein_desc">Gibt die für den Zug verbrauchte Zeit zurück, aber nie mehr als die eingestellte Verzögerung. Nicht kumulativ.</string>
+    <string name="guide_bonus_fischer_desc">Fügt NACH jedem Zug eine feste Zeit (Inkrement) hinzu.</string>
+    <string name="guide_bonus_us_delay_desc">Eine Verzögerung vor dem Ablauf. Die Uhr wartet die Verzögerung ab, bevor sie zu laufen beginnt.</string>
+    <string name="guide_byoyomi_canadian_desc">Die Spieler müssen eine feste Anzahl Züge innerhalb einer einzigen längeren Periode ausführen.</string>
+    <string name="guide_byoyomi_japanese_desc">Nach der Hauptzeit erhalten die Spieler eine Reihe kurzer Perioden, die bei jedem Zug zurückgesetzt werden.</string>
+    <string name="guide_byoyomi_progressive_desc">Die Zahl der verlangten Züge steigt mit jeder abgeschlossenen Periode.</string>
+    <string name="guide_chrono_countdown_desc">Hauptuhr, die für die ganze Partie herunterzählt.</string>
+    <string name="guide_chrono_countup_desc">Stoppuhr-Modus, der die verstrichene Gesamtzeit misst.</string>
+    <string name="guide_chrono_one_for_all_desc">Globale Uhr, die beim Tippen nicht den Spieler wechselt.</string>
+    <string name="guide_counts_down_desc">Beginnt bei einer Grenze und zählt bis null verbleibende Züge herunter.</string>
+    <string name="guide_counts_up_desc">Zeigt die Gesamtzahl der seit Beginn gespielten Züge.</string>
+    <string name="guide_fast_move_desc">Dynamische Tempoanpassung nach Zugfrequenz oder aufgelaufener Strafe.</string>
+    <string name="guide_fide_desc">Mehrstufige Turnierzeit (zum Beispiel 40 Züge in 90 Min + 30 Min Bonus).</string>
+    <string name="guide_gong_desc">Erzwungene Züge in festen Abständen (gleichzeitig oder reihum).</string>
+    <string name="guide_hidden_desc">Verbirgt die Ziffern der Uhr an bestimmten Schwellen, um die Spannung zu erhöhen.</string>
+    <string name="guide_hourglass_desc">Die Zeit, die ein Spieler verliert, wird dem Gegner gutgeschrieben. Die Gesamtzeit bleibt gleich.</string>
+    <string name="guide_move_global_desc">Zugzeit und Gesamtzeit laufen gleichzeitig. Beide müssen über null bleiben.</string>
+    <string name="guide_move_global_shared_desc">Alle Spieler teilen sich einen gemeinsamen Vorrat und haben zusätzlich eine eigene Zuguhr.</string>
+    <string name="guide_move_overtime_desc">Schreibt nicht verbrauchte Zugzeit einem zweiten gemeinsamen Vorrat gut.</string>
+    <string name="guide_move_save_cap_desc">Nicht verbrauchte Zugzeit wandert auf ein Konto, begrenzt durch eine Obergrenze.</string>
+    <string name="guide_move_shared_desc">Eine einzige Uhr für alle Spieler. Wechselt bei 0:00 automatisch.</string>
+    <string name="guide_move_standard_desc">Setzt bei jedem Zug auf eine feste Dauer zurück.</string>
+    <string name="guide_omni_desc">Professionelle Zentrale mit 6 Ebenen für komplexe Spielstrukturen (Partien &gt; Runden &gt; Züge &gt; Phasen).</string>
+    <string name="guide_phases_desc">Abfolge verschiedener Uhren (zum Beispiel Vorbereitung 5 Min -&gt; Partie 20 Min -&gt; Sudden Death).</string>
+    <string name="guide_random_desc">Grundzeit und Inkremente werden innerhalb eines festgelegten Bereichs ausgelost.</string>
+    <string name="guide_section_advanced">Fortgeschrittene und experimentelle Modi</string>
+    <string name="guide_section_bonus">Modi mit Bonus</string>
+    <string name="guide_section_specialty">Spezialmodi</string>
+    <string name="guide_sudden_death_standard_desc">Reiner Countdown. Wer zuerst 0:00 erreicht, verliert oder fällt.</string>
+
+    <!-- QR sharing -->
+    <string name="qr_align" tools:ignore="Typos">Den Code im Sucher der Kamera ausrichten</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">Zum Scannen von Codes wird die Kameraberechtigung benötigt.</string>
+    <string name="qr_code">QR-Code</string>
+    <string name="qr_scan_title">QR-Code scannen</string>
+    <string name="qr_share_hint">Scanne diesen Code auf einem anderen Gerät, um die Konfiguration zu übernehmen.</string>
+    <string name="qr_share_includes">Enthält: Konfiguration der Uhr</string>
+    <string name="qr_share_title">Per QR-Code teilen</string>
+    <string name="qr_too_large">QR-Code konnte nicht erzeugt werden — die Daten sind vermutlich zu groß. Versuche es ohne die Partieprotokolle.</string>
+
+    <!-- Toasts -->
+    <string name="toast_audio_failed">Audio konnte nicht abgespielt werden</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">Kameraberechtigung erforderlich</string>
+    <string name="toast_fen_copied">FEN kopiert</string>
+    <string name="toast_mic_permission">Die Mikrofonberechtigung wird benötigt.</string>
+    <string name="toast_note_deleted">Notiz gelöscht</string>
+    <string name="toast_permission_granted">Berechtigung erteilt. Erneut auf Aufnehmen tippen.</string>
+    <string name="toast_start_failed">Start fehlgeschlagen</string>
+
+    <!-- Tools -->
+    <string name="tools_add_result">Ergebnis hinzufügen</string>
+    <string name="tools_add_result_placeholder">Ergebnis oder Notiz hinzufügen…</string>
+    <string name="tools_audio">Audio</string>
+    <string name="tools_audio_note">Audionotiz</string>
+    <string name="tools_board">Brett</string>
+    <string name="tools_bold">Fett</string>
+    <string name="tools_checkbox">Kontrollkästchen</string>
+    <string name="tools_clear_board">Brett leeren</string>
+    <string name="tools_color">Farbe</string>
+    <string name="tools_copy_fen">FEN KOPIEREN</string>
+    <string name="tools_copy_format">%s kopieren</string>
+    <string name="tools_dark_square">SCHWARZ</string>
+    <string name="tools_delete_recording">Aufnahme löschen</string>
+    <string name="tools_detailed_moves">Züge im Detail</string>
+    <string name="tools_dice_roll">Würfelwurf</string>
+    <string name="tools_draw">Zeichnen</string>
+    <string name="tools_draw_again">Erneut ziehen</string>
+    <string name="tools_draw_note">Zeichennotiz</string>
+    <string name="tools_edit_board">Brett bearbeiten</string>
+    <string name="tools_edit_note">Notiz bearbeiten</string>
+    <string name="tools_eraser">Radierer</string>
+    <string name="tools_final_score">Endstand: %d</string>
+    <string name="tools_format_hint">Text markieren und mit der Werkzeugleiste formatieren…</string>
+    <string name="tools_game_logs">Partieprotokolle</string>
+    <string name="tools_game_over">PARTIE BEENDET</string>
+    <string name="tools_generate">ERZEUGEN</string>
+    <!-- German coins land Kopf or Zahl; heads is KOPF. -->
+    <string name="tools_heads">KOPF</string>
+    <string name="tools_tails">ZAHL</string>
+    <string name="tools_image">Bild</string>
+    <string name="tools_image_note">Bildnotiz</string>
+    <string name="tools_italic">Kursiv</string>
+    <string name="tools_large">Groß</string>
+    <string name="tools_left">Links</string>
+    <string name="tools_log_details">Protokolldetails</string>
+    <string name="tools_match_summary">Zusammenfassung der Begegnung</string>
+    <string name="tools_min_moves">Mindestzüge?</string>
+    <string name="tools_move">Zug</string>
+    <string name="tools_name_square_title">Feld benennen</string>
+    <string name="tools_new_audio_note">Neue Audionotiz</string>
+    <string name="tools_new_board_note">Neue Brettnotiz</string>
+    <string name="tools_new_draw_note">Neue Zeichennotiz</string>
+    <string name="tools_new_image_note">Neue Bildnotiz</string>
+    <string name="tools_new_note">Neue Notiz</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Neue Videonotiz</string>
+    <string name="tools_no_games">Noch keine Partien aufgezeichnet.</string>
+    <string name="tools_no_notes">Noch keine Notizen. Zum Anlegen auf + tippen.</string>
+    <string name="tools_no_photo">Noch kein Foto</string>
+    <string name="tools_no_video" tools:ignore="Typos">Noch kein Video (max. 1 Min)</string>
+    <string name="tools_normal">Normal</string>
+    <string name="tools_note_image">Bild der Notiz</string>
+    <string name="tools_offset">Abweichung: %1$s%2$d ms</string>
+    <string name="tools_pick_straw">Halm %d ziehen</string>
+    <string name="tools_play">Abspielen</string>
+    <string name="tools_player_short">S%d</string>
+    <string name="tools_prepare">BEREIT MACHEN</string>
+    <string name="tools_random_card">Zufällige Karte</string>
+    <string name="tools_record">Aufnehmen</string>
+    <string name="tools_record_video" tools:ignore="Typos">Video aufnehmen</string>
+    <string name="tools_reset_scoreboard">Anzeigetafel zurücksetzen</string>
+    <string name="tools_retake_photo">Foto wiederholen</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Video wiederholen</string>
+    <string name="tools_roll_dice">Würfeln</string>
+    <string name="tools_score">Stand: %d</string>
+    <string name="tools_select_piece">Figur wählen</string>
+    <string name="tools_select_text_color">Textfarbe wählen</string>
+    <string name="tools_share_log">Protokoll teilen</string>
+    <string name="tools_short_straw">Kurzer Halm</string>
+    <string name="tools_shred">Vernichten</string>
+    <string name="tools_spent">Verbraucht</string>
+    <string name="tools_start">START</string>
+    <string name="tools_start_trial">VERSUCH STARTEN</string>
+    <string name="tools_stop">STOPP</string>
+    <string name="tools_stop_precision">Genauigkeit beim Stoppen</string>
+    <string name="tools_take_photo">Foto aufnehmen</string>
+    <string name="tools_target">ZIEL</string>
+    <string name="tools_target_time">Ziel: 5,000 s</string>
+    <string name="tools_text">Text</string>
+    <string name="tools_time_per_move">Zeit pro Zug</string>
+    <string name="tools_title">Titel</string>
+    <string name="tools_toss_coin">Münze werfen</string>
+    <string name="tools_underline">Unterstrichen</string>
+    <string name="tools_undo">Rückgängig</string>
+    <string name="tools_variant_generator">Variantengenerator</string>
+    <string name="tools_video" tools:ignore="Typos">Video</string>
+    <string name="tools_video_note" tools:ignore="Typos">Videonotiz</string>
+    <string name="tools_white_square">WEISS</string>
+
+    <!-- Chess variants: names stay English, descriptions are translated -->
+    <string name="variant_chess2880_desc">Symmetrisch, ungleichfarbige Läufer, König auf beliebigem Feld (keine Rochade).</string>
+    <string name="variant_chess960_desc">Symmetrisch, ungleichfarbige Läufer, König zwischen den Türmen (mit Rochade).</string>
+    <string name="variant_double960_desc">Asymmetrisch, ungleichfarbige Läufer, König zwischen den Türmen (Taktik auf hohem Niveau).</string>
+    <string name="variant_shuffle_desc">Symmetrisch, König und Läufer auf beliebigen Feldern (völliger Zufall).</string>
+    <string name="variant_transcendental_desc">Asymmetrisch, ungleichfarbige Läufer, König auf beliebigem Feld (sehr taktisch).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Halme: %d</item>
+        <item quantity="other">Halme: %d</item>
+    </plurals>
+</resources>
