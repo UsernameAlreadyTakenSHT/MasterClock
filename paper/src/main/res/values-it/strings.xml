@@ -2,14 +2,102 @@
 <!--
   MasterClock — it
 
-  Empty on purpose: every string still falls back to the English values/strings.xml, so the app is
-  fully usable while this file is being filled in.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
 
-  To translate, copy a <string> line over from values/strings.xml and translate the text, leaving
-  the name attribute alone. See TRANSLATING.md at the repository root.
+  The three buttons under the E-Ink clock are narrow: "Impostazioni" does not fit and is "Opzioni"
+  here, the same shortening German needed. The app module has room and keeps the full word.
 
-  tools:ignore="MissingTranslation" keeps the build at zero lint warnings while the file is still
-  partial; it does not hide anything you need to see.
+  Translated without a native reviewer, like the Spanish and German.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Annulla</string>
+    <string name="common_reset">Azzera</string>
+    <string name="timer_reset_title">Azzerare la partita?</string>
+    <string name="timer_reset_message">Lo stato attuale andrà perso.</string>
+    <string name="common_back">Indietro</string>
+    <string name="common_close">Chiudi</string>
+    <string name="common_clear">Cancella</string>
+    <string name="common_player_n">Giocatore %d</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Cambia turno</string>
+    <string name="timer_pause">Pausa</string>
+    <string name="timer_resume">Riprendi</string>
+    <!-- "Impostazioni" at 12 characters does not fit beside Azzera and Riprendi. -->
+    <string name="timer_settings">Opzioni</string>
+
+    <!-- Settings -->
+    <string name="settings_tab_modes">Modi</string>
+    <!-- Short like the French "Jeu", Spanish "Juego" and German "Spiel". -->
+    <string name="settings_tab_behavior">Gioco</string>
+    <string name="settings_tab_display">Schermo</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_more">Altro</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_not_optimized">Questa pagina delle impostazioni non è ancora ottimizzata per l\'inchiostro elettronico.</string>
+    <string name="settings_initial_time">Tempo iniziale</string>
+    <string name="settings_increment">Incremento</string>
+    <string name="settings_move_time">Tempo per mossa</string>
+    <string name="settings_system_behavior">Comportamento del sistema</string>
+    <string name="settings_sound">Suono</string>
+    <string name="settings_haptic_feedback">Feedback aptico</string>
+    <string name="settings_keep_awake">Mantieni lo schermo acceso</string>
+    <string name="settings_fullscreen">Schermo intero</string>
+    <string name="settings_reverse_colors">Inverti i colori</string>
+    <string name="settings_clear_logs">Cancella la cronologia</string>
+    <string name="settings_clear_logs_title">Eliminare definitivamente tutta la cronologia delle partite?</string>
+    <string name="settings_reset_settings">Ripristina le impostazioni</string>
+    <string name="settings_reset_message">Ripristinare davvero tutte le impostazioni? L\'operazione non può essere annullata.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Crediti</string>
+    <string name="credits_tab_changes">Novità</string>
+    <string name="credits_tab_licenses">Licenze</string>
+    <string name="credits_rules_documents">Documenti di regole</string>
+    <string name="credits_libraries">MasterClock è realizzato con queste librerie open source.</string>
+
+    <!-- Sharing -->
+    <string name="share_settings">Condividi le impostazioni</string>
+    <string name="toast_backup_ok">Backup riuscito!</string>
+    <string name="toast_import_ok">Importazione riuscita!</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Giocatore %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Giocatore %1$d, %2$s, tocca a te</string>
+    <string name="a11y_out_of_time">tempo esaurito</string>
+    <string name="a11y_no_time_left">tempo finito</string>
+    <string name="a11y_announce_out_of_time">Il giocatore %d ha esaurito il tempo</string>
+    <string name="a11y_announce_paused">In pausa</string>
+    <string name="a11y_announce_to_move">Tocca al giocatore %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!--
+      CLDR gives Italian the same three categories as French and Spanish: one, many for round
+      millions, and other. A clock will never reach many, but lint checks the categories rather
+      than the plausible range.
+    -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d ora</item>
+        <item quantity="many">%d di ore</item>
+        <item quantity="other">%d ore</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="many">%d di minuti</item>
+        <item quantity="other">%d minuti</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d secondo</item>
+        <item quantity="many">%d di secondi</item>
+        <item quantity="other">%d secondi</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">%d periodo rimasto</item>
+        <item quantity="many">%d di periodi rimasti</item>
+        <item quantity="other">%d periodi rimasti</item>
+    </plurals>
+
+    <string name="settings_version">Versione %s</string>
 </resources>

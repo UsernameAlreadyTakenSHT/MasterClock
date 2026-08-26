@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock Complete — it
+
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here.
+
+  app_name is left out on purpose — it is the product name.
+
+  Translated without a native reviewer, like the Spanish and German.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Rules screen -->
+    <string name="rules_title">Alcune regole</string>
+    <string name="rules_intro">Documenti di riferimento, consultabili offline.</string>
+    <string name="rules_group_chess">Scacchi (documento ufficiale)</string>
+    <string name="rules_group_draughts">Dama (documento ufficiale)</string>
+    <string name="rules_group_shogi">Shogi (documento ufficiale)</string>
+    <string name="rules_group_more_games">Altri giochi</string>
+    <string name="rules_group_more_resources">Altre risorse</string>
+    <string name="toast_pdf_open_failed">Impossibile aprire questo documento</string>
+    <string name="toast_no_pdf_viewer">Nessun lettore PDF installato</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_connected">Pronto a ricevere le mosse</string>
+    <string name="board_connected_to">Connesso: %s</string>
+    <string name="board_connecting">Connessione…</string>
+    <string name="board_disconnect">Disconnetti</string>
+    <string name="board_disconnected">Disconnesso</string>
+    <string name="board_error">Errore: %s</string>
+    <string name="board_last_move">Ultima mossa: %s</string>
+    <string name="board_looking">Ricerca di scacchiere…</string>
+    <string name="board_nearby">Dispositivi vicini</string>
+    <string name="board_none_found">Nessun dispositivo trovato. Tocca aggiorna per cercare.</string>
+    <string name="board_scan">Cerca</string>
+    <string name="board_scanning">Ricerca di scacchiere…</string>
+    <string name="board_title">Connessione alla scacchiera</string>
+    <string name="board_unknown_device">Dispositivo sconosciuto</string>
+    <string name="common_share">Condividi</string>
+
+    <!-- Mode guide: names stay English, descriptions are translated -->
+    <string name="guide_intro">Documentazione completa dei motori di tempo di MasterClock e delle loro sottomodalità, nell\'ordine dell\'interfaccia.</string>
+    <string name="guide_bonus_bronstein_desc">Restituisce il tempo speso nella mossa, senza mai superare il ritardo impostato. Non cumulativo.</string>
+    <string name="guide_bonus_fischer_desc">Aggiunge un tempo fisso (incremento) DOPO ogni mossa.</string>
+    <string name="guide_bonus_us_delay_desc">Un ritardo prima del conteggio. L\'orologio attende la durata del ritardo prima di iniziare a scorrere.</string>
+    <string name="guide_byoyomi_canadian_desc">I giocatori devono completare un numero preciso di mosse in un unico periodo più lungo.</string>
+    <string name="guide_byoyomi_japanese_desc">Dopo il tempo principale i giocatori dispongono di una serie di periodi brevi, azzerati a ogni mossa.</string>
+    <string name="guide_byoyomi_progressive_desc">Il numero di mosse richieste cresce a ogni periodo completato.</string>
+    <string name="guide_chrono_countdown_desc">Orologio principale che conta alla rovescia per tutta la partita.</string>
+    <string name="guide_chrono_countup_desc">Modalità cronometro che misura il tempo totale trascorso.</string>
+    <string name="guide_chrono_one_for_all_desc">Orologio globale che non cambia giocatore quando si premono i pulsanti.</string>
+    <string name="guide_counts_down_desc">Parte da un limite e scende fino a zero mosse rimaste.</string>
+    <string name="guide_counts_up_desc">Mostra il numero totale di mosse giocate dall\'inizio.</string>
+    <string name="guide_fast_move_desc">Regolazione dinamica della velocità in base alla frequenza delle mosse o a una penalità accumulata.</string>
+    <string name="guide_fide_desc">Cadenza da torneo a più fasi (per esempio 40 mosse in 90 min + 30 min di bonus).</string>
+    <string name="guide_gong_desc">Mosse imposte a intervalli fissi (simultanee o a turno).</string>
+    <string name="guide_hidden_desc">Nasconde le cifre dell\'orologio a certe soglie per aumentare la tensione.</string>
+    <string name="guide_hourglass_desc">Il tempo perso da un giocatore viene aggiunto all\'avversario. Il tempo totale resta costante.</string>
+    <string name="guide_move_global_desc">Tempo per mossa e tempo globale scorrono insieme. Entrambi devono restare sopra lo zero.</string>
+    <string name="guide_move_global_shared_desc">Tutti i giocatori condividono una riserva globale e hanno inoltre un timer di mossa personale.</string>
+    <string name="guide_move_overtime_desc">Aggiunge il tempo di mossa non usato a una riserva globale secondaria.</string>
+    <string name="guide_move_save_cap_desc">Il tempo di mossa non usato finisce in una banca, con un tetto massimo.</string>
+    <string name="guide_move_shared_desc">Un solo orologio per tutti i giocatori. Cambia automaticamente a 0:00.</string>
+    <string name="guide_move_standard_desc">Torna a una durata fissa a ogni mossa.</string>
+    <string name="guide_omni_desc">Stazione professionale a 6 livelli per strutture di gioco complesse (partite &gt; manche &gt; turni &gt; fasi).</string>
+    <string name="guide_phases_desc">Sequenza di orologi diversi (per esempio preparazione 5 min -&gt; partita 20 min -&gt; Sudden Death).</string>
+    <string name="guide_random_desc">Tempo base e incrementi sono estratti a caso in un intervallo definito.</string>
+    <string name="guide_section_advanced">Motori avanzati e sperimentali</string>
+    <string name="guide_section_bonus">Motori con bonus</string>
+    <string name="guide_section_specialty">Motori speciali</string>
+    <string name="guide_sudden_death_standard_desc">Conteggio puro. Il primo giocatore che arriva a 0:00 perde o cade.</string>
+
+    <!-- QR sharing -->
+    <string name="qr_align" tools:ignore="Typos">Allinea il codice nell\'inquadratura</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">Per scansionare i codici serve il permesso della fotocamera.</string>
+    <string name="qr_code">Codice QR</string>
+    <string name="qr_scan_title">Scansiona un codice QR</string>
+    <string name="qr_share_hint">Scansiona questo codice su un altro dispositivo per importare la configurazione.</string>
+    <string name="qr_share_includes">Contiene: configurazione dell\'orologio</string>
+    <string name="qr_share_title">Condividi con un codice QR</string>
+    <string name="qr_too_large">Impossibile generare il codice QR: i dati sono probabilmente troppo grandi. Prova a condividere senza i registri delle partite.</string>
+
+    <!-- Toasts -->
+    <string name="toast_audio_failed">Riproduzione audio non riuscita</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">Serve il permesso della fotocamera</string>
+    <string name="toast_fen_copied">FEN copiata</string>
+    <string name="toast_mic_permission">Serve il permesso del microfono.</string>
+    <string name="toast_note_deleted">Nota eliminata</string>
+    <string name="toast_permission_granted">Permesso concesso. Tocca di nuovo Registra.</string>
+    <string name="toast_start_failed">Avvio non riuscito</string>
+
+    <!-- Tools -->
+    <string name="tools_add_result">Aggiungi un risultato</string>
+    <string name="tools_add_result_placeholder">Aggiungi un risultato o una nota…</string>
+    <string name="tools_audio">Audio</string>
+    <string name="tools_audio_note">Nota audio</string>
+    <string name="tools_board">Scacchiera</string>
+    <string name="tools_bold">Grassetto</string>
+    <string name="tools_checkbox">Casella</string>
+    <string name="tools_clear_board">Svuota la scacchiera</string>
+    <string name="tools_color">Colore</string>
+    <string name="tools_copy_fen">COPIA LA FEN</string>
+    <string name="tools_copy_format">Copia %s</string>
+    <string name="tools_dark_square">NERA</string>
+    <string name="tools_delete_recording">Elimina la registrazione</string>
+    <string name="tools_detailed_moves">Mosse in dettaglio</string>
+    <string name="tools_dice_roll">Lancio di dadi</string>
+    <string name="tools_draw">Disegna</string>
+    <string name="tools_draw_again">Estrai di nuovo</string>
+    <string name="tools_draw_note">Nota disegnata</string>
+    <string name="tools_edit_board">Modifica la scacchiera</string>
+    <string name="tools_edit_note">Modifica la nota</string>
+    <string name="tools_eraser">Gomma</string>
+    <string name="tools_final_score">Punteggio finale: %d</string>
+    <string name="tools_format_hint">Seleziona il testo e usa la barra degli strumenti per formattarlo…</string>
+    <string name="tools_game_logs">Registri delle partite</string>
+    <string name="tools_game_over">PARTITA FINITA</string>
+    <string name="tools_generate">GENERA</string>
+    <!-- Italian coins land testa or croce; heads is TESTA. -->
+    <string name="tools_heads">TESTA</string>
+    <string name="tools_tails">CROCE</string>
+    <string name="tools_image">Immagine</string>
+    <string name="tools_image_note">Nota immagine</string>
+    <string name="tools_italic">Corsivo</string>
+    <string name="tools_large">Grande</string>
+    <string name="tools_left">Sinistra</string>
+    <string name="tools_log_details">Dettagli del registro</string>
+    <string name="tools_match_summary">Riepilogo dell\'incontro</string>
+    <string name="tools_min_moves">Mosse minime?</string>
+    <string name="tools_move">Mossa</string>
+    <string name="tools_name_square_title">Nomina la casa</string>
+    <string name="tools_new_audio_note">Nuova nota audio</string>
+    <string name="tools_new_board_note">Nuova nota scacchiera</string>
+    <string name="tools_new_draw_note">Nuova nota disegnata</string>
+    <string name="tools_new_image_note">Nuova nota immagine</string>
+    <string name="tools_new_note">Nuova nota</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Nuova nota video</string>
+    <string name="tools_no_games">Nessuna partita registrata finora.</string>
+    <string name="tools_no_notes">Nessuna nota. Tocca + per crearne una.</string>
+    <string name="tools_no_photo">Nessuna foto</string>
+    <string name="tools_no_video" tools:ignore="Typos">Nessun video (max 1 min)</string>
+    <string name="tools_normal">Normale</string>
+    <string name="tools_note_image">Immagine della nota</string>
+    <string name="tools_offset">Scarto: %1$s%2$d ms</string>
+    <string name="tools_pick_straw">Estrai la pagliuzza %d</string>
+    <string name="tools_play">Riproduci</string>
+    <string name="tools_player_short">G%d</string>
+    <string name="tools_prepare">PREPARATI</string>
+    <string name="tools_random_card">Carta a caso</string>
+    <string name="tools_record">Registra</string>
+    <string name="tools_record_video" tools:ignore="Typos">Registra un video</string>
+    <string name="tools_reset_scoreboard">Azzera il tabellone</string>
+    <string name="tools_retake_photo">Rifai la foto</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Rifai il video</string>
+    <string name="tools_roll_dice">Lancia i dadi</string>
+    <string name="tools_score">Punteggio: %d</string>
+    <string name="tools_select_piece">Scegli un pezzo</string>
+    <string name="tools_select_text_color">Scegli il colore del testo</string>
+    <string name="tools_share_log">Condividi il registro</string>
+    <string name="tools_short_straw">Pagliuzza corta</string>
+    <string name="tools_shred">Distruggi</string>
+    <string name="tools_spent">Usato</string>
+    <string name="tools_start">INIZIA</string>
+    <string name="tools_start_trial">INIZIA LA PROVA</string>
+    <string name="tools_stop">STOP</string>
+    <string name="tools_stop_precision">Precisione nel fermarsi</string>
+    <string name="tools_take_photo">Scatta una foto</string>
+    <string name="tools_target">OBIETTIVO</string>
+    <string name="tools_target_time">Obiettivo: 5,000 s</string>
+    <string name="tools_text">Testo</string>
+    <string name="tools_time_per_move">Tempo per mossa</string>
+    <string name="tools_title">Titolo</string>
+    <string name="tools_toss_coin">Lancia la moneta</string>
+    <string name="tools_underline">Sottolineato</string>
+    <string name="tools_undo">Annulla</string>
+    <string name="tools_variant_generator">Generatore di varianti</string>
+    <string name="tools_video" tools:ignore="Typos">Video</string>
+    <string name="tools_video_note" tools:ignore="Typos">Nota video</string>
+    <string name="tools_white_square">BIANCA</string>
+
+    <!-- Chess variants: names stay English, descriptions are translated -->
+    <string name="variant_chess2880_desc">Simmetrica, alfieri di colore opposto, re su qualsiasi casa (niente arrocco).</string>
+    <string name="variant_chess960_desc">Simmetrica, alfieri di colore opposto, re fra le torri (con arrocco).</string>
+    <string name="variant_double960_desc">Asimmetrica, alfieri di colore opposto, re fra le torri (tattica di alto livello).</string>
+    <string name="variant_shuffle_desc">Simmetrica, re e alfieri su qualsiasi casa (caso totale).</string>
+    <string name="variant_transcendental_desc">Asimmetrica, alfieri di colore opposto, re su qualsiasi casa (molto tattica).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Pagliuzze: %d</item>
+        <item quantity="many">Pagliuzze: %d</item>
+        <item quantity="other">Pagliuzze: %d</item>
+    </plurals>
+</resources>
