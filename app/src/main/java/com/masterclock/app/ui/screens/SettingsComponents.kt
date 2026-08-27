@@ -951,28 +951,49 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
 @Composable
 fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, allowPhaseSkip: Boolean, onUpdate: (PlayerSettings) -> Unit, onUpdateGlobal: (Boolean, Long, Boolean) -> Unit) {
     val mode = p.mode
+    val mainModeIdx = when {
+        mode == TimerMode.SUDDEN_DEATH -> 0
+        mode in listOf(TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY) -> 1
+        mode.name.startsWith("MOVE_TIMER") -> 2
+        mode == TimerMode.HOURGLASS -> 3
+        mode.name.startsWith("BYOYOMI") -> 4
+        mode == TimerMode.CHRONO_COUNTDOWN -> 5
+        mode == TimerMode.FAST_MOVE -> 13
+        else -> -1
+    }
+    val showInitial = (mainModeIdx == 0 || mainModeIdx == 1 || mainModeIdx == 3 || mainModeIdx == 4 ||
+                    (mainModeIdx == 2 && mode in listOf(TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED)) ||
+                    (mainModeIdx == 5 && mode == TimerMode.CHRONO_COUNTDOWN) ||
+                    (mode == TimerMode.FAST_MOVE && p.fastMoveMode != FastMoveType.TRANSFER))
+    val showMoveOrByoyomiTime = mainModeIdx == 2 || mainModeIdx == 4 ||
+        (mode == TimerMode.FAST_MOVE && p.fastMoveMode == FastMoveType.TRANSFER)
+
+    // Every mode used to get the "Time Parameters" heading whether or not anything sat under it.
+    // Count Up and Chrono's count-up have no parameter at all, so the two of them showed a title
+    // introducing nothing. Work out first whether there is anything to introduce.
+    val hasAnyParameter = showInitial || showMoveOrByoyomiTime ||
+        mainModeIdx == 1 || mainModeIdx == 4 ||
+        mode == TimerMode.MOVE_TIMER_SAVE_CAP ||
+        mode == TimerMode.BYOYOMI_PROGRESSIVE ||
+        mode == TimerMode.MOVE_COUNTS_DOWN ||
+        mode == TimerMode.GONG ||
+        mode == TimerMode.FIDE_PERIODS ||
+        mode == TimerMode.PHASES ||
+        mode == TimerMode.RANDOM || mode == TimerMode.HIDDEN ||
+        mode == TimerMode.FAST_MOVE
+    if (!hasAnyParameter) return
+
+    // The gap belongs to this panel rather than to the page above it, so that it goes away with
+    // the section on the two modes that have no parameters.
+    Spacer(Modifier.height(24.dp))
+
     SettingsSection(stringResource(R.string.settings_time_parameters)) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val mainModeIdx = when { 
-                mode == TimerMode.SUDDEN_DEATH -> 0
-                mode in listOf(TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY) -> 1
-                mode.name.startsWith("MOVE_TIMER") -> 2
-                mode == TimerMode.HOURGLASS -> 3
-                mode.name.startsWith("BYOYOMI") -> 4
-                mode == TimerMode.CHRONO_COUNTDOWN -> 5
-                mode == TimerMode.FAST_MOVE -> 13
-                else -> -1 
-            }
-            val showInitial = (mainModeIdx == 0 || mainModeIdx == 1 || mainModeIdx == 3 || mainModeIdx == 4 || 
-                            (mainModeIdx == 2 && mode in listOf(TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED)) ||
-                            (mainModeIdx == 5 && mode == TimerMode.CHRONO_COUNTDOWN) ||
-                            (mode == TimerMode.FAST_MOVE && p.fastMoveMode != FastMoveType.TRANSFER))
-
             if (showInitial) {
                 val label = if (mode == TimerMode.FAST_MOVE && p.fastMoveMode == FastMoveType.SHRINK) stringResource(R.string.settings_starting_move_time) else stringResource(R.string.settings_initial_time)
                 HMSInput(label, p.initialTimeMs) { onUpdate(p.copy(initialTimeMs = it)) }
             }
-            if (mainModeIdx == 2 || mainModeIdx == 4 || (mode == TimerMode.FAST_MOVE && p.fastMoveMode == FastMoveType.TRANSFER)) { 
+            if (showMoveOrByoyomiTime) {
                 val label = if (mainModeIdx == 2) stringResource(R.string.settings_move_time) 
                            else if (mode == TimerMode.FAST_MOVE) stringResource(R.string.settings_time_per_move)
                            else stringResource(R.string.settings_byoyomi_time)
