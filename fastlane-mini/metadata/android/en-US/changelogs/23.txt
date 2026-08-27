@@ -1,0 +1,5 @@
+MasterClock is now available in German, Italian, Portuguese and Dutch as well: seven languages besides English.
+Brazilian Portuguese follows the European translation and overrides only the words where the two differ.
+Timing mode names stay in English: they are the vocabulary printed on tournament clocks.
+None of the new translations has been reviewed by a native speaker yet. Corrections are welcome.
+The launcher icon is smaller inside its mask, so it no longer crowds the edge next to other apps.
