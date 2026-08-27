@@ -1142,11 +1142,18 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                     }
                 }
 
+                val entriesScroll = rememberScrollState()
+
+                // The three tabs share one scroll state, so switching tabs used to land you at
+                // whatever offset the previous one was left at -- halfway down Licenses because
+                // you had scrolled Changes. Every tab starts at its own beginning instead.
+                LaunchedEffect(selectedTab) { entriesScroll.scrollTo(0) }
+
                 Column(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .heightIn(max = 320.dp)
-                        .verticalScroll(rememberScrollState()),
+                        .verticalScroll(entriesScroll),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     when (selectedTab) {

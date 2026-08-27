@@ -5,3 +5,4 @@ None of the new translations has been reviewed by a native speaker yet. Correcti
 The settings page scrolls as one, so the options below the modes can no longer push the time fields off a small screen.
 Settings and the changelog now have a scrollbar, with chevrons to page up and down and a long press to jump to either end.
 The launcher icon is smaller inside its mask, so it no longer crowds the edge next to other apps.
+Changes, Credits and Licenses each open at their own first line instead of sharing one scroll position.
