@@ -1,0 +1,2 @@
+The Close button is back in the version dialog on small screens. The changelog was taking all the room and leaving none for it.
+Imported settings, scanned codes and backups are checked more carefully before being applied.

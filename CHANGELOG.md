@@ -1,3 +1,12 @@
+## v0.8.23 — 2026-08-27
+
+### Fixed
+- **A shared settings file could make your game history unopenable.** Imported games were told apart by their start time, so two carrying the same one crashed the history and the "Last games" tab the moment either was opened — and since imported games are stored, it kept crashing after a restart. Clearing the whole history was the only way out. They are told apart by their own identifier now. This affected anything you could import: a `.json` file, a scanned QR code, or a `.zip` backup. Nothing was ever read or sent anywhere; the damage was confined to making your own history unreachable. If a file you were given has already done this, update and your history opens again — you do not need to clear it.
+- The same weakness in the scoreboard is closed too, and imported scoreboards now get fresh identifiers.
+- **E-Ink: the Close button is back in the version dialog.** On a 4.3" screen the changelog took all the room it asked for and left none for the button, which was not merely cramped but absent from the layout — the dialog could only be dismissed by tapping outside it. The entries give way to the button now.
+- **"Time Parameters" no longer appears with nothing under it.** Chronos' Count Up and Move Counts' Count Up have no parameter at all, and both showed the heading anyway. The spacing above it is even across every mode as well.
+- The mode options for Hidden, Random, Phases, Gong and Chronos have rounded corners, like every other option in the app.
+
 ## v0.8.22 — 2026-08-26
 
 ### Added

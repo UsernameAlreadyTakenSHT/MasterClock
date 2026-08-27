@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-26"
+    const val BUILD_DATE = "2026-08-27"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,17 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.23",
+            date = "2026-08-27",
+            notes = listOf(
+                "A shared settings file could make your game history unopenable, and keep it that way after a restart. Imported games are told apart by their own identifier now, so it cannot happen.",
+                "The same weakness in the scoreboard is closed too.",
+                "E-Ink: the Close button is back in the version dialog on small screens; the changelog was taking all the room.",
+                "Time Parameters no longer appears with nothing under it on Chronos Count Up and Move Counts Count Up, and the spacing above it is even across modes.",
+                "The mode options for Hidden, Random, Phases, Gong and Chronos have rounded corners like every other option.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.22",
             date = "2026-08-26",

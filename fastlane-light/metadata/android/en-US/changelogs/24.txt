@@ -1,0 +1,4 @@
+Fixes a problem where a shared settings file could make your game history unopenable, and keep it that way after a restart. Imported games are told apart by their own identifier now.
+The same weakness in the scoreboard is closed too.
+Time Parameters no longer appears with nothing under it on Chronos Count Up and Move Counts Count Up, and the spacing above it is even across modes.
+The mode options for Hidden, Random, Phases, Gong and Chronos have rounded corners like every other option.
