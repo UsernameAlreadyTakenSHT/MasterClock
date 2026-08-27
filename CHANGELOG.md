@@ -1,3 +1,19 @@
+## v0.8.22 — 2026-08-26
+
+### Added
+- **Four more languages: German, Italian, Portuguese and Dutch.** 2695 strings and 54 plural forms, every screen of every build, phone and E-Ink alike. With French and Spanish that is seven languages besides English.
+- **Brazilian Portuguese ships alongside European Portuguese.** It is not a second full translation: it carries the 131 strings where the two actually differ and falls back to the European wording for everything else, string by string, the way Android resolves resources. A Brazilian phone gets `usuário` and `tela`; a Portuguese one keeps `utilizador` and `ecrã`.
+- **The E-Ink build's settings and changelog scroll with a scrollbar.** E Ink has no fling, no overscroll stretch and no scrollbar that fades in under a finger, so a page that continues below the fold had nothing on screen to say so. The scrollbar carries chevrons that page up and down, long-press to jump to either end, and tap anywhere on the track to seek — and it appears only while the content actually overflows, giving the width back to the page otherwise.
+- Timing mode names stay in English, as they have since the first translation: `Sudden Death`, `Fischer`, `Byoyomi`, `FIDE Periods` and the rest are the vocabulary printed on tournament clocks and written in federation rulebooks. Their descriptions are translated.
+- **None of the four new translations has been reviewed by a native speaker.** Each was checked by lint, by comparing every format placeholder against the English, and on screen on all four phone builds and on E-Ink — but the wording has had no native reader, and neither has the Spanish from v0.8.21. Corrections are the most useful thing anyone can send: see [TRANSLATING.md](TRANSLATING.md).
+
+### Fixed
+- **E-Ink: the settings page no longer buries the time fields.** The system-behaviour switches and the version footer were pinned below the scrolling area, and being unweighted they were measured first — on a 4.3" Mudita screen they took everything, leaving about 95dp for the rest. The mode buttons were followed straight by the System behavior divider, and the hour/minute/second boxes could not be brought into view at any scroll position. The page scrolls as one now.
+- **The launcher icon no longer crowds its mask.** It filled the adaptive-icon safe zone exactly, which is not the same as fitting: a round mask left 3dp of margin and the black stroke ran to the edge. Beside Gmail, Maps or Contacts in the app drawer, ours were visibly the oversized ones. The clock now takes three quarters of the visible area, the proportion its neighbours use. Android 7's unmasked icons are deliberately unchanged.
+
+### Changed
+- Android Gradle Plugin updated to 9.3.2, the newest stable release. It changes R8 and the resource shrinker rather than any app code; APK sizes are unchanged.
+
 ## v0.8.21 — 2026-08-22
 
 ### Added
