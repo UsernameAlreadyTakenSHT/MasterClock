@@ -293,6 +293,12 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                 // less to hint at it than on a full page. Same scrollbar as the settings page.
                 val entriesScroll = rememberScrollState()
 
+                // The three tabs share one scroll state, so switching tabs used to land you at
+                // whatever offset the previous one was left at -- halfway down Licenses because
+                // you had scrolled Changes. Every tab starts at its own beginning instead.
+                // scrollTo, not animateScrollTo: E Ink does not animate.
+                LaunchedEffect(selectedTab) { entriesScroll.scrollTo(0) }
+
                 Row(modifier = Modifier.heightIn(max = 320.dp)) {
                     Column(
                         modifier = Modifier
