@@ -21,6 +21,7 @@ object AppInfo {
                 "None of the new translations has been checked by a native speaker yet; corrections are welcome.",
                 "E-Ink: the settings page scrolls as one, so the time fields can no longer be pushed off a small screen by the options below them.",
                 "E-Ink: settings and the changelog now have a scrollbar, with chevrons to page up and down.",
+                "Changes, Credits and Licenses each open at their own first line instead of sharing one scroll position.",
                 "The launcher icon is smaller inside its mask, so it no longer crowds the edge next to other apps.",
             ),
         ),

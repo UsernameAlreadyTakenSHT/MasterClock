@@ -9,6 +9,7 @@
 
 ### Fixed
 - **E-Ink: the settings page no longer buries the time fields.** The system-behaviour switches and the version footer were pinned below the scrolling area, and being unweighted they were measured first — on a 4.3" Mudita screen they took everything, leaving about 95dp for the rest. The mode buttons were followed straight by the System behavior divider, and the hour/minute/second boxes could not be brought into view at any scroll position. The page scrolls as one now.
+- **Changes, Credits and Licenses each open at their own first line.** The three tabs shared one scroll position, so leaving one halfway down dropped you into the middle of the next.
 - **The launcher icon no longer crowds its mask.** It filled the adaptive-icon safe zone exactly, which is not the same as fitting: a round mask left 3dp of margin and the black stroke ran to the edge. Beside Gmail, Maps or Contacts in the app drawer, ours were visibly the oversized ones. The clock now takes three quarters of the visible area, the proportion its neighbours use. Android 7's unmasked icons are deliberately unchanged.
 
 ### Changed
