@@ -299,7 +299,21 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                 // scrollTo, not animateScrollTo: E Ink does not animate.
                 LaunchedEffect(selectedTab) { entriesScroll.scrollTo(0) }
 
-                Row(modifier = Modifier.heightIn(max = 320.dp)) {
+                // weight, not a bare height cap. Without it the entries take their 320dp off the
+                // top and Close, measured last with nothing left, comes out zero-high: on a real
+                // Kompakt screen (480x800 at 240dpi, so 320x533dp) the button was not merely
+                // cramped, it was absent from the layout altogether and the dialog could only be
+                // dismissed by tapping outside it.
+                //
+                // fill = false so the entries still stop at 320dp on a screen with room to spare;
+                // the weight only ever takes space away, never adds it. Close is unweighted and so
+                // is measured first, at its full height -- the scrolling half is the half that can
+                // afford to shrink.
+                Row(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(max = 320.dp)
+                ) {
                     Column(
                         modifier = Modifier
                             .weight(1f)
