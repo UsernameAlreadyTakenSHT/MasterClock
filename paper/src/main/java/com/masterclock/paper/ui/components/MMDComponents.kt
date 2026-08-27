@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -168,8 +169,14 @@ fun ScrollbarMMD(
     val scope = rememberCoroutineScope()
     val color = MaterialTheme.colorScheme.onBackground
     val viewport = scrollState.viewportSize
-    val atTop = scrollState.value <= 0
-    val atBottom = scrollState.value >= range
+    // scrollState.value moves with every scrolled pixel, and reading it straight into composition
+    // would recompose the whole scrollbar that often -- lint flags it as @FrequentlyChangingValue.
+    // These two only flip at the ends, so derive them and let the thumb's position be read in the
+    // draw scope below, where it repaints without recomposing.
+    val atTop by remember(scrollState) { derivedStateOf { scrollState.value <= 0 } }
+    val atBottom by remember(scrollState) {
+        derivedStateOf { scrollState.value >= scrollState.maxValue }
+    }
 
     Column(
         modifier = modifier
