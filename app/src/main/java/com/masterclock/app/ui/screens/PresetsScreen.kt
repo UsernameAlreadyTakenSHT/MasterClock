@@ -183,7 +183,9 @@ fun PresetsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(lastTen, key = { it.startTime }) { log ->
+                        // Keyed on id rather than startTime, which an imported log controls
+                        // verbatim; see the game history list for the crash that caused.
+                        items(lastTen, key = { it.id }) { log ->
                             val date = remember(log.startTime) {
                                 SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(log.startTime))
                             }

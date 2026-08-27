@@ -117,4 +117,49 @@ class ImportSanitizationTest {
         val text = "y".repeat(100)
         assertEquals(text, readImportText(ByteArrayInputStream(text.toByteArray()), maxBytes = 100))
     }
+
+    // --- sanitizeImportedScoreboard ---
+    //
+    // The scoreboard list is keyed on game id and Compose throws on a duplicate key, so an import
+    // carrying two games with the same id used to crash the screen on open. Unlike GameLog, whose
+    // id is a Room primary key, nothing else makes these unique.
+
+    private fun session(vararg ids: String) = ScoreboardSession(
+        id = "session-from-the-file",
+        games = ids.map { ScoreboardGame(id = it, result = "1-0") },
+    )
+
+    @Test
+    fun `gives every imported scoreboard game a distinct id`() {
+        val out = sanitizeImportedScoreboard(session("same", "same", "same"))
+        assertEquals(3, out.games.size)
+        assertEquals(3, out.games.map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun `does not keep the ids the file supplied`() {
+        val out = sanitizeImportedScoreboard(session("a", "b"))
+        assertTrue(out.games.none { it.id == "a" || it.id == "b" })
+        assertNotEquals("session-from-the-file", out.id)
+    }
+
+    @Test
+    fun `leaves everything else about the session alone`() {
+        val incoming = ScoreboardSession(
+            player1Name = "Ada",
+            player2Name = "Bob",
+            games = listOf(ScoreboardGame(id = "x", result = "0-1", timestamp = 42L)),
+        )
+        val out = sanitizeImportedScoreboard(incoming)
+        assertEquals("Ada", out.player1Name)
+        assertEquals("Bob", out.player2Name)
+        assertEquals("0-1", out.games.single().result)
+        // Timestamps are shown to the user as the game's time; only the key had to change.
+        assertEquals(42L, out.games.single().timestamp)
+    }
+
+    @Test
+    fun `handles an empty scoreboard`() {
+        assertEquals(emptyList<ScoreboardGame>(), sanitizeImportedScoreboard(ScoreboardSession()).games)
+    }
 }
