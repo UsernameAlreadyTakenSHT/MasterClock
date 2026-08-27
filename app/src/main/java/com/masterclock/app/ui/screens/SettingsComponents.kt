@@ -314,11 +314,11 @@ fun PhasesPanel(
     val newPhaseNameTemplate = stringResource(R.string.settings_phase_n)
     SettingsSection(stringResource(R.string.settings_phases_config)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            BehaviorSwitch(stringResource(R.string.settings_repeat_phases), loopPhases) { onUpdateGlobal(it, pauseMs, allowPhaseSkip) }
+            BehaviorSwitch(stringResource(R.string.settings_repeat_phases), loopPhases, topRounded = true, bottomRounded = true) { onUpdateGlobal(it, pauseMs, allowPhaseSkip) }
 
             HMSInput(stringResource(R.string.settings_pause_between_phases), pauseMs) { onUpdateGlobal(loopPhases, it, allowPhaseSkip) }
 
-            BehaviorSwitch(stringResource(R.string.settings_allow_skip), allowPhaseSkip) { onUpdateGlobal(loopPhases, pauseMs, it) }
+            BehaviorSwitch(stringResource(R.string.settings_allow_skip), allowPhaseSkip, topRounded = true, bottomRounded = true) { onUpdateGlobal(loopPhases, pauseMs, it) }
 
             val phases = p.phases
             phases.forEachIndexed { index, phase ->
@@ -355,13 +355,13 @@ fun PhasesPanel(
                         }
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BehaviorSwitch(stringResource(R.string.settings_auto_advance), phase.autoAdvance) { auto ->
+                            BehaviorSwitch(stringResource(R.string.settings_auto_advance), phase.autoAdvance, topRounded = true, bottomRounded = true) { auto ->
                                 val newList = phases.toMutableList().apply { this[index] = phase.copy(autoAdvance = auto) }
                                 onUpdateP(p.copy(phases = newList))
                             }
                         }
 
-                        BehaviorSwitch(stringResource(R.string.settings_flag_on_end), checked = phase.flagOnEnd) { flag ->
+                        BehaviorSwitch(stringResource(R.string.settings_flag_on_end), checked = phase.flagOnEnd, topRounded = true, bottomRounded = true) { flag ->
                             val newList = phases.toMutableList().apply { this[index] = phase.copy(flagOnEnd = flag) }
                             onUpdateP(p.copy(phases = newList))
                         }
@@ -436,12 +436,12 @@ fun ToolCard(
 fun RandomModePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
     SettingsSection(if (p.mode == TimerMode.RANDOM) stringResource(R.string.settings_random_config) else stringResource(R.string.settings_hidden_config)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            BehaviorSwitch(stringResource(R.string.settings_rounded_time), p.roundedTime) {
+            BehaviorSwitch(stringResource(R.string.settings_rounded_time), p.roundedTime, topRounded = true, bottomRounded = true) {
                 onUpdate(p.copy(roundedTime = it))
             }
 
             if (p.mode == TimerMode.HIDDEN) {
-                BehaviorSwitch(stringResource(R.string.settings_show_percentage), p.showHiddenPercentages) {
+                BehaviorSwitch(stringResource(R.string.settings_show_percentage), p.showHiddenPercentages, topRounded = true, bottomRounded = true) {
                     onUpdate(p.copy(showHiddenPercentages = it))
                 }
             }
@@ -929,7 +929,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     ModeCard("Countdown", p.mode == TimerMode.CHRONO_COUNTDOWN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }
                     ModeCard("Countup", p.mode == TimerMode.CHRONO_COUNTUP, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTUP)) }
                 }
-                BehaviorSwitch(stringResource(R.string.settings_one_for_all), isOneForAll) { onUpdateOneForAll(it) }
+                BehaviorSwitch(stringResource(R.string.settings_one_for_all), isOneForAll, topRounded = true, bottomRounded = true) { onUpdateOneForAll(it) }
             }
         }
         6 -> SettingsSection(stringResource(R.string.settings_move_counts_type)) {
@@ -1083,7 +1083,7 @@ fun NumericInput(label: String, value: Int, onValueChange: (Int) -> Unit) {
 @Composable
 fun GongPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        BehaviorSwitch(stringResource(R.string.settings_simultaneous), p.gongSimultaneous) { onUpdate(p.copy(gongSimultaneous = it)) }
+        BehaviorSwitch(stringResource(R.string.settings_simultaneous), p.gongSimultaneous, topRounded = true, bottomRounded = true) { onUpdate(p.copy(gongSimultaneous = it)) }
         HMSInput(stringResource(R.string.settings_reflection_time), p.gongReflectionMs) { onUpdate(p.copy(gongReflectionMs = it)) }
         HMSInput(stringResource(R.string.settings_time_to_move), p.gongMoveMs) { onUpdate(p.copy(gongMoveMs = it)) }
     }
