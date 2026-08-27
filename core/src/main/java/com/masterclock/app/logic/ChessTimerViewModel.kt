@@ -747,6 +747,24 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
 )
 
 /**
+ * The scoreboard was the one import channel reaching the UI with no validation at all.
+ *
+ * Its games live in memory rather than in Room, so unlike [GameLog] -- whose id is a primary key,
+ * and whose uniqueness the database therefore enforces -- nothing else stops two imported games
+ * from carrying the same id. The scoreboard list is keyed on that id, and Compose throws on a
+ * duplicate key, so a crafted session would crash the screen the moment it was opened.
+ *
+ * Fresh ids on the way in, which is the same treatment [sanitizeImportedSettings] gives
+ * [NotebookNote.id]. No cap on the number of games: the list renders lazily, the session is never
+ * persisted, and [MAX_IMPORT_TEXT_BYTES] already bounds how much can arrive -- a limit here would
+ * be a number invented to look thorough, and would silently drop a real user's own tally.
+ */
+internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardSession = session.copy(
+    id = java.util.UUID.randomUUID().toString(),
+    games = session.games.map { game -> game.copy(id = java.util.UUID.randomUUID().toString()) },
+)
+
+/**
  * Pure per-player time-transition function: given the current [PlayerState] and how much time
  * elapsed, returns the next [PlayerState] for every timer mode except the multi-player-coupled ones
  * (PHASES/GONG/HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED, handled inline in
@@ -1556,7 +1574,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val newSettings = if (isImport) sanitizeImportedSettings(getApplication(), newSettings) else newSettings
         _settings.value = newSettings
         
-        scoreboardToImport?.let { _scoreboard.value = it }
+        // isImport guards this for the same reason it guards newSettings above: the scoreboard
+        // arrives from the same untrusted QR/JSON/ZIP payload.
+        scoreboardToImport?.let { _scoreboard.value = if (isImport) sanitizeImportedScoreboard(it) else it }
         // Volume changes only need the play() volume updated, not a full sample reload:
         // the Slider fires per drag-frame, and reloading on every frame accumulated
         // duplicate samples in the SoundPool until load() started failing silently.
