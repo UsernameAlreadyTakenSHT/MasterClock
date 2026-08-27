@@ -866,12 +866,25 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
             }
         }
     }
-    Spacer(Modifier.height(12.dp))
     val bonusOptionsAllowed = listOf(TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY).count { FlavorConfig.isModeAllowed(it) }
     val moveTimerOptionsAllowed = listOf(
         TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_SAVE_CAP, TimerMode.MOVE_TIMER_OVERTIME,
         TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_SHARED, TimerMode.MOVE_TIMER_GLOBAL_SHARED
     ).count { FlavorConfig.isModeAllowed(it) }
+
+    // This gap separates the mode grid from the sub-mode section, so it is drawn only when there
+    // is one. Seven of the modes have no branch in the when below -- Sudden Death, Hourglass, FIDE
+    // Periods, Phases, Random, Hidden, Gong -- and a flavor that allows only one bonus or one
+    // move-timer variant drops those two branches as well. Drawn unconditionally it left a run of
+    // empty space before whatever the page puts next.
+    val hasSubModeSection = when (mainMode) {
+        1 -> bonusOptionsAllowed > 1
+        2 -> moveTimerOptionsAllowed > 1
+        4, 5, 6, 13 -> true
+        else -> false
+    }
+    if (hasSubModeSection) Spacer(Modifier.height(12.dp))
+
     when (mainMode) {
         1 -> if (bonusOptionsAllowed > 1) SettingsSection(stringResource(R.string.settings_bonus_type)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -967,24 +980,35 @@ fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, al
                     (mode == TimerMode.FAST_MOVE && p.fastMoveMode != FastMoveType.TRANSFER))
     val showMoveOrByoyomiTime = mainModeIdx == 2 || mainModeIdx == 4 ||
         (mode == TimerMode.FAST_MOVE && p.fastMoveMode == FastMoveType.TRANSFER)
+    val showIncrement = mainModeIdx == 1
+    val showPeriodsGoal = mainModeIdx == 4
+    val showTimeCap = mode == TimerMode.MOVE_TIMER_SAVE_CAP
+    val showProgression = mode == TimerMode.BYOYOMI_PROGRESSIVE
+    val showMaxMoves = mode == TimerMode.MOVE_COUNTS_DOWN
+    val showGong = mode == TimerMode.GONG
+    val showFidePeriods = mode == TimerMode.FIDE_PERIODS
+    val showPhases = mode == TimerMode.PHASES
+    val showRandom = mode == TimerMode.RANDOM || mode == TimerMode.HIDDEN
+    val showFastMove = mode == TimerMode.FAST_MOVE
 
     // Every mode used to get the "Time Parameters" heading whether or not anything sat under it.
-    // Count Up and Chrono's count-up have no parameter at all, so the two of them showed a title
-    // introducing nothing. Work out first whether there is anything to introduce.
-    val hasAnyParameter = showInitial || showMoveOrByoyomiTime ||
-        mainModeIdx == 1 || mainModeIdx == 4 ||
-        mode == TimerMode.MOVE_TIMER_SAVE_CAP ||
-        mode == TimerMode.BYOYOMI_PROGRESSIVE ||
-        mode == TimerMode.MOVE_COUNTS_DOWN ||
-        mode == TimerMode.GONG ||
-        mode == TimerMode.FIDE_PERIODS ||
-        mode == TimerMode.PHASES ||
-        mode == TimerMode.RANDOM || mode == TimerMode.HIDDEN ||
-        mode == TimerMode.FAST_MOVE
+    // Count Up and Chrono's count-up match none of the conditions above, so the two of them showed
+    // a title introducing nothing.
+    //
+    // One term per condition, and the body below tests the same values rather than repeating the
+    // expressions. That correspondence is the whole safety of this: a parameter added to the body
+    // with its own inline condition would be missing from this list, the early return would fire,
+    // and the setting would be silently unreachable for its mode -- with nothing, compiler or
+    // test, to catch it. Some terms are implied by others and could be dropped; they are kept so
+    // the list stays one-to-one with the rows.
+    val hasAnyParameter = showInitial || showMoveOrByoyomiTime || showIncrement || showPeriodsGoal ||
+        showTimeCap || showProgression || showMaxMoves || showGong || showFidePeriods ||
+        showPhases || showRandom || showFastMove
     if (!hasAnyParameter) return
 
-    // The gap belongs to this panel rather than to the page above it, so that it goes away with
-    // the section on the two modes that have no parameters.
+    // Separation from whatever the page put above, kept here rather than in the page so that it
+    // goes away together with the section on the two modes that have no parameters. The mode grid
+    // above brings its own gap only when it drew a sub-mode section, so this is 24dp either way.
     Spacer(Modifier.height(24.dp))
 
     SettingsSection(stringResource(R.string.settings_time_parameters)) {
@@ -1000,16 +1024,16 @@ fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, al
                 val currentTime = if (mainModeIdx == 2) p.moveTimeMs else if (mode == TimerMode.FAST_MOVE) p.moveTimeMs else p.byoyomiTimeMs
                 HMSInput(label, currentTime) { onUpdate(if (mainModeIdx == 2 || mode == TimerMode.FAST_MOVE) p.copy(moveTimeMs = it) else p.copy(byoyomiTimeMs = it)) } 
             }
-            if (mainModeIdx == 1) { HMSInput(stringResource(R.string.settings_increment_bonus), p.incrementMs) { onUpdate(p.copy(incrementMs = it)) } }
-            if (mainModeIdx == 4) { NumericInput(stringResource(R.string.settings_periods_goal), p.byoyomiPeriods) { onUpdate(p.copy(byoyomiPeriods = it)) } }
-            if (mode == TimerMode.MOVE_TIMER_SAVE_CAP) { HMSInput(stringResource(R.string.settings_time_cap), p.timeCapMs) { onUpdate(p.copy(timeCapMs = it)) } }
-            if (mode == TimerMode.BYOYOMI_PROGRESSIVE) { NumericInput(stringResource(R.string.settings_progression), p.byoyomiProgression) { onUpdate(p.copy(byoyomiProgression = it)) } }
-            if (mode == TimerMode.MOVE_COUNTS_DOWN) { NumericInput(stringResource(R.string.settings_max_moves), p.maxMoves) { onUpdate(p.copy(maxMoves = it)) } }
-            if (mode == TimerMode.GONG) { GongPanel(p, onUpdate) }
-            if (mode == TimerMode.FIDE_PERIODS) { FidePeriodsPanel(p, onUpdate) }
-            if (mode == TimerMode.PHASES) { PhasesPanel(p = p, loopPhases = loopPhases, pauseMs = pauseMs, allowPhaseSkip = allowPhaseSkip, onUpdateP = onUpdate, onUpdateGlobal = onUpdateGlobal) }
-            if (mode == TimerMode.RANDOM || mode == TimerMode.HIDDEN) { RandomModePanel(p, onUpdate) }
-            if (mode == TimerMode.FAST_MOVE) { FastMovePanel(p, onUpdate) }
+            if (showIncrement) { HMSInput(stringResource(R.string.settings_increment_bonus), p.incrementMs) { onUpdate(p.copy(incrementMs = it)) } }
+            if (showPeriodsGoal) { NumericInput(stringResource(R.string.settings_periods_goal), p.byoyomiPeriods) { onUpdate(p.copy(byoyomiPeriods = it)) } }
+            if (showTimeCap) { HMSInput(stringResource(R.string.settings_time_cap), p.timeCapMs) { onUpdate(p.copy(timeCapMs = it)) } }
+            if (showProgression) { NumericInput(stringResource(R.string.settings_progression), p.byoyomiProgression) { onUpdate(p.copy(byoyomiProgression = it)) } }
+            if (showMaxMoves) { NumericInput(stringResource(R.string.settings_max_moves), p.maxMoves) { onUpdate(p.copy(maxMoves = it)) } }
+            if (showGong) { GongPanel(p, onUpdate) }
+            if (showFidePeriods) { FidePeriodsPanel(p, onUpdate) }
+            if (showPhases) { PhasesPanel(p = p, loopPhases = loopPhases, pauseMs = pauseMs, allowPhaseSkip = allowPhaseSkip, onUpdateP = onUpdate, onUpdateGlobal = onUpdateGlobal) }
+            if (showRandom) { RandomModePanel(p, onUpdate) }
+            if (showFastMove) { FastMovePanel(p, onUpdate) }
         }
     }
 }
