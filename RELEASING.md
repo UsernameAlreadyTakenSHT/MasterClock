@@ -60,7 +60,7 @@ cheapest way to catch a half-applied version bump.
 
 ```sh
 git commit -m "Release vX.Y.Z: ..."
-git tag vX.Y.Z
+git tag -s vX.Y.Z -m "vX.Y.Z"
 git push master HEAD:master
 git push master vX.Y.Z
 ```
@@ -69,6 +69,20 @@ The remote is named `master`, not `origin`, and carries two push URLs — one pu
 GitHub and GitLab. Never force-push, and never move a tag that has already been pushed: the
 workflow builds from the tag, so a moved tag means published APKs that no longer match their
 commit.
+
+`-s` signs the tag. `tag.gpgsign` is set for this repository so a bare `git tag` signs too, but
+write it out: it is the difference between a tag anyone can forge and one they cannot, and it should
+be visible in the command rather than hidden in a config file. Expect a passphrase prompt — a tag
+that goes through without one was not signed.
+
+Verify before pushing:
+
+```sh
+git tag -v vX.Y.Z
+```
+
+Tags up to and including v0.8.23 are unsigned and stay that way. Signing them now would mean
+deleting and recreating published tags, which is exactly what the paragraph above forbids.
 
 ## 5. What CI does, and what it does not
 
