@@ -149,22 +149,29 @@ class MainActivity : ComponentActivity() {
                     scope.launch(Dispatchers.IO) {
                         try {
                             val tempFile = File(context.cacheDir, "import_backup.zip")
-                            context.contentResolver.openInputStream(it)?.use { input ->
-                                tempFile.outputStream().use { output ->
-                                    input.copyTo(output)
+                            try {
+                                context.contentResolver.openInputStream(it)?.use { input ->
+                                    // Bounded: copyTo wrote the picked file to the cache in full
+                                    // before any of the extractor's limits applied.
+                                    tempFile.outputStream().use { output ->
+                                        copyImportArchive(input, output)
+                                    }
                                 }
+                                val pkg = ZipBackupManager.extractBackup(tempFile)
+                                withContext(Dispatchers.Main) {
+                                    timerViewModel.updateSettings(
+                                        newSettings = pkg.settings,
+                                        logsToImport = pkg.logs,
+                                        scoreboardToImport = pkg.scoreboard,
+                                        isImport = true
+                                    )
+                                    Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
+                                }
+                            } finally {
+                                // In a finally, not after the import: a refused or malformed
+                                // archive used to be left behind in the cache.
+                                tempFile.delete()
                             }
-                            val pkg = ZipBackupManager.extractBackup(tempFile)
-                            withContext(Dispatchers.Main) {
-                                timerViewModel.updateSettings(
-                                    newSettings = pkg.settings,
-                                    logsToImport = pkg.logs,
-                                    scoreboardToImport = pkg.scoreboard,
-                                    isImport = true
-                                )
-                                Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
-                            }
-                            tempFile.delete()
                         } catch (e: Exception) {
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, "Failed to import: ${e.message}", Toast.LENGTH_LONG).show()
