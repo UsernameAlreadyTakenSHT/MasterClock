@@ -110,6 +110,15 @@ awk '/^## /{n++} n==1{print}' CHANGELOG.md > release_notes.md
 gh release edit vX.Y.Z --notes-file release_notes.md
 ```
 
+**Both forges need this, and GitLab is the awkward one.** Each release body is generated from
+`CHANGELOG.md` *as it stood at the tagged commit*, so editing the file afterwards fixes neither of
+them — every published body has to be corrected in place, twice. GitLab's API refuses it unless the
+token carries the `api` scope, which is far broader than the `write_repository` a push needs; the
+scope exists to edit anything in the account, and taking it on to reorder a heading is a poor trade.
+Edit that one by hand at `/-/releases`.
+
+Better still, read the notes before tagging. Both corrections are avoidable and neither is quick.
+
 ## 6. Distribution
 
 Store listings live in the `fastlane*` directories, one per build. `docs/permissions/README.md`
