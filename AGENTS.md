@@ -57,6 +57,20 @@ someone runs the task it belongs to — which is exactly when nobody is expectin
 Then read the diff before committing. A bump you meant to make shows as a handful of changed
 components; anything else changing is the file doing its job.
 
+**An AGP bump needs one entry added by hand.** `aapt2` publishes a separate jar per host OS and
+Gradle resolves only the one it runs on, so regenerating on Windows records `-windows.jar` and
+leaves the CI — which is Linux — with an artifact it cannot verify. The build then dies in about
+40 seconds on `Dependency verification failed ... aapt2-<version>-linux.jar`. The version tracks
+AGP, so this recurs on every bump. Fetch the digests and add them beside the generated one:
+
+```sh
+v=<aapt2 version, from the failure or the generated windows entry>
+for os in linux osx; do
+  curl -sLO "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/$v/aapt2-$v-$os.jar"
+  sha256sum "aapt2-$v-$os.jar"
+done
+```
+
 Check the `<trusted-artifacts>` block at the top survived the regeneration. It trusts `-sources.jar`
 and `-javadoc.jar` by pattern, and without it the IDE stops working: Android Studio resolves sources
 for code navigation in its own detached configurations, which the build never touches, so
