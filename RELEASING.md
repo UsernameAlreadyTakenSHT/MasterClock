@@ -70,6 +70,15 @@ GitHub and GitLab. Never force-push, and never move a tag that has already been 
 workflow builds from the tag, so a moved tag means published APKs that no longer match their
 commit.
 
+On Windows, `git tag -s` fails with `gpg: skipped ...: No secret key` even though `gpg` signs fine
+from a terminal. Git for Windows ships its own gpg at `/usr/bin/gpg` with an empty keyring, while
+the key lives in Gpg4win's. `gpg.program` is set in this repository's local config to point at the
+latter — local config is not versioned, so a fresh clone needs it again:
+
+```sh
+git config --local gpg.program "C:/Program Files/GnuPG/bin/gpg.exe"
+```
+
 `-s` signs the tag. `tag.gpgsign` is set for this repository so a bare `git tag` signs too, but
 write it out: it is the difference between a tag anyone can forge and one they cannot, and it should
 be visible in the command rather than hidden in a config file. Expect a passphrase prompt — a tag
