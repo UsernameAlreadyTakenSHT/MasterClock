@@ -1,13 +1,13 @@
 ## v0.8.24 — 2026-08-28
 
-### Changed
-- **MasterClock Light is now MasterClock Lite — and if you have it installed, this update will not reach you.** The rename went all the way down to the app's identity, which Android treats as a different application: your existing copy will simply stop being offered updates, silently and for good. To carry on, install the new one from the release page and remove the old one. Nothing else does this — Complete, Standard, Mini and E-Ink update normally. Your settings and history do not transfer automatically; export a backup from the old build first if you want to keep them.
-- The Complete build's icon no longer carries a FULL badge. It is the plain clock now: the badge made the main app look like one variant among four, and its own store listing has always called it simply MasterClock.
-
 ### Added
 - **Every release now ships a `SHA256SUMS.txt` beside the APKs**, so you can check that what you downloaded is what was published: `sha256sum -c SHA256SUMS.txt`.
 - **Release tags are signed from this one on.** The public key is in the repository at `docs/signing-key.asc`, fingerprint `210B 5FD0 0E17 66BB 8797  3EDC A286 94BC BC91 9301`. Tags up to v0.8.23 are unsigned and stay that way — signing them now would mean recreating published tags. [docs/VERIFYING.md](docs/VERIFYING.md) explains what each check proves and what it does not.
 - APKs now carry an APK Signature Scheme v3 block alongside v2. The certificate is unchanged, so updates are unaffected; what it adds is the ability to replace the signing key later, which without v3 would have been impossible.
+
+### Changed
+- **MasterClock Light is now MasterClock Lite — and if you have it installed, this update will not reach you.** The rename went all the way down to the app's identity, which Android treats as a different application: your existing copy will simply stop being offered updates, silently and for good. To carry on, install the new one from the release page and remove the old one. Nothing else does this — Complete, Standard, Mini and E-Ink update normally. Your settings and history do not transfer automatically; export a backup from the old build first if you want to keep them.
+- The Complete build's icon no longer carries a FULL badge. It is the plain clock now: the badge made the main app look like one variant among four, and its own store listing has always called it simply MasterClock.
 
 ### Fixed
 - Restoring a backup no longer copies the whole file into the cache before checking its size. An archive far past the limit was written to disk in full and rejected afterwards; it is now refused as it arrives, and a failed import no longer leaves its copy behind.
