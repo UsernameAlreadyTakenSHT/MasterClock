@@ -38,9 +38,14 @@ build_apks:
     - ./gradlew buildAllReleaseFlavors
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
+        # Digests are recorded against the *published* name, not the path they are built at, so the
+        # file reads the same as the GitHub one and matches what a user actually downloads.
+        # Verify with: sha256sum -c SHA256SUMS.txt
+        rm -f SHA256SUMS.txt
         for flavor in complete standard lite mini; do
           apk_path=$(find "app/build/outputs/apk/${flavor}/release" -name "*.apk" | head -n1)
           target_name="masterclock-${flavor}-${CI_COMMIT_TAG}.apk"
+          echo "$(sha256sum "${apk_path}" | cut -d' ' -f1)  ${target_name}" >> SHA256SUMS.txt
           echo "Uploading ${apk_path} as ${target_name}..."
           curl --silent --show-error --fail \
             --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
@@ -49,11 +54,19 @@ build_apks:
         done
         paper_apk_path=$(find "paper/build/outputs/apk/release" -name "*.apk" | head -n1)
         paper_target_name="masterclock-paper-${CI_COMMIT_TAG}.apk"
+        echo "$(sha256sum "${paper_apk_path}" | cut -d' ' -f1)  ${paper_target_name}" >> SHA256SUMS.txt
         echo "Uploading ${paper_apk_path} as ${paper_target_name}..."
         curl --silent --show-error --fail \
           --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
           --upload-file "${paper_apk_path}" \
           "${PACKAGE_REGISTRY_URL}/${paper_target_name}"
+
+        cat SHA256SUMS.txt
+        echo "Uploading SHA256SUMS.txt..."
+        curl --silent --show-error --fail \
+          --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file SHA256SUMS.txt \
+          "${PACKAGE_REGISTRY_URL}/SHA256SUMS-${CI_COMMIT_TAG}.txt"
 
         awk '/^## /{n++} n==1{print}' CHANGELOG.md > release_notes.md
       fi
@@ -95,4 +108,5 @@ release_tag:
         --assets-link "{\"name\":\"MasterClock standard (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-standard-${CI_COMMIT_TAG}.apk\"}" \
         --assets-link "{\"name\":\"MasterClock lite (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-lite-${CI_COMMIT_TAG}.apk\"}" \
         --assets-link "{\"name\":\"MasterClock mini (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-mini-${CI_COMMIT_TAG}.apk\"}" \
-        --assets-link "{\"name\":\"MasterClock paper (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk\"}"
+        --assets-link "{\"name\":\"MasterClock paper (APK)\",\"url\":\"${PACKAGE_REGISTRY_URL}/masterclock-paper-${CI_COMMIT_TAG}.apk\"}" \
+        --assets-link "{\"name\":\"SHA256SUMS.txt\",\"url\":\"${PACKAGE_REGISTRY_URL}/SHA256SUMS-${CI_COMMIT_TAG}.txt\"}"
