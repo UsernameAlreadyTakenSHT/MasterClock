@@ -118,6 +118,34 @@ class ImportSanitizationTest {
         assertEquals(text, readImportText(ByteArrayInputStream(text.toByteArray()), maxBytes = 100))
     }
 
+    // --- copyImportArchive ---
+
+    @Test
+    fun `copies an archive through unchanged`() {
+        val bytes = ByteArray(20_000) { (it % 251).toByte() }
+        val out = java.io.ByteArrayOutputStream()
+        copyImportArchive(ByteArrayInputStream(bytes), out)
+        assertArrayEquals(bytes, out.toByteArray())
+    }
+
+    @Test(expected = ImportTooLargeException::class)
+    fun `refuses an archive past the limit`() {
+        val big = ByteArray(101)
+        copyImportArchive(ByteArrayInputStream(big), java.io.ByteArrayOutputStream(), maxBytes = 100)
+    }
+
+    @Test
+    fun `stops writing once the limit is passed`() {
+        // The point of the bound is that the bytes never reach the disk, so the sink must not have
+        // grown past the limit by the time it throws.
+        val out = java.io.ByteArrayOutputStream()
+        try {
+            copyImportArchive(ByteArrayInputStream(ByteArray(50_000)), out, maxBytes = 8_192)
+        } catch (_: ImportTooLargeException) {
+        }
+        assertTrue("wrote ${out.size()} bytes past an 8192 byte limit", out.size() <= 8_192)
+    }
+
     // --- sanitizeImportedScoreboard ---
     //
     // The scoreboard list is keyed on game id and Compose throws on a duplicate key, so an import
