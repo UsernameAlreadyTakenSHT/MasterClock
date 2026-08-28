@@ -99,6 +99,14 @@ Pushing a `v*` tag runs `.github/workflows/build-apks.yml`: it builds the five r
 them from the repository secrets, uploads them as artifacts, and creates the GitHub Release with
 the changelog section from step 2.
 
+**Rehearse on GitHub, publish on GitLab.** Both pipelines run only on a `v*` tag or a manual
+trigger, so ordinary pushes cost nothing — but GitLab's free tier gives the whole namespace 400
+compute minutes a month, reset on the 1st, and one release run eats 10–20 of them. GitHub's budget
+is separate and far larger. So when a CI change needs trying out, use `workflow_dispatch` on GitHub:
+it runs the build and every step up to the release, which is tag-gated and stays skipped. GitLab's
+upload block is inside `if [ -n "$CI_COMMIT_TAG" ]` and cannot be rehearsed at all — it is first
+exercised by the release itself, which is worth knowing before relying on a change to it.
+
 It does **not** build AABs, and it does **not** touch GitLab releases. Check the run finishes green,
 then open the Release page and confirm the notes are the ones you just wrote.
 
