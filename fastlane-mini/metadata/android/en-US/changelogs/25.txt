@@ -1,0 +1,5 @@
+MasterClock Light has been renamed MasterClock Lite. If you use that build, the rename changed its identity and Android will no longer offer it updates: install MasterClock Lite from the release page and remove the old one. This build is unaffected and updates normally.
+This build's icon no longer carries a FULL badge.
+Releases now ship a SHA256SUMS.txt so you can check the APK you downloaded, and release tags are signed from this version on.
+Restoring a backup: an oversized archive is refused as it arrives, instead of being copied to the cache in full and rejected afterwards.
+The Lato typeface used by the E-Ink build is credited in Credits.
