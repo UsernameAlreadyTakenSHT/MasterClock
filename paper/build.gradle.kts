@@ -43,6 +43,9 @@ android {
                 storePassword = releaseStorePassword
                 keyAlias = releaseKeyAlias
                 keyPassword = releaseKeyPassword
+                // See app/build.gradle.kts: v3 adds the proof-of-rotation block that makes
+                // replacing this key possible later, and has to be on before it is needed.
+                enableV3Signing = true
             }
         }
     }
