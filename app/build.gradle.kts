@@ -125,6 +125,17 @@ android {
     }
 }
 
+// compileOptions above only sets the language level and the class-file version; it does not decide
+// which JDK compiles. This does, so the output stops depending on whatever JDK happened to launch
+// Gradle -- which is what makes the build reproducible for someone who is not us.
+//
+// Measured before adding it: the same revision built with Android Studio's JBR 21 and with Temurin
+// 21.0.12.1 produced byte-identical APKs, so this is not fixing a difference that exists today. It
+// is here so a contributor on JDK 17 or 25 gets the same bytes rather than finding out otherwise.
+kotlin {
+    jvmToolchain(21)
+}
+
 dependencies {
     implementation(project(":core"))
 
