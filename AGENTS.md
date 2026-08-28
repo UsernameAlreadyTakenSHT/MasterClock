@@ -57,6 +57,12 @@ someone runs the task it belongs to — which is exactly when nobody is expectin
 Then read the diff before committing. A bump you meant to make shows as a handful of changed
 components; anything else changing is the file doing its job.
 
+Check the `<trusted-artifacts>` block at the top survived the regeneration. It trusts `-sources.jar`
+and `-javadoc.jar` by pattern, and without it the IDE stops working: Android Studio resolves sources
+for code navigation in its own detached configurations, which the build never touches, so
+`--write-verification-metadata` never records them and every sync fails on ~74 unverified artifacts.
+Trusting them costs nothing — neither kind is ever read by the compiler or reaches the APK.
+
 ## How flavors differ
 
 `FlavorConfig` (in `core`) gates features at runtime: `hasMoreTab()`, `hasFullSettingsTabs()`,
