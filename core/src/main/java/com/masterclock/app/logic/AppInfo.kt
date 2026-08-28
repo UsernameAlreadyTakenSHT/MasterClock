@@ -271,6 +271,11 @@ object AppInfo {
             url = "https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/",
         ),
         CreditEntry(
+            title = "Font — Lato",
+            detail = "Łukasz Dziedzic — SIL Open Font License 1.1. Bundled by the E-Ink build.",
+            url = "https://www.latofonts.com/",
+        ),
+        CreditEntry(
             title = "License",
             detail = "Project licensed under the MIT License.",
         ),

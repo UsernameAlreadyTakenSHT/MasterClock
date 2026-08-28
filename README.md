@@ -54,6 +54,7 @@ Settings › Apps › MasterClock › Language.
   - Beep: [Beep – u_edtmwfwu7c](https://pixabay.com/sound-effects/film-special-effects-beep-329314/)
   - Final beep: [Public Domain Beep Sound – qubodup](https://pixabay.com/sound-effects/public-domain-beep-sound-100267/)
   - Switch: [Light Switch – Pixabay](https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/)
+- **Font**: [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, [SIL Open Font License 1.1](https://openfontlicense.org/). Bundled by the E-Ink build.
 
 ### Rules documents
 
