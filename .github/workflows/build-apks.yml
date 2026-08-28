@@ -78,11 +78,20 @@ jobs:
           done
           cp paper/build/outputs/apk/release/*.apk "dist/masterclock-paper-${tag}.apk"
 
+      # Computed here, after the APKs are signed and under their published names, so the digests
+      # are of the exact bytes a user downloads. Hashing an intermediate would produce a number
+      # that verifies nothing. Verify a download with: sha256sum -c SHA256SUMS.txt
+      - name: Checksum the published APKs
+        run: |
+          cd dist
+          sha256sum *.apk > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
       - name: Upload APKs as build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: masterclock-apks-${{ github.ref_name }}
-          path: dist/*.apk
+          path: dist/*
           if-no-files-found: error
 
       - name: Extract changelog section for this tag
@@ -95,4 +104,5 @@ jobs:
         with:
           files: |
             dist/*.apk
+            dist/SHA256SUMS.txt
           body_path: release_notes.md
