@@ -2,7 +2,7 @@
 <!--
   Strings only the Complete build uses, alongside the screens that use them in src/complete: the
   tool screens, the mode guide, the rules, the QR pair and the Bluetooth board. Left in src/main
-  they would be flagged unused in Standard, Light and Mini, which cannot reach any of them.
+  they would be flagged unused in Standard, Lite and Mini, which cannot reach any of them.
 -->
 <!--
   tools:ignore="MissingTranslation" is on the source rather than on the translations, because that

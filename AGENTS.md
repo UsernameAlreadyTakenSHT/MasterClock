@@ -10,7 +10,7 @@ Three Gradle modules produce **five** shipped apps:
 | module | what it is |
 |---|---|
 | `core` | Android library. All timer logic, settings, persistence, import/export. No UI. |
-| `app` | The phone app, built in four flavors: `complete`, `standard`, `light`, `mini`. |
+| `app` | The phone app, built in four flavors: `complete`, `standard`, `lite`, `mini`. |
 | `paper` | A **separate app**, not a flavor: the E-Ink build for Mudita devices. |
 
 `paper` duplicates some UI on purpose — an E-Ink screen needs different components, not a themed
@@ -21,7 +21,7 @@ belongs in `core` and must be checked in both.
 
 ```sh
 ./gradlew :app:assembleCompleteRelease :app:assembleStandardRelease \
-          :app:assembleLightRelease :app:assembleMiniRelease \
+          :app:assembleLiteRelease :app:assembleMiniRelease \
           :paper:assembleRelease :core:test \
           :app:lintCompleteRelease :paper:lintRelease
 ```
@@ -42,7 +42,7 @@ compiled.
 Two source sets matter:
 
 - `app/src/complete/` — screens only Complete can reach (tools, notebook, QR, rules, Bluetooth).
-- `app/src/reduced/` — shared by `standard`, `light` and `mini`, wired in `app/build.gradle.kts`.
+- `app/src/reduced/` — shared by `standard`, `lite` and `mini`, wired in `app/build.gradle.kts`.
   It holds a stub for every Complete-only screen, at the **same signature**, so `MainActivity` can
   register the whole navigation graph unconditionally. A stub navigates straight back.
 

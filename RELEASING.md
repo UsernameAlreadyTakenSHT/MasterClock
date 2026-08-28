@@ -14,7 +14,7 @@ Work through the list. Commit as you go rather than in one lump at the end.
 | `paper/build.gradle.kts` | the **same** `versionCode`, `versionName = "X.Y.Z-paper"` |
 
 Both modules share one `versionCode`; it is also the name of the fastlane changelog files below.
-The four app flavors add their own `versionNameSuffix` (`-complete`, `-standard`, `-light`,
+The four app flavors add their own `versionNameSuffix` (`-complete`, `-standard`, `-lite`,
 `-mini`), so nothing else needs editing for them.
 
 ## 2. The changelog, in all seven places
@@ -29,7 +29,7 @@ The same notes have to be written seven times, in three different shapes.
 - **`core/src/main/java/com/masterclock/app/logic/AppInfo.kt`** — bump `BUILD_DATE` and prepend a
   `ChangelogEntry`. This is what the in-app changelog dialog shows.
 - **`fastlane*/metadata/android/en-US/changelogs/<versionCode>.txt`** — five files, one per
-  listing: `fastlane/` (complete), `fastlane-standard/`, `fastlane-light/`, `fastlane-mini/`,
+  listing: `fastlane/` (complete), `fastlane-standard/`, `fastlane-lite/`, `fastlane-mini/`,
   `fastlane-paper/`. Plain text, one note per line, no Markdown.
 
 If the release changes stored data in a way users will notice — a renamed serialized enum resets
@@ -40,7 +40,7 @@ settings, a schema bump wipes history — say so in the notes rather than lettin
 
 ```sh
 ./gradlew :app:assembleCompleteRelease :app:assembleStandardRelease \
-          :app:assembleLightRelease :app:assembleMiniRelease \
+          :app:assembleLiteRelease :app:assembleMiniRelease \
           :paper:assembleRelease :core:test \
           :app:lintCompleteRelease :paper:lintRelease
 ```

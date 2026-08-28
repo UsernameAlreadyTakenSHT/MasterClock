@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Light ships no camera, microphone or Bluetooth feature, so it must not ask for the permissions.
+  Lite ships no camera, microphone or Bluetooth feature, so it must not ask for the permissions.
 
   The main manifest is shared by all four flavors. Every feature that needs these permissions (the
   notebook's audio, photo and video notes, the QR scanner, the Bluetooth board) is reached only from

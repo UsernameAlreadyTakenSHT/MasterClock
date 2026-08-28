@@ -15,7 +15,7 @@ import com.masterclock.app.logic.TimePadding
  * and therefore no way to mis-declare a route and only find out at runtime. If a signature ever
  * drifts, the three reduced flavors stop compiling, which is the loud failure we want.
  *
- * The point of moving them out is the size of the compiled code. Standard, Light and Mini used to
+ * The point of moving them out is the size of the compiled code. Standard, Lite and Mini used to
  * carry CameraX, ZXing, media3 and Coil plus every tool screen, and an APK's dex expands roughly
  * four and a half times once Android compiles it ahead of time -- so dead code costs far more on
  * the device than it does in the download.

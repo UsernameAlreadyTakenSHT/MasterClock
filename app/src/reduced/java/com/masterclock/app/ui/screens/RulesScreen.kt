@@ -9,7 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
  * The real one lives in `src/complete` and is the only thing in the project that references the ten
  * bundled rulebook PDFs. Those PDFs are 9.3 MB of a 13.7 MB APK, and the resource shrinker keeps
  * them for as long as *something* compiled into the build points at them -- which, while
- * RulesScreen sat in `src/main`, meant all four flavors. Moving it here lets Standard, Light and
+ * RulesScreen sat in `src/main`, meant all four flavors. Moving it here lets Standard, Lite and
  * Mini drop the documents they could never open, exactly as the paper build already does.
  *
  * This is unreachable in practice: Route.Rules is only ever navigated to from SettingsMorePage,

@@ -197,10 +197,10 @@ enum class TimePadding {
 /**
  * The padding a build actually renders with.
  *
- * Only Complete and Standard offer the choice; Light, Mini and the E-Ink build are fixed on FULL,
+ * Only Complete and Standard offer the choice; Lite, Mini and the E-Ink build are fixed on FULL,
  * which is what their clocks have always shown. Resolved here rather than by simply leaving the
  * setting out of their UI, because a settings file or QR share from another device carries the
- * stored value with it -- without this, importing one could put a Light install into a format it
+ * stored value with it -- without this, importing one could put a Lite install into a format it
  * has no way to leave.
  */
 fun ChessClockSettings.effectiveTimePadding(): TimePadding =

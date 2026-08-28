@@ -1,7 +1,7 @@
 # ChessClockV2 Multi-Flavor Build & Audit Script
 # This script builds all release flavors and audits their sizes.
 
-$flavors = @("complete", "standard", "light", "extraLight")
+$flavors = @("complete", "standard", "lite", "mini")
 $results = @()
 
 Write-Host "--- Starting Multi-Flavor Release Build ---" -ForegroundColor Cyan
