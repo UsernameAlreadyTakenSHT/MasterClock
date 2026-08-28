@@ -33,6 +33,30 @@ all `core` tests green, and lint clean apart from the `GradleDependency` notice.
 Unit tests live in `core/src/test`. The repository has **no** instrumentation tests, so `core` is
 where behaviour gets pinned: put logic there and test it there rather than in a composable.
 
+### When a dependency bump fails verification
+
+`gradle/verification-metadata.xml` pins a SHA-256 for every artifact the build downloads, so a
+version bump — including a transitive one that moved on its own — stops the build with
+`Dependency verification failed` until the file is regenerated. Locally and on both CIs. That is the
+point of it, and it is also its whole maintenance cost.
+
+Regenerate by prefixing the command above:
+
+```sh
+./gradlew --write-verification-metadata sha256 \
+          :app:assembleCompleteRelease :app:assembleStandardRelease \
+          :app:assembleLiteRelease :app:assembleMiniRelease \
+          :paper:assembleRelease :core:test \
+          :app:lintCompleteRelease :paper:lintRelease
+```
+
+Pass the **whole** task list, not just one assemble. Lint and the unit tests resolve configurations
+the release builds never touch, and an entry missing from the file fails the build the first time
+someone runs the task it belongs to — which is exactly when nobody is expecting it.
+
+Then read the diff before committing. A bump you meant to make shows as a handful of changed
+components; anything else changing is the file doing its job.
+
 ## How flavors differ
 
 `FlavorConfig` (in `core`) gates features at runtime: `hasMoreTab()`, `hasFullSettingsTabs()`,
