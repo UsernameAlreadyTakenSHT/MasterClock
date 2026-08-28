@@ -45,6 +45,13 @@ ten lines in your language and the rest stay English. See **[TRANSLATING.md](TRA
 On Android 13 and later the language can be picked per app, under
 Settings › Apps › MasterClock › Language.
 
+## Verifying a release
+
+Releases ship a `SHA256SUMS.txt` beside the APKs, and tags from v0.8.24 on are GPG-signed with the
+key in [`docs/signing-key.asc`](docs/signing-key.asc) — fingerprint
+`210B 5FD0 0E17 66BB 8797  3EDC A286 94BC BC91 9301`. [docs/VERIFYING.md](docs/VERIFYING.md) explains
+what each check proves and what it does not.
+
 ## Credits & Licensing
 
 - **Logo icon**: clock icon by [Paweł Kuna](https://opensvg.dev/icons) (v3.44.0), MIT License.
