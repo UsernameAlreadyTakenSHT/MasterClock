@@ -45,6 +45,16 @@ android {
                 storePassword = releaseStorePassword
                 keyAlias = releaseKeyAlias
                 keyPassword = releaseKeyPassword
+                // v3 carries the proof-of-rotation chain, and AGP leaves it off unless asked. It
+                // adds to v2 rather than replacing it, so older Android keeps reading the v2 block
+                // and the certificate is unchanged -- nothing about an existing install or about
+                // F-Droid's AllowedAPKSigningKeys moves.
+                //
+                // What it buys is the ability to replace this key later. Without a v3 block there
+                // is nowhere to put the proof that a new key succeeds this one, so a compromise or
+                // a lost keystore would mean a new package name and every user reinstalling by
+                // hand. It has to be enabled before that day, not on it.
+                enableV3Signing = true
             }
         }
     }
