@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-27"
+    const val BUILD_DATE = "2026-08-28"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,17 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.24",
+            date = "2026-08-28",
+            notes = listOf(
+                "MasterClock Light is now MasterClock Lite. If you use it, this update will not reach you: the rename changed the app's identity, so Android treats it as a different app. Install the new one from the release page and remove the old one. The other builds update normally.",
+                "The Complete build's icon no longer carries a FULL badge.",
+                "Releases now include a SHA256SUMS.txt so you can check what you downloaded, and release tags are signed from this version on.",
+                "Restoring a backup: an oversized archive is refused as it arrives instead of being written to the cache in full first.",
+                "The Lato typeface used by the E-Ink build is credited in Credits.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.23",
             date = "2026-08-27",

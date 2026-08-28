@@ -1,0 +1,4 @@
+Releases now ship a SHA256SUMS.txt so you can check the APK you downloaded, and release tags are signed from this version on.
+Restoring a backup: an oversized archive is refused as it arrives, instead of being copied to the cache in full and rejected afterwards.
+The Lato typeface this build uses is credited in Credits.
+MasterClock Light, one of the phone builds, has been renamed MasterClock Lite. This build is unaffected.

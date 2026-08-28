@@ -1,0 +1,4 @@
+This build was called MasterClock Light until now. The rename went down to the app's identity, so Android treats it as a different application: a copy of the old MasterClock Light will never be offered this update. Install this one and remove the old build. Settings and history do not carry over on their own — export a backup from the old build first if you want to keep them.
+Releases now ship a SHA256SUMS.txt so you can check the APK you downloaded, and release tags are signed from this version on.
+Restoring a backup: an oversized archive is refused as it arrives, instead of being copied to the cache in full and rejected afterwards.
+The Lato typeface used by the E-Ink build is credited in Credits.
