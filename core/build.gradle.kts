@@ -26,6 +26,11 @@ android {
     }
 }
 
+// See app/build.gradle.kts for why this is here as well as compileOptions.
+kotlin {
+    jvmToolchain(21)
+}
+
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
