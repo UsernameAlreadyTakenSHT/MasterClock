@@ -19,7 +19,7 @@ import com.masterclock.app.R
  * Title bar and back arrow shared by every full-screen tool.
  *
  * It lives in its own file, and in src/main rather than beside the tools themselves, because the
- * tool screens are COMPLETE only while StatisticsScreen -- which Standard and Light also reach --
+ * tool screens are COMPLETE only while StatisticsScreen -- which Standard and Lite also reach --
  * uses the same scaffold. Leaving it in ToolsScreens.kt would have pinned that whole file into
  * every flavor.
  */

@@ -1,7 +1,7 @@
 package com.masterclock.app.logic
 
 enum class AppFlavor {
-    COMPLETE, STANDARD, LIGHT, MINI, E_INK
+    COMPLETE, STANDARD, LITE, MINI, E_INK
 }
 
 object FlavorConfig {
@@ -35,7 +35,7 @@ object FlavorConfig {
     }
 
     fun hasOmni(): Boolean {
-        return currentFlavor == AppFlavor.COMPLETE || currentFlavor == AppFlavor.STANDARD || currentFlavor == AppFlavor.LIGHT
+        return currentFlavor == AppFlavor.COMPLETE || currentFlavor == AppFlavor.STANDARD || currentFlavor == AppFlavor.LITE
     }
 
     fun isModeAllowed(mode: TimerMode): Boolean {

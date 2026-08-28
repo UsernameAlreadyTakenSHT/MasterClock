@@ -120,12 +120,12 @@ class TimePaddingTest {
     }
 
     @Test
-    fun `Light Mini and E-Ink stay on FULL whatever is stored`() {
+    fun `Lite Mini and E-Ink stay on FULL whatever is stored`() {
         // These offer no way to change it, so a value can only reach them through an imported
         // settings file or a scanned QR share -- which must not strand them in a format they
         // cannot leave.
         val stored = ChessClockSettings(timePadding = TimePadding.MINIMAL)
-        listOf(AppFlavor.LIGHT, AppFlavor.MINI, AppFlavor.E_INK).forEach { flavor ->
+        listOf(AppFlavor.LITE, AppFlavor.MINI, AppFlavor.E_INK).forEach { flavor ->
             FlavorConfig.currentFlavor = flavor
             assertEquals("$flavor should be pinned to FULL", TimePadding.FULL, stored.effectiveTimePadding())
         }

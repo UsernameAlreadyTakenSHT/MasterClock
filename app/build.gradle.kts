@@ -86,10 +86,10 @@ android {
             applicationIdSuffix = ".standard"
             versionNameSuffix = "-standard"
         }
-        create("light") {
+        create("lite") {
             dimension = "version"
-            applicationIdSuffix = ".light"
-            versionNameSuffix = "-light"
+            applicationIdSuffix = ".lite"
+            versionNameSuffix = "-lite"
         }
         create("mini") {
             dimension = "version"
@@ -98,7 +98,7 @@ android {
         }
     }
 
-    // Standard, Light and Mini share one extra source set. Gradle gives each flavor its own
+    // Standard, Lite and Mini share one extra source set. Gradle gives each flavor its own
     // directory but has no notion of "every flavor except complete", and duplicating src/reduced
     // three times would be three copies to keep in step.
     //
@@ -110,7 +110,7 @@ android {
     // kotlin.directories, not java.srcDir: the sources here are .kt, the Kotlin compilation does not
     // pick them up from the Java source set, and srcDir is deprecated in this AGP.
     sourceSets {
-        listOf("standard", "light", "mini").forEach { flavor ->
+        listOf("standard", "lite", "mini").forEach { flavor ->
             getByName(flavor) { kotlin.directories.add("src/reduced/java") }
         }
     }
@@ -179,7 +179,7 @@ tasks.register("buildAllReleaseFlavors") {
     group = "build"
     description = "Builds all release APKs for all flavors (+ paper) and prints their sizes"
 
-    val flavors = listOf("complete", "standard", "light", "mini")
+    val flavors = listOf("complete", "standard", "lite", "mini")
     val buildTasks = flavors.map { "assemble${it.replaceFirstChar { c -> c.uppercase() }}Release" }
     dependsOn(buildTasks)
     dependsOn(":paper:assembleRelease")
@@ -210,7 +210,7 @@ tasks.register("buildAllReleaseBundles") {
     group = "build"
     description = "Builds all release AABs (Android App Bundles) for all flavors (+ paper) and prints their sizes"
 
-    val flavors = listOf("complete", "standard", "light", "mini")
+    val flavors = listOf("complete", "standard", "lite", "mini")
     val buildTasks = flavors.map { "bundle${it.replaceFirstChar { c -> c.uppercase() }}Release" }
     dependsOn(buildTasks)
     dependsOn(":paper:bundleRelease")

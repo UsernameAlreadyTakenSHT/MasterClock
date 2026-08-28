@@ -157,7 +157,7 @@ fun PresetsScreen(
                     }
                 }
             } else {
-                // Standard and Light have no More tab, so this is their only route to the
+                // Standard and Lite have no More tab, so this is their only route to the
                 // statistics screen; Complete additionally lists it under More > Game Data.
                 if (FlavorConfig.hasStatistics()) {
                     TextButton(
