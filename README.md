@@ -93,7 +93,12 @@ Also listed in-app under the version footer → Licenses tab.
 | [OkHttp](https://square.github.io/okhttp/) · [Okio](https://square.github.io/okio/) | Square, Inc. | Apache-2.0 |
 | [ZXing Core](https://github.com/zxing/zxing) | ZXing Authors | Apache-2.0 |
 | [ZXing Android Embedded](https://github.com/journeyapps/zxing-android-embedded) | JourneyApps | Apache-2.0 |
+| [Guava](https://github.com/google/guava) | The Guava Authors | Apache-2.0 |
+| [Dagger](https://github.com/google/dagger) | Google LLC | Apache-2.0 |
+| [javax.inject (JSR-330)](https://github.com/javax-inject/javax-inject) | The JSR-330 Expert Group | Apache-2.0 |
 
-Accompanist Permissions and ZXing Android Embedded ship only in the phone builds, not in the E-Ink build.
+Only the first three ship in every build. Everything below them reaches Complete alone: R8 strips
+each one from Standard, Lite, Mini and E-Ink, none of which ever call it. The last three arrive
+through CameraX and amount to a handful of classes, but they are shipped and so are credited.
 
 Project licensed under the MIT License.
