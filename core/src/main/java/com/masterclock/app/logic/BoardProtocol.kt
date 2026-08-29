@@ -89,6 +89,16 @@ sealed interface BoardReport {
      */
     data class SquareChanged(val squareIndex: Int, val piece: Char) : BoardReport
 
+    /**
+     * What is on each square, identified by tag rather than by type.
+     *
+     * Certabo's boards read an RFID chip glued under each piece, so what they report is which
+     * *individual* piece stands where -- not that it is a knight. Turning that into a position
+     * needs a mapping learned once from a known layout; see [PieceTagCalibration]. Null entries are
+     * empty squares, and the list is in this app's square order.
+     */
+    data class TaggedSquares(val tags: List<String?>) : BoardReport
+
     /** Moves named directly, which only the raw-capture fallback and a few makes produce. */
     data class Moves(val moves: List<String>) : BoardReport
 
@@ -109,10 +119,18 @@ class BoardMoveTracker {
     /** What the board says right now, including halfway through a move. */
     private var current: BoardPosition? = null
 
+    /** Only used by makes that identify pieces by tag; see [BoardReport.TaggedSquares]. */
+    private val calibration = PieceTagCalibration()
+
+    /** Whether a tag-reading board still needs the pieces set up before it can be understood. */
+    val needsCalibration: Boolean get() = !calibration.isCalibrated
+
     fun onReport(report: BoardReport): List<String> = when (report) {
         is BoardReport.Moves -> report.moves
         is BoardReport.Ignored -> emptyList()
         is BoardReport.Position -> applyPosition(report.position)
+        is BoardReport.TaggedSquares ->
+            calibration.identify(report.tags)?.let { applyPosition(it) } ?: emptyList()
         is BoardReport.SquareChanged -> {
             // Without a full dump first there is nothing to apply this to: a single square says
             // where one piece is, not where the other thirty-one are.
@@ -159,6 +177,8 @@ class BoardMoveTracker {
     fun reset() {
         settled = null
         current = null
+        // A different set of pieces may be on the next board, so the learned tags go too.
+        calibration.reset()
     }
 }
 
@@ -189,7 +209,7 @@ object BoardProtocols {
      * because it matches nothing and is only ever chosen explicitly.
      */
     val known: List<BoardProtocol> =
-        listOf(ChessnutProtocol, DgtProtocol, MillenniumProtocol, RawCaptureProtocol)
+        listOf(ChessnutProtocol, DgtProtocol, MillenniumProtocol, CertaboProtocol, RawCaptureProtocol)
 
     /**
      * The protocol to use for a board advertising [deviceName], or [RawCaptureProtocol] when no
