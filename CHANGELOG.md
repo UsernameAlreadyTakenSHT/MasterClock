@@ -1,3 +1,18 @@
+## v0.8.25 — 2026-08-29
+
+### Added
+- **A board note can hold a draughts position.** Chess is still what a new note opens as; beside it are international draughts on 10×10 and, for the Russian, Brazilian and English games, 8×8. Switching between the two draughts boards keeps every piece that still has a square to stand on.
+- **The board note has an undo button.** It takes back clearing the whole board too, which used to be the one mistake that cost the entire position.
+- **Pieces can be dragged**: out of the tray onto a square, from one square to another, and off the board altogether to remove one.
+
+### Changed
+- Shogi is no longer offered when choosing a game. Nothing is removed — a game already recorded as shogi still opens, still exports as KIF, and its rules document stays. It is withheld because no electronic shogi board is made, so the board-linking work it sits beside has nothing to offer it.
+- The Licenses tab lists what each build actually ships rather than what the project depends on. Standard, Lite and Mini were crediting four libraries they do not contain, and three that are shipped were missing.
+
+### Fixed
+- **A single piece could not be removed from a board note.** Once a piece was picked from the tray it stayed picked, and an empty hand was the only thing that cleared a square — so wiping the whole board was one tap away while removing one piece was impossible. Tapping the held piece again puts it down, and so does tapping the space around the pieces.
+- Standard, Lite and Mini no longer carry the chess and draughts artwork, which only the Complete build can display.
+
 ## v0.8.24 — 2026-08-28
 
 ### Added

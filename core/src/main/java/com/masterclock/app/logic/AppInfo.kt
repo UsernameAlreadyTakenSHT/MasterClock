@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-28"
+    const val BUILD_DATE = "2026-08-29"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,18 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.25",
+            date = "2026-08-29",
+            notes = listOf(
+                "Board notes can hold a draughts position: international draughts on 10x10, or 8x8 for the Russian, Brazilian and English games. Chess is still what a new note opens as.",
+                "The board note editor has an undo button, which takes back clearing the board too.",
+                "Pieces can be dragged: out of the tray onto a square, between squares, and off the board to remove one.",
+                "A single piece can be removed again. Once a piece was picked it stayed picked, so wiping the whole board was one tap away while removing one piece was not.",
+                "Shogi is no longer offered when choosing a game, since no electronic shogi board exists. Games already recorded as shogi still open and still export.",
+                "The Licenses tab now lists what each build actually ships.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.24",
             date = "2026-08-28",
