@@ -71,6 +71,15 @@ sealed interface BoardReport {
     /** The whole board, as most makes send on every change. */
     data class Position(val position: BoardPosition) : BoardReport
 
+    /**
+     * One square changed, without restating the rest.
+     *
+     * DGT's boards work this way once put in update mode: a full dump establishes the position and
+     * every change after it is a two-byte message. [BoardMoveTracker] applies these to the position
+     * it is already holding.
+     */
+    data class SquareChanged(val squareIndex: Int, val piece: Char) : BoardReport
+
     /** Moves named directly, which only the raw-capture fallback and a few makes produce. */
     data class Moves(val moves: List<String>) : BoardReport
 
@@ -85,24 +94,62 @@ sealed interface BoardReport {
  * decoders, and every make would otherwise carry its own copy of this.
  */
 class BoardMoveTracker {
-    private var lastPosition: BoardPosition? = null
+    /** The last position a move was recognised from. Only advances when one is. */
+    private var settled: BoardPosition? = null
+
+    /** What the board says right now, including halfway through a move. */
+    private var current: BoardPosition? = null
 
     fun onReport(report: BoardReport): List<String> = when (report) {
         is BoardReport.Moves -> report.moves
         is BoardReport.Ignored -> emptyList()
-        is BoardReport.Position -> {
-            val previous = lastPosition
-            lastPosition = report.position
-            // The first report only establishes where the pieces are; there is no move to infer
-            // from it, and the board is usually reporting a position set up before the app was even
-            // connected.
-            if (previous == null) emptyList()
-            else listOfNotNull(BoardDiffer.moveBetween(previous, report.position))
+        is BoardReport.Position -> applyPosition(report.position)
+        is BoardReport.SquareChanged -> {
+            // Without a full dump first there is nothing to apply this to: a single square says
+            // where one piece is, not where the other thirty-one are.
+            val base = current
+            if (base == null) {
+                emptyList()
+            } else {
+                val squares = base.squares.toCharArray()
+                squares[report.squareIndex] = report.piece
+                applyPosition(BoardPosition(String(squares)))
+            }
         }
     }
 
+    /**
+     * Compares against the last *settled* position, not the last report.
+     *
+     * This is the whole point of holding two positions. A move reaches the board in pieces: the
+     * piece is lifted, and only later put down -- and on a DGT in update mode those are two
+     * separate messages, one square each. Comparing each report with the one before it would see a
+     * square empty, then a square fill, and recognise neither as a move. Comparing with the last
+     * settled position instead lets the halves add up, and the baseline only moves on once a whole
+     * move has been recognised.
+     *
+     * A consequence worth knowing: if a player does something the differ cannot name, the baseline
+     * stays where it is and the next comparison spans both changes. That is why [BoardDiffer]
+     * refuses anything it does not recognise rather than guessing -- a wrong guess would re-baseline
+     * on a position that never existed.
+     */
+    private fun applyPosition(position: BoardPosition): List<String> {
+        current = position
+        val from = settled
+        // The first report only establishes where the pieces are; there is no move in it, and it
+        // usually describes a position set up before the app was watching.
+        if (from == null) {
+            settled = position
+            return emptyList()
+        }
+        val move = BoardDiffer.moveBetween(from, position) ?: return emptyList()
+        settled = position
+        return listOf(move)
+    }
+
     fun reset() {
-        lastPosition = null
+        settled = null
+        current = null
     }
 }
 
