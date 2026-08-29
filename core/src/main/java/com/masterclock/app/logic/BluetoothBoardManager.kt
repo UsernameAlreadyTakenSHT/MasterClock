@@ -49,6 +49,9 @@ class BluetoothBoardManager(private val context: Context) {
     /** Which make the connected board speaks. See [BoardProtocol]. */
     private var protocol: BoardProtocol = RawCaptureProtocol
 
+    /** The game this round is, for makes that have to be told before play starts. */
+    private var gameType: GameType = GameType.CHESS
+
     /** Holds the previous position, since boards report state rather than moves. */
     private val moveTracker = BoardMoveTracker()
 
@@ -249,7 +252,7 @@ class BluetoothBoardManager(private val context: Context) {
     }
 
     private fun sendInitCommand(gatt: BluetoothGatt) {
-        protocol.initCommand?.let { writeToBoard(it) }
+        protocol.initCommandFor(gameType)?.let { writeToBoard(it) }
     }
 
     fun startScan() {
@@ -278,7 +281,8 @@ class BluetoothBoardManager(private val context: Context) {
         }
     }
 
-    fun connect(device: BluetoothDevice, onMoveReceived: (String) -> Unit) {
+    fun connect(device: BluetoothDevice, gameType: GameType, onMoveReceived: (String) -> Unit) {
+        this.gameType = gameType
         if (!hasConnectPermission()) {
             _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
             return

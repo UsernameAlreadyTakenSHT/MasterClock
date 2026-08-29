@@ -38,16 +38,35 @@ object OpenBoardProtocol : BoardProtocol {
     )
 
     /**
-     * The handshake. The central opens every round with `begin` and its position; the board answers
-     * `sync` if the pieces match and `unsync` with what it actually sees if they do not.
+     * The handshake for a game of chess, which is what a board assumes when told nothing.
      *
-     * This is not optional, and it is not `get_state`: that one is a feature a board may or may not
-     * implement, and a conformant board sent it instead of `begin` simply waits, saying nothing.
-     *
-     * The position sent is the standard chess opening. Draughts needs `set_variant` before this,
-     * which means knowing which game is being played -- see the note on variants below.
+     * `begin` is not optional and it is not `get_state`: that one is a feature a board may or may
+     * not implement, and a conformant board sent it instead of `begin` simply waits, saying nothing.
      */
-    override val initCommand = "$BEGIN $STARTING_FEN w\n".toByteArray(Charsets.US_ASCII)
+    override val initCommand = "$BEGIN $CHESS_FEN w\n".toByteArray(Charsets.US_ASCII)
+
+    /**
+     * The opening for a given game.
+     *
+     * Chess sends `begin` alone: the spec says a board assumes `standard` when no variant was set,
+     * so naming it would add a round trip for nothing. Draughts must announce itself first --
+     * `set_variant` before `begin`, in that order and only before it -- or the board starts a game
+     * of chess and disagrees with every move that follows.
+     *
+     * International draughts is the variant chosen, being what "draughts" means to most players and
+     * the default the board note already takes. The eight-by-eight games -- Russian, Brazilian,
+     * English -- differ in their rules as well as their size, so picking between them needs a
+     * setting this app does not have yet, and guessing would be worse than the ten-by-ten default.
+     *
+     * Shogi cannot reach here: it is withheld from the game picker precisely because no board
+     * plays it, and the protocol has no variant for it either. It falls back to chess rather than
+     * inventing something.
+     */
+    override fun initCommandFor(gameType: GameType): ByteArray = when (gameType) {
+        GameType.DRAUGHTS ->
+            "$SET_VARIANT $DRAUGHTS_VARIANT\n$BEGIN $DRAUGHTS_FEN w\n".toByteArray(Charsets.US_ASCII)
+        else -> initCommand
+    }
 
     override fun decode(payload: ByteArray): BoardReport {
         val text = String(payload, Charsets.US_ASCII).trim()
@@ -96,6 +115,13 @@ object OpenBoardProtocol : BoardProtocol {
     private const val UNSYNC = "unsync"
     private const val UNSYNC_SETTABLE = "unsync_settable"
     private const val BEGIN = "begin"
+    private const val SET_VARIANT = "set_variant"
     private const val OK = "ok"
-    private const val STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+
+    private const val CHESS_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+
+    /** International draughts: ten by ten, twenty men a side, the middle two ranks clear. */
+    private const val DRAUGHTS_VARIANT = "draughts_standard"
+    private const val DRAUGHTS_FEN =
+        "1m1m1m1m1m/m1m1m1m1m1/1m1m1m1m1m/m1m1m1m1m1/10/10/1M1M1M1M1M/M1M1M1M1M1/1M1M1M1M1M/M1M1M1M1M1"
 }
