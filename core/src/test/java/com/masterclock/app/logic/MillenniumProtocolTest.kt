@@ -111,8 +111,35 @@ class MillenniumProtocolTest {
 
     @Test
     fun `a ChessLink is recognised by name`() {
+        // "MILLENNIUM CHESS" is the local name the board actually advertises.
         assertSame(MillenniumProtocol, BoardProtocols.forDeviceName("MILLENNIUM CHESS"))
         assertSame(MillenniumProtocol, BoardProtocols.forDeviceName("ChessLink"))
+    }
+
+    @Test
+    fun `the board is reachable over Bluetooth as well as the cable`() {
+        val ble = MillenniumProtocol.ble
+        assertNotNull(ble)
+        // Any service: the board's transparent-UART characteristics are what identify it.
+        assertNull(ble!!.serviceUuid)
+        assertNotNull(ble.notifyCharacteristicUuid)
+        assertNotNull(ble.writeCharacteristicUuid)
+    }
+
+    @Test
+    fun `a reply split across BLE notifications is reassembled`() {
+        // A notification carries 20 bytes by default and a board reply is 67, so this make needs
+        // framing over Bluetooth too -- decoding each notification alone yields three bad frames.
+        val assembler = StreamAssembler(MillenniumProtocol.framing!!)
+        val reply = boardReply(BoardPosition.STARTING)
+
+        assertEquals(emptyList<ByteArray>(), assembler.offer(reply.copyOfRange(0, 20)))
+        assertEquals(emptyList<ByteArray>(), assembler.offer(reply.copyOfRange(20, 40)))
+        assertEquals(emptyList<ByteArray>(), assembler.offer(reply.copyOfRange(40, 60)))
+
+        val done = assembler.offer(reply.copyOfRange(60, reply.size))
+        assertEquals(1, done.size)
+        assertEquals(BoardReport.Position(BoardPosition.STARTING), MillenniumProtocol.decode(done.single()))
     }
 }
 
