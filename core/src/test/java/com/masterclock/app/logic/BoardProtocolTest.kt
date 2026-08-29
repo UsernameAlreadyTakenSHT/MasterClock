@@ -39,24 +39,24 @@ class BoardProtocolTest {
         // frame arrived on a GATT notification or a serial endpoint.
         val frame = byteArrayOf(0x0A, 0x1B.toByte(), 0x2C)
         assertEquals(RawCaptureProtocol.decode(frame), RawCaptureProtocol.decode(frame.copyOf()))
-        assertEquals(listOf("0a 1b 2c"), RawCaptureProtocol.decode(frame))
+        assertEquals(BoardReport.Moves(listOf("0a 1b 2c")), RawCaptureProtocol.decode(frame))
     }
 
     @Test
     fun `raw capture reports a payload as hex`() {
-        assertEquals(listOf("01 a0 ff"), RawCaptureProtocol.decode(byteArrayOf(0x01, 0xA0.toByte(), 0xFF.toByte())))
+        assertEquals(BoardReport.Moves(listOf("01 a0 ff")), RawCaptureProtocol.decode(byteArrayOf(0x01, 0xA0.toByte(), 0xFF.toByte())))
     }
 
     @Test
     fun `high bytes are not sign-extended`() {
         // Kotlin's Byte is signed, so a naive formatter turns 0x80 into "ffffff80" and the trace
         // becomes unreadable exactly where a board's status bytes live.
-        assertEquals(listOf("80 ff 7f 00"), RawCaptureProtocol.decode(byteArrayOf(0x80.toByte(), 0xFF.toByte(), 0x7F, 0x00)))
+        assertEquals(BoardReport.Moves(listOf("80 ff 7f 00")), RawCaptureProtocol.decode(byteArrayOf(0x80.toByte(), 0xFF.toByte(), 0x7F, 0x00)))
     }
 
     @Test
     fun `an empty payload is not a move`() {
-        assertEquals(emptyList<String>(), RawCaptureProtocol.decode(byteArrayOf()))
+        assertEquals(BoardReport.Ignored, RawCaptureProtocol.decode(byteArrayOf()))
     }
 
     @Test
@@ -72,7 +72,7 @@ class BoardProtocolTest {
             override val name = "Fake"
             override val ble = BleAddressing(serviceUuid = UUID.randomUUID(), notifyCharacteristicUuid = UUID.randomUUID())
             override fun matchesDeviceName(deviceName: String?) = deviceName?.startsWith("FAKE") == true
-            override fun decode(payload: ByteArray) = listOf("e2e4")
+            override fun decode(payload: ByteArray) = BoardReport.Moves(listOf("e2e4"))
         }
         val candidates = listOf(fake, RawCaptureProtocol)
 

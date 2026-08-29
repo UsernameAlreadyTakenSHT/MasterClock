@@ -57,16 +57,53 @@ interface BoardProtocol {
     val usbBaudRate: Int get() = 9600
 
     /**
-     * Turn one notification payload into the moves it describes.
+     * Turn one payload into what it says about the board.
      *
-     * A payload is not always one move: some boards report the whole 64-square occupancy on every
-     * change, which yields one move or none, and some batch several. Returning a list rather than a
-     * nullable keeps both honest.
-     *
-     * Whatever notation comes out is what an exported PGN will show, so implementations should emit
-     * what their board actually means rather than guessing at SAN.
+     * Nearly every make reports a position rather than a move -- see [BoardReport.Position], which
+     * [BoardMoveTracker] turns into moves. [BoardReport.Moves] exists for the rare payload that
+     * really does name a move, and for the raw-capture fallback.
      */
-    fun decode(payload: ByteArray): List<String>
+    fun decode(payload: ByteArray): BoardReport
+}
+
+/** What one payload from a board turned out to be. */
+sealed interface BoardReport {
+    /** The whole board, as most makes send on every change. */
+    data class Position(val position: BoardPosition) : BoardReport
+
+    /** Moves named directly, which only the raw-capture fallback and a few makes produce. */
+    data class Moves(val moves: List<String>) : BoardReport
+
+    /** A payload that says nothing about the board: a keep-alive, a battery level, a malformed frame. */
+    data object Ignored : BoardReport
+}
+
+/**
+ * Keeps the previous position so a stream of board reports becomes a stream of moves.
+ *
+ * One per connection, and deliberately not inside [BoardProtocol]: the protocols are stateless
+ * decoders, and every make would otherwise carry its own copy of this.
+ */
+class BoardMoveTracker {
+    private var lastPosition: BoardPosition? = null
+
+    fun onReport(report: BoardReport): List<String> = when (report) {
+        is BoardReport.Moves -> report.moves
+        is BoardReport.Ignored -> emptyList()
+        is BoardReport.Position -> {
+            val previous = lastPosition
+            lastPosition = report.position
+            // The first report only establishes where the pieces are; there is no move to infer
+            // from it, and the board is usually reporting a position set up before the app was even
+            // connected.
+            if (previous == null) emptyList()
+            else listOfNotNull(BoardDiffer.moveBetween(previous, report.position))
+        }
+    }
+
+    fun reset() {
+        lastPosition = null
+    }
 }
 
 /**
@@ -83,8 +120,8 @@ object RawCaptureProtocol : BoardProtocol {
     /** Both null: accept any service, and subscribe to every characteristic that notifies. */
     override val ble = BleAddressing(serviceUuid = null, notifyCharacteristicUuid = null)
 
-    override fun decode(payload: ByteArray): List<String> =
-        if (payload.isEmpty()) emptyList() else listOf(payload.toHexString())
+    override fun decode(payload: ByteArray): BoardReport =
+        if (payload.isEmpty()) BoardReport.Ignored else BoardReport.Moves(listOf(payload.toHexString()))
 }
 
 /** Lowercase hex, space-separated, as a BLE trace would show it. */
@@ -95,7 +132,7 @@ object BoardProtocols {
      * Every make the app can talk to, most specific first; [RawCaptureProtocol] must stay last
      * because it matches nothing and is only ever chosen explicitly.
      */
-    val known: List<BoardProtocol> = listOf(RawCaptureProtocol)
+    val known: List<BoardProtocol> = listOf(ChessnutProtocol, RawCaptureProtocol)
 
     /**
      * The protocol to use for a board advertising [deviceName], or [RawCaptureProtocol] when no

@@ -68,6 +68,9 @@ class UsbBoardManager(private val context: Context) {
     val lastMove: StateFlow<String?> = _lastMove.asStateFlow()
 
     private var protocol: BoardProtocol = RawCaptureProtocol
+
+    /** Holds the previous position, since boards report state rather than moves. */
+    private val moveTracker = BoardMoveTracker()
     private var connection: UsbDeviceConnection? = null
     private var claimedInterface: UsbInterface? = null
     private var readJob: Job? = null
@@ -115,6 +118,7 @@ class UsbBoardManager(private val context: Context) {
 
         this.onMoveReceived = onMoveReceived
         protocol = BoardProtocols.forUsbIds(device.vendorId, device.productId)
+        moveTracker.reset()
         _connectionState.value = ConnectionState.Connecting
 
         if (usbManager.hasPermission(device)) {
@@ -157,8 +161,18 @@ class UsbBoardManager(private val context: Context) {
 
         connection = opened
         claimedInterface = serialInterface
-        opened.configureCdcLine(serialInterface.id, protocol.usbBaudRate)
+        // Only a serial line has a baud rate to set; asking a HID interface for one achieves
+        // nothing and can upset devices that answer control requests strictly.
+        if (serialInterface.interfaceClass == UsbConstants.USB_CLASS_CDC_DATA) {
+            opened.configureCdcLine(serialInterface.id, protocol.usbBaudRate)
+        }
         _connectionState.value = ConnectionState.Connected(device.productName ?: device.deviceName)
+        // Several makes report nothing until asked; Chessnut is one of them.
+        protocol.initCommand?.let { command ->
+            serialInterface.findEndpoint(UsbConstants.USB_DIR_OUT)?.let { endpointOut ->
+                opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS)
+            }
+        }
         startReading(opened, endpointIn)
     }
 
@@ -173,7 +187,7 @@ class UsbBoardManager(private val context: Context) {
                 if (read <= 0) continue
 
                 val payload = buffer.copyOf(minOf(read, MAX_PAYLOAD_BYTES))
-                val moves = protocol.decode(payload)
+                val moves = moveTracker.onReport(protocol.decode(payload))
                 if (moves.isEmpty()) continue
                 withContext(Dispatchers.Main) {
                     moves.forEach { move ->
@@ -222,14 +236,23 @@ class UsbBoardManager(private val context: Context) {
 private fun UsbDevice.findCdcDataInterface(): UsbInterface? {
     val interfaces = (0 until interfaceCount).map { getInterface(it) }
     return interfaces.firstOrNull { it.interfaceClass == UsbConstants.USB_CLASS_CDC_DATA }
+    // Chessnut's boards are HID over USB rather than serial, and HID carries its reports on
+    // interrupt endpoints. Same bytes, different plumbing.
+        ?: interfaces.firstOrNull {
+            it.interfaceClass == UsbConstants.USB_CLASS_HID && it.findEndpoint(UsbConstants.USB_DIR_IN) != null
+        }
         ?: interfaces.firstOrNull {
             it.interfaceClass == UsbConstants.USB_CLASS_VENDOR_SPEC && it.findEndpoint(UsbConstants.USB_DIR_IN) != null
         }
 }
 
+/** Bulk for serial, interrupt for HID; [UsbDeviceConnection.bulkTransfer] drives both. */
 private fun UsbInterface.findEndpoint(direction: Int): UsbEndpoint? =
     (0 until endpointCount).map { getEndpoint(it) }
-        .firstOrNull { it.direction == direction && it.type == UsbConstants.USB_ENDPOINT_XFER_BULK }
+        .firstOrNull {
+            it.direction == direction &&
+                (it.type == UsbConstants.USB_ENDPOINT_XFER_BULK || it.type == UsbConstants.USB_ENDPOINT_XFER_INT)
+        }
 
 /**
  * Sets the line speed and raises DTR/RTS.

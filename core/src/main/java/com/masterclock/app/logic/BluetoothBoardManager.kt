@@ -49,6 +49,9 @@ class BluetoothBoardManager(private val context: Context) {
     /** Which make the connected board speaks. See [BoardProtocol]. */
     private var protocol: BoardProtocol = RawCaptureProtocol
 
+    /** Holds the previous position, since boards report state rather than moves. */
+    private val moveTracker = BoardMoveTracker()
+
     /**
      * Characteristics still waiting to have notifications turned on.
      *
@@ -164,7 +167,7 @@ class BluetoothBoardManager(private val context: Context) {
 
     private fun handlePayload(payload: ByteArray?) {
         val bytes = payload?.take(MAX_CHARACTERISTIC_BYTES)?.toByteArray() ?: return
-        protocol.decode(bytes).forEach { move ->
+        moveTracker.onReport(protocol.decode(bytes)).forEach { move ->
             _lastMove.value = move
             _onMoveReceivedCallback?.invoke(move)
         }
@@ -257,6 +260,7 @@ class BluetoothBoardManager(private val context: Context) {
         // Nothing implements a real make yet, so this resolves to raw capture for every board. Once
         // one does, the same call picks it up with no change here.
         protocol = BoardProtocols.forDeviceName(device.name)
+        moveTracker.reset()
         pendingNotifySubscriptions.clear()
 
         val connectionSettings = BluetoothGattConnectionSettings.Builder()
