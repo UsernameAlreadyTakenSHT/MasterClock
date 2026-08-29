@@ -69,6 +69,9 @@ class UsbBoardManager(private val context: Context) {
 
     private var protocol: BoardProtocol = RawCaptureProtocol
 
+    /** The game this round is, for makes that have to be told before play starts. */
+    private var gameType: GameType = GameType.CHESS
+
     /** Holds the previous position, since boards report state rather than moves. */
     private val moveTracker = BoardMoveTracker()
 
@@ -115,7 +118,8 @@ class UsbBoardManager(private val context: Context) {
         _attachedDevices.value = usbManager.deviceList.values.map { it.toCandidate() }
     }
 
-    fun connect(candidateId: String, onMoveReceived: (String) -> Unit) {
+    fun connect(candidateId: String, gameType: GameType, onMoveReceived: (String) -> Unit) {
+        this.gameType = gameType
         val device = usbManager.deviceList.values.firstOrNull { it.deviceName == candidateId }
         if (device == null) {
             _connectionState.value = ConnectionState.Error("That board is no longer plugged in")
@@ -175,7 +179,7 @@ class UsbBoardManager(private val context: Context) {
         }
         _connectionState.value = ConnectionState.Connected(device.productName ?: device.deviceName)
         // Several makes report nothing until asked; Chessnut is one of them.
-        protocol.initCommand?.let { command ->
+        protocol.initCommandFor(gameType)?.let { command ->
             serialInterface.findEndpoint(UsbConstants.USB_DIR_OUT)?.let { endpointOut ->
                 opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS)
             }

@@ -100,6 +100,58 @@ class OpenBoardProtocolTest {
     }
 
     @Test
+    fun `a draughts round announces its variant before it begins`() {
+        // Order is the whole point: the spec says set_variant may only come before begin, and a
+        // board told nothing plays chess -- then disagrees with every move that follows.
+        val lines = OpenBoardProtocol.initCommandFor(GameType.DRAUGHTS)
+            .toString(Charsets.US_ASCII).trim().lines()
+
+        assertEquals(2, lines.size)
+        assertEquals("set_variant draughts_standard", lines[0])
+        assertTrue(lines[1].startsWith("begin "))
+    }
+
+    @Test
+    fun `the draughts position is ten by ten with the middle clear`() {
+        val fen = OpenBoardProtocol.initCommandFor(GameType.DRAUGHTS)
+            .toString(Charsets.US_ASCII).trim().lines()[1].removePrefix("begin ").removeSuffix(" w")
+        val ranks = fen.split("/")
+
+        assertEquals(10, ranks.size)
+        // Twenty men a side, and the two middle ranks empty, which is what makes it a start.
+        assertEquals(20, fen.count { it == 'm' })
+        assertEquals(20, fen.count { it == 'M' })
+        assertEquals(listOf("10", "10"), ranks.subList(4, 6))
+    }
+
+    @Test
+    fun `a game of chess says nothing about variants`() {
+        // A board assumes standard when never told, so naming it would be a round trip for nothing.
+        val chess = OpenBoardProtocol.initCommandFor(GameType.CHESS).toString(Charsets.US_ASCII)
+        assertFalse(chess.contains("set_variant"))
+        assertTrue(chess.trim().startsWith("begin "))
+    }
+
+    @Test
+    fun `shogi falls back to chess rather than inventing a variant`() {
+        // It cannot be picked any more, precisely because no board plays it, and the protocol has
+        // no name for it either.
+        assertArrayEquals(
+            OpenBoardProtocol.initCommandFor(GameType.CHESS),
+            OpenBoardProtocol.initCommandFor(GameType.SHOGI),
+        )
+    }
+
+    @Test
+    fun `the vendor makes ignore the game entirely`() {
+        // They are chess boards and nothing else; their opening does not vary.
+        GameType.entries.forEach { game ->
+            assertArrayEquals(ChessnutProtocol.initCommand, ChessnutProtocol.initCommandFor(game))
+            assertArrayEquals(DgtProtocol.initCommand, DgtProtocol.initCommandFor(game))
+        }
+    }
+
+    @Test
     fun `the handshake is begin, not get_state`() {
         // begin is what the protocol requires of a central; get_state is an optional feature, and a
         // conformant board sent it instead simply waits and says nothing.

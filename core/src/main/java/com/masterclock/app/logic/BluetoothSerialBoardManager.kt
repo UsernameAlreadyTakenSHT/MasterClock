@@ -60,6 +60,9 @@ class BluetoothSerialBoardManager(private val context: Context) {
     val lastMove: StateFlow<String?> = _lastMove.asStateFlow()
 
     private var protocol: BoardProtocol = RawCaptureProtocol
+
+    /** The game this round is, for makes that have to be told before play starts. */
+    private var gameType: GameType = GameType.CHESS
     private val moveTracker = BoardMoveTracker()
     private var assembler: StreamAssembler? = null
     private var socket: BluetoothSocket? = null
@@ -88,7 +91,8 @@ class BluetoothSerialBoardManager(private val context: Context) {
         }
     }
 
-    fun connect(candidateId: String, onMoveReceived: (String) -> Unit) {
+    fun connect(candidateId: String, gameType: GameType, onMoveReceived: (String) -> Unit) {
+        this.gameType = gameType
         if (!hasConnectPermission()) {
             _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
             return
@@ -134,7 +138,7 @@ class BluetoothSerialBoardManager(private val context: Context) {
         }
 
         // Several makes report nothing until asked; DGT wants a dump before update mode.
-        protocol.initCommand?.let { command ->
+        protocol.initCommandFor(gameType)?.let { command ->
             runCatching { opened.outputStream.write(command); opened.outputStream.flush() }
         }
 

@@ -41,6 +41,15 @@ interface BoardProtocol {
     /** Sent once the link is up. Several makes stay silent until asked to report. */
     val initCommand: ByteArray? get() = null
 
+    /**
+     * What to send once the link is up, for a make whose opening depends on the game being played.
+     *
+     * Only the open protocol needs this: it is told which game a round is, and refuses to start one
+     * it was not told about. The four vendor makes are chess boards and nothing else, so they
+     * ignore [gameType] and send their fixed [initCommand].
+     */
+    fun initCommandFor(gameType: GameType): ByteArray? = initCommand
+
     /** Whether an advertised Bluetooth name looks like this make. */
     fun matchesDeviceName(deviceName: String?): Boolean = false
 

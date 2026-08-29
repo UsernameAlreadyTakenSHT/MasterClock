@@ -46,6 +46,11 @@ fun BluetoothBoardScreen(
     val serialMove by serialManager.lastMove.collectAsState()
     val context = LocalContext.current
 
+    // Which game this is decides what the board is told to set up, so it is read at the moment of
+    // connecting rather than assumed to be chess.
+    val settings by viewModel.settings.collectAsState()
+    val gameType = settings.gameType
+
     // Only one board is connected at a time, so whichever transport is not idle is the one this
     // screen is talking about.
     val connectionState = when {
@@ -180,7 +185,7 @@ fun BluetoothBoardScreen(
                 Spacer(Modifier.height(8.dp))
                 usbDevices.forEach { candidate ->
                     Surface(
-                        onClick = { usbManager.connect(candidate.id) { viewModel.recordBoardMove(it) } },
+                        onClick = { usbManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -207,7 +212,7 @@ fun BluetoothBoardScreen(
             } else {
                 pairedDevices.forEach { candidate ->
                     Surface(
-                        onClick = { serialManager.connect(candidate.id) { viewModel.recordBoardMove(it) } },
+                        onClick = { serialManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -245,7 +250,7 @@ fun BluetoothBoardScreen(
                 LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(scannedDevices) { device ->
                         Surface(
-                            onClick = { manager.connect(device.device) { viewModel.recordBoardMove(it) } },
+                            onClick = { manager.connect(device.device, gameType) { viewModel.recordBoardMove(it) } },
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ) {
