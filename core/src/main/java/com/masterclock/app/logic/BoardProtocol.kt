@@ -14,32 +14,47 @@ import java.util.UUID
  * Adding a make is therefore one implementation of this interface plus one entry in
  * [BoardProtocols.known]. Nothing else has to change.
  */
+/**
+ * Where to listen on a board reached over Bluetooth.
+ *
+ * Kept apart from [BoardProtocol] itself because none of it means anything over USB, where there
+ * are no services, characteristics or descriptors -- only endpoints carrying a byte stream. What
+ * both transports share is [BoardProtocol.decode], which is also the expensive part to work out per
+ * make, so it must not be entangled with either one.
+ */
+data class BleAddressing(
+    /** The GATT service to look for, or null to accept any. A real make names one, which also lets the scan filter on it. */
+    val serviceUuid: UUID?,
+    /** The characteristic updates arrive on, or null to subscribe to everything that notifies. */
+    val notifyCharacteristicUuid: UUID?,
+    /** Characteristic to write [BoardProtocol.initCommand] to, if the board needs waking up. */
+    val writeCharacteristicUuid: UUID? = null,
+)
+
 interface BoardProtocol {
     /** Shown in the board picker. Not translated: these are product names. */
     val name: String
 
-    /**
-     * The GATT service to look for, or null to accept any service.
-     *
-     * Null is what [RawCaptureProtocol] uses; a real make always names one, which also lets the
-     * scan filter on it instead of listing every BLE device in the room.
-     */
-    val serviceUuid: UUID?
+    /** How to address this make over Bluetooth, or null if it has no Bluetooth variant. */
+    val ble: BleAddressing?
 
-    /**
-     * The characteristic the board pushes updates on, or null to subscribe to every characteristic
-     * that supports notification.
-     */
-    val notifyCharacteristicUuid: UUID?
-
-    /** Characteristic to write [initCommand] to once connected, if the board needs waking up. */
-    val writeCharacteristicUuid: UUID? get() = null
-
-    /** Sent once after subscribing. Several makes stay silent until asked to report. */
+    /** Sent once the link is up. Several makes stay silent until asked to report. */
     val initCommand: ByteArray? get() = null
 
-    /** Whether an advertised name looks like this make. Used when [serviceUuid] is null. */
+    /** Whether an advertised Bluetooth name looks like this make. */
     fun matchesDeviceName(deviceName: String?): Boolean = false
+
+    /** Whether a USB device's vendor and product ids belong to this make. */
+    fun matchesUsbIds(vendorId: Int, productId: Int): Boolean = false
+
+    /**
+     * Line speed to ask for over USB serial.
+     *
+     * Only a make knows its own: DGT's boards run at 9600, others at 115200. The default is the
+     * slower one because a device configured faster usually still delivers readable frames, while
+     * the reverse produces silence -- and silence is the hardest failure to diagnose here.
+     */
+    val usbBaudRate: Int get() = 9600
 
     /**
      * Turn one notification payload into the moves it describes.
@@ -64,8 +79,9 @@ interface BoardProtocol {
  */
 object RawCaptureProtocol : BoardProtocol {
     override val name = "Raw capture (unknown board)"
-    override val serviceUuid: UUID? = null
-    override val notifyCharacteristicUuid: UUID? = null
+
+    /** Both null: accept any service, and subscribe to every characteristic that notifies. */
+    override val ble = BleAddressing(serviceUuid = null, notifyCharacteristicUuid = null)
 
     override fun decode(payload: ByteArray): List<String> =
         if (payload.isEmpty()) emptyList() else listOf(payload.toHexString())
@@ -88,4 +104,24 @@ object BoardProtocols {
     fun forDeviceName(deviceName: String?): BoardProtocol =
         known.firstOrNull { it !== RawCaptureProtocol && it.matchesDeviceName(deviceName) }
             ?: RawCaptureProtocol
+
+    /** The protocol for a USB board with these ids, or [RawCaptureProtocol] when none claims it. */
+    fun forUsbIds(vendorId: Int, productId: Int): BoardProtocol =
+        known.firstOrNull { it !== RawCaptureProtocol && it.matchesUsbIds(vendorId, productId) }
+            ?: RawCaptureProtocol
 }
+
+/** Which way a board is attached. The pairing and decoding above are the same for both. */
+enum class BoardTransportKind { BLUETOOTH, USB }
+
+/**
+ * A board the user could connect to, named the same way whichever transport found it, so the
+ * picker does not need one list per transport.
+ */
+data class BoardCandidate(
+    /** Stable within a transport: a MAC address over Bluetooth, a device name over USB. */
+    val id: String,
+    val label: String,
+    val detail: String,
+    val kind: BoardTransportKind,
+)

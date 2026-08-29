@@ -127,12 +127,12 @@ class BluetoothBoardManager(private val context: Context) {
                 return
             }
 
-            val services = protocol.serviceUuid
+            val services = protocol.ble?.serviceUuid
                 ?.let { listOfNotNull(gatt.getService(it)) }
                 ?: gatt.services
             val characteristics = services
                 .flatMap { it.characteristics }
-                .filter { protocol.notifyCharacteristicUuid == null || it.uuid == protocol.notifyCharacteristicUuid }
+                .filter { protocol.ble?.notifyCharacteristicUuid == null || it.uuid == protocol.ble?.notifyCharacteristicUuid }
                 .filter { it.properties and NOTIFY_OR_INDICATE != 0 }
 
             if (characteristics.isEmpty()) {
@@ -205,7 +205,7 @@ class BluetoothBoardManager(private val context: Context) {
 
     private fun sendInitCommand(gatt: BluetoothGatt) {
         val command = protocol.initCommand ?: return
-        val uuid = protocol.writeCharacteristicUuid ?: return
+        val uuid = protocol.ble?.writeCharacteristicUuid ?: return
         if (!hasConnectPermission()) return
         val characteristic = gatt.services.flatMap { it.characteristics }.firstOrNull { it.uuid == uuid } ?: return
 
