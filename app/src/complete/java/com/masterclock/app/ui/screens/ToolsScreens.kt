@@ -44,7 +44,12 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -1216,6 +1221,30 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBa
 /** How many board states the editor can step back through. Far more than anyone undoes in a row. */
 private const val MAX_BOARD_HISTORY = 50
 
+/** Side of one square in the board note's grid. */
+private val BOARD_SQUARE_SIZE = 40.dp
+
+/**
+ * A piece being dragged, and where the finger currently is in the screen's own coordinates.
+ *
+ * Root coordinates rather than any one container's, because a drag that starts in the palette ends
+ * on the board: the two have no common frame otherwise, and translating between them at drop time
+ * is how the piece would land a row off.
+ *
+ * [fromSquare] is null when the piece came from the palette, which is what distinguishes placing a
+ * new piece from moving one that was already on the board.
+ */
+private data class BoardDrag(val piece: String, val fromSquare: Int?, val position: Offset)
+
+/** The square under [offset], measured from the grid's top-left corner, or null if outside it. */
+private fun squareAt(offset: Offset, squarePx: Float): Int? {
+    val file = (offset.x / squarePx).toInt()
+    val rowFromTop = (offset.y / squarePx).toInt()
+    if (offset.x < 0f || offset.y < 0f || file !in 0..7 || rowFromTop !in 0..7) return null
+    // The grid is drawn rank 8 first, so the top row is rank 7 in the note's own indexing.
+    return (7 - rowFromTop) * 8 + file
+}
+
 /**
  * One piece in the palette below the board.
  *
@@ -1223,13 +1252,35 @@ private const val MAX_BOARD_HISTORY = 50
  * on a square clears it.
  */
 @Composable
-private fun PieceChoice(piece: String, selected: Boolean, imageLoader: ImageLoader, onClick: () -> Unit) {
+private fun PieceChoice(
+    piece: String,
+    selected: Boolean,
+    imageLoader: ImageLoader,
+    onClick: () -> Unit,
+    onDragStart: (Offset) -> Unit,
+    onDrag: (Offset) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit,
+) {
+    // Where this button sits on screen, so a drag leaving it can be drawn from the piece itself
+    // rather than jumping to the finger.
+    var centre by remember { mutableStateOf(Offset.Zero) }
     IconButton(
         onClick = onClick,
-        modifier = Modifier.background(
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent,
-            CircleShape,
-        ),
+        modifier = Modifier
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent,
+                CircleShape,
+            )
+            .onGloballyPositioned { centre = it.boundsInRoot().center }
+            .pointerInput(piece) {
+                detectDragGestures(
+                    onDragStart = { offset -> onDragStart(centre + offset - Offset(size.width / 2f, size.height / 2f)) },
+                    onDrag = { change, amount -> change.consume(); onDrag(amount) },
+                    onDragEnd = onDragEnd,
+                    onDragCancel = onDragCancel,
+                )
+            },
     ) {
         AsyncImage(model = getPieceSvgPath(piece), contentDescription = piece, modifier = Modifier.size(32.dp), imageLoader = imageLoader)
     }
@@ -1250,13 +1301,41 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         }
     }
 
+    var drag by remember { mutableStateOf<BoardDrag?>(null) }
+    var boardBounds by remember { mutableStateOf<Rect?>(null) }
+    val squarePx = with(LocalDensity.current) { BOARD_SQUARE_SIZE.toPx() }
+
+    // Read inside the gesture detector rather than captured when it starts, so a drag is not
+    // interrupted and restarted every time the board changes underneath it.
+    val currentBoard by rememberUpdatedState(board)
+
+    /** Applies a finished drag: move, place, or -- dropped off the board -- remove. */
+    val finishDrag: () -> Unit = {
+        drag?.let { d ->
+            val bounds = boardBounds
+            val target = bounds?.let { squareAt(d.position - it.topLeft, squarePx) }
+            val next = currentBoard.toMutableList()
+            when {
+                target != null -> {
+                    if (d.fromSquare != null) next[d.fromSquare] = ""
+                    next[target] = d.piece
+                }
+                // A piece carried off the board is a piece taken off the board. Doing nothing here
+                // would leave no way to remove one without putting the palette down first.
+                d.fromSquare != null -> next[d.fromSquare] = ""
+            }
+            editBoard(next)
+        }
+        drag = null
+    }
+
     val context = LocalContext.current
     val imageLoader = remember {
         ImageLoader.Builder(context)
             .components { add(SvgDecoder.Factory()) }
             .build()
     }
-    
+
     LaunchedEffect(title, board) { onUpdate(note.copy(title = title, boardPosition = board)) }
     ToolScaffold(
         title = stringResource(R.string.tools_edit_board),
@@ -1273,10 +1352,37 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             }
         },
     ) { padding ->
+      // The dragged piece is drawn in this Box rather than in the board or the palette, so it can
+      // travel between the two and over everything else on the way.
+      Box(Modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                Column(Modifier.padding(8.dp)) {
+                Column(
+                    Modifier
+                        .padding(8.dp)
+                        .onGloballyPositioned { boardBounds = it.boundsInRoot() }
+                        // The whole grid handles the drag, not each square: a square that has just
+                        // been left cannot report where the finger went next.
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    val from = squareAt(offset, squarePx)
+                                    val piece = from?.let { currentBoard[it] }.orEmpty()
+                                    if (piece.isNotEmpty()) {
+                                        val origin = boardBounds?.topLeft ?: Offset.Zero
+                                        drag = BoardDrag(piece, from, origin + offset)
+                                    }
+                                },
+                                onDrag = { change, amount ->
+                                    change.consume()
+                                    drag = drag?.let { it.copy(position = it.position + amount) }
+                                },
+                                onDragEnd = { finishDrag() },
+                                onDragCancel = { drag = null },
+                            )
+                        }
+                ) {
                     for (rank in 7 downTo 0) {
                         Row {
                             for (file in 0..7) {
@@ -1284,14 +1390,16 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                                 val isDark = (rank + file) % 2 == 0
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
+                                        .size(BOARD_SQUARE_SIZE)
                                         .background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2))
                                         .clickable {
                                             editBoard(board.toMutableList().also { it[index] = selectedPiece ?: "" })
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    val piece = board[index]
+                                    // The square a piece is being lifted from reads as empty while
+                                    // the drag lasts, so the piece is not in two places at once.
+                                    val piece = if (drag?.fromSquare == index) "" else board[index]
                                     if (piece.isNotEmpty()) {
                                         AsyncImage(
                                             model = getPieceSvgPath(piece),
@@ -1331,17 +1439,48 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                     )
                     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                         piecesList.subList(0, 6).forEach { p ->
-                            PieceChoice(p, selectedPiece == p, imageLoader) { selectedPiece = if (selectedPiece == p) null else p }
+                            PieceChoice(
+                                piece = p,
+                                selected = selectedPiece == p,
+                                imageLoader = imageLoader,
+                                onClick = { selectedPiece = if (selectedPiece == p) null else p },
+                                onDragStart = { from -> drag = BoardDrag(p, fromSquare = null, position = from) },
+                                onDrag = { amount -> drag = drag?.let { it.copy(position = it.position + amount) } },
+                                onDragEnd = finishDrag,
+                                onDragCancel = { drag = null },
+                            )
                         }
                     }
                     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                         piecesList.subList(6, 12).forEach { p ->
-                            PieceChoice(p, selectedPiece == p, imageLoader) { selectedPiece = if (selectedPiece == p) null else p }
+                            PieceChoice(
+                                piece = p,
+                                selected = selectedPiece == p,
+                                imageLoader = imageLoader,
+                                onClick = { selectedPiece = if (selectedPiece == p) null else p },
+                                onDragStart = { from -> drag = BoardDrag(p, fromSquare = null, position = from) },
+                                onDrag = { amount -> drag = drag?.let { it.copy(position = it.position + amount) } },
+                                onDragEnd = finishDrag,
+                                onDragCancel = { drag = null },
+                            )
                         }
                     }
                 }
             }
         }
+
+        drag?.let { d ->
+            val half = with(LocalDensity.current) { (BOARD_SQUARE_SIZE / 2).roundToPx() }
+            AsyncImage(
+                model = getPieceSvgPath(d.piece),
+                contentDescription = null,
+                imageLoader = imageLoader,
+                modifier = Modifier
+                    .offset { IntOffset(d.position.x.toInt() - half, d.position.y.toInt() - half) }
+                    .size(BOARD_SQUARE_SIZE),
+            )
+        }
+      }
     }
 }
 
