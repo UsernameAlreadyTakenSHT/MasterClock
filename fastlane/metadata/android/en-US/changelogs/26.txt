@@ -1,0 +1,6 @@
+Board notes can hold a draughts position: international draughts on 10x10, or 8x8 for the Russian, Brazilian and English games. Chess is still what a new note opens as.
+The board note editor has an undo button, which takes back clearing the whole board too.
+Pieces can be dragged: out of the tray onto a square, from one square to another, and off the board to remove one.
+A single piece can be removed from a board note again. Once a piece was picked from the tray it stayed picked, so wiping the whole board was one tap away while removing one piece was not.
+Shogi is no longer offered when choosing a game, since no electronic shogi board is made. Games already recorded as shogi still open and still export.
+The Licenses tab now lists what this build actually ships.
