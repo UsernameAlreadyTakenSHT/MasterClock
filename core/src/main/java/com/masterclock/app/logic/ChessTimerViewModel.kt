@@ -342,8 +342,35 @@ data class NotebookNote(
     val drawingPaths: List<DrawingPath> = emptyList(),
     val imagePath: String? = null,
     val videoPath: String? = null,
-    val boardPosition: List<String> = List(64) { "" }
+    val boardPosition: List<String> = List(64) { "" },
+    val boardVariant: BoardNoteVariant = BoardNoteVariant.CHESS,
 )
+
+/**
+ * Which board a board note draws.
+ *
+ * Notes written before this existed have no variant stored and no geometry other than eight by
+ * eight, so chess is the default and they keep working untouched -- the events blob is read with
+ * unknown keys ignored, and a missing one falls back here.
+ *
+ * Draughts pieces use the letters the open board protocol settled on: `m`/`M` for men, `d`/`D` for
+ * dames, lower case for black. Reusing them means one vocabulary across the app rather than a
+ * second one invented for the notebook.
+ */
+@Serializable
+enum class BoardNoteVariant(val side: Int) {
+    CHESS(8),
+
+    /** International draughts, and the default when draughts is picked: ten by ten. */
+    DRAUGHTS_INTERNATIONAL(10),
+
+    /** Russian, Brazilian and English draughts, all played on eight by eight. */
+    DRAUGHTS_SMALL(8);
+
+    val squareCount: Int get() = side * side
+
+    val isDraughts: Boolean get() = this != CHESS
+}
 
 @Serializable
 data class ChessClockSettings(
