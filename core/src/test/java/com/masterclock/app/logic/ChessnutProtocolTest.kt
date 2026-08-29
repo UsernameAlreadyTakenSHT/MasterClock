@@ -105,7 +105,8 @@ class ChessnutProtocolTest {
         assertSame(ChessnutProtocol, BoardProtocols.forUsbIds(0x2d80, 0x8001))
         assertSame(ChessnutProtocol, BoardProtocols.forUsbIds(0x2d80, 0x8600))
         assertSame(RawCaptureProtocol, BoardProtocols.forUsbIds(0x2d80, 0x9000))
-        assertSame(RawCaptureProtocol, BoardProtocols.forDeviceName("DGT Pegasus"))
+        // Another make's board must not be claimed by this one.
+        assertSame(RawCaptureProtocol, BoardProtocols.forDeviceName("Millennium ChessLink"))
     }
 
     @Test

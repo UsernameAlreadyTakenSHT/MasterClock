@@ -71,6 +71,12 @@ class UsbBoardManager(private val context: Context) {
 
     /** Holds the previous position, since boards report state rather than moves. */
     private val moveTracker = BoardMoveTracker()
+
+    /**
+     * Reassembles messages for makes that need it. Null for the ones whose reads are already whole
+     * messages, which is every HID board.
+     */
+    private var assembler: StreamAssembler? = null
     private var connection: UsbDeviceConnection? = null
     private var claimedInterface: UsbInterface? = null
     private var readJob: Job? = null
@@ -118,6 +124,7 @@ class UsbBoardManager(private val context: Context) {
 
         this.onMoveReceived = onMoveReceived
         protocol = BoardProtocols.forUsbIds(device.vendorId, device.productId)
+        assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
         _connectionState.value = ConnectionState.Connecting
 
@@ -186,8 +193,11 @@ class UsbBoardManager(private val context: Context) {
                 val read = connection.bulkTransfer(endpoint, buffer, buffer.size, READ_TIMEOUT_MS)
                 if (read <= 0) continue
 
-                val payload = buffer.copyOf(minOf(read, MAX_PAYLOAD_BYTES))
-                val moves = moveTracker.onReport(protocol.decode(payload))
+                val chunk = buffer.copyOf(minOf(read, MAX_PAYLOAD_BYTES))
+                // A serial read is a slice of a byte stream, not a message. Where the make says how
+                // its messages are delimited, put them back together first.
+                val payloads = assembler?.offer(chunk) ?: listOf(chunk)
+                val moves = payloads.flatMap { moveTracker.onReport(protocol.decode(it)) }
                 if (moves.isEmpty()) continue
                 withContext(Dispatchers.Main) {
                     moves.forEach { move ->
