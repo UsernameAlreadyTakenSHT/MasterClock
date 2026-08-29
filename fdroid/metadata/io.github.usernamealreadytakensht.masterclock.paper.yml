@@ -1,0 +1,42 @@
+Categories:
+  - Game Helper
+  - Timer
+License: MIT
+AuthorName: UsernameAlreadyTakenSHT
+WebSite: https://usernamealreadytakensht.github.io/masterclock-website/
+SourceCode: https://github.com/UsernameAlreadyTakenSHT/MasterClock
+IssueTracker: https://github.com/UsernameAlreadyTakenSHT/MasterClock/issues
+Changelog: https://github.com/UsernameAlreadyTakenSHT/MasterClock/blob/HEAD/CHANGELOG.md
+
+Name: MasterClock Paper
+Summary: A high-contrast chess clock for E-Ink devices
+Description: |-
+  MasterClock Paper is a chess clock built specifically for E-Ink devices (such as Mudita
+  Pure/Kompakt-style hardware), using a pure black-and-white interface designed for E-Ink
+  screens: high contrast, no gradients, minimal redraws.
+
+  It covers three timing modes: Timer (Sudden Death), Fischer, and Move Timer, plus a
+  "Reverse colors" toggle, keep-screen-awake, sound, and haptic feedback options tuned
+  for E-Ink hardware.
+
+  MasterClock collects no data, contains no ads, no trackers, and needs no network
+  connection to work.
+
+  For transparency: this app is developed with the help of AI (Claude Code). Review the
+  code accordingly before relying on it.
+
+RepoType: git
+Repo: https://github.com/UsernameAlreadyTakenSHT/MasterClock.git
+
+Builds:
+  - versionName: 0.8.24-paper
+    versionCode: 25
+    commit: v0.8.24
+    subdir: paper
+    gradle:
+      - yes
+
+AutoUpdateMode: None
+UpdateCheckMode: Tags
+CurrentVersion: 0.8.24-paper
+CurrentVersionCode: 25
