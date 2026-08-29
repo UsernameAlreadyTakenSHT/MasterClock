@@ -1,0 +1,54 @@
+Categories:
+  - Game Helper
+  - Timer
+License: MIT
+AuthorName: UsernameAlreadyTakenSHT
+WebSite: https://usernamealreadytakensht.github.io/masterclock-website/
+SourceCode: https://github.com/UsernameAlreadyTakenSHT/MasterClock
+IssueTracker: https://github.com/UsernameAlreadyTakenSHT/MasterClock/issues
+Changelog: https://github.com/UsernameAlreadyTakenSHT/MasterClock/blob/HEAD/CHANGELOG.md
+
+Name: MasterClock Lite
+Summary: A simple chess clock with every timing mode, presets included
+Description: |-
+  MasterClock Lite is a simplified chess clock for chess, wargames, and tabletop games.
+
+  This is the Lite build: every classic timing mode, ready-made presets, and arbitre mode
+  (manual time adjustment for a tournament director), with no extra settings screens to
+  dig through. If you want behavior/display/audio customization or the full toolset
+  (Notebook, Scoreboard, and so on), look for MasterClock Standard or MasterClock
+  instead.
+
+  Classic time controls:
+
+  * Sudden Death, Fischer, Bronstein, US Delay
+  * Byoyomi (Japanese, Canadian, Progressive)
+  * Hourglass, Gong, Hidden/Random time
+  * Move counters, fast-move variants, time banking
+
+  Also included:
+
+  * A large library of ready-made presets: blitz, rapid, classical, and named tournament time controls
+  * Arbitre mode for manual time correction during a game
+
+  MasterClock collects no data, contains no ads, no trackers, and needs no network
+  connection to work.
+
+  For transparency: this app is developed with the help of AI (Claude Code). Review the
+  code accordingly before relying on it.
+
+RepoType: git
+Repo: https://github.com/UsernameAlreadyTakenSHT/MasterClock.git
+
+Builds:
+  - versionName: 0.8.24-lite
+    versionCode: 25
+    commit: v0.8.24
+    subdir: app
+    gradle:
+      - lite
+
+AutoUpdateMode: None
+UpdateCheckMode: Tags
+CurrentVersion: 0.8.24-lite
+CurrentVersionCode: 25

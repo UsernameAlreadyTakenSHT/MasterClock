@@ -19,3 +19,6 @@ local.properties
 # Claude Code: personal/local settings and runtime lock files, not shared team config.
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+# Fetched from fdroiddata to run "fdroid lint" locally; see fdroid/README.md.
+fdroid/config/
