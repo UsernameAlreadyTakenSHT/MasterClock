@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
@@ -32,10 +33,43 @@ fun BluetoothBoardScreen(
     onBack: () -> Unit
 ) {
     val manager = viewModel.bluetoothManager
-    val connectionState by manager.connectionState.collectAsState()
+    val usbManager = viewModel.usbBoardManager
+    val serialManager = viewModel.bluetoothSerialBoardManager
+    val bluetoothState by manager.connectionState.collectAsState()
+    val usbState by usbManager.connectionState.collectAsState()
+    val serialState by serialManager.connectionState.collectAsState()
     val scannedDevices by manager.scannedDevices.collectAsState()
-    val lastMove by manager.lastMove.collectAsState()
+    val usbDevices by usbManager.attachedDevices.collectAsState()
+    val pairedDevices by serialManager.pairedDevices.collectAsState()
+    val bluetoothMove by manager.lastMove.collectAsState()
+    val usbMove by usbManager.lastMove.collectAsState()
+    val serialMove by serialManager.lastMove.collectAsState()
     val context = LocalContext.current
+
+    // Which game this is decides what the board is told to set up, so it is read at the moment of
+    // connecting rather than assumed to be chess.
+    val settings by viewModel.settings.collectAsState()
+    val gameType = settings.gameType
+
+    // Only one board is connected at a time, so whichever transport is not idle is the one this
+    // screen is talking about.
+    val connectionState = when {
+        usbState !is ConnectionState.Idle -> usbState
+        serialState !is ConnectionState.Idle -> serialState
+        else -> bluetoothState
+    }
+    val lastMove = when {
+        usbState !is ConnectionState.Idle -> usbMove
+        serialState !is ConnectionState.Idle -> serialMove
+        else -> bluetoothMove
+    }
+
+    // Neither USB nor a paired serial board needs scanning: one is plugged in, the other was paired
+    // in the system settings. Both are simply looked up.
+    LaunchedEffect(Unit) {
+        usbManager.refreshDevices()
+        serialManager.refreshPairedDevices()
+    }
 
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
@@ -68,6 +102,8 @@ fun BluetoothBoardScreen(
                 }
             } else if (connectionState is ConnectionState.Idle) {
                 IconButton(onClick = {
+                    usbManager.refreshDevices()
+                    serialManager.refreshPairedDevices()
                     val missing = permissions.filter {
                         ContextCompat.checkSelfPermission(context, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
                     }
@@ -115,7 +151,13 @@ fun BluetoothBoardScreen(
                     }
                     if (connectionState is ConnectionState.Connected) {
                         Spacer(Modifier.weight(1f))
-                        TextButton(onClick = { manager.disconnect() }) {
+                        TextButton(onClick = {
+                            when {
+                                usbState !is ConnectionState.Idle -> usbManager.disconnect()
+                                serialState !is ConnectionState.Idle -> serialManager.disconnect()
+                                else -> manager.disconnect()
+                            }
+                        }) {
                             Text(stringResource(R.string.board_disconnect))
                         }
                     }
@@ -128,6 +170,66 @@ fun BluetoothBoardScreen(
                 Text(stringResource(R.string.board_last_move, lastMove.orEmpty()), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(16.dp))
             }
+
+            Text(stringResource(R.string.board_usb_section), style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+
+            if (usbDevices.isEmpty()) {
+                Text(stringResource(R.string.board_usb_none), style = MaterialTheme.typography.bodyMedium)
+            } else {
+                Text(
+                    stringResource(R.string.board_usb_charging_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                usbDevices.forEach { candidate ->
+                    Surface(
+                        onClick = { usbManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Usb, null)
+                            Spacer(Modifier.width(16.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(candidate.label, fontWeight = FontWeight.Bold)
+                                Text(candidate.detail, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Text(stringResource(R.string.board_paired_section), style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+
+            if (pairedDevices.isEmpty()) {
+                Text(stringResource(R.string.board_paired_none), style = MaterialTheme.typography.bodyMedium)
+            } else {
+                pairedDevices.forEach { candidate ->
+                    Surface(
+                        onClick = { serialManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Bluetooth, null)
+                            Spacer(Modifier.width(16.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(candidate.label, fontWeight = FontWeight.Bold)
+                                Text(candidate.detail, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
 
             Text(stringResource(R.string.board_nearby), style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
@@ -148,7 +250,7 @@ fun BluetoothBoardScreen(
                 LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(scannedDevices) { device ->
                         Surface(
-                            onClick = { manager.connect(device.device) { viewModel.recordBoardMove(it) } },
+                            onClick = { manager.connect(device.device, gameType) { viewModel.recordBoardMove(it) } },
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ) {
