@@ -34,9 +34,9 @@ class OpenBoardProtocolTest {
     }
 
     @Test
-    fun `a draughts position decodes, men and dames included`() {
-        // Brazilian, Russian and English draughts are played on 8x8, so their positions parse here;
-        // only International, at 10x10, does not.
+    fun `draughts men and dames are understood by the FEN reader`() {
+        // Not used by this protocol, which never turns a position into a move, but the reader has
+        // to know these symbols for any make that reports draughts positions and no moves.
         val fen = "1m1m1m1m/m1m1m1m1/1m1m1m1m/8/8/M1M1M1M1/1M1M1M1M/M1M1M1M1"
         val report = BoardPosition.fromFenPlacement(fen)
         assertNotNull(report)
@@ -71,17 +71,32 @@ class OpenBoardProtocolTest {
     }
 
     @Test
-    fun `a chess position arrives as FEN`() {
+    fun `a position never becomes a move on this protocol`() {
+        // The board names its own moves, so inferring one from a position as well would report the
+        // same move twice -- once through "move", once from diffing the position it left behind.
         val fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-        assertEquals(BoardReport.Position(BoardPosition.STARTING), OpenBoardProtocol.decode(message("state $fen")))
-        assertEquals(BoardReport.Position(BoardPosition.STARTING), OpenBoardProtocol.decode(message("sync $fen")))
+        assertEquals(BoardReport.Ignored, OpenBoardProtocol.decode(message("state $fen")))
+        assertEquals(BoardReport.Ignored, OpenBoardProtocol.decode(message("sync $fen")))
     }
 
     @Test
-    fun `a position that is not eight ranks is turned away rather than mangled`() {
-        // International draughts is played on 10x10. Refusing costs nothing: moves arrive through
-        // "move" whatever the board size, and only the position would have been misread.
-        assertEquals(BoardReport.Ignored, OpenBoardProtocol.decode(message("state 1m1m1m1m1m/m1m1m1m1m1/10/10/10/10/10/10/1M1M1M1M1M/M1M1M1M1M1")))
+    fun `a move is reported once, even when a position follows it`() {
+        val tracker = BoardMoveTracker()
+        val fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPP1PPP/RNBQKBNR"
+
+        assertEquals(listOf("e2e4"), tracker.onReport(OpenBoardProtocol.decode(message("move e2e4"))))
+        assertEquals(emptyList<String>(), tracker.onReport(OpenBoardProtocol.decode(message("sync $fen"))))
+    }
+
+    @Test
+    fun `board size makes no difference to a move`() {
+        // International draughts is played on ten by ten. Since only "move" is read, and that is
+        // just text, the board's size never comes into it.
+        assertEquals(BoardReport.Moves(listOf("c3d4")), OpenBoardProtocol.decode(message("move c3d4")))
+        assertEquals(
+            BoardReport.Ignored,
+            OpenBoardProtocol.decode(message("sync 1m1m1m1m1m/m1m1m1m1m1/10/10/10/10/10/10/1M1M1M1M1M/M1M1M1M1M1")),
+        )
     }
 
     @Test

@@ -59,10 +59,17 @@ object OpenBoardProtocol : BoardProtocol {
             // the game is chess: whatever notation it uses is carried through untouched.
             MOVE -> if (argument.isEmpty()) BoardReport.Ignored else BoardReport.Moves(listOf(argument))
 
-            // A position, sent on request and whenever the board thinks the two have drifted apart.
-            // A draughts board's state is not a chess FEN and is turned away rather than mangled.
-            STATE, SYNC, UNSYNC, UNSYNC_SETTABLE ->
-                BoardPosition.fromFenPlacement(argument)?.let { BoardReport.Position(it) } ?: BoardReport.Ignored
+            // Positions are not turned into moves here, and that is deliberate.
+            //
+            // A board that names its own moves must not also have them inferred: the tracker would
+            // diff this position against the last settled one and report a move that has already
+            // been reported through `move`, counting a single move twice. Inference exists for the
+            // vendor makes, which say nothing else.
+            //
+            // It also settles the board-size question. Whether a draughts board is eight squares
+            // wide or ten changes nothing, because no position is read either way -- only `move` is,
+            // and that is just text.
+            STATE, SYNC, UNSYNC, UNSYNC_SETTABLE -> BoardReport.Ignored
 
             // Acknowledgements, resign and draw offers, options: all meaningful to a chess app, none
             // of them a clock's business.
