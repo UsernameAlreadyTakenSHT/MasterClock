@@ -437,7 +437,7 @@
     <string name="settings_more_knight">Percurso do cavalo</string>
     <string name="settings_more_name_square">Nomear a casa</string>
     <string name="settings_more_board">Ligação ao tabuleiro</string>
-    <string name="settings_more_link_board">Ligar um tabuleiro (ainda não disponível)</string>
+    <string name="settings_more_link_board">Ligar um tabuleiro (ainda não testado)</string>
     <string name="settings_more_auto_switch">Trocar de vez automaticamente</string>
     <string name="settings_more_game">Partida</string>
     <string name="settings_more_game_data">Dados de jogo</string>

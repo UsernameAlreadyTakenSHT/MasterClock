@@ -429,7 +429,7 @@
     <string name="settings_more_knight">Springerweg</string>
     <string name="settings_more_name_square">Feld benennen</string>
     <string name="settings_more_board">Brettverbindung</string>
-    <string name="settings_more_link_board">Brett verbinden (noch nicht verfügbar)</string>
+    <string name="settings_more_link_board">Brett verbinden (noch nicht getestet)</string>
     <string name="settings_more_auto_switch">Zug automatisch wechseln</string>
     <string name="settings_more_game">Partie</string>
     <string name="settings_more_game_data">Spieldaten</string>

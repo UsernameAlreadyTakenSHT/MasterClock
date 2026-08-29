@@ -428,7 +428,7 @@
     <string name="settings_more_knight">Paardenpad</string>
     <string name="settings_more_name_square">Veld benoemen</string>
     <string name="settings_more_board">Bordverbinding</string>
-    <string name="settings_more_link_board">Bord koppelen (nog niet beschikbaar)</string>
+    <string name="settings_more_link_board">Bord koppelen (nog niet getest)</string>
     <string name="settings_more_auto_switch">Beurt automatisch wisselen</string>
     <string name="settings_more_game">Partij</string>
     <string name="settings_more_game_data">Spelgegevens</string>

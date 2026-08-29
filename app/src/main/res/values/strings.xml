@@ -468,7 +468,7 @@
     <string name="settings_more_knight">Knight\'s Path</string>
     <string name="settings_more_name_square">Name the square</string>
     <string name="settings_more_board">Board Connection</string>
-    <string name="settings_more_link_board">Link board (not implemented yet)</string>
+    <string name="settings_more_link_board">Link board (not tested yet)</string>
     <string name="settings_more_auto_switch">Auto switch turn on move</string>
     <string name="settings_more_game">Game</string>
     <string name="settings_more_game_data">Game Data</string>

@@ -13,6 +13,18 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.26",
+            date = "2026-08-29",
+            notes = listOf(
+                "Link board works now — but nothing in it has ever met a real board. It is written and tested against recorded frames only, because there is no device here to test with. Treat it as an experiment, and please report what happens either way.",
+                "Five protocols are understood: the open BLE board protocol, Chessnut, DGT, Millennium ChessLink and Certabo.",
+                "Three ways to connect: Bluetooth LE, USB cable, and Bluetooth Classic for the older DGT e-Boards.",
+                "Moves read from a board are recorded with the game and reach the PGN export. \"Auto switch turn on move\" presses the clock for you; with it off, the board still names the move your own press records.",
+                "Draughts is covered, ten-by-ten included, on boards speaking the open protocol.",
+                "Fixed: the Link board screen used to connect and then stay silent forever, because it never subscribed to anything.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.25",
             date = "2026-08-29",
             notes = listOf(
