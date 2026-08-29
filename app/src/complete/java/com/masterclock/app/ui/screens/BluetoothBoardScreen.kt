@@ -34,22 +34,37 @@ fun BluetoothBoardScreen(
 ) {
     val manager = viewModel.bluetoothManager
     val usbManager = viewModel.usbBoardManager
+    val serialManager = viewModel.bluetoothSerialBoardManager
     val bluetoothState by manager.connectionState.collectAsState()
     val usbState by usbManager.connectionState.collectAsState()
+    val serialState by serialManager.connectionState.collectAsState()
     val scannedDevices by manager.scannedDevices.collectAsState()
     val usbDevices by usbManager.attachedDevices.collectAsState()
+    val pairedDevices by serialManager.pairedDevices.collectAsState()
     val bluetoothMove by manager.lastMove.collectAsState()
     val usbMove by usbManager.lastMove.collectAsState()
+    val serialMove by serialManager.lastMove.collectAsState()
     val context = LocalContext.current
 
     // Only one board is connected at a time, so whichever transport is not idle is the one this
     // screen is talking about.
-    val connectionState = if (usbState !is ConnectionState.Idle) usbState else bluetoothState
-    val lastMove = if (usbState !is ConnectionState.Idle) usbMove else bluetoothMove
+    val connectionState = when {
+        usbState !is ConnectionState.Idle -> usbState
+        serialState !is ConnectionState.Idle -> serialState
+        else -> bluetoothState
+    }
+    val lastMove = when {
+        usbState !is ConnectionState.Idle -> usbMove
+        serialState !is ConnectionState.Idle -> serialMove
+        else -> bluetoothMove
+    }
 
-    // USB needs no scanning, only a look at what is plugged in -- but a board can be plugged in
-    // while the screen is open, so this reruns on every recomposition of the device list.
-    LaunchedEffect(Unit) { usbManager.refreshDevices() }
+    // Neither USB nor a paired serial board needs scanning: one is plugged in, the other was paired
+    // in the system settings. Both are simply looked up.
+    LaunchedEffect(Unit) {
+        usbManager.refreshDevices()
+        serialManager.refreshPairedDevices()
+    }
 
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
@@ -83,6 +98,7 @@ fun BluetoothBoardScreen(
             } else if (connectionState is ConnectionState.Idle) {
                 IconButton(onClick = {
                     usbManager.refreshDevices()
+                    serialManager.refreshPairedDevices()
                     val missing = permissions.filter {
                         ContextCompat.checkSelfPermission(context, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
                     }
@@ -131,7 +147,11 @@ fun BluetoothBoardScreen(
                     if (connectionState is ConnectionState.Connected) {
                         Spacer(Modifier.weight(1f))
                         TextButton(onClick = {
-                            if (usbState !is ConnectionState.Idle) usbManager.disconnect() else manager.disconnect()
+                            when {
+                                usbState !is ConnectionState.Idle -> usbManager.disconnect()
+                                serialState !is ConnectionState.Idle -> serialManager.disconnect()
+                                else -> manager.disconnect()
+                            }
                         }) {
                             Text(stringResource(R.string.board_disconnect))
                         }
@@ -167,6 +187,33 @@ fun BluetoothBoardScreen(
                     ) {
                         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Usb, null)
+                            Spacer(Modifier.width(16.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(candidate.label, fontWeight = FontWeight.Bold)
+                                Text(candidate.detail, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Text(stringResource(R.string.board_paired_section), style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+
+            if (pairedDevices.isEmpty()) {
+                Text(stringResource(R.string.board_paired_none), style = MaterialTheme.typography.bodyMedium)
+            } else {
+                pairedDevices.forEach { candidate ->
+                    Surface(
+                        onClick = { serialManager.connect(candidate.id) { viewModel.recordBoardMove(it) } },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Bluetooth, null)
                             Spacer(Modifier.width(16.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(candidate.label, fontWeight = FontWeight.Bold)
