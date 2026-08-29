@@ -178,12 +178,16 @@ fun MoreSettingsPage(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(stringResource(R.string.settings_more_game), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    // Shogi is withheld for now rather than removed -- but it stays listed for
+                    // anyone who had already chosen it, who would otherwise be left on a setting
+                    // they can neither see nor leave.
+                    val games = GameType.entries.filter { it.isOfferable(currentSettings.gameType) }
                     SingleChoiceSegmentedButtonRow {
-                        GameType.entries.forEachIndexed { i, gt ->
+                        games.forEachIndexed { i, gt ->
                             SegmentedButton(
                                 selected = currentSettings.gameType == gt,
                                 onClick = { onSettingsChanged(currentSettings.copy(gameType = gt)) },
-                                shape = SegmentedButtonDefaults.itemShape(i, GameType.entries.size),
+                                shape = SegmentedButtonDefaults.itemShape(i, games.size),
                                 label = { Text(gt.label(), style = MaterialTheme.typography.labelSmall) }
                             )
                         }
