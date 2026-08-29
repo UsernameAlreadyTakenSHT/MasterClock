@@ -139,6 +139,15 @@ class BluetoothBoardManager(private val context: Context) {
                 return
             }
 
+            // A service the board exposes is a fact; its advertised name is a guess. So if any make
+            // names a service and this board has it, that make wins over whatever the name suggested.
+            BoardProtocols.forAdvertisedServices(gatt.services.map { it.uuid })?.let { byService ->
+                if (byService !== protocol) {
+                    protocol = byService
+                    assembler = protocol.framing?.let { StreamAssembler(it) }
+                }
+            }
+
             val services = protocol.ble?.serviceUuid
                 ?.let { listOfNotNull(gatt.getService(it)) }
                 ?: gatt.services
@@ -177,9 +186,32 @@ class BluetoothBoardManager(private val context: Context) {
     private fun handlePayload(payload: ByteArray?) {
         val bytes = payload?.take(MAX_CHARACTERISTIC_BYTES)?.toByteArray() ?: return
         val payloads = assembler?.offer(bytes) ?: listOf(bytes)
-        payloads.flatMap { moveTracker.onReport(protocol.decode(it)) }.forEach { move ->
-            _lastMove.value = move
-            _onMoveReceivedCallback?.invoke(move)
+        payloads.forEach { message ->
+            // Answer before acting on it: a board waiting for an acknowledgement sends nothing more
+            // until it arrives, so a slow reply costs the next move, not just this one.
+            protocol.replyTo(message)?.let { writeToBoard(it) }
+            moveTracker.onReport(protocol.decode(message)).forEach { move ->
+                _lastMove.value = move
+                _onMoveReceivedCallback?.invoke(move)
+            }
+        }
+    }
+
+    /** Writes to whichever characteristic the make nominated for it. */
+    private fun writeToBoard(bytes: ByteArray) {
+        if (!hasConnectPermission()) return
+        val gatt = activeGatt ?: return
+        val uuid = protocol.ble?.writeCharacteristicUuid ?: return
+        val characteristic = gatt.services.flatMap { it.characteristics }.firstOrNull { it.uuid == uuid } ?: return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeCharacteristic(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+        } else {
+            @Suppress("DEPRECATION")
+            run {
+                characteristic.value = bytes
+                gatt.writeCharacteristic(characteristic)
+            }
         }
     }
 
@@ -217,20 +249,7 @@ class BluetoothBoardManager(private val context: Context) {
     }
 
     private fun sendInitCommand(gatt: BluetoothGatt) {
-        val command = protocol.initCommand ?: return
-        val uuid = protocol.ble?.writeCharacteristicUuid ?: return
-        if (!hasConnectPermission()) return
-        val characteristic = gatt.services.flatMap { it.characteristics }.firstOrNull { it.uuid == uuid } ?: return
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            gatt.writeCharacteristic(characteristic, command, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-        } else {
-            @Suppress("DEPRECATION")
-            run {
-                characteristic.value = command
-                gatt.writeCharacteristic(characteristic)
-            }
-        }
+        protocol.initCommand?.let { writeToBoard(it) }
     }
 
     fun startScan() {

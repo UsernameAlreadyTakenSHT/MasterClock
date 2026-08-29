@@ -73,6 +73,14 @@ interface BoardProtocol {
      * really does name a move, and for the raw-capture fallback.
      */
     fun decode(payload: ByteArray): BoardReport
+
+    /**
+     * What to write back after receiving [payload], for makes whose protocol expects an answer.
+     *
+     * Null for the four vendor makes, which talk without waiting. The open BLE protocol does wait:
+     * it acknowledges every move, and a board that gets no answer stops sending.
+     */
+    fun replyTo(payload: ByteArray): ByteArray? = null
 }
 
 /** What one payload from a board turned out to be. */
@@ -208,8 +216,20 @@ object BoardProtocols {
      * Every make the app can talk to, most specific first; [RawCaptureProtocol] must stay last
      * because it matches nothing and is only ever chosen explicitly.
      */
-    val known: List<BoardProtocol> =
-        listOf(ChessnutProtocol, DgtProtocol, MillenniumProtocol, CertaboProtocol, RawCaptureProtocol)
+    val known: List<BoardProtocol> = listOf(
+        OpenBoardProtocol, ChessnutProtocol, DgtProtocol, MillenniumProtocol, CertaboProtocol,
+        RawCaptureProtocol,
+    )
+
+    /**
+     * The protocol whose service the connected board actually exposes, if any.
+     *
+     * Checked before names, because a service a board announces is a fact and a name is a guess.
+     * Only the open protocol names one; the vendor makes are found by name because their services
+     * are unknown or unpublished.
+     */
+    fun forAdvertisedServices(services: Collection<java.util.UUID>): BoardProtocol? =
+        known.firstOrNull { it.ble?.serviceUuid != null && it.ble?.serviceUuid in services }
 
     /**
      * The protocol to use for a board advertising [deviceName], or [RawCaptureProtocol] when no
