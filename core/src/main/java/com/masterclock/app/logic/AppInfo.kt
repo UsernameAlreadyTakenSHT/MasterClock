@@ -262,6 +262,11 @@ object AppInfo {
             url = "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
         ),
         CreditEntry(
+            title = "Draughts stones",
+            detail = "Antonsusi, Wikimedia Commons — public domain (too simple a shape to be copyrighted)",
+            url = "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
+        ),
+        CreditEntry(
             title = "Audio — Gong",
             detail = "Zen Gong, Alex_Jauk (Pixabay)",
             url = "https://pixabay.com/sound-effects/film-special-effects-zen-gong-199844/",

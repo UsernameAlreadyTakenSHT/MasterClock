@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.center
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
@@ -1277,43 +1276,19 @@ private fun resizeBoard(squares: List<String>, from: BoardNoteVariant, to: Board
 }
 
 /**
- * A draughts piece, drawn rather than loaded.
+ * One piece on a board, chess or draughts.
  *
- * No draughts artwork ships with the app, and a man is a disc: drawing it costs nothing, needs no
- * asset, and adds no third-party licence to the credits. A dame is the same disc with a ring inside
- * it, which is how a crowned piece is shown when it is not two discs stacked.
+ * Both come from the same Wikimedia set and load the same way; [getPieceSvgPath] is what knows
+ * which file a letter means.
  */
 @Composable
-private fun DraughtsPiece(piece: String, size: Dp, modifier: Modifier = Modifier) {
-    val isWhite = piece.uppercase(Locale.US) == piece
-    val body = if (isWhite) Color(0xFFF5F0E1) else Color(0xFF2B2B2B)
-    val edge = if (isWhite) Color(0xFF8A8577) else Color(0xFF6E6E6E)
-    val isDame = piece.equals("d", ignoreCase = true)
-
-    Canvas(modifier.size(size)) {
-        val radius = this.size.minDimension / 2f * 0.82f
-        val centre = this.size.center
-        drawCircle(color = body, radius = radius, center = centre)
-        drawCircle(color = edge, radius = radius, center = centre, style = Stroke(width = radius * 0.14f))
-        if (isDame) {
-            drawCircle(color = edge, radius = radius * 0.52f, center = centre, style = Stroke(width = radius * 0.12f))
-        }
-    }
-}
-
-/** Draws whichever kind of piece [piece] is: a chess image, or a drawn draughts disc. */
-@Composable
 private fun BoardPiece(piece: String, size: Dp, imageLoader: ImageLoader, modifier: Modifier = Modifier) {
-    if (piece.equals("m", ignoreCase = true) || piece.equals("d", ignoreCase = true)) {
-        DraughtsPiece(piece, size, modifier)
-    } else {
-        AsyncImage(
-            model = getPieceSvgPath(piece),
-            contentDescription = piece,
-            modifier = modifier.size(size),
-            imageLoader = imageLoader,
-        )
-    }
+    AsyncImage(
+        model = getPieceSvgPath(piece),
+        contentDescription = piece,
+        modifier = modifier.size(size),
+        imageLoader = imageLoader,
+    )
 }
 
 /**
@@ -1633,7 +1608,11 @@ fun FullChessBoardDisplay(whitePos: List<String>, blackPos: List<String>) {
 
 fun getPieceSvgPath(p: String): String {
     val type = when(p.lowercase(Locale.US)) {
-        "p" -> "p"; "n" -> "n"; "b" -> "b"; "r" -> "r"; "q" -> "q"; "k" -> "k"; else -> "p"
+        "p" -> "p"; "n" -> "n"; "b" -> "b"; "r" -> "r"; "q" -> "q"; "k" -> "k"
+        // Draughts, from the same Wikimedia set and named the same way: one stone for a man, two
+        // stacked for a dame.
+        "m" -> "1"; "d" -> "2"
+        else -> "p"
     }
     val color = if (p.uppercase(Locale.US) == p) "l" else "d"
     return "file:///android_asset/pieces/Chess_${type}${color}t45.svg"
