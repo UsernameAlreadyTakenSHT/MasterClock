@@ -350,15 +350,20 @@ object AppInfo {
      * A third-party library shipped in the app.
      *
      * Hand-maintained on purpose: Google's play-services-oss-licenses plugin would drag Play
-     * Services into an app distributed on F-Droid. [appOnly] marks libraries the E-Ink build does
-     * not ship, so it does not claim credit for code it does not contain.
+     * Services into an app distributed on F-Droid.
+     *
+     * [completeOnly] marks what only the Complete build ships, so no other build claims credit for
+     * code it does not contain. Which build ships what is settled by R8, not by the dependency
+     * blocks: `paper` declares Coil and `core` declares ZXing, yet neither reaches any APK but
+     * Complete's, because nothing outside `src/complete` calls them. Check this list against the
+     * `mapping.txt` R8 writes per variant, never against `build.gradle.kts`.
      */
     data class OssLicense(
         val name: String,
         val copyright: String,
         val license: String,
         val url: String,
-        val appOnly: Boolean = false,
+        val completeOnly: Boolean = false,
     )
 
     val OSS_LICENSES = listOf(
@@ -385,54 +390,84 @@ object AppInfo {
             copyright = "Coil Contributors",
             license = "Apache License 2.0",
             url = "https://github.com/coil-kt/coil",
+            completeOnly = true,
         ),
         OssLicense(
             name = "Accompanist Drawable Painter",
             copyright = "Google LLC",
             license = "Apache License 2.0",
             url = "https://github.com/google/accompanist",
-        ),
-        OssLicense(
-            name = "AndroidSVG",
-            copyright = "Paul LeBeau",
-            license = "Apache License 2.0",
-            url = "https://github.com/BigBadaboom/androidsvg",
-        ),
-        OssLicense(
-            name = "OkHttp",
-            copyright = "Square, Inc.",
-            license = "Apache License 2.0",
-            url = "https://square.github.io/okhttp/",
-        ),
-        OssLicense(
-            name = "Okio",
-            copyright = "Square, Inc.",
-            license = "Apache License 2.0",
-            url = "https://square.github.io/okio/",
-        ),
-        OssLicense(
-            name = "ZXing Core",
-            copyright = "ZXing Authors",
-            license = "Apache License 2.0",
-            url = "https://github.com/zxing/zxing",
+            completeOnly = true,
         ),
         OssLicense(
             name = "Accompanist Permissions",
             copyright = "Google LLC",
             license = "Apache License 2.0",
             url = "https://github.com/google/accompanist",
-            appOnly = true,
+            completeOnly = true,
+        ),
+        OssLicense(
+            name = "AndroidSVG",
+            copyright = "Paul LeBeau",
+            license = "Apache License 2.0",
+            url = "https://github.com/BigBadaboom/androidsvg",
+            completeOnly = true,
+        ),
+        OssLicense(
+            name = "OkHttp",
+            copyright = "Square, Inc.",
+            license = "Apache License 2.0",
+            url = "https://square.github.io/okhttp/",
+            completeOnly = true,
+        ),
+        OssLicense(
+            name = "Okio",
+            copyright = "Square, Inc.",
+            license = "Apache License 2.0",
+            url = "https://square.github.io/okio/",
+            completeOnly = true,
+        ),
+        OssLicense(
+            name = "ZXing Core",
+            copyright = "ZXing Authors",
+            license = "Apache License 2.0",
+            url = "https://github.com/zxing/zxing",
+            completeOnly = true,
         ),
         OssLicense(
             name = "ZXing Android Embedded",
             copyright = "JourneyApps",
             license = "Apache License 2.0",
             url = "https://github.com/journeyapps/zxing-android-embedded",
-            appOnly = true,
+            completeOnly = true,
+        ),
+        // Reached only through CameraX, which the QR scanner and the notebook's photo notes pull
+        // in. A handful of classes each -- ListenableFuture, Dagger's lazy-init helpers and the
+        // Provider interface they implement -- but shipped all the same, so credited all the same.
+        OssLicense(
+            name = "Guava",
+            copyright = "The Guava Authors",
+            license = "Apache License 2.0",
+            url = "https://github.com/google/guava",
+            completeOnly = true,
+        ),
+        OssLicense(
+            name = "Dagger",
+            copyright = "Google LLC",
+            license = "Apache License 2.0",
+            url = "https://github.com/google/dagger",
+            completeOnly = true,
+        ),
+        OssLicense(
+            name = "javax.inject (JSR-330)",
+            copyright = "The JSR-330 Expert Group",
+            license = "Apache License 2.0",
+            url = "https://github.com/javax-inject/javax-inject",
+            completeOnly = true,
         ),
     )
 
     /** The libraries actually shipped by the running build. */
     fun ossLicenses(): List<OssLicense> =
-        OSS_LICENSES.filter { !it.appOnly || !FlavorConfig.isEInk() }
+        OSS_LICENSES.filter { !it.completeOnly || FlavorConfig.currentFlavor == AppFlavor.COMPLETE }
 }
