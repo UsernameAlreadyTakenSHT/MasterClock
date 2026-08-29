@@ -1010,6 +1010,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val soundManager = SoundManager(application)
     private val voiceManager = VoiceManager(application)
     val bluetoothManager = BluetoothBoardManager(application)
+    val usbBoardManager = UsbBoardManager(application)
     private var lastBeepSecond: Long = -1
     private var lastAutoSaveTime: Long = 0
     
@@ -1517,6 +1518,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         soundManager.release()
         voiceManager.release()
         bluetoothManager.disconnect()
+        // release(), not disconnect(): the USB manager also holds a registered broadcast receiver.
+        usbBoardManager.release()
     }
 
     private fun applyPostMoveLogic(playerIndex: Int, timeSpentOnMove: Long) {

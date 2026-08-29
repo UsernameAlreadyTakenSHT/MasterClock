@@ -25,5 +25,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
 
     <uses-feature android:name="android.hardware.camera" tools:node="remove" />
+    <uses-feature android:name="android.hardware.usb.host" tools:node="remove" />
 
 </manifest>

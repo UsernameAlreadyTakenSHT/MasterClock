@@ -24,8 +24,22 @@ class BoardProtocolTest {
     fun `raw capture accepts any service and any notifying characteristic`() {
         // Both null is what makes the manager subscribe to everything that notifies, which is the
         // whole point of the fallback: it is how an unknown board gets reverse-engineered.
-        assertNull(RawCaptureProtocol.serviceUuid)
-        assertNull(RawCaptureProtocol.notifyCharacteristicUuid)
+        assertNull(RawCaptureProtocol.ble?.serviceUuid)
+        assertNull(RawCaptureProtocol.ble?.notifyCharacteristicUuid)
+    }
+
+    @Test
+    fun `an unknown USB board falls back to raw capture too`() {
+        assertSame(RawCaptureProtocol, BoardProtocols.forUsbIds(vendorId = 0x1234, productId = 0x5678))
+    }
+
+    @Test
+    fun `decoding is the same whichever transport delivered the bytes`() {
+        // The point of keeping decode() out of both transports: one make, one decoder, whether the
+        // frame arrived on a GATT notification or a serial endpoint.
+        val frame = byteArrayOf(0x0A, 0x1B.toByte(), 0x2C)
+        assertEquals(RawCaptureProtocol.decode(frame), RawCaptureProtocol.decode(frame.copyOf()))
+        assertEquals(listOf("0a 1b 2c"), RawCaptureProtocol.decode(frame))
     }
 
     @Test
@@ -56,8 +70,7 @@ class BoardProtocolTest {
         // forDeviceName never reaches it.
         val fake = object : BoardProtocol {
             override val name = "Fake"
-            override val serviceUuid: UUID? = null
-            override val notifyCharacteristicUuid: UUID? = null
+            override val ble = BleAddressing(serviceUuid = UUID.randomUUID(), notifyCharacteristicUuid = UUID.randomUUID())
             override fun matchesDeviceName(deviceName: String?) = deviceName?.startsWith("FAKE") == true
             override fun decode(payload: ByteArray) = listOf("e2e4")
         }
