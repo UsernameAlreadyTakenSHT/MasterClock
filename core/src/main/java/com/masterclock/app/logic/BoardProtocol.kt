@@ -204,8 +204,14 @@ object BoardProtocols {
             ?: RawCaptureProtocol
 }
 
-/** Which way a board is attached. The pairing and decoding above are the same for both. */
-enum class BoardTransportKind { BLUETOOTH, USB }
+/**
+ * Which way a board is attached. The pairing and decoding above are the same for all of them.
+ *
+ * [BLUETOOTH_SERIAL] is not a variant of [BLUETOOTH]: a Bluetooth Classic board offers a serial
+ * port over RFCOMM and has no GATT services at all, so nothing about reaching it is shared with a
+ * BLE peripheral. DGT's e-Boards are the reason it exists.
+ */
+enum class BoardTransportKind { BLUETOOTH, BLUETOOTH_SERIAL, USB }
 
 /**
  * A board the user could connect to, named the same way whichever transport found it, so the
