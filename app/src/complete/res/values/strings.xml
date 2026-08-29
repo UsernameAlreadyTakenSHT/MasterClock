@@ -180,6 +180,8 @@
     <string name="tools_roll_dice">Roll the dice</string>
     <string name="tools_score">Score: %d</string>
     <string name="tools_select_piece">Select Piece</string>
+    <string name="tools_board_eraser_hint">No piece selected — tap a square to clear it</string>
+    <string name="tools_board_deselect">Deselect the piece</string>
     <string name="tools_select_text_color">Select Text Color</string>
     <string name="tools_share_log">Share Log</string>
     <string name="tools_short_straw">Short Straw</string>
