@@ -57,6 +57,15 @@ interface BoardProtocol {
     val usbBaudRate: Int get() = 9600
 
     /**
+     * How to find message boundaries, for makes reached over a byte stream.
+     *
+     * Null means the transport already delivers whole messages, which is true of BLE notifications
+     * and HID reports -- Chessnut needs nothing here. A serial line does not: a 67-byte board dump
+     * at 9600 baud arrives in several reads, and two short messages can arrive in one.
+     */
+    val framing: StreamFraming? get() = null
+
+    /**
      * Turn one payload into what it says about the board.
      *
      * Nearly every make reports a position rather than a move -- see [BoardReport.Position], which
@@ -179,7 +188,7 @@ object BoardProtocols {
      * Every make the app can talk to, most specific first; [RawCaptureProtocol] must stay last
      * because it matches nothing and is only ever chosen explicitly.
      */
-    val known: List<BoardProtocol> = listOf(ChessnutProtocol, RawCaptureProtocol)
+    val known: List<BoardProtocol> = listOf(ChessnutProtocol, DgtProtocol, RawCaptureProtocol)
 
     /**
      * The protocol to use for a board advertising [deviceName], or [RawCaptureProtocol] when no
