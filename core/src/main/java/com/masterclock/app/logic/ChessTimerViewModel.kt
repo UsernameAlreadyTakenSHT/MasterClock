@@ -292,7 +292,29 @@ data class PlayerSettings(
 enum class FastMoveType { ACCELERATE, SHRINK, TRANSFER }
 
 @Serializable
-enum class GameType { CHESS, DRAUGHTS, SHOGI }
+enum class GameType {
+    CHESS,
+    DRAUGHTS,
+
+    /**
+     * Hidden from the game picker for now; see [GameType.isOfferable].
+     *
+     * Nothing about shogi is removed -- the KIF export, the rules document and the spoken labels
+     * all stay, so a game already recorded as shogi still opens and still exports. It is only
+     * withdrawn from the choices offered, because the electronic-board work that surrounds that
+     * picker has no shogi to offer: no manufacturer makes a shogi board, and no protocol here
+     * speaks one.
+     */
+    SHOGI;
+
+    /**
+     * Whether this game can be picked.
+     *
+     * A game already set stays offered even when withdrawn, or anyone who had chosen it would be
+     * unable to see what they had chosen, let alone change it.
+     */
+    fun isOfferable(current: GameType): Boolean = this != SHOGI || current == SHOGI
+}
 
 @Serializable
 enum class ClockOrientation { VERTICAL, HORIZONTAL_LEFT, HORIZONTAL_RIGHT }
