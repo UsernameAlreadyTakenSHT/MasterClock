@@ -1213,9 +1213,24 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBa
     }
 }
 
+/** How many board states the editor can step back through. Far more than anyone undoes in a row. */
+private const val MAX_BOARD_HISTORY = 50
+
 @Composable
 fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     var title by remember { mutableStateOf(note.title) }; var board by remember { mutableStateOf(note.boardPosition) }; var selectedPiece by remember { mutableStateOf<String?>(null) }; val piecesList = listOf("K", "Q", "R", "B", "N", "P", "k", "q", "r", "b", "n", "p")
+
+    // Previous board states, oldest first, so a misplaced piece costs one tap rather than a hunt
+    // for where it used to be. Capped because setting up a position is a long series of small
+    // edits and the whole history would otherwise sit in memory for as long as the note is open.
+    var history by remember { mutableStateOf(listOf<List<String>>()) }
+    val editBoard: (List<String>) -> Unit = { next ->
+        if (next != board) {
+            history = (history + listOf(board)).takeLast(MAX_BOARD_HISTORY)
+            board = next
+        }
+    }
+
     val context = LocalContext.current
     val imageLoader = remember {
         ImageLoader.Builder(context)
@@ -1224,7 +1239,21 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     }
     
     LaunchedEffect(title, board) { onUpdate(note.copy(title = title, boardPosition = board)) }
-    ToolScaffold(title = stringResource(R.string.tools_edit_board), onBack = onBack, actions = { IconButton(onClick = { board = List(64) { "" } }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.tools_clear_board)) } }) { padding ->
+    ToolScaffold(
+        title = stringResource(R.string.tools_edit_board),
+        onBack = onBack,
+        actions = {
+            IconButton(
+                onClick = { history.lastOrNull()?.let { board = it; history = history.dropLast(1) } },
+                enabled = history.isNotEmpty(),
+            ) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }
+            // Clearing goes through the history too: emptying a board by accident is the one
+            // mistake here that costs the most to make good by hand.
+            IconButton(onClick = { editBoard(List(64) { "" }) }) {
+                Icon(Icons.Default.DeleteSweep, stringResource(R.string.tools_clear_board))
+            }
+        },
+    ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
@@ -1239,9 +1268,7 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                                         .size(40.dp)
                                         .background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2))
                                         .clickable {
-                                            val newBoard = board.toMutableList()
-                                            newBoard[index] = selectedPiece ?: ""
-                                            board = newBoard
+                                            editBoard(board.toMutableList().also { it[index] = selectedPiece ?: "" })
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
