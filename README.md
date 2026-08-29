@@ -45,6 +45,13 @@ ten lines in your language and the rest stay English. See **[TRANSLATING.md](TRA
 On Android 13 and later the language can be picked per app, under
 Settings › Apps › MasterClock › Language.
 
+## Privacy
+
+MasterClock collects nothing: no analytics, no ads, no trackers, and no network access at all.
+Settings, game logs and notebook entries stay on the device. The
+[privacy policy](https://usernamealreadytakensht.github.io/masterclock-website/) says what each
+runtime permission is for and when it is asked for.
+
 ## Verifying a release
 
 Releases ship a `SHA256SUMS.txt` beside the APKs, and tags from v0.8.24 on are GPG-signed with the
