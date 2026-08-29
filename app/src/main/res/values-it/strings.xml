@@ -432,7 +432,7 @@
     <string name="settings_more_knight">Percorso del cavallo</string>
     <string name="settings_more_name_square">Nomina la casa</string>
     <string name="settings_more_board">Connessione alla scacchiera</string>
-    <string name="settings_more_link_board">Collega una scacchiera (non ancora disponibile)</string>
+    <string name="settings_more_link_board">Collega una scacchiera (non ancora testata)</string>
     <string name="settings_more_auto_switch">Cambia turno automaticamente</string>
     <string name="settings_more_game">Partita</string>
     <string name="settings_more_game_data">Dati di gioco</string>

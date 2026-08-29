@@ -1,3 +1,16 @@
+## v0.8.26 — 2026-08-29
+
+### Added
+- **Link board now does something — but nothing here has ever met a real board.** Every part of it is written and tested against recorded frames; not one byte has been exchanged with a physical device, because there is none to test with. Treat it as an experiment, and please report what happens, whichever way it goes. It is the only way this gets better.
+- Five protocols are understood: the open BLE board protocol used by Lichess-compatible and home-built boards, Chessnut, DGT, Millennium ChessLink and Certabo.
+- Three ways to connect: Bluetooth LE, USB cable, and Bluetooth Classic for the older DGT e-Boards, which present themselves as a serial port rather than as a BLE device.
+- Moves read from a board are recorded with the game and reach the PGN export, and "Auto switch turn on move" presses the clock for you. With it off, the board still names the move your own press records.
+- Draughts is covered by the open protocol, which carries moves as text and never interprets them — including the ten-by-ten international game. No manufacturer sells an electronic draughts board any more, so a home-built one is the only route.
+- A Certabo learns its pieces from the starting position, the way its own software does: the chips are stuck under the pieces by whoever owns the set, so no table can be shipped.
+
+### Fixed
+- The Link board screen previously connected and then sat in silence forever: no notification was ever subscribed to, so nothing a board said could arrive.
+
 ## v0.8.25 — 2026-08-29
 
 ### Added

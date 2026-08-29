@@ -1,0 +1,1 @@
+Nothing changes in this build. This release adds support for connected chessboards, which only the Complete build can reach.

@@ -69,7 +69,7 @@
     <string name="settings_more_help">Ajuda e suporte</string>
     <string name="settings_more_straw">Canudo curto</string>
     <string name="settings_more_board">Conexão com o tabuleiro</string>
-    <string name="settings_more_link_board">Conectar um tabuleiro (ainda não disponível)</string>
+    <string name="settings_more_link_board">Conectar um tabuleiro (ainda não testado)</string>
     <string name="settings_more_logs">Registros e histórico de partidas</string>
     <string name="settings_more_limit_age">Limitar o histórico por idade</string>
     <string name="settings_more_data_sharing">Dados e compartilhamento</string>

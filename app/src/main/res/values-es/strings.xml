@@ -441,7 +441,7 @@
     <string name="settings_more_knight">Recorrido del caballo</string>
     <string name="settings_more_name_square">Nombrar la casilla</string>
     <string name="settings_more_board">Conexión con el tablero</string>
-    <string name="settings_more_link_board">Vincular un tablero (aún no disponible)</string>
+    <string name="settings_more_link_board">Vincular un tablero (aún sin probar)</string>
     <string name="settings_more_auto_switch">Cambiar de turno automáticamente</string>
     <string name="settings_more_game">Partida</string>
     <string name="settings_more_game_data">Datos de juego</string>

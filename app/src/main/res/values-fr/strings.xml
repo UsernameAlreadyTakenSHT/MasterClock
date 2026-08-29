@@ -449,7 +449,7 @@
     <string name="settings_more_knight">Parcours du cavalier</string>
     <string name="settings_more_name_square">Nommer la case</string>
     <string name="settings_more_board">Connexion à l\'échiquier</string>
-    <string name="settings_more_link_board">Relier un échiquier (pas encore disponible)</string>
+    <string name="settings_more_link_board">Relier un échiquier (pas encore testé)</string>
     <string name="settings_more_auto_switch">Changer de tour automatiquement</string>
     <string name="settings_more_game">Partie</string>
     <string name="settings_more_game_data">Données de jeu</string>
