@@ -1216,6 +1216,25 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBa
 /** How many board states the editor can step back through. Far more than anyone undoes in a row. */
 private const val MAX_BOARD_HISTORY = 50
 
+/**
+ * One piece in the palette below the board.
+ *
+ * Tapping the piece already held puts it down, which is the only way back to the mode where a tap
+ * on a square clears it.
+ */
+@Composable
+private fun PieceChoice(piece: String, selected: Boolean, imageLoader: ImageLoader, onClick: () -> Unit) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.background(
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent,
+            CircleShape,
+        ),
+    ) {
+        AsyncImage(model = getPieceSvgPath(piece), contentDescription = piece, modifier = Modifier.size(32.dp), imageLoader = imageLoader)
+    }
+}
+
 @Composable
 fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     var title by remember { mutableStateOf(note.title) }; var board by remember { mutableStateOf(note.boardPosition) }; var selectedPiece by remember { mutableStateOf<String?>(null) }; val piecesList = listOf("K", "Q", "R", "B", "N", "P", "k", "q", "r", "b", "n", "p")
@@ -1287,27 +1306,37 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                     }
                 }
             }
-            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // Tapping the tray anywhere but on a piece puts the palette down. The piece
+                    // buttons consume their own taps, so this only fires on the space around them.
+                    // Without indication: a ripple across the whole tray would read as a control.
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClickLabel = stringResource(R.string.tools_board_deselect),
+                    ) { selectedPiece = null },
+            ) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.tools_select_piece), style = MaterialTheme.typography.labelMedium)
+                    // The label doubles as the only sign of which mode the board is in: with no
+                    // piece held, a tap on a square clears it, and nothing else would say so.
+                    Text(
+                        stringResource(
+                            if (selectedPiece == null) R.string.tools_board_eraser_hint else R.string.tools_select_piece
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
                     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                         piecesList.subList(0, 6).forEach { p ->
-                            IconButton(
-                                onClick = { selectedPiece = p },
-                                modifier = Modifier.background(if (selectedPiece == p) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent, CircleShape)
-                            ) {
-                                AsyncImage(model = getPieceSvgPath(p), contentDescription = p, modifier = Modifier.size(32.dp), imageLoader = imageLoader)
-                            }
+                            PieceChoice(p, selectedPiece == p, imageLoader) { selectedPiece = if (selectedPiece == p) null else p }
                         }
                     }
                     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                         piecesList.subList(6, 12).forEach { p ->
-                            IconButton(
-                                onClick = { selectedPiece = p },
-                                modifier = Modifier.background(if (selectedPiece == p) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent, CircleShape)
-                            ) {
-                                AsyncImage(model = getPieceSvgPath(p), contentDescription = p, modifier = Modifier.size(32.dp), imageLoader = imageLoader)
-                            }
+                            PieceChoice(p, selectedPiece == p, imageLoader) { selectedPiece = if (selectedPiece == p) null else p }
                         }
                     }
                 }
