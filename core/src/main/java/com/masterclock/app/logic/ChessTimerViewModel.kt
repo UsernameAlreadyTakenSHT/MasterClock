@@ -596,6 +596,39 @@ data class GameEvent(
     val timeSpentMs: Long? = null
 )
 
+/**
+ * What a move reported by a linked board should do to the clock.
+ *
+ * The board supplies notation and the clock supplies timing, and the two do not necessarily arrive
+ * together: with [ChessClockSettings.autoSwitchOnBoardMove] off, the player still presses the clock
+ * themselves, some moments after lifting the piece. Whichever arrives second completes the pair, so
+ * a notation that cannot be used immediately is held rather than dropped -- otherwise every MOVE
+ * event records `null` and an exported PGN is a column of "???".
+ */
+sealed interface BoardMoveOutcome {
+    /** Press the clock now, stamping the MOVE event with [notation]. */
+    data class SwitchNow(val notation: String) : BoardMoveOutcome
+
+    /** Keep [notation] until the player presses the clock, and stamp that MOVE with it. */
+    data class HoldForNextPress(val notation: String) : BoardMoveOutcome
+
+    /** No clock is running, so there is no move to attach this to. Record it and move on. */
+    data class NoGameRunning(val notation: String) : BoardMoveOutcome
+}
+
+fun boardMoveOutcome(
+    notation: String,
+    activePlayer: Int?,
+    isPaused: Boolean,
+    autoSwitchOnBoardMove: Boolean,
+): BoardMoveOutcome = when {
+    activePlayer == null -> BoardMoveOutcome.NoGameRunning(notation)
+    // A paused clock must not be resumed by the board: pausing is deliberate, and a piece knocked
+    // over while the players are away would otherwise restart the game behind their backs.
+    autoSwitchOnBoardMove && !isPaused -> BoardMoveOutcome.SwitchNow(notation)
+    else -> BoardMoveOutcome.HoldForNextPress(notation)
+}
+
 @Serializable
 data class GameLog(
     val id: String = java.util.UUID.randomUUID().toString(),
@@ -1016,9 +1049,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var timerJob: Job? = null
     private var lastTickTime: Long = 0
     private var moveStartTime: Long = 0
+
+    /**
+     * Notation reported by a linked board that no MOVE event has claimed yet. See
+     * [BoardMoveOutcome]; the next clock press consumes it. Only ever holds the most recent one --
+     * if the board reports twice before the player presses, the first is stale.
+     */
+    private var pendingBoardNotation: String? = null
     private val soundManager = SoundManager(application)
     private val voiceManager = VoiceManager(application)
     val bluetoothManager = BluetoothBoardManager(application)
+    val usbBoardManager = UsbBoardManager(application)
+    val bluetoothSerialBoardManager = BluetoothSerialBoardManager(application)
     private var lastBeepSecond: Long = -1
     private var lastAutoSaveTime: Long = 0
     
@@ -1269,7 +1311,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         } else {
             val p = currentState.players.getOrNull(playerIndex - 1) ?: return
             val timeSpentOnMove = System.currentTimeMillis() - moveStartTime
-            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.timeRemainingMs, moveCount = p.moveCount + 1, moveNotation = boardNotation, timeSpentMs = timeSpentOnMove))
+            // A press with no notation of its own claims whatever the board reported since the last
+            // move, which is how the notation reaches the PGN when auto-switch is off.
+            val notation = boardNotation ?: pendingBoardNotation
+            pendingBoardNotation = null
+            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.timeRemainingMs, moveCount = p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
             applyPostMoveLogic(playerIndex, timeSpentOnMove)
             moveStartTime = System.currentTimeMillis(); startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
@@ -1522,6 +1568,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         soundManager.release()
         voiceManager.release()
         bluetoothManager.disconnect()
+        // release(), not disconnect(): the USB manager also holds a registered broadcast receiver,
+        // and both it and the serial one own a coroutine scope.
+        usbBoardManager.release()
+        bluetoothSerialBoardManager.release()
     }
 
     private fun applyPostMoveLogic(playerIndex: Int, timeSpentOnMove: Long) {
@@ -1553,9 +1603,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll) || mode == TimerMode.PHASES) { startClock(active); return }
         if (_uiState.value.players.none { it.isOutOfTime }) startClock(active)
     }
-    fun reset() { 
+    fun reset() {
         timerJob?.cancel()
         timerJob = null
+        // Anything the board reported but no press claimed belongs to the game being ended, not to
+        // the next one.
+        pendingBoardNotation = null
         currentLog?.let { log ->
             addEvent(GameEvent(eventType = "RESET"))
             viewModelScope.launch {
@@ -1800,22 +1853,32 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun recordBoardMove(notation: String) {
         val currentState = _uiState.value
         val active = currentState.activePlayer
-        if (active != null) {
-            val p = currentState.players[active - 1]
-            addEvent(GameEvent(
-                eventType = "BOARD_MOVE",
-                playerIndex = active,
-                timeRemainingMs = p.timeRemainingMs,
-                moveCount = p.moveCount,
-                moveNotation = notation,
-                detail = "Move from board: $notation"
-            ))
-            
-            if (settings.value.autoSwitchOnBoardMove && !currentState.isPaused) {
-                startOrSwitch(active, boardNotation = notation)
+        val outcome = boardMoveOutcome(
+            notation = notation,
+            activePlayer = active,
+            isPaused = currentState.isPaused,
+            autoSwitchOnBoardMove = settings.value.autoSwitchOnBoardMove,
+        )
+        when (outcome) {
+            // The MOVE event this raises carries the notation, so a separate BOARD_MOVE alongside it
+            // would be the same move logged twice.
+            is BoardMoveOutcome.SwitchNow -> startOrSwitch(active!!, boardNotation = outcome.notation)
+
+            is BoardMoveOutcome.HoldForNextPress -> {
+                pendingBoardNotation = outcome.notation
+                val p = currentState.players[active!! - 1]
+                addEvent(GameEvent(
+                    eventType = "BOARD_MOVE",
+                    playerIndex = active,
+                    timeRemainingMs = p.timeRemainingMs,
+                    moveCount = p.moveCount,
+                    moveNotation = outcome.notation,
+                    detail = "Move from board: ${outcome.notation}",
+                ))
             }
-        } else {
-            addEvent(GameEvent(eventType = "BOARD_DATA", detail = "Data while paused: $notation"))
+
+            is BoardMoveOutcome.NoGameRunning ->
+                addEvent(GameEvent(eventType = "BOARD_DATA", detail = "Data with no clock running: ${outcome.notation}"))
         }
     }
 
