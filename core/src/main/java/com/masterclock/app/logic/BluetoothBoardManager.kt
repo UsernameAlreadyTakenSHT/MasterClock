@@ -53,6 +53,15 @@ class BluetoothBoardManager(private val context: Context) {
     private val moveTracker = BoardMoveTracker()
 
     /**
+     * Reassembles messages for makes that need it, even here.
+     *
+     * A notification is usually a whole message, which is why Chessnut needs nothing. But a default
+     * BLE payload is 20 bytes, and a ChessLink board reply is 67 -- so on that make a reply arrives
+     * in three notifications and decoding them one at a time yields three malformed frames.
+     */
+    private var assembler: StreamAssembler? = null
+
+    /**
      * Characteristics still waiting to have notifications turned on.
      *
      * They have to be done one at a time: Android allows a single outstanding GATT operation, and a
@@ -167,7 +176,8 @@ class BluetoothBoardManager(private val context: Context) {
 
     private fun handlePayload(payload: ByteArray?) {
         val bytes = payload?.take(MAX_CHARACTERISTIC_BYTES)?.toByteArray() ?: return
-        moveTracker.onReport(protocol.decode(bytes)).forEach { move ->
+        val payloads = assembler?.offer(bytes) ?: listOf(bytes)
+        payloads.flatMap { moveTracker.onReport(protocol.decode(it)) }.forEach { move ->
             _lastMove.value = move
             _onMoveReceivedCallback?.invoke(move)
         }
@@ -260,6 +270,7 @@ class BluetoothBoardManager(private val context: Context) {
         // Nothing implements a real make yet, so this resolves to raw capture for every board. Once
         // one does, the same call picks it up with no change here.
         protocol = BoardProtocols.forDeviceName(device.name)
+        assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
         pendingNotifySubscriptions.clear()
 

@@ -1,5 +1,7 @@
 package com.masterclock.app.logic
 
+import java.util.UUID
+
 /**
  * Millennium's ChessLink boards -- the Exclusive, the King Performance, the eONE.
  *
@@ -15,11 +17,22 @@ object MillenniumProtocol : BoardProtocol {
     override val name = "Millennium ChessLink"
 
     /**
-     * ChessLink is reached as a serial line over USB, and over BLE on the boards that have it. The
-     * BLE service is not published anywhere this could honestly take it from, so only the cable is
-     * claimed.
+     * Over BLE, a ChessLink is a serial line in disguise.
+     *
+     * These are Microchip's transparent UART characteristics -- the same pair any board built on
+     * that module exposes -- so the ASCII protocol below runs over them unchanged. No service is
+     * named because the reference implementation does not filter on one either; it walks every
+     * service looking for these two.
+     *
+     * A consequence that matters: a 67-square reply is far longer than the 20 bytes a default BLE
+     * notification carries, so it arrives in pieces. This is the one make where [framing] is needed
+     * over Bluetooth and not only over the cable.
      */
-    override val ble = null
+    override val ble = BleAddressing(
+        serviceUuid = null,
+        notifyCharacteristicUuid = UUID.fromString("49535343-1E4D-4BD9-BA61-23C647249616"),
+        writeCharacteristicUuid = UUID.fromString("49535343-8841-43F4-A8D4-ECBE34729BB3"),
+    )
 
     /** Ask for the current position. The board reports changes unprompted afterwards. */
     override val initCommand = command("S")
