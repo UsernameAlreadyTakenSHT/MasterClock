@@ -188,7 +188,8 @@ object BoardProtocols {
      * Every make the app can talk to, most specific first; [RawCaptureProtocol] must stay last
      * because it matches nothing and is only ever chosen explicitly.
      */
-    val known: List<BoardProtocol> = listOf(ChessnutProtocol, DgtProtocol, RawCaptureProtocol)
+    val known: List<BoardProtocol> =
+        listOf(ChessnutProtocol, DgtProtocol, MillenniumProtocol, RawCaptureProtocol)
 
     /**
      * The protocol to use for a board advertising [deviceName], or [RawCaptureProtocol] when no
