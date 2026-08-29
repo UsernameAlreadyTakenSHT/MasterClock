@@ -23,6 +23,14 @@ value class BoardPosition(val squares: String) {
         const val SQUARE_COUNT = 64
         const val EMPTY = '.'
 
+        /**
+         * A square that holds something the board cannot identify.
+         *
+         * Occupied, so it takes part in working out a move; not a piece, so no promotion is ever
+         * read out of it. Boards with occupancy-only sensors report whole positions this way.
+         */
+        const val UNKNOWN_PIECE = '?'
+
         val STARTING = BoardPosition(
             "rnbqkbnr" +
                 "pppppppp" +
@@ -35,6 +43,42 @@ value class BoardPosition(val squares: String) {
         )
 
         val EMPTY_BOARD = BoardPosition(EMPTY.toString().repeat(SQUARE_COUNT))
+
+        /**
+         * Reads the placement field of a FEN -- the part before the first space.
+         *
+         * Returns null for anything that is not an eight-by-eight chess position, which is how a
+         * draughts board's own state notation is turned away rather than mangled into 64 squares.
+         */
+        fun fromFenPlacement(fen: String): BoardPosition? {
+            val ranks = fen.trim().substringBefore(' ').split('/')
+            if (ranks.size != 8) return null
+
+            val squares = StringBuilder(SQUARE_COUNT)
+            for (rank in ranks) {
+                var filled = 0
+                for (c in rank) {
+                    when {
+                        c.isDigit() -> {
+                            val gap = c - '0'
+                            if (gap == 0) return null
+                            repeat(gap) { squares.append(EMPTY) }
+                            filled += gap
+                        }
+                        // Chess pieces; draughts men and dames (m/M, d/D), which the open protocol
+                        // adds and which 8x8 draughts variants use; and the three ways a board says
+                        // it can feel a piece but cannot tell which one it is.
+                        c.lowercaseChar() in "pnbrqkmdu" || c == UNKNOWN_PIECE -> {
+                            squares.append(c)
+                            filled++
+                        }
+                        else -> return null
+                    }
+                }
+                if (filled != 8) return null
+            }
+            return BoardPosition(squares.toString())
+        }
 
         /** "a8" for 0, "h1" for 63. */
         fun squareName(index: Int): String {
