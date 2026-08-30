@@ -131,6 +131,19 @@ class BluetoothBoardManager(private val context: Context) {
                 _connectionState.value = ConnectionState.Connected(gatt.device.name ?: "Unknown Board")
                 gatt.discoverServices()
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                // Android hands out a fixed number of GATT clients and only close() gives one back.
+                // A board that goes out of range or is switched off arrives here, and without this
+                // the client is kept forever: a handful of those and no further connection succeeds
+                // at all, in this app or any other, until it is restarted.
+                //
+                // Only when we did not close it ourselves. disconnect() clears activeGatt after
+                // closing, so this comparison is what tells an unsolicited drop from a deliberate
+                // one and keeps the object from being closed twice.
+                if (activeGatt === gatt) {
+                    if (hasConnectPermission()) gatt.close()
+                    activeGatt = null
+                    pendingNotifySubscriptions.clear()
+                }
                 _connectionState.value = ConnectionState.Idle
             }
         }
