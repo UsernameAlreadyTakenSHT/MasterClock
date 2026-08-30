@@ -15,6 +15,8 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +38,9 @@ data class ScannedDevice(
 
 /** Client Characteristic Configuration, the descriptor every notification is switched on through. */
 private val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+
+/** How long a scan runs before stopping itself. Boards in range answer in seconds. */
+private const val SCAN_TIMEOUT_MS = 30_000L
 
 /** Either flavour of server-pushed update; indication is the acknowledged one, and both are fine here. */
 private const val NOTIFY_OR_INDICATE =
@@ -95,6 +100,14 @@ class BluetoothBoardManager(private val context: Context) {
 
     /** Whether an operation has been issued and not yet called back. */
     private var operationInFlight = false
+
+    /**
+     * Callbacks arrive on the main executor, so everything scheduled here runs on the same thread
+     * the queue and the scan state are touched from. No locking needed, and none would help.
+     */
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val scanTimeout = Runnable { stopScan() }
 
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val adapter: BluetoothAdapter? = bluetoothManager.adapter
@@ -326,9 +339,15 @@ class BluetoothBoardManager(private val context: Context) {
         _scannedDevices.value = emptyList()
         _connectionState.value = ConnectionState.Scanning
         adapter.bluetoothLeScanner?.startScan(scanCallback)
+        // A BLE scan does not stop by itself, and one left running keeps the radio busy and drains
+        // the battery for as long as the app is open. Boards in range announce themselves within a
+        // few seconds; half a minute is generous, and the button offers another go.
+        mainHandler.removeCallbacks(scanTimeout)
+        mainHandler.postDelayed(scanTimeout, SCAN_TIMEOUT_MS)
     }
 
     fun stopScan() {
+        mainHandler.removeCallbacks(scanTimeout)
         if (!hasScanPermission()) return
         adapter?.bluetoothLeScanner?.stopScan(scanCallback)
         if (_connectionState.value is ConnectionState.Scanning) {
