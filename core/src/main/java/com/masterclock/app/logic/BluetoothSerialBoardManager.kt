@@ -107,12 +107,16 @@ class BluetoothSerialBoardManager(private val context: Context) {
             return
         }
 
+        // Closing the old socket is what actually stops the old loop: cancelling its job cannot
+        // interrupt a thread parked in a blocking read, but closing the stream underneath it makes
+        // that read throw, which is the exit it is written to take.
+        disconnect()
+
         protocol = BoardProtocols.forDeviceName(device.name)
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
         _connectionState.value = ConnectionState.Connecting
 
-        readJob?.cancel()
         readJob = scope.launch { openAndRead(device, onMoveReceived) }
     }
 

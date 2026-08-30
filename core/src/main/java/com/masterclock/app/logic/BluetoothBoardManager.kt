@@ -300,6 +300,9 @@ class BluetoothBoardManager(private val context: Context) {
             _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
             return
         }
+        // Tapping a second board without leaving the first used to overwrite activeGatt and lose
+        // the old client for good. Nothing here is a no-op when there is nothing to close.
+        disconnect()
         stopScan()
         _connectionState.value = ConnectionState.Connecting
         _onMoveReceivedCallback = onMoveReceived

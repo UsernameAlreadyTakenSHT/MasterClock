@@ -126,6 +126,10 @@ class UsbBoardManager(private val context: Context) {
             return
         }
 
+        // Connecting again used to overwrite the open connection without releasing the interface or
+        // closing it, leaving the device claimed and unusable until the app was killed.
+        disconnect()
+
         this.onMoveReceived = onMoveReceived
         protocol = BoardProtocols.forUsbIds(device.vendorId, device.productId)
         assembler = protocol.framing?.let { StreamAssembler(it) }
