@@ -1,6 +1,7 @@
 package com.masterclock.app.logic
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.masterclock.app.data.SettingsRepository
@@ -324,6 +325,8 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     val omniState: StateFlow<OmniState> = _omniState.asStateFlow()
 
     private var timerJob: Job? = null
+
+    /** [SystemClock.elapsedRealtime]; see the note on the same field in [ChessTimerViewModel]. */
     private var lastTickTime: Long = 0
 
     init {
@@ -379,7 +382,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         if (timerJob == null) {
-            lastTickTime = System.currentTimeMillis()
+            lastTickTime = SystemClock.elapsedRealtime()
             timerJob = viewModelScope.launch {
                 while (isActive) {
                     val state = _omniState.value
@@ -389,7 +392,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                     val delayMs = if (needsFastTick) 10L else 100L
 
                     delay(delayMs.milliseconds)
-                    val now = System.currentTimeMillis()
+                    val now = SystemClock.elapsedRealtime()
                     tickOmni(now - lastTickTime)
                     lastTickTime = now
                 }
