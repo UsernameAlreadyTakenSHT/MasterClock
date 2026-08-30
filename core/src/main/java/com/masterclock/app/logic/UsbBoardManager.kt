@@ -87,6 +87,17 @@ class UsbBoardManager(private val context: Context) {
     private var connection: UsbDeviceConnection? = null
     private var claimedInterface: UsbInterface? = null
     private var readJob: Job? = null
+
+    /**
+     * Counts connections, so a departing read loop can tell it is no longer the current one.
+     *
+     * Cancelling a coroutine cannot interrupt a thread parked in bulkTransfer, which blocks for up
+     * to half a second. In that window the old loop is still running while the new one starts, and
+     * both would otherwise feed the same move tracker and assembler -- one connection's frames
+     * decoded into another's position.
+     */
+    @Volatile
+    private var readSession = 0
     private var onMoveReceived: ((String) -> Unit)? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -203,9 +214,10 @@ class UsbBoardManager(private val context: Context) {
 
     private fun startReading(connection: UsbDeviceConnection, endpoint: UsbEndpoint) {
         readJob?.cancel()
+        val session = ++readSession
         readJob = scope.launch {
             val buffer = ByteArray(READ_BUFFER_BYTES)
-            while (isActive) {
+            while (isActive && session == readSession) {
                 // bulkTransfer blocks up to the timeout and returns -1 when it expires, which is the
                 // normal state between moves rather than an error.
                 val read = connection.bulkTransfer(endpoint, buffer, buffer.size, READ_TIMEOUT_MS)
@@ -242,6 +254,10 @@ class UsbBoardManager(private val context: Context) {
         connection?.close()
         connection = null
         claimedInterface = null
+        // The callback holds the view model; there is no reason to keep it after the board it was
+        // given for has gone. The calibration flag belongs to that board too.
+        onMoveReceived = null
+        _needsCalibration.value = false
         _connectionState.value = ConnectionState.Idle
     }
 
