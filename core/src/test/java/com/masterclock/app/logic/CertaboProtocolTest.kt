@@ -131,4 +131,39 @@ class CertaboProtocolTest {
     fun `a Certabo is recognised by name`() {
         assertSame(CertaboProtocol, BoardProtocols.forDeviceName("Certabo Chessboard"))
     }
+
+    @Test
+    fun `a Certabo over USB is recognised by what it calls itself`() {
+        // It has no ids of its own: what a plugged-in Certabo advertises belongs to the serial chip
+        // inside it. Matching on ids alone left it unreachable by cable while working over
+        // Bluetooth, where the name is what gets matched.
+        assertSame(
+            CertaboProtocol,
+            BoardProtocols.forUsbDevice(vendorId = 0x0403, productId = 0x6001, "Certabo"),
+        )
+        // The manufacturer field will do when the product name is missing, as it often is.
+        assertSame(
+            CertaboProtocol,
+            BoardProtocols.forUsbDevice(0x0403, 0x6001, null, "Certabo"),
+        )
+    }
+
+    @Test
+    fun `ids still win over names`() {
+        // A Chessnut announces ids of its own, and those are the better evidence: a device that
+        // named itself misleadingly should not be able to override them.
+        assertSame(
+            ChessnutProtocol,
+            BoardProtocols.forUsbDevice(0x2d80, 0x8001, "Certabo"),
+        )
+    }
+
+    @Test
+    fun `an unknown serial device is still raw capture`() {
+        assertSame(
+            RawCaptureProtocol,
+            BoardProtocols.forUsbDevice(0x0403, 0x6001, "USB Serial", "FTDI"),
+        )
+        assertSame(RawCaptureProtocol, BoardProtocols.forUsbDevice(0x0403, 0x6001))
+    }
 }

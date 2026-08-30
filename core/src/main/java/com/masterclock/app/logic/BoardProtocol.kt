@@ -261,6 +261,24 @@ object BoardProtocols {
     fun forUsbIds(vendorId: Int, productId: Int): BoardProtocol =
         known.firstOrNull { it !== RawCaptureProtocol && it.matchesUsbIds(vendorId, productId) }
             ?: RawCaptureProtocol
+
+    /**
+     * The protocol for a plugged-in board, by its ids first and its names second.
+     *
+     * Ids are the better evidence and are tried first. But a board built around an off-the-shelf
+     * serial chip advertises that chip's vendor and product, not its own -- Certabo is exactly this
+     * -- so a make that cannot claim any id would otherwise be unreachable over a cable while
+     * working perfectly over Bluetooth, where the advertised name is what gets matched.
+     *
+     * [names] is what the device calls itself: its product name, its manufacturer, in that order of
+     * usefulness. Nulls are expected; not every device fills them in.
+     */
+    fun forUsbDevice(vendorId: Int, productId: Int, vararg names: String?): BoardProtocol {
+        forUsbIds(vendorId, productId).let { if (it !== RawCaptureProtocol) return it }
+        return names.filterNotNull().firstNotNullOfOrNull { name ->
+            known.firstOrNull { it !== RawCaptureProtocol && it.matchesDeviceName(name) }
+        } ?: RawCaptureProtocol
+    }
 }
 
 /**
