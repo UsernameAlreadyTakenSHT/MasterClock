@@ -37,6 +37,7 @@
     <string name="board_nearby">Nearby Devices</string>
     <string name="board_usb_section">Plugged in</string>
     <string name="board_paired_section">Paired</string>
+    <string name="board_needs_calibration">Set the pieces up in the starting position. This board reads a chip under each piece, so it has to be shown which is which before it can follow a game.</string>
     <string name="board_paired_none">No paired board. Pair it in the system Bluetooth settings first.</string>
     <string name="board_usb_none">No board plugged in.</string>
     <string name="board_usb_charging_warning">While a board occupies the USB port, the phone does not charge.</string>

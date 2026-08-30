@@ -60,6 +60,10 @@ class BluetoothSerialBoardManager(private val context: Context) {
     private val _lastMove = MutableStateFlow<String?>(null)
     val lastMove: StateFlow<String?> = _lastMove.asStateFlow()
 
+    /** True while a tag-reading board is connected but has not been shown the starting position. */
+    private val _needsCalibration = MutableStateFlow(false)
+    val needsCalibration: StateFlow<Boolean> = _needsCalibration.asStateFlow()
+
     private var protocol: BoardProtocol = RawCaptureProtocol
 
     /** The game this round is, for makes that have to be told before play starts. */
@@ -115,6 +119,7 @@ class BluetoothSerialBoardManager(private val context: Context) {
         protocol = BoardProtocols.forDeviceName(device.name)
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
+        _needsCalibration.value = protocol.needsPieceCalibration
         _connectionState.value = ConnectionState.Connecting
 
         readJob = scope.launch { openAndRead(device, onMoveReceived) }
@@ -169,6 +174,9 @@ class BluetoothSerialBoardManager(private val context: Context) {
             val chunk = buffer.copyOf(read)
             val payloads = assembler?.offer(chunk) ?: listOf(chunk)
             val moves = payloads.flatMap { moveTracker.onReport(protocol.decode(it)) }
+            // The hint disappears the moment the board has been shown its pieces, which is the only
+            // feedback the player gets that the setup worked.
+            _needsCalibration.value = protocol.needsPieceCalibration && moveTracker.needsCalibration
             if (moves.isEmpty()) continue
             withContext(Dispatchers.Main) {
                 moves.forEach { move ->
