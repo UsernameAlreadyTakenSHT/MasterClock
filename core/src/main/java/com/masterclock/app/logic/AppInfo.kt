@@ -288,7 +288,7 @@ object AppInfo {
         CreditEntry(
             title = "Draughts stones",
             detail = "Antonsusi, Wikimedia Commons — public domain (too simple a shape to be copyrighted)",
-            url = "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
+            url = "https://commons.wikimedia.org/wiki/Category:SVG_Draughts_pieces",
         ),
         CreditEntry(
             title = "Audio — Gong",
