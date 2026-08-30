@@ -135,7 +135,12 @@ class UsbBoardManager(private val context: Context) {
         disconnect()
 
         this.onMoveReceived = onMoveReceived
-        protocol = BoardProtocols.forUsbIds(device.vendorId, device.productId)
+        protocol = BoardProtocols.forUsbDevice(
+            device.vendorId,
+            device.productId,
+            device.productName,
+            device.manufacturerName,
+        )
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
         _needsCalibration.value = protocol.needsPieceCalibration
