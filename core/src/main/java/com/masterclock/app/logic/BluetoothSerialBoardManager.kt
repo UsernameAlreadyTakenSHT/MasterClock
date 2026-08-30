@@ -66,6 +66,9 @@ class BluetoothSerialBoardManager(private val context: Context) {
     private var gameType: GameType = GameType.CHESS
     private val moveTracker = BoardMoveTracker()
     private var assembler: StreamAssembler? = null
+    // Written from the IO thread that opens it and read from the main thread that closes it, so the
+    // identity check above needs this to be seeing the same value both sides.
+    @Volatile
     private var socket: BluetoothSocket? = null
     private var readJob: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -171,7 +174,18 @@ class BluetoothSerialBoardManager(private val context: Context) {
             }
         }
 
-        withContext(Dispatchers.Main) { disconnect() }
+        // Tear down this socket, and only this socket. Calling disconnect() here would cancel
+        // whatever `readJob` currently holds and close whatever `socket` currently holds -- which,
+        // if the user has reconnected while this loop was winding down, is the new connection. The
+        // identity check is what tells "I am the current session" from "I am its predecessor".
+        withContext(Dispatchers.Main) {
+            runCatching { opened.close() }
+            if (socket === opened) {
+                socket = null
+                assembler?.reset()
+                _connectionState.value = ConnectionState.Idle
+            }
+        }
     }
 
     /** Clears a failed attempt without disturbing a live one. See [BluetoothBoardManager.clearError]. */
