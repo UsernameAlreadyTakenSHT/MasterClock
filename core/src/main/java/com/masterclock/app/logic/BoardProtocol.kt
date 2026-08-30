@@ -57,6 +57,15 @@ interface BoardProtocol {
     fun matchesUsbIds(vendorId: Int, productId: Int): Boolean = false
 
     /**
+     * Whether this make has to be shown its pieces before it can be understood.
+     *
+     * True only where the board reports which individual piece is on a square rather than what kind
+     * it is; see [PieceTagCalibration]. The app has to say so, because until the pieces are set up
+     * such a board is connected, talking, and producing nothing.
+     */
+    val needsPieceCalibration: Boolean get() = false
+
+    /**
      * Line speed to ask for over USB serial.
      *
      * Only a make knows its own: DGT's boards run at 9600, others at 115200. The default is the

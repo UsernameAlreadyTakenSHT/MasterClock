@@ -27,6 +27,9 @@ object CertaboProtocol : BoardProtocol {
 
     override val usbBaudRate = 38400
 
+    /** The chips are stuck under the pieces by whoever owns the set, so the mapping must be learned. */
+    override val needsPieceCalibration = true
+
     override fun matchesDeviceName(deviceName: String?): Boolean =
         deviceName?.contains("Certabo", ignoreCase = true) == true
 

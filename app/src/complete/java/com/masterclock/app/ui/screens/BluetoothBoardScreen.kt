@@ -44,6 +44,8 @@ fun BluetoothBoardScreen(
     val bluetoothMove by manager.lastMove.collectAsState()
     val usbMove by usbManager.lastMove.collectAsState()
     val serialMove by serialManager.lastMove.collectAsState()
+    val usbNeedsCalibration by usbManager.needsCalibration.collectAsState()
+    val serialNeedsCalibration by serialManager.needsCalibration.collectAsState()
     val context = LocalContext.current
 
     // Which game this is decides what the board is told to set up, so it is read at the moment of
@@ -174,6 +176,18 @@ fun BluetoothBoardScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+
+            // Until a tag-reading board has been shown its pieces it is connected, talking, and
+            // producing nothing at all. Without this the screen would look like a board that simply
+            // does not work.
+            if (connectionState is ConnectionState.Connected && (usbNeedsCalibration || serialNeedsCalibration)) {
+                Text(
+                    stringResource(R.string.board_needs_calibration),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(16.dp))
+            }
 
             if (lastMove != null) {
                 Text(stringResource(R.string.board_last_move, lastMove.orEmpty()), style = MaterialTheme.typography.titleMedium)
