@@ -211,6 +211,9 @@ class BluetoothSerialBoardManager(private val context: Context) {
         runCatching { socket?.close() }
         socket = null
         assembler?.reset()
+        // Belongs to the board that has just gone; keeping it would have the next connection start
+        // with the previous one's answer.
+        _needsCalibration.value = false
         _connectionState.value = ConnectionState.Idle
     }
 

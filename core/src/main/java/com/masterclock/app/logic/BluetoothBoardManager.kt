@@ -431,6 +431,9 @@ class BluetoothBoardManager(private val context: Context) {
         }
         activeGatt = null
         clearGattQueue()
+        // The callback holds the view model; there is no reason to keep it once the board it was
+        // given for has gone.
+        _onMoveReceivedCallback = null
         _connectionState.value = ConnectionState.Idle
     }
 }
