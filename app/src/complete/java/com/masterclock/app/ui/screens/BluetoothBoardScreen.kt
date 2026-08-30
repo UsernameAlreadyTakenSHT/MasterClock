@@ -100,8 +100,17 @@ fun BluetoothBoardScreen(
                 IconButton(onClick = { manager.stopScan() }) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                 }
-            } else if (connectionState is ConnectionState.Idle) {
+            // Errors keep the button, and that is the point: the commonest one is "Bluetooth is
+            // disabled", which the user then goes and fixes. Offering the scan only from Idle left
+            // them with the message that told them what to do and no way to try again afterwards.
+            } else if (connectionState !is ConnectionState.Connected && connectionState !is ConnectionState.Connecting) {
                 IconButton(onClick = {
+                    // Whichever transport failed last, this is the user asking to start over. A
+                    // stale error from one of them would otherwise keep the whole screen showing a
+                    // failure while another transport was busy succeeding.
+                    manager.clearError()
+                    usbManager.clearError()
+                    serialManager.clearError()
                     usbManager.refreshDevices()
                     serialManager.refreshPairedDevices()
                     val missing = permissions.filter {

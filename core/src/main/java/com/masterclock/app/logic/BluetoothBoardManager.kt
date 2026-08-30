@@ -304,6 +304,17 @@ class BluetoothBoardManager(private val context: Context) {
         activeGatt = device.connectGatt(connectionSettings, ContextCompat.getMainExecutor(context), gattCallback)
     }
 
+    /**
+     * Puts a failed attempt behind us, so the screen stops reporting it.
+     *
+     * Only an error is cleared: a scan or a live connection must survive this untouched. Without
+     * it, a failure -- "Bluetooth is disabled" being the usual one -- stays on screen after the user
+     * has gone and fixed exactly what it asked for.
+     */
+    fun clearError() {
+        if (_connectionState.value is ConnectionState.Error) _connectionState.value = ConnectionState.Idle
+    }
+
     fun disconnect() {
         if (hasConnectPermission()) {
             activeGatt?.disconnect()
