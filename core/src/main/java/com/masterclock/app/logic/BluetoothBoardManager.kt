@@ -42,6 +42,14 @@ private val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b3
 /** How long a scan runs before stopping itself. Boards in range answer in seconds. */
 private const val SCAN_TIMEOUT_MS = 30_000L
 
+/**
+ * How long one GATT operation may go unanswered before the queue moves on without it.
+ *
+ * Well beyond a healthy round trip, which is milliseconds: this is for the board that has stopped
+ * answering, not for a slow one.
+ */
+private const val GATT_OPERATION_TIMEOUT_MS = 5_000L
+
 /** Either flavour of server-pushed update; indication is the acknowledged one, and both are fine here. */
 private const val NOTIFY_OR_INDICATE =
     BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE
@@ -108,6 +116,16 @@ class BluetoothBoardManager(private val context: Context) {
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private val scanTimeout = Runnable { stopScan() }
+
+    /**
+     * Gives up on an operation that never called back, so the queue is not stuck behind it.
+     *
+     * A board that stops answering mid-exchange, or a connection that drops without the stack
+     * saying so, would otherwise leave [operationInFlight] true for good: every later
+     * acknowledgement queues behind it and none is ever sent, which on the open protocol means the
+     * board falls silent and the app looks connected.
+     */
+    private val operationTimeout = Runnable { operationFinished() }
 
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val adapter: BluetoothAdapter? = bluetoothManager.adapter
@@ -177,8 +195,7 @@ class BluetoothBoardManager(private val context: Context) {
                 if (activeGatt === gatt) {
                     if (hasConnectPermission()) gatt.close()
                     activeGatt = null
-                    gattQueue.clear()
-                    operationInFlight = false
+                    clearGattQueue()
                 }
                 _connectionState.value = ConnectionState.Idle
             }
@@ -213,8 +230,7 @@ class BluetoothBoardManager(private val context: Context) {
                 return
             }
 
-            gattQueue.clear()
-            operationInFlight = false
+            clearGattQueue()
             characteristics.forEach { gattQueue += GattOperation.Subscribe(it) }
             // Queued behind the subscriptions on purpose: a board asked to report before it has
             // been subscribed to would answer into a void.
@@ -263,8 +279,21 @@ class BluetoothBoardManager(private val context: Context) {
     }
 
     private fun operationFinished() {
+        mainHandler.removeCallbacks(operationTimeout)
         operationInFlight = false
         runNextOperation()
+    }
+
+    /**
+     * Forgets everything queued, in flight, and waited on.
+     *
+     * The pending timeout has to go with the queue: left scheduled, it would fire later against a
+     * connection that no longer exists and drain a queue nobody asked for.
+     */
+    private fun clearGattQueue() {
+        mainHandler.removeCallbacks(operationTimeout)
+        gattQueue.clear()
+        operationInFlight = false
     }
 
     /**
@@ -283,6 +312,9 @@ class BluetoothBoardManager(private val context: Context) {
             operationInFlight = when (operation) {
                 is GattOperation.Subscribe -> subscribe(gatt, operation.characteristic)
                 is GattOperation.Write -> write(gatt, operation.bytes)
+            }
+            if (operationInFlight) {
+                mainHandler.postDelayed(operationTimeout, GATT_OPERATION_TIMEOUT_MS)
             }
         }
     }
@@ -372,8 +404,7 @@ class BluetoothBoardManager(private val context: Context) {
         protocol = BoardProtocols.forDeviceName(device.name)
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
-        gattQueue.clear()
-        operationInFlight = false
+        clearGattQueue()
 
         val connectionSettings = BluetoothGattConnectionSettings.Builder()
             .setTransport(BluetoothDevice.TRANSPORT_LE)
@@ -399,8 +430,7 @@ class BluetoothBoardManager(private val context: Context) {
             activeGatt?.close()
         }
         activeGatt = null
-        gattQueue.clear()
-        operationInFlight = false
+        clearGattQueue()
         _connectionState.value = ConnectionState.Idle
     }
 }
