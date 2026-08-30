@@ -41,6 +41,20 @@ private val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b3
 private const val NOTIFY_OR_INDICATE =
     BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE
 
+/**
+ * One thing to say to a board, queued because only one can be in flight at a time.
+ *
+ * Both kinds have to share a queue rather than have one each: the radio does not care which sort of
+ * operation it is, only that there is exactly one.
+ */
+private sealed interface GattOperation {
+    /** Turn on notifications for one characteristic, which is a write to its CCCD. */
+    data class Subscribe(val characteristic: BluetoothGattCharacteristic) : GattOperation
+
+    /** Send bytes to the make's nominated write characteristic. */
+    data class Write(val bytes: ByteArray) : GattOperation
+}
+
 class BluetoothBoardManager(private val context: Context) {
     // The BLE ATT MTU already caps a single characteristic update well under this (~512 bytes max),
     // so this is defense-in-depth against a malicious/buggy peripheral, not a real-world-reachable limit.
@@ -65,14 +79,22 @@ class BluetoothBoardManager(private val context: Context) {
     private var assembler: StreamAssembler? = null
 
     /**
-     * Characteristics still waiting to have notifications turned on.
+     * Everything waiting to be sent to the board, in order.
      *
-     * They have to be done one at a time: Android allows a single outstanding GATT operation, and a
-     * second descriptor write issued before [BluetoothGattCallback.onDescriptorWrite] arrives is
-     * dropped silently. That is the classic reason a board connects, reports nothing, and gives no
-     * error -- so the queue drains from the callback rather than in a loop.
+     * Android allows exactly one outstanding GATT operation. A second issued before the first calls
+     * back is dropped silently -- no exception, no error, nothing -- so subscriptions and writes
+     * cannot each be serialised separately: they compete with one another. Turning on notifications
+     * takes one descriptor write per characteristic, and the open protocol answers every move with
+     * an acknowledgement, so those two are exactly what would collide, and a board that misses an
+     * acknowledgement stops sending.
+     *
+     * Drained from the completion callbacks rather than in a loop, since the completion is the only
+     * signal that the previous operation is done.
      */
-    private val pendingNotifySubscriptions = ArrayDeque<BluetoothGattCharacteristic>()
+    private val gattQueue = ArrayDeque<GattOperation>()
+
+    /** Whether an operation has been issued and not yet called back. */
+    private var operationInFlight = false
 
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val adapter: BluetoothAdapter? = bluetoothManager.adapter
@@ -142,7 +164,8 @@ class BluetoothBoardManager(private val context: Context) {
                 if (activeGatt === gatt) {
                     if (hasConnectPermission()) gatt.close()
                     activeGatt = null
-                    pendingNotifySubscriptions.clear()
+                    gattQueue.clear()
+                    operationInFlight = false
                 }
                 _connectionState.value = ConnectionState.Idle
             }
@@ -177,15 +200,23 @@ class BluetoothBoardManager(private val context: Context) {
                 return
             }
 
-            pendingNotifySubscriptions.clear()
-            pendingNotifySubscriptions.addAll(characteristics)
-            subscribeToNextCharacteristic(gatt)
+            gattQueue.clear()
+            operationInFlight = false
+            characteristics.forEach { gattQueue += GattOperation.Subscribe(it) }
+            // Queued behind the subscriptions on purpose: a board asked to report before it has
+            // been subscribed to would answer into a void.
+            protocol.initCommandFor(gameType)?.let { gattQueue += GattOperation.Write(it) }
+            runNextOperation()
         }
 
         override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
             // Failures are not fatal in raw-capture mode: a board may expose characteristics it will
             // not actually let us subscribe to, and the others still work.
-            subscribeToNextCharacteristic(gatt)
+            operationFinished()
+        }
+
+        override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            operationFinished()
         }
 
         @Deprecated("Deprecated in Java")
@@ -205,7 +236,7 @@ class BluetoothBoardManager(private val context: Context) {
         payloads.forEach { message ->
             // Answer before acting on it: a board waiting for an acknowledgement sends nothing more
             // until it arrives, so a slow reply costs the next move, not just this one.
-            protocol.replyTo(message)?.let { writeToBoard(it) }
+            protocol.replyTo(message)?.let { enqueue(GattOperation.Write(it)) }
             moveTracker.onReport(protocol.decode(message)).forEach { move ->
                 _lastMove.value = move
                 _onMoveReceivedCallback?.invoke(move)
@@ -213,40 +244,42 @@ class BluetoothBoardManager(private val context: Context) {
         }
     }
 
-    /** Writes to whichever characteristic the make nominated for it. */
-    private fun writeToBoard(bytes: ByteArray) {
+    private fun enqueue(operation: GattOperation) {
+        gattQueue += operation
+        if (!operationInFlight) runNextOperation()
+    }
+
+    private fun operationFinished() {
+        operationInFlight = false
+        runNextOperation()
+    }
+
+    /**
+     * Issues queued operations until one is accepted, or the queue empties.
+     *
+     * A loop rather than recursion: an operation the stack refuses returns immediately and never
+     * calls back, and a board that refuses many in a row would otherwise pile up stack frames for
+     * each one.
+     */
+    private fun runNextOperation() {
         if (!hasConnectPermission()) return
         val gatt = activeGatt ?: return
-        val uuid = protocol.ble?.writeCharacteristicUuid ?: return
-        val characteristic = gatt.services.flatMap { it.characteristics }.firstOrNull { it.uuid == uuid } ?: return
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            gatt.writeCharacteristic(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-        } else {
-            @Suppress("DEPRECATION")
-            run {
-                characteristic.value = bytes
-                gatt.writeCharacteristic(characteristic)
+        while (!operationInFlight) {
+            val operation = gattQueue.removeFirstOrNull() ?: return
+            operationInFlight = when (operation) {
+                is GattOperation.Subscribe -> subscribe(gatt, operation.characteristic)
+                is GattOperation.Write -> write(gatt, operation.bytes)
             }
         }
     }
 
-    private fun subscribeToNextCharacteristic(gatt: BluetoothGatt) {
-        if (!hasConnectPermission()) return
-        val characteristic = pendingNotifySubscriptions.removeFirstOrNull()
-        if (characteristic == null) {
-            sendInitCommand(gatt)
-            return
-        }
-
+    /** Returns whether the operation was accepted and a callback should be expected. */
+    private fun subscribe(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic): Boolean {
         gatt.setCharacteristicNotification(characteristic, true)
         // setCharacteristicNotification only routes callbacks locally; the board is not told
-        // anything until its CCCD is written.
-        val cccd = characteristic.getDescriptor(CCCD_UUID)
-        if (cccd == null) {
-            subscribeToNextCharacteristic(gatt)
-            return
-        }
+        // anything until its CCCD is written, and it is that write which is the GATT operation.
+        val cccd = characteristic.getDescriptor(CCCD_UUID) ?: return false
 
         val enable = if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
             BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
@@ -254,18 +287,27 @@ class BluetoothBoardManager(private val context: Context) {
             BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
         }
 
-        val written = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             gatt.writeDescriptor(cccd, enable) == BluetoothGatt.GATT_SUCCESS
         } else {
             @Suppress("DEPRECATION")
             run { cccd.value = enable; gatt.writeDescriptor(cccd) }
         }
-        // Nothing will call back if the write was refused outright, so keep the queue moving.
-        if (!written) subscribeToNextCharacteristic(gatt)
     }
 
-    private fun sendInitCommand(gatt: BluetoothGatt) {
-        protocol.initCommandFor(gameType)?.let { writeToBoard(it) }
+    /** Returns whether the operation was accepted and a callback should be expected. */
+    private fun write(gatt: BluetoothGatt, bytes: ByteArray): Boolean {
+        val uuid = protocol.ble?.writeCharacteristicUuid ?: return false
+        val characteristic = gatt.services.flatMap { it.characteristics }
+            .firstOrNull { it.uuid == uuid } ?: return false
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeCharacteristic(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) ==
+                BluetoothGatt.GATT_SUCCESS
+        } else {
+            @Suppress("DEPRECATION")
+            run { characteristic.value = bytes; gatt.writeCharacteristic(characteristic) }
+        }
     }
 
     fun startScan() {
@@ -311,7 +353,8 @@ class BluetoothBoardManager(private val context: Context) {
         protocol = BoardProtocols.forDeviceName(device.name)
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
-        pendingNotifySubscriptions.clear()
+        gattQueue.clear()
+        operationInFlight = false
 
         val connectionSettings = BluetoothGattConnectionSettings.Builder()
             .setTransport(BluetoothDevice.TRANSPORT_LE)
@@ -337,7 +380,8 @@ class BluetoothBoardManager(private val context: Context) {
             activeGatt?.close()
         }
         activeGatt = null
-        pendingNotifySubscriptions.clear()
+        gattQueue.clear()
+        operationInFlight = false
         _connectionState.value = ConnectionState.Idle
     }
 }
