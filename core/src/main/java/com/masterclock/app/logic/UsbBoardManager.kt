@@ -213,6 +213,11 @@ class UsbBoardManager(private val context: Context) {
         }
     }
 
+    /** Clears a failed attempt without disturbing a live one. See [BluetoothBoardManager.clearError]. */
+    fun clearError() {
+        if (_connectionState.value is ConnectionState.Error) _connectionState.value = ConnectionState.Idle
+    }
+
     fun disconnect() {
         readJob?.cancel()
         readJob = null
