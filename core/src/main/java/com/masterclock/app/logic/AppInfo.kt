@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-29"
+    const val BUILD_DATE = "2026-08-30"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,19 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.27",
+            date = "2026-08-30",
+            notes = listOf(
+                "A phone correcting its own clock could hand a player time or take it away, and this was true of every release so far. Timing came from wall-clock time, so an NTP sync or a manual change landed straight on whoever was on move. It now uses a clock that cannot be set by anyone.",
+                "The clock no longer redraws a hundred times a second. The tick follows the display — fast only while hundredths are showing — which costs less battery over a long game. Accuracy is unchanged.",
+                "Link board: an error no longer hides the scan button, so a scan that failed because Bluetooth was off can be retried once it is on.",
+                "Link board: a board going out of range used to keep a Bluetooth connection slot for good, until the phone was restarted.",
+                "Link board: a move read from the board is dropped when the board goes away, instead of being recorded against a later game.",
+                "Link board: reconnecting no longer leaks the previous connection, acknowledgements are no longer silently dropped, and a Certabo now says it is waiting for the pieces to be set up.",
+                "The credit for the draughts pieces pointed at Wikimedia's chess piece category instead of the draughts one.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.26",
             date = "2026-08-29",
