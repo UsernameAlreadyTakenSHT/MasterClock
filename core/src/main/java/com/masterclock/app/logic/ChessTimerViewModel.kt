@@ -1,6 +1,7 @@
 package com.masterclock.app.logic
 
 import android.app.Application
+import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -1047,6 +1048,20 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val _uiState = MutableStateFlow(createInitialState(_settings.value))
     val uiState: StateFlow<ChessClockState> = _uiState.asStateFlow()
     private var timerJob: Job? = null
+
+    /**
+     * Both are [SystemClock.elapsedRealtime], never wall-clock time.
+     *
+     * A clock measures how much time has passed, and wall-clock time does not answer that question:
+     * it can be corrected by NTP, changed by the user, or adjusted by the phone at any moment. A
+     * correction backwards makes the difference between two readings negative -- which would hand
+     * the player on move however much time the phone had drifted -- and one forwards deducts it in
+     * a single tick, which can flag someone who had minutes left.
+     *
+     * elapsedRealtime counts from boot, cannot be set, and keeps counting through sleep, so the
+     * difference between two readings is the time that actually elapsed and nothing else. The
+     * timestamps recorded in game logs stay on wall-clock time, because those really are dates.
+     */
     private var lastTickTime: Long = 0
     private var moveStartTime: Long = 0
 
@@ -1320,19 +1335,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val nextPlayer = if (playerCount > 1) (playerIndex % playerCount) + 1 else 1
         
         if (currentState.activePlayer == null) {
-            moveStartTime = System.currentTimeMillis(); startClock(nextPlayer)
+            moveStartTime = SystemClock.elapsedRealtime(); startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
             addEvent(GameEvent(eventType = "INITIAL_PRESS", playerIndex = playerIndex, detail = "P$nextPlayer clock started"))
         } else {
             val p = currentState.players.getOrNull(playerIndex - 1) ?: return
-            val timeSpentOnMove = System.currentTimeMillis() - moveStartTime
+            val timeSpentOnMove = SystemClock.elapsedRealtime() - moveStartTime
             // A press with no notation of its own claims whatever the board reported since the last
             // move, which is how the notation reaches the PGN when auto-switch is off.
             val notation = boardNotation ?: pendingBoardNotation
             pendingBoardNotation = null
             addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.timeRemainingMs, moveCount = p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
             applyPostMoveLogic(playerIndex, timeSpentOnMove)
-            moveStartTime = System.currentTimeMillis(); startClock(nextPlayer)
+            moveStartTime = SystemClock.elapsedRealtime(); startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
         }
     }
@@ -1352,7 +1367,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
             state.copy(activePlayer = playerIndex, isPaused = false, players = newPlayers)
         }
-        lastTickTime = System.currentTimeMillis()
+        lastTickTime = SystemClock.elapsedRealtime()
         timerJob = viewModelScope.launch { 
             while (isActive) { 
                 try {
@@ -1368,7 +1383,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun tick() {
-        val now = System.currentTimeMillis(); val delta = now - lastTickTime; lastTickTime = now
+        val now = SystemClock.elapsedRealtime(); val delta = now - lastTickTime; lastTickTime = now
         
         // Auto-save check: every 5 seconds while running
         if (now - lastAutoSaveTime >= 5000) {
