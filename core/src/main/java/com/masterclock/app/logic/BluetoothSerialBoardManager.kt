@@ -17,6 +17,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -144,7 +145,12 @@ class BluetoothSerialBoardManager(private val context: Context) {
 
         val input = opened.inputStream
         val buffer = ByteArray(READ_BUFFER_BYTES)
-        while (scope.isActive && readJob?.isActive == true) {
+        // Ask this coroutine whether it is still wanted, rather than looking up the field that is
+        // supposed to hold it. `readJob` is assigned after launch() returns, on another thread and
+        // behind no memory barrier, so a loop that started first could read null -- or the previous,
+        // just-cancelled job -- and stop before its first read. The board would connect and then
+        // say nothing, intermittently, which is the hardest shape of failure to chase.
+        while (currentCoroutineContext().isActive) {
             val read = try {
                 input.read(buffer)
             } catch (e: IOException) {
