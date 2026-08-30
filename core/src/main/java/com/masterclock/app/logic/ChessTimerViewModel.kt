@@ -607,11 +607,17 @@ data class GameEvent(
  * event records `null` and an exported PGN is a column of "???".
  */
 sealed interface BoardMoveOutcome {
-    /** Press the clock now, stamping the MOVE event with [notation]. */
-    data class SwitchNow(val notation: String) : BoardMoveOutcome
+    /**
+     * Press the clock now, stamping the MOVE event with [notation].
+     *
+     * [playerIndex] is carried rather than looked up again by the caller: it is only ever produced
+     * when a player is on move, so holding it here is what makes that guarantee readable instead of
+     * something the caller has to assert.
+     */
+    data class SwitchNow(val notation: String, val playerIndex: Int) : BoardMoveOutcome
 
     /** Keep [notation] until the player presses the clock, and stamp that MOVE with it. */
-    data class HoldForNextPress(val notation: String) : BoardMoveOutcome
+    data class HoldForNextPress(val notation: String, val playerIndex: Int) : BoardMoveOutcome
 
     /** No clock is running, so there is no move to attach this to. Record it and move on. */
     data class NoGameRunning(val notation: String) : BoardMoveOutcome
@@ -626,8 +632,8 @@ fun boardMoveOutcome(
     activePlayer == null -> BoardMoveOutcome.NoGameRunning(notation)
     // A paused clock must not be resumed by the board: pausing is deliberate, and a piece knocked
     // over while the players are away would otherwise restart the game behind their backs.
-    autoSwitchOnBoardMove && !isPaused -> BoardMoveOutcome.SwitchNow(notation)
-    else -> BoardMoveOutcome.HoldForNextPress(notation)
+    autoSwitchOnBoardMove && !isPaused -> BoardMoveOutcome.SwitchNow(notation, activePlayer)
+    else -> BoardMoveOutcome.HoldForNextPress(notation, activePlayer)
 }
 
 @Serializable
@@ -1362,7 +1368,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun addEvent(event: GameEvent) {
-        currentLog = currentLog?.copy(events = currentLog!!.events + event)
+        currentLog = currentLog?.let { it.copy(events = it.events + event) }
     }
 
     private fun startClock(playerIndex: Int) {
@@ -1919,24 +1925,23 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun recordBoardMove(notation: String) {
         val currentState = _uiState.value
-        val active = currentState.activePlayer
         val outcome = boardMoveOutcome(
             notation = notation,
-            activePlayer = active,
+            activePlayer = currentState.activePlayer,
             isPaused = currentState.isPaused,
             autoSwitchOnBoardMove = settings.value.autoSwitchOnBoardMove,
         )
         when (outcome) {
             // The MOVE event this raises carries the notation, so a separate BOARD_MOVE alongside it
             // would be the same move logged twice.
-            is BoardMoveOutcome.SwitchNow -> startOrSwitch(active!!, boardNotation = outcome.notation)
+            is BoardMoveOutcome.SwitchNow -> startOrSwitch(outcome.playerIndex, boardNotation = outcome.notation)
 
             is BoardMoveOutcome.HoldForNextPress -> {
                 pendingBoardNotation = outcome.notation
-                val p = currentState.players[active!! - 1]
+                val p = currentState.players[outcome.playerIndex - 1]
                 addEvent(GameEvent(
                     eventType = "BOARD_MOVE",
-                    playerIndex = active,
+                    playerIndex = outcome.playerIndex,
                     timeRemainingMs = p.timeRemainingMs,
                     moveCount = p.moveCount,
                     moveNotation = outcome.notation,

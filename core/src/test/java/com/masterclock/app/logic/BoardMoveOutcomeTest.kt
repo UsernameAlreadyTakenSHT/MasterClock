@@ -16,19 +16,19 @@ class BoardMoveOutcomeTest {
     @Test
     fun `auto-switch on presses the clock straight away`() {
         val outcome = boardMoveOutcome("e2e4", activePlayer = 1, isPaused = false, autoSwitchOnBoardMove = true)
-        assertEquals(BoardMoveOutcome.SwitchNow("e2e4"), outcome)
+        assertEquals(BoardMoveOutcome.SwitchNow("e2e4", 1), outcome)
     }
 
     @Test
     fun `auto-switch off holds the notation for the player's own press`() {
         val outcome = boardMoveOutcome("e2e4", activePlayer = 1, isPaused = false, autoSwitchOnBoardMove = false)
-        assertEquals(BoardMoveOutcome.HoldForNextPress("e2e4"), outcome)
+        assertEquals(BoardMoveOutcome.HoldForNextPress("e2e4", 1), outcome)
     }
 
     @Test
     fun `a paused clock is never resumed by the board`() {
         val outcome = boardMoveOutcome("e2e4", activePlayer = 1, isPaused = true, autoSwitchOnBoardMove = true)
-        assertEquals(BoardMoveOutcome.HoldForNextPress("e2e4"), outcome)
+        assertEquals(BoardMoveOutcome.HoldForNextPress("e2e4", 1), outcome)
     }
 
     @Test
@@ -49,10 +49,10 @@ class BoardMoveOutcomeTest {
         // what the PGN will show, so nothing here may reinterpret it.
         listOf("e2e4", "Nf3", "O-O", "e8=Q+", "0000").forEach { notation ->
             val held = boardMoveOutcome(notation, activePlayer = 2, isPaused = false, autoSwitchOnBoardMove = false)
-            assertEquals(BoardMoveOutcome.HoldForNextPress(notation), held)
+            assertEquals(BoardMoveOutcome.HoldForNextPress(notation, 2), held)
 
             val switched = boardMoveOutcome(notation, activePlayer = 2, isPaused = false, autoSwitchOnBoardMove = true)
-            assertEquals(BoardMoveOutcome.SwitchNow(notation), switched)
+            assertEquals(BoardMoveOutcome.SwitchNow(notation, 2), switched)
         }
     }
 }
