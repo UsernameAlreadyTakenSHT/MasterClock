@@ -103,7 +103,8 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
     val locale = LocalConfiguration.current.locales[0]
     var selectedLog by remember { mutableStateOf<GameLog?>(null) }
 
-    if (selectedLog == null) {
+    val openLog = selectedLog
+    if (openLog == null) {
         val sortedHistory = remember(history) { history.sortedByDescending { it.startTime } }
         ToolScaffold(title = stringResource(R.string.tools_game_logs), onBack = onBack) { padding ->
             if (sortedHistory.isEmpty()) {
@@ -143,7 +144,7 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
             }
         }
     } else {
-        val log = selectedLog!!
+        val log = openLog
         ToolScaffold(
             title = stringResource(R.string.tools_log_details), 
             onBack = { selectedLog = null },
@@ -620,10 +621,10 @@ fun RandomCardScreen(onBack: () -> Unit) {
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isBack || currentCard == null) {
+                        val card = currentCard
+                        if (isBack || card == null) {
                             Icon(Icons.Default.Style, null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f))
                         } else {
-                            val card = currentCard!!
                             val color = if (card.second == "♥" || card.second == "♦") Color(0xFFD32F2F) else Color(0xFF212121)
                             Box(Modifier.fillMaxSize().padding(20.dp)) {
                                 Text(card.first + card.second, color = color, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, modifier = Modifier.align(Alignment.TopStart))
