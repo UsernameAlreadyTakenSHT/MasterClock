@@ -1038,6 +1038,15 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     return state.copy(players = newList)
 }
 
+/** Tick rate while the smallest digit on screen is hundredths of a second. */
+private const val FAST_TICK_MS = 10L
+
+/** Tick rate the rest of the time: enough for tenths, and ten times cheaper. */
+private const val SLOW_TICK_MS = 100L
+
+/** How long a crash may cost a running game. */
+private const val AUTO_SAVE_INTERVAL_MS = 15_000L
+
 class ChessTimerViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepo = SettingsRepository(application)
     private val gameDao = GameDatabase.getDatabase(application).gameLogDao()
@@ -1368,10 +1377,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             state.copy(activePlayer = playerIndex, isPaused = false, players = newPlayers)
         }
         lastTickTime = SystemClock.elapsedRealtime()
-        timerJob = viewModelScope.launch { 
-            while (isActive) { 
+        timerJob = viewModelScope.launch {
+            while (isActive) {
                 try {
-                    delay(10.milliseconds)
+                    delay(tickIntervalMs().milliseconds)
                     tick()
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
@@ -1382,11 +1391,39 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    /**
+     * How often to tick, which is how often the screen is asked to redraw.
+     *
+     * Every tick publishes a new state, so ticking at 10ms recomposes the timer a hundred times a
+     * second for the whole game -- most of it spent redrawing digits that did not change. The
+     * accounting does not care: time is taken from the difference between two readings, so a
+     * coarser tick is just as accurate, only later.
+     *
+     * The display does care, but only when it shows hundredths. Tenths change every 100ms and
+     * seconds every 1000, so 100ms keeps both exact.
+     *
+     * The condition mirrors the one TimerDisplay uses to decide whether hundredths appear, and the
+     * two have to agree: tick slower than the display and the smallest digit moves in jumps.
+     */
+    private fun tickIntervalMs(): Long {
+        val settings = _settings.value
+        if (!settings.showHundredths) return SLOW_TICK_MS
+        if (!settings.showHundredthsOnlyUnder10s) return FAST_TICK_MS
+
+        val active = _uiState.value.activePlayer ?: return SLOW_TICK_MS
+        val remaining = _uiState.value.players.getOrNull(active - 1)?.timeRemainingMs ?: return SLOW_TICK_MS
+        return if (kotlin.math.abs(remaining) < 10_000L) FAST_TICK_MS else SLOW_TICK_MS
+    }
+
     private fun tick() {
         val now = SystemClock.elapsedRealtime(); val delta = now - lastTickTime; lastTickTime = now
         
-        // Auto-save check: every 5 seconds while running
-        if (now - lastAutoSaveTime >= 5000) {
+        // Saved so a game survives the app being killed. Every five seconds meant serialising the
+        // settings and the whole state, then writing to the database, some 1,400 times over a
+        // two-hour game -- for a recovery that almost never happens. Fifteen bounds what a crash
+        // costs to fifteen seconds of one player's clock, which is a fair price for a third of the
+        // writes.
+        if (now - lastAutoSaveTime >= AUTO_SAVE_INTERVAL_MS) {
             lastAutoSaveTime = now
             saveClockForLater()
         }
