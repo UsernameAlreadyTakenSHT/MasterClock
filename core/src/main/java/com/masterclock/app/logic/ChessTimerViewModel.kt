@@ -1086,6 +1086,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var pendingShortcutId: String? = null
 
     init {
+        // A notation waiting for a press must not outlive the board that supplied it. Held while
+        // auto-switch is off, it is claimed by the player's next press -- and if the board goes out
+        // of range or is unplugged in between, that press might be minutes later, or in another
+        // game entirely. The move recorded would name something nobody played, in an exported PGN,
+        // with nothing on screen to suggest anything had gone wrong.
+        viewModelScope.launch {
+            combine(
+                bluetoothManager.connectionState,
+                usbBoardManager.connectionState,
+                bluetoothSerialBoardManager.connectionState,
+            ) { states -> states.any { it is ConnectionState.Connected } }
+                .distinctUntilChanged()
+                .collect { anyBoardConnected -> if (!anyBoardConnected) pendingBoardNotation = null }
+        }
+
         viewModelScope.launch {
             val savedSettings = settingsRepo.settingsFlow.first()
             _settings.value = savedSettings
