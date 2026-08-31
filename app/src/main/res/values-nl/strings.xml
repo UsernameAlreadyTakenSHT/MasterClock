@@ -121,6 +121,8 @@
     <string name="toast_backup_ok">Back-up gelukt!</string>
     <string name="toast_import_ok">Import gelukt!</string>
     <string name="toast_import_failed">Import mislukt: bestand kon niet worden gelezen.</string>
+    <string name="toast_export_ok">Export gelukt!</string>
+    <string name="toast_export_failed">Export mislukt: bestand kon niet worden geschreven.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Speler %1$d, %2$s</string>
