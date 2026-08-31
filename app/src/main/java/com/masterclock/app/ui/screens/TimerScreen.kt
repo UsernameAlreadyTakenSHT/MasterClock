@@ -694,11 +694,10 @@ fun TimerDisplay(timeMs: Long, style: TextStyle, settings: ChessClockSettings, i
     val tenths = (absTimeMs % 1000) / 100
     val showHours = settings.alwaysShowHours || hours > 0
     val showMinutes = settings.alwaysShowMinutes || minutes > 0 || showHours
-    val showTenths = (settings.showTenthsThresholdMs == Long.MAX_VALUE || (absTimeMs < settings.showTenthsThresholdMs && settings.showTenthsThresholdMs > 0))
-    val showHundredths = settings.showHundredths && (
-        if (settings.showHundredthsOnlyUnder10s) absTimeMs < 10000L 
-        else showTenths
-    )
+    // Both come from core, because the tick rate is chosen from the same two questions and the
+    // answers have to match: tick slower than the display and the smallest digit moves in jumps.
+    val showTenths = settings.showsTenthsAt(absTimeMs)
+    val showHundredths = settings.showsHundredthsAt(absTimeMs)
     
     val tightStyle = style.copy(letterSpacing = (-2).sp)
     val fractionalStyle = tightStyle.copy(
