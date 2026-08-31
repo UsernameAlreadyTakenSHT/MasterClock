@@ -1,0 +1,5 @@
+The clock no longer stops to serialise your settings every fifteen seconds. The autosave encoded them on the same thread that draws the clock, for the length of every game.
+The game history no longer decodes on that thread either, and it no longer loads without any limit when history is set to unlimited — it used to read every game ever played, at startup, which is exactly when the first frame is due.
+Importing and exporting a JSON file now happen off the drawing thread as well, and both say whether they worked. The import used to say nothing at all in either direction.
+Two error messages that were always in English are translated.
+A debug build no longer replaces an installed release build. This only affects builds made from source.

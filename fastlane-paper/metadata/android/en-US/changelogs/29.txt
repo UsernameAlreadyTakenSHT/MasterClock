@@ -1,0 +1,3 @@
+The clock no longer stops to serialise your settings every fifteen seconds. The autosave encoded them on the same thread that draws the clock, for the length of every game — which matters more here than anywhere else, since an E-Ink screen is slow to redraw as it is.
+The game history no longer decodes on that thread either, and it no longer loads without any limit when history is set to unlimited — it used to read every game ever played, at startup, which is exactly when the first frame is due.
+A debug build no longer replaces an installed release build. This only affects builds made from source.
