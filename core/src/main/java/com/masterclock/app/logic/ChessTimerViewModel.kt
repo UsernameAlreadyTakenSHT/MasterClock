@@ -1053,10 +1053,24 @@ private const val SLOW_TICK_MS = 100L
 /** How long a crash may cost a running game. */
 private const val AUTO_SAVE_INTERVAL_MS = 15_000L
 
+/**
+ * What "unlimited" history actually means when reading it back.
+ *
+ * A ceiling has to exist somewhere: every row is decoded into memory, so the alternative is a
+ * startup cost that grows without bound for as long as someone keeps playing.
+ */
+private const val MAX_UNLIMITED_HISTORY = 10_000
+
 class ChessTimerViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepo = SettingsRepository(application)
     private val gameDao = GameDatabase.getDatabase(application).gameLogDao()
     private val converters = Converters()
+
+    /**
+     * One instance, because a Json builds and caches a serializer lookup and the saved clock was
+     * constructing a fresh one every fifteen seconds to throw it away again.
+     */
+    private val json = Json { ignoreUnknownKeys = true }
 
     private val _settings = MutableStateFlow(ChessClockSettings())
     val settings: StateFlow<ChessClockSettings> = _settings.asStateFlow()
@@ -1111,6 +1125,23 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val _customPresets = MutableStateFlow<List<SavedPreset>>(emptyList())
     val customPresets: StateFlow<List<SavedPreset>> = _customPresets.asStateFlow()
 
+    /**
+     * Reads the game history back and decodes it, off the main thread.
+     *
+     * viewModelScope runs on Dispatchers.Main and [Converters.toGameLog] parses three JSON columns
+     * per row, so decoding where the rows arrived meant deserialising the entire history on the UI
+     * thread. At startup that is precisely when the first frame is due.
+     *
+     * The unlimited case is clamped here as well. SQLite reads a negative LIMIT as no limit at all,
+     * so passing logHistoryLimit through unchanged made "unlimited" mean every game ever played --
+     * on the one path that did it, while the two others had already settled on ten thousand. One
+     * function now, so the three cannot drift again.
+     */
+    private suspend fun loadHistory(limit: Int): List<GameLog> {
+        val entities = gameDao.getRecentLogs(if (limit == -1) MAX_UNLIMITED_HISTORY else limit)
+        return withContext(Dispatchers.Default) { entities.map { converters.toGameLog(it) } }
+    }
+
     /** Set once the init block below has finished; see [applyShortcut]. */
     private var isLoaded = false
     private var pendingShortcutId: String? = null
@@ -1137,8 +1168,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             soundManager.loadSounds(savedSettings)
             _uiState.value = createInitialState(savedSettings)
 
-            val entities = gameDao.getRecentLogs(savedSettings.logHistoryLimit)
-            _gameHistory.value = entities.map { converters.toGameLog(it) }
+            _gameHistory.value = loadHistory(savedSettings.logHistoryLimit)
 
             _hasSavedClock.value = gameDao.getSavedClock() != null
             _customPresets.value = settingsRepo.customPresetsFlow.first()
@@ -1710,9 +1740,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     }
                 }
 
-                val finalLimit = if (limit == -1) 10000 else limit
-                val entities = gameDao.getRecentLogs(finalLimit)
-                _gameHistory.value = entities.map { converters.toGameLog(it) }
+                _gameHistory.value = loadHistory(limit)
             }
         }
         currentLog = null
@@ -1812,10 +1840,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                         .copy(settings = sanitizeImportedSettings(app, log.settings))
                     gameDao.insertLog(converters.fromGameLog(sanitizedLog))
                 }
-                val limit = _settings.value.logHistoryLimit
-                val finalLimit = if (limit == -1) 10000 else limit
-                val entities = gameDao.getRecentLogs(finalLimit)
-                _gameHistory.value = entities.map { converters.toGameLog(it) }
+                _gameHistory.value = loadHistory(_settings.value.logHistoryLimit)
             }
         }
 
@@ -1888,16 +1913,29 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun advancePhase(playerIndex: Int) { _uiState.update { performPhaseAdvance(it, playerIndex) } }
 
+    /**
+     * Called from [tick], which runs on the main thread, so nothing here may encode on the caller.
+     *
+     * It used to. Both encodeToString calls sat outside the launch, and what they encode is the
+     * whole of [ChessClockSettings] -- every notebook note and every drawing stroke ride along in
+     * it. Every fifteen seconds, for the length of a game, the clock stopped to serialise a
+     * notebook.
+     *
+     * The two values are read here rather than inside the coroutine on purpose: this is what the
+     * clock looked like at the moment the save was due, not whenever the encode happens to run.
+     */
     fun saveClockForLater() {
-        val json = Json { ignoreUnknownKeys = true }
-        val settingsStr = json.encodeToString(ChessClockSettings.serializer(), settings.value)
-        val stateStr = json.encodeToString(ChessClockStateProxy.serializer(), uiState.value.toProxy())
-        
+        val settingsSnapshot = settings.value
+        val stateSnapshot = uiState.value.toProxy()
+
         viewModelScope.launch {
-            gameDao.saveClock(com.masterclock.app.data.SavedClockEntity(
-                settingsJson = settingsStr,
-                stateJson = stateStr
-            ))
+            val entity = withContext(Dispatchers.Default) {
+                com.masterclock.app.data.SavedClockEntity(
+                    settingsJson = json.encodeToString(ChessClockSettings.serializer(), settingsSnapshot),
+                    stateJson = json.encodeToString(ChessClockStateProxy.serializer(), stateSnapshot),
+                )
+            }
+            gameDao.saveClock(entity)
             _hasSavedClock.value = true
         }
     }
@@ -1905,7 +1943,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun resumeSavedClock() {
         viewModelScope.launch {
             val saved = gameDao.getSavedClock() ?: return@launch
-            val json = Json { ignoreUnknownKeys = true }
             try {
                 val resumedSettings = json.decodeFromString(ChessClockSettings.serializer(), saved.settingsJson)
                 val proxy = json.decodeFromString(ChessClockStateProxy.serializer(), saved.stateJson)
