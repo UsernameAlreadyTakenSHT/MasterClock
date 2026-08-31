@@ -766,14 +766,19 @@ fun StopPrecisionScreen(onBack: () -> Unit) {
     // time answers what time it is, not how much has passed, and an NTP sync or a manual change
     // moves it mid-attempt. Here that lands on a reading the exercise scores to the millisecond --
     // a correction backwards can even show a negative elapsed time.
-    LaunchedEffect(isRunning) { if (isRunning) { startTime = SystemClock.elapsedRealtime(); while (isRunning) { displayTime = SystemClock.elapsedRealtime() - startTime; delay(5) } } }
+    // The loop only feeds the number on screen, so it runs at roughly one frame rather than the 200
+    // times a second it used to: nothing can display more than the screen refreshes. What gets
+    // scored is read at the tap instead -- see the button below -- which is also what makes the
+    // slower poll safe. Taking the result from the last poll was leaving it up to a poll period
+    // stale, on an exercise that colours the answer by ten-millisecond bands.
+    LaunchedEffect(isRunning) { if (isRunning) { startTime = SystemClock.elapsedRealtime(); while (isRunning) { displayTime = SystemClock.elapsedRealtime() - startTime; delay(16) } } }
     ToolScaffold(title = stringResource(R.string.tools_stop_precision), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.tools_target_time), modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.Center) { if (!isRunning && displayTime > 0) { val diff = Math.abs(displayTime - 5000L); val color = when { diff <= 10 -> Color(0xFF2196F3); diff <= 20 -> Color(0xFF4CAF50); diff <= 50 -> Color(0xFFFFEB3B); diff <= 100 -> Color(0xFFFF9800); else -> MaterialTheme.colorScheme.error }; Text(text = stringResource(R.string.tools_offset, if (displayTime > 5000) "+" else "-", diff), color = color, fontWeight = FontWeight.Black, style = MaterialTheme.typography.headlineSmall) } }
                 Text(text = String.format(locale, "%.3fs", displayTime / 1000f), style = MaterialTheme.typography.displayLarge.copy(fontSize = 90.sp), fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(72.dp)); Surface(onClick = { if (isRunning) isRunning = false else { displayTime = 0; isRunning = true } }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(if (isRunning) stringResource(R.string.tools_stop) else stringResource(R.string.tools_start), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
+                Spacer(Modifier.height(72.dp)); Surface(onClick = { if (isRunning) { displayTime = SystemClock.elapsedRealtime() - startTime; isRunning = false } else { displayTime = 0; isRunning = true } }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(if (isRunning) stringResource(R.string.tools_stop) else stringResource(R.string.tools_start), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                 Spacer(Modifier.height(48.dp))
             }
         }
