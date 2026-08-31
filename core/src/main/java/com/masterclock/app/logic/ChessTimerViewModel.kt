@@ -207,6 +207,31 @@ enum class TimePadding {
 fun ChessClockSettings.effectiveTimePadding(): TimePadding =
     if (FlavorConfig.hasFullSettingsTabs()) timePadding else TimePadding.FULL
 
+/**
+ * Whether a reading of [absTimeMs] is drawn with tenths.
+ *
+ * A threshold of [Long.MAX_VALUE] means always; zero means never, which is why it is checked
+ * separately rather than left to the comparison.
+ */
+fun ChessClockSettings.showsTenthsAt(absTimeMs: Long): Boolean =
+    showTenthsThresholdMs == Long.MAX_VALUE || (absTimeMs < showTenthsThresholdMs && showTenthsThresholdMs > 0)
+
+/**
+ * Whether a reading of [absTimeMs] is drawn with hundredths.
+ *
+ * Two callers, and they have to agree: TimerDisplay decides what to draw with it, and
+ * [ChessTimerViewModel.tickIntervalMs] decides how often to redraw. Tick slower than the display
+ * and the smallest digit moves in visible jumps.
+ *
+ * They used to be two conditions in two modules, kept in step by a comment. The tick's copy was the
+ * looser of the two -- it ignored the tenths threshold entirely -- so a clock set to show hundredths
+ * only near the end still ticked a hundred times a second from the first move, which is most of the
+ * battery the coarser tick was meant to save. Erring that way was deliberate and safe to look at,
+ * but one function means neither can drift from the other at all.
+ */
+fun ChessClockSettings.showsHundredthsAt(absTimeMs: Long): Boolean =
+    showHundredths && (if (showHundredthsOnlyUnder10s) absTimeMs < 10_000L else showsTenthsAt(absTimeMs))
+
 fun padTimeUnit(value: Long, isLeading: Boolean, padding: TimePadding): String = when (padding) {
     TimePadding.MINIMAL -> value.toString()
     TimePadding.FULL -> value.toString().padStart(2, '0')
@@ -1438,17 +1463,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * The display does care, but only when it shows hundredths. Tenths change every 100ms and
      * seconds every 1000, so 100ms keeps both exact.
      *
-     * The condition mirrors the one TimerDisplay uses to decide whether hundredths appear, and the
-     * two have to agree: tick slower than the display and the smallest digit moves in jumps.
+     * Whether hundredths are on screen is [showsHundredthsAt]'s question, and asking it there is
+     * what keeps this from being a second copy of the display's condition.
      */
     private fun tickIntervalMs(): Long {
         val settings = _settings.value
         if (!settings.showHundredths) return SLOW_TICK_MS
-        if (!settings.showHundredthsOnlyUnder10s) return FAST_TICK_MS
 
         val active = _uiState.value.activePlayer ?: return SLOW_TICK_MS
         val remaining = _uiState.value.players.getOrNull(active - 1)?.timeRemainingMs ?: return SLOW_TICK_MS
-        return if (kotlin.math.abs(remaining) < 10_000L) FAST_TICK_MS else SLOW_TICK_MS
+        return if (settings.showsHundredthsAt(kotlin.math.abs(remaining))) FAST_TICK_MS else SLOW_TICK_MS
     }
 
     private fun tick() {
