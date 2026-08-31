@@ -1104,8 +1104,6 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
     val scope = rememberCoroutineScope()
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else Toast.makeText(context, micPermissionText, Toast.LENGTH_SHORT).show() }
-    LaunchedEffect(isRecording) { if (isRecording) { recordingTime = 0; while (isRecording && recordingTime < 60) { delay(1000); recordingTime++; if (recordingTime >= 60) isRecording = false } } }
-    DisposableEffect(Unit) { onDispose { recorder?.release(); player?.release() } }
     fun startRecording() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -1136,6 +1134,25 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     fun stopRecording() { try { recorder?.apply { stop(); release() }; recorder = null; isRecording = false; val file = File(context.filesDir, "audio_${note.id}.mp4"); onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L)) } catch (_: Exception) { isRecording = false } }
     fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { isPlaying = false } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
     fun stopPlayback() { player?.stop(); player?.release(); player = null; isPlaying = false; playbackTime = 0 }
+
+    // Below stopRecording() rather than above, because it has to call it. Reaching the one-minute
+    // ceiling used to flip isRecording and nothing else: the MediaRecorder kept running with the
+    // microphone open and the file still growing, while the screen said the recording had stopped,
+    // and the take was never attached to the note. Pressing record again then started a second
+    // recorder on the same file and abandoned the first, still holding the mic.
+    //
+    // isRecording is still true here only when the loop ended by hitting the ceiling; a manual stop
+    // clears it, which both ends the loop and cancels this effect.
+    LaunchedEffect(isRecording) {
+        if (!isRecording) return@LaunchedEffect
+        recordingTime = 0
+        while (isRecording && recordingTime < 60) {
+            delay(1000)
+            recordingTime++
+        }
+        if (isRecording) stopRecording()
+    }
+    DisposableEffect(Unit) { onDispose { recorder?.release(); player?.release() } }
 
     ToolScaffold(title = stringResource(R.string.tools_audio_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
