@@ -734,9 +734,9 @@ private fun sanitizeImportedSettings(context: android.content.Context, settings:
     val sanitizedNotes = settings.notebookNotes.map { note ->
         note.copy(
             id = java.util.UUID.randomUUID().toString(),
-            audioPath = sanitizeImportedMediaPath(context, note.audioPath),
-            imagePath = sanitizeImportedMediaPath(context, note.imagePath),
-            videoPath = sanitizeImportedMediaPath(context, note.videoPath),
+            audioPath = sanitizeImportedMediaPath(context.filesDir, note.audioPath),
+            imagePath = sanitizeImportedMediaPath(context.filesDir, note.imagePath),
+            videoPath = sanitizeImportedMediaPath(context.filesDir, note.videoPath),
         )
     }
     val sanitizedNumberOfPlayers = settings.numberOfPlayers.coerceIn(1, 4)
@@ -797,16 +797,49 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
     )
 }
 
-/** Only accept a path that resolves under this app's own sandbox (filesDir/cacheDir); drop anything else. */
-private fun sanitizeImportedMediaPath(context: android.content.Context, path: String?): String? {
+/**
+ * The three shapes the notebook ever writes a media file in. Nothing else is a note's own media,
+ * whatever directory it sits in.
+ */
+private val NOTE_AUDIO_NAME = Regex("""audio_[A-Za-z0-9-]{1,64}\.mp4""")
+private val NOTE_IMAGE_NAME = Regex("""image_[A-Za-z0-9-]{1,64}\.jpg""")
+private val NOTE_VIDEO_NAME = Regex("""video_[A-Za-z0-9-]{1,64}\.mp4""")
+
+/**
+ * Accept an imported note media path only if it names a file the notebook itself could have
+ * written: `filesDir/audio_<id>.mp4`, `filesDir/shares/image_<id>.jpg` or
+ * `filesDir/shares/video_<id>.mp4`.
+ *
+ * Containment in the sandbox used to be the whole test, and that is not the same question. The
+ * app's own DataStore lives at `filesDir/datastore/settings.preferences_pb`, which is inside
+ * filesDir and therefore passed. The notebook's delete button hands these three fields to
+ * `shredFile`, which overwrites a file with random bytes and unlinks it -- so a note carrying that
+ * path turned one tap on a trash icon into the irrecoverable loss of every setting, preset and note
+ * the user had. Five independent reviews found this same path.
+ *
+ * Matching the naming convention rather than dropping the fields outright keeps the one case that
+ * is legitimate: restoring a backup onto the device it was taken from, where the media files are
+ * still present and the note can find them again. A backup archive carries no media itself -- only
+ * settings.json, logs.json and scoreboard.json -- so relinking is all a restore can ever do.
+ *
+ * Residual, and accepted: since note ids are regenerated on import, a path cannot be tied back to
+ * the note that owns it, so one note can still name another note's recording. That costs a media
+ * file rather than the settings store, and closing it would mean giving up relinking entirely.
+ */
+internal fun sanitizeImportedMediaPath(filesDirRaw: java.io.File, path: String?): String? {
     if (path.isNullOrBlank()) return null
     return try {
         val canonical = java.io.File(path).canonicalFile
-        val allowedRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
-        val isInsideSandbox = allowedRoots.any { root ->
-            canonical == root || canonical.path.startsWith(root.path + java.io.File.separator)
+        val filesDir = filesDirRaw.canonicalFile
+        val sharesDir = java.io.File(filesDir, "shares").canonicalFile
+        val parent = canonical.parentFile ?: return null
+        val name = canonical.name
+        val allowed = when {
+            parent == filesDir -> NOTE_AUDIO_NAME.matches(name)
+            parent == sharesDir -> NOTE_IMAGE_NAME.matches(name) || NOTE_VIDEO_NAME.matches(name)
+            else -> false
         }
-        if (isInsideSandbox) canonical.path else null
+        if (allowed) canonical.path else null
     } catch (_: Exception) {
         null
     }
