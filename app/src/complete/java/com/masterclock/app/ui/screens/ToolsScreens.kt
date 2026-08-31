@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
+import android.os.SystemClock
 import android.widget.MediaController
 import android.widget.Toast
 import android.widget.VideoView
@@ -761,7 +762,11 @@ fun StopPrecisionScreen(onBack: () -> Unit) {
     var isRunning by remember { mutableStateOf(false) }
     var startTime by remember { mutableLongStateOf(0L) }
     var displayTime by remember { mutableLongStateOf(0L) }
-    LaunchedEffect(isRunning) { if (isRunning) { startTime = System.currentTimeMillis(); while (isRunning) { displayTime = System.currentTimeMillis() - startTime; delay(5) } } }
+    // elapsedRealtime, not currentTimeMillis, for the same reason the two clocks use it: wall-clock
+    // time answers what time it is, not how much has passed, and an NTP sync or a manual change
+    // moves it mid-attempt. Here that lands on a reading the exercise scores to the millisecond --
+    // a correction backwards can even show a negative elapsed time.
+    LaunchedEffect(isRunning) { if (isRunning) { startTime = SystemClock.elapsedRealtime(); while (isRunning) { displayTime = SystemClock.elapsedRealtime() - startTime; delay(5) } } }
     ToolScaffold(title = stringResource(R.string.tools_stop_precision), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.tools_target_time), modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
