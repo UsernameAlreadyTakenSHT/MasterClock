@@ -1131,7 +1131,27 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             Toast.makeText(context, startFailedText, Toast.LENGTH_SHORT).show()
         }
     }
-    fun stopRecording() { try { recorder?.apply { stop(); release() }; recorder = null; isRecording = false; val file = File(context.filesDir, "audio_${note.id}.mp4"); onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L)) } catch (_: Exception) { isRecording = false } }
+    fun stopRecording() {
+        val active = recorder ?: return
+        // Cleared before stop() so a second call -- the ceiling and a disposal can arrive together
+        // -- finds nothing to stop rather than stopping the same recorder twice.
+        recorder = null
+        isRecording = false
+        val file = File(context.filesDir, "audio_${note.id}.mp4")
+        try {
+            active.stop()
+        } catch (_: Exception) {
+            // stop() throws when the recorder has captured nothing yet, which is any take under
+            // about a second. What it leaves on disk is a stub with no playable audio in it, so it
+            // is deleted rather than offered to the note as a recording. Releasing here matters:
+            // the old catch left the recorder holding the microphone.
+            active.release()
+            file.delete()
+            return
+        }
+        active.release()
+        onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L))
+    }
     fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { isPlaying = false } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
     fun stopPlayback() { player?.stop(); player?.release(); player = null; isPlaying = false; playbackTime = 0 }
 
@@ -1152,7 +1172,11 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         }
         if (isRecording) stopRecording()
     }
-    DisposableEffect(Unit) { onDispose { recorder?.release(); player?.release() } }
+    // Leaving the screen while recording is treated as stopping, because releasing a running
+    // recorder is not the same as stopping one: release() without stop() never writes the MP4's
+    // index, so the file left behind will not play, and onUpdate was never reached either. Walking
+    // away therefore cost the whole take and left the unplayable orphan in filesDir.
+    DisposableEffect(Unit) { onDispose { stopRecording(); player?.release() } }
 
     ToolScaffold(title = stringResource(R.string.tools_audio_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
