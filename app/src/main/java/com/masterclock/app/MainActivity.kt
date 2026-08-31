@@ -184,8 +184,11 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(context, backupOkText, Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
+                            // The message used to be shown to the user; it is a Java exception
+                            // string, always in English and rarely about anything they can act on.
+                            Log.w("MainActivity", "Failed to export backup archive", e)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Failed to export: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, exportFailedText, Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -221,8 +224,9 @@ class MainActivity : ComponentActivity() {
                                 tempFile.delete()
                             }
                         } catch (e: Exception) {
+                            Log.w("MainActivity", "Failed to import backup archive", e)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Failed to import: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, importFailedText, Toast.LENGTH_LONG).show()
                             }
                         }
                     }
