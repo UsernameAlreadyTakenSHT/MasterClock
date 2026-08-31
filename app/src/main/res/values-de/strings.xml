@@ -121,6 +121,7 @@
 
     <string name="toast_backup_ok">Sicherung erstellt!</string>
     <string name="toast_import_ok">Import erfolgreich!</string>
+    <string name="toast_import_failed">Import fehlgeschlagen: Datei nicht lesbar.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Spieler %1$d, %2$s</string>

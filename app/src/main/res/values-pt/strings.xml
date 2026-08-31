@@ -125,6 +125,7 @@
 
     <string name="toast_backup_ok">Cópia de segurança concluída!</string>
     <string name="toast_import_ok">Importação concluída!</string>
+    <string name="toast_import_failed">Falha na importação: não foi possível ler o ficheiro.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jogador %1$d, %2$s</string>

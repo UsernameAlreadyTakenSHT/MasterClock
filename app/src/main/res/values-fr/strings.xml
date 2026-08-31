@@ -126,6 +126,7 @@
 
     <string name="toast_backup_ok">Sauvegarde réussie !</string>
     <string name="toast_import_ok">Import réussi !</string>
+    <string name="toast_import_failed">Import impossible : fichier illisible.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Joueur %1$d, %2$s</string>
