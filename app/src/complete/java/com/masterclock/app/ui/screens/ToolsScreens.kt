@@ -1064,7 +1064,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
             NotebookNoteType.BOARD -> BoardNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
             else -> {
                 var title by remember(selectedNoteId) { mutableStateOf(selectedNote.title) }; var rawText by remember(selectedNoteId) { mutableStateOf(selectedNote.content) }; var contentValue by remember(selectedNoteId) { mutableStateOf(TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(selectedNote.content), selection = TextRange(selectedNote.content.length))) }; var showColorPicker by remember { mutableStateOf(false) }
-                LaunchedEffect(title, rawText) { val newList = settings.notebookNotes.map { if (it.id == selectedNoteId) it.copy(title = title, content = rawText) else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }
+                PersistDebounced(title to rawText) { (newTitle, newText) -> val newList = settings.notebookNotes.map { if (it.id == selectedNoteId) it.copy(title = newTitle, content = newText) else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }
                 fun applyFormat(prefix: String, suffix: String = prefix) { val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.start, selection.end); val newText = text.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.start + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
                 ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = { selectedNoteId = null }) { padding ->
                     Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1080,6 +1080,43 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/** Long enough to cover typing, short enough that nobody could leave a note in less. */
+private const val NOTE_PERSIST_DEBOUNCE_MS = 400L
+
+/**
+ * Persists [value] once it has stopped changing, and at once if the screen is left before that.
+ *
+ * A note editor writing through on every change sounds cheap and is not: one write re-serialises
+ * the whole of ChessClockSettings -- every note in the notebook, every stroke of every drawing --
+ * and DataStore then rewrites its file. Typing a sentence into a text note meant one of those per
+ * character, each one larger than the last.
+ *
+ * The flush on disposal is what makes the wait free rather than a way to lose the last few
+ * characters. It also covers the case the write-through was there for in the first place:
+ * MainActivity's system back handler calls navigator.goBack() directly and never runs
+ * ToolScaffold's onBack lambda, so leaving is only ever observed here.
+ *
+ * Nothing is written for a value that has come back to what it was first composed with, which is
+ * also what keeps merely opening a note from writing.
+ */
+@Composable
+private fun <T> PersistDebounced(value: T, onPersist: (T) -> Unit) {
+    val persist by rememberUpdatedState(onPersist)
+    val initial = remember { value }
+    var pending by remember { mutableStateOf<T?>(null) }
+
+    LaunchedEffect(value) {
+        if (value == initial) return@LaunchedEffect
+        pending = value
+        delay(NOTE_PERSIST_DEBOUNCE_MS)
+        persist(value)
+        pending = null
+    }
+    DisposableEffect(Unit) {
+        onDispose { pending?.let { persist(it) } }
     }
 }
 
@@ -1259,7 +1296,7 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
 @Composable
 fun DrawingNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     var title by remember { mutableStateOf(note.title) }; var currentPaths by remember { mutableStateOf(note.drawingPaths) }; var currentColor by remember { mutableLongStateOf(0xFF000000L) }; var currentWidth by remember { mutableFloatStateOf(8f) }; var isEraser by remember { mutableStateOf(false) }; var activePoints by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
-    LaunchedEffect(title, currentPaths) { onUpdate(note.copy(title = title, drawingPaths = currentPaths)) }
+    PersistDebounced(title to currentPaths) { (newTitle, paths) -> onUpdate(note.copy(title = newTitle, drawingPaths = paths)) }
     ToolScaffold(title = stringResource(R.string.tools_draw_note), onBack = onBack, actions = { IconButton(onClick = { if (currentPaths.isNotEmpty()) currentPaths = currentPaths.dropLast(1) }) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }; IconButton(onClick = { currentPaths = emptyList() }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
@@ -1466,8 +1503,8 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             .build()
     }
 
-    LaunchedEffect(title, board, variant) {
-        onUpdate(note.copy(title = title, boardPosition = board, boardVariant = variant))
+    PersistDebounced(Triple(title, board, variant)) { (newTitle, newBoard, newVariant) ->
+        onUpdate(note.copy(title = newTitle, boardPosition = newBoard, boardVariant = newVariant))
     }
     ToolScaffold(
         title = stringResource(R.string.tools_edit_board),
