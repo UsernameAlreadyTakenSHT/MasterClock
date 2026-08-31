@@ -60,6 +60,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Without this a debug build carries the same application id as the release one, so
+            // installing it replaces the real app -- taking its settings, history and notebook with
+            // it, since the two then share one data directory. Testing a change should not cost
+            // anyone the install they were using.
+            //
+            // debugOptimized picks this up through initWith, which is what it wants too.
+            applicationIdSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
