@@ -15,6 +15,7 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
@@ -142,6 +143,23 @@ class BluetoothBoardManager(private val context: Context) {
         // BLUETOOTH / BLUETOOTH_ADMIN are normal (install-time) permissions pre-S.
         true
     }
+
+    /**
+     * Hands a GATT client back, whatever the permission state says.
+     *
+     * close() is the only call that returns one, and Android has a fixed number. Guarding it behind
+     * hasConnectPermission() -- which is what every call site used to do -- meant that a permission
+     * revoked while connected turned a throw into a client leaked for good: the field was cleared
+     * either way, so nothing could ever close it afterwards.
+     *
+     * Attempting it and swallowing the refusal is the better trade in both directions. With the
+     * permission it recovers the client; without it, nothing was going to be recovered anyway.
+     */
+    private fun closeGattQuietly(gatt: BluetoothGatt?) {
+        if (gatt == null) return
+        runCatching { gatt.close() }
+            .onFailure { Log.w("BluetoothBoardManager", "Could not close the GATT client", it) }
+    }
     
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Idle)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
@@ -178,6 +196,10 @@ class BluetoothBoardManager(private val context: Context) {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 if (!hasConnectPermission()) {
+                    // Bailing out used to leave this client open with nothing holding a reference
+                    // that could ever close it.
+                    if (activeGatt === gatt) activeGatt = null
+                    closeGattQuietly(gatt)
                     _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
                     return
                 }
@@ -193,7 +215,7 @@ class BluetoothBoardManager(private val context: Context) {
                 // closing, so this comparison is what tells an unsolicited drop from a deliberate
                 // one and keeps the object from being closed twice.
                 if (activeGatt === gatt) {
-                    if (hasConnectPermission()) gatt.close()
+                    closeGattQuietly(gatt)
                     activeGatt = null
                     clearGattQueue()
                 }
@@ -369,8 +391,17 @@ class BluetoothBoardManager(private val context: Context) {
             return
         }
         _scannedDevices.value = emptyList()
+        // The permission can go away between the check above and this call, and the scanner answers
+        // that with a SecurityException rather than a return value. Setting Scanning only once the
+        // scan is actually running keeps the screen from waiting forever on one that never started.
+        val scanner = adapter.bluetoothLeScanner
+        val started = runCatching { scanner?.startScan(scanCallback) }
+        if (started.isFailure) {
+            Log.w("BluetoothBoardManager", "Could not start the BLE scan", started.exceptionOrNull())
+            _connectionState.value = ConnectionState.Error("Bluetooth scan permission required")
+            return
+        }
         _connectionState.value = ConnectionState.Scanning
-        adapter.bluetoothLeScanner?.startScan(scanCallback)
         // A BLE scan does not stop by itself, and one left running keeps the radio busy and drains
         // the battery for as long as the app is open. Boards in range announce themselves within a
         // few seconds; half a minute is generous, and the button offers another go.
@@ -380,8 +411,9 @@ class BluetoothBoardManager(private val context: Context) {
 
     fun stopScan() {
         mainHandler.removeCallbacks(scanTimeout)
-        if (!hasScanPermission()) return
-        adapter?.bluetoothLeScanner?.stopScan(scanCallback)
+        // Not gated on the permission any more: returning early left the state stuck on Scanning
+        // when a revocation was exactly the thing that had ended the scan.
+        runCatching { adapter?.bluetoothLeScanner?.stopScan(scanCallback) }
         if (_connectionState.value is ConnectionState.Scanning) {
             _connectionState.value = ConnectionState.Idle
         }
@@ -410,7 +442,17 @@ class BluetoothBoardManager(private val context: Context) {
             .setTransport(BluetoothDevice.TRANSPORT_LE)
             .setAutoConnectEnabled(false)
             .build()
-        activeGatt = device.connectGatt(connectionSettings, ContextCompat.getMainExecutor(context), gattCallback)
+        // Same revocation window as the scan, and the same reason to report it: without this the
+        // screen would sit on Connecting with nothing connecting.
+        val opened = runCatching {
+            device.connectGatt(connectionSettings, ContextCompat.getMainExecutor(context), gattCallback)
+        }
+        activeGatt = opened.getOrNull()
+        if (activeGatt == null) {
+            Log.w("BluetoothBoardManager", "Could not open a GATT connection", opened.exceptionOrNull())
+            _onMoveReceivedCallback = null
+            _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+        }
     }
 
     /**
@@ -425,11 +467,12 @@ class BluetoothBoardManager(private val context: Context) {
     }
 
     fun disconnect() {
-        if (hasConnectPermission()) {
-            activeGatt?.disconnect()
-            activeGatt?.close()
-        }
+        val gatt = activeGatt
         activeGatt = null
+        if (gatt != null) {
+            runCatching { gatt.disconnect() }
+            closeGattQuietly(gatt)
+        }
         clearGattQueue()
         // The callback holds the view model; there is no reason to keep it once the board it was
         // given for has gone.
