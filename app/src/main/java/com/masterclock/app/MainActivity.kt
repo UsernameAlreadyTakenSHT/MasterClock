@@ -80,6 +80,7 @@ class MainActivity : ComponentActivity() {
             // Hoisted: these fire from document-picker callbacks, outside composable scope.
             val backupOkText = stringResource(R.string.toast_backup_ok)
             val importOkText = stringResource(R.string.toast_import_ok)
+            val importFailedText = stringResource(R.string.toast_import_failed)
             var shouldIncludeLogs by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
@@ -208,32 +209,42 @@ class MainActivity : ComponentActivity() {
 
             val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 uri?.let {
-                    context.contentResolver.openInputStream(it)?.use { stream ->
-                        // Bounded: readText() would pull a file of any size straight into the heap.
-                        val content = try {
-                            readImportText(stream)
-                        } catch (e: Exception) {
-                            Log.w("MainActivity", "Failed to read settings file", e)
-                            return@use
-                        }
-                        try {
-                            val pkg = json.decodeFromString<SharePackage>(content)
-                            timerViewModel.updateSettings(
-                                newSettings = pkg.settings,
-                                logsToImport = pkg.logs,
-                                scoreboardToImport = pkg.scoreboard,
-                                isImport = true
-                            )
-                        } catch (_: Exception) {
-                            // Not the current SharePackage format; fall back to the legacy bare-settings format.
+                    // Every outcome here used to be silent. An unreadable file, a format neither
+                    // parser recognised, a provider that handed back no stream at all: each was a
+                    // log line and nothing more, so the picker closed and the screen sat unchanged,
+                    // with no way to tell a refused file from one that imported settings identical
+                    // to the current ones. Success said nothing either, which the backup import
+                    // three lambdas up has always done.
+                    val imported = try {
+                        context.contentResolver.openInputStream(it)?.use { stream ->
+                            // Bounded: readText() would pull a file of any size straight into the heap.
+                            val content = readImportText(stream)
                             try {
+                                val pkg = json.decodeFromString<SharePackage>(content)
+                                timerViewModel.updateSettings(
+                                    newSettings = pkg.settings,
+                                    logsToImport = pkg.logs,
+                                    scoreboardToImport = pkg.scoreboard,
+                                    isImport = true
+                                )
+                            } catch (_: Exception) {
+                                // Not the current SharePackage format; fall back to the legacy
+                                // bare-settings format. A failure here is the real one, and it
+                                // reaches the outer catch rather than being swallowed.
                                 val oldSettings = json.decodeFromString<ChessClockSettings>(content)
                                 timerViewModel.updateSettings(oldSettings, isImport = true)
-                            } catch (e: Exception) {
-                                Log.w("MainActivity", "Failed to import settings file (new and legacy format both failed)", e)
                             }
-                        }
+                            true
+                        } ?: false
+                    } catch (e: Exception) {
+                        Log.w("MainActivity", "Failed to import settings file", e)
+                        false
                     }
+                    Toast.makeText(
+                        context,
+                        if (imported) importOkText else importFailedText,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
             

@@ -120,6 +120,7 @@
 
     <string name="toast_backup_ok">Backup riuscito!</string>
     <string name="toast_import_ok">Importazione riuscita!</string>
+    <string name="toast_import_failed">Importazione non riuscita: impossibile leggere il file.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Giocatore %1$d, %2$s</string>
