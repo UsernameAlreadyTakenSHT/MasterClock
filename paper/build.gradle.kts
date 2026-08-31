@@ -51,6 +51,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // See app/build.gradle.kts: without the suffix a debug install replaces the released
+            // app and inherits its data directory.
+            applicationIdSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
