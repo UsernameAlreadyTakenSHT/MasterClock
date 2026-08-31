@@ -1162,7 +1162,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         active.release()
         onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L))
     }
-    fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { isPlaying = false } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
+    fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
     fun stopPlayback() { player?.stop(); player?.release(); player = null; isPlaying = false; playbackTime = 0 }
 
     // Below stopRecording() rather than above, because it has to call it. Reaching the one-minute
@@ -1227,14 +1227,28 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }; val videoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
-    val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success -> if (success) onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) }
+    // A retake writes over video_<id>.mp4, so the path is identical before and after and nothing in
+    // the note tells the two apart. This counter is what does: it changes on every capture, and the
+    // player reloads when it does.
+    var captureCount by remember { mutableIntStateOf(0) }
+    val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success -> if (success) { captureCount++; onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) } }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
 
     ToolScaffold(title = stringResource(R.string.tools_video_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                if (note.videoPath != null) AndroidView(factory = { ctx -> VideoView(ctx).apply { setVideoPath(note.videoPath); val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller); start() } }, modifier = Modifier.fillMaxSize())
+                val videoPath = note.videoPath
+                // The source used to be set in factory, which runs once: a retake left the old
+                // recording playing, since the path it compared had not changed. Loading it from
+                // update, keyed on the capture counter, is what actually picks up a new take. The
+                // view also has to give the decoder back, which nothing did.
+                if (videoPath != null) AndroidView(
+                    factory = { ctx -> VideoView(ctx).apply { val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller) } },
+                    update = { view -> if (view.tag != captureCount) { view.tag = captureCount; view.setVideoPath(videoPath); view.start() } },
+                    onRelease = { view -> view.stopPlayback() },
+                    modifier = Modifier.fillMaxSize(),
+                )
                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_video), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
             Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) videoLauncher.launch(videoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.videoPath == null) Icons.Default.Videocam else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.videoPath == null) stringResource(R.string.tools_record_video) else stringResource(R.string.tools_retake_video)) }
