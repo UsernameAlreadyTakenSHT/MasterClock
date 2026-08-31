@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-30"
+    const val BUILD_DATE = "2026-08-31"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,20 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.28",
+            date = "2026-08-31",
+            notes = listOf(
+                "A voice note recorded for the full minute was always lost, and the microphone kept recording after the screen said it had stopped. The one-minute limit only changed the label.",
+                "Leaving a voice note while it was still recording threw the recording away. It is kept now.",
+                "Importing a JSON file said nothing at all, whether it worked or not. Both outcomes are reported now.",
+                "The precision trainer measured with a clock that can be reset mid-attempt, and kept the reading from its last poll rather than from your tap — on the one screen where the measurement is the whole point.",
+                "Retaking a video kept showing the previous one.",
+                "The clock no longer stops to serialise the notebook every fifteen seconds, and the game history no longer loads on the drawing thread — nor without limit when history is set to unlimited.",
+                "Typing in a note no longer rewrites the entire notebook on every keystroke. Edits are saved after a pause, and immediately if you leave.",
+                "A debug build no longer replaces an installed release build. This only affects builds made from source.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.27",
             date = "2026-08-30",

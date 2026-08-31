@@ -1,0 +1,10 @@
+A voice note recorded for the full minute was always lost, and the microphone kept recording after the screen said it had stopped. The one-minute limit only ever changed the label; it now actually ends the recording.
+Leaving a voice note while it was still recording threw the take away, because the recorder was released without being stopped. It is kept now.
+Importing a JSON file said nothing at all, whether it worked or not: the picker closed and the screen was unchanged either way. Both outcomes are reported now.
+The precision trainer measured with wall-clock time, which a sync can move mid-attempt, and kept the reading from its last poll instead of from your tap — on the one screen where the measurement is the whole exercise.
+Retaking a video kept showing the previous one.
+The clock no longer stops to serialise the notebook every fifteen seconds, and the game history no longer decodes on the thread drawing the clock — nor without any limit when history is set to unlimited.
+Typing in a note no longer rewrites the entire notebook on every keystroke. Edits are saved after a short pause, and immediately if you leave the note.
+Link board: a board dropping out could cost the phone a Bluetooth connection slot when the app had lost the permission, because closing was skipped while the reference to it was cleared anyway.
+Two buttons and two error messages that were always in English are translated.
+A debug build no longer replaces an installed release build. This only affects builds made from source.

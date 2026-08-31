@@ -1,3 +1,23 @@
+## v0.8.28 — 2026-08-31
+
+A whole release of things found by reading the app rather than by using it. Most of them had been
+there a long time.
+
+### Fixed
+- **A voice note recorded for a full minute was always lost, and the microphone stayed on.** The one-minute limit only ever changed the label: the button went back to "Record", the timer stopped climbing, and the recorder went on recording, because nothing had told it to stop. The take was never attached to the note, and pressing record again started a second recorder on the same file while the first carried on holding the microphone. The ceiling now ends the recording, which is what it always claimed to do.
+- **Leaving a voice note while it was still recording threw the recording away.** It was released without being stopped, and those are not the same thing: the file left behind has no index and will not play, and the note kept no reference to it. Walking away now finishes the recording properly and keeps it. A take of under a second is still discarded, because there is nothing in it, but its leftover file is deleted rather than left in place.
+- **Importing a JSON file said nothing at all, whether it worked or not.** An unreadable file, a format neither parser recognised, or a perfectly good import all looked identical: the picker closed and the screen was unchanged. Both outcomes are now reported, the way the backup import beside it always has.
+- **The precision trainer measured with the wrong clock, and scored the wrong instant.** It used wall-clock time, so a clock correction mid-attempt corrupted the result — on the one screen where the measurement is the whole exercise. And the result it kept was whatever its polling loop had last written, up to a poll old, on a reading it colours in ten-millisecond bands. It now counts from a clock that cannot be set, and takes its reading at the moment you tap.
+- **Retaking a video kept showing the old one.** The player was pointed at the file once and never again, and a retake writes over the same file, so nothing about the note changed to tell them apart.
+- **A board going out of range could cost the phone a Bluetooth connection slot even when the app had the permission taken away.** Three places skipped closing the connection when the permission was missing, but cleared the reference to it anyway, so nothing was left that could ever close it. They now try, and accept a refusal.
+
+### Changed
+- **The clock no longer stops to serialise the notebook mid-game.** The fifteen-second autosave encoded settings — every note and every drawing in them — on the same thread that draws the clock. So did loading the game history at startup, which also had no ceiling in the "unlimited" case: it loaded every game ever played, while the same code elsewhere had settled on ten thousand. Both now happen off the main thread. The JSON export and import move off it too; the backup pair beside them always had.
+- **Typing in a note no longer rewrites the whole notebook on every keystroke.** Saving a note re-serialises every note and every drawing stroke, and the editors did that per character, per brush stroke, per piece placed. They now wait for a pause, and still save immediately if you leave.
+- The clock's tick rate and what the display actually shows are now decided by one function instead of two conditions in two modules. They had already drifted: with hundredths enabled but shown only near the end, the clock still ticked a hundred times a second from the first move.
+- A debug build no longer replaces an installed release build. Nothing changes for anyone installing from a release page; this only affects builds made from source.
+- The last four strings the app still spoke English regardless of language are translated: two buttons in the voice note editor, and two error messages that used to show a raw Java exception.
+
 ## v0.8.27 — 2026-08-30
 
 ### Fixed
