@@ -133,6 +133,8 @@
     <string name="toast_backup_ok">Backup successful!</string>
     <string name="toast_import_ok">Import successful!</string>
     <string name="toast_import_failed">Import failed: file could not be read.</string>
+    <string name="toast_export_ok">Export successful!</string>
+    <string name="toast_export_failed">Export failed: file could not be written.</string>
 
     <!--
       Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,

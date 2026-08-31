@@ -122,6 +122,8 @@
     <string name="toast_backup_ok">¡Copia de seguridad realizada!</string>
     <string name="toast_import_ok">¡Importación correcta!</string>
     <string name="toast_import_failed">Error al importar: no se pudo leer el archivo.</string>
+    <string name="toast_export_ok">¡Exportación correcta!</string>
+    <string name="toast_export_failed">Error al exportar: no se pudo escribir el archivo.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jugador %1$d, %2$s</string>
