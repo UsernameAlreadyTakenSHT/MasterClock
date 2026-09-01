@@ -16,8 +16,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -84,6 +87,10 @@ class MainActivity : ComponentActivity() {
             val exportOkText = stringResource(R.string.toast_export_ok)
             val exportFailedText = stringResource(R.string.toast_export_failed)
             var shouldIncludeLogs by remember { mutableStateOf(false) }
+            // Held between the scan and the user's decision. A QR code is the one import that needs
+            // no file and no picker -- framing it is the whole of the interaction -- so it is the
+            // one that must not apply itself.
+            var pendingScan by remember { mutableStateOf<SharePackage?>(null) }
 
             val scope = rememberCoroutineScope()
 
@@ -422,17 +429,25 @@ class MainActivity : ComponentActivity() {
                         entry<Route.QRReceive> { _ ->
                             QRReceiveScreen(
                                 onResult = { scanResult ->
-                                    try {
-                                        val pkg = json.decodeFromString<SharePackage>(scanResult)
-                                        timerViewModel.updateSettings(
-                                            newSettings = pkg.settings,
-                                            logsToImport = pkg.logs,
-                                            scoreboardToImport = pkg.scoreboard,
-                                            isImport = true
-                                        )
+                                    // Decoded here, applied only if the user says so. Pointing the
+                                    // camera at a code used to be consent: whatever it carried
+                                    // replaced the settings and added its logs and scoreboard
+                                    // immediately, and a code on a poster or a table works as well
+                                    // as one on a friend's screen.
+                                    val parsed = runCatching { json.decodeFromString<SharePackage>(scanResult) }
+                                    parsed.exceptionOrNull()?.let { e ->
+                                        Log.w("MainActivity", "Failed to read scanned QR share package", e)
+                                    }
+                                    // This callback is delivered on the ImageAnalysis executor, not
+                                    // the main thread. The navigation and the state write were
+                                    // already happening there; a Toast would have thrown outright,
+                                    // since it needs a prepared Looper.
+                                    scope.launch {
+                                        pendingScan = parsed.getOrNull()
                                         navigator.goBack()
-                                    } catch (e: Exception) {
-                                        Log.w("MainActivity", "Failed to import scanned QR share package", e)
+                                        if (parsed.isFailure) {
+                                            Toast.makeText(context, importFailedText, Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 },
                                 onBack = { navigator.goBack() }
@@ -472,6 +487,33 @@ class MainActivity : ComponentActivity() {
                         entries = navigationState.toEntries(entryProvider),
                         onBack = { navigator.goBack() }
                     )
+
+                    // Outside the scanner's navigation entry on purpose: the screen is left as soon
+                    // as a code is read, so a dialog belonging to it would be torn down with it.
+                    pendingScan?.let { scanned ->
+                        AlertDialog(
+                            onDismissRequest = { pendingScan = null },
+                            title = { Text(stringResource(R.string.qr_confirm_title)) },
+                            text = { Text(stringResource(R.string.qr_confirm_message)) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    pendingScan = null
+                                    timerViewModel.updateSettings(
+                                        newSettings = scanned.settings,
+                                        logsToImport = scanned.logs,
+                                        scoreboardToImport = scanned.scoreboard,
+                                        isImport = true
+                                    )
+                                    Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
+                                }) { Text(stringResource(R.string.qr_confirm_apply)) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { pendingScan = null }) {
+                                    Text(stringResource(R.string.common_cancel))
+                                }
+                            },
+                        )
+                    }
                 }
             }
         }

@@ -124,6 +124,9 @@
     <string name="toast_import_failed">Error al importar: no se pudo leer el archivo.</string>
     <string name="toast_export_ok">¡Exportación correcta!</string>
     <string name="toast_export_failed">Error al exportar: no se pudo escribir el archivo.</string>
+    <string name="qr_confirm_title">¿Aplicar los ajustes escaneados?</string>
+    <string name="qr_confirm_message">Este código sustituye tus ajustes actuales y puede añadir partidas y un marcador. Acepta códigos solo de alguien de confianza.</string>
+    <string name="qr_confirm_apply">Aplicar</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jugador %1$d, %2$s</string>

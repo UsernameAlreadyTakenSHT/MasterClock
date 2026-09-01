@@ -123,6 +123,9 @@
     <string name="toast_import_failed">Importazione non riuscita: impossibile leggere il file.</string>
     <string name="toast_export_ok">Esportazione riuscita!</string>
     <string name="toast_export_failed">Esportazione non riuscita: impossibile scrivere il file.</string>
+    <string name="qr_confirm_title">Applicare le impostazioni scansionate?</string>
+    <string name="qr_confirm_message">Questo codice sostituisce le tue impostazioni attuali e può aggiungere partite e un tabellone. Accetta un codice solo da una persona di cui ti fidi.</string>
+    <string name="qr_confirm_apply">Applica</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Giocatore %1$d, %2$s</string>
