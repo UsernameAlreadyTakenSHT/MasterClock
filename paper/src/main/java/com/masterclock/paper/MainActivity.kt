@@ -70,6 +70,9 @@ class MainActivity : ComponentActivity() {
             // Hoisted: these fire from launcher callbacks, outside composable scope.
             val backupOkText = stringResource(R.string.toast_backup_ok)
             val importOkText = stringResource(R.string.toast_import_ok)
+            val importFailedText = stringResource(R.string.toast_import_failed)
+            val exportOkText = stringResource(R.string.toast_export_ok)
+            val exportFailedText = stringResource(R.string.toast_export_failed)
             var shouldIncludeLogs by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
@@ -100,23 +103,41 @@ class MainActivity : ComponentActivity() {
 
             val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
                 uri?.let {
-                    context.contentResolver.openOutputStream(it)?.use { stream ->
-                        val pkg = if (shouldIncludeLogs) {
-                            SharePackage(
-                                settings = settings.copy(
-                                    notebookNotes = settings.notebookNotes.filter { it.type == NotebookNoteType.TEXT }
-                                ),
-                                logs = gameHistory,
-                                scoreboard = timerViewModel.scoreboard.value
-                            )
-                        } else {
-                            SharePackage(
-                                settings = settings.copy(notebookNotes = emptyList()),
-                                logs = null,
-                                scoreboard = null
-                            )
+                    // Assembled here because it reads composition state; encoded and written off the
+                    // main thread, which is where all of it used to happen. See the same treatment
+                    // in app/src/main/java/com/masterclock/app/MainActivity.kt.
+                    val pkg = if (shouldIncludeLogs) {
+                        SharePackage(
+                            settings = settings.copy(
+                                notebookNotes = settings.notebookNotes.filter { it.type == NotebookNoteType.TEXT }
+                            ),
+                            logs = gameHistory,
+                            scoreboard = timerViewModel.scoreboard.value
+                        )
+                    } else {
+                        SharePackage(
+                            settings = settings.copy(notebookNotes = emptyList()),
+                            logs = null,
+                            scoreboard = null
+                        )
+                    }
+                    scope.launch(Dispatchers.IO) {
+                        val written = runCatching {
+                            val bytes = json.encodeToString(pkg).toByteArray()
+                            context.contentResolver.openOutputStream(it)?.use { stream ->
+                                stream.write(bytes)
+                            } ?: error("No output stream for $it")
                         }
-                        stream.write(json.encodeToString(pkg).toByteArray())
+                        written.exceptionOrNull()?.let { e ->
+                            Log.w("MainActivity", "Failed to export settings file", e)
+                        }
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                context,
+                                if (written.isSuccess) exportOkText else exportFailedText,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
                     }
                 }
             }
@@ -136,8 +157,11 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(context, backupOkText, Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
+                            // The message used to go to the user: a Java exception string, always in
+                            // English and rarely about anything they can act on.
+                            Log.w("MainActivity", "Failed to export backup archive", e)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Failed to export: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, exportFailedText, Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -173,8 +197,9 @@ class MainActivity : ComponentActivity() {
                                 tempFile.delete()
                             }
                         } catch (e: Exception) {
+                            Log.w("MainActivity", "Failed to import backup archive", e)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Failed to import: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, importFailedText, Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -183,30 +208,42 @@ class MainActivity : ComponentActivity() {
 
             val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 uri?.let {
-                    context.contentResolver.openInputStream(it)?.use { stream ->
-                        // Bounded: readText() would pull a file of any size straight into the heap.
-                        val content = try {
-                            readImportText(stream)
-                        } catch (e: Exception) {
-                            Log.w("MainActivity", "Failed to read settings file", e)
-                            return@use
-                        }
-                        try {
-                            val pkg = json.decodeFromString<SharePackage>(content)
-                            timerViewModel.updateSettings(
-                                newSettings = pkg.settings,
-                                logsToImport = pkg.logs,
-                                scoreboardToImport = pkg.scoreboard,
-                                isImport = true
-                            )
-                        } catch (_: Exception) {
-                            // Not the current SharePackage format; fall back to the legacy bare-settings format.
+                    // Every outcome here used to be a log line and nothing else: the picker closed
+                    // and the screen was unchanged whether the file had been applied, refused or
+                    // never opened. Reading and parsing also happened on the main thread, over a
+                    // stream that can belong to a cloud provider. Both were fixed in the phone app
+                    // and not ported here.
+                    scope.launch(Dispatchers.IO) {
+                        val parsed = runCatching {
+                            val content = context.contentResolver.openInputStream(it)?.use { stream ->
+                                // Bounded: readText() would pull a file of any size straight into the heap.
+                                readImportText(stream)
+                            } ?: error("No input stream for $it")
                             try {
-                                val oldSettings = json.decodeFromString<ChessClockSettings>(content)
-                                timerViewModel.updateSettings(oldSettings, isImport = true)
-                            } catch (e: Exception) {
-                                Log.w("MainActivity", "Failed to import settings file (new and legacy format both failed)", e)
+                                json.decodeFromString<SharePackage>(content)
+                            } catch (_: Exception) {
+                                // Not the current SharePackage format; fall back to the legacy
+                                // bare-settings format. A failure there is the real one.
+                                SharePackage(settings = json.decodeFromString<ChessClockSettings>(content))
                             }
+                        }
+                        parsed.exceptionOrNull()?.let { e ->
+                            Log.w("MainActivity", "Failed to import settings file", e)
+                        }
+                        withContext(Dispatchers.Main) {
+                            parsed.getOrNull()?.let { pkg ->
+                                timerViewModel.updateSettings(
+                                    newSettings = pkg.settings,
+                                    logsToImport = pkg.logs,
+                                    scoreboardToImport = pkg.scoreboard,
+                                    isImport = true
+                                )
+                            }
+                            Toast.makeText(
+                                context,
+                                if (parsed.isSuccess) importOkText else importFailedText,
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         }
                     }
                 }
