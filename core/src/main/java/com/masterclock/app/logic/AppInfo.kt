@@ -490,13 +490,6 @@ object AppInfo {
             url = "https://github.com/zxing/zxing",
             completeOnly = true,
         ),
-        OssLicense(
-            name = "ZXing Android Embedded",
-            copyright = "JourneyApps",
-            license = "Apache License 2.0",
-            url = "https://github.com/journeyapps/zxing-android-embedded",
-            completeOnly = true,
-        ),
         // Reached only through CameraX, which the QR scanner and the notebook's photo notes pull
         // in. A handful of classes each -- ListenableFuture, Dagger's lazy-init helpers and the
         // Provider interface they implement -- but shipped all the same, so credited all the same.

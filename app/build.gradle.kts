@@ -187,7 +187,9 @@ dependencies {
     "completeImplementation"(libs.androidx.camera.core)
     "completeImplementation"(libs.androidx.camera.lifecycle)
     "completeImplementation"(libs.androidx.camera.view)
-    "completeImplementation"(libs.zxing.android.embedded)
+    // zxing-android-embedded was declared here and never imported. The QR screens use
+    // com.google.zxing from zxing-core for decoding and encoding, and CameraX for the preview,
+    // which is the whole of what that library would have provided.
     "completeImplementation"(libs.accompanist.permissions)
     "completeImplementation"(libs.coil.compose)
     "completeImplementation"(libs.coil.svg)
