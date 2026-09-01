@@ -731,9 +731,22 @@ data class ChessClockState(
  * videoPath/custom*Uri are read and written to directly.
  */
 private fun sanitizeImportedSettings(context: android.content.Context, settings: ChessClockSettings): ChessClockSettings {
-    val sanitizedNotes = settings.notebookNotes.map { note ->
+    val sanitizedNotes = settings.notebookNotes.take(MAX_IMPORTED_NOTES).map { note ->
         note.copy(
             id = java.util.UUID.randomUUID().toString(),
+            title = note.title.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
+            content = note.content.take(MAX_IMPORTED_NOTE_CONTENT_CHARS),
+            drawingPaths = note.drawingPaths.take(MAX_IMPORTED_DRAWING_PATHS).map { stroke ->
+                stroke.copy(points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS))
+            },
+            // The grid is laid out from boardVariant.side, so an imported list of any other length
+            // means the tap and drag handlers index past its end the first time the board is
+            // touched. Normalising here is what keeps the two in step; the editor's own resize
+            // already does the same when the variant changes.
+            boardPosition = note.boardPosition.take(note.boardVariant.squareCount).let { squares ->
+                if (squares.size == note.boardVariant.squareCount) squares
+                else squares + List(note.boardVariant.squareCount - squares.size) { "" }
+            },
             audioPath = sanitizeImportedMediaPath(context.filesDir, note.audioPath),
             imagePath = sanitizeImportedMediaPath(context.filesDir, note.imagePath),
             videoPath = sanitizeImportedMediaPath(context.filesDir, note.videoPath),
@@ -747,6 +760,14 @@ private fun sanitizeImportedSettings(context: android.content.Context, settings:
         customFinalBeepUri = sanitizeImportedContentUri(settings.customFinalBeepUri),
         customSwitchUri = sanitizeImportedContentUri(settings.customSwitchUri),
         numberOfPlayers = sanitizedNumberOfPlayers,
+        // The one integer that reaches SQL directly, and the one this function used to miss.
+        // trimLogs(0) runs DELETE ... WHERE id NOT IN (SELECT id ... LIMIT 0), whose subquery
+        // selects nothing, so every row goes -- silently, at the end of the next game. And SQLite
+        // reads any negative LIMIT as no limit, so a value like -2 slips past the ceiling in
+        // loadHistory, which only recognised -1. The UI offers -1 or 10..10000; nothing else is a
+        // value a user could have chosen.
+        logHistoryLimit = if (settings.logHistoryLimit == -1) -1
+            else settings.logHistoryLimit.coerceIn(1, MAX_UNLIMITED_HISTORY),
         // Per-player customization (p3Custom/p4Custom) is only ever offered by the app's own UI for
         // 2 players (SettingsBehaviorPage forces this same rule when toggling "more players"); an
         // import must not be able to sneak past that restriction.
@@ -794,6 +815,19 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
         fastMoveFullAccelRate = settings.fastMoveFullAccelRate.coerceAtLeast(0f),
         fastMoveShrinkDecrementMs = settings.fastMoveShrinkDecrementMs.coerceAtLeast(0),
         fastMoveShrinkFloorMs = settings.fastMoveShrinkFloorMs.coerceAtLeast(0),
+        // Every scalar above was clamped and both lists were left alone. Their length drives how
+        // much the settings screen composes at once, and phases additionally drives the clock:
+        // see performPhaseAdvance, which loops back to phases[0] and needs there to be one.
+        phases = settings.phases.take(MAX_IMPORTED_PERIODS).map { phase ->
+            phase.copy(timeMs = phase.timeMs.coerceAtLeast(0), name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS))
+        },
+        fidePeriods = settings.fidePeriods.take(MAX_IMPORTED_PERIODS).map { period ->
+            period.copy(
+                timeMs = period.timeMs.coerceAtLeast(0),
+                incrementMs = period.incrementMs.coerceAtLeast(0),
+                movesToNext = period.movesToNext.coerceAtLeast(0),
+            )
+        },
     )
 }
 
@@ -859,6 +893,38 @@ private fun sanitizeImportedContentUri(uri: String?): String? {
  */
 const val MAX_IMPORTED_EVENTS_PER_LOG = 2_000
 
+/**
+ * Ceilings on the parts of an imported notebook that the UI composes eagerly.
+ *
+ * A drawing is rendered by rebuilding a Path from its points on every frame, and the notebook list
+ * and note editors are plain Columns. The 10 MB the reader allows is a great many coordinates, and
+ * the settings blob is re-encoded to DataStore on every later change, so an oversized import is
+ * paid for again and again rather than once. These are deliberately far above anything a person
+ * would produce by hand.
+ */
+private const val MAX_IMPORTED_NOTES = 500
+private const val MAX_IMPORTED_NOTE_TITLE_CHARS = 200
+private const val MAX_IMPORTED_NOTE_CONTENT_CHARS = 100_000
+private const val MAX_IMPORTED_DRAWING_PATHS = 5_000
+private const val MAX_IMPORTED_DRAWING_POINTS = 10_000
+
+/**
+ * A game has one time control, and a period or phase is a thing a person types in one at a time.
+ * Both lists are rendered by a `forEachIndexed` inside a scrolling Column, one Card with several
+ * text fields each, so a few hundred thousand of them is an unresponsive settings screen that
+ * persists across restarts.
+ */
+private const val MAX_IMPORTED_PERIODS = 64
+
+/** Room reads a row through a CursorWindow of about 2 MB, and every event of a game shares one column. */
+private const val MAX_IMPORTED_EVENT_DETAIL_CHARS = 256
+
+/** Long enough for any event name this app writes; short enough not to be a payload. */
+private const val MAX_IMPORTED_EVENT_TYPE_CHARS = 64
+
+/** More than anyone has played, and far below what makes the history screen or the database suffer. */
+private const val MAX_IMPORTED_LOGS = 10_000
+
 /** A month per move is already absurd; anything past it is a crafted value, not a slow player. */
 private const val MAX_IMPORTED_DURATION_MS = 30L * 24 * 60 * 60 * 1000
 
@@ -874,9 +940,20 @@ private const val MAX_MOVE_NOTATION_CHARS = 32
  * sandbox -- [GameEvent] holds no path or URI -- so the exposure is denial of service and nonsense
  * arithmetic rather than data theft, which is why the limits below are generous rather than strict.
  */
+// The id is deliberately left alone, unlike NotebookNote's and ScoreboardGame's. A review argued
+// for regenerating it, because insertLog is OnConflictStrategy.REPLACE and an imported log carrying
+// the id of a recorded game overwrites it. That is true, and the cure is worse: keeping the id is
+// what makes restoring a backup idempotent, so a user who restores the same archive twice gets
+// their history back rather than two of everything. What it buys an attacker is the replacement of
+// one local game record, with no path out of the sandbox.
 internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
     events = log.events.take(MAX_IMPORTED_EVENTS_PER_LOG).map { event ->
         event.copy(
+            // Neither of these was bounded. Every event of a game shares one JSON column, and Room
+            // reads a row through a CursorWindow of about 2 MB: exceed it and getRecentLogs throws
+            // where nothing catches it, on every launch, until the app's data is cleared.
+            eventType = event.eventType.take(MAX_IMPORTED_EVENT_TYPE_CHARS),
+            detail = event.detail?.take(MAX_IMPORTED_EVENT_DETAIL_CHARS),
             // moveDurations() drops a MOVE with a null playerIndex while the log screen used to
             // keep it, so an out-of-range index desynchronised the two lists. Normalising here
             // means the display never has to guess.
@@ -1196,7 +1273,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * function now, so the three cannot drift again.
      */
     private suspend fun loadHistory(limit: Int): List<GameLog> {
-        val entities = gameDao.getRecentLogs(if (limit == -1) MAX_UNLIMITED_HISTORY else limit)
+        // Any non-positive value, not just -1: SQLite reads every negative LIMIT as no limit at
+        // all, so testing for -1 alone left -2 free to load the entire table. sanitizeImportedSettings
+        // now refuses such a value on the way in as well, and this is the backstop.
+        val effective = if (limit <= 0) MAX_UNLIMITED_HISTORY else limit.coerceAtMost(MAX_UNLIMITED_HISTORY)
+        val entities = gameDao.getRecentLogs(effective)
         return withContext(Dispatchers.Default) { entities.map { converters.toGameLog(it) } }
     }
 
@@ -1892,11 +1973,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // Games" tab (onPresetSelected -> updateSettings(set, states), isImport defaults to
                 // false there) -- silently reopening the path-sanitisation hole this guards against.
                 val app = getApplication<Application>()
-                logs.forEach { log ->
+                // Capped, unlike a game the user actually played: that path goes through
+                // saveLogWithTrim, which enforces logHistoryLimit, while this one inserts whatever
+                // arrives. A backup is allowed to be large, but not unbounded.
+                logs.take(MAX_IMPORTED_LOGS).forEach { log ->
                     val sanitizedLog = sanitizeImportedLog(log)
                         .copy(settings = sanitizeImportedSettings(app, log.settings))
                     gameDao.insertLog(converters.fromGameLog(sanitizedLog))
                 }
+                val limit = _settings.value.logHistoryLimit
+                if (limit != -1) gameDao.trimLogs(limit)
                 _gameHistory.value = loadHistory(_settings.value.logHistoryLimit)
             }
         }
@@ -1953,6 +2039,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private fun performPhaseAdvance(state: ChessClockState, playerIndex: Int): ChessClockState {
         val s = getPlayerSettings(playerIndex)
         val p = state.players[playerIndex - 1]
+        // With no phases at all there is nothing to advance to, and the loopPhases branch below
+        // would otherwise send phases[0] into an empty list. Settings are persisted, so a crafted
+        // import reaching here once would crash the clock on every launch after it.
+        if (s.phases.isEmpty()) {
+            val newList = state.players.toMutableList()
+                .apply { this[playerIndex - 1] = p.copy(isOutOfTime = true, timeRemainingMs = 0) }
+            return state.copy(players = newList, globalTimeMs = 0)
+        }
         var nextIdx = p.currentPhaseIndex + 1
         if (nextIdx >= s.phases.size) {
             nextIdx = if (settings.value.loopPhases) {
