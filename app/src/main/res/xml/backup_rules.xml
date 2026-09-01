@@ -3,6 +3,19 @@
   Covers API 23-30 (below API 31, android:dataExtractionRules doesn't apply — see
   data_extraction_rules.xml for 31+). Same intent as allowBackup="false": nothing leaves the device.
 -->
+<!--
+  Every exclude needs a path; the single domain="root" that used to be here carried none, so the
+  rule was not the belt-and-braces the comment above claims. allowBackup="false" already turns
+  backup off wholesale on these versions, which is why nothing was ever actually exposed, but a
+  defence that is written down and does not parse is worse than one that is absent.
+
+  Listed per domain because "root" is the data directory itself and does not stand in for the
+  files, databases and shared-preferences trees beneath it.
+-->
 <full-backup-content>
-    <exclude domain="root" />
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
 </full-backup-content>

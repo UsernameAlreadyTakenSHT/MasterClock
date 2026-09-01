@@ -174,12 +174,19 @@ class MainActivity : ComponentActivity() {
                     scope.launch(Dispatchers.IO) {
                         try {
                             val zipFile = ZipBackupManager.createFullBackup(context, settings, gameHistory, timerViewModel.scoreboard.value)
-                            context.contentResolver.openOutputStream(it)?.use { output ->
-                                zipFile.inputStream().use { input ->
-                                    input.copyTo(output)
+                            try {
+                                context.contentResolver.openOutputStream(it)?.use { output ->
+                                    zipFile.inputStream().use { input ->
+                                        input.copyTo(output)
+                                    }
                                 }
+                            } finally {
+                                // In a finally, like the import's temp file: the archive holds the
+                                // settings, every notebook note and the whole game history in the
+                                // clear, and an export that failed at openOutputStream used to leave
+                                // it in the cache with nothing to remove it.
+                                zipFile.delete()
                             }
-                            zipFile.delete()
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, backupOkText, Toast.LENGTH_SHORT).show()
                             }
@@ -474,7 +481,18 @@ class MainActivity : ComponentActivity() {
         try {
             val cacheDir = File(context.cacheDir, "shares")
             if (!cacheDir.exists()) cacheDir.mkdirs()
-            val shareFile = File(cacheDir, "master_clock_config.json")
+            // Every share used to write the same path, and a read grant lives as long as the task
+            // that received it. So a target still holding the URI from an earlier share -- settings
+            // only, say -- could read whatever the next one put there, which may include the game
+            // history and text notes it was never given.
+            //
+            // A directory per share gives each its own URI and keeps the filename meaningful to
+            // whoever receives it. The previous ones go at the same time: they are a cleartext copy
+            // of the user's configuration sitting in the cache with nothing to remove them.
+            cacheDir.listFiles()?.filter { it.isDirectory && it.name.startsWith("config-") }
+                ?.forEach { it.deleteRecursively() }
+            val shareDir = File(cacheDir, "config-${java.util.UUID.randomUUID()}").apply { mkdirs() }
+            val shareFile = File(shareDir, "master_clock_config.json")
             FileOutputStream(shareFile).use { it.write(jsonData.toByteArray()) }
 
             val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", shareFile)
