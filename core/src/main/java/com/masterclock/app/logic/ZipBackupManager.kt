@@ -121,6 +121,12 @@ object ZipBackupManager {
             // recovers. Letting the Error through would sail straight past the `catch (e: Exception)`
             // that both import screens rely on, turning a refused backup into a crash.
             throw ZipBackupTooLargeException("Backup archive did not fit in memory: ${e.message}")
+        } catch (e: StackOverflowError) {
+            // The same argument, for the other Error a hostile archive can raise: kotlinx
+            // .serialization parses by recursive descent, so a settings.json nested a few thousand
+            // arrays deep exhausts the stack rather than the heap. Size limits do not catch it --
+            // the file is tiny -- and it was the one Error left that could reach a screen.
+            throw ZipBackupTooLargeException("Backup archive is nested too deeply to parse")
         }
 
         return SharePackage(

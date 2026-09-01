@@ -147,12 +147,16 @@ class MainActivity : ComponentActivity() {
                     scope.launch(Dispatchers.IO) {
                         try {
                             val zipFile = ZipBackupManager.createFullBackup(context, settings, gameHistory, timerViewModel.scoreboard.value)
-                            context.contentResolver.openOutputStream(it)?.use { output ->
-                                zipFile.inputStream().use { input ->
-                                    input.copyTo(output)
+                            try {
+                                context.contentResolver.openOutputStream(it)?.use { output ->
+                                    zipFile.inputStream().use { input ->
+                                        input.copyTo(output)
+                                    }
                                 }
+                            } finally {
+                                // A failed export used to leave the cleartext archive in the cache.
+                                zipFile.delete()
                             }
-                            zipFile.delete()
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, backupOkText, Toast.LENGTH_SHORT).show()
                             }
@@ -359,7 +363,12 @@ class MainActivity : ComponentActivity() {
         try {
             val cacheDir = File(context.cacheDir, "shares")
             if (!cacheDir.exists()) cacheDir.mkdirs()
-            val shareFile = File(cacheDir, "master_clock_config.json")
+            // A directory per share, so a target still holding an earlier URI cannot read what the
+            // next share writes. See app/src/main/java/com/masterclock/app/MainActivity.kt.
+            cacheDir.listFiles()?.filter { it.isDirectory && it.name.startsWith("config-") }
+                ?.forEach { it.deleteRecursively() }
+            val shareDir = File(cacheDir, "config-${java.util.UUID.randomUUID()}").apply { mkdirs() }
+            val shareFile = File(shareDir, "master_clock_config.json")
             FileOutputStream(shareFile).use { it.write(jsonData.toByteArray()) }
 
             val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", shareFile)

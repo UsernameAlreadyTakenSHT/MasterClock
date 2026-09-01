@@ -1481,15 +1481,22 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         drag?.let { d ->
             val bounds = boardBounds
             val target = bounds?.let { squareAt(d.position - it.topLeft, squarePx, variant.side) }
-            val next = currentBoard.toMutableList()
+            // Sized to the variant before anything is written into it. The grid is laid out from
+            // variant.side, so a board list of any other length -- which a note imported before the
+            // sanitiser normalised them still has, stored in settings -- would be indexed past its
+            // end here and on the tap handler below.
+            val next = currentBoard.toMutableList().apply {
+                while (size < variant.squareCount) add("")
+                while (size > variant.squareCount) removeAt(size - 1)
+            }
             when {
                 target != null -> {
-                    if (d.fromSquare != null) next[d.fromSquare] = ""
-                    next[target] = d.piece
+                    if (d.fromSquare != null && d.fromSquare in next.indices) next[d.fromSquare] = ""
+                    if (target in next.indices) next[target] = d.piece
                 }
                 // A piece carried off the board is a piece taken off the board. Doing nothing here
                 // would leave no way to remove one without putting the palette down first.
-                d.fromSquare != null -> next[d.fromSquare] = ""
+                d.fromSquare != null && d.fromSquare in next.indices -> next[d.fromSquare] = ""
             }
             editBoard(next)
         }
@@ -1581,7 +1588,14 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                                         .size(squareSize)
                                         .background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2))
                                         .clickable {
-                                            editBoard(board.toMutableList().also { it[index] = selectedPiece ?: "" })
+                                            // Same reason as finishDrag: the list may be shorter
+                                            // than the grid for a note stored before imports were
+                                            // normalised to the variant.
+                                            val squares = board.toMutableList().apply {
+                                                while (size < variant.squareCount) add("")
+                                            }
+                                            squares[index] = selectedPiece ?: ""
+                                            editBoard(squares)
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
