@@ -123,6 +123,9 @@
     <string name="toast_import_failed">Import mislukt: bestand kon niet worden gelezen.</string>
     <string name="toast_export_ok">Export gelukt!</string>
     <string name="toast_export_failed">Export mislukt: bestand kon niet worden geschreven.</string>
+    <string name="qr_confirm_title">Gescande instellingen toepassen?</string>
+    <string name="qr_confirm_message">Deze code vervangt je huidige instellingen en kan partijen en een scorebord toevoegen. Accepteer alleen een code van iemand die je vertrouwt.</string>
+    <string name="qr_confirm_apply">Toepassen</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Speler %1$d, %2$s</string>

@@ -129,6 +129,9 @@
     <string name="toast_import_failed">Import impossible : fichier illisible.</string>
     <string name="toast_export_ok">Export réussi !</string>
     <string name="toast_export_failed">Export impossible : écriture du fichier refusée.</string>
+    <string name="qr_confirm_title">Appliquer les réglages scannés ?</string>
+    <string name="qr_confirm_message">Ce code remplace vos réglages actuels et peut ajouter des parties et un tableau des scores. N\'acceptez un code que d\'une personne de confiance.</string>
+    <string name="qr_confirm_apply">Appliquer</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Joueur %1$d, %2$s</string>
