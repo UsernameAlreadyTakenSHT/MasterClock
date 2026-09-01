@@ -14,6 +14,19 @@ package com.masterclock.app.logic
  */
 class PieceTagCalibration {
 
+    private companion object {
+        /**
+         * A chess set has thirty-two pieces, and a player may own a spare or two. Anything past
+         * this is not a set being recognised.
+         *
+         * The map is only ever added to, and a board that keeps sending starting-position frames
+         * with tags it has never used before adds thirty-two entries per frame for as long as it
+         * stays connected. That board is broken or hostile either way; the ceiling means it costs
+         * nothing but its own calibration.
+         */
+        const val MAX_LEARNED_TAGS = 64
+    }
+
     private val pieceByTag = mutableMapOf<String, Char>()
 
     val isCalibrated: Boolean get() = pieceByTag.isNotEmpty()
@@ -31,7 +44,11 @@ class PieceTagCalibration {
 
         if (looksLikeStartingPosition(tags)) {
             tags.forEachIndexed { square, tag ->
-                if (tag != null) pieceByTag[tag] = BoardPosition.STARTING[square]
+                // A tag already known is re-learned freely -- that is the same set being set up
+                // again. Only a tag that would grow the map past the ceiling is refused.
+                if (tag != null && (pieceByTag.containsKey(tag) || pieceByTag.size < MAX_LEARNED_TAGS)) {
+                    pieceByTag[tag] = BoardPosition.STARTING[square]
+                }
             }
         }
         if (!isCalibrated) return null

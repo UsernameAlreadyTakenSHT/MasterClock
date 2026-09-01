@@ -51,6 +51,9 @@ private const val SCAN_TIMEOUT_MS = 30_000L
  */
 private const val GATT_OPERATION_TIMEOUT_MS = 5_000L
 
+/** Far more than a working board ever has outstanding: subscriptions plus a reply per move. */
+private const val MAX_QUEUED_GATT_OPERATIONS = 64
+
 /** Either flavour of server-pushed update; indication is the acknowledged one, and both are fine here. */
 private const val NOTIFY_OR_INDICATE =
     BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE
@@ -295,7 +298,20 @@ class BluetoothBoardManager(private val context: Context) {
         }
     }
 
+    /**
+     * One acknowledgement is queued per message a board sends, and each operation ahead of it can
+     * take up to [GATT_OPERATION_TIMEOUT_MS] to clear. A board notifying faster than the radio can
+     * answer therefore grows this queue for as long as it stays connected.
+     *
+     * Dropping the newest rather than the oldest is deliberate: what is already queued is what the
+     * board has been waiting on longest, and a queue this deep means the acknowledgements have
+     * stopped being useful anyway.
+     */
     private fun enqueue(operation: GattOperation) {
+        if (gattQueue.size >= MAX_QUEUED_GATT_OPERATIONS) {
+            Log.w("BluetoothBoardManager", "GATT queue full, dropping an operation")
+            return
+        }
         gattQueue += operation
         if (!operationInFlight) runNextOperation()
     }

@@ -1536,8 +1536,27 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    /**
+     * The same ceiling an imported log gets, applied to the game being played.
+     *
+     * A move read from a connected board carries a string the board chose, and the board may be
+     * hostile or simply broken; nothing else here bounds how many events one game can produce.
+     * Past the cap the game keeps running and the clock keeps working -- only the recording stops
+     * growing, which is the right thing to lose.
+     *
+     * The notation is truncated for the same reason it is on import: the longest real SAN, USI or
+     * PDN move is far shorter, and the raw-capture protocol turns whatever arrives into hex.
+     */
     private fun addEvent(event: GameEvent) {
-        currentLog = currentLog?.let { it.copy(events = it.events + event) }
+        currentLog = currentLog?.let { log ->
+            if (log.events.size >= MAX_IMPORTED_EVENTS_PER_LOG) return@let log
+            log.copy(
+                events = log.events + event.copy(
+                    moveNotation = event.moveNotation?.take(MAX_MOVE_NOTATION_CHARS),
+                    detail = event.detail?.take(MAX_IMPORTED_EVENT_DETAIL_CHARS),
+                )
+            )
+        }
     }
 
     private fun startClock(playerIndex: Int) {
