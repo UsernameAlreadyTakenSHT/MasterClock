@@ -64,6 +64,9 @@
     <string name="share_settings">Partager les réglages</string>
     <string name="toast_backup_ok">Sauvegarde réussie !</string>
     <string name="toast_import_ok">Import réussi !</string>
+    <string name="toast_import_failed">Import impossible : fichier illisible.</string>
+    <string name="toast_export_ok">Export réussi !</string>
+    <string name="toast_export_failed">Export impossible : écriture du fichier refusée.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Joueur %1$d, %2$s</string>
