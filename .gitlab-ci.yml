@@ -13,9 +13,20 @@ stages:
 
 build_apks:
   stage: build
+  # This job decodes the release keystore and writes its three passwords into local.properties, and
+  # GitLab reads this file from the ref being built. A web-triggered pipeline used to be allowed on
+  # any ref, so pushing a branch with an edited script and pressing "Run pipeline" was enough to walk
+  # off with the app signing key -- the one credential in this project that cannot be rotated without
+  # every user reinstalling by hand.
+  #
+  # Requiring a protected ref closes that: an unprotected branch no longer reaches the signing step.
+  # The belt-and-braces version is to mark ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+  # ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD as Protected in Settings > CI/CD > Variables, which
+  # GitLab then refuses to expose to any unprotected ref regardless of what this file says. That is a
+  # project setting and cannot be committed here.
   rules:
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
   before_script:
     - apt-get update -qq && apt-get install -y -qq wget unzip curl gawk
     - mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
