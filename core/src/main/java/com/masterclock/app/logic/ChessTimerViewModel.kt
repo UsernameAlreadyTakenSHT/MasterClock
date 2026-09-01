@@ -755,10 +755,10 @@ private fun sanitizeImportedSettings(context: android.content.Context, settings:
     val sanitizedNumberOfPlayers = settings.numberOfPlayers.coerceIn(1, 4)
     return settings.copy(
         notebookNotes = sanitizedNotes,
-        customBeepUri = sanitizeImportedContentUri(settings.customBeepUri),
-        customGongUri = sanitizeImportedContentUri(settings.customGongUri),
-        customFinalBeepUri = sanitizeImportedContentUri(settings.customFinalBeepUri),
-        customSwitchUri = sanitizeImportedContentUri(settings.customSwitchUri),
+        customBeepUri = sanitizeImportedContentUri(context, settings.customBeepUri),
+        customGongUri = sanitizeImportedContentUri(context, settings.customGongUri),
+        customFinalBeepUri = sanitizeImportedContentUri(context, settings.customFinalBeepUri),
+        customSwitchUri = sanitizeImportedContentUri(context, settings.customSwitchUri),
         numberOfPlayers = sanitizedNumberOfPlayers,
         // The one integer that reaches SQL directly, and the one this function used to miss.
         // trimLogs(0) runs DELETE ... WHERE id NOT IN (SELECT id ... LIMIT 0), whose subquery
@@ -879,10 +879,26 @@ internal fun sanitizeImportedMediaPath(filesDirRaw: java.io.File, path: String?)
     }
 }
 
-/** Only accept content:// URIs (SAF-granted); a bare file:// URI would read an arbitrary sandbox file. */
-private fun sanitizeImportedContentUri(uri: String?): String? {
-    if (uri.isNullOrBlank()) return null
-    return if (uri.startsWith("content://")) uri else null
+/**
+ * Keep an imported custom-sound URI only if this app actually holds a persisted read grant for it.
+ *
+ * The test used to be `startsWith("content://")`, which is a check on spelling rather than on
+ * access: any provider URI on the device survived it, and SoundManager then called
+ * openFileDescriptor on whatever arrived, at every settings load.
+ *
+ * SettingsAudioPage takes a persistable read permission whenever the user picks a sound, so a URI
+ * the user chose always has one and a URI that came from somewhere else does not. Dropping the
+ * latter also makes the state honest: without a grant the sound could never have played anyway, so
+ * the setting silently fell back to the default while still displaying a custom file.
+ */
+private fun sanitizeImportedContentUri(context: android.content.Context, uri: String?): String? {
+    if (uri.isNullOrBlank() || !uri.startsWith("content://")) return null
+    val held = try {
+        context.contentResolver.persistedUriPermissions.any { it.isReadPermission && it.uri.toString() == uri }
+    } catch (_: Exception) {
+        false
+    }
+    return if (held) uri else null
 }
 
 /**
