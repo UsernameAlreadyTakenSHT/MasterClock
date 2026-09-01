@@ -13,6 +13,20 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!--
+      Removed for every flavour, not only the reduced three.
+
+      Nothing in this project declares ACCESS_NETWORK_STATE: it arrives transitively through
+      androidx.camera:camera-video, by way of androidx.media3:media3-common. Lite, Standard and Mini
+      each stripped it and Complete did not, so the build with the camera features shipped a network
+      permission for an app that makes no network call at all. Confirmed on an installed APK, where
+      it was listed as requested and granted, not merely present in a manifest.
+
+      It is a normal permission, so nothing was ever prompted and nothing here uses it; the cost was
+      a store listing and a privacy policy that both say this app does not touch the network, next to
+      a permission saying it inspects the connection.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <!-- Host mode, for a board attached by cable. Not required: most phones have it, some do not,
          and this is a clock before it is a board reader. -->

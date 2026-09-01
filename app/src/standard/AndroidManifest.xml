@@ -8,9 +8,8 @@
   Without the removals below, this build's store listing asks for the microphone and the camera to
   run a chess clock that can never open either.
 
-  ACCESS_NETWORK_STATE is declared nowhere in this project: it arrives transitively through
-  androidx.camera:camera-video, which depends on androidx.media3:media3-common. The app makes no
-  network call at all, so it is removed here too.
+  ACCESS_NETWORK_STATE used to be removed here as well. It is stripped in the main manifest now,
+  for every flavour, because Complete was shipping it. See the comment there.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
@@ -22,7 +21,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:node="remove" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
     <uses-permission android:name="android.permission.CAMERA" tools:node="remove" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
 
     <uses-feature android:name="android.hardware.camera" tools:node="remove" />
     <uses-feature android:name="android.hardware.usb.host" tools:node="remove" />
