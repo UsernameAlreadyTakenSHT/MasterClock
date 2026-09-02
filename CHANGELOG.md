@@ -1,3 +1,26 @@
+## v0.8.29 — 2026-09-02
+
+A security release. Nothing here is reachable without importing a file, scanning a code or restoring
+an archive that somebody else gave you — but all of it survives a restart once it is in, which is
+why it is now stopped at the door rather than cleaned up afterwards.
+
+### Fixed
+- **An imported note could aim the notebook's shredder at your settings.** A note's media path was accepted anywhere inside the app's own storage, and the app's settings file lives there too — so a crafted settings file, backup or QR code could point a note at it, and deleting that note overwrote every setting, preset and note you had with random bytes. Unrecoverably, with nothing on screen to say so. A media path now has to look like a file the notebook itself wrote.
+- **A crafted import could make the app crash on every launch afterwards.** Three separate ways: a board note whose square list did not match its variant crashed on the first tap; a phase list left empty crashed the clock on the first press; and a game log large enough to exceed the database's row limit made the history fail to load at startup, where nothing caught it. In each case the poisoned settings were saved, so the crash came back on every launch until app data was cleared.
+- **An imported file could silently delete your entire game history.** The history limit was the one number that reached the database unchecked, and a value of zero turned the end of every game into "delete everything".
+- **A scanned QR code is no longer applied without asking.** Pointing the camera at a code was the whole of the interaction: whatever it carried replaced your settings and added its games immediately, with no preview. A code on a poster works as well as one on a friend's screen. It now shows what it will do and waits for you.
+- Custom sound files are kept only if the app actually holds permission to read them, rather than only looking like a valid address.
+- **The E-Ink build's import and export were a release behind.** They ran on the drawing thread and said nothing at all, whichever way they went — the phone app's fixes for both had not been carried across.
+
+### Changed
+- **The Complete build no longer asks for a network permission.** Nothing in this app declares it; it arrived through a camera library, and the three smaller builds each stripped it while Complete did not. This app makes no network call at all, and now its permissions say so.
+- Sharing your settings writes to a fresh location each time. The same path was reused for every share, and a read grant lives as long as the app that received it, so an earlier recipient could read whatever the next share put there.
+- A backup archive that fails to export is no longer left behind in the cache in the clear.
+- A library that was declared but never used is gone from the Complete build, and its credit with it.
+- Ceilings on several things a connected board controls: how much of a game it can record, how many pieces it can teach the app, and how many replies can queue up behind it.
+- The backup exclusion rules were missing a required attribute and were most likely being ignored. Backup was already switched off outright, so nothing was ever exposed — but the file now says what it meant.
+- The release signing job no longer runs for unprotected branches on GitLab.
+
 ## v0.8.28 — 2026-08-31
 
 A whole release of things found by reading the app rather than by using it. Most of them had been

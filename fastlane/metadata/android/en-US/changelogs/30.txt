@@ -1,0 +1,10 @@
+A security release. Nothing here is reachable without importing a file, scanning a code or restoring an archive somebody else gave you — but all of it survives a restart once it is in, which is why it is now stopped at the door.
+An imported note could aim the notebook's shredder at your own settings file: deleting that note overwrote every setting, preset and note you had with random bytes, unrecoverably, with nothing on screen to say so.
+A crafted import could make the app crash on every launch afterwards, three separate ways: a board note whose squares did not match its variant, an empty phase list, or a game log too large for the database to read back. The bad settings were saved, so the crash returned until app data was cleared.
+An imported file could silently delete your whole game history by setting the history limit to zero.
+A scanned QR code now shows what it will do and waits for you. Pointing the camera at a code used to be the whole interaction: whatever it carried replaced your settings immediately, and a code on a poster works as well as one on a friend's screen.
+Custom sound files are kept only if the app actually holds permission to read them.
+The Complete build no longer asks for a network permission. Nothing here declares it; it arrived through a camera library, and this app makes no network call at all.
+Sharing your settings writes to a fresh location each time, so an earlier recipient cannot read what a later share puts there, and a backup export that fails no longer leaves the archive behind in the cache.
+Ceilings on what a connected board can do: how much of a game it can record, how many pieces it can teach the app, how many replies can queue behind it.
+A library that was declared but never used is gone, and its credit with it.

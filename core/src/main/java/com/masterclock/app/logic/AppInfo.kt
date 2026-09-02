@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-08-31"
+    const val BUILD_DATE = "2026-09-02"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,20 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.29",
+            date = "2026-09-02",
+            notes = listOf(
+                "A security release. Nothing here is reachable without importing a file, scanning a code or restoring an archive somebody else gave you — but all of it survives a restart once it is in.",
+                "An imported note could point the notebook's shredder at your own settings file, so deleting that note destroyed every setting, preset and note you had, unrecoverably.",
+                "A crafted import could make the app crash on every launch afterwards — a board note sized wrong, an empty phase list, or a game log too large for the database — until app data was cleared.",
+                "An imported file could silently delete your entire game history by setting the history limit to zero.",
+                "A scanned QR code now shows what it will do and waits for you, instead of replacing your settings the moment the camera sees it.",
+                "The Complete build no longer asks for a network permission. It arrived through a camera library and this app makes no network call at all.",
+                "The E-Ink build's import and export were a release behind: they ran on the drawing thread and reported nothing either way.",
+                "Sharing your settings writes to a fresh location each time, and a failed backup export no longer leaves the archive in the cache.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.28",
             date = "2026-08-31",
