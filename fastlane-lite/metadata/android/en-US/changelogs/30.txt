@@ -1,0 +1,7 @@
+A security release. Nothing here is reachable without importing a file or restoring an archive somebody else gave you — but all of it survives a restart once it is in.
+A crafted import could make the app crash on every launch afterwards, two ways in this build: an empty phase list, or a game log too large for the database to read back. The bad settings were saved, so the crash returned until app data was cleared.
+An imported file could silently delete your whole game history by setting the history limit to zero.
+Imported settings are now bounded field by field, including several lists and strings the previous check passed through untouched.
+Custom sound files are kept only if the app actually holds permission to read them.
+Sharing your settings writes to a fresh location each time, so an earlier recipient cannot read what a later share puts there, and a backup export that fails no longer leaves the archive behind in the cache.
+The backup exclusion rules were missing a required attribute and were most likely ignored. Backup was already switched off outright, so nothing was ever exposed, but the file now says what it meant.

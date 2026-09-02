@@ -1,0 +1,6 @@
+A security release, plus two fixes this build should have had a release ago.
+This build's import and export were a release behind the phone app. They did their work on the thread that draws the clock, over a file that can come from a cloud provider, and they reported nothing at all whichever way they went: a refused file and a successful one looked exactly the same. Both now run off that thread and say what happened.
+Error messages no longer show raw Java exception text, which was always in English whatever the phone is set to.
+A crafted import could make the app crash on every launch afterwards: an empty phase list, or a game log too large for the database to read back. The bad settings were saved, so the crash returned until app data was cleared.
+An imported file could silently delete your whole game history by setting the history limit to zero.
+Sharing your settings writes to a fresh location each time, and a backup export that fails no longer leaves the archive behind in the cache.
