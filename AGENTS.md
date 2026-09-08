@@ -71,6 +71,30 @@ for os in linux osx; do
 done
 ```
 
+**A bump that adds a Maven Central dependency needs its `.pom` added by hand too.** Central serves
+the POM as a module's primary metadata and Gradle reads it before the `.module` file — but only
+downloads it when the artifact is not already in the local cache. Any machine that has ever built
+anything using Groovy or JUnit therefore records the `.module` alone, and the file generated there
+dies on a cold CI runner with `Dependency verification failed ... <name>.pom`. AGP 9.4.0 brought in
+`org.apache.groovy`, `org.junit.platform` and `org.opentest4j` this way, and CI stopped at the first
+of them.
+
+Google-hosted artifacts do not have this problem: `com.android.*` records `.jar` plus `.module` and
+no POM, which is what the working file has always looked like. So the ones to check are the
+components that are **new to Maven Central** in this bump:
+
+```sh
+# components in the new file that were not in the old one, and have no .pom recorded
+git show HEAD:gradle/verification-metadata.xml > /tmp/old.xml
+```
+
+Compare the component lists, keep the additions from `repo1.maven.org`, and fetch each POM:
+
+```sh
+curl -sSLO "https://repo1.maven.org/maven2/<group as path>/<name>/<v>/<name>-<v>.pom"
+sha256sum <name>-<v>.pom
+```
+
 Check the `<trusted-artifacts>` block at the top survived the regeneration. It trusts `-sources.jar`
 and `-javadoc.jar` by pattern, and without it the IDE stops working: Android Studio resolves sources
 for code navigation in its own detached configurations, which the build never touches, so
