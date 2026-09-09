@@ -25,6 +25,23 @@ enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector)
     MORE(R.string.settings_tab_more, Icons.Default.Menu),
     OMNI(R.string.settings_tab_omni, Icons.Default.Dataset);
 
+    /**
+     * Whether this build can reach this page at all.
+     *
+     * A different question from [getVisibleCategories], which asks what belongs in the bottom bar:
+     * OMNI is reachable without ever appearing there. This is the one [fromRoute] has to ask,
+     * because a route name is the one way into this enum that the running build did not choose --
+     * and MORE is the page holding settings export, settings import, ZIP backup, restore and APK
+     * share, which lives in src/main and is compiled into all four flavours with nothing but this
+     * check between Mini and all of it.
+     */
+    fun isReachableInThisBuild(): Boolean = when (this) {
+        MODES -> true
+        BEHAVIOR, DISPLAY, AUDIO -> FlavorConfig.hasFullSettingsTabs()
+        MORE -> FlavorConfig.hasMoreTab()
+        OMNI -> FlavorConfig.hasOmni()
+    }
+
     companion object {
         /**
          * Resolves a category stored in a navigation route, falling back to [MODES].
@@ -35,19 +52,12 @@ enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector)
          * the app on the way back in rather than land on the Modes tab.
          */
         fun fromRoute(name: String): SettingsCategory =
-            entries.firstOrNull { it.name == name } ?: MODES
+            entries.firstOrNull { it.name == name && it.isReachableInThisBuild() } ?: MODES
 
         fun getVisibleCategories(): List<SettingsCategory> {
             // Omni has no navbar tab -- it's reached only via the "Omni-Timer" ModeCard in the
             // Modes page (SettingsComponents.kt), which switches the category directly.
-            return entries.filter { category ->
-                when (category) {
-                    OMNI -> false
-                    MORE -> FlavorConfig.hasMoreTab()
-                    MODES -> true
-                    BEHAVIOR, DISPLAY, AUDIO -> FlavorConfig.hasFullSettingsTabs()
-                }
-            }
+            return entries.filter { it != OMNI && it.isReachableInThisBuild() }
         }
     }
 }
