@@ -102,6 +102,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            // Sharing the app copies the whole APK -- tens of megabytes -- into the cache, and the
+            // share itself cannot delete it: the app receiving the URI reads it after the chooser
+            // has returned. Launch is the first moment that is certainly over, so it is the only
+            // place the space can actually be reclaimed. Clearing it before the *next* share, which
+            // is where this used to be attempted, reclaimed nothing at all -- the copy has a fixed
+            // name, so it was being overwritten anyway, and a user who shares once and never again
+            // is exactly the case that leaves it sitting there.
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    runCatching { File(context.cacheDir, "apk_share").deleteRecursively() }
+                }
+            }
+
             // Republish whenever the sources change: saving, renaming or deleting a preset moves
             // customPresets, and finishing a game moves gameHistory.
             LaunchedEffect(customPresets, gameHistory) {
