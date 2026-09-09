@@ -128,9 +128,18 @@ android {
     //
     // kotlin.directories, not java.srcDir: the sources here are .kt, the Kotlin compilation does not
     // pick them up from the Java source set, and srcDir is deprecated in this AGP.
+    // res and assets are registered alongside the sources, even though src/reduced has neither
+    // today. Wiring only the Kotlin directory meant a shared string or drawable dropped into
+    // src/reduced/res would be picked up by nothing at all -- no error, no warning, just an
+    // unresolved R field in three flavors at once, at the first reference. Registering the
+    // directories costs nothing while they are empty and removes that trap.
     sourceSets {
         listOf("standard", "lite", "mini").forEach { flavor ->
-            getByName(flavor) { kotlin.directories.add("src/reduced/java") }
+            getByName(flavor) {
+                kotlin.directories.add("src/reduced/java")
+                res.srcDir("src/reduced/res")
+                assets.srcDir("src/reduced/assets")
+            }
         }
     }
 

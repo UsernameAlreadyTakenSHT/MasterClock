@@ -330,7 +330,15 @@ fun MoreSettingsPage(
                                 val apkFile = File(appInfo.publicSourceDir)
 
                                 val shareFolder = File(localContext.cacheDir, "apk_share")
-                                if (!shareFolder.exists()) shareFolder.mkdirs()
+                                // Clear it first. A share leaves a full copy of the APK -- tens of
+                                // megabytes -- sitting in the cache, and nothing ever removed it;
+                                // the sibling settings share next door cleans its previous
+                                // directories for the same reason. One copy has to survive this
+                                // block, because the app receiving the URI reads it after the
+                                // chooser returns, so the next share is the earliest moment the
+                                // last one can go.
+                                shareFolder.deleteRecursively()
+                                shareFolder.mkdirs()
 
                                 val destinationFile = File(shareFolder, "MasterClock.apk")
                                 apkFile.inputStream().use { input ->
