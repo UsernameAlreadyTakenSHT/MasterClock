@@ -74,7 +74,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val timerViewModel: ChessTimerViewModel = viewModel()
-            val omniViewModel: OmniTimerViewModel = viewModel()
             val settings by timerViewModel.settings.collectAsState()
             val gameHistory by timerViewModel.gameHistory.collectAsState()
             val customPresets by timerViewModel.customPresets.collectAsState()
@@ -469,6 +468,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         entry<Route.OmniTimer> { _ ->
+                            // Built here rather than beside the clock's ViewModel, so it exists
+                            // only once this screen is actually opened. Held at the top of
+                            // setContent it was created on every launch of every flavour, and its
+                            // init allocates a second SoundPool, decodes four samples into it and
+                            // starts a settings collector that lives as long as the process --
+                            // in Mini, where FlavorConfig.hasOmni() is false and there is no way to
+                            // reach this route at all.
+                            val omniViewModel: OmniTimerViewModel = viewModel()
                             OmniTimerScreen(
                                 viewModel = omniViewModel,
                                 onBack = { navigator.goBack() }

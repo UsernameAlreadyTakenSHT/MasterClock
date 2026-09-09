@@ -62,7 +62,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val timerViewModel: ChessTimerViewModel = viewModel()
-            val omniViewModel: OmniTimerViewModel = viewModel()
             val settings by timerViewModel.settings.collectAsState()
             val gameHistory by timerViewModel.gameHistory.collectAsState()
             val json = remember { Json { ignoreUnknownKeys = true } }
