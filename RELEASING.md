@@ -12,10 +12,17 @@ Work through the list. Commit as you go rather than in one lump at the end.
 |---|---|
 | `app/build.gradle.kts` | `versionCode` +1, `versionName = "X.Y.Z"` |
 | `paper/build.gradle.kts` | the **same** `versionCode`, `versionName = "X.Y.Z-paper"` |
+| `fdroid/metadata/*.yml` (×5) | `versionName`, `versionCode`, `commit: vX.Y.Z`, `CurrentVersion`, `CurrentVersionCode` |
 
 Both modules share one `versionCode`; it is also the name of the fastlane changelog files below.
 The four app flavors add their own `versionNameSuffix` (`-complete`, `-standard`, `-lite`,
 `-mini`), so nothing else needs editing for them.
+
+The five F-Droid entries are in this table because nothing else updates them and nothing catches it
+when they are missed: `AutoUpdateMode: None` is deliberate — `fdroid checkupdates` cannot see
+`versionNameSuffix`, so it would propose the unsuffixed name and fail the next build. They drifted
+five releases behind before anyone noticed, which is what this row is for. `fdroid/README.md`
+explains the suffix trap in full.
 
 ## 2. The changelog, in all seven places
 
