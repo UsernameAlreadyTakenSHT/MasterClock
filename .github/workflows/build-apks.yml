@@ -21,6 +21,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # gradle-wrapper.jar is the code that enforces distributionSha256Sum, so it is the one file
+      # whose tampering would silently switch off the only integrity check this build has on Gradle
+      # itself. It is committed to the repository and has not changed since the initial commit while
+      # gradle-wrapper.properties moved to 9.7.1 in three steps -- and nothing verified it.
+      - name: Validate the Gradle wrapper
+        uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
       - name: Set up JDK 21
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:

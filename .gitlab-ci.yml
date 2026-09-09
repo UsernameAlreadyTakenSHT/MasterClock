@@ -1,4 +1,15 @@
-image: eclipse-temurin:21-jdk-jammy
+# Pinned by digest, not by tag, and for the same reason .github/workflows/build-apks.yml pins every
+# action by commit SHA: a tag is mutable, and the job that runs on this image decodes the release
+# keystore and holds its three passwords. Whoever controls the tag -- by repushing it, or by
+# compromising the upstream account -- would otherwise run arbitrary code beside the signing key.
+# The rule was applied strictly on one forge and not at all on the other.
+#
+# This is eclipse-temurin:21-jdk-jammy as of 2026-09-09. Moving to a newer JDK image means resolving
+# the new tag to its digest and replacing both the digest and this comment:
+#   TOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/eclipse-temurin:pull" | jq -r .token)
+#   curl -sI -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.index.v1+json" \
+#     https://registry-1.docker.io/v2/library/eclipse-temurin/manifests/21-jdk-jammy | grep -i docker-content-digest
+image: eclipse-temurin:21-jdk-jammy@sha256:d48e921b83506f58910295b35fd02978c7f4c57fef41bceee6a460d7d97bc251
 
 variables:
   ANDROID_SDK_ROOT: "$CI_PROJECT_DIR/android-sdk"
@@ -31,6 +42,19 @@ build_apks:
     - apt-get update -qq && apt-get install -y -qq wget unzip curl gawk
     - mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
     - wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS_VERSION}_latest.zip" -O cmdline-tools.zip
+    # This archive is unzipped and put on the PATH four lines before the release keystore is
+    # decoded, so whatever comes back from dl.google.com runs beside the signing key. It arrived
+    # with no integrity check at all, while Gradle's own distribution three files away is pinned
+    # with distributionSha256Sum -- the same care, not applied here.
+    #
+    # Google publishes only a SHA-1 for this file, in
+    # https://dl.google.com/android/repository/repository2-3.xml:
+    #   <checksum type="sha1">d313adb7aedccf6cf0cfca51ec180f0059f5f8f8</checksum>
+    #   <size>153607504</size>
+    # The digest below is SHA-256 of the bytes that match that published SHA-1 and that size, so it
+    # is pinned to what Google's own manifest describes rather than to whatever a download happened
+    # to produce. Bumping ANDROID_CMDLINE_TOOLS_VERSION means replacing this line too.
+    - echo "2d2d50857e4eb553af5a6dc3ad507a17adf43d115264b1afc116f95c92e5e258  cmdline-tools.zip" | sha256sum -c -
     - unzip -q cmdline-tools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
     - mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
     - export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
@@ -108,7 +132,12 @@ build_apks:
 
 release_tag:
   stage: release
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  # Same rule as the build image above. `:latest` in the job that holds CI_JOB_TOKEN was the loosest
+  # pin in either pipeline. Digest resolved 2026-09-09:
+  #   TOKEN=$(curl -s "https://gitlab.com/jwt/auth?service=container_registry&scope=repository:gitlab-org/release-cli:pull" | jq -r .token)
+  #   curl -sI -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+  #     https://registry.gitlab.com/v2/gitlab-org/release-cli/manifests/latest | grep -i docker-content-digest
+  image: registry.gitlab.com/gitlab-org/release-cli:latest@sha256:3f52d526f48e8d10625c722fa6d6423ee82aadeae1b1aa91f07b62551d96dacf
   rules:
     - if: '$CI_COMMIT_TAG'
   needs:
