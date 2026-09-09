@@ -1178,7 +1178,25 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.copy(timeRemainingMs = p.timeRemainingMs + p.secondaryTimeMs)
         TimerMode.BRONSTEIN -> tempP.copy(timeRemainingMs = p.timeRemainingMs + timeSpentOnMove.coerceAtMost(s.incrementMs))
         TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> tempP.copy(timeRemainingMs = s.moveTimeMs)
-        TimerMode.MOVE_TIMER_SAVE_CAP -> { val newBank = (p.secondaryTimeMs + p.timeRemainingMs.coerceAtLeast(0)).coerceAtMost(s.timeCapMs); tempP.copy(timeRemainingMs = s.moveTimeMs + newBank, secondaryTimeMs = newBank) }
+        TimerMode.MOVE_TIMER_SAVE_CAP -> {
+            // What is left of the pot at the moment of the press. SAVE_CAP is not named in
+            // tickPlayer, so it burns through the generic branch as a single number: timeRemainingMs
+            // is already moveTimeMs plus the bank, minus whatever this turn cost.
+            //
+            // That is why the bank must not be added again. It used to be -- `secondaryTimeMs +
+            // timeRemainingMs` -- which re-credited the whole previous bank every move, so from the
+            // second move on the bank grew by itself: with 30s moves and 10s spent, move two banked
+            // 60s where 40s were left. The bank is shown on screen (timer_bank), so the player
+            // watched a number that had stopped meaning anything.
+            val carried = p.timeRemainingMs.coerceAtLeast(0)
+            // The cap is the ceiling on the clock as a whole, not on the bank alone: with 30s moves
+            // and a 2:00 cap the clock stops at 2:00, never 2:30. A cap below the move time cannot
+            // bind without handing the player less than one move, so it is floored there -- which
+            // makes a cap of zero mean "save nothing", i.e. plain MOVE_TIMER_STANDARD.
+            val cap = s.timeCapMs.coerceAtLeast(s.moveTimeMs)
+            val newTotal = (s.moveTimeMs + carried).coerceAtMost(cap)
+            tempP.copy(timeRemainingMs = newTotal, secondaryTimeMs = (newTotal - s.moveTimeMs).coerceAtLeast(0))
+        }
         TimerMode.BYOYOMI_JAPANESE -> if (p.isInByoyomi) tempP.copy(timeRemainingMs = s.byoyomiTimeMs) else tempP
         TimerMode.BYOYOMI_CANADIAN -> if (p.isInByoyomi) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = s.byoyomiPeriods) else tempP.copy(movesRemainingInPeriod = rem) } else tempP
         TimerMode.BYOYOMI_PROGRESSIVE -> if (p.isInByoyomi) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) { val goal = p.currentByoyomiMovesGoal + s.byoyomiProgression; tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = goal, currentByoyomiMovesGoal = goal) } else tempP.copy(movesRemainingInPeriod = rem) } else tempP

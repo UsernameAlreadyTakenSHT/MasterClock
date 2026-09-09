@@ -374,11 +374,9 @@ class ChessTimerLogicTest {
     // --- Modes that had no coverage at all until now ---
     //
     // Everything below drives the real tickPlayer/computePostMoveState, like the sections above.
-    // MOVE_TIMER_SAVE_CAP is deliberately absent: its post-move arithmetic is wrong, so a test of
-    // correct behaviour cannot pass until that is fixed, and a test of current behaviour would
-    // encode the bug. MOVE_TIMER_SHARED and PHASES have only their post-move side covered -- their
-    // countdown lives inline in ChessTimerViewModel.tick() and their phase transitions in private
-    // methods, neither reachable from here.
+    // MOVE_TIMER_SHARED and PHASES have only their post-move side covered -- their countdown lives
+    // inline in ChessTimerViewModel.tick() and their phase transitions in private methods, neither
+    // reachable from here.
 
     // US_DELAY: the delay is spent before the main clock, and never out of it.
 
@@ -608,5 +606,89 @@ class ChessTimerLogicTest {
         val next = computePostMoveState(state, 1, 0, settings, s)
         // A phase runs to its own end; only a phase transition may change this clock.
         assertEquals(45_000, next.players[0].timeRemainingMs)
+    }
+
+    // MOVE_TIMER_SAVE_CAP: unused move time is carried over, and the clock as a whole has a ceiling.
+
+    @Test
+    fun `SAVE_CAP carries over what a move did not use`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SAVE_CAP, moveTimeMs = 30_000, timeCapMs = 120_000)
+        val settings = ChessClockSettings(main = s)
+        // First move: the pot was 30s, ten of them were spent, twenty are left.
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 20_000)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, timeSpentOnMove = 10_000, settings, s)
+        assertEquals(50_000, next.players[0].timeRemainingMs)
+        assertEquals(20_000, next.players[0].secondaryTimeMs)
+    }
+
+    @Test
+    fun `SAVE_CAP does not bank again the time the clock was already carrying`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SAVE_CAP, moveTimeMs = 30_000, timeCapMs = 120_000)
+        val settings = ChessClockSettings(main = s)
+        // Second move: the pot was 30s + a 20s bank, ten were spent, forty are left. The bank is
+        // inside timeRemainingMs already -- adding secondaryTimeMs to it, as this used to, banked
+        // 60s and set the clock to 90s instead of 70s, and compounded from there.
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 40_000, secondaryTimeMs = 20_000)),
+            activePlayer = 1,
+        )
+        val next = computePostMoveState(state, 1, timeSpentOnMove = 10_000, settings, s)
+        assertEquals(70_000, next.players[0].timeRemainingMs)
+        assertEquals(40_000, next.players[0].secondaryTimeMs)
+    }
+
+    @Test
+    fun `SAVE_CAP caps the whole clock, not the bank alone`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SAVE_CAP, moveTimeMs = 30_000, timeCapMs = 120_000)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 100_000, secondaryTimeMs = 70_000)),
+            activePlayer = 1,
+        )
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        // 2:00 on the clock, not 2:30. Capping the bank instead would leave room for a fresh move
+        // on top of a full bank, so a 30s move with a 2:00 cap would reach 2:30.
+        assertEquals(120_000, next.players[0].timeRemainingMs)
+        assertEquals(90_000, next.players[0].secondaryTimeMs)
+    }
+
+    @Test
+    fun `SAVE_CAP converges on the cap over a run of fast moves instead of passing it`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SAVE_CAP, moveTimeMs = 30_000, timeCapMs = 120_000)
+        val settings = ChessClockSettings(main = s)
+        var clock = 30_000L
+        repeat(8) {
+            val state = ChessClockState(
+                players = listOf(PlayerState(timeRemainingMs = clock - 10_000)),
+                activePlayer = 1,
+            )
+            clock = computePostMoveState(state, 1, 10_000, settings, s).players[0].timeRemainingMs
+            assertTrue("clock went past the cap: $clock", clock <= 120_000)
+        }
+        assertEquals(120_000, clock)
+    }
+
+    @Test
+    fun `SAVE_CAP banks nothing from a turn that ran out`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SAVE_CAP, moveTimeMs = 30_000, timeCapMs = 120_000)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 0)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, timeSpentOnMove = 30_000, settings, s)
+        assertEquals(30_000, next.players[0].timeRemainingMs)
+        assertEquals(0, next.players[0].secondaryTimeMs)
+    }
+
+    @Test
+    fun `SAVE_CAP with a cap below the move time saves nothing rather than shortening the move`() {
+        // A cap under one move cannot bind without handing the player less time than the mode
+        // promises them each turn, so it degrades to plain MOVE_TIMER_STANDARD. That also makes a
+        // cap of zero -- which the settings field accepts -- mean "save nothing" instead of
+        // "no time at all".
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SAVE_CAP, moveTimeMs = 30_000, timeCapMs = 0)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 25_000)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, 5000, settings, s)
+        assertEquals(30_000, next.players[0].timeRemainingMs)
+        assertEquals(0, next.players[0].secondaryTimeMs)
     }
 }
