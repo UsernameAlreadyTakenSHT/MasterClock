@@ -1,6 +1,7 @@
 package com.masterclock.app.logic
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -74,6 +75,18 @@ private sealed interface GattOperation {
     data class Write(val bytes: ByteArray) : GattOperation
 }
 
+// Lint cannot see this file's permission handling, because none of it is shaped the way lint looks
+// for. Every entry point goes through hasScanPermission() or hasConnectPermission(), which wrap
+// ContextCompat.checkSelfPermission behind a version check rather than calling it inline; and the
+// calls that have to survive a permission revoked mid-connection are wrapped in runCatching, which
+// lint does not treat as handling a SecurityException. So MissingPermission reports every Bluetooth
+// call in the class and none of the reports is actionable as written.
+//
+// The rule this file actually follows, and which a new call has to follow too: reach a Bluetooth
+// API either behind one of the two permission helpers, or inside a runCatching that answers for the
+// refusal. Suppressing here is what lets the rest of lint run over core at all -- and lint pointed
+// at core is what found subscribe() and write() breaking that rule.
+@SuppressLint("MissingPermission")
 class BluetoothBoardManager(private val context: Context) {
     // The BLE ATT MTU already caps a single characteristic update well under this (~512 bytes max),
     // so this is defense-in-depth against a malicious/buggy peripheral, not a real-world-reachable limit.

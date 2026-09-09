@@ -48,6 +48,10 @@ settings, a schema bump wipes history — say so in the notes rather than lettin
 Expected: `BUILD SUCCESSFUL`, all core tests green, and lint reporting only the known
 `GradleDependency` notice (dependency versions are pinned on purpose).
 
+The two lint tasks cover `core` as well, because both modules set `lint { checkDependencies = true }`.
+They did not until v0.8.30, and for as long as they did not, nothing in this list ever read a file
+in `core`.
+
 If it stops on `Dependency verification failed`, a dependency moved since
 `gradle/verification-metadata.xml` was last written. Regenerate it — the command and the reason it
 takes the full task list are in [AGENTS.md](AGENTS.md#when-a-dependency-bump-fails-verification) —

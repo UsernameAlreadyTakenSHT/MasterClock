@@ -30,6 +30,14 @@ This is the bar for any non-trivial change, not just releases. Compiling one fla
 the reduced flavors have their own source set and break independently. Expect `BUILD SUCCESSFUL`,
 all `core` tests green, and lint clean apart from the `GradleDependency` notice.
 
+Both modules set `lint { checkDependencies = true }`, which is what makes these two tasks read
+`core` as well as their own sources. Without it AGP defaults `checkDependencies` to `false`, and the
+two tasks named above analysed exactly zero of the files in `core` — where the logic, the
+persistence and the whole import/export chain live. That is how a call to an API 37 class shipped
+inside a `minSdk 24` module and reached a release: the check that exists for precisely that was
+pointed somewhere else. There is no separate `:core:lint*` task in the bar because these two now
+cover it; do not remove the `lint` blocks without adding one.
+
 Unit tests live in `core/src/test`. The repository has **no** instrumentation tests, so `core` is
 where behaviour gets pinned: put logic there and test it there rather than in a composable.
 

@@ -77,6 +77,11 @@ android {
         compose = true
         buildConfig = true
     }
+    // Same reason as app/build.gradle.kts: :paper:lintRelease is the other half of the documented
+    // bar, and it too stopped at this module's own sources while core went unread.
+    lint {
+        checkDependencies = true
+    }
 }
 
 // See app/build.gradle.kts for why this is here as well as compileOptions.

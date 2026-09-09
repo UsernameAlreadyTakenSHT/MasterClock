@@ -1,6 +1,7 @@
 package com.masterclock.app.logic
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
@@ -40,6 +41,11 @@ import java.util.UUID
  * here afterwards; discovering an unpaired one would not help, since pairing cannot be completed
  * from inside an app anyway.
  */
+// Same as BluetoothBoardManager: every entry point checks hasConnectPermission() and openAndRead
+// catches SecurityException outright, but neither shape is one lint recognises, so it reports each
+// Bluetooth call in the class. The two inline @Suppress("MissingPermission") this file already
+// carried were the same admission, made twice.
+@SuppressLint("MissingPermission")
 class BluetoothSerialBoardManager(private val context: Context) {
 
     private companion object {
@@ -129,9 +135,7 @@ class BluetoothSerialBoardManager(private val context: Context) {
         val opened = try {
             // Discovery is expensive and slows every connection attempt down while it runs; Android
             // asks for it to be stopped before opening a socket.
-            @Suppress("MissingPermission")
             adapter?.cancelDiscovery()
-            @Suppress("MissingPermission")
             device.createRfcommSocketToServiceRecord(SPP_UUID).also { it.connect() }
         } catch (e: IOException) {
             withContext(Dispatchers.Main) {

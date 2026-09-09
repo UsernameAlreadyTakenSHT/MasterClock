@@ -142,6 +142,14 @@ android {
         compose = true
         buildConfig = true
     }
+    // Without this, lint stops at this module's own sources: checkDependencies defaults to false,
+    // so :app:lintCompleteRelease -- the task RELEASING.md calls the bar -- never opened a single
+    // file in core/, which is where the logic, the persistence and the whole import/export chain
+    // live. That is how a call to an API 37 class shipped in a minSdk 24 module and reached a
+    // release: the check that exists for exactly that was pointed somewhere else.
+    lint {
+        checkDependencies = true
+    }
 }
 
 // compileOptions above only sets the language level and the class-file version; it does not decide
