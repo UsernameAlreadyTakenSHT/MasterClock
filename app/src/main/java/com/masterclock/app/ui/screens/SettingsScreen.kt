@@ -162,7 +162,7 @@ fun SettingsScreen(
             text = { Text(stringResource(R.string.settings_reset_message)) },
             confirmButton = {
                 TextButton(onClick = { onResetSettings(); showResetSettingsDialog = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                    Text("Reset")
+                    Text(stringResource(R.string.common_reset))
                 }
             },
             dismissButton = {
