@@ -201,7 +201,14 @@ class BluetoothBoardManager(private val context: Context) {
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
-            if (device.name != null) {
+            // Reading the name needs BLUETOOTH_CONNECT from API 31, and this arrives on a callback
+            // thread on a scan that started while the permission was still held -- so revoking it
+            // mid-scan reached an uncaught SecurityException here. Every other callback in this
+            // class already answers for that window, two of them with an explicit
+            // hasConnectPermission() check; this was the one left. A board whose name cannot be
+            // read is simply not offered, which is what the null case below already does.
+            val name = runCatching { device.name }.getOrNull()
+            if (name != null) {
                 val existing = _scannedDevices.value.find { it.device.address == device.address }
                 if (existing == null) {
                     _scannedDevices.value = _scannedDevices.value + ScannedDevice(device, result.rssi)
