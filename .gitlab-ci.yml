@@ -46,6 +46,10 @@ build_apks:
     - chmod +x gradlew
   script:
     - export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
+    # The bar from AGENTS.md, same as the GitHub side. Both pipelines used to run assemble tasks
+    # only, so a tag whose tests failed was signed and published to two forges with nothing
+    # objecting.
+    - ./gradlew :core:test :app:lintCompleteRelease :paper:lintRelease
     - ./gradlew buildAllReleaseFlavors
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then

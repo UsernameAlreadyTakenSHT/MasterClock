@@ -46,10 +46,27 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      # Both of these steps are gated on a tag, and that gate is the whole point of them.
+      #
+      # This workflow also answers workflow_dispatch, which GitHub allows on any branch. Without the
+      # gate, pushing a branch with an edited script and pressing "Run workflow" walked off with the
+      # app signing key -- the one credential in this project that cannot be rotated without every
+      # user reinstalling by hand. The same hole was closed on GitLab in 9f258f4 by requiring a
+      # protected ref; this side was left open, and RELEASING.md recommends dispatch as the way to
+      # rehearse CI changes, which is exactly the path an attacker would take.
+      #
+      # A dispatch run still builds. hasReleaseSigningConfig in app/build.gradle.kts is false
+      # without these properties, so it produces unsigned APKs -- which is what a smoke build should
+      # produce anyway.
+      #
+      # Marking the four secrets as protected/environment-scoped in the repository settings is the
+      # belt-and-braces version, and cannot be committed here.
       - name: Decode release keystore
+        if: startsWith(github.ref, 'refs/tags/')
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "${{ github.workspace }}/release.keystore"
 
       - name: Write local.properties (release signing)
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           cat >> local.properties <<KEYEOF
           MASTERCLOCK_RELEASE_STORE_FILE=${{ github.workspace }}/release.keystore
@@ -57,6 +74,13 @@ jobs:
           MASTERCLOCK_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
           MASTERCLOCK_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
           KEYEOF
+
+      # The bar from AGENTS.md, run where it cannot be forgotten. Until now CI ran assemble tasks
+      # only: a tag whose tests failed was signed, published to two forges and given its SHA-256
+      # digests without a single step objecting, and the only thing standing in the way was the
+      # maintainer remembering to run these on their own machine first.
+      - name: Test and lint
+        run: ./gradlew :core:test :app:lintCompleteRelease :paper:lintRelease
 
       - name: Build all flavors + paper (release APKs)
         run: ./gradlew buildAllReleaseFlavors
@@ -69,10 +93,19 @@ jobs:
         if: always()
         run: rm -f "${{ github.workspace }}/release.keystore" local.properties
 
+      # The ref name reaches the shell through the environment, not through expression
+      # interpolation. `${{ }}` is substituted into the script before bash ever sees it, and `$`,
+      # `(`, `)` and backticks are all legal in a git ref -- so a tag named v0.9.0$(...) ran
+      # arbitrary code here, before SHA256SUMS.txt is computed below and published to the release.
+      # A token holding contents:write but not the workflow scope can push such a tag while being
+      # unable to edit this file, which is a real boundary to cross. The GitLab side already does
+      # this correctly with $CI_COMMIT_TAG.
       - name: Stage renamed artifacts
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
           mkdir -p dist
-          tag="${{ github.ref_name }}"
+          tag="$REF_NAME"
           for flavor in complete standard lite mini; do
             cp "app/build/outputs/apk/${flavor}/release/"*.apk "dist/masterclock-${flavor}-${tag}.apk"
           done
