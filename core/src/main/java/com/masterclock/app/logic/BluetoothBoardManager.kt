@@ -18,6 +18,7 @@ import android.os.Build
 import android.util.Log
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -454,21 +455,40 @@ class BluetoothBoardManager(private val context: Context) {
         moveTracker.reset()
         clearGattQueue()
 
-        val connectionSettings = BluetoothGattConnectionSettings.Builder()
-            .setTransport(BluetoothDevice.TRANSPORT_LE)
-            .setAutoConnectEnabled(false)
-            .build()
         // Same revocation window as the scan, and the same reason to report it: without this the
         // screen would sit on Connecting with nothing connecting.
-        val opened = runCatching {
-            device.connectGatt(connectionSettings, ContextCompat.getMainExecutor(context), gattCallback)
-        }
+        val opened = runCatching { openGatt(device) }
         activeGatt = opened.getOrNull()
         if (activeGatt == null) {
             Log.w("BluetoothBoardManager", "Could not open a GATT connection", opened.exceptionOrNull())
             _onMoveReceivedCallback = null
             _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
         }
+    }
+
+    /**
+     * Opens the GATT client, by whichever route the device running us actually has.
+     *
+     * `BluetoothGattConnectionSettings` and the `connectGatt` overload that takes it were both added
+     * in API 37, and this module builds against 37 but ships to minSdk 24 -- so the settings-based
+     * call resolved at compile time and threw `NoClassDefFoundError` on every device below 37, which
+     * today is every device. Splitting the new call into its own `@RequiresApi` method keeps the
+     * class off the verification path on the old branch rather than merely off the execution path.
+     */
+    private fun openGatt(device: BluetoothDevice): BluetoothGatt? =
+        if (Build.VERSION.SDK_INT >= 37) {
+            openGattWithConnectionSettings(device)
+        } else {
+            device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+        }
+
+    @RequiresApi(37)
+    private fun openGattWithConnectionSettings(device: BluetoothDevice): BluetoothGatt? {
+        val connectionSettings = BluetoothGattConnectionSettings.Builder()
+            .setTransport(BluetoothDevice.TRANSPORT_LE)
+            .setAutoConnectEnabled(false)
+            .build()
+        return device.connectGatt(connectionSettings, ContextCompat.getMainExecutor(context), gattCallback)
     }
 
     /**
