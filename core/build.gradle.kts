@@ -48,9 +48,11 @@ dependencies {
     api(libs.kotlinx.serialization.core)
     api(libs.kotlinx.serialization.json)
     
-    // Utilities used by logic (Zip, QR, Sound)
-    api(libs.zxing.core)
-
+    // No zxing here. Nothing in core imports com.google.zxing -- the encoder and decoder are used
+    // only by app/src/complete's two QR screens -- and declaring it as `api` put both on the
+    // compile classpath of all four flavours and of paper. That is precisely the leak
+    // "completeImplementation" exists to prevent for CameraX and Coil, so it now sits beside them
+    // in app/build.gradle.kts.
     "ksp"(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)

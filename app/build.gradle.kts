@@ -199,6 +199,9 @@ dependencies {
     // com.google.zxing from zxing-core for decoding and encoding, and CameraX for the preview,
     // which is the whole of what that library would have provided.
     "completeImplementation"(libs.accompanist.permissions)
+    // Moved out of core, which declared it as `api` while importing none of it: the QR encoder and
+    // decoder are used only by this flavour's two QR screens.
+    "completeImplementation"(libs.zxing.core)
     "completeImplementation"(libs.coil.compose)
     "completeImplementation"(libs.coil.svg)
 
