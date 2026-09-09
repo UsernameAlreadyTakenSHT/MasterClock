@@ -479,6 +479,9 @@ class BluetoothBoardManager(private val context: Context) {
         if (Build.VERSION.SDK_INT >= 37) {
             openGattWithConnectionSettings(device)
         } else {
+            // Deprecated in favour of the API 37 call above, which is the branch this device does
+            // not have. Deprecated is the whole point of the fallback.
+            @Suppress("DEPRECATION")
             device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         }
 

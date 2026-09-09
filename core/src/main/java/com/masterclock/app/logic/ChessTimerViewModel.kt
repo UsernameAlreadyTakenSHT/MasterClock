@@ -730,10 +730,33 @@ data class ChessClockState(
  * on delete (an empty/crafted id can match every file in `filesDir`), and audioPath/imagePath/
  * videoPath/custom*Uri are read and written to directly.
  */
-private fun sanitizeImportedSettings(context: android.content.Context, settings: ChessClockSettings): ChessClockSettings {
+private fun sanitizeImportedSettings(context: android.content.Context, settings: ChessClockSettings): ChessClockSettings =
+    sanitizeSettings(context, settings, freshNoteIds = true)
+
+/**
+ * Re-checks settings that were read back from DataStore, rather than ones arriving from outside.
+ *
+ * Every guard above ran on `isImport = true` and nowhere else, so all of them were doors with no
+ * room behind them: an import that landed before the guard existed was persisted, and the app read
+ * it straight back into [_settings] on every launch afterwards without looking at it again. The
+ * v0.8.29 fix for the note that aims the notebook's shredder at `settings.preferences_pb` therefore
+ * protected clean installs and did nothing at all for an install that already carried the payload.
+ *
+ * Note ids are the one thing that must survive: they are what the notebook's own files are named
+ * after, so regenerating them on read would orphan every recording and photo on every launch.
+ * Everything else here is idempotent, which is what makes it safe to run each time.
+ */
+private fun sanitizeStoredSettings(context: android.content.Context, settings: ChessClockSettings): ChessClockSettings =
+    sanitizeSettings(context, settings, freshNoteIds = false)
+
+private fun sanitizeSettings(
+    context: android.content.Context,
+    settings: ChessClockSettings,
+    freshNoteIds: Boolean,
+): ChessClockSettings {
     val sanitizedNotes = settings.notebookNotes.take(MAX_IMPORTED_NOTES).map { note ->
         note.copy(
-            id = java.util.UUID.randomUUID().toString(),
+            id = if (freshNoteIds) java.util.UUID.randomUUID().toString() else note.id,
             title = note.title.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
             content = note.content.take(MAX_IMPORTED_NOTE_CONTENT_CHARS),
             drawingPaths = note.drawingPaths.take(MAX_IMPORTED_DRAWING_PATHS).map { stroke ->
@@ -1277,6 +1300,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     val customPresets: StateFlow<List<SavedPreset>> = _customPresets.asStateFlow()
 
     /**
+     * The limit to pass to `trimLogs`, or null when the history is unlimited and nothing is trimmed.
+     *
+     * [loadHistory] clamps the same number for reads and this path did not, which is what let a
+     * stored `logHistoryLimit` of 0 delete the whole history at the end of every game while the
+     * clamp on the read side hid the symptom: `DELETE ... WHERE id NOT IN (SELECT id ... LIMIT 0)`
+     * has a subquery that selects nothing, so every row matches. A trim is destructive and a read is
+     * not, so if either of the two was going to be the unguarded one, it should not have been this.
+     */
+    private fun trimLimitFor(limit: Int): Int? =
+        if (limit == -1) null else limit.coerceIn(1, MAX_UNLIMITED_HISTORY)
+
+    /**
      * Reads the game history back and decodes it, off the main thread.
      *
      * viewModelScope runs on Dispatchers.Main and [Converters.toGameLog] parses three JSON columns
@@ -1318,7 +1353,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         viewModelScope.launch {
-            val savedSettings = settingsRepo.settingsFlow.first()
+            val storedSettings = settingsRepo.settingsFlow.first()
+            // DataStore is where an import writes, so what comes back out of it is exactly as
+            // untrusted as what went in -- and until now nothing looked at it again on the way
+            // back. Anything a pre-0.8.29 import left behind is repaired here, once, and written
+            // back so the repair sticks and so the next export carries the repaired values rather
+            // than the poisoned ones. Decoding and checking both happen off the main thread.
+            val savedSettings = withContext(Dispatchers.Default) {
+                sanitizeStoredSettings(getApplication(), storedSettings)
+            }
+            if (savedSettings != storedSettings) {
+                Log.i("ChessTimerViewModel", "Repaired stored settings that failed validation")
+                settingsRepo.saveSettings(savedSettings)
+            }
             _settings.value = savedSettings
             soundManager.loadSounds(savedSettings)
             _uiState.value = createInitialState(savedSettings)
@@ -1894,9 +1941,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 gameDao.insertLog(converters.fromGameLog(log))
                 
                 // 1. Cleanup by count (skip if infinite)
-                if (limit != -1) {
-                    gameDao.trimLogs(limit)
-                }
+                trimLimitFor(limit)?.let { gameDao.trimLogs(it) }
                 
                 // 2. Cleanup by duration
                 if (durationLimit != LogDurationLimit.INFINITE) {
@@ -2016,8 +2061,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                         .copy(settings = sanitizeImportedSettings(app, log.settings))
                     gameDao.insertLog(converters.fromGameLog(sanitizedLog))
                 }
-                val limit = _settings.value.logHistoryLimit
-                if (limit != -1) gameDao.trimLogs(limit)
+                trimLimitFor(_settings.value.logHistoryLimit)?.let { gameDao.trimLogs(it) }
                 _gameHistory.value = loadHistory(_settings.value.logHistoryLimit)
             }
         }
