@@ -370,4 +370,243 @@ class ChessTimerLogicTest {
         assertEquals(1, applied.notebookNotes.size)
         assertEquals("My opening prep", applied.notebookNotes.first().title)
     }
+
+    // --- Modes that had no coverage at all until now ---
+    //
+    // Everything below drives the real tickPlayer/computePostMoveState, like the sections above.
+    // MOVE_TIMER_SAVE_CAP is deliberately absent: its post-move arithmetic is wrong, so a test of
+    // correct behaviour cannot pass until that is fixed, and a test of current behaviour would
+    // encode the bug. MOVE_TIMER_SHARED and PHASES have only their post-move side covered -- their
+    // countdown lives inline in ChessTimerViewModel.tick() and their phase transitions in private
+    // methods, neither reachable from here.
+
+    // US_DELAY: the delay is spent before the main clock, and never out of it.
+
+    @Test
+    fun `US_DELAY spends the delay before touching the main clock`() {
+        val s = PlayerSettings(mode = TimerMode.US_DELAY, incrementMs = 5000)
+        val settings = ChessClockSettings(main = s)
+        val p = PlayerState(timeRemainingMs = 300_000, delayRemainingMs = 5000)
+        val next = tickPlayer(p, delta = 1000, s = s, settings = settings)
+        assertEquals(4000, next.delayRemainingMs)
+        assertEquals(300_000, next.timeRemainingMs)
+    }
+
+    @Test
+    fun `US_DELAY clamps the delay at zero rather than billing the overshoot to the main clock`() {
+        val s = PlayerSettings(mode = TimerMode.US_DELAY, incrementMs = 5000)
+        val settings = ChessClockSettings(main = s)
+        // 500ms of delay left, a 1000ms tick: the 500ms of overshoot is not taken from the main
+        // clock, it is dropped. At the 100ms tick this is worth at most a tenth of a second a move.
+        val next = tickPlayer(PlayerState(timeRemainingMs = 300_000, delayRemainingMs = 500), 1000, s, settings)
+        assertEquals(0, next.delayRemainingMs)
+        assertEquals(300_000, next.timeRemainingMs)
+    }
+
+    @Test
+    fun `US_DELAY burns the main clock once the delay is gone`() {
+        val s = PlayerSettings(mode = TimerMode.US_DELAY, incrementMs = 5000)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 300_000, delayRemainingMs = 0), 1000, s, settings)
+        assertEquals(299_000, next.timeRemainingMs)
+    }
+
+    // MOVE_TIMER_STANDARD: a fixed allowance per move, restored on every press.
+
+    @Test
+    fun `MOVE_TIMER_STANDARD counts the move allowance down`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_STANDARD, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 30_000), 1000, s, settings)
+        assertEquals(29_000, next.timeRemainingMs)
+    }
+
+    @Test
+    fun `MOVE_TIMER_STANDARD flags when the move allowance runs out`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_STANDARD, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.FREEZE)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 500), 1000, s, settings)
+        assertEquals(0, next.timeRemainingMs)
+        assertTrue(next.isOutOfTime)
+    }
+
+    @Test
+    fun `MOVE_TIMER_STANDARD restores the full allowance on a press, keeping nothing`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_STANDARD, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 22_000)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, timeSpentOnMove = 8000, settings, s)
+        // The 22 seconds left are lost, not banked -- that is what separates this from SAVE_CAP.
+        assertEquals(30_000, next.players[0].timeRemainingMs)
+    }
+
+    // MOVE_TIMER_OVERTIME: an allowance per move, backed by one global reserve it dips into.
+
+    @Test
+    fun `MOVE_TIMER_OVERTIME spends the move clock while it lasts and leaves the reserve alone`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000, initialTimeMs = 600_000)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 5000, secondaryTimeMs = 600_000), 1000, s, settings)
+        assertEquals(4000, next.timeRemainingMs)
+        assertEquals(600_000, next.secondaryTimeMs)
+        assertFalse(next.isOutOfTime)
+    }
+
+    @Test
+    fun `MOVE_TIMER_OVERTIME takes only the overshoot from the reserve on the crossing tick`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000, initialTimeMs = 600_000)
+        val settings = ChessClockSettings(main = s)
+        // 500ms of move clock left against a 1000ms tick: 500ms of it is real overtime, and only
+        // that 500ms may reach the reserve. Charging the whole delta here would bill the player
+        // twice for the same half-second.
+        val next = tickPlayer(PlayerState(timeRemainingMs = 500, secondaryTimeMs = 600_000), 1000, s, settings)
+        assertEquals(0, next.timeRemainingMs)
+        assertEquals(599_500, next.secondaryTimeMs)
+        assertFalse(next.isOutOfTime)
+    }
+
+    @Test
+    fun `MOVE_TIMER_OVERTIME burns the reserve at full rate once the move clock is empty`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000, initialTimeMs = 600_000)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 0, secondaryTimeMs = 599_500), 1000, s, settings)
+        assertEquals(0, next.timeRemainingMs)
+        assertEquals(598_500, next.secondaryTimeMs)
+    }
+
+    @Test
+    fun `MOVE_TIMER_OVERTIME flags only when the reserve itself is exhausted`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000, initialTimeMs = 600_000)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 0, secondaryTimeMs = 500), 1000, s, settings)
+        assertTrue(next.isOutOfTime)
+    }
+
+    @Test
+    fun `MOVE_TIMER_OVERTIME restores the move clock on a press and carries the reserve over`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000, initialTimeMs = 600_000)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 0, secondaryTimeMs = 545_000)),
+            activePlayer = 1,
+        )
+        val next = computePostMoveState(state, 1, timeSpentOnMove = 85_000, settings, s)
+        assertEquals(30_000, next.players[0].timeRemainingMs)
+        // The reserve is the whole point of the mode: a press must not refill it.
+        assertEquals(545_000, next.players[0].secondaryTimeMs)
+    }
+
+    // BYOYOMI_CANADIAN: after the main time, a block of time for a fixed number of moves.
+
+    @Test
+    fun `BYOYOMI_CANADIAN enters byoyomi when the main time runs out`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_CANADIAN, byoyomiTimeMs = 300_000, byoyomiPeriods = 25)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 500, isInByoyomi = false), 1000, s, settings)
+        assertTrue(next.isInByoyomi)
+        assertEquals(300_000, next.timeRemainingMs)
+        assertFalse(next.isOutOfTime)
+    }
+
+    @Test
+    fun `BYOYOMI_CANADIAN counts the block down once inside it`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_CANADIAN, byoyomiTimeMs = 300_000, byoyomiPeriods = 25)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 300_000, isInByoyomi = true), 1000, s, settings)
+        assertEquals(299_000, next.timeRemainingMs)
+        assertFalse(next.isOutOfTime)
+    }
+
+    @Test
+    fun `BYOYOMI_CANADIAN flags when the block runs out`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_CANADIAN, byoyomiTimeMs = 300_000, byoyomiPeriods = 25)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 500, isInByoyomi = true), 1000, s, settings)
+        assertTrue(next.isOutOfTime)
+    }
+
+    @Test
+    fun `BYOYOMI_CANADIAN counts a move off the quota without refilling the block`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_CANADIAN, byoyomiTimeMs = 300_000, byoyomiPeriods = 25)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 240_000, isInByoyomi = true, movesRemainingInPeriod = 25)),
+            activePlayer = 1,
+        )
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        assertEquals(24, next.players[0].movesRemainingInPeriod)
+        assertEquals(240_000, next.players[0].timeRemainingMs)
+    }
+
+    @Test
+    fun `BYOYOMI_CANADIAN refills the block only on the last move of the quota`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_CANADIAN, byoyomiTimeMs = 300_000, byoyomiPeriods = 25)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 4000, isInByoyomi = true, movesRemainingInPeriod = 1)),
+            activePlayer = 1,
+        )
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        assertEquals(300_000, next.players[0].timeRemainingMs)
+        assertEquals(25, next.players[0].movesRemainingInPeriod)
+    }
+
+    // RANDOM: the roll is held in secondaryTimeMs and credited on the press.
+
+    @Test
+    fun `RANDOM credits the rolled bonus after a move`() {
+        val s = PlayerSettings(mode = TimerMode.RANDOM)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 100_000, secondaryTimeMs = 3000)),
+            activePlayer = 1,
+        )
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        assertEquals(103_000, next.players[0].timeRemainingMs)
+    }
+
+    @Test
+    fun `RANDOM keeps the roll for the next move rather than clearing it`() {
+        val s = PlayerSettings(mode = TimerMode.RANDOM)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 100_000, secondaryTimeMs = 3000)),
+            activePlayer = 1,
+        )
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        // A new roll is the ViewModel's job; this function must not silently zero the old one.
+        assertEquals(3000, next.players[0].secondaryTimeMs)
+    }
+
+    // Modes whose countdown lives elsewhere: what matters here is that a press does NOT reset them.
+
+    @Test
+    fun `MOVE_TIMER_GLOBAL_SHARED restores the mover's move clock on a press`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 4000)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        assertEquals(30_000, next.players[0].timeRemainingMs)
+    }
+
+    @Test
+    fun `MOVE_TIMER_SHARED is not reset by a press`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 12_000)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        // One clock is shared by everyone, so refilling it on each press would make it endless.
+        assertEquals(12_000, next.players[0].timeRemainingMs)
+        assertEquals(1, next.players[0].moveCount)
+    }
+
+    @Test
+    fun `PHASES is not reset by a press`() {
+        val s = PlayerSettings(mode = TimerMode.PHASES)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 45_000)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, 0, settings, s)
+        // A phase runs to its own end; only a phase transition may change this clock.
+        assertEquals(45_000, next.players[0].timeRemainingMs)
+    }
 }
