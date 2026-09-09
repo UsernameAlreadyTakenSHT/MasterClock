@@ -44,14 +44,35 @@ fun QRReceiveScreen(
         onBack = onBack
     ) { pad ->
         if (cameraPermissionState.status.isGranted) {
+            // Guards against onResult() firing more than once: setAnalyzer() keeps delivering
+            // frames (and can decode successfully on several in a row) until the camera is actually
+            // unbound in response to the first onResult(), which doesn't happen instantly. It lives
+            // out here rather than in the factory so that leaving the screen can set it too.
+            val hasScanned = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
+            // The camera is bound to the Activity's lifecycle, not this screen's: the navigation
+            // stack installs a saveable-state decorator and no lifecycle decorator, so
+            // LocalLifecycleOwner here is the Activity. Nothing therefore ended the session on the
+            // way out -- backing out without scanning left the camera open and analysing for the
+            // life of the Activity, with the indicator lit and one executor leaked per visit, and a
+            // code entering frame afterwards still called onResult from whatever screen the user
+            // had reached by then.
+            val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
+            val cameraProvider = remember { java.util.concurrent.atomic.AtomicReference<ProcessCameraProvider?>(null) }
+            // The analyzer is built once by the factory below, so it would otherwise hold the first
+            // composition's callback for as long as it runs.
+            val currentOnResult by rememberUpdatedState(onResult)
+
+            DisposableEffect(Unit) {
+                onDispose {
+                    hasScanned.set(true)
+                    runCatching { cameraProvider.getAndSet(null)?.unbindAll() }
+                    analysisExecutor.shutdown()
+                }
+            }
+
             Box(Modifier.fillMaxSize().padding(pad)) {
                 AndroidView(
                     factory = { ctx ->
-                        // Guards against onResult() firing more than once: setAnalyzer() keeps
-                        // delivering frames (and can decode successfully on several in a row) until
-                        // the caller actually unbinds the camera in response to the first onResult(),
-                        // which doesn't happen instantly.
-                        val hasScanned = java.util.concurrent.atomic.AtomicBoolean(false)
                         val previewView = PreviewView(ctx).apply {
                             scaleType = PreviewView.ScaleType.FILL_CENTER
                             layoutParams = ViewGroup.LayoutParams(
@@ -62,7 +83,14 @@ fun QRReceiveScreen(
                         
                         val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
                         cameraProviderFuture.addListener({
-                            val cameraProvider = cameraProviderFuture.get()
+                            val provider = cameraProviderFuture.get()
+                            // The provider arrives asynchronously, so the screen can have been left
+                            // -- or a code already read -- by the time it does. Binding then would
+                            // open a camera that nothing is left to close.
+                            if (hasScanned.get()) {
+                                return@addListener
+                            }
+                            cameraProvider.set(provider)
                             val preview = Preview.Builder().build().also {
                                 it.setSurfaceProvider(previewView.surfaceProvider)
                             }
@@ -71,7 +99,7 @@ fun QRReceiveScreen(
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .build()
 
-                            imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
+                            imageAnalysis.setAnalyzer(analysisExecutor) { imageProxy ->
                                 val buffer = imageProxy.planes[0].buffer
                                 val data = ByteArray(buffer.remaining())
                                 buffer.get(data)
@@ -86,7 +114,7 @@ fun QRReceiveScreen(
                                     val reader = MultiFormatReader()
                                     val result = reader.decode(binaryBitmap)
                                     if (hasScanned.compareAndSet(false, true)) {
-                                        onResult(result.text)
+                                        currentOnResult(result.text)
                                     }
                                 } catch (_: Exception) {
                                     // No code found
@@ -97,8 +125,8 @@ fun QRReceiveScreen(
 
                             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
                             try {
-                                cameraProvider.unbindAll()
-                                cameraProvider.bindToLifecycle(
+                                provider.unbindAll()
+                                provider.bindToLifecycle(
                                     lifecycleOwner, cameraSelector, preview, imageAnalysis
                                 )
                             } catch (e: Exception) {
