@@ -85,9 +85,9 @@
     <string name="guide_move_global_shared" translatable="false">Global Shared</string>
     <string name="guide_move_global_shared_desc">All players share a global reserve while having a personal move timer.</string>
     <string name="guide_move_overtime" translatable="false">Overtime</string>
-    <string name="guide_move_overtime_desc">Adds unused move time to a secondary global reserve.</string>
+    <string name="guide_move_overtime_desc">Going over the move time draws on a secondary global reserve.</string>
     <string name="guide_move_save_cap" translatable="false">Save &amp; Cap</string>
-    <string name="guide_move_save_cap_desc">Unused move time is stored in a bank, limited by a maximum capacity.</string>
+    <string name="guide_move_save_cap_desc">Unused move time is carried over to the next move, up to a ceiling on the clock.</string>
     <string name="guide_move_shared" translatable="false">Shared (Auto)</string>
     <string name="guide_move_shared_desc">A single timer for all players. Automatically switches at 0:00.</string>
     <string name="guide_move_standard" translatable="false">Standard</string>

@@ -64,8 +64,8 @@
     <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total mantém-se constante.</string>
     <string name="guide_move_global_desc">O tempo de lance e o tempo global correm ao mesmo tempo. Ambos têm de ficar acima de zero.</string>
     <string name="guide_move_global_shared_desc">Todos os jogadores partilham uma reserva global e têm ainda um relógio de lance próprio.</string>
-    <string name="guide_move_overtime_desc">Acrescenta o tempo de lance não usado a uma reserva global secundária.</string>
-    <string name="guide_move_save_cap_desc">O tempo de lance não usado vai para um banco, limitado por um teto máximo.</string>
+    <string name="guide_move_overtime_desc">Ultrapassar o tempo de lance consome uma reserva global secundária.</string>
+    <string name="guide_move_save_cap_desc">O tempo de lance não usado passa para o lance seguinte, até um teto no relógio.</string>
     <string name="guide_move_shared_desc">Um único relógio para todos os jogadores. Muda automaticamente às 0:00.</string>
     <string name="guide_move_standard_desc">Volta a uma duração fixa em cada lance.</string>
     <string name="guide_omni_desc">Estação profissional de 6 níveis para estruturas de jogo complexas (partidas &gt; rondas &gt; vezes &gt; fases).</string>

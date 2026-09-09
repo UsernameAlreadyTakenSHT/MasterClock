@@ -59,8 +59,8 @@
     <string name="guide_hourglass_desc">Le temps perdu par un joueur est ajouté à l\'adversaire. Le temps total reste constant.</string>
     <string name="guide_move_global_desc">Le temps de coup et le temps global s\'écoulent en même temps. Les deux doivent rester au-dessus de zéro.</string>
     <string name="guide_move_global_shared_desc">Tous les joueurs partagent une réserve globale tout en ayant un chrono de coup personnel.</string>
-    <string name="guide_move_overtime_desc">Ajoute le temps de coup non utilisé à une réserve globale secondaire.</string>
-    <string name="guide_move_save_cap_desc">Le temps de coup non utilisé est mis en banque, dans la limite d\'un plafond.</string>
+    <string name="guide_move_overtime_desc">Dépasser le temps de coup puise dans une réserve globale secondaire.</string>
+    <string name="guide_move_save_cap_desc">Le temps de coup non utilisé est reporté sur le coup suivant, dans la limite d\'un plafond sur la pendule.</string>
     <string name="guide_move_shared_desc">Un seul chrono pour tous les joueurs. Changement automatique à 0:00.</string>
     <string name="guide_move_standard_desc">Remise à une durée fixe à chaque coup.</string>
     <string name="guide_omni_desc">Station professionnelle à 6 niveaux pour les structures de jeu complexes (parties &gt; manches &gt; tours &gt; phases).</string>

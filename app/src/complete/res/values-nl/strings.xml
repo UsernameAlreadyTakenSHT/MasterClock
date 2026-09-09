@@ -61,8 +61,8 @@
     <string name="guide_hourglass_desc">De tijd die een speler verliest wordt bij de tegenstander opgeteld. De totale tijd blijft gelijk.</string>
     <string name="guide_move_global_desc">Zettijd en globale tijd lopen tegelijk. Beide moeten boven nul blijven.</string>
     <string name="guide_move_global_shared_desc">Alle spelers delen een globale voorraad en hebben daarnaast een eigen zetklok.</string>
-    <string name="guide_move_overtime_desc">Voegt ongebruikte zettijd toe aan een tweede globale voorraad.</string>
-    <string name="guide_move_save_cap_desc">Ongebruikte zettijd gaat naar een bank, met een maximum.</string>
+    <string name="guide_move_overtime_desc">Wie de zettijd overschrijdt, put uit een tweede globale voorraad.</string>
+    <string name="guide_move_save_cap_desc">Ongebruikte zettijd gaat mee naar de volgende zet, tot een maximum op de klok.</string>
     <string name="guide_move_shared_desc">Eén klok voor alle spelers. Wisselt automatisch bij 0:00.</string>
     <string name="guide_move_standard_desc">Gaat bij elke zet terug naar een vaste duur.</string>
     <string name="guide_omni_desc">Professionele centrale met 6 niveaus voor complexe spelstructuren (partijen &gt; rondes &gt; beurten &gt; fases).</string>

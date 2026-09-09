@@ -61,8 +61,8 @@
     <string name="guide_hourglass_desc">El tiempo que pierde un jugador se suma al del rival. El tiempo total se mantiene constante.</string>
     <string name="guide_move_global_desc">El tiempo de jugada y el tiempo global corren a la vez. Ambos deben mantenerse por encima de cero.</string>
     <string name="guide_move_global_shared_desc">Todos los jugadores comparten una reserva global y además tienen un reloj de jugada propio.</string>
-    <string name="guide_move_overtime_desc">Añade el tiempo de jugada no utilizado a una reserva global secundaria.</string>
-    <string name="guide_move_save_cap_desc">El tiempo de jugada no utilizado se guarda en un banco, con un tope máximo.</string>
+    <string name="guide_move_overtime_desc">Superar el tiempo de jugada consume una reserva global secundaria.</string>
+    <string name="guide_move_save_cap_desc">El tiempo de jugada no utilizado pasa a la siguiente jugada, hasta un tope en el reloj.</string>
     <string name="guide_move_shared_desc">Un único reloj para todos los jugadores. Cambia automáticamente a las 0:00.</string>
     <string name="guide_move_standard_desc">Vuelve a una duración fija en cada jugada.</string>
     <string name="guide_omni_desc">Estación profesional de 6 niveles para estructuras de juego complejas (partidas &gt; rondas &gt; turnos &gt; fases).</string>

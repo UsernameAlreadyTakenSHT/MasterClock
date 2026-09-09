@@ -61,8 +61,8 @@
     <string name="guide_hourglass_desc">Il tempo perso da un giocatore viene aggiunto all\'avversario. Il tempo totale resta costante.</string>
     <string name="guide_move_global_desc">Tempo per mossa e tempo globale scorrono insieme. Entrambi devono restare sopra lo zero.</string>
     <string name="guide_move_global_shared_desc">Tutti i giocatori condividono una riserva globale e hanno inoltre un timer di mossa personale.</string>
-    <string name="guide_move_overtime_desc">Aggiunge il tempo di mossa non usato a una riserva globale secondaria.</string>
-    <string name="guide_move_save_cap_desc">Il tempo di mossa non usato finisce in una banca, con un tetto massimo.</string>
+    <string name="guide_move_overtime_desc">Superare il tempo di mossa attinge a una riserva globale secondaria.</string>
+    <string name="guide_move_save_cap_desc">Il tempo di mossa non usato passa alla mossa successiva, fino a un tetto massimo sul cronometro.</string>
     <string name="guide_move_shared_desc">Un solo orologio per tutti i giocatori. Cambia automaticamente a 0:00.</string>
     <string name="guide_move_standard_desc">Torna a una durata fissa a ogni mossa.</string>
     <string name="guide_omni_desc">Stazione professionale a 6 livelli per strutture di gioco complesse (partite &gt; manche &gt; turni &gt; fasi).</string>
