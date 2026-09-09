@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattConnectionSettings
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothStatusCodes
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
@@ -365,12 +366,25 @@ class BluetoothBoardManager(private val context: Context) {
         }
     }
 
-    /** Returns whether the operation was accepted and a callback should be expected. */
-    private fun subscribe(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic): Boolean {
+    /**
+     * Returns whether the operation was accepted and a callback should be expected.
+     *
+     * These two were the only GATT calls in this file that were neither behind a permission check
+     * nor inside a runCatching. Every entry point checks hasConnectPermission(), but that is
+     * checked when the user starts something; these run later, driven by the board's own callbacks
+     * on a connection that is already open. Revoking Bluetooth from the system settings while a
+     * board is connected is enough for the next frame to reach an uncaught SecurityException --
+     * which is a crash, from a background thread, in a feature nobody was touching. The whole file
+     * is written around that revocation window; these two had been missed.
+     *
+     * Returning false is already the "refused, expect no callback" answer that runNextOperation
+     * handles, so a refusal costs the queue nothing.
+     */
+    private fun subscribe(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic): Boolean = runCatching {
         gatt.setCharacteristicNotification(characteristic, true)
         // setCharacteristicNotification only routes callbacks locally; the board is not told
         // anything until its CCCD is written, and it is that write which is the GATT operation.
-        val cccd = characteristic.getDescriptor(CCCD_UUID) ?: return false
+        val cccd = characteristic.getDescriptor(CCCD_UUID) ?: return@runCatching false
 
         val enable = if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
             BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
@@ -378,27 +392,33 @@ class BluetoothBoardManager(private val context: Context) {
             BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
         }
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            gatt.writeDescriptor(cccd, enable) == BluetoothGatt.GATT_SUCCESS
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeDescriptor(cccd, enable) == BluetoothStatusCodes.SUCCESS
         } else {
             @Suppress("DEPRECATION")
             run { cccd.value = enable; gatt.writeDescriptor(cccd) }
         }
+    }.getOrElse {
+        Log.w("BluetoothBoardManager", "Could not subscribe to the board's notifications", it)
+        false
     }
 
     /** Returns whether the operation was accepted and a callback should be expected. */
-    private fun write(gatt: BluetoothGatt, bytes: ByteArray): Boolean {
-        val uuid = protocol.ble?.writeCharacteristicUuid ?: return false
+    private fun write(gatt: BluetoothGatt, bytes: ByteArray): Boolean = runCatching {
+        val uuid = protocol.ble?.writeCharacteristicUuid ?: return@runCatching false
         val characteristic = gatt.services.flatMap { it.characteristics }
-            .firstOrNull { it.uuid == uuid } ?: return false
+            .firstOrNull { it.uuid == uuid } ?: return@runCatching false
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             gatt.writeCharacteristic(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) ==
-                BluetoothGatt.GATT_SUCCESS
+                BluetoothStatusCodes.SUCCESS
         } else {
             @Suppress("DEPRECATION")
             run { characteristic.value = bytes; gatt.writeCharacteristic(characteristic) }
         }
+    }.getOrElse {
+        Log.w("BluetoothBoardManager", "Could not write to the board", it)
+        false
     }
 
     fun startScan() {
