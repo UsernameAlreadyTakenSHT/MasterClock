@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
-import com.masterclock.paper.ui.navigation.Route
 import com.masterclock.paper.ui.components.*
 import com.masterclock.paper.R
 
@@ -45,27 +44,26 @@ enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector)
     }
 }
 
+/**
+ * The E-Ink settings screen, which is the Modes page and nothing else.
+ *
+ * It used to take eight more callbacks -- clear logs, reset settings, export, backup, import,
+ * restore, share, open a tool -- and carry the two confirmation dialogs for the first two. None of
+ * it could ever run: getVisibleCategories() yields a single category for E_INK, so the bottom bar
+ * is never drawn and `category` can never become anything but MODES; six of those callbacks were
+ * not referenced in the body at all, and the two dialog flags were only ever written `false`.
+ *
+ * Adding a page here means adding the callbacks back along with the UI that calls them, not before.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: ChessTimerViewModel,
     currentSettings: ChessClockSettings,
     category: SettingsCategory,
     onSettingsChanged: (ChessClockSettings) -> Unit,
-    onClearLogs: () -> Unit,
-    onResetSettings: () -> Unit,
-    onExportSettings: (Boolean) -> Unit,
-    onExportMedia: () -> Unit,
-    onImportSettings: () -> Unit,
-    onImportMedia: () -> Unit,
-    onShareSettings: (Boolean, Boolean) -> Unit,
     onBackClick: () -> Unit,
-    onToolClick: (Route) -> Unit,
     onCategoryChanged: (SettingsCategory) -> Unit
 ) {
-    var showResetSettingsDialog by remember { mutableStateOf(false) }
-    var showClearLogsDialog by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -123,35 +121,5 @@ fun SettingsScreen(
                 }
             }
         }
-    }
-
-    if (showResetSettingsDialog) {
-        MMDAlertDialog(
-            onDismissRequest = { showResetSettingsDialog = false },
-            title = stringResource(R.string.settings_reset_settings),
-            text = stringResource(R.string.settings_reset_message),
-            confirmButtonText = stringResource(R.string.common_reset),
-            onConfirm = { 
-                onResetSettings()
-                showResetSettingsDialog = false 
-            },
-            dismissButtonText = stringResource(R.string.common_cancel),
-            onDismiss = { showResetSettingsDialog = false }
-        )
-    }
-
-    if (showClearLogsDialog) {
-        MMDAlertDialog(
-            onDismissRequest = { showClearLogsDialog = false },
-            title = stringResource(R.string.settings_clear_logs),
-            text = stringResource(R.string.settings_clear_logs_title),
-            confirmButtonText = stringResource(R.string.common_clear),
-            onConfirm = { 
-                onClearLogs()
-                showClearLogsDialog = false 
-            },
-            dismissButtonText = stringResource(R.string.common_cancel),
-            onDismiss = { showClearLogsDialog = false }
-        )
     }
 }

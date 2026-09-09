@@ -18,7 +18,6 @@
     <string name="timer_reset_message">De huidige stand gaat verloren.</string>
     <string name="common_back">Terug</string>
     <string name="common_close">Sluiten</string>
-    <string name="common_clear">Wissen</string>
     <string name="common_player_n">Speler %d</string>
 
     <!-- Timer -->
@@ -46,10 +45,6 @@
     <string name="settings_keep_awake">Scherm aan houden</string>
     <string name="settings_fullscreen">Volledig scherm</string>
     <string name="settings_reverse_colors">Kleuren omkeren</string>
-    <string name="settings_clear_logs">Geschiedenis wissen</string>
-    <string name="settings_clear_logs_title">De volledige partijgeschiedenis definitief verwijderen?</string>
-    <string name="settings_reset_settings">Instellingen resetten</string>
-    <string name="settings_reset_message">Weet je zeker dat je alle instellingen wilt resetten? Dit kan niet ongedaan worden gemaakt.</string>
 
     <!-- Credits dialog -->
     <string name="credits_tab_credits">Met dank aan</string>
@@ -59,12 +54,6 @@
     <string name="credits_libraries">MasterClock is gebouwd met deze opensourcebibliotheken.</string>
 
     <!-- Sharing -->
-    <string name="share_settings">Instellingen delen</string>
-    <string name="toast_backup_ok">Back-up gelukt!</string>
-    <string name="toast_import_ok">Import gelukt!</string>
-    <string name="toast_import_failed">Import mislukt: bestand kon niet worden gelezen.</string>
-    <string name="toast_export_ok">Export gelukt!</string>
-    <string name="toast_export_failed">Export mislukt: bestand kon niet worden geschreven.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Speler %1$d, %2$s</string>

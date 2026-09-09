@@ -15,8 +15,4 @@
     <string name="settings_not_optimized">Esta página de configurações ainda não está otimizada para tinta eletrônica.</string>
     <string name="settings_keep_awake">Manter a tela ligada</string>
     <string name="settings_fullscreen">Tela cheia</string>
-    <string name="settings_reset_settings">Redefinir as configurações</string>
-    <string name="settings_reset_message">Redefinir mesmo todas as configurações? Esta ação não pode ser desfeita.</string>
-    <string name="share_settings">Compartilhar as configurações</string>
-    <string name="settings_clear_logs">Limpar o histórico</string>
 </resources>

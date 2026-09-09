@@ -15,7 +15,6 @@
     <string name="timer_reset_message">Se perderá el estado actual.</string>
     <string name="common_back">Atrás</string>
     <string name="common_close">Cerrar</string>
-    <string name="common_clear">Borrar</string>
     <string name="common_player_n">Jugador %d</string>
 
     <!-- Timer -->
@@ -42,10 +41,6 @@
     <string name="settings_keep_awake">Mantener la pantalla encendida</string>
     <string name="settings_fullscreen">Pantalla completa</string>
     <string name="settings_reverse_colors">Invertir los colores</string>
-    <string name="settings_clear_logs">Borrar el historial</string>
-    <string name="settings_clear_logs_title">¿Eliminar definitivamente todo el historial de partidas?</string>
-    <string name="settings_reset_settings">Restablecer los ajustes</string>
-    <string name="settings_reset_message">¿Seguro que quieres restablecer todos los ajustes? Esta acción no se puede deshacer.</string>
 
     <!-- Credits dialog -->
     <string name="credits_tab_credits">Créditos</string>
@@ -55,12 +50,6 @@
     <string name="credits_libraries">MasterClock está hecho con estas bibliotecas de código abierto.</string>
 
     <!-- Sharing -->
-    <string name="share_settings">Compartir los ajustes</string>
-    <string name="toast_backup_ok">¡Copia de seguridad realizada!</string>
-    <string name="toast_import_ok">¡Importación correcta!</string>
-    <string name="toast_import_failed">Error al importar: no se pudo leer el archivo.</string>
-    <string name="toast_export_ok">¡Exportación correcta!</string>
-    <string name="toast_export_failed">Error al exportar: no se pudo escribir el archivo.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jugador %1$d, %2$s</string>

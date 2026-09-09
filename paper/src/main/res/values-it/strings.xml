@@ -17,7 +17,6 @@
     <string name="timer_reset_message">Lo stato attuale andrà perso.</string>
     <string name="common_back">Indietro</string>
     <string name="common_close">Chiudi</string>
-    <string name="common_clear">Cancella</string>
     <string name="common_player_n">Giocatore %d</string>
 
     <!-- Timer -->
@@ -45,10 +44,6 @@
     <string name="settings_keep_awake">Mantieni lo schermo acceso</string>
     <string name="settings_fullscreen">Schermo intero</string>
     <string name="settings_reverse_colors">Inverti i colori</string>
-    <string name="settings_clear_logs">Cancella la cronologia</string>
-    <string name="settings_clear_logs_title">Eliminare definitivamente tutta la cronologia delle partite?</string>
-    <string name="settings_reset_settings">Ripristina le impostazioni</string>
-    <string name="settings_reset_message">Ripristinare davvero tutte le impostazioni? L\'operazione non può essere annullata.</string>
 
     <!-- Credits dialog -->
     <string name="credits_tab_credits">Crediti</string>
@@ -58,12 +53,6 @@
     <string name="credits_libraries">MasterClock è realizzato con queste librerie open source.</string>
 
     <!-- Sharing -->
-    <string name="share_settings">Condividi le impostazioni</string>
-    <string name="toast_backup_ok">Backup riuscito!</string>
-    <string name="toast_import_ok">Importazione riuscita!</string>
-    <string name="toast_import_failed">Importazione non riuscita: impossibile leggere il file.</string>
-    <string name="toast_export_ok">Esportazione riuscita!</string>
-    <string name="toast_export_failed">Esportazione non riuscita: impossibile scrivere il file.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Giocatore %1$d, %2$s</string>
