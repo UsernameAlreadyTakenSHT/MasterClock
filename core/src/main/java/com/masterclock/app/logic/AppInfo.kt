@@ -308,11 +308,22 @@ object AppInfo {
         ),
     )
 
+    /**
+     * An asset or document shipped in the app, and whoever it belongs to.
+     *
+     * [completeOnly] and [eInkOnly] do for assets what [OssLicense.completeOnly] does for libraries.
+     * That mechanism existed for code and for nothing else, so every build rendered this whole list
+     * and claimed credit for files it does not contain -- Mini crediting the Cburnett chess pieces,
+     * which live in `app/src/complete/assets/pieces/`, and paper crediting them too while itself
+     * bundling the one font nothing else does.
+     */
     data class CreditEntry(
         val title: String,
         val detail: String,
         /** Shown under the detail line when set; the README already carried these links. */
         val url: String? = null,
+        val completeOnly: Boolean = false,
+        val eInkOnly: Boolean = false,
     )
 
     val CREDITS = listOf(
@@ -325,11 +336,13 @@ object AppInfo {
             title = "Chess pieces",
             detail = "\"Cburnett\" style, Wikimedia Commons — GFDL and CC BY-SA 3.0",
             url = "https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces",
+            completeOnly = true,
         ),
         CreditEntry(
             title = "Draughts stones",
             detail = "Antonsusi, Wikimedia Commons — public domain (too simple a shape to be copyrighted)",
             url = "https://commons.wikimedia.org/wiki/Category:SVG_Draughts_pieces",
+            completeOnly = true,
         ),
         CreditEntry(
             title = "Audio — Gong",
@@ -355,6 +368,9 @@ object AppInfo {
             title = "Font — Lato",
             detail = "Łukasz Dziedzic — SIL Open Font License 1.1. Bundled by the E-Ink build.",
             url = "https://www.latofonts.com/",
+            // paper/src/main/res/font holds the five faces; no other build carries any of them,
+            // which is what the detail line already said and nothing enforced.
+            eInkOnly = true,
         ),
         CreditEntry(
             title = "License",
@@ -533,4 +549,25 @@ object AppInfo {
     /** The libraries actually shipped by the running build. */
     fun ossLicenses(): List<OssLicense> =
         OSS_LICENSES.filter { !it.completeOnly || FlavorConfig.currentFlavor == AppFlavor.COMPLETE }
+
+    /** [CREDITS], less anything this build does not ship. */
+    fun credits(): List<CreditEntry> = CREDITS.filter { entry ->
+        when {
+            entry.completeOnly -> FlavorConfig.currentFlavor == AppFlavor.COMPLETE
+            entry.eInkOnly -> FlavorConfig.isEInk()
+            else -> true
+        }
+    }
+
+    /**
+     * [RULES_CREDITS], or nothing at all outside the Complete build.
+     *
+     * The ten rulebooks live in `core`'s `res/raw` and so are compiled into every consumer, but the
+     * Rules screen that opens them is `app/src/complete` only -- the reduced source set has a stub
+     * and paper has no such screen -- so the resource shrinker strips every PDF from the other four
+     * APKs. Their `resources.txt` says `raw:rules_chess... is not reachable`. Crediting a rulebook
+     * that a build does not contain is the same mistake as crediting a library it does not link.
+     */
+    fun rulesCredits(): List<CreditEntry> =
+        if (FlavorConfig.currentFlavor == AppFlavor.COMPLETE) RULES_CREDITS else emptyList()
 }

@@ -1215,15 +1215,21 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                             }
                         }
                         1 -> {
-                            AppInfo.CREDITS.forEach { CreditRow(it) }
-                            Text(
-                                stringResource(R.string.credits_rules_documents),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                            AppInfo.RULES_CREDITS.forEach { CreditRow(it) }
+                            AppInfo.credits().forEach { CreditRow(it) }
+                            // The heading goes with the list: outside Complete there are no
+                            // rulebooks in the APK, so a "Rules documents" heading over nothing
+                            // would be worse than the unfiltered list it replaces.
+                            val rulesCredits = AppInfo.rulesCredits()
+                            if (rulesCredits.isNotEmpty()) {
+                                Text(
+                                    stringResource(R.string.credits_rules_documents),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                                rulesCredits.forEach { CreditRow(it) }
+                            }
                         }
                         else -> {
                             Text(

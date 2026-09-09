@@ -334,13 +334,18 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                                 }
                             }
                             1 -> {
-                                AppInfo.CREDITS.forEach { CreditRow(it) }
-                                Text(
-                                    stringResource(R.string.credits_rules_documents),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                AppInfo.RULES_CREDITS.forEach { CreditRow(it) }
+                                AppInfo.credits().forEach { CreditRow(it) }
+                                // Always empty here -- paper ships no rulebook and no screen to
+                                // open one -- so the heading has to go with the list.
+                                val rulesCredits = AppInfo.rulesCredits()
+                                if (rulesCredits.isNotEmpty()) {
+                                    Text(
+                                        stringResource(R.string.credits_rules_documents),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    rulesCredits.forEach { CreditRow(it) }
+                                }
                             }
                             else -> {
                                 Text(
