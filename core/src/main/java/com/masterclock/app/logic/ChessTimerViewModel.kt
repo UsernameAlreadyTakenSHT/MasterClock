@@ -1622,14 +1622,24 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    private fun startClock(playerIndex: Int) {
+    /**
+     * Starts the clock for [playerIndex].
+     *
+     * [armDelay] is what separates a turn beginning from a clock merely being restarted. US Delay
+     * grants its delay once per move, and this function refilled it unconditionally -- while
+     * resume() calls it too. So pausing and pressing play handed the mover back a delay they had
+     * already spent, as often as they cared to, and with pauseOnBackground on, locking the screen
+     * did the same. Only a real turn change arms it now; resume() puts the clock back exactly as it
+     * was found.
+     */
+    private fun startClock(playerIndex: Int, armDelay: Boolean = true) {
         timerJob?.cancel()
         timerJob = null
         lastBeepSecond = -1
         _uiState.update { state ->
             val s = getPlayerSettings(playerIndex)
             val newPlayers = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == playerIndex && s.mode == TimerMode.US_DELAY) p.copy(delayRemainingMs = s.incrementMs) else p
+                if (armDelay && idx + 1 == playerIndex && s.mode == TimerMode.US_DELAY) p.copy(delayRemainingMs = s.incrementMs) else p
             }
             state.copy(activePlayer = playerIndex, isPaused = false, players = newPlayers)
         }
@@ -1923,8 +1933,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         addEvent(GameEvent(eventType = "RESUME"))
         val s = _settings.value
         val mode = getPlayerSettings(active).mode
-        if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll) || mode == TimerMode.PHASES) { startClock(active); return }
-        if (_uiState.value.players.none { it.isOutOfTime }) startClock(active)
+        if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll) || mode == TimerMode.PHASES) { startClock(active, armDelay = false); return }
+        if (_uiState.value.players.none { it.isOutOfTime }) startClock(active, armDelay = false)
     }
     fun reset() {
         timerJob?.cancel()
