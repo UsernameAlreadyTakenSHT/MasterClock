@@ -576,7 +576,14 @@ class ChessTimerLogicTest {
         assertEquals(3000, next.players[0].secondaryTimeMs)
     }
 
-    // Modes whose countdown lives elsewhere: what matters here is that a press does NOT reset them.
+    // Modes whose countdown lives elsewhere.
+    //
+    // Read the last two carefully: startOrSwitch returns before applyPostMoveLogic for both
+    // MOVE_TIMER_SHARED and PHASES, and applyPostMoveLogic is computePostMoveState's only caller,
+    // so production never reaches this function with either mode. They pass through the `else ->
+    // tempP` fallthrough. What they pin is therefore narrower than "a press does not reset the
+    // clock": they fail if someone adds one of these modes to the branch that restores moveTimeMs,
+    // and they would stay green if someone deleted the early return in startOrSwitch instead.
 
     @Test
     fun `MOVE_TIMER_GLOBAL_SHARED restores the mover's move clock on a press`() {
@@ -588,23 +595,25 @@ class ChessTimerLogicTest {
     }
 
     @Test
-    fun `MOVE_TIMER_SHARED is not reset by a press`() {
+    fun `MOVE_TIMER_SHARED has no post-move branch that would refill its clock`() {
         val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 30_000)
         val settings = ChessClockSettings(main = s)
         val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 12_000)), activePlayer = 1)
         val next = computePostMoveState(state, 1, 0, settings, s)
-        // One clock is shared by everyone, so refilling it on each press would make it endless.
+        // One clock is shared by everyone, so a branch restoring moveTimeMs here would make it
+        // endless the day someone routed this mode through applyPostMoveLogic.
         assertEquals(12_000, next.players[0].timeRemainingMs)
         assertEquals(1, next.players[0].moveCount)
     }
 
     @Test
-    fun `PHASES is not reset by a press`() {
+    fun `PHASES has no post-move branch that would restart its clock`() {
         val s = PlayerSettings(mode = TimerMode.PHASES)
         val settings = ChessClockSettings(main = s)
         val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 45_000)), activePlayer = 1)
         val next = computePostMoveState(state, 1, 0, settings, s)
-        // A phase runs to its own end; only a phase transition may change this clock.
+        // A phase runs to its own end; only startPhaseTransition/performPhaseAdvance may move this
+        // clock, and neither of those is reachable from here.
         assertEquals(45_000, next.players[0].timeRemainingMs)
     }
 

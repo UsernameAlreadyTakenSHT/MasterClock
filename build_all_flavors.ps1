@@ -70,4 +70,4 @@ foreach ($flavor in $flavors) {
 Write-Host "`n--- Build Summary ---" -ForegroundColor Cyan
 $results | Format-Table -AutoSize
 
-Write-Host "`nAPKs are located in: app/build/outputs/apk/" -ForegroundColor Gray
+Write-Host "`nApp APKs: app/build/outputs/apk/  --  paper APK: paper/build/outputs/apk/release/" -ForegroundColor Gray

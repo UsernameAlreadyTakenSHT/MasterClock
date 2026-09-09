@@ -12,7 +12,7 @@ Work through the list. Commit as you go rather than in one lump at the end.
 |---|---|
 | `app/build.gradle.kts` | `versionCode` +1, `versionName = "X.Y.Z"` |
 | `paper/build.gradle.kts` | the **same** `versionCode`, `versionName = "X.Y.Z-paper"` |
-| `fdroid/metadata/*.yml` (×5) | `versionName`, `versionCode`, `commit: vX.Y.Z`, `CurrentVersion`, `CurrentVersionCode` |
+| `fdroid/metadata/*.yml` (×5) | **add** a `Builds:` entry (`versionName`, `versionCode`, `commit: vX.Y.Z`), then update `CurrentVersion` / `CurrentVersionCode` in place |
 
 Both modules share one `versionCode`; it is also the name of the fastlane changelog files below.
 The four app flavors add their own `versionNameSuffix` (`-complete`, `-standard`, `-lite`,
@@ -23,6 +23,12 @@ when they are missed: `AutoUpdateMode: None` is deliberate — `fdroid checkupda
 `versionNameSuffix`, so it would propose the unsuffixed name and fail the next build. They drifted
 five releases behind before anyone noticed, which is what this row is for. `fdroid/README.md`
 explains the suffix trap in full.
+
+**Add** to `Builds:`, never overwrite it. In fdroiddata that list is an accumulating history, one
+entry per release, and it is what lets a user on an older Android install a version their device can
+run. Rewriting a published entry is also rejected in review. The entries currently hold a single
+build because the first submission has not been made yet and F-Droid asks a new app for its latest
+version only — from the release after that one, this row means appending.
 
 ## 2. The changelog, in all seven places
 
