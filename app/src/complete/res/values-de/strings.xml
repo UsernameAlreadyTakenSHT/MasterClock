@@ -61,7 +61,7 @@
     <string name="guide_hourglass_desc">Die Zeit, die ein Spieler verliert, wird dem Gegner gutgeschrieben. Die Gesamtzeit bleibt gleich.</string>
     <string name="guide_move_global_desc">Zugzeit und Gesamtzeit laufen gleichzeitig. Beide müssen über null bleiben.</string>
     <string name="guide_move_global_shared_desc">Alle Spieler teilen sich einen gemeinsamen Vorrat und haben zusätzlich eine eigene Zuguhr.</string>
-    <string name="guide_move_overtime_desc">Wer die Zugzeit überschreitet, zehrt von einem zweiten gemeinsamen Vorrat.</string>
+    <string name="guide_move_overtime_desc">Wer die Zugzeit überschreitet, zehrt von einem zweiten globalen Vorrat.</string>
     <string name="guide_move_save_cap_desc">Nicht verbrauchte Zugzeit wird auf den nächsten Zug übertragen, bis zu einer Obergrenze für die Uhr.</string>
     <string name="guide_move_shared_desc">Eine einzige Uhr für alle Spieler. Wechselt bei 0:00 automatisch.</string>
     <string name="guide_move_standard_desc">Setzt bei jedem Zug auf eine feste Dauer zurück.</string>
