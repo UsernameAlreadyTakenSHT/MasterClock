@@ -132,8 +132,15 @@ class BluetoothBoardManager(private val context: Context) {
      */
     private val operationTimeout = Runnable { operationFinished() }
 
-    private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    private val adapter: BluetoothAdapter? = bluetoothManager.adapter
+    // `as?`, not `as`, and for a reason that has nothing to do with boards. ChessTimerViewModel
+    // constructs this manager as an eager field for every consumer -- all four app flavours and
+    // paper -- so the cast runs on first composition even in builds whose manifests strip every
+    // Bluetooth permission and which ship no board screen at all. A device with no Bluetooth
+    // returns null here, and a hard cast turned that into an NPE inside the ViewModel's field
+    // initialisers, i.e. a crash before the first frame. BluetoothSerialBoardManager had always
+    // done this lookup safely; this one had not.
+    private val adapter: BluetoothAdapter? =
+        (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
 
     private fun hasScanPermission(): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
