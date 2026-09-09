@@ -1495,7 +1495,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 TimerMode.MOVE_COUNTS_DOWN -> PlayerState(timeRemainingMs = 0, moveCount = pSettings.maxMoves)
                 TimerMode.FIDE_PERIODS -> {
                     val first = pSettings.fidePeriods.firstOrNull() ?: FidePeriod()
-                    PlayerState(timeRemainingMs = first.timeMs, currentPeriodIndex = 0)
+                    PlayerState(
+                        timeRemainingMs = first.timeMs,
+                        currentPeriodIndex = 0,
+                        // Same rule computePostMoveState applies to every later move. Without it the
+                        // first move of each player had no delay at all -- delayRemainingMs took
+                        // PlayerState's default of 0, and startClock arms a delay only for
+                        // US_DELAY -- so a delay period granted its delay from move 2 onwards. On
+                        // the built-in "US 80'/40 + 30' + 30s" that is 30 seconds each, taken from
+                        // the main clock on the one move where a player is least likely to notice.
+                        delayRemainingMs = if (!first.isFischer && first.hasDelay) first.incrementMs else 0L,
+                    )
                 }
                 TimerMode.PHASES -> {
                     val first = pSettings.phases.firstOrNull() ?: GamePhase()
