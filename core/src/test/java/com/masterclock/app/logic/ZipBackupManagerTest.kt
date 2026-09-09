@@ -94,12 +94,21 @@ class ZipBackupManagerTest {
     }
 
     @Test
-    fun `falls back to default settings when the archive carries none`() {
-        val pkg = ZipBackupManager.extractBackup(zip("logs.json" to logsJson(1)))
+    fun `refuses an archive that carries no settings`() {
+        // This used to return factory defaults, and the caller persisted them while reporting
+        // "Import successful". Since the notebook lives inside ChessClockSettings, restoring any
+        // zip that was not ours -- a photo archive, an empty one, any file renamed .zip -- wiped
+        // every note and drawing the user had.
+        assertThrows(NotASettingsFileException::class.java) {
+            ZipBackupManager.extractBackup(zip("logs.json" to logsJson(1)))
+        }
+    }
 
-        assertEquals(ChessClockSettings().logHistoryLimit, pkg.settings.logHistoryLimit)
-        assertEquals(1, pkg.logs?.size)
-        assertNull(pkg.scoreboard)
+    @Test
+    fun `refuses an archive with nothing in it at all`() {
+        assertThrows(NotASettingsFileException::class.java) {
+            ZipBackupManager.extractBackup(zip())
+        }
     }
 
     // --- entries that are not ours ---

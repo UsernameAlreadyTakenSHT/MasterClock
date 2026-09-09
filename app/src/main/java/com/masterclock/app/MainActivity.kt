@@ -264,14 +264,7 @@ class MainActivity : ComponentActivity() {
                                 // Bounded: readText() would pull a file of any size straight into the heap.
                                 readImportText(stream)
                             } ?: error("No input stream for $it")
-                            try {
-                                json.decodeFromString<SharePackage>(content)
-                            } catch (_: Exception) {
-                                // Not the current SharePackage format; fall back to the legacy
-                                // bare-settings format. A failure here is the real one, and it
-                                // reaches runCatching rather than being swallowed.
-                                SharePackage(settings = json.decodeFromString<ChessClockSettings>(content))
-                            }
+                            decodeSharePackage(content)
                         }
                         parsed.exceptionOrNull()?.let { e ->
                             Log.w("MainActivity", "Failed to import settings file", e)

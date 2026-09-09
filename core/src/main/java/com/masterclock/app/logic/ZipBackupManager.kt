@@ -129,8 +129,19 @@ object ZipBackupManager {
             throw ZipBackupTooLargeException("Backup archive is nested too deeply to parse")
         }
 
+        // No settings.json means this archive is not one of ours. Substituting a default here read
+        // as "restore an empty configuration": any zip at all -- a photo archive, an empty one, any
+        // file renamed .zip, since ZipInputStream returns null for a bad signature rather than
+        // throwing -- came back as factory settings, which the caller then persisted while
+        // reporting success. The notebook lives inside ChessClockSettings, so that silently
+        // destroyed every note and drawing the user had. The same argument the malformed case
+        // already makes above: settings.json is the point of the backup.
+        val restored = settings ?: throw NotASettingsFileException(
+            "Archive has no $SETTINGS_ENTRY, so it is not a MasterClock backup"
+        )
+
         return SharePackage(
-            settings = settings ?: ChessClockSettings(),
+            settings = restored,
             logs = logs,
             scoreboard = scoreboard
         )
