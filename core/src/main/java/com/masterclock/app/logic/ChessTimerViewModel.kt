@@ -1276,9 +1276,23 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var pendingBoardNotation: String? = null
     private val soundManager = SoundManager(application)
     private val voiceManager = VoiceManager(application)
-    val bluetoothManager = BluetoothBoardManager(application)
-    val usbBoardManager = UsbBoardManager(application)
-    val bluetoothSerialBoardManager = BluetoothSerialBoardManager(application)
+    // Built on first use, not on construction.
+    //
+    // Every consumer of this ViewModel creates it on first composition -- all four app flavours and
+    // paper -- and these three were eager fields whose flows were combined in init, so nothing could
+    // avoid them. That meant Mini, Lite, Standard and paper each resolved a BluetoothAdapter,
+    // obtained a UsbManager and registered a USB broadcast receiver at every launch, for hardware
+    // whose permissions their manifests remove outright and which they ship no screen to reach.
+    // BluetoothBoardScreen in app/src/complete is the only file in either module that touches them.
+    //
+    // The delegates are kept so onCleared can ask whether there is anything to release rather than
+    // constructing all three in order to shut them down.
+    private val bluetoothManagerDelegate = lazy { BluetoothBoardManager(application) }
+    private val usbBoardManagerDelegate = lazy { UsbBoardManager(application) }
+    private val bluetoothSerialBoardManagerDelegate = lazy { BluetoothSerialBoardManager(application) }
+    val bluetoothManager: BluetoothBoardManager by bluetoothManagerDelegate
+    val usbBoardManager: UsbBoardManager by usbBoardManagerDelegate
+    val bluetoothSerialBoardManager: BluetoothSerialBoardManager by bluetoothSerialBoardManagerDelegate
     private var lastBeepSecond: Long = -1
     private var lastAutoSaveTime: Long = 0
     
@@ -1342,14 +1356,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // of range or is unplugged in between, that press might be minutes later, or in another
         // game entirely. The move recorded would name something nobody played, in an exported PGN,
         // with nothing on screen to suggest anything had gone wrong.
-        viewModelScope.launch {
-            combine(
-                bluetoothManager.connectionState,
-                usbBoardManager.connectionState,
-                bluetoothSerialBoardManager.connectionState,
-            ) { states -> states.any { it is ConnectionState.Connected } }
-                .distinctUntilChanged()
-                .collect { anyBoardConnected -> if (!anyBoardConnected) pendingBoardNotation = null }
+        //
+        // Reading the three flows is what used to force all three transports into existence on
+        // every launch of every build, so the collector only starts where a board can be connected
+        // in the first place. In a build with no board screen there is never a pending notation to
+        // drop.
+        if (FlavorConfig.hasBoards()) {
+            viewModelScope.launch {
+                combine(
+                    bluetoothManager.connectionState,
+                    usbBoardManager.connectionState,
+                    bluetoothSerialBoardManager.connectionState,
+                ) { states -> states.any { it is ConnectionState.Connected } }
+                    .distinctUntilChanged()
+                    .collect { anyBoardConnected -> if (!anyBoardConnected) pendingBoardNotation = null }
+            }
         }
 
         viewModelScope.launch {
@@ -1910,11 +1931,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     override fun onCleared() {
         soundManager.release()
         voiceManager.release()
-        bluetoothManager.disconnect()
+        // Asked through the delegates, so shutting down does not construct the very transports this
+        // build went out of its way never to build.
+        if (bluetoothManagerDelegate.isInitialized()) bluetoothManager.disconnect()
         // release(), not disconnect(): the USB manager also holds a registered broadcast receiver,
         // and both it and the serial one own a coroutine scope.
-        usbBoardManager.release()
-        bluetoothSerialBoardManager.release()
+        if (usbBoardManagerDelegate.isInitialized()) usbBoardManager.release()
+        if (bluetoothSerialBoardManagerDelegate.isInitialized()) bluetoothSerialBoardManager.release()
     }
 
     private fun applyPostMoveLogic(playerIndex: Int, timeSpentOnMove: Long) {

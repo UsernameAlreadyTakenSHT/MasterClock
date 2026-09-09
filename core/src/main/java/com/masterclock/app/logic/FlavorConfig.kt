@@ -34,6 +34,21 @@ object FlavorConfig {
         return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
     }
 
+    /**
+     * Whether this build can talk to an electronic board.
+     *
+     * `app/src/complete/.../BluetoothBoardScreen.kt` is the only file in either module that touches
+     * the three transports, and the three reduced flavours plus paper strip every Bluetooth
+     * permission and the usb.host feature from their manifests. This is what lets
+     * ChessTimerViewModel avoid building the transports at all in those builds -- it used to
+     * construct all three eagerly and combine their flows in init, so every launch of every build
+     * resolved a BluetoothAdapter, obtained a UsbManager and registered a USB broadcast receiver
+     * for hardware it had no permission to reach and no screen to reach it from.
+     */
+    fun hasBoards(): Boolean {
+        return currentFlavor == AppFlavor.COMPLETE
+    }
+
     fun hasOmni(): Boolean {
         return currentFlavor == AppFlavor.COMPLETE || currentFlavor == AppFlavor.STANDARD || currentFlavor == AppFlavor.LITE
     }
