@@ -1932,6 +1932,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Anything the board reported but no press claimed belongs to the game being ended, not to
         // the next one.
         pendingBoardNotation = null
+        // The autosave belongs to the game being ended too. Nothing but resumeSavedClock ever
+        // cleared it, so the arbitre overlay went on offering "Resume" for a game that had been
+        // reset -- indefinitely, and long after its snapshot had stopped resembling anything the
+        // user would recognise.
+        viewModelScope.launch {
+            gameDao.clearSavedClock()
+            _hasSavedClock.value = false
+        }
         currentLog?.let { log ->
             addEvent(GameEvent(eventType = "RESET"))
             viewModelScope.launch {
@@ -2174,12 +2182,36 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val saved = gameDao.getSavedClock() ?: return@launch
             try {
-                val resumedSettings = json.decodeFromString(ChessClockSettings.serializer(), saved.settingsJson)
-                val proxy = json.decodeFromString(ChessClockStateProxy.serializer(), saved.stateJson)
-                
+                // The mirror of saveClockForLater, which was moved off the main thread in v0.8.28
+                // while this side was left on it. Both blobs carry the notebook.
+                val resumed = withContext(Dispatchers.Default) {
+                    json.decodeFromString(ChessClockSettings.serializer(), saved.settingsJson) to
+                        json.decodeFromString(ChessClockStateProxy.serializer(), saved.stateJson).toState()
+                }
+                val resumedSettings = resumed.first
+
                 _settings.value = resumedSettings
-                _uiState.value = proxy.toState()
-                
+                // Persisted, not merely held. Restoring into memory alone left DataStore holding
+                // whatever the user had configured since the autosave, so the next settings edit
+                // wrote this older snapshot back over all of it; and the sounds still playing were
+                // the ones loaded before.
+                settingsRepo.saveSettings(resumedSettings)
+                soundManager.loadSounds(resumedSettings)
+
+                // The autosave runs only from tick(), so every snapshot it takes is of a *running*
+                // clock. Installing one as-is produced a clock that looked like it was counting --
+                // active side lit, pause icon showing -- with no timerJob behind it, so it never
+                // moved. And because isPaused was false, the first press did not take
+                // startOrSwitch's resume() branch either: it went straight to the switch and
+                // charged the mover elapsedRealtime() minus a moveStartTime this process had never
+                // set, i.e. the device's uptime.
+                timerJob?.cancel()
+                timerJob = null
+                val now = SystemClock.elapsedRealtime()
+                lastTickTime = now
+                moveStartTime = now
+                _uiState.value = resumed.second.copy(isPaused = true)
+
                 gameDao.clearSavedClock()
                 _hasSavedClock.value = false
             } catch (e: Exception) {
