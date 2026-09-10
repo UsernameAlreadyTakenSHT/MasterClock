@@ -1,0 +1,8 @@
+Resuming a saved clock gave you a clock that looked like it was running and counted nothing, and the first press charged the mover for the time since the phone was switched on.
+US Delay gave the delay back in full on every pause and play, and with pause-in-the-background on, on every screen lock.
+A FIDE period with a delay gave no delay on the first move of each player.
+Save & Cap counted its bank twice from the second move on. Its ceiling now applies to the clock rather than the bank alone: thirty-second moves with a two-minute cap stop at two minutes, not two and a half.
+Opening the app on a device with no Bluetooth hardware at all crashed it before the first frame — in a build that ships no Bluetooth feature and cannot connect to a board.
+That build no longer reaches for Bluetooth and USB hardware at launch either.
+Credits list only what this build actually contains: chess pieces, rulebooks and the E-Ink font were being credited by builds that ship none of them.
+The confirm button on "Reset all settings" was in English in every language.

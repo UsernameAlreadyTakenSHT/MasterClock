@@ -1,0 +1,5 @@
+Opening the app on a device with no Bluetooth hardware at all crashed it before the first frame — in a build that ships no Bluetooth feature and cannot connect to a board.
+This build no longer reaches for Bluetooth and USB hardware at launch either. It was resolving a Bluetooth adapter, taking hold of the USB service and registering a USB receiver every time it started, for hardware it has no permission to touch.
+Credits list only what this build actually contains: chess pieces, rulebooks and the E-Ink font were being credited by builds that ship none of them.
+The confirm button on "Reset all settings" was in English in every language.
+A short release for this build. Most of what changed elsewhere is in features Mini does not ship.

@@ -1,3 +1,32 @@
+## v0.8.30 — 2026-09-10
+
+The largest thing here is that connecting an electronic board has never worked in a released build,
+on any phone. Most of the rest is the same shape: things that were wrong from the first version
+that shipped them, and that nobody reported because nothing about them looked like a fault.
+
+### Fixed
+- **Connecting a Bluetooth board has never worked.** The app asked for the connection through a part of Android that no phone has yet, so the attempt failed instantly on every device that has ever run this app. It now uses the call that has been there since Android 6 wherever the newer one is missing, which today is everywhere.
+- **Importing the wrong file destroyed your notebook.** Any JSON file at all was accepted as a settings export — a file belonging to another app, an exported contact list, anything — and so was any .zip that held no backup. Both replaced your settings with factory ones and reported "Import successful", and because your notes and drawings live inside your settings, they went too. An import now has to carry something this app recognises.
+- **Last release's fix for the notebook shredder only protected clean installs.** Settings were checked on the way in and never on the way out, so an install that had already taken a bad file kept it: the poisoned note was read back at every launch, and deleting it still overwrote every setting, preset and note you had. What comes out of storage is now checked as well, once, and repaired in place.
+- **Your game history could be deleted at the end of every game.** A stored history limit of zero was refused when the history was read and obeyed when it was trimmed — so the deletion happened, and the check on the other side hid why.
+- **The QR scanner left the camera running after you left it.** Backing out without scanning kept the camera open and analysing for as long as the app was, indicator lit and battery going — and a code that entered the frame later still raised the "apply these settings?" question, from whatever screen you had reached by then.
+- **Resuming a saved clock gave you a clock that never moved.** It looked like it was running — the right side lit, the pause button showing — and counted nothing, because nothing had been started. The first press then charged the mover for the time since the phone was switched on.
+- **Pause and play handed back a delay you had already spent.** In US Delay, tapping pause and then play refilled the delay in full, as often as you liked; and with "pause in the background" on, which is the default, locking the screen did the same without anyone touching the clock.
+- **A FIDE period with a delay gave no delay on the first move.** It only appeared from the second move on. On the built-in US 80'/40 + 30' + 30s preset that is thirty seconds each, taken from the main clock on the one move you have nothing to compare against.
+- **Save & Cap counted its bank twice.** From the second move on the bank re-credited itself: with thirty-second moves and ten seconds spent it banked sixty where forty were left, and kept compounding until it hit the ceiling. The bank on screen had stopped meaning anything.
+- **Bluetooth going away crashed the app.** Turning it off with a board connected, or revoking the permission during a scan, raised an error nothing caught. And on a device with no Bluetooth hardware at all the app crashed before drawing its first frame — including in the builds that ship no Bluetooth feature at all.
+- The mode guide described Overtime backwards. It does not add unused move time to the reserve; it draws on the reserve when you go past your move time.
+- The confirm button on "Reset all settings" was in English in every language.
+
+### Changed
+- **Save & Cap's ceiling is now on the clock rather than on the bank.** With thirty-second moves and a two-minute cap the clock stops at two minutes. Before, the cap applied to the bank alone, so a fresh move sat on top of a full bank and the clock could reach two and a half.
+- **The four builds with no board screen no longer reach for the hardware.** Every build resolved a Bluetooth adapter, took hold of the USB service and registered a USB receiver at launch — including the ones whose Bluetooth permissions are stripped from the manifest and which have no way to open a board at all.
+- The QR library is gone from the four builds that cannot use it.
+- Credits list only what your build actually contains. Chess pieces, rulebooks and the E-Ink font were being credited by builds that ship none of them.
+- The E-Ink build's settings no longer carry an import and export that could not be reached. That screen only ever shows one page, so none of it was ever on offer.
+- Sharing the app no longer leaves a copy of it in the cache for good.
+- Release signing on GitHub is limited to tags, both build pipelines verify what they download before running it beside the signing key, and both now run the tests and the linter before building.
+
 ## v0.8.29 — 2026-09-02
 
 A security release. Nothing here is reachable without importing a file, scanning a code or restoring

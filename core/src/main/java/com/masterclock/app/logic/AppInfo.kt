@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-09-02"
+    const val BUILD_DATE = "2026-09-10"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,24 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.30",
+            date = "2026-09-10",
+            notes = listOf(
+                "Connecting a Bluetooth board has never worked in a released build. The app asked for the connection through a part of Android that no phone has yet, so it failed instantly on every device.",
+                "Importing the wrong file destroyed your notebook. Any JSON file at all, and any .zip holding no backup, was accepted as a settings export and reported as a success — and your notes and drawings live inside your settings.",
+                "Last release's fix for the notebook shredder only protected clean installs: settings were checked on the way in and never on the way out, so an install that had already taken a bad file kept it. What comes out of storage is now checked too.",
+                "Your game history could be deleted at the end of every game, from a stored history limit of zero that was refused on read and obeyed on trim.",
+                "The QR scanner left the camera running after you left it, and a code entering the frame afterwards still asked to apply itself.",
+                "Resuming a saved clock gave you a clock that looked like it was running and counted nothing, and the first press charged the mover for the time since the phone was switched on.",
+                "US Delay gave the delay back in full on every pause and play — and with pause-in-the-background on, on every screen lock.",
+                "A FIDE period with a delay gave no delay on the first move of each player.",
+                "Save & Cap counted its bank twice from the second move on, and its ceiling now applies to the clock rather than to the bank alone: thirty-second moves with a two-minute cap stop at two minutes, not two and a half.",
+                "Turning Bluetooth off with a board connected crashed the app, and so did opening it on a device with no Bluetooth hardware at all.",
+                "The mode guide described Overtime backwards: it draws on the reserve when you go past your move time, it does not add unused time to it.",
+                "The four builds with no board screen no longer reach for Bluetooth and USB hardware at launch, and credits now list only what your build actually contains.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.29",
             date = "2026-09-02",

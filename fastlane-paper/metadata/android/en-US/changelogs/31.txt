@@ -1,0 +1,5 @@
+A correction first: last release said this build's import and export had been fixed. They had been — but neither was reachable. This settings screen only ever shows one page, so no import, export, backup or reset was ever on offer here, and the code behind them has been removed rather than left to suggest otherwise.
+Opening the app on a device with no Bluetooth hardware at all crashed it before the first frame — in a build that ships no Bluetooth feature and cannot connect to a board.
+This build no longer reaches for Bluetooth and USB hardware at launch either. It was resolving a Bluetooth adapter, taking hold of the USB service and registering a USB receiver every time it started, for hardware it has no permission to touch.
+It also no longer builds the Omni timer at startup, a feature this build does not ship — that was a second sound engine and a second settings reader loaded on every launch for nothing.
+Credits list only what this build actually contains. The chess pieces and the ten rulebooks were credited here and are not in this APK; the Lato font, which only this build carries, was credited everywhere else.
