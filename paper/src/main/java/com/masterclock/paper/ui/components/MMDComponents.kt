@@ -1,3 +1,19 @@
+/*
+ * Compose components in the shape of MMD, the design language Mudita's own software uses on its
+ * E Ink devices. Buttons, switches, text fields, dialogs and a scrollbar, sized and drawn to sit
+ * beside that software rather than to look like stock Material on a screen that cannot render it
+ * well -- no elevation, no ripple, hard borders, and a scrollbar that is visible because E Ink
+ * offers none of the motion cues that normally say "there is more below".
+ *
+ * They are written from how that interface behaves, not adapted from Mudita's code: nothing here
+ * is derived from their source, and the deviations are deliberate and noted where they occur (see
+ * ScrollbarMMD). That is why this file carries no upstream licence -- there is no upstream code in
+ * it. The debt is one of design, and it is acknowledged in the credits, which the E-Ink build alone
+ * shows.
+ *
+ * "MMD" is the abbreviation Mudita's own material uses; this file does not expand it because the
+ * expansion has never been checked against a primary source.
+ */
 package com.masterclock.paper.ui.components
 
 import androidx.compose.animation.animateColorAsState

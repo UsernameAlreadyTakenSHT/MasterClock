@@ -383,6 +383,13 @@ object AppInfo {
             url = "https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/",
         ),
         CreditEntry(
+            title = "E-Ink interface",
+            detail = "Modelled on MMD, the design language Mudita's own software uses. Written from how that interface behaves, not adapted from their code.",
+            url = "https://mudita.com/",
+            // Only the E-Ink build carries these components, and the debt is theirs alone.
+            eInkOnly = true,
+        ),
+        CreditEntry(
             title = "Font — Lato",
             detail = "Łukasz Dziedzic — SIL Open Font License 1.1. Bundled by the E-Ink build.",
             url = "https://www.latofonts.com/",
