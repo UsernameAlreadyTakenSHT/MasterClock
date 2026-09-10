@@ -1,0 +1,1 @@
+Nothing in this release changes anything in this build. Both of its fixes are in Save & Cap, which Mini does not offer, and in the E-Ink build's credits. Mini ships to keep its version in step with the other four, and this note exists so nobody has to guess what changed.

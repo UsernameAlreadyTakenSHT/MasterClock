@@ -1,3 +1,11 @@
+## v0.8.31 — 2026-09-10
+
+Two small things on top of v0.8.30, one of them a consequence of it.
+
+### Changed
+- **Save & Cap shows its ceiling rather than its bank.** The bank is the clock minus one move, so under a two-minute cap with thirty-second moves it settled at 1:30 — a number nobody typed, sitting directly beneath a clock that was in fact stopping at 2:00. Since the last release put the ceiling on the clock, the ceiling is the figure worth showing: it is the one you set, and it is the limit of the number right above it.
+- The E-Ink build credits the design its interface is modelled on. Its buttons, switches, dialogs and scrollbar are built in the shape of MMD, the design language Mudita's own software uses — written from how that interface behaves rather than adapted from their code, which is why there is no third-party licence riding along with them. The rest of this app credits its pieces, its font, its sounds and its rulebooks; this was the one borrowed thing that went unnamed.
+
 ## v0.8.30 — 2026-09-10
 
 The largest thing here is that connecting an electronic board has never worked in a released build,

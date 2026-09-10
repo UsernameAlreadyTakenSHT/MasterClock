@@ -1,0 +1,2 @@
+This build now credits the design its interface is modelled on. Its buttons, switches, dialogs and scrollbar are built in the shape of MMD, the design language Mudita's own software uses — written from how that interface behaves rather than adapted from their code, so no third-party licence rides along with them. The rest of this app credits its font, its sounds and its artwork; this was the one borrowed thing that went unnamed.
+The other fix in this release is in Save & Cap, a mode this build does not offer.

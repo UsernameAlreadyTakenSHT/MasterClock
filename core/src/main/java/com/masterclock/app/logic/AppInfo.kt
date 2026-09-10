@@ -13,6 +13,14 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.31",
+            date = "2026-09-10",
+            notes = listOf(
+                "Save & Cap shows its ceiling rather than its bank. The bank is the clock minus one move, so a two-minute cap with thirty-second moves settled at 1:30 — a number nobody typed, under a clock that was stopping at 2:00.",
+                "The E-Ink build credits the design its interface is modelled on: MMD, the design language Mudita's own software uses.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.30",
             date = "2026-09-10",
             notes = listOf(

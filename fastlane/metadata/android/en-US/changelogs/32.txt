@@ -1,0 +1,1 @@
+Save & Cap shows its ceiling rather than its bank. The bank is the clock minus one move, so under a two-minute cap with thirty-second moves it settled at 1:30 — a number nobody typed, sitting directly beneath a clock that was in fact stopping at 2:00. The ceiling is the figure you set, and the limit of the number right above it.
