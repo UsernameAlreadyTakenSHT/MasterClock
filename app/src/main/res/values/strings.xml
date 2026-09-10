@@ -180,7 +180,7 @@
     </plurals>
 
     <!-- Timer chips -->
-    <string name="timer_bank">BANK</string>
+    <string name="timer_cap">CAP</string>
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">TOTAL</string>
     <string name="timer_overtime">OT</string>

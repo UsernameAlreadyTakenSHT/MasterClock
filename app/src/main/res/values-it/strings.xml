@@ -161,7 +161,7 @@
     </plurals>
 
     <!-- Timer chips -->
-    <string name="timer_bank">BANCA</string>
+    <string name="timer_cap">TETTO</string>
     <string name="timer_global">GLOBALE</string>
     <string name="timer_total">TOTALE</string>
     <!--

@@ -460,8 +460,20 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
-                            val label = when(pSettings.mode) { TimerMode.MOVE_TIMER_OVERTIME -> stringResource(R.string.timer_overtime); TimerMode.MOVE_TIMER_GLOBAL -> stringResource(R.string.timer_total); TimerMode.MOVE_TIMER_GLOBAL_SHARED -> stringResource(R.string.timer_global); else -> stringResource(R.string.timer_bank) }
-                            Text("$label: ${formatSecondaryTime(playerState.secondaryTimeMs, settings.effectiveTimePadding())}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
+                            val label = when(pSettings.mode) { TimerMode.MOVE_TIMER_OVERTIME -> stringResource(R.string.timer_overtime); TimerMode.MOVE_TIMER_GLOBAL -> stringResource(R.string.timer_total); TimerMode.MOVE_TIMER_GLOBAL_SHARED -> stringResource(R.string.timer_global); else -> stringResource(R.string.timer_cap) }
+                            // Save & Cap shows its ceiling rather than its bank. The bank is the
+                            // clock minus one move, so a 30s move under a 2:00 cap read "1:30" at
+                            // saturation -- a number the player never typed and cannot act on,
+                            // sitting under a clock that was in fact stopping at 2:00. The ceiling
+                            // is the number they set, and it is the ceiling of the clock right
+                            // above it. Floored at the move time for the same reason
+                            // computePostMoveState floors it: a smaller cap cannot bind.
+                            val secondary = if (pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP) {
+                                pSettings.timeCapMs.coerceAtLeast(pSettings.moveTimeMs)
+                            } else {
+                                playerState.secondaryTimeMs
+                            }
+                            Text("$label: ${formatSecondaryTime(secondary, settings.effectiveTimePadding())}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.PHASES -> {
                             val phase = pSettings.phases.getOrNull(playerState.currentPhaseIndex)

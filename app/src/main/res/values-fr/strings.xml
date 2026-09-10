@@ -171,7 +171,7 @@
     </plurals>
 
     <!-- Timer chips -->
-    <string name="timer_bank">BANQUE</string>
+    <string name="timer_cap">PLAFOND</string>
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">TOTAL</string>
     <!--

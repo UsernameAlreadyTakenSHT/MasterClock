@@ -1186,7 +1186,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             // That is why the bank must not be added again. It used to be -- `secondaryTimeMs +
             // timeRemainingMs` -- which re-credited the whole previous bank every move, so from the
             // second move on the bank grew by itself: with 30s moves and 10s spent, move two banked
-            // 60s where 40s were left. The bank is shown on screen (timer_bank), so the player
+            // 60s where 40s were left. The bank drove what the clock showed, so the player
             // watched a number that had stopped meaning anything.
             val carried = p.timeRemainingMs.coerceAtLeast(0)
             // The cap is the ceiling on the clock as a whole, not on the bank alone: with 30s moves

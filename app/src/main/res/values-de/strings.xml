@@ -158,7 +158,7 @@
     </plurals>
 
     <!-- Timer chips -->
-    <string name="timer_bank">KONTO</string>
+    <string name="timer_cap">MAXIMUM</string>
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">GESAMT</string>
     <!--

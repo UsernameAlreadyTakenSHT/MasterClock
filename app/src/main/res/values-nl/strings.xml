@@ -157,7 +157,7 @@
     </plurals>
 
     <!-- Timer chips -->
-    <string name="timer_bank">BANK</string>
+    <string name="timer_cap">MAXIMUM</string>
     <string name="timer_global">GLOBAAL</string>
     <string name="timer_total">TOTAAL</string>
     <!--
