@@ -29,14 +29,14 @@ RepoType: git
 Repo: https://github.com/UsernameAlreadyTakenSHT/MasterClock.git
 
 Builds:
-  - versionName: 0.8.29-paper
-    versionCode: 30
-    commit: v0.8.29
+  - versionName: 0.8.30-paper
+    versionCode: 31
+    commit: v0.8.30
     subdir: paper
     gradle:
       - yes
 
 AutoUpdateMode: None
 UpdateCheckMode: Tags
-CurrentVersion: 0.8.29-paper
-CurrentVersionCode: 30
+CurrentVersion: 0.8.30-paper
+CurrentVersionCode: 31
