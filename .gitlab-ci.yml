@@ -4,17 +4,17 @@
 # compromising the upstream account -- would otherwise run arbitrary code beside the signing key.
 # The rule was applied strictly on one forge and not at all on the other.
 #
-# This is eclipse-temurin:21-jdk-jammy as of 2026-09-09. Moving to a newer JDK image means resolving
+# This is eclipse-temurin:21-jdk-jammy as of 2026-10-11. Moving to a newer JDK image means resolving
 # the new tag to its digest and replacing both the digest and this comment:
 #   TOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/eclipse-temurin:pull" | jq -r .token)
 #   curl -sI -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.index.v1+json" \
 #     https://registry-1.docker.io/v2/library/eclipse-temurin/manifests/21-jdk-jammy | grep -i docker-content-digest
-image: eclipse-temurin:21-jdk-jammy@sha256:d48e921b83506f58910295b35fd02978c7f4c57fef41bceee6a460d7d97bc251
+image: eclipse-temurin:21-jdk-jammy@sha256:e0c60c487345d1dc9d0fc7b6f0496f3cc941e5132e09296cc17a6decc71b902b
 
 variables:
   ANDROID_SDK_ROOT: "$CI_PROJECT_DIR/android-sdk"
   ANDROID_HOME: "$CI_PROJECT_DIR/android-sdk"
-  ANDROID_CMDLINE_TOOLS_VERSION: "11076708"
+  ANDROID_CMDLINE_TOOLS_VERSION: "16111833"
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/masterclock/${CI_COMMIT_TAG}"
 
@@ -49,12 +49,12 @@ build_apks:
     #
     # Google publishes only a SHA-1 for this file, in
     # https://dl.google.com/android/repository/repository2-3.xml:
-    #   <checksum type="sha1">d313adb7aedccf6cf0cfca51ec180f0059f5f8f8</checksum>
-    #   <size>153607504</size>
+    #   <checksum type="sha1">e025545c62a8e64c7559119566a569fb1dec5f60</checksum>
+    #   <size>181052239</size>
     # The digest below is SHA-256 of the bytes that match that published SHA-1 and that size, so it
     # is pinned to what Google's own manifest describes rather than to whatever a download happened
     # to produce. Bumping ANDROID_CMDLINE_TOOLS_VERSION means replacing this line too.
-    - echo "2d2d50857e4eb553af5a6dc3ad507a17adf43d115264b1afc116f95c92e5e258  cmdline-tools.zip" | sha256sum -c -
+    - echo "0877a1d048fe4a24efe2eff536ca4223f7adeb58648bb81909d33c446918cfa8  cmdline-tools.zip" | sha256sum -c -
     - unzip -q cmdline-tools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
     - mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
     - export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
