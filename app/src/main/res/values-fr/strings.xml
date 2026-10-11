@@ -553,7 +553,7 @@
     <string name="timer_reroll_message">La partie redémarre avec un nouveau temps aléatoire.</string>
     <string name="timer_arbitre_control">Contrôle arbitre</string>
     <string name="timer_arbitre">Arbitre</string>
-    <string name="timer_save_clock">Enregistrer la pendule</string>
+    <string name="timer_save_clock">Enregistrer</string>
     <string name="timer_resume">Reprendre</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CYCLE : %d</string>

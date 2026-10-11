@@ -529,7 +529,7 @@
     <string name="timer_reroll_message">Die Partie startet mit einer neuen Zufallszeit neu.</string>
     <string name="timer_arbitre_control">Schiedsrichter-Steuerung</string>
     <string name="timer_arbitre">Schiedsrichter</string>
-    <string name="timer_save_clock">Uhr speichern</string>
+    <string name="timer_save_clock">Speichern</string>
     <string name="timer_resume">Weiter</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">ZYKLUS: %d</string>

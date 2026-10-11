@@ -581,7 +581,7 @@
     <string name="timer_reroll_message">The game restarts with a new random time.</string>
     <string name="timer_arbitre_control">Arbitre Control</string>
     <string name="timer_arbitre">Arbitre</string>
-    <string name="timer_save_clock">Save Clock</string>
+    <string name="timer_save_clock">Save</string>
     <string name="timer_resume">Resume</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CYCLE: %d</string>

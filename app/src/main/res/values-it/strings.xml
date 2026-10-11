@@ -536,7 +536,7 @@
     <string name="timer_reroll_message">La partita riparte con un nuovo tempo casuale.</string>
     <string name="timer_arbitre_control">Controllo arbitro</string>
     <string name="timer_arbitre">Arbitro</string>
-    <string name="timer_save_clock">Salva l\'orologio</string>
+    <string name="timer_save_clock">Salva</string>
     <string name="timer_resume">Riprendi</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CICLO: %d</string>

@@ -545,7 +545,7 @@
     <string name="timer_reroll_message">La partida se reinicia con un tiempo aleatorio nuevo.</string>
     <string name="timer_arbitre_control">Control del árbitro</string>
     <string name="timer_arbitre">Árbitro</string>
-    <string name="timer_save_clock">Guardar el reloj</string>
+    <string name="timer_save_clock">Guardar</string>
     <string name="timer_resume">Reanudar</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CICLO: %d</string>

@@ -528,7 +528,7 @@
     <string name="timer_reroll_message">De partij begint opnieuw met een nieuwe willekeurige tijd.</string>
     <string name="timer_arbitre_control">Arbiterbediening</string>
     <string name="timer_arbitre">Arbiter</string>
-    <string name="timer_save_clock">Klok opslaan</string>
+    <string name="timer_save_clock">Opslaan</string>
     <string name="timer_resume">Hervatten</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CYCLUS: %d</string>
