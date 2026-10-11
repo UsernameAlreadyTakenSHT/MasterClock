@@ -532,13 +532,11 @@ object AppInfo {
             url = "https://github.com/BigBadaboom/androidsvg",
             completeOnly = true,
         ),
-        OssLicense(
-            name = "OkHttp",
-            copyright = "Square, Inc.",
-            license = "Apache License 2.0",
-            url = "https://square.github.io/okhttp/",
-            completeOnly = true,
-        ),
+        // No OkHttp entry. It arrived with Coil 2, which bundled its network fetcher; Coil 3 moved
+        // networking into separate modules this app does not take, and R8's mapping for the Complete
+        // build has had no okhttp3 class since the move. An HTTP client was never something an app
+        // that makes no network call should have been shipping. Okio stays: Coil 3 still reads files
+        // through it.
         OssLicense(
             name = "Okio",
             copyright = "Square, Inc.",

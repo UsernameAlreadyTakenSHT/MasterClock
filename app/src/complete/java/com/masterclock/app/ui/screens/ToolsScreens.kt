@@ -76,9 +76,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.toColorInt
-import coil.compose.AsyncImage
-import coil.ImageLoader
-import coil.decode.SvgDecoder
+import coil3.compose.AsyncImage
+import coil3.ImageLoader
+import coil3.svg.SvgDecoder
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import kotlinx.coroutines.Dispatchers

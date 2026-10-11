@@ -105,8 +105,6 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.material)
-    implementation(libs.coil.compose)
-    implementation(libs.coil.svg)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
