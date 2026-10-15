@@ -6,6 +6,13 @@
       <trusted-artifacts>
          <trust file=".*-javadoc[.]jar" regex="true"/>
          <trust file=".*-sources[.]jar" regex="true"/>
+         <!-- Gradle's own source distribution, which Android Studio downloads so build scripts can
+              navigate into the Gradle API. Same footing as the two rules above: it is resolved in
+              the IDE's detached configurations, never by the build, never compiled and never in an
+              APK, so the build cannot record it and has nothing to protect by checking it. Without
+              this, the first sync after every Gradle upgrade fails on gradle-VERSION-src.zip. A
+              pattern rather than a digest, so the next upgrade does not break it again. -->
+         <trust group="gradle" name="gradle" file="gradle-.*-src[.]zip" regex="true" reason="IDE-only Gradle source distribution, never part of the build"/>
       </trusted-artifacts>
    </configuration>
    <components>

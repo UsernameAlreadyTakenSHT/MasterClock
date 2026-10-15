@@ -118,6 +118,11 @@ for code navigation in its own detached configurations, which the build never to
 `--write-verification-metadata` never records them and every sync fails on ~74 unverified artifacts.
 Trusting them costs nothing — neither kind is ever read by the compiler or reaches the APK.
 
+The third rule there trusts `gradle-<version>-src.zip`, Gradle's own source distribution, for the
+same reason. Android Studio fetches it the first time it sees a Gradle version, so the first sync
+after every Gradle upgrade failed on it — the move to 9.8.1 is how it surfaced. It is a pattern, not
+a digest, precisely so that the next upgrade does not break the sync again.
+
 ## How flavors differ
 
 `FlavorConfig` (in `core`) gates features at runtime: `hasMoreTab()`, `hasFullSettingsTabs()`,
