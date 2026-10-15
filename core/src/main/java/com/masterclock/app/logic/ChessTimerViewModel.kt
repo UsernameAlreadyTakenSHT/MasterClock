@@ -9,6 +9,7 @@ import com.masterclock.app.data.Converters
 import com.masterclock.app.data.GameDatabase
 import com.masterclock.app.data.SettingsRepository
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -1322,6 +1323,24 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var currentLog: GameLog? = null
     private var lastRandomRoll: Pair<Long, Long>? = null
 
+    /**
+     * Writes to the game history, applied one at a time in the order they were asked for.
+     *
+     * The game being played used to exist only in memory until someone pressed Reset, so a game
+     * that ended any other way -- a flag and then the app swiped away, the system reclaiming the
+     * process overnight, a crash -- was never stored at all. It is now written again after every
+     * event, so what is lost is at most the time since the last press.
+     *
+     * One consumer, because the writes are launched from the main thread and encoded off it: two
+     * launches could finish in either order and leave an older copy of the log on top of a newer
+     * one, or let the trim that ends a game run before that game's last write.
+     */
+    private sealed interface HistoryWrite {
+        class Store(val log: GameLog) : HistoryWrite
+        class Finish(val limit: Int, val durationLimit: LogDurationLimit) : HistoryWrite
+    }
+    private val historyWrites = Channel<HistoryWrite>(Channel.UNLIMITED)
+
     private val _hasSavedClock = MutableStateFlow(false)
     val hasSavedClock: StateFlow<Boolean> = _hasSavedClock.asStateFlow()
 
@@ -1388,6 +1407,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 ) { states -> states.any { it is ConnectionState.Connected } }
                     .distinctUntilChanged()
                     .collect { anyBoardConnected -> if (!anyBoardConnected) pendingBoardNotation = null }
+            }
+        }
+
+        viewModelScope.launch {
+            for (write in historyWrites) {
+                try {
+                    applyHistoryWrite(write)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // One failed write must not stop the ones queued behind it.
+                    Log.w("ChessTimerViewModel", "Failed to write game history", e)
+                }
             }
         }
 
@@ -1660,15 +1692,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * PDN move is far shorter, and the raw-capture protocol turns whatever arrives into hex.
      */
     private fun addEvent(event: GameEvent) {
-        currentLog = currentLog?.let { log ->
-            if (log.events.size >= MAX_IMPORTED_EVENTS_PER_LOG) return@let log
-            log.copy(
-                events = log.events + event.copy(
-                    moveNotation = event.moveNotation?.take(MAX_MOVE_NOTATION_CHARS),
-                    detail = event.detail?.take(MAX_IMPORTED_EVENT_DETAIL_CHARS),
-                )
+        val log = currentLog ?: return
+        if (log.events.size >= MAX_IMPORTED_EVENTS_PER_LOG) return
+        val updated = log.copy(
+            events = log.events + event.copy(
+                moveNotation = event.moveNotation?.take(MAX_MOVE_NOTATION_CHARS),
+                detail = event.detail?.take(MAX_IMPORTED_EVENT_DETAIL_CHARS),
             )
-        }
+        )
+        currentLog = updated
+        historyWrites.trySend(HistoryWrite.Store(updated))
     }
 
     /**
@@ -2015,20 +2048,28 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * settings and starting times, and the first game never appeared as a game of its own.
      */
     private fun finishCurrentLog() {
-        currentLog?.let { log ->
-            addEvent(GameEvent(eventType = "RESET"))
-            viewModelScope.launch {
-                val limit = _settings.value.logHistoryLimit
-                val durationLimit = _settings.value.logDurationLimit
-                
-                gameDao.insertLog(converters.fromGameLog(log))
-                
+        if (currentLog == null) return
+        // Queues the final write. The log used to be captured before this event was added, so no
+        // stored game ever carried its RESET.
+        addEvent(GameEvent(eventType = "RESET"))
+        currentLog = null
+        val s = _settings.value
+        historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit))
+    }
+
+    private suspend fun applyHistoryWrite(write: HistoryWrite) {
+        when (write) {
+            is HistoryWrite.Store -> {
+                val entity = withContext(Dispatchers.Default) { converters.fromGameLog(write.log) }
+                gameDao.insertLog(entity)
+            }
+            is HistoryWrite.Finish -> {
                 // 1. Cleanup by count (skip if infinite)
-                trimLimitFor(limit)?.let { gameDao.trimLogs(it) }
-                
+                trimLimitFor(write.limit)?.let { gameDao.trimLogs(it) }
+
                 // 2. Cleanup by duration
-                if (durationLimit != LogDurationLimit.INFINITE) {
-                    val days = when(durationLimit) {
+                if (write.durationLimit != LogDurationLimit.INFINITE) {
+                    val days = when (write.durationLimit) {
                         LogDurationLimit.ONE_DAY -> 1
                         LogDurationLimit.ONE_WEEK -> 7
                         LogDurationLimit.ONE_MONTH -> 30
@@ -2041,10 +2082,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     }
                 }
 
-                _gameHistory.value = loadHistory(limit)
+                _gameHistory.value = loadHistory(write.limit)
             }
         }
-        currentLog = null
     }
 
     /**
