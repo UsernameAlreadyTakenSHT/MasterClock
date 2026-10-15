@@ -2001,6 +2001,20 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             gameDao.clearSavedClock()
             _hasSavedClock.value = false
         }
+        finishCurrentLog()
+        lastAnnouncedThreshold.clear()
+        _uiState.update { createInitialState(_settings.value, reuseRandomRoll = true) }
+    }
+
+    /**
+     * Stores the game being played, if there is one, and ends it.
+     *
+     * reset() was the only way a game reached the history, so every other way of ending one lost
+     * it or worse. Changing the time control mid-game rebuilt the clock and left [currentLog] in
+     * place: the next game's events went on being appended to the old one, under the old one's
+     * settings and starting times, and the first game never appeared as a game of its own.
+     */
+    private fun finishCurrentLog() {
         currentLog?.let { log ->
             addEvent(GameEvent(eventType = "RESET"))
             viewModelScope.launch {
@@ -2031,8 +2045,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
         currentLog = null
-        lastAnnouncedThreshold.clear()
-        _uiState.update { createInitialState(_settings.value, reuseRandomRoll = true) }
     }
 
     /**
@@ -2097,6 +2109,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (coreChanged) {
             timerJob?.cancel()
             timerJob = null
+            // The clock below is a new game, so the one being played ends here, the same way Reset
+            // ends it. Saved with the settings it was played under: _settings has moved on, but
+            // the log carries its own copy from the first press.
+            finishCurrentLog()
+            lastAnnouncedThreshold.clear()
             if (initialStates != null) {
                 // A "Last Games" preset carries its own already-rolled RANDOM/HIDDEN time in
                 // initialStates -- without updating the cache reset() reuses, Reset would silently
