@@ -46,7 +46,11 @@ data class ChessClockStateProxy(
     val cycleCount: Int = 1,
     val globalTimeMs: Long = 0,
     val isArbitreMode: Boolean = false,
-    val firstToFlag: Int? = null
+    val firstToFlag: Int? = null,
+    // Which stored game this clock belongs to, so that resuming it goes on writing that game rather
+    // than starting a new one whose "starting" times are the ones it had mid-game. Only the
+    // autosave sets it; null in snapshots older than the field, which then resume as before.
+    val gameLogId: String? = null,
 )
 
 fun PlayerState.toProxy() = PlayerStateProxy(
@@ -2284,7 +2288,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     fun saveClockForLater() {
         val settingsSnapshot = settings.value
-        val stateSnapshot = uiState.value.toProxy()
+        val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id)
 
         viewModelScope.launch {
             val entity = withContext(Dispatchers.Default) {
@@ -2306,9 +2310,28 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // while this side was left on it. Both blobs carry the notebook.
                 val resumed = withContext(Dispatchers.Default) {
                     json.decodeFromString(ChessClockSettings.serializer(), saved.settingsJson) to
-                        json.decodeFromString(ChessClockStateProxy.serializer(), saved.stateJson).toState()
+                        json.decodeFromString(ChessClockStateProxy.serializer(), saved.stateJson)
                 }
                 val resumedSettings = resumed.first
+
+                // The game the clock belongs to, read back from the history it has been written to
+                // as it was played. Resuming used to leave currentLog null, so the next press opened
+                // a new game whose starting times were the mid-game ones: every move from before the
+                // interruption was lost, and the Last Games tile offered a 5-minute game as 3:12.
+                // A log that cannot be found (trimmed since) or read back resumes as before.
+                val savedLogId = resumed.second.gameLogId
+                val resumedLog = when {
+                    savedLogId == null -> null
+                    currentLog?.id == savedLogId -> currentLog
+                    else -> gameDao.getLog(savedLogId)
+                        ?.let { entity -> withContext(Dispatchers.Default) { converters.toGameLog(entity) } }
+                        // toGameLog degrades an unreadable row to an empty log rather than throwing.
+                        ?.takeIf { it.events.isNotEmpty() }
+                }
+                // Whatever was on screen is replaced, so it ends here like any other game -- unless
+                // it is the very game being resumed.
+                if (resumedLog == null || resumedLog.id != currentLog?.id) finishCurrentLog()
+                currentLog = resumedLog
 
                 _settings.value = resumedSettings
                 // Persisted, not merely held. Restoring into memory alone left DataStore holding
@@ -2330,7 +2353,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 val now = SystemClock.elapsedRealtime()
                 lastTickTime = now
                 moveStartTime = now
-                _uiState.value = resumed.second.copy(isPaused = true)
+                _uiState.value = resumed.second.toState().copy(isPaused = true)
 
                 gameDao.clearSavedClock()
                 _hasSavedClock.value = false

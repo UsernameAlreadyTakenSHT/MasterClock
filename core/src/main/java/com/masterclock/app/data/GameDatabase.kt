@@ -10,6 +10,9 @@ interface GameLogDao {
     @Query("SELECT * FROM game_logs ORDER BY startTime DESC LIMIT :limit")
     suspend fun getRecentLogs(limit: Int): List<GameLogEntity>
 
+    @Query("SELECT * FROM game_logs WHERE id = :id")
+    suspend fun getLog(id: String): GameLogEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: GameLogEntity)
 
