@@ -2053,12 +2053,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * [reset] deliberately reuses the roll so restarting a game does not change the time under the
      * players; that left no way at all to get a fresh one short of toggling a setting to invalidate
      * the cache. Dropping [lastRandomRoll] first makes createInitialState draw again.
+     *
+     * Everything else is a reset, and goes through reset(). This used to rebuild the clock itself
+     * and simply drop [currentLog], so a game ended by a re-roll was never stored, and the autosave
+     * survived it -- the arbitre panel went on offering "Resume" for the game just thrown away.
      */
     fun rerollRandomTime() {
         lastRandomRoll = null
-        currentLog = null
-        lastAnnouncedThreshold.clear()
-        _uiState.update { createInitialState(_settings.value) }
+        reset()
     }
 
     fun updateSettings(
