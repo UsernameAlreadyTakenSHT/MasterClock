@@ -1023,9 +1023,13 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
  * duplicate key, so a crafted session would crash the screen the moment it was opened.
  *
  * Fresh ids on the way in, which is the same treatment [sanitizeImportedSettings] gives
- * [NotebookNote.id]. No cap on the number of games: the list renders lazily, the session is never
- * persisted, and [MAX_IMPORT_TEXT_BYTES] already bounds how much can arrive -- a limit here would
- * be a number invented to look thorough, and would silently drop a real user's own tally.
+ * [NotebookNote.id]. No cap on the number of games: the list renders lazily, and
+ * [MAX_IMPORT_TEXT_BYTES] already bounds how much can arrive -- a limit here would be a number
+ * invented to look thorough, and would silently drop a real user's own tally.
+ *
+ * The stored session goes through this too at every launch, since a restore is what usually wrote
+ * it. Regenerating its ids there costs nothing: nothing refers to a scoreboard game by id but the
+ * list's own keys.
  */
 internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardSession = session.copy(
     id = java.util.UUID.randomUUID().toString(),
@@ -1444,6 +1448,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             _settings.value = savedSettings
             soundManager.loadSounds(savedSettings)
             _uiState.value = createInitialState(savedSettings)
+            // Sanitised like an import: it is the same shape of data, and a backup restore is what
+            // usually put it there.
+            _scoreboard.value = sanitizeImportedScoreboard(settingsRepo.scoreboardFlow.first())
 
             _gameHistory.value = loadHistory(savedSettings.logHistoryLimit)
 
@@ -2124,7 +2131,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         
         // isImport guards this for the same reason it guards newSettings above: the scoreboard
         // arrives from the same untrusted QR/JSON/ZIP payload.
-        scoreboardToImport?.let { _scoreboard.value = if (isImport) sanitizeImportedScoreboard(it) else it }
+        scoreboardToImport?.let { setScoreboard(if (isImport) sanitizeImportedScoreboard(it) else it) }
         // Volume changes only need the play() volume updated, not a full sample reload:
         // the Slider fires per drag-frame, and reloading on every frame accumulated
         // duplicate samples in the SoundPool until load() started failing silently.
@@ -2409,17 +2416,25 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun updateScoreboardNames(p1: String, p2: String) {
-        _scoreboard.update { it.copy(player1Name = p1, player2Name = p2) }
+        setScoreboard(_scoreboard.value.copy(player1Name = p1, player2Name = p2))
     }
 
     fun addScoreboardGame(result: String) {
-        _scoreboard.update { current ->
-            val newList = current.games + ScoreboardGame(result = result)
-            current.copy(games = newList)
-        }
+        val current = _scoreboard.value
+        setScoreboard(current.copy(games = current.games + ScoreboardGame(result = result)))
     }
 
     fun resetScoreboard() {
-        _scoreboard.value = ScoreboardSession()
+        setScoreboard(ScoreboardSession())
+    }
+
+    /**
+     * The scoreboard was a plain in-memory flow that nothing ever wrote down, so closing the app
+     * threw away an evening's results; only a backup export ever read it. Every change is
+     * persisted now, the same way settings edits are.
+     */
+    private fun setScoreboard(session: ScoreboardSession) {
+        _scoreboard.value = session
+        viewModelScope.launch { settingsRepo.saveScoreboard(session) }
     }
 }
