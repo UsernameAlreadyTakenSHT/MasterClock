@@ -812,6 +812,25 @@ private fun sanitizeSettings(
 }
 
 /**
+ * The notebook after an import: every note the device already has, plus each imported note it
+ * does not have yet.
+ *
+ * The notebook lives inside [ChessClockSettings], and an import replaced the settings whole, so it
+ * replaced the notebook with whatever the file carried -- and no export but the ZIP carries all of
+ * it. A QR code and a settings file without history carry no notes at all, and one with history
+ * carries the text notes only. Importing any of them, a user's own export included, deleted every
+ * note, drawing and recording on the device, with "Import successful!" on screen.
+ *
+ * Merging means an import can only ever add to the notebook. A note counts as already present
+ * when everything but its id matches, since an import regenerates ids: that keeps re-importing
+ * one's own export, or restoring a backup onto the device it came from, from doubling every note.
+ */
+internal fun mergeImportedNotes(local: List<NotebookNote>, imported: List<NotebookNote>): List<NotebookNote> {
+    val present = local.mapTo(HashSet()) { it.copy(id = "") }
+    return local + imported.filter { present.add(it.copy(id = "")) }
+}
+
+/**
  * Clamps imported PlayerSettings to sane, non-negative bounds. Without this, a crafted
  * randomMinTimeMs > randomMaxTimeMs crashes the app the moment a RANDOM/HIDDEN-mode game is
  * started: `(min..max).random()` in createInitialState() throws IllegalArgumentException on an
@@ -2126,7 +2145,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // argument at call sites still binds by the original parameter name, so this is transparent
         // to callers.
         @Suppress("NAME_SHADOWING")
-        val newSettings = if (isImport) sanitizeImportedSettings(getApplication(), newSettings) else newSettings
+        val newSettings = if (isImport) {
+            sanitizeImportedSettings(getApplication(), newSettings).let { imported ->
+                imported.copy(notebookNotes = mergeImportedNotes(oldSettings.notebookNotes, imported.notebookNotes))
+            }
+        } else newSettings
         _settings.value = newSettings
         
         // isImport guards this for the same reason it guards newSettings above: the scoreboard

@@ -294,7 +294,7 @@
     <string name="share_export_storage_desc">Die .json-Datei im Gerätespeicher ablegen.</string>
     <string name="share_export_full">Alles exportieren (vollständige Sicherung)</string>
     <string name="share_export_full_desc">Enthält alle Einstellungen, den Verlauf UND eigene Audio- und Bilddateien in einem .zip-Archiv.</string>
-    <string name="share_include_history">Verlauf und Notizen einschließen</string>
+    <string name="share_include_history">Verlauf und Textnotizen einschließen</string>
     <string name="share_import_title">Daten importieren</string>
     <string name="share_import_json">JSON-Datei importieren</string>
     <string name="share_import_json_desc">Eine zuvor exportierte .json-Konfigurationsdatei laden.</string>

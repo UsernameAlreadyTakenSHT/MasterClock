@@ -293,7 +293,7 @@
     <string name="share_export_storage_desc">Het .json-bestand in de opslag van het apparaat bewaren.</string>
     <string name="share_export_full">Alles exporteren (volledige back-up)</string>
     <string name="share_export_full_desc">Bevat alle instellingen, de geschiedenis ÉN eigen audio- en afbeeldingsbestanden in een .zip-archief.</string>
-    <string name="share_include_history">Geschiedenis en notities meenemen</string>
+    <string name="share_include_history">Geschiedenis en tekstnotities meenemen</string>
     <string name="share_import_title">Gegevens importeren</string>
     <string name="share_import_json">JSON-bestand importeren</string>
     <string name="share_import_json_desc">Een eerder geëxporteerd .json-configuratiebestand laden.</string>

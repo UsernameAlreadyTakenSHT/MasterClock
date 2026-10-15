@@ -319,7 +319,7 @@
     <string name="share_export_storage_desc">Save the .json file to your device\'s storage.</string>
     <string name="share_export_full">Export All (Full Backup)</string>
     <string name="share_export_full_desc">Includes all settings, history, AND custom audio/images files in a .zip archive.</string>
-    <string name="share_include_history">Include history &amp; notes</string>
+    <string name="share_include_history">Include history &amp; text notes</string>
     <string name="share_import_title">Import Data</string>
     <string name="share_import_json">Import JSON File</string>
     <string name="share_import_json_desc">Load a previously exported .json configuration file.</string>

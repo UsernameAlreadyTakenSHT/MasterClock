@@ -302,7 +302,7 @@
     <string name="share_export_storage_desc">Guardar o ficheiro .json no armazenamento do dispositivo.</string>
     <string name="share_export_full">Exportar tudo (cópia completa)</string>
     <string name="share_export_full_desc">Inclui todas as definições, o histórico E os ficheiros de áudio e imagem personalizados num arquivo .zip.</string>
-    <string name="share_include_history">Incluir o histórico e as notas</string>
+    <string name="share_include_history">Incluir o histórico e as notas de texto</string>
     <string name="share_import_title">Importar dados</string>
     <string name="share_import_json">Importar um ficheiro JSON</string>
     <string name="share_import_json_desc">Carregar um ficheiro de configuração .json já exportado.</string>
