@@ -68,6 +68,21 @@ class ImportSanitizationTest {
     }
 
     @Test
+    fun `brings a log dated in the future back to the present`() {
+        // The count trim keeps the newest rows by startTime, so future-dated imports would outrank
+        // every game played afterwards and get each one deleted as it was stored.
+        val before = System.currentTimeMillis()
+        val out = sanitizeImportedLog(log(emptyList()).copy(startTime = 4_102_444_800_000L)) // 2100
+        assertTrue(out.startTime in before..System.currentTimeMillis())
+    }
+
+    @Test
+    fun `keeps a past start time and refuses a negative one`() {
+        assertEquals(1_700_000_000_000L, sanitizeImportedLog(log(emptyList()).copy(startTime = 1_700_000_000_000L)).startTime)
+        assertEquals(0L, sanitizeImportedLog(log(emptyList()).copy(startTime = -5L)).startTime)
+    }
+
+    @Test
     fun `caps initial player states at four`() {
         val states = List(50) { PlayerStateProxy(timeRemainingMs = 600_000) }
         assertEquals(4, sanitizeImportedLog(log(emptyList(), states)).initialPlayerStates.size)

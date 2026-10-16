@@ -1029,6 +1029,11 @@ private const val MAX_MOVE_NOTATION_CHARS = 32
 // their history back rather than two of everything. What it buys an attacker is the replacement of
 // one local game record, with no path out of the sandbox.
 internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
+    // The history is trimmed by count keeping the newest rows by startTime, so an imported log
+    // dated in the future ranks above every game played from then on: ten of them dated 2100, under
+    // a limit of ten, and each new game was deleted by the trim that stored it. Nothing imported
+    // can have started later than the moment it arrives.
+    startTime = log.startTime.coerceIn(0L, System.currentTimeMillis()),
     events = log.events.take(MAX_IMPORTED_EVENTS_PER_LOG).map { event ->
         event.copy(
             // Neither of these was bounded. Every event of a game shares one JSON column, and Room
