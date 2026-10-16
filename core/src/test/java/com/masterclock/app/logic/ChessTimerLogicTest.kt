@@ -13,11 +13,10 @@ import org.junit.Assert.*
  * into a variable that was then never applied to the state -- fixed in this same change) survived
  * undetected.
  *
- * [simulateMultiPlayerTick] below is a narrower, still-hand-written duplicate for the handful of
- * modes (HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/PHASES/GONG/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED) that are
- * implemented inline in `ChessTimerViewModel.tick()` rather than in the extracted [tickPlayer]; that
- * remains a known, documented gap rather than something this change
- * attempts to fully close.
+ * The coupled modes (HOURGLASS, CHRONO_COUNTDOWN, CHRONO_COUNTUP, GONG, MOVE_TIMER_SHARED,
+ * MOVE_TIMER_GLOBAL_SHARED) go through [tickCoupled], the same function tick() calls. They used to
+ * be tested through a hand-written copy of tick()'s inline branches, which kept passing whatever
+ * the real code did. PHASES is the one mode still inline in the ViewModel and not reached here.
  */
 class ChessTimerLogicTest {
 
@@ -269,60 +268,87 @@ class ChessTimerLogicTest {
         assertEquals(1, state.players[1].moveCount)
     }
 
-    // --- Modes still implemented inline in ChessTimerViewModel.tick(), not yet extracted ---
+    // --- tickCoupled: the modes whose players share or trade time ---
 
-    /**
-     * Duplicates just the HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/GONG/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED branches of
-     * `ChessTimerViewModel.tick()`. Unlike [tickPlayer]/[computePostMoveState] above, these are NOT
-     * exercised against production code -- a known, deliberately narrowed gap (see class doc).
-     */
-    private fun simulateMultiPlayerTick(state: ChessClockState, delta: Long, settings: ChessClockSettings): ChessClockState {
-        val activeIdx = state.activePlayer ?: 1
-        val s = settings.main
-        return when (s.mode) {
-            TimerMode.HOURGLASS -> {
-                val share = delta / (settings.numberOfPlayers - 1).coerceAtLeast(1)
-                val newPlayers = state.players.mapIndexed { idx, p ->
-                    if (idx + 1 == activeIdx) {
-                        val nt = p.timeRemainingMs - delta
-                        p.copy(timeRemainingMs = nt.coerceAtLeast(0), isOutOfTime = nt <= 0)
-                    } else {
-                        p.copy(timeRemainingMs = p.timeRemainingMs + share)
-                    }
-                }
-                state.copy(players = newPlayers)
-            }
-            TimerMode.CHRONO_COUNTDOWN -> {
-                val ng = (state.globalTimeMs - delta).coerceAtLeast(0)
-                state.copy(globalTimeMs = ng, players = state.players.map { it.copy(isOutOfTime = ng <= 0) })
-            }
-            TimerMode.CHRONO_COUNTUP -> state.copy(globalTimeMs = state.globalTimeMs + delta)
-            TimerMode.GONG -> {
-                var ns = state
-                val updateList = if (s.gongSimultaneous) (1..settings.numberOfPlayers).toList() else listOf(activeIdx)
-                for (idx in updateList) {
-                    val p = ns.players[idx - 1]
-                    var t = p.timeRemainingMs - delta; var ref = p.isGongReflectionPhase; var nextA = ns.activePlayer
-                    if (t <= 0) {
-                        if (ref) { t = s.gongMoveMs; ref = false }
-                        else { t = s.gongReflectionMs; ref = true; if (!s.gongSimultaneous) nextA = (activeIdx % settings.numberOfPlayers) + 1 }
-                    }
-                    val up = p.copy(timeRemainingMs = t, isGongReflectionPhase = ref)
-                    ns = ns.copy(players = ns.players.toMutableList().apply { this[idx - 1] = up }, activePlayer = nextA)
-                }
-                ns
-            }
-            else -> state
-        }
-    }
+    private fun coupled(state: ChessClockState, delta: Long, settings: ChessClockSettings): CoupledTick =
+        tickCoupled(state, delta, settings, settings.main, state.activePlayer ?: 1)!!
 
     @Test
     fun `HOURGLASS shares the active player's loss with the others`() {
         val settings = ChessClockSettings(numberOfPlayers = 3, main = PlayerSettings(mode = TimerMode.HOURGLASS, initialTimeMs = 30_000))
         val state = ChessClockState(players = listOf(PlayerState(30_000), PlayerState(30_000), PlayerState(30_000)), activePlayer = 1)
-        val next = simulateMultiPlayerTick(state, 10_000, settings)
+        val next = coupled(state, 10_000, settings).state
         assertEquals(20_000, next.players[0].timeRemainingMs)
         assertEquals(35_000, next.players[1].timeRemainingMs) // gains half of P1's loss
+    }
+
+    @Test
+    fun `HOURGLASS with two players moves time across exactly`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.HOURGLASS))
+        val state = ChessClockState(players = listOf(PlayerState(60_000), PlayerState(60_000)), activePlayer = 2)
+        val next = coupled(state, 1_000, settings).state
+        assertEquals(61_000, next.players[0].timeRemainingMs)
+        assertEquals(59_000, next.players[1].timeRemainingMs)
+    }
+
+    @Test
+    fun `CHRONO_COUNTDOWN runs the one shared clock and freezes the game when it ends`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.CHRONO_COUNTDOWN), flagBehavior = FlagBehavior.FREEZE)
+        val state = ChessClockState(players = listOf(PlayerState(0), PlayerState(0)), activePlayer = 1, globalTimeMs = 500)
+        val result = coupled(state, 1_000, settings)
+        assertEquals(0, result.state.globalTimeMs)
+        assertTrue(result.state.players.all { it.isOutOfTime })
+        assertTrue(result.state.isPaused)
+        assertTrue(result.cue!!.after.isOutOfTime) // the flag is what the cue carries to the audio
+    }
+
+    @Test
+    fun `CHRONO_COUNTUP only counts up`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.CHRONO_COUNTUP))
+        val state = ChessClockState(players = listOf(PlayerState(0), PlayerState(0)), activePlayer = 1, globalTimeMs = 5_000)
+        val result = coupled(state, 1_000, settings)
+        assertEquals(6_000, result.state.globalTimeMs)
+        assertNull(result.cue)
+    }
+
+    @Test
+    fun `MOVE_TIMER_SHARED hands the turn on when the shared move time runs out`() {
+        val settings = ChessClockSettings(numberOfPlayers = 3, main = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 10_000))
+        val players = List(3) { PlayerState(timeRemainingMs = 400) }
+        val result = coupled(ChessClockState(players = players, activePlayer = 3, cycleCount = 1), 1_000, settings)
+        assertEquals(1, result.state.activePlayer)
+        assertEquals(2, result.state.cycleCount) // back to P1 starts a new cycle
+        assertTrue(result.state.players.all { it.timeRemainingMs == 10_000L })
+    }
+
+    @Test
+    fun `MOVE_TIMER_GLOBAL_SHARED takes a tick from the move clock and from the shared pool`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED))
+        val players = listOf(PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 600_000), PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 600_000))
+        val next = coupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings).state
+        assertEquals(29_000, next.players[0].timeRemainingMs)
+        assertTrue(next.players.all { it.secondaryTimeMs == 599_000L })
+    }
+
+    @Test
+    fun `GONG moves from reflection to move with a gong, then on to the next player`() {
+        val s = PlayerSettings(mode = TimerMode.GONG, gongReflectionMs = 5_000, gongMoveMs = 3_000)
+        val settings = ChessClockSettings(main = s)
+        val reflecting = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 100, isGongReflectionPhase = true), PlayerState(5_000)), activePlayer = 1)
+        val moving = coupled(reflecting, 200, settings)
+        assertTrue(moving.playGong)
+        assertEquals(3_000, moving.state.players[0].timeRemainingMs)
+        assertFalse(moving.state.players[0].isGongReflectionPhase)
+
+        val done = coupled(moving.state.copy(players = moving.state.players.toMutableList().apply { this[0] = this[0].copy(timeRemainingMs = 100) }), 200, settings)
+        assertEquals(2, done.state.activePlayer)
+        assertEquals(1, done.state.players[0].moveCount)
+    }
+
+    @Test
+    fun `modes that are not coupled are left to tickPlayer`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.FISCHER))
+        assertNull(tickCoupled(ChessClockState(players = listOf(PlayerState(1), PlayerState(1)), activePlayer = 1), 100, settings, settings.main, 1))
     }
 
     // --- applyPresetTimeControl: presets carry a time control, not a whole app configuration ---
@@ -392,9 +418,9 @@ class ChessTimerLogicTest {
     // --- Modes that had no coverage at all until now ---
     //
     // Everything below drives the real tickPlayer/computePostMoveState, like the sections above.
-    // MOVE_TIMER_SHARED and PHASES have only their post-move side covered -- their countdown lives
-    // inline in ChessTimerViewModel.tick() and their phase transitions in private methods, neither
-    // reachable from here.
+    // MOVE_TIMER_SHARED's countdown is covered through tickCoupled above. PHASES has only its
+    // post-move side covered: its countdown and phase transitions are still ViewModel methods,
+    // not reachable from here.
 
     // US_DELAY: the delay is spent before the main clock, and never out of it.
 

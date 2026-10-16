@@ -1289,6 +1289,120 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
     }
 }
 
+/** A player's state before and after a tick, for the audio and voice cues to compare. */
+internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int)
+
+/**
+ * What [tickCoupled] decided: the next state, and the side effects the ViewModel is to carry out
+ * for it -- a cue to compare for beeps (and for the voice too, when [speaks]), and the gong.
+ */
+internal class CoupledTick(
+    val state: ChessClockState,
+    val cue: TickCue? = null,
+    val speaks: Boolean = true,
+    val playGong: Boolean = false,
+)
+
+/**
+ * One tick of the modes whose players are coupled -- MOVE_TIMER_SHARED, MOVE_TIMER_GLOBAL_SHARED,
+ * HOURGLASS, CHRONO_COUNTDOWN, CHRONO_COUNTUP and GONG -- or null for any other mode.
+ *
+ * These lived inline in [ChessTimerViewModel.tick], with their sounds played from the middle of
+ * the arithmetic, so nothing could reach them from a test: the tests ran a hand-written copy of
+ * them instead, which is how the hourglass losing time and the shared modes' flag handling went
+ * unnoticed. The arithmetic is here now, pure, and the effects come back as data for tick() to
+ * perform. PHASES stays in the ViewModel, since its transitions go through methods that read the
+ * settings flows.
+ */
+internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClockSettings, s: PlayerSettings, active: Int): CoupledTick? {
+    when (s.mode) {
+        TimerMode.MOVE_TIMER_SHARED -> {
+            val p1 = state.players[0]
+            val newTime = p1.timeRemainingMs - delta
+            return if (newTime <= 0) {
+                val next = (active % settings.numberOfPlayers) + 1
+                val resetPlayers = state.players.map { it.copy(timeRemainingMs = s.moveTimeMs) }
+                val flaggedP = p1.copy(timeRemainingMs = 0, isOutOfTime = true)
+                CoupledTick(
+                    state.copy(players = resetPlayers, activePlayer = next, cycleCount = if (next == 1) state.cycleCount + 1 else state.cycleCount),
+                    TickCue(p1, flaggedP, active),
+                )
+            } else {
+                CoupledTick(state.copy(players = state.players.map { it.copy(timeRemainingMs = newTime) }), TickCue(p1, p1.copy(timeRemainingMs = newTime), active), speaks = false)
+            }
+        }
+        TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
+            val pActive = state.players[active - 1]
+            val newMoveTime = pActive.timeRemainingMs - delta
+            val newGlobalTime = (pActive.secondaryTimeMs - delta).coerceAtLeast(0)
+            val outMove = newMoveTime <= 0
+            val outGlobal = newGlobalTime <= 0
+            val newPlayers = state.players.mapIndexed { idx, p ->
+                if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
+                else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = outGlobal)
+            }
+            return CoupledTick(
+                state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && (outMove || outGlobal)),
+                TickCue(pActive, newPlayers[active - 1], active),
+            )
+        }
+        TimerMode.HOURGLASS -> {
+            val share = delta / (settings.numberOfPlayers - 1).coerceAtLeast(1)
+            val activeP = state.players[active - 1]
+            val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(activeP.timeRemainingMs, activeP.isOutOfTime, activeP.isNegative, delta, settings.flagBehavior)
+            val newActiveP = activeP.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
+            val newPlayers = state.players.mapIndexed { idx, p ->
+                if (idx + 1 == active) newActiveP else p.copy(timeRemainingMs = p.timeRemainingMs + share)
+            }
+            return CoupledTick(
+                state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut),
+                TickCue(activeP, newActiveP, active),
+            )
+        }
+        TimerMode.CHRONO_COUNTDOWN -> {
+            val p1 = state.players[0]
+            val (newGlobal, isOut, isNeg) = applyFlagBehaviorDelta(state.globalTimeMs, p1.isOutOfTime, p1.isNegative, delta, settings.flagBehavior)
+            val oldForAudio = p1.copy(timeRemainingMs = state.globalTimeMs)
+            val newForAudio = p1.copy(timeRemainingMs = newGlobal, isOutOfTime = isOut, isNegative = isNeg)
+            return CoupledTick(
+                state.copy(globalTimeMs = newGlobal, players = state.players.map { it.copy(isOutOfTime = isOut, isNegative = isNeg) }, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut),
+                TickCue(oldForAudio, newForAudio, 1),
+            )
+        }
+        TimerMode.CHRONO_COUNTUP -> return CoupledTick(state.copy(globalTimeMs = state.globalTimeMs + delta))
+        TimerMode.GONG -> {
+            val isSim = s.gongSimultaneous
+            val playersToUpdate = if (isSim) (1..settings.numberOfPlayers).toList() else listOf(active)
+            var newState = state
+            var gong = false
+            for (idx in playersToUpdate) {
+                val p = newState.players[idx - 1]
+                var newTime = p.timeRemainingMs - delta
+                var isReflection = p.isGongReflectionPhase
+                var nextActiveIdx = newState.activePlayer ?: 1
+                var moveCount = p.moveCount
+
+                if (newTime <= 0) {
+                    if (isReflection) {
+                        newTime = s.gongMoveMs
+                        isReflection = false
+                        if (idx == active) gong = true
+                    } else {
+                        newTime = s.gongReflectionMs
+                        isReflection = true
+                        moveCount++
+                        if (!isSim) { nextActiveIdx = (active % settings.numberOfPlayers) + 1 }
+                    }
+                }
+                val updatedP = p.copy(timeRemainingMs = newTime, isGongReflectionPhase = isReflection, moveCount = moveCount)
+                newState = newState.copy(players = newState.players.toMutableList().apply { this[idx - 1] = updatedP }, activePlayer = nextActiveIdx)
+            }
+            return CoupledTick(newState, playGong = gong)
+        }
+        else -> return null
+    }
+}
+
 /**
  * Pure post-move state transition (increments/resets/period-advances the mover after
  * [ChessTimerViewModel.startOrSwitch] records a move) for every mode driven by [applyPostMoveLogic].
@@ -2004,85 +2118,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
 
 
-            if (s.mode == TimerMode.MOVE_TIMER_SHARED) {
-                val p1 = state.players[0]
-                val newTime = p1.timeRemainingMs - delta
-                return@update if (newTime <= 0) {
-                    val next = (active % settings.numberOfPlayers) + 1
-                    val resetPlayers = state.players.map { it.copy(timeRemainingMs = s.moveTimeMs) }
-                    val flaggedP = p1.copy(timeRemainingMs = 0, isOutOfTime = true)
-                    handleAudio(p1, flaggedP, settings, active)
-                    handleVoice(p1, flaggedP, settings, active)
-                    state.copy(players = resetPlayers, activePlayer = next, cycleCount = if (next == 1) state.cycleCount + 1 else state.cycleCount)
-                } else {
-                    handleAudio(p1, p1.copy(timeRemainingMs = newTime), settings, active)
-                    state.copy(players = state.players.map { it.copy(timeRemainingMs = newTime) })
+            tickCoupled(state, delta, settings, s, active)?.let { result ->
+                result.cue?.let { cue ->
+                    handleAudio(cue.before, cue.after, settings, cue.playerIndex)
+                    if (result.speaks) handleVoice(cue.before, cue.after, settings, cue.playerIndex)
                 }
-            }
-            if (s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED) {
-                val pActive = state.players[active - 1]
-                val newMoveTime = pActive.timeRemainingMs - delta
-                val newGlobalTime = (pActive.secondaryTimeMs - delta).coerceAtLeast(0)
-                val outMove = newMoveTime <= 0
-                val outGlobal = newGlobalTime <= 0
-                val newPlayers = state.players.mapIndexed { idx, p ->
-                    if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
-                    else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = outGlobal)
-                }
-                handleAudio(pActive, newPlayers[active - 1], settings, active)
-                handleVoice(pActive, newPlayers[active - 1], settings, active)
-                return@update state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && (outMove || outGlobal))
-            }
-            if (s.mode == TimerMode.HOURGLASS) {
-                val share = delta / (settings.numberOfPlayers - 1).coerceAtLeast(1)
-                val activeP = state.players[active - 1]
-                val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(activeP.timeRemainingMs, activeP.isOutOfTime, activeP.isNegative, delta, settings.flagBehavior)
-                val newActiveP = activeP.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
-                handleAudio(activeP, newActiveP, settings, active)
-                handleVoice(activeP, newActiveP, settings, active)
-                val newPlayers = state.players.mapIndexed { idx, p ->
-                    if (idx + 1 == active) newActiveP else p.copy(timeRemainingMs = p.timeRemainingMs + share)
-                }
-                return@update state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut)
-            }
-            if (s.mode == TimerMode.CHRONO_COUNTDOWN) {
-                val p1 = state.players[0]
-                val (newGlobal, isOut, isNeg) = applyFlagBehaviorDelta(state.globalTimeMs, p1.isOutOfTime, p1.isNegative, delta, settings.flagBehavior)
-                val oldForAudio = p1.copy(timeRemainingMs = state.globalTimeMs)
-                val newForAudio = p1.copy(timeRemainingMs = newGlobal, isOutOfTime = isOut, isNegative = isNeg)
-                handleAudio(oldForAudio, newForAudio, settings, 1)
-                handleVoice(oldForAudio, newForAudio, settings, 1)
-                return@update state.copy(globalTimeMs = newGlobal, players = state.players.map { it.copy(isOutOfTime = isOut, isNegative = isNeg) }, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut)
-            }
-            if (s.mode == TimerMode.CHRONO_COUNTUP) return@update state.copy(globalTimeMs = state.globalTimeMs + delta)
-
-            if (s.mode == TimerMode.GONG) {
-                val isSim = s.gongSimultaneous
-                val playersToUpdate = if (isSim) (1..settings.numberOfPlayers).toList() else listOf(active)
-                var newState = state
-                for (idx in playersToUpdate) {
-                    val p = newState.players[idx - 1]
-                    var newTime = p.timeRemainingMs - delta
-                    var isReflection = p.isGongReflectionPhase
-                    var nextActiveIdx = newState.activePlayer ?: 1
-                    var moveCount = p.moveCount
-
-                    if (newTime <= 0) {
-                        if (isReflection) {
-                            newTime = s.gongMoveMs
-                            isReflection = false
-                            if (idx == active) soundManager.playGong()
-                        } else {
-                            newTime = s.gongReflectionMs
-                            isReflection = true
-                            moveCount++
-                            if (!isSim) { nextActiveIdx = (active % settings.numberOfPlayers) + 1 }
-                        }
-                    }
-                    val updatedP = p.copy(timeRemainingMs = newTime, isGongReflectionPhase = isReflection, moveCount = moveCount)
-                    newState = newState.copy(players = newState.players.toMutableList().apply { this[idx - 1] = updatedP }, activePlayer = nextActiveIdx)
-                }
-                return@update newState
+                if (result.playGong) soundManager.playGong()
+                return@update result.state
             }
 
             val pActive = state.players[active - 1]
