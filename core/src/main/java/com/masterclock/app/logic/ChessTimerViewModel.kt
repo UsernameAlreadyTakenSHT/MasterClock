@@ -2430,7 +2430,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             computePostMoveState(state, playerIndex, timeSpentOnMove, _settings.value, s)
         }
         val after = _uiState.value.players.getOrNull(playerIndex - 1)
-        if (before == null || after == null || before.isOutOfTime || !after.isOutOfTime) return false
+        if (before == null || after == null) return false
+        if (before.isOutOfTime || !after.isOutOfTime) {
+            // What the move itself changed is announced too. A FIDE period reached by move count --
+            // forcedMoveCounter, the default -- advances here and not in tick(), so "Period 2"
+            // was never said for it. Thresholds cannot fire: a move only ever adds time.
+            handleVoice(before, after, _settings.value, playerIndex)
+            return false
+        }
         handleAudio(before, after, _settings.value, playerIndex)
         handleVoice(before, after, _settings.value, playerIndex)
         _uiState.update { if (it.firstToFlag == null) it.copy(firstToFlag = playerIndex) else it }
