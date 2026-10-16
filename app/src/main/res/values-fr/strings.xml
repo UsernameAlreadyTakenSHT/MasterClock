@@ -313,7 +313,7 @@
     <string name="share_export_storage">Exporter vers le stockage</string>
     <string name="share_export_storage_desc">Enregistrer le fichier .json dans le stockage de l\'appareil.</string>
     <string name="share_export_full">Tout exporter (sauvegarde complète)</string>
-    <string name="share_export_full_desc">Contient tous les réglages, l\'historique ET les fichiers audio/images personnalisés dans une archive .zip.</string>
+    <string name="share_export_full_desc">Contient tous les réglages, l\'historique, les préréglages ET le carnet avec ses photos, enregistrements et vidéos dans une archive .zip.</string>
     <string name="share_include_history">Inclure l\'historique et les notes texte</string>
     <string name="share_import_title">Importer des données</string>
     <string name="share_import_json">Importer un fichier JSON</string>

@@ -171,7 +171,10 @@ weakened:
   `sanitizeImportedLog` in `core`. Every import path passes `isImport = true`. Media paths are
   confined to the app sandbox; only `content://` URIs are accepted.
 - `ZipBackupManager` checks an entry's name before reading it, bounds each entry and the archive by
-  bytes actually decompressed, and never writes a file during extraction.
+  bytes actually decompressed, and never writes a file during extraction. Notebook media is
+  restored by a second pass, `restoreMedia`, only once extraction has accepted the whole archive:
+  an entry's name only selects a destination that `sanitizeImportedMediaPath` derived from an
+  imported note, files are staged and moved into place at the end, and nothing is overwritten.
 
 New import surface needs the same treatment, and `core/src/test` has the tests that pin it.
 

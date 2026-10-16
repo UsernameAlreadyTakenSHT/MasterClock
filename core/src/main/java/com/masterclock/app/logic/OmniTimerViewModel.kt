@@ -325,6 +325,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     val omniState: StateFlow<OmniState> = _omniState.asStateFlow()
 
     private var timerJob: Job? = null
+    private var settingsUpdatedBeforeLoad = false
 
     /** [SystemClock.elapsedRealtime]; see the note on the same field in [ChessTimerViewModel]. */
     private var lastTickTime: Long = 0
@@ -332,8 +333,13 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     init {
         viewModelScope.launch {
             val savedOmni = settingsRepo.omniSettingsFlow.first()
-            _omniSettings.value = savedOmni
-            _omniState.value = createInitialOmniState(savedOmni)
+            // A backup restore can create this ViewModel and hand it settings in the same breath;
+            // the stored copy read here would then overwrite them in memory, and the next edit
+            // would write the old ones back.
+            if (!settingsUpdatedBeforeLoad) {
+                _omniSettings.value = savedOmni
+                _omniState.value = createInitialOmniState(savedOmni)
+            }
 
             // Reuses the classic clock's own audio prefs (custom sounds/volume) rather than adding
             // a separate Omni-specific audio settings page — and keeps following them: loading them
@@ -356,7 +362,11 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /** Omni settings arriving from a backup, which is untrusted input like any other import. */
+    fun restoreOmniSettings(imported: OmniSettings) = updateOmniSettings(sanitizeImportedOmniSettings(imported))
+
     fun updateOmniSettings(newSettings: OmniSettings) {
+        settingsUpdatedBeforeLoad = true
         _omniSettings.value = newSettings
         if (!_omniState.value.isRunning) {
             _omniState.value = createInitialOmniState(newSettings)

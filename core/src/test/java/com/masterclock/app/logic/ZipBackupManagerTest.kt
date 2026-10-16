@@ -170,7 +170,7 @@ class ZipBackupManagerTest {
 
     @Test
     fun `rejects an archive with too many entries`() {
-        val many = Array(101) { "junk-$it.bin" to text("x") }
+        val many = Array(ZipBackupManager.MAX_ENTRIES + 1) { "junk-$it.bin" to text("x") }
 
         assertThrows(ZipBackupTooLargeException::class.java) {
             ZipBackupManager.extractBackup(zip(*many))
@@ -201,5 +201,121 @@ class ZipBackupManagerTest {
         assertThrows(SerializationException::class.java) {
             ZipBackupManager.extractBackup(zip("settings.json" to text("{not json at all")))
         }
+    }
+
+    // --- presets, Omni and the notebook's media ---
+    //
+    // The backup used to carry the three JSON entries above and nothing else, while the screen
+    // offering it promised the media too: restored onto a new phone, every photo, recording and
+    // video note pointed at a file that did not exist, and saved presets and the Omni setup were
+    // simply gone.
+
+    /** A sandbox laid out like the app's: audio in filesDir, images and videos in shares/. */
+    private fun sandbox(): File = temp.newFolder().also { File(it, "shares").mkdirs() }
+
+    private fun mediaNotes(filesDir: File) = listOf(
+        NotebookNote(type = NotebookNoteType.VOICE, audioPath = File(filesDir, "audio_a1.mp4").path),
+        NotebookNote(type = NotebookNoteType.IMAGE, imagePath = File(filesDir, "shares/image_b2.jpg").path),
+        NotebookNote(type = NotebookNoteType.VIDEO, videoPath = File(filesDir, "shares/video_c3.mp4").path),
+    )
+
+    private fun backUp(from: File, notes: List<NotebookNote>): File {
+        val archive = temp.newFile()
+        archive.outputStream().use { out ->
+            ZipBackupManager.writeFullBackup(
+                output = out,
+                settings = ChessClockSettings(notebookNotes = notes),
+                logs = emptyList(),
+                scoreboard = ScoreboardSession(),
+                presets = listOf(SavedPreset(id = "p1", name = "Blitz", settings = ChessClockSettings())),
+                omniSettings = OmniSettings(numberOfPlayers = 6),
+                mediaFiles = ZipBackupManager.mediaFilesToBackUp(from, notes),
+            )
+        }
+        return archive
+    }
+
+    @Test
+    fun `a backup restored onto another device brings its media, presets and Omni setup back`() {
+        val source = sandbox()
+        val notes = mediaNotes(source)
+        File(source, "audio_a1.mp4").writeBytes(text("voice"))
+        File(source, "shares/image_b2.jpg").writeBytes(text("photo"))
+        File(source, "shares/video_c3.mp4").writeBytes(text("film"))
+        val archive = backUp(source, notes)
+
+        val target = sandbox()
+        // On the other device the notes arrive naming its own sandbox, as they would after
+        // sanitizeImportedSettings; here the two sandboxes stand in for the two devices.
+        val arrived = mediaNotes(target)
+        val pkg = ZipBackupManager.extractBackup(archive)
+        val restored = ZipBackupManager.restoreMedia(
+            open = { archive.inputStream() },
+            destinations = ZipBackupManager.mediaDestinations(target, arrived),
+            stagingDir = File(target, "restore_staging"),
+        )
+
+        assertEquals(3, restored)
+        assertEquals("voice", File(target, "audio_a1.mp4").readText())
+        assertEquals("photo", File(target, "shares/image_b2.jpg").readText())
+        assertEquals("film", File(target, "shares/video_c3.mp4").readText())
+        assertFalse("staging must not outlive the restore", File(target, "restore_staging").exists())
+        assertEquals(listOf("Blitz"), pkg.customPresets?.map { it.name })
+        assertEquals(6, pkg.omniSettings?.numberOfPlayers)
+    }
+
+    @Test
+    fun `a restore never overwrites a file the device already has`() {
+        val source = sandbox()
+        File(source, "audio_a1.mp4").writeBytes(text("from the backup"))
+        val archive = backUp(source, mediaNotes(source))
+
+        val target = sandbox()
+        File(target, "audio_a1.mp4").writeBytes(text("the user's own"))
+        ZipBackupManager.restoreMedia(
+            open = { archive.inputStream() },
+            destinations = ZipBackupManager.mediaDestinations(target, mediaNotes(target)),
+            stagingDir = File(target, "restore_staging"),
+        )
+
+        assertEquals("the user's own", File(target, "audio_a1.mp4").readText())
+    }
+
+    @Test
+    fun `a media entry no note names is not written anywhere`() {
+        val target = sandbox()
+        val archive = zip(
+            "settings.json" to settingsJson(10),
+            "media/audio_zz.mp4" to text("stray"),
+            "media/../datastore/settings.preferences_pb" to text("hostile"),
+        )
+
+        val restored = ZipBackupManager.restoreMedia(
+            open = { archive.inputStream() },
+            destinations = ZipBackupManager.mediaDestinations(target, mediaNotes(target)),
+            stagingDir = File(target, "restore_staging"),
+        )
+
+        assertEquals(0, restored)
+        assertFalse(File(target, "audio_zz.mp4").exists())
+        assertFalse(File(target, "datastore").exists())
+    }
+
+    @Test
+    fun `a note cannot aim a restore outside the notebook's own files`() {
+        val target = sandbox()
+        // The path the notebook's shredder was once aimed at; sanitizeImportedMediaPath refuses it,
+        // so no destination exists for it whatever the archive holds.
+        val hostile = listOf(NotebookNote(audioPath = File(target, "datastore/settings.preferences_pb").path))
+        assertTrue(ZipBackupManager.mediaDestinations(target, hostile).isEmpty())
+    }
+
+    @Test
+    fun `a backup only ever carries the notebook's own files`() {
+        val source = sandbox()
+        File(source, "datastore").mkdirs()
+        File(source, "datastore/settings.preferences_pb").writeBytes(text("secrets"))
+        val notes = listOf(NotebookNote(audioPath = File(source, "datastore/settings.preferences_pb").path))
+        assertTrue(ZipBackupManager.mediaFilesToBackUp(source, notes).isEmpty())
     }
 }

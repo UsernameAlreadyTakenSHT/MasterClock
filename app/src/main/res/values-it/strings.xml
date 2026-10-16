@@ -296,7 +296,7 @@
     <string name="share_export_storage">Esporta nella memoria</string>
     <string name="share_export_storage_desc">Salva il file .json nella memoria del dispositivo.</string>
     <string name="share_export_full">Esporta tutto (backup completo)</string>
-    <string name="share_export_full_desc">Include tutte le impostazioni, la cronologia E i file audio e immagine personalizzati in un archivio .zip.</string>
+    <string name="share_export_full_desc">Include tutte le impostazioni, la cronologia, i preset E il taccuino con foto, registrazioni e video in un archivio .zip.</string>
     <string name="share_include_history">Includi cronologia e note di testo</string>
     <string name="share_import_title">Importa dati</string>
     <string name="share_import_json">Importa un file JSON</string>

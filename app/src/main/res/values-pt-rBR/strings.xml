@@ -57,7 +57,7 @@
     <string name="share_qr">Compartilhar por código QR</string>
     <string name="share_qr_desc">Leitura imediata para outro dispositivo (só configurações).</string>
     <string name="share_export_storage_desc">Salvar o arquivo .json no armazenamento do dispositivo.</string>
-    <string name="share_export_full_desc">Inclui todas as configurações, o histórico E os arquivos de áudio e imagem personalizados em um arquivo .zip.</string>
+    <string name="share_export_full_desc">Inclui todas as configurações, o histórico, as predefinições E o caderno com suas fotos, gravações e vídeos em um arquivo .zip.</string>
     <string name="share_import_json">Importar um arquivo JSON</string>
     <string name="share_import_json_desc">Carregar um arquivo de configuração .json já exportado.</string>
     <string name="share_scan_qr">Escanear um código QR</string>

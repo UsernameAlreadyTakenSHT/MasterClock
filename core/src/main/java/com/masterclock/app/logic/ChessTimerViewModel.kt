@@ -679,7 +679,10 @@ data class GameLog(
 data class SharePackage(
     val settings: ChessClockSettings,
     val logs: List<GameLog>? = null,
-    val scoreboard: ScoreboardSession? = null
+    val scoreboard: ScoreboardSession? = null,
+    // Only a full backup carries these two; a settings file or QR code leaves them null.
+    val customPresets: List<SavedPreset>? = null,
+    val omniSettings: OmniSettings? = null,
 )
 
 @Serializable
@@ -898,10 +901,11 @@ private val NOTE_VIDEO_NAME = Regex("""video_[A-Za-z0-9-]{1,64}\.mp4""")
  * path turned one tap on a trash icon into the irrecoverable loss of every setting, preset and note
  * the user had. Five independent reviews found this same path.
  *
- * Matching the naming convention rather than dropping the fields outright keeps the one case that
- * is legitimate: restoring a backup onto the device it was taken from, where the media files are
- * still present and the note can find them again. A backup archive carries no media itself -- only
- * settings.json, logs.json and scoreboard.json -- so relinking is all a restore can ever do.
+ * Matching the naming convention rather than dropping the fields outright keeps the case that is
+ * legitimate: restoring a backup, whose media entries [ZipBackupManager.restoreMedia] writes back
+ * to exactly the paths this function accepts -- or finds still present, on the device the backup
+ * came from. This function is also what decides where those entries may land, through
+ * [ZipBackupManager.mediaDestinations], so the two cannot disagree.
  *
  * Residual, and accepted: since note ids are regenerated on import, a path cannot be tied back to
  * the note that owns it, so one note can still name another note's recording. That costs a media
@@ -966,6 +970,7 @@ const val MAX_IMPORTED_EVENTS_PER_LOG = 2_000
  * would produce by hand.
  */
 private const val MAX_IMPORTED_NOTES = 500
+private const val MAX_IMPORTED_PRESETS = 500
 private const val MAX_IMPORTED_NOTE_TITLE_CHARS = 200
 private const val MAX_IMPORTED_NOTE_CONTENT_CHARS = 100_000
 private const val MAX_IMPORTED_DRAWING_PATHS = 5_000
@@ -1050,6 +1055,70 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
  * it. Regenerating its ids there costs nothing: nothing refers to a scoreboard game by id but the
  * list's own keys.
  */
+/**
+ * Saved presets from a backup, each one's settings through the same sanitiser an imported
+ * configuration gets: applying a preset copies its time control onto the clock, so a crafted one
+ * is exactly as dangerous as a crafted settings file. Presets never carry a notebook.
+ */
+internal fun sanitizeImportedPresets(context: android.content.Context, presets: List<SavedPreset>): List<SavedPreset> =
+    presets.take(MAX_IMPORTED_PRESETS).map { preset ->
+        preset.copy(
+            name = preset.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
+            settings = sanitizeImportedSettings(context, preset.settings).copy(notebookNotes = emptyList()),
+        )
+    }
+
+/**
+ * The device's presets plus each restored one it does not already have, by id -- a preset keeps
+ * its id through a backup, so restoring onto the same device doubles nothing, and nothing the user
+ * saved since is lost.
+ */
+internal fun mergeImportedPresets(local: List<SavedPreset>, imported: List<SavedPreset>): List<SavedPreset> {
+    val present = local.mapTo(HashSet()) { it.id }
+    return local + imported.filter { present.add(it.id) }
+}
+
+/**
+ * Omni settings from a backup. The engine already falls back to a default for every list it finds
+ * empty, so what is bounded here is what the settings page composes from: one row per player, per
+ * game, per round, per turn and per phase.
+ */
+internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings = settings.copy(
+    // The settings page's slider runs from 1 to 20.
+    numberOfPlayers = settings.numberOfPlayers.coerceIn(1, 20),
+    playerColors = settings.playerColors.take(20),
+    globalDurationMs = settings.globalDurationMs.coerceAtLeast(0),
+    gameDurationMs = settings.gameDurationMs.coerceAtLeast(0),
+    interTurnPauseMs = settings.interTurnPauseMs.coerceAtLeast(0),
+    interRoundPauseMs = settings.interRoundPauseMs.coerceAtLeast(0),
+    interGamePauseMs = settings.interGamePauseMs.coerceAtLeast(0),
+    launchCountdownMs = settings.launchCountdownMs.coerceAtLeast(0),
+    games = settings.games.take(MAX_IMPORTED_PERIODS).map { game ->
+        game.copy(
+            name = game.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
+            durationMs = game.durationMs.coerceAtLeast(0),
+            rounds = game.rounds.take(MAX_IMPORTED_PERIODS).map { round ->
+                round.copy(
+                    name = round.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
+                    durationMs = round.durationMs.coerceAtLeast(0),
+                    turnDurationMs = round.turnDurationMs.coerceAtLeast(0),
+                    customTurns = round.customTurns.take(MAX_IMPORTED_PERIODS).map { turn ->
+                        turn.copy(
+                            durationMs = turn.durationMs.coerceAtLeast(0),
+                            phases = turn.phases.take(MAX_IMPORTED_PERIODS).map { phase ->
+                                phase.copy(
+                                    name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
+                                    durationMs = phase.durationMs.coerceAtLeast(0),
+                                )
+                            },
+                        )
+                    },
+                )
+            },
+        )
+    },
+)
+
 internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardSession = session.copy(
     id = java.util.UUID.randomUUID().toString(),
     games = session.games.map { game -> game.copy(id = java.util.UUID.randomUUID().toString()) },
@@ -2138,6 +2207,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         initialStates: List<PlayerStateProxy>? = null,
         logsToImport: List<GameLog>? = null,
         scoreboardToImport: ScoreboardSession? = null,
+        presetsToImport: List<SavedPreset>? = null,
         isImport: Boolean = false
     ) {
         val oldSettings = _settings.value
@@ -2155,6 +2225,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // isImport guards this for the same reason it guards newSettings above: the scoreboard
         // arrives from the same untrusted QR/JSON/ZIP payload.
         scoreboardToImport?.let { setScoreboard(if (isImport) sanitizeImportedScoreboard(it) else it) }
+        presetsToImport?.let { presets ->
+            val imported = if (isImport) sanitizeImportedPresets(getApplication(), presets) else presets
+            persistCustomPresets(mergeImportedPresets(_customPresets.value, imported))
+        }
         // Volume changes only need the play() volume updated, not a full sample reload:
         // the Slider fires per drag-frame, and reloading on every frame accumulated
         // duplicate samples in the SoundPool until load() started failing silently.

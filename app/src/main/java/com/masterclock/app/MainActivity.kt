@@ -29,11 +29,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.masterclock.app.data.SettingsRepository
 import com.masterclock.app.logic.*
 import com.masterclock.app.ui.navigation.Navigator
 import com.masterclock.app.ui.navigation.Route
@@ -43,6 +45,7 @@ import com.masterclock.app.ui.screens.*
 import com.masterclock.app.ui.theme.MasterClockTheme
 import android.widget.Toast
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -190,22 +193,28 @@ class MainActivity : ComponentActivity() {
 
             val mediaExportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
                 uri?.let {
+                    val presets = customPresets
                     scope.launch(Dispatchers.IO) {
                         try {
-                            val zipFile = ZipBackupManager.createFullBackup(context, settings, gameHistory, timerViewModel.scoreboard.value)
-                            try {
-                                context.contentResolver.openOutputStream(it)?.use { output ->
-                                    zipFile.inputStream().use { input ->
-                                        input.copyTo(output)
-                                    }
-                                }
-                            } finally {
-                                // In a finally, like the import's temp file: the archive holds the
-                                // settings, every notebook note and the whole game history in the
-                                // clear, and an export that failed at openOutputStream used to leave
-                                // it in the cache with nothing to remove it.
-                                zipFile.delete()
-                            }
+                            // Read from the store rather than from an Omni ViewModel, which need not
+                            // exist yet and would hold the defaults until its own load finished.
+                            // Every Omni edit is written there as it is made.
+                            val omni = SettingsRepository(context).omniSettingsFlow.first()
+                            val media = ZipBackupManager.mediaFilesToBackUp(context.filesDir, settings.notebookNotes)
+                            // Written straight to the destination. It used to be built in the cache
+                            // and copied, and a provider returning no stream was reported as a
+                            // successful backup.
+                            context.contentResolver.openOutputStream(it)?.use { output ->
+                                ZipBackupManager.writeFullBackup(
+                                    output = output,
+                                    settings = settings,
+                                    logs = gameHistory,
+                                    scoreboard = timerViewModel.scoreboard.value,
+                                    presets = presets,
+                                    omniSettings = omni,
+                                    mediaFiles = media,
+                                )
+                            } ?: error("No output stream for $it")
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, backupOkText, Toast.LENGTH_SHORT).show()
                             }
@@ -225,29 +234,31 @@ class MainActivity : ComponentActivity() {
                 uri?.let {
                     scope.launch(Dispatchers.IO) {
                         try {
-                            val tempFile = File(context.cacheDir, "import_backup.zip")
-                            try {
-                                context.contentResolver.openInputStream(it)?.use { input ->
-                                    // Bounded: copyTo wrote the picked file to the cache in full
-                                    // before any of the extractor's limits applied.
-                                    tempFile.outputStream().use { output ->
-                                        copyImportArchive(input, output)
-                                    }
+                            // Read from the picked file twice rather than copied to the cache first:
+                            // with the notebook's videos in it, a copy could cost gigabytes of disk.
+                            // Both passes bound what they decompress, and the second writes only the
+                            // media the first pass's notes name.
+                            val open = { context.contentResolver.openInputStream(it) ?: error("No input stream for $it") }
+                            val pkg = ZipBackupManager.extractBackup(open)
+                            ZipBackupManager.restoreMedia(
+                                open = open,
+                                destinations = ZipBackupManager.mediaDestinations(context.filesDir, pkg.settings.notebookNotes),
+                                stagingDir = File(context.filesDir, "restore_staging"),
+                            )
+                            withContext(Dispatchers.Main) {
+                                timerViewModel.updateSettings(
+                                    newSettings = pkg.settings,
+                                    logsToImport = pkg.logs,
+                                    scoreboardToImport = pkg.scoreboard,
+                                    presetsToImport = pkg.customPresets,
+                                    isImport = true
+                                )
+                                // The Omni ViewModel is activity-scoped like this one, so this is the
+                                // instance its screens use.
+                                pkg.omniSettings?.let { omni ->
+                                    ViewModelProvider(this@MainActivity)[OmniTimerViewModel::class.java].restoreOmniSettings(omni)
                                 }
-                                val pkg = ZipBackupManager.extractBackup(tempFile)
-                                withContext(Dispatchers.Main) {
-                                    timerViewModel.updateSettings(
-                                        newSettings = pkg.settings,
-                                        logsToImport = pkg.logs,
-                                        scoreboardToImport = pkg.scoreboard,
-                                        isImport = true
-                                    )
-                                    Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
-                                }
-                            } finally {
-                                // In a finally, not after the import: a refused or malformed
-                                // archive used to be left behind in the cache.
-                                tempFile.delete()
+                                Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
                             Log.w("MainActivity", "Failed to import backup archive", e)
