@@ -149,6 +149,29 @@ internal fun nextPhaseState(state: ChessClockState, playerIndex: Int, phases: Li
     return state.copy(players = newList, globalTimeMs = nextPhase.timeMs, phasesFinished = false)
 }
 
+/**
+ * A random time from [minMs]..[maxMs] that is a multiple of [stepMs], or of [fineStepMs] when no
+ * multiple of [stepMs] falls in the range, or [minMs] itself when no multiple of either does.
+ *
+ * Both bounds used to be divided down, so the minimum was rounded *down* to a step: a 1:05-10:00
+ * range could draw 1:00, and 12-15 seconds drew 10 every time -- below the minimum the player had
+ * set. The minimum now rounds up and the maximum down, so the draw always stays inside the range.
+ */
+internal fun drawInRange(
+    minMs: Long,
+    maxMs: Long,
+    stepMs: Long,
+    fineStepMs: Long,
+    random: kotlin.random.Random = kotlin.random.Random,
+): Long {
+    for (step in listOf(stepMs, fineStepMs)) {
+        val low = Math.floorDiv(minMs + step - 1, step)
+        val high = Math.floorDiv(maxMs, step)
+        if (low <= high) return random.nextLong(low, high + 1) * step
+    }
+    return minMs
+}
+
 fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
     if (state.phasesFinished) return ClockAnnouncement.Finished
     val flagged = state.firstToFlag
@@ -2081,18 +2104,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 sharedRandomInc = reused.second
             } else {
                 sharedRandomBase = try {
-                    if (s1.roundedTime) {
-                        (s1.randomMinTimeMs / 10_000..s1.randomMaxTimeMs / 10_000).random() * 10_000L
-                    } else {
-                        (s1.randomMinTimeMs / 1000..s1.randomMaxTimeMs / 1000).random() * 1000L
-                    }
+                    if (s1.roundedTime) drawInRange(s1.randomMinTimeMs, s1.randomMaxTimeMs, 10_000L, 1000L)
+                    else drawInRange(s1.randomMinTimeMs, s1.randomMaxTimeMs, 1000L, 1000L)
                 } catch (_: Exception) { 600_000L }
                 sharedRandomInc = try {
-                    if (s1.roundedTime) {
-                        (s1.randomMinIncMs / 1000..s1.randomMaxIncMs / 1000).random() * 1000L
-                    } else {
-                        (s1.randomMinIncMs / 100..s1.randomMaxIncMs / 100).random() * 100L
-                    }
+                    if (s1.roundedTime) drawInRange(s1.randomMinIncMs, s1.randomMaxIncMs, 1000L, 100L)
+                    else drawInRange(s1.randomMinIncMs, s1.randomMaxIncMs, 100L, 100L)
                 } catch (_: Exception) { 0L }
                 lastRandomRoll = sharedRandomBase to sharedRandomInc
             }
