@@ -1556,6 +1556,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var moveStartTime: Long = 0
 
     /**
+     * When the clock was paused, or null while it runs. resume() moves [moveStartTime] forward by
+     * the length of the pause, so a move's duration is the time the clock actually ran for it.
+     *
+     * Nothing ever adjusted moveStartTime for a pause, so a paused span counted as thinking time:
+     * Bronstein gave back up to its whole increment for time never used -- think 1s, pause a
+     * minute, press, and gain 2s of a 3s increment -- FAST_MOVE TRANSFER handed the pause to the
+     * opponent, and every log, chart and statistic since v0.8.13 counted it as the move.
+     */
+    private var pausedAt: Long? = null
+
+    /**
      * Notation reported by a linked board that no MOVE event has claimed yet. See
      * [BoardMoveOutcome]; the next clock press consumes it. Only ever holds the most recent one --
      * if the board reports twice before the player presses, the first is stale.
@@ -1982,7 +1993,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val nextPlayer = if (playerCount > 1) (playerIndex % playerCount) + 1 else 1
         
         if (currentState.activePlayer == null) {
-            moveStartTime = SystemClock.elapsedRealtime(); startClock(nextPlayer)
+            moveStartTime = SystemClock.elapsedRealtime(); pausedAt = null; startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
             addEvent(GameEvent(eventType = "INITIAL_PRESS", playerIndex = playerIndex, detail = "P$nextPlayer clock started"))
         } else {
@@ -2281,10 +2292,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         settleRunningClock()
         timerJob?.cancel()
         timerJob = null
+        if (pausedAt == null) pausedAt = SystemClock.elapsedRealtime()
         _uiState.update { it.copy(isPaused = true) }
         addEvent(GameEvent(eventType = "PAUSE"))
     }
     fun resume() {
+        pausedAt?.let { moveStartTime += SystemClock.elapsedRealtime() - it }
+        pausedAt = null
         val active = _uiState.value.activePlayer ?: 1
         if (currentLog == null && FlavorConfig.keepsGameHistory()) {
             val playersInitialStates = _uiState.value.players.map { it.toProxy() }
@@ -2303,6 +2317,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun reset() {
         timerJob?.cancel()
         timerJob = null
+        pausedAt = null
         // Anything the board reported but no press claimed belongs to the game being ended, not to
         // the next one.
         pendingBoardNotation = null
@@ -2466,6 +2481,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (coreChanged) {
             timerJob?.cancel()
             timerJob = null
+            pausedAt = null
             // The clock below is a new game, so the one being played ends here, the same way Reset
             // ends it. Saved with the settings it was played under: _settings has moved on, but
             // the log carries its own copy from the first press.
@@ -2603,7 +2619,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     fun saveClockForLater() {
         val settingsSnapshot = settings.value
-        val moveElapsed = if (uiState.value.activePlayer != null) (SystemClock.elapsedRealtime() - moveStartTime).coerceAtLeast(0) else 0L
+        // Up to the pause, if paused: the Save button is pressed on a paused clock.
+        val moveElapsed = if (uiState.value.activePlayer != null) ((pausedAt ?: SystemClock.elapsedRealtime()) - moveStartTime).coerceAtLeast(0) else 0L
         val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed)
 
         val generation = savedClockGeneration
@@ -2676,6 +2693,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 val now = SystemClock.elapsedRealtime()
                 lastTickTime = now
                 moveStartTime = now - resumed.second.moveElapsedMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS)
+                // Installed paused, so the wait until Resume is pressed is a pause like any other.
+                pausedAt = now
                 _uiState.value = resumed.second.toState().copy(isPaused = true)
 
                 clearSavedClock()
