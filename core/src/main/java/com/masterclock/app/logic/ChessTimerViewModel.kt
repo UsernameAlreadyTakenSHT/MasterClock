@@ -1240,11 +1240,26 @@ private fun globalMoveClockTick(p: PlayerState, delta: Long, flagBehavior: FlagB
     return applyFlagBehaviorDelta(p.timeRemainingMs, moveOverrun, p.isNegative, delta, flagBehavior)
 }
 
+/**
+ * The modes whose clocks run in stages of their own -- byoyomi periods, FIDE periods, Hidden's
+ * draw -- and so never reached [applyFlagBehaviorDelta]. Under NEGATIVE they ignored it: Canadian
+ * and Progressive byoyomi let the clock fall below zero with no sign, so an overrun read 0:01,
+ * 0:02 counting up; Japanese byoyomi, FIDE and Hidden froze at 0:00 and never counted it at all.
+ */
+private val STAGED_MODES = setOf(TimerMode.BYOYOMI_JAPANESE, TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE, TimerMode.FIDE_PERIODS, TimerMode.HIDDEN)
+
+/** The last stage running out: an overrun to count under NEGATIVE, a clock held at zero otherwise. */
+private fun PlayerState.finalFlag(overrunMs: Long, flagBehavior: FlagBehavior): PlayerState =
+    if (flagBehavior == FlagBehavior.NEGATIVE) copy(timeRemainingMs = overrunMs.coerceAtLeast(0), isOutOfTime = true, isNegative = true)
+    else copy(timeRemainingMs = 0, isOutOfTime = true)
+
 internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
     if (p.delayRemainingMs > 0) {
         if (delta <= p.delayRemainingMs) return p.copy(delayRemainingMs = p.delayRemainingMs - delta)
         return tickPlayer(p.copy(delayRemainingMs = 0), delta - p.delayRemainingMs, s, settings)
     }
+    // An overrun past the last stage goes on growing; see finalFlag.
+    if (p.isOutOfTime && p.isNegative && s.mode in STAGED_MODES) return p.copy(timeRemainingMs = p.timeRemainingMs + delta)
     return when (s.mode) {
         TimerMode.MOVE_TIMER_OVERTIME -> { val newTime = p.timeRemainingMs - delta; if (newTime < 0) { val newSec = p.secondaryTimeMs + newTime; p.copy(timeRemainingMs = 0, secondaryTimeMs = newSec, isOutOfTime = newSec <= 0) } else p.copy(timeRemainingMs = newTime) }
         TimerMode.MOVE_TIMER_GLOBAL -> {
@@ -1258,14 +1273,14 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             when {
                 newTime > 0 -> p.copy(timeRemainingMs = newTime)
                 !p.isInByoyomi -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, isInByoyomi = true), -newTime, s, settings)
-                p.byoyomiPeriodsRemaining - 1 <= 0 -> p.copy(timeRemainingMs = 0, byoyomiPeriodsRemaining = 0, isOutOfTime = true)
+                p.byoyomiPeriodsRemaining - 1 <= 0 -> p.copy(byoyomiPeriodsRemaining = 0).finalFlag(-newTime, settings.flagBehavior)
                 else -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, byoyomiPeriodsRemaining = p.byoyomiPeriodsRemaining - 1), -newTime, s, settings)
             }
         }
         TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> {
             val newTime = p.timeRemainingMs - delta
             when {
-                p.isInByoyomi -> p.copy(timeRemainingMs = newTime, isOutOfTime = newTime <= 0)
+                p.isInByoyomi -> if (newTime > 0) p.copy(timeRemainingMs = newTime) else p.finalFlag(-newTime, settings.flagBehavior)
                 newTime > 0 -> p.copy(timeRemainingMs = newTime)
                 else -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, isInByoyomi = true), -newTime, s, settings)
             }
@@ -1283,9 +1298,7 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
                     flagged = true
                     isOut = false
                 } else {
-                    newTime = 0
-                    isOut = true
-                    flagged = true
+                    return p.copy(hasFlagged = true).finalFlag(-newTime, settings.flagBehavior)
                 }
             }
             p.copy(timeRemainingMs = newTime, isOutOfTime = isOut, currentPeriodIndex = periodIdx, hasFlagged = flagged)
@@ -1295,7 +1308,7 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             var revealUntil = (p.revealTimeUntilMs - delta).coerceAtLeast(0)
             var lastPerc = p.lastRevealPercentage
             if (newTime <= 0) {
-                p.copy(timeRemainingMs = 0, isOutOfTime = true, revealTimeUntilMs = 0)
+                p.copy(revealTimeUntilMs = 0).finalFlag(-newTime, settings.flagBehavior)
             } else {
                 val initial = p.initialTotalTimeMs
                 if (initial > 0 && s.showHiddenPercentages) {
@@ -1621,12 +1634,15 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             val saved = tempP.copy(timeRemainingMs = newTotal, secondaryTimeMs = (newTotal - s.moveTimeMs).coerceAtLeast(0))
             if (p.isNegative) saved.copy(isNegative = false, isOutOfTime = false) else saved
         }
-        TimerMode.BYOYOMI_JAPANESE -> if (p.isInByoyomi) tempP.copy(timeRemainingMs = s.byoyomiTimeMs) else tempP
-        TimerMode.BYOYOMI_CANADIAN -> if (p.isInByoyomi) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = s.byoyomiPeriods) else tempP.copy(movesRemainingInPeriod = rem) } else tempP
-        TimerMode.BYOYOMI_PROGRESSIVE -> if (p.isInByoyomi) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) { val goal = p.currentByoyomiMovesGoal + s.byoyomiProgression; tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = goal, currentByoyomiMovesGoal = goal) } else tempP.copy(movesRemainingInPeriod = rem) } else tempP
+        // A move refills a period only for a player who still has one: after the last has run out,
+        // under NEGATIVE, a move would otherwise hand a fresh period to someone already out.
+        TimerMode.BYOYOMI_JAPANESE -> if (p.isInByoyomi && !p.isOutOfTime) tempP.copy(timeRemainingMs = s.byoyomiTimeMs) else tempP
+        TimerMode.BYOYOMI_CANADIAN -> if (p.isInByoyomi && !p.isOutOfTime) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = s.byoyomiPeriods) else tempP.copy(movesRemainingInPeriod = rem) } else tempP
+        TimerMode.BYOYOMI_PROGRESSIVE -> if (p.isInByoyomi && !p.isOutOfTime) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) { val goal = p.currentByoyomiMovesGoal + s.byoyomiProgression; tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = goal, currentByoyomiMovesGoal = goal) } else tempP.copy(movesRemainingInPeriod = rem) } else tempP
         TimerMode.FIDE_PERIODS -> {
             val currentPeriod = s.fidePeriods.getOrNull(p.currentPeriodIndex) ?: FidePeriod()
-            var nextTime = p.timeRemainingMs
+            // Signed, as for the increment modes: under NEGATIVE an overrun is stored positive.
+            var nextTime = p.signedTimeMs()
             var periodIdx = p.currentPeriodIndex
             val flagged = p.hasFlagged
             var activePeriod = currentPeriod
@@ -1646,7 +1662,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             // same generic delayRemainingMs mechanism US_DELAY uses. hasDelay distinguishes plain Sudden
             // Death (no delay) from US Delay -- both are non-Fischer, only the latter reads incrementMs.
             val nextDelay = if (!activePeriod.isFischer && activePeriod.hasDelay) activePeriod.incrementMs else 0L
-            tempP.copy(timeRemainingMs = nextTime, currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay)
+            tempP.copy(currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay).withSignedTime(nextTime)
         }
         TimerMode.FAST_MOVE -> {
             // TRANSFER is handled above (needs to update the opponent too); only SHRINK/ACCELERATE reach here.

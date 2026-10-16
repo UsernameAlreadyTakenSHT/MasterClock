@@ -363,6 +363,49 @@ class ChessTimerLogicTest {
         assertTrue(next.isNegative)
     }
 
+    // --- NEGATIVE in the modes with stages of their own ---
+
+    private fun negativeTick(s: PlayerSettings, p: PlayerState, delta: Long = 1_000) =
+        tickPlayer(p, delta, s, ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE))
+
+    @Test
+    fun `Canadian byoyomi shows its overrun with a sign under NEGATIVE`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_CANADIAN, byoyomiTimeMs = 300_000, byoyomiPeriods = 10)
+        var p = negativeTick(s, PlayerState(timeRemainingMs = 400, isInByoyomi = true, movesRemainingInPeriod = 3))
+        assertTrue(p.isOutOfTime)
+        assertTrue(p.isNegative) // drawn -0:00.6, where it used to read 0:00.6 counting up
+        assertEquals(600, p.timeRemainingMs)
+        p = negativeTick(s, p)
+        assertEquals(1_600, p.timeRemainingMs)
+    }
+
+    @Test
+    fun `Japanese byoyomi counts the overrun past its last period under NEGATIVE`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, byoyomiTimeMs = 30_000, byoyomiPeriods = 1)
+        val p = negativeTick(s, negativeTick(s, PlayerState(timeRemainingMs = 500, isInByoyomi = true, byoyomiPeriodsRemaining = 1)))
+        assertTrue(p.isNegative)
+        assertEquals(1_500, p.timeRemainingMs)
+    }
+
+    @Test
+    fun `a move does not refill a byoyomi period after the last one is gone`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, byoyomiTimeMs = 30_000, byoyomiPeriods = 1)
+        val out = PlayerState(timeRemainingMs = 2_000, isInByoyomi = true, isOutOfTime = true, isNegative = true)
+        assertEquals(2_000, negativeMove(s, out).timeRemainingMs)
+    }
+
+    @Test
+    fun `FIDE and Hidden count the overrun under NEGATIVE and hold zero otherwise`() {
+        val fide = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(FidePeriod(timeMs = 60_000)))
+        assertEquals(500, negativeTick(fide, PlayerState(timeRemainingMs = 500)).timeRemainingMs)
+        assertTrue(negativeTick(fide, PlayerState(timeRemainingMs = 500)).isNegative)
+        val hidden = PlayerSettings(mode = TimerMode.HIDDEN)
+        assertTrue(negativeTick(hidden, PlayerState(timeRemainingMs = 500)).isNegative)
+        val frozen = tickPlayer(PlayerState(timeRemainingMs = 500), 1_000, hidden, ChessClockSettings(main = hidden, flagBehavior = FlagBehavior.FREEZE))
+        assertEquals(0, frozen.timeRemainingMs)
+        assertFalse(frozen.isNegative)
+    }
+
     // --- flagsEndGame: one rule for a press and for Resume ---
 
     @Test
