@@ -28,6 +28,9 @@ interface GameLogDao {
     @Query("DELETE FROM game_logs")
     suspend fun clearAllLogs()
 
+    @Query("DELETE FROM game_logs WHERE id = :id")
+    suspend fun deleteLog(id: String)
+
     @Query("DELETE FROM game_logs WHERE startTime < :timestamp AND id != :keepId")
     suspend fun deleteLogsOlderThan(timestamp: Long, keepId: String)
 

@@ -1481,7 +1481,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     private sealed interface HistoryWrite {
         class Store(val log: GameLog) : HistoryWrite
-        class Finish(val limit: Int, val durationLimit: LogDurationLimit, val finishedLogId: String) : HistoryWrite
+        class Finish(val limit: Int, val durationLimit: LogDurationLimit, val finishedLogId: String, val discard: Boolean = false) : HistoryWrite
     }
     private val historyWrites = Channel<HistoryWrite>(Channel.UNLIMITED)
 
@@ -2242,13 +2242,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * settings and starting times, and the first game never appeared as a game of its own.
      */
     private fun finishCurrentLog() {
-        val finishedId = currentLog?.id ?: return
+        val log = currentLog ?: return
+        val s = _settings.value
+        // Nothing happened: Play and then Reset, or a stray press. It has already been written as
+        // the game went, so it is taken back out rather than left as a "0 moves" tile in Last
+        // Games and one more game played in the statistics.
+        if (log.events.none { it.eventType == "MOVE" || it.eventType == "FLAG" }) {
+            currentLog = null
+            historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit, log.id, discard = true))
+            return
+        }
         // Queues the final write. The log used to be captured before this event was added, so no
         // stored game ever carried its RESET.
         addEvent(GameEvent(eventType = "RESET"))
         currentLog = null
-        val s = _settings.value
-        historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit, finishedId))
+        historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit, log.id))
     }
 
     private suspend fun applyHistoryWrite(write: HistoryWrite) {
@@ -2258,6 +2266,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 gameDao.insertLog(entity)
             }
             is HistoryWrite.Finish -> {
+                if (write.discard) gameDao.deleteLog(write.finishedLogId)
+
                 // 1. Cleanup by count (skip if infinite)
                 trimLimitFor(write.limit)?.let { gameDao.trimLogs(it) }
 
