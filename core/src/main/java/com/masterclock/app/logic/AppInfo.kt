@@ -408,17 +408,17 @@ object AppInfo {
         ),
         CreditEntry(
             title = "E-Ink interface",
-            detail = "Modelled on MMD, the design language Mudita's own software uses. Written from how that interface behaves, not adapted from their code.",
-            url = "https://mudita.com/",
-            // Only the E-Ink build carries these components, and the debt is theirs alone.
+            detail = "Built with Mudita Mindful Design (MMD), Mudita's own component library for its E Ink devices.",
+            url = "https://github.com/mudita/MMD",
+            // Only the E-Ink build links the library; its licence is listed with the others.
             eInkOnly = true,
         ),
         CreditEntry(
             title = "Font — Lato",
-            detail = "Łukasz Dziedzic — SIL Open Font License 1.1. Bundled by the E-Ink build.",
+            detail = "Łukasz Dziedzic — SIL Open Font License 1.1. Bundled by the E-Ink build, through MMD.",
             url = "https://www.latofonts.com/",
-            // paper/src/main/res/font holds the five faces; no other build carries any of them,
-            // which is what the detail line already said and nothing enforced.
+            // The faces come in MMD's own res/font now, and only paper links MMD, so no other
+            // build carries any of them.
             eInkOnly = true,
         ),
         CreditEntry(
@@ -499,6 +499,7 @@ object AppInfo {
         val license: String,
         val url: String,
         val completeOnly: Boolean = false,
+        val eInkOnly: Boolean = false,
     )
 
     val OSS_LICENSES = listOf(
@@ -519,6 +520,14 @@ object AppInfo {
             copyright = "Google LLC",
             license = "Apache License 2.0",
             url = "https://github.com/material-components/material-components-android",
+        ),
+        // Built on Material 3, whose copyright its sources keep beside Mudita's.
+        OssLicense(
+            name = "Mudita Mindful Design (MMD)",
+            copyright = "Mudita Sp. z o.o., The Android Open Source Project",
+            license = "Apache License 2.0",
+            url = "https://github.com/mudita/MMD",
+            eInkOnly = true,
         ),
         OssLicense(
             name = "Coil",
@@ -595,7 +604,13 @@ object AppInfo {
 
     /** The libraries actually shipped by the running build. */
     fun ossLicenses(): List<OssLicense> =
-        OSS_LICENSES.filter { !it.completeOnly || FlavorConfig.currentFlavor == AppFlavor.COMPLETE }
+        OSS_LICENSES.filter { lib ->
+            when {
+                lib.completeOnly -> FlavorConfig.currentFlavor == AppFlavor.COMPLETE
+                lib.eInkOnly -> FlavorConfig.isEInk()
+                else -> true
+            }
+        }
 
     /** [CREDITS], less anything this build does not ship. */
     fun credits(): List<CreditEntry> = CREDITS.filter { entry ->
