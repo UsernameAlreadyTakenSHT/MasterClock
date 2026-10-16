@@ -24,6 +24,7 @@
     <string name="timer_switch_turn">Trocar de vez</string>
     <string name="timer_pause">Pausa</string>
     <string name="timer_resume">Retomar</string>
+    <string name="timer_start">Iniciar</string>
     <!-- "Configurações" at 13 characters does not fit beside Zerar and Retomar. -->
     <string name="timer_settings">Opções</string>
 

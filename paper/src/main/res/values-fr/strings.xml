@@ -27,6 +27,7 @@
     <string name="timer_switch_turn">Changer de tour</string>
     <string name="timer_pause">Pause</string>
     <string name="timer_resume">Reprendre</string>
+    <string name="timer_start">Démarrer</string>
     <string name="timer_settings">Réglages</string>
 
     <!-- Settings -->

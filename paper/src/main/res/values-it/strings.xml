@@ -23,6 +23,7 @@
     <string name="timer_switch_turn">Cambia turno</string>
     <string name="timer_pause">Pausa</string>
     <string name="timer_resume">Riprendi</string>
+    <string name="timer_start">Avvia</string>
     <!-- "Impostazioni" at 12 characters does not fit beside Azzera and Riprendi. -->
     <string name="timer_settings">Opzioni</string>
 

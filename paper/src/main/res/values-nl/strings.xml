@@ -24,6 +24,7 @@
     <string name="timer_switch_turn">Beurt wisselen</string>
     <string name="timer_pause">Pauze</string>
     <string name="timer_resume">Hervatten</string>
+    <string name="timer_start">Starten</string>
     <!-- "Instellingen" at 12 characters does not fit beside Reset and Hervatten. -->
     <string name="timer_settings">Opties</string>
 

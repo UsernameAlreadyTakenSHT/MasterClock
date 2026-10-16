@@ -25,6 +25,7 @@
     <string name="timer_switch_turn">Zug wechseln</string>
     <string name="timer_pause">Pause</string>
     <string name="timer_resume">Weiter</string>
+    <string name="timer_start">Starten</string>
     <!-- "Einstellungen" at 13 characters does not fit the button beside Reset and Weiter. -->
     <string name="timer_settings">Optionen</string>
 

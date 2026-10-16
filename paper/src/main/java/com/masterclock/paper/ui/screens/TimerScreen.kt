@@ -87,7 +87,12 @@ fun TimerScreen(
                     onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    val label = if (state.isPaused || state.activePlayer == null) stringResource(R.string.timer_resume) else stringResource(R.string.timer_pause)
+                    // Before the first press there is nothing to resume: the button starts P1's clock.
+                    val label = when {
+                        state.activePlayer == null -> stringResource(R.string.timer_start)
+                        state.isPaused -> stringResource(R.string.timer_resume)
+                        else -> stringResource(R.string.timer_pause)
+                    }
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelLarge

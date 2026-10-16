@@ -18,6 +18,7 @@
     <string name="timer_switch_turn">Switch turn</string>
     <string name="timer_pause">Pause</string>
     <string name="timer_resume">Resume</string>
+    <string name="timer_start">Start</string>
     <string name="timer_settings">Settings</string>
 
     <!--

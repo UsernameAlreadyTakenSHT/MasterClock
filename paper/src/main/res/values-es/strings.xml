@@ -21,6 +21,7 @@
     <string name="timer_switch_turn">Cambiar de turno</string>
     <string name="timer_pause">Pausa</string>
     <string name="timer_resume">Reanudar</string>
+    <string name="timer_start">Iniciar</string>
     <string name="timer_settings">Ajustes</string>
 
     <!-- Settings -->
