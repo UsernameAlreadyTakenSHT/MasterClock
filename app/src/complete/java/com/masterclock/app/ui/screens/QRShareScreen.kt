@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.masterclock.app.R
 
@@ -97,7 +98,12 @@ fun QRShareScreen(
 private fun generateQRCode(content: String): Bitmap? {
     return try {
         val writer = QRCodeWriter()
-        val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, 512, 512)
+        // Without a character set zxing encodes byte mode as ISO-8859-1, and anything it cannot
+        // map becomes '?': a phase named in Cyrillic, CJK or with an emoji arrived as "????" --
+        // inside JSON that stayed valid, so it imported silently corrupted. UTF-8 is written with
+        // an ECI marker, which tells the reader which character set to decode with.
+        val hints = mapOf(EncodeHintType.CHARACTER_SET to Charsets.UTF_8.name())
+        val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, 512, 512, hints)
         val width = bitMatrix.width
         val height = bitMatrix.height
         val bitmap = createBitmap(width, height, Bitmap.Config.RGB_565)

@@ -112,7 +112,11 @@ fun QRReceiveScreen(
                                 
                                 try {
                                     val reader = MultiFormatReader()
-                                    val result = reader.decode(binaryBitmap)
+                                    // Codes from this app now carry an ECI marker for UTF-8; this
+                                    // is for codes that state no set. Older ones from this app hold
+                                    // only what survived ISO-8859-1 -- anything else was already
+                                    // '?' -- and JSON's ASCII reads the same either way.
+                                    val result = reader.decode(binaryBitmap, mapOf(DecodeHintType.CHARACTER_SET to Charsets.UTF_8.name()))
                                     if (hasScanned.compareAndSet(false, true)) {
                                         currentOnResult(result.text)
                                     }
