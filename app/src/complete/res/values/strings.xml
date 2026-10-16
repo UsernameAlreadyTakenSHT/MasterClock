@@ -115,7 +115,7 @@
     <string name="qr_share_hint">Scan this code on another device to import configuration.</string>
     <string name="qr_share_includes">Includes: Chess Clock Configuration</string>
     <string name="qr_share_title">Share via QR Code</string>
-    <string name="qr_too_large">Could not generate a QR code — the data is likely too large. Try sharing without game logs.</string>
+    <string name="qr_too_large">Could not generate a QR code — these settings are too large for one. Share them as a file instead.</string>
     <string name="toast_audio_failed">Failed to play audio</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Camera permission required</string>
     <string name="toast_fen_copied">FEN copied</string>

@@ -81,7 +81,7 @@
     <string name="qr_share_hint">Scan deze code op een ander apparaat om de configuratie over te nemen.</string>
     <string name="qr_share_includes">Bevat: configuratie van de klok</string>
     <string name="qr_share_title">Delen via QR-code</string>
-    <string name="qr_too_large">De QR-code kon niet worden gemaakt — de gegevens zijn waarschijnlijk te groot. Probeer het zonder de partijlogboeken.</string>
+    <string name="qr_too_large">De QR-code kon niet worden gemaakt — deze instellingen zijn te groot voor één code. Deel ze in plaats daarvan als bestand.</string>
 
     <!-- Toasts -->
     <string name="toast_audio_failed">Audio kon niet worden afgespeeld</string>

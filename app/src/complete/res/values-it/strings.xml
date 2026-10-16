@@ -81,7 +81,7 @@
     <string name="qr_share_hint">Scansiona questo codice su un altro dispositivo per importare la configurazione.</string>
     <string name="qr_share_includes">Contiene: configurazione dell\'orologio</string>
     <string name="qr_share_title">Condividi con un codice QR</string>
-    <string name="qr_too_large">Impossibile generare il codice QR: i dati sono probabilmente troppo grandi. Prova a condividere senza i registri delle partite.</string>
+    <string name="qr_too_large">Impossibile generare il codice QR: queste impostazioni sono troppo grandi per un solo codice. Condividile come file.</string>
 
     <!-- Toasts -->
     <string name="toast_audio_failed">Riproduzione audio non riuscita</string>

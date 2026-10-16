@@ -81,7 +81,7 @@
     <string name="qr_share_hint">Scanne diesen Code auf einem anderen Gerät, um die Konfiguration zu übernehmen.</string>
     <string name="qr_share_includes">Enthält: Konfiguration der Uhr</string>
     <string name="qr_share_title">Per QR-Code teilen</string>
-    <string name="qr_too_large">QR-Code konnte nicht erzeugt werden — die Daten sind vermutlich zu groß. Versuche es ohne die Partieprotokolle.</string>
+    <string name="qr_too_large">QR-Code konnte nicht erzeugt werden — diese Einstellungen sind zu groß für einen Code. Teile sie stattdessen als Datei.</string>
 
     <!-- Toasts -->
     <string name="toast_audio_failed">Audio konnte nicht abgespielt werden</string>

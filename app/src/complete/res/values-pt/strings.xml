@@ -84,7 +84,7 @@
     <string name="qr_share_hint">Leia este código noutro dispositivo para importar a configuração.</string>
     <string name="qr_share_includes">Contém: configuração do relógio</string>
     <string name="qr_share_title">Partilhar por código QR</string>
-    <string name="qr_too_large">Não foi possível gerar o código QR: os dados são provavelmente demasiado grandes. Tente partilhar sem os registos de partidas.</string>
+    <string name="qr_too_large">Não foi possível gerar o código QR: estas definições são demasiado grandes para um só código. Partilhe-as como ficheiro.</string>
 
     <!-- Toasts -->
     <string name="toast_audio_failed">Não foi possível reproduzir o áudio</string>

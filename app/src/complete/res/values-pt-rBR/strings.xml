@@ -24,7 +24,7 @@
     <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmera</string>
     <string name="qr_camera_permission" tools:ignore="Typos">É necessária a permissão da câmera para escanear códigos.</string>
     <string name="toast_camera_permission" tools:ignore="Typos">É necessária a permissão da câmera</string>
-    <string name="qr_too_large">Não foi possível gerar o código QR: os dados são provavelmente grandes demais. Tente compartilhar sem os registros de partidas.</string>
+    <string name="qr_too_large">Não foi possível gerar o código QR: essas configurações são grandes demais para um só código. Compartilhe-as como arquivo.</string>
 
     <!-- Tools -->
     <string name="tools_checkbox">Caixa de seleção</string>

@@ -79,7 +79,7 @@
     <string name="qr_share_hint">Scannez ce code sur un autre appareil pour importer la configuration.</string>
     <string name="qr_share_includes">Contient : configuration de la pendule</string>
     <string name="qr_share_title">Partager par QR code</string>
-    <string name="qr_too_large">Impossible de générer un QR code — les données sont probablement trop volumineuses. Essayez de partager sans les journaux de parties.</string>
+    <string name="qr_too_large">Impossible de générer un QR code — ces réglages sont trop volumineux pour un seul code. Partagez-les plutôt sous forme de fichier.</string>
 
     <!-- Toasts -->
     <string name="toast_audio_failed">Échec de la lecture audio</string>
