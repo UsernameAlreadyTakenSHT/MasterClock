@@ -1,0 +1,2 @@
+A move is charged exactly up to the press: the time since the clock's last refresh was charged to no one.
+TalkBack names the play button by what it does, in the app's language.

@@ -1,0 +1,3 @@
+Built with Mudita Mindful Design, Mudita's own interface library for its E Ink devices.
+A move is charged exactly up to the press: the time since the clock's last refresh was charged to no one.
+The first button press reads Start, not Resume.

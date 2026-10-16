@@ -13,6 +13,20 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.33",
+            date = "2026-10-16",
+            notes = listOf(
+                "Pauses no longer count as thinking time. In Bronstein a pause was even paid back, and histories and statistics counted pauses as moves.",
+                "A move is charged exactly up to the press. The time since the clock's last refresh was charged to no one, about three seconds a player over sixty moves.",
+                "Hidden mode no longer gives its time away through beeps, vibration, the voice, the low-time flash or TalkBack.",
+                "A game that plays on after a flag can be resumed after a pause. Negative time works in byoyomi, FIDE periods, Hidden, Global and Overtime.",
+                "Phases, Gong, FIDE periods, Move Counts, the hourglass and Omni fixed, with their sounds and voice lines.",
+                "Voice announcements speak the device's language when a voice for it is installed, and are heard every time a threshold is crossed.",
+                "QR codes carry accented and non-Latin text intact. Pressing Play then Reset no longer adds an empty game.",
+                "E-Ink: built with Mudita Mindful Design, Mudita's own interface library, which is credited in Licenses.",
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.32",
             date = "2026-10-16",
             notes = listOf(

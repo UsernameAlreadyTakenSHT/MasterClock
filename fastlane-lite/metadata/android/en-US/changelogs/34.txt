@@ -1,0 +1,3 @@
+Pauses no longer count as thinking time, and a move is charged exactly up to the press.
+Hidden mode no longer gives its time away through sound, vibration or TalkBack.
+Negative time, Phases, Gong, FIDE periods, the hourglass and Omni fixed.

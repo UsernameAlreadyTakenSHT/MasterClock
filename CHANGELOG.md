@@ -1,3 +1,37 @@
+## v0.8.33 — 2026-10-16
+
+Mostly the clock itself: what it charges, when, and what it says about it. The E-Ink build is now
+built with Mudita's own interface library.
+
+### Fixed
+- **Pauses were counted as thinking time.** The time spent paused went into the move that was paused. In Bronstein it was even paid back: think a second, pause a minute, and the full delay came back every move. Every game history and statistic counted pauses as moves too. A move now only counts the time its clock actually ran; games recorded before this keep their old durations.
+- **A move was charged up to the last tick, not up to the press.** Whatever had run since the last refresh of the clock was charged to no one — about three seconds a player over a sixty-move game — and a player with a few hundredths left who pressed in time could escape the flag. When a delay or a byoyomi period ran out mid-tick, the rest of that tick was lost too. The clock now charges exactly the time that passed.
+- **Hidden mode gave its time away** through the countdown beeps and vibrations, the voice, the low-time flash, and TalkBack, which read out the exact time the screen was hiding. It now says only "time hidden", and stays quiet until the flag.
+- **A game that plays on after a flag could not be resumed after a pause** — under negative time, or with three or four players under the "flag" behaviour. Resume did nothing and only Reset got out of it.
+- **Negative time**, the flag setting that lets a clock run on below zero, now works in byoyomi, FIDE periods, Hidden, Global and Overtime, shows its minus sign, and counts as negative time when the move is made.
+- **Phases**: no more pause before a phase that does not exist; a tap skips the pause between phases; the gong and the phase's name are heard at each change; and everything about the time on screen follows the clock Chrono and Phases actually show.
+- **Gong** has its countdown beeps and its "Move" and "Reflect" voice lines.
+- **FIDE periods**: a period that ended on its move count no longer flags, and reaching one by move count is announced.
+- **Voice announcements** are heard every time the clock comes down through a threshold, not only the first time.
+- Running out of moves in Move Counts is now the flag it is.
+- The hourglass moves time exactly, and only from a clock that has some to give.
+- In Global Shared, an inactive player keeps their own flag. Under the "flag" behaviour, an eliminated player's turn is skipped, and the first player to flag is recorded in every mode.
+- A settings file can no longer give the other players a different mode from Player 1's. With Player 2 in Random or Hidden, their time was never drawn and they flagged at once.
+- Pressing Play and then Reset no longer adds an empty game to the history and the statistics.
+- A saved clock remembers how far into its move it was.
+- **Omni**: a fixed round stays fixed, with its duration and phases on the round; a turn with no phases is no longer cut short; the time bank of a turn reaches the next turn; and a clock at zero no longer keeps the app refreshing at full speed.
+- An autosave can no longer bring back a game just cleared by Reset.
+- QR codes carry accented and non-Latin text intact, scanning reads cameras that pad their frames, and a configuration too large for a QR code now points to sharing it as a file instead.
+- Sharing the app shares every part of a split install. Sharing a settings file says so when it fails.
+- A custom sound the app could not keep access to is refused, with the reason. A retaken photo or recording no longer leaves the old file behind.
+- TalkBack names the play button by what it does — start, resume or pause — in the app's language. It was an English "Resume" everywhere.
+- The E-Ink build's first button press reads Start, not Resume.
+
+### Changed
+- **Voice announcements speak the device's language** when a voice for it is installed, English otherwise. They were English in every language, and silent altogether on a device with no English voice. The voice test now says when there is no voice at all.
+- **The E-Ink build is built with Mudita Mindful Design (MMD)**, Mudita's own component library for its E Ink devices: its theme, its type and its buttons, switches, fields, tabs and bars. The library is credited, with its licence, in the version dialog. Unselected tabs and the version footer are in full ink rather than grey, which E Ink renders as a dither.
+- Note titles and texts, and phase names, stop at the length the app keeps. Longer text was accepted, then quietly shortened at the next launch.
+
 ## v0.8.32 — 2026-10-16
 
 Most of this is about what the app kept, and what it quietly failed to keep: games that never
