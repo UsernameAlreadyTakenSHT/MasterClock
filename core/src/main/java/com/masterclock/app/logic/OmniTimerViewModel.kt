@@ -36,9 +36,18 @@ internal fun drawOmniBank(banks: Map<Int, Long>, settings: OmniSettings, nextPla
     return (banks + (key to 0L)) to banked
 }
 
+/**
+ * What survives [event] under [scope].
+ *
+ * TURN_TO_TURN used to clear everything at every event -- including the turn boundary at which
+ * the next turn was about to draw the bank -- so in that scope the deposit was gone before anyone
+ * could use it and banking did nothing at all. A turn's deposit now lasts exactly one turn: the
+ * older ones are dropped before it is made (see [computeOmniAdvance]), and it is kept here for the
+ * next turn to draw.
+ */
 internal fun handleTimeBankScope(currentBanks: Map<Int, Long>, scope: TimeBankScope, event: String): Map<Int, Long> {
     return when (scope) {
-        TimeBankScope.TURN_TO_TURN -> emptyMap()
+        TimeBankScope.TURN_TO_TURN -> if (event == "SESSION") emptyMap() else currentBanks
         TimeBankScope.ROUND_TO_ROUND -> if (event == "ROUND" || event == "GAME" || event == "SESSION") emptyMap() else currentBanks
         TimeBankScope.GAME_TO_GAME -> if (event == "GAME" || event == "SESSION") emptyMap() else currentBanks
         TimeBankScope.SESSION_WIDE -> currentBanks
@@ -220,7 +229,10 @@ internal fun computeOmniAdvance(
     // (turn/round/game/session advance). The pure phase-advance return below must NOT apply
     // this: the turn keeps its remaining time, so crediting it there banked the full remainder
     // again at every phase boundary — banks ballooned with phases + time bank enabled.
-    val updatedBanks = applyOmniTimeBanking(state, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
+    // In the turn scope a bank lasts one turn, so whatever an earlier turn left undrawn is
+    // dropped before this turn makes its own deposit.
+    val bankBase = if (settings.timeBankScope == TimeBankScope.TURN_TO_TURN) state.copy(playerTimeBanks = emptyMap()) else state
+    val updatedBanks = applyOmniTimeBanking(bankBase, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
 
     if (forceLevel == "SESSION") {
         return state.copy(isRunning = false, isInTransition = true, transitionLabel = "SESSION", playerTimeBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "SESSION"))

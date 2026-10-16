@@ -76,6 +76,23 @@ class OmniTimerLogicTest {
     }
 
     @Test
+    fun `a turn-scoped bank reaches the next turn and no further`() {
+        val round = OmniRoundSettings(turnDurationMs = 60_000)
+        val settings = OmniSettings(
+            games = listOf(OmniGameSettings(rounds = listOf(round))),
+            numberOfPlayers = 3,
+            timeBankMode = TimeBankMode.GLOBAL_RESERVE,
+            timeBankScope = TimeBankScope.TURN_TO_TURN,
+        )
+        // P1 ends their turn with 0:20 left: the next turn starts at 1:00 + 0:20.
+        val second = computeOmniAdvance(OmniState(turnCounterInRound = 0, currentTurnTimeMs = 20_000), settings)
+        assertEquals(80_000, second.currentTurnTimeMs)
+        // That turn ends with nothing left: the turn after it starts at 1:00, the 0:20 already spent.
+        val third = computeOmniAdvance(second.copy(isInTransition = false, currentTurnTimeMs = 0), settings)
+        assertEquals(60_000, third.currentTurnTimeMs)
+    }
+
+    @Test
     fun `GAME forceLevel skips remaining rounds and advances to the next game`() {
         val round = OmniRoundSettings()
         val game1 = OmniGameSettings(name = "Game 1", rounds = listOf(round, round))
