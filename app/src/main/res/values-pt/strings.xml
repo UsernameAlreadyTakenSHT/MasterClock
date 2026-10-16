@@ -131,6 +131,8 @@
     <string name="qr_confirm_title">Aplicar as definições lidas?</string>
     <string name="qr_confirm_message">Este código substitui as tuas definições atuais e pode acrescentar partidas e um placar. Aceita um código apenas de alguém em quem confias.</string>
     <string name="qr_confirm_apply">Aplicar</string>
+    <string name="import_confirm_title">Importar este ficheiro?</string>
+    <string name="import_confirm_message">Este ficheiro substitui as tuas definições atuais e o placar. As suas partidas, predefinições e notas juntam-se às tuas: nada teu é apagado.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jogador %1$d, %2$s</string>

@@ -127,6 +127,8 @@
     <string name="qr_confirm_title">¿Aplicar los ajustes escaneados?</string>
     <string name="qr_confirm_message">Este código sustituye tus ajustes actuales y puede añadir partidas y un marcador. Acepta códigos solo de alguien de confianza.</string>
     <string name="qr_confirm_apply">Aplicar</string>
+    <string name="import_confirm_title">¿Importar este archivo?</string>
+    <string name="import_confirm_message">Este archivo sustituye tus ajustes actuales y el marcador. Sus partidas, preajustes y notas se añaden a los tuyos: no se borra nada tuyo.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jugador %1$d, %2$s</string>

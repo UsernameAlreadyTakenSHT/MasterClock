@@ -126,6 +126,8 @@
     <string name="qr_confirm_title">Applicare le impostazioni scansionate?</string>
     <string name="qr_confirm_message">Questo codice sostituisce le tue impostazioni attuali e può aggiungere partite e un tabellone. Accetta un codice solo da una persona di cui ti fidi.</string>
     <string name="qr_confirm_apply">Applica</string>
+    <string name="import_confirm_title">Importare questo file?</string>
+    <string name="import_confirm_message">Questo file sostituisce le tue impostazioni attuali e il tabellone. Le sue partite, i preset e le note si aggiungono ai tuoi: nulla di tuo viene eliminato.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Giocatore %1$d, %2$s</string>

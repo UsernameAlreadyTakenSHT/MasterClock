@@ -126,6 +126,8 @@
     <string name="qr_confirm_title">Gescande instellingen toepassen?</string>
     <string name="qr_confirm_message">Deze code vervangt je huidige instellingen en kan partijen en een scorebord toevoegen. Accepteer alleen een code van iemand die je vertrouwt.</string>
     <string name="qr_confirm_apply">Toepassen</string>
+    <string name="import_confirm_title">Dit bestand importeren?</string>
+    <string name="import_confirm_message">Dit bestand vervangt je huidige instellingen en het scorebord. De partijen, voorinstellingen en notities erin komen bij de jouwe: niets van jou wordt verwijderd.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Speler %1$d, %2$s</string>

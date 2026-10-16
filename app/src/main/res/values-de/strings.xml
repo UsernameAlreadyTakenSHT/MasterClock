@@ -127,6 +127,8 @@
     <string name="qr_confirm_title">Gescannte Einstellungen übernehmen?</string>
     <string name="qr_confirm_message">Dieser Code ersetzt deine aktuellen Einstellungen und kann Partien und eine Punktetafel hinzufügen. Nimm nur Codes von jemandem an, dem du vertraust.</string>
     <string name="qr_confirm_apply">Übernehmen</string>
+    <string name="import_confirm_title">Diese Datei importieren?</string>
+    <string name="import_confirm_message">Diese Datei ersetzt deine aktuellen Einstellungen und die Punktetafel. Ihre Partien, Vorlagen und Notizen kommen zu deinen hinzu: Von deinen wird nichts gelöscht.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Spieler %1$d, %2$s</string>

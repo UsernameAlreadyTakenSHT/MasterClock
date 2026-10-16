@@ -132,6 +132,8 @@
     <string name="qr_confirm_title">Appliquer les réglages scannés ?</string>
     <string name="qr_confirm_message">Ce code remplace vos réglages actuels et peut ajouter des parties et un tableau des scores. N\'acceptez un code que d\'une personne de confiance.</string>
     <string name="qr_confirm_apply">Appliquer</string>
+    <string name="import_confirm_title">Importer ce fichier ?</string>
+    <string name="import_confirm_message">Ce fichier remplace vos réglages actuels et le tableau des scores. Ses parties, préréglages et notes s\'ajoutent aux vôtres : rien de ce qui est à vous n\'est supprimé.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Joueur %1$d, %2$s</string>

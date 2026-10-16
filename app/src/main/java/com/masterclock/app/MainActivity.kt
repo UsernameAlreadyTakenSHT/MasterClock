@@ -52,6 +52,12 @@ import kotlinx.serialization.json.Json
 import java.io.*
 import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * A picked file that has been read and accepted, waiting for the user to confirm the import.
+ * [archive] reopens a backup for its media pass, and is null for a settings file.
+ */
+private class PendingFileImport(val pkg: SharePackage, val archive: (() -> InputStream)?)
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,6 +109,10 @@ class MainActivity : ComponentActivity() {
             // no file and no picker -- framing it is the whole of the interaction -- so it is the
             // one that must not apply itself.
             var pendingScan by remember { mutableStateOf<SharePackage?>(null) }
+            // The same for a picked file. JSON and ZIP imports used to apply the moment the picker
+            // closed, so a mis-tap on a stale export replaced the settings and scoreboard with no
+            // way back; only the QR code asked first.
+            var pendingFileImport by remember { mutableStateOf<PendingFileImport?>(null) }
 
             val scope = rememberCoroutineScope()
 
@@ -250,26 +260,9 @@ class MainActivity : ComponentActivity() {
                             // media the first pass's notes name.
                             val open = { context.contentResolver.openInputStream(it) ?: error("No input stream for $it") }
                             val pkg = ZipBackupManager.extractBackup(open)
-                            ZipBackupManager.restoreMedia(
-                                open = open,
-                                destinations = ZipBackupManager.mediaDestinations(context.filesDir, pkg.settings.notebookNotes),
-                                stagingDir = File(context.filesDir, "restore_staging"),
-                            )
-                            withContext(Dispatchers.Main) {
-                                timerViewModel.updateSettings(
-                                    newSettings = pkg.settings,
-                                    logsToImport = pkg.logs,
-                                    scoreboardToImport = pkg.scoreboard,
-                                    presetsToImport = pkg.customPresets,
-                                    isImport = true
-                                )
-                                // The Omni ViewModel is activity-scoped like this one, so this is the
-                                // instance its screens use.
-                                pkg.omniSettings?.let { omni ->
-                                    ViewModelProvider(this@MainActivity)[OmniTimerViewModel::class.java].restoreOmniSettings(omni)
-                                }
-                                Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
-                            }
+                            // Validated, not applied: the media pass and the import itself wait for
+                            // the confirmation below.
+                            withContext(Dispatchers.Main) { pendingFileImport = PendingFileImport(pkg, archive = open) }
                         } catch (e: Exception) {
                             Log.w("MainActivity", "Failed to import backup archive", e)
                             withContext(Dispatchers.Main) {
@@ -303,19 +296,10 @@ class MainActivity : ComponentActivity() {
                             Log.w("MainActivity", "Failed to import settings file", e)
                         }
                         withContext(Dispatchers.Main) {
-                            parsed.getOrNull()?.let { pkg ->
-                                timerViewModel.updateSettings(
-                                    newSettings = pkg.settings,
-                                    logsToImport = pkg.logs,
-                                    scoreboardToImport = pkg.scoreboard,
-                                    isImport = true
-                                )
-                            }
-                            Toast.makeText(
-                                context,
-                                if (parsed.isSuccess) importOkText else importFailedText,
-                                Toast.LENGTH_SHORT,
-                            ).show()
+                            // A readable file waits for the confirmation; only a refusal is reported
+                            // straight away.
+                            parsed.getOrNull()?.let { pkg -> pendingFileImport = PendingFileImport(pkg, archive = null) }
+                            if (parsed.isFailure) Toast.makeText(context, importFailedText, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -546,6 +530,60 @@ class MainActivity : ComponentActivity() {
                             },
                             dismissButton = {
                                 TextButton(onClick = { pendingScan = null }) {
+                                    Text(stringResource(R.string.common_cancel))
+                                }
+                            },
+                        )
+                    }
+
+                    pendingFileImport?.let { pending ->
+                        AlertDialog(
+                            onDismissRequest = { pendingFileImport = null },
+                            title = { Text(stringResource(R.string.import_confirm_title)) },
+                            text = { Text(stringResource(R.string.import_confirm_message)) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    pendingFileImport = null
+                                    val pkg = pending.pkg
+                                    scope.launch(Dispatchers.IO) {
+                                        try {
+                                            // A backup's media is written only now, once the user
+                                            // has said yes.
+                                            pending.archive?.let { open ->
+                                                ZipBackupManager.restoreMedia(
+                                                    open = open,
+                                                    destinations = ZipBackupManager.mediaDestinations(context.filesDir, pkg.settings.notebookNotes),
+                                                    stagingDir = File(context.filesDir, "restore_staging"),
+                                                )
+                                            }
+                                            withContext(Dispatchers.Main) {
+                                                timerViewModel.updateSettings(
+                                                    newSettings = pkg.settings,
+                                                    logsToImport = pkg.logs,
+                                                    scoreboardToImport = pkg.scoreboard,
+                                                    // Only a backup carries these; a settings file's
+                                                    // are ignored, as they always were.
+                                                    presetsToImport = if (pending.archive != null) pkg.customPresets else null,
+                                                    isImport = true
+                                                )
+                                                // The Omni ViewModel is activity-scoped like this
+                                                // one, so this is the instance its screens use.
+                                                if (pending.archive != null) pkg.omniSettings?.let { omni ->
+                                                    ViewModelProvider(this@MainActivity)[OmniTimerViewModel::class.java].restoreOmniSettings(omni)
+                                                }
+                                                Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.w("MainActivity", "Failed to import file", e)
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, importFailedText, Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                }) { Text(stringResource(R.string.qr_confirm_apply)) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { pendingFileImport = null }) {
                                     Text(stringResource(R.string.common_cancel))
                                 }
                             },

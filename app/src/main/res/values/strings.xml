@@ -138,6 +138,8 @@
     <string name="qr_confirm_title">Apply scanned settings?</string>
     <string name="qr_confirm_message">This code replaces your current settings, and can add games and a scoreboard. Only accept a code from someone you trust.</string>
     <string name="qr_confirm_apply">Apply</string>
+    <string name="import_confirm_title">Import this file?</string>
+    <string name="import_confirm_message">This file replaces your current settings and scoreboard. Its games, presets and notes are added to yours: nothing of yours is deleted.</string>
 
     <!--
       Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,
