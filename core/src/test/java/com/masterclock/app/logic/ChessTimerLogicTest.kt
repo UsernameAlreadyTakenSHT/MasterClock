@@ -386,6 +386,19 @@ class ChessTimerLogicTest {
         assertTrue(flagsEndGame(players(1).take(2), FlagBehavior.FLAG, 2))
     }
 
+    @Test
+    fun `under FLAG an eliminated player's turn is skipped`() {
+        val players = listOf(PlayerState(30_000), PlayerState(0, isOutOfTime = true), PlayerState(30_000), PlayerState(30_000))
+        assertEquals(3, nextPlayerInTurn(1, players, 4, FlagBehavior.FLAG))
+        assertEquals(1, nextPlayerInTurn(4, players, 4, FlagBehavior.FLAG))
+    }
+
+    @Test
+    fun `under NEGATIVE a player who is out still takes their turn`() {
+        val players = listOf(PlayerState(30_000), PlayerState(5_000, isOutOfTime = true, isNegative = true), PlayerState(30_000))
+        assertEquals(2, nextPlayerInTurn(1, players, 3, FlagBehavior.NEGATIVE))
+    }
+
     // --- tickCoupled: the modes whose players share or trade time ---
 
     private fun coupled(state: ChessClockState, delta: Long, settings: ChessClockSettings): CoupledTick =

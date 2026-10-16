@@ -1344,6 +1344,26 @@ internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior
 }
 
 /**
+ * Who moves after [current]: the next player round the table, skipping those FLAG has eliminated.
+ *
+ * Turns went round every seat regardless, so with three or four players under FLAG an eliminated
+ * player kept being handed the clock -- and since their clock no longer runs once out, each of
+ * those turns was unlimited time. Under the other behaviours a player who is out still plays (the
+ * overrun is just shown), and is not skipped.
+ */
+internal fun nextPlayerInTurn(current: Int, players: List<PlayerState>, playerCount: Int, flagBehavior: FlagBehavior): Int {
+    if (playerCount <= 1) return 1
+    val plainNext = (current % playerCount) + 1
+    if (flagBehavior != FlagBehavior.FLAG) return plainNext
+    var candidate = current
+    repeat(playerCount) {
+        candidate = (candidate % playerCount) + 1
+        if (players.getOrNull(candidate - 1)?.isOutOfTime != true) return candidate
+    }
+    return plainNext
+}
+
+/**
  * Records who flagged first, if this state is where it happened.
  *
  * Only the per-player tick path set firstToFlag, and under FLAG the loss colour depends on it: in
@@ -2091,7 +2111,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
         if (currentState.isPaused && currentState.activePlayer != null) { resume(); return }
         
-        val nextPlayer = if (playerCount > 1) (playerIndex % playerCount) + 1 else 1
+        val nextPlayer = nextPlayerInTurn(playerIndex, currentState.players, playerCount, settings.value.flagBehavior)
         
         if (currentState.activePlayer == null) {
             moveStartTime = SystemClock.elapsedRealtime(); pausedAt = null; startClock(nextPlayer)
