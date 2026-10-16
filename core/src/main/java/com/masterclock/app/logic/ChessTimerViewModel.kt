@@ -1841,7 +1841,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             val notation = boardNotation ?: pendingBoardNotation
             pendingBoardNotation = null
             addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.timeRemainingMs, moveCount = p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
-            applyPostMoveLogic(playerIndex, timeSpentOnMove)
+            val flaggedByMove = applyPostMoveLogic(playerIndex, timeSpentOnMove)
+            // Under FREEZE a flag stops the game, exactly as tick() stops it for one on the clock.
+            if (flaggedByMove && settings.value.flagBehavior == FlagBehavior.FREEZE) {
+                timerJob?.cancel()
+                timerJob = null
+                _uiState.update { it.copy(isPaused = true) }
+                return
+            }
             moveStartTime = SystemClock.elapsedRealtime(); startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
         }
@@ -2165,11 +2172,24 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (bluetoothSerialBoardManagerDelegate.isInitialized()) bluetoothSerialBoardManager.release()
     }
 
-    private fun applyPostMoveLogic(playerIndex: Int, timeSpentOnMove: Long) {
+    /**
+     * Returns whether the move itself put the mover out -- which only MOVE_COUNTS_DOWN does, on
+     * its last allowed move. That flag is raised here, outside tick(), so it used to go through
+     * none of what tick() does for one: no triple beep, no voice, no FLAG event in the log and no
+     * loss colour, while the clock went on to start the opponent's turn as if nothing had happened.
+     */
+    private fun applyPostMoveLogic(playerIndex: Int, timeSpentOnMove: Long): Boolean {
+        val before = _uiState.value.players.getOrNull(playerIndex - 1)
         _uiState.update { state ->
             val s = getPlayerSettings(playerIndex)
             computePostMoveState(state, playerIndex, timeSpentOnMove, _settings.value, s)
         }
+        val after = _uiState.value.players.getOrNull(playerIndex - 1)
+        if (before == null || after == null || before.isOutOfTime || !after.isOutOfTime) return false
+        handleAudio(before, after, _settings.value, playerIndex)
+        handleVoice(before, after, _settings.value, playerIndex)
+        _uiState.update { if (it.firstToFlag == null) it.copy(firstToFlag = playerIndex) else it }
+        return true
     }
 
     fun pause() { 
