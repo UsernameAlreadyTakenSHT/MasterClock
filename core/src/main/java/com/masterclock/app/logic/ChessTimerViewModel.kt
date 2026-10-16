@@ -2049,8 +2049,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (s.mode == TimerMode.PHASES) {
             if (currentState.isPaused) { resume(); return }
             val p1 = currentState.players[0]
-            val canAdvance = p1.isInInterPhasePause || p1.isOutOfTime || settings.value.allowPhaseSkip
-            if (canAdvance) { _uiState.update { startPhaseTransition(it) } }
+            when {
+                // A tap during the pause between phases skips it. It went to startPhaseTransition,
+                // which starts the pause -- so a tap with five seconds of it left put it back to
+                // its full length, and the pause could never be skipped at all.
+                p1.isInInterPhasePause -> _uiState.update { performPhaseAdvance(it, 1) }
+                p1.isOutOfTime || settings.value.allowPhaseSkip -> _uiState.update { startPhaseTransition(it) }
+            }
             return
         }
 
