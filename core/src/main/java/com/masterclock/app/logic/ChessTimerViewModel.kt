@@ -2388,14 +2388,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             voiceManager.speak("Entering Byoyomi", vol)
         }
 
-        // 5. Phases
-        if (newState.currentPhaseIndex > oldState.currentPhaseIndex) {
-            val s = getPlayerSettings(playerIdx)
-            val phaseName = s.phases.getOrNull(newState.currentPhaseIndex)?.name ?: "Next Phase"
-            voiceManager.speak(phaseName, vol)
-        }
+        // Phase names are announced by onPhaseTransition: this function is only ever handed two
+        // states of the same phase, and the check that stood here could never fire.
 
-        // 6. Gong Mode
+        // 5. Gong Mode
         if (getPlayerSettings(playerIdx).mode == TimerMode.GONG) {
             if (oldState.isGongReflectionPhase && !newState.isGongReflectionPhase) {
                 voiceManager.speak("Move", vol)
