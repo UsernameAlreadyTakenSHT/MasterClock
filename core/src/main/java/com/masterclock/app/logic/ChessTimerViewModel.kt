@@ -989,8 +989,15 @@ const val MAX_IMPORTED_EVENTS_PER_LOG = 2_000
 const val MAX_NOTEBOOK_NOTES = 500
 private const val MAX_IMPORTED_NOTES = MAX_NOTEBOOK_NOTES
 private const val MAX_IMPORTED_PRESETS = 500
-private const val MAX_IMPORTED_NOTE_TITLE_CHARS = 200
-private const val MAX_IMPORTED_NOTE_CONTENT_CHARS = 100_000
+/**
+ * The longest note or phase title, and the longest note text, the app keeps. Public so the screens
+ * that write them stop there: the stored-settings check cuts anything longer at every launch, and
+ * the fields used to accept it -- so a long paste was silently shortened the next day.
+ */
+const val MAX_NOTE_TITLE_CHARS = 200
+const val MAX_NOTE_CONTENT_CHARS = 100_000
+private const val MAX_IMPORTED_NOTE_TITLE_CHARS = MAX_NOTE_TITLE_CHARS
+private const val MAX_IMPORTED_NOTE_CONTENT_CHARS = MAX_NOTE_CONTENT_CHARS
 private const val MAX_IMPORTED_DRAWING_PATHS = 5_000
 private const val MAX_IMPORTED_DRAWING_POINTS = 10_000
 

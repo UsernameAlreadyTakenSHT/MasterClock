@@ -332,7 +332,7 @@ fun PhasesPanel(
                             OutlinedTextField(
                                 value = phase.name,
                                 onValueChange = { name ->
-                                    val newList = phases.toMutableList().apply { this[index] = phase.copy(name = name) }
+                                    val newList = phases.toMutableList().apply { this[index] = phase.copy(name = name.take(MAX_NOTE_TITLE_CHARS)) }
                                     onUpdateP(p.copy(phases = newList))
                                 },
                                 label = { Text(stringResource(R.string.settings_phase_n_name, index + 1)) },
