@@ -327,27 +327,32 @@ fun MoreSettingsPage(
 
                                 val pm = localContext.packageManager
                                 val appInfo = pm.getApplicationInfo(localContext.packageName, 0)
-                                val apkFile = File(appInfo.publicSourceDir)
 
                                 val shareFolder = File(localContext.cacheDir, "apk_share")
                                 if (!shareFolder.exists()) shareFolder.mkdirs()
 
-                                val destinationFile = File(shareFolder, "MasterClock.apk")
-                                apkFile.inputStream().use { input ->
-                                    destinationFile.outputStream().use { output ->
-                                        input.copyTo(output)
+                                // A store that installs split APKs (Accrescent does) leaves the app
+                                // in several files, and the base one alone does not install. Every
+                                // part is shared then, under its own name, for an installer that
+                                // takes a split set; an ordinary install is still one APK.
+                                val parts = listOf(File(appInfo.publicSourceDir)) +
+                                    (appInfo.splitPublicSourceDirs ?: emptyArray()).map { File(it) }
+                                val uris = parts.mapIndexed { i, part ->
+                                    val name = if (parts.size == 1) "MasterClock.apk"
+                                        else if (i == 0) "MasterClock-base.apk" else "MasterClock-${part.name}"
+                                    val destinationFile = File(shareFolder, name)
+                                    part.inputStream().use { input ->
+                                        destinationFile.outputStream().use { output -> input.copyTo(output) }
                                     }
+                                    FileProvider.getUriForFile(localContext, "${localContext.packageName}.fileprovider", destinationFile)
                                 }
 
-                                val uri = FileProvider.getUriForFile(
-                                    localContext,
-                                    "${localContext.packageName}.fileprovider",
-                                    destinationFile
-                                )
-
-                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                val intent = if (uris.size == 1) {
+                                    Intent(Intent.ACTION_SEND).apply { putExtra(Intent.EXTRA_STREAM, uris.single()) }
+                                } else {
+                                    Intent(Intent.ACTION_SEND_MULTIPLE).apply { putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris)) }
+                                }.apply {
                                     type = "application/vnd.android.package-archive"
-                                    putExtra(Intent.EXTRA_STREAM, uri)
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
 
