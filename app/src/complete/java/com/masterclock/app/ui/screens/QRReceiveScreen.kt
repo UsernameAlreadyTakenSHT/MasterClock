@@ -100,12 +100,18 @@ fun QRReceiveScreen(
                                 .build()
 
                             imageAnalysis.setAnalyzer(analysisExecutor) { imageProxy ->
-                                val buffer = imageProxy.planes[0].buffer
+                                val plane = imageProxy.planes[0]
+                                val buffer = plane.buffer
                                 val data = ByteArray(buffer.remaining())
                                 buffer.get(data)
-                                
+
+                                // A row of the Y plane is rowStride bytes long, which is the image
+                                // width plus whatever padding the camera adds -- many devices pad
+                                // to an alignment. Reading rows as width bytes long sheared every
+                                // frame on those, and no code was ever found. The padded width is
+                                // the data's width; the crop is the image's.
                                 val source = PlanarYUVLuminanceSource(
-                                    data, imageProxy.width, imageProxy.height,
+                                    data, plane.rowStride, imageProxy.height,
                                     0, 0, imageProxy.width, imageProxy.height, false
                                 )
                                 val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
