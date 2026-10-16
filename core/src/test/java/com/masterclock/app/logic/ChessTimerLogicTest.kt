@@ -71,7 +71,8 @@ class ChessTimerLogicTest {
         val settings = ChessClockSettings(main = s)
         val next = tickPlayer(PlayerState(timeRemainingMs = 500), delta = 1000, s = s, settings = settings)
         assertTrue(next.isInByoyomi)
-        assertEquals(30_000, next.timeRemainingMs)
+        // The 500ms the main clock could not cover come out of the first period.
+        assertEquals(29_500, next.timeRemainingMs)
     }
 
     @Test
@@ -81,8 +82,25 @@ class ChessTimerLogicTest {
         val p = PlayerState(timeRemainingMs = 500, isInByoyomi = true, byoyomiPeriodsRemaining = 2)
         val next = tickPlayer(p, delta = 1000, s = s, settings = settings)
         assertEquals(1, next.byoyomiPeriodsRemaining)
-        assertEquals(30_000, next.timeRemainingMs)
+        assertEquals(29_500, next.timeRemainingMs)
         assertFalse(next.isOutOfTime)
+    }
+
+    @Test
+    fun `BYOYOMI_CANADIAN charges the rest of the tick to the period it enters`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_CANADIAN, byoyomiTimeMs = 300_000, byoyomiPeriods = 10)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 40), delta = 100, s = s, settings = settings)
+        assertTrue(next.isInByoyomi)
+        assertEquals(299_940, next.timeRemainingMs)
+    }
+
+    @Test
+    fun `BYOYOMI_JAPANESE with zero-length periods still ends in a flag`() {
+        val s = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, byoyomiTimeMs = 0, byoyomiPeriods = 3)
+        val settings = ChessClockSettings(main = s)
+        val next = tickPlayer(PlayerState(timeRemainingMs = 10, byoyomiPeriodsRemaining = 3), delta = 100, s = s, settings = settings)
+        assertTrue(next.isOutOfTime)
     }
 
     @Test
@@ -391,14 +409,14 @@ class ChessTimerLogicTest {
     }
 
     @Test
-    fun `US_DELAY clamps the delay at zero rather than billing the overshoot to the main clock`() {
+    fun `US_DELAY bills the part of a tick past the delay to the main clock`() {
         val s = PlayerSettings(mode = TimerMode.US_DELAY, incrementMs = 5000)
         val settings = ChessClockSettings(main = s)
-        // 500ms of delay left, a 1000ms tick: the 500ms of overshoot is not taken from the main
-        // clock, it is dropped. At the 100ms tick this is worth at most a tenth of a second a move.
+        // 500ms of delay left, a 1000ms tick: the other 500ms are thinking time past the delay.
+        // They used to be dropped -- up to a tick's worth, every move, charged to no one.
         val next = tickPlayer(PlayerState(timeRemainingMs = 300_000, delayRemainingMs = 500), 1000, s, settings)
         assertEquals(0, next.delayRemainingMs)
-        assertEquals(300_000, next.timeRemainingMs)
+        assertEquals(299_500, next.timeRemainingMs)
     }
 
     @Test
@@ -502,7 +520,8 @@ class ChessTimerLogicTest {
         val settings = ChessClockSettings(main = s)
         val next = tickPlayer(PlayerState(timeRemainingMs = 500, isInByoyomi = false), 1000, s, settings)
         assertTrue(next.isInByoyomi)
-        assertEquals(300_000, next.timeRemainingMs)
+        // The block starts at 5:00 less the 500ms the main clock could not cover.
+        assertEquals(299_500, next.timeRemainingMs)
         assertFalse(next.isOutOfTime)
     }
 

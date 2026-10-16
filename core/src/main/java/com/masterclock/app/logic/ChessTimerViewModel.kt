@@ -1179,16 +1179,41 @@ internal fun applyFlagBehaviorDelta(currentTime: Long, isOut: Boolean, isNegativ
     return Triple(newTime, out, neg)
 }
 
+/**
+ * The part of a tick left over when one countdown runs out goes on to the next one, rather than
+ * being thrown away. A tick that finished the US delay with 20ms of it left, or emptied the main
+ * clock into byoyomi, or ran a Japanese period out, used to drop the rest of its time: up to a
+ * tick's worth (100ms) per move, never charged to anyone.
+ *
+ * Each step that carries a remainder over strictly reduces what is left to run -- the delay is
+ * gone, main time is gone, a period is consumed -- so the recursion ends, even with a byoyomi
+ * period of zero length.
+ */
 internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
-    if (p.delayRemainingMs > 0) return p.copy(delayRemainingMs = (p.delayRemainingMs - delta).coerceAtLeast(0))
+    if (p.delayRemainingMs > 0) {
+        if (delta <= p.delayRemainingMs) return p.copy(delayRemainingMs = p.delayRemainingMs - delta)
+        return tickPlayer(p.copy(delayRemainingMs = 0), delta - p.delayRemainingMs, s, settings)
+    }
     return when (s.mode) {
         TimerMode.MOVE_TIMER_OVERTIME -> { val newTime = p.timeRemainingMs - delta; if (newTime < 0) { val newSec = p.secondaryTimeMs + newTime; p.copy(timeRemainingMs = 0, secondaryTimeMs = newSec, isOutOfTime = newSec <= 0) } else p.copy(timeRemainingMs = newTime) }
         TimerMode.MOVE_TIMER_GLOBAL -> { val newTime = p.timeRemainingMs - delta; val newSec = p.secondaryTimeMs - delta; p.copy(timeRemainingMs = newTime, secondaryTimeMs = newSec, isOutOfTime = newTime <= 0 || newSec <= 0) }
         TimerMode.BYOYOMI_JAPANESE -> {
-            if (!p.isInByoyomi) { val newTime = p.timeRemainingMs - delta; if (newTime <= 0) p.copy(timeRemainingMs = s.byoyomiTimeMs, isInByoyomi = true) else p.copy(timeRemainingMs = newTime) }
-            else { val newTime = p.timeRemainingMs - delta; if (newTime <= 0) { val newPeriods = p.byoyomiPeriodsRemaining - 1; if (newPeriods <= 0) p.copy(timeRemainingMs = 0, byoyomiPeriodsRemaining = 0, isOutOfTime = true) else p.copy(timeRemainingMs = s.byoyomiTimeMs, byoyomiPeriodsRemaining = newPeriods) } else p.copy(timeRemainingMs = newTime) }
+            val newTime = p.timeRemainingMs - delta
+            when {
+                newTime > 0 -> p.copy(timeRemainingMs = newTime)
+                !p.isInByoyomi -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, isInByoyomi = true), -newTime, s, settings)
+                p.byoyomiPeriodsRemaining - 1 <= 0 -> p.copy(timeRemainingMs = 0, byoyomiPeriodsRemaining = 0, isOutOfTime = true)
+                else -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, byoyomiPeriodsRemaining = p.byoyomiPeriodsRemaining - 1), -newTime, s, settings)
+            }
         }
-        TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> { if (!p.isInByoyomi) { val newTime = p.timeRemainingMs - delta; if (newTime <= 0) p.copy(timeRemainingMs = s.byoyomiTimeMs, isInByoyomi = true) else p.copy(timeRemainingMs = newTime) } else { val newTime = p.timeRemainingMs - delta; p.copy(timeRemainingMs = newTime, isOutOfTime = newTime <= 0) } }
+        TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> {
+            val newTime = p.timeRemainingMs - delta
+            when {
+                p.isInByoyomi -> p.copy(timeRemainingMs = newTime, isOutOfTime = newTime <= 0)
+                newTime > 0 -> p.copy(timeRemainingMs = newTime)
+                else -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, isInByoyomi = true), -newTime, s, settings)
+            }
+        }
         TimerMode.FIDE_PERIODS -> {
             var newTime = p.timeRemainingMs - delta
             var isOut = p.isOutOfTime
