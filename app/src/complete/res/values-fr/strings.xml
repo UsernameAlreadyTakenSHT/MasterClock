@@ -135,6 +135,7 @@
     <string name="tools_new_draw_note">Nouvelle note dessinée</string>
     <string name="tools_new_image_note">Nouvelle note image</string>
     <string name="tools_new_note">Nouvelle note</string>
+    <string name="tools_notebook_full">Le carnet est plein (%1$d notes). Supprimez-en une pour en ajouter une autre.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Nouvelle note vidéo</string>
     <string name="tools_no_games">Aucune partie enregistrée pour l\'instant.</string>
     <string name="tools_no_notes">Aucune note. Appuyez sur + pour en créer une.</string>

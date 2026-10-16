@@ -827,10 +827,14 @@ private fun sanitizeSettings(
  * Merging means an import can only ever add to the notebook. A note counts as already present
  * when everything but its id matches, since an import regenerates ids: that keeps re-importing
  * one's own export, or restoring a backup onto the device it came from, from doubling every note.
+ *
+ * Imported notes stop at [MAX_NOTEBOOK_NOTES]. The device's own notes come first and are never
+ * the ones cut; past the ceiling, the launch-time sanitiser would otherwise cut the newest.
  */
 internal fun mergeImportedNotes(local: List<NotebookNote>, imported: List<NotebookNote>): List<NotebookNote> {
     val present = local.mapTo(HashSet()) { it.copy(id = "") }
-    return local + imported.filter { present.add(it.copy(id = "")) }
+    val room = (MAX_NOTEBOOK_NOTES - local.size).coerceAtLeast(0)
+    return local + imported.filter { present.add(it.copy(id = "")) }.take(room)
 }
 
 /**
@@ -969,7 +973,17 @@ const val MAX_IMPORTED_EVENTS_PER_LOG = 2_000
  * paid for again and again rather than once. These are deliberately far above anything a person
  * would produce by hand.
  */
-private const val MAX_IMPORTED_NOTES = 500
+/**
+ * How many notes the notebook holds, enforced where notes are made as well as where they arrive.
+ *
+ * It used to be a ceiling on imports alone, while the notebook let a user go on adding notes past
+ * it. sanitizeStoredSettings applies the same ceiling at every launch and new notes are appended
+ * last, so the 501st note a user wrote was deleted the next time the app started -- with its media
+ * left orphaned on disk. The screen now refuses the note instead, and a merging import stops at
+ * the ceiling rather than filling the notebook past it.
+ */
+const val MAX_NOTEBOOK_NOTES = 500
+private const val MAX_IMPORTED_NOTES = MAX_NOTEBOOK_NOTES
 private const val MAX_IMPORTED_PRESETS = 500
 private const val MAX_IMPORTED_NOTE_TITLE_CHARS = 200
 private const val MAX_IMPORTED_NOTE_CONTENT_CHARS = 100_000

@@ -970,6 +970,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val newImageNoteTitle = stringResource(R.string.tools_new_image_note)
     val newVideoNoteTitle = stringResource(R.string.tools_new_video_note)
     val newBoardNoteTitle = stringResource(R.string.tools_new_board_note)
+    val notebookFullText = stringResource(R.string.tools_notebook_full, MAX_NOTEBOOK_NOTES)
     val locale = LocalConfiguration.current.locales[0]
     val settings by viewModel.settings.collectAsState()
     val context = LocalContext.current
@@ -979,7 +980,11 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val selectedNote = remember(selectedNoteId, settings.notebookNotes) { settings.notebookNotes.find { it.id == selectedNoteId } }
     if (selectedNote == null) {
         val sortedNotes = remember(settings.notebookNotes) { settings.notebookNotes.sortedByDescending { it.timestamp } }
-        ToolScaffold(title = stringResource(R.string.settings_more_notebook), onBack = onBack, actions = { IconButton(onClick = { showTypeSelection = true }) { Icon(Icons.Default.Add, stringResource(R.string.tools_new_note)) } }) { padding ->
+        ToolScaffold(title = stringResource(R.string.settings_more_notebook), onBack = onBack, actions = { IconButton(onClick = {
+            // Refused here rather than accepted and then cut at the next launch; see MAX_NOTEBOOK_NOTES.
+            if (settings.notebookNotes.size >= MAX_NOTEBOOK_NOTES) Toast.makeText(context, notebookFullText, Toast.LENGTH_LONG).show()
+            else showTypeSelection = true
+        }) { Icon(Icons.Default.Add, stringResource(R.string.tools_new_note)) } }) { padding ->
             if (sortedNotes.isEmpty()) { Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_no_notes), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             else { 
                 LazyColumn(

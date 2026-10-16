@@ -140,6 +140,7 @@
     <string name="tools_new_draw_note">Nova nota desenhada</string>
     <string name="tools_new_image_note">Nova nota de imagem</string>
     <string name="tools_new_note">Nova nota</string>
+    <string name="tools_notebook_full">O caderno está cheio (%1$d notas). Apaga uma para adicionar outra.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Nova nota de vídeo</string>
     <string name="tools_no_games">Ainda não há partidas registadas.</string>
     <string name="tools_no_notes">Ainda não há notas. Toque em + para criar uma.</string>

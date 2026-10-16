@@ -55,6 +55,21 @@ class NotebookMergeTest {
     }
 
     @Test
+    fun `an import stops at the notebook's ceiling and never cuts the device's own notes`() {
+        val local = List(MAX_NOTEBOOK_NOTES - 2) { NotebookNote(id = "l$it", title = "Local $it", timestamp = it.toLong()) }
+        val imported = List(5) { NotebookNote(id = "i$it", title = "Imported $it", timestamp = 1_000L + it) }
+        val merged = mergeImportedNotes(local, imported)
+        assertEquals(MAX_NOTEBOOK_NOTES, merged.size)
+        assertEquals(local, merged.take(local.size))
+    }
+
+    @Test
+    fun `a full notebook takes nothing from an import`() {
+        val local = List(MAX_NOTEBOOK_NOTES) { NotebookNote(id = "l$it", title = "Local $it", timestamp = it.toLong()) }
+        assertEquals(local, mergeImportedNotes(local, listOf(NotebookNote(title = "One more"))))
+    }
+
+    @Test
     fun `a note repeated inside the import is added once`() {
         val other = NotebookNote(id = "o1", title = "Twice", timestamp = 5L)
         val merged = mergeImportedNotes(emptyList(), listOf(other, other.copy(id = "o2")))
