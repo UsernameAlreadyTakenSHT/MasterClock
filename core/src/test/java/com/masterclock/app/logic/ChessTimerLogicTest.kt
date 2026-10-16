@@ -467,6 +467,16 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `the player who flags in a coupled mode is recorded as first to flag`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.HOURGLASS), flagBehavior = FlagBehavior.FLAG)
+        val before = ChessClockState(players = listOf(PlayerState(60_000), PlayerState(300)), activePlayer = 2)
+        val after = coupled(before, 1_000, settings).state.withFirstFlag(before, 2)
+        assertEquals(2, after.firstToFlag)
+        // And it is not overwritten by a later flag.
+        assertEquals(2, after.copy(players = after.players.map { it.copy(isOutOfTime = true) }).withFirstFlag(after, 1).firstToFlag)
+    }
+
+    @Test
     fun `modes that are not coupled are left to tickPlayer`() {
         val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.FISCHER))
         assertNull(tickCoupled(ChessClockState(players = listOf(PlayerState(1), PlayerState(1)), activePlayer = 1), 100, settings, settings.main, 1))

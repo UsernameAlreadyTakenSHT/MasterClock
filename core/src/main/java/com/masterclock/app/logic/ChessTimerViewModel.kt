@@ -1343,6 +1343,21 @@ internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior
     }
 }
 
+/**
+ * Records who flagged first, if this state is where it happened.
+ *
+ * Only the per-player tick path set firstToFlag, and under FLAG the loss colour depends on it: in
+ * HOURGLASS, CHRONO_COUNTDOWN and the shared move timers the player who flagged got the FLAGGED
+ * label and never the colour. The active player is preferred when several go out at once -- one
+ * shared CHRONO clock running out puts everyone out together.
+ */
+internal fun ChessClockState.withFirstFlag(before: ChessClockState, active: Int): ChessClockState {
+    if (firstToFlag != null) return this
+    val newlyOut = players.indices.filter { players[it].isOutOfTime && before.players.getOrNull(it)?.isOutOfTime != true }.map { it + 1 }
+    if (newlyOut.isEmpty()) return this
+    return copy(firstToFlag = if (active in newlyOut) active else newlyOut.first())
+}
+
 /** A player's state before and after a tick, for the audio and voice cues to compare. */
 internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int)
 
@@ -2241,7 +2256,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     if (result.speaks) handleVoice(cue.before, cue.after, settings, cue.playerIndex)
                 }
                 if (result.playGong) soundManager.playGong()
-                return@update result.state
+                return@update result.state.withFirstFlag(state, active)
             }
 
             val pActive = state.players[active - 1]
