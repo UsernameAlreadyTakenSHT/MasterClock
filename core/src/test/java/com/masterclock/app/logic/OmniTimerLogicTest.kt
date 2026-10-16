@@ -433,7 +433,7 @@ class OmniTimerLogicTest {
     }
 
     @Test
-    fun `omniPhaseAutoAdvances reads the configured phase's toggle and defaults to true`() {
+    fun `omniPhaseAutoAdvances reads the configured phase's toggle`() {
         val manualPhase = OmniPhaseSettings(durationMs = 20_000, autoAdvance = false)
         val autoPhase = OmniPhaseSettings(durationMs = 20_000, autoAdvance = true)
         val turn = OmniTurnSettings(phases = listOf(manualPhase, autoPhase))
@@ -446,5 +446,21 @@ class OmniTimerLogicTest {
         // FIXED round with no configured phases: matches OmniPhaseSettings' default of true.
         val fixedSettings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(OmniRoundSettings()))), numberOfPlayers = 2)
         assertTrue(omniPhaseAutoAdvances(fixedSettings, OmniState(currentPhaseIndex = 0, turnCounterInRound = 0)))
+    }
+
+    @Test
+    fun `a FIXED round gives every player's turn its phases`() {
+        val phases = listOf(OmniPhaseSettings(durationMs = 20_000), OmniPhaseSettings(durationMs = 40_000))
+        val round = OmniRoundSettings(turnLogic = RoundTurnLogic.FIXED, turnDurationMs = 60_000, fixedTurnPhases = phases)
+        val turns = omniTurnsOf(round, 4)
+        assertEquals(4, turns.size)
+        assertTrue(turns.all { it.phases == phases && it.durationMs == 60_000L })
+
+        val settings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(round))), numberOfPlayers = 4)
+        assertEquals(40_000, getOmniDuration(settings, "PHASE", playerIdx = 3, phaseIdx = 1))
+        // The last phase of the third turn hands over to the fourth, not to the end of the round.
+        val next = computeOmniAdvance(OmniState(turnCounterInRound = 2, currentPhaseIndex = 1), settings)
+        assertEquals(3, next.turnCounterInRound)
+        assertEquals("TURN", next.transitionLabel)
     }
 }

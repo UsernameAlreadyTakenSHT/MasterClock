@@ -52,7 +52,8 @@ fun SettingsOmniPage(
         
         settings.games.forEach { game ->
             game.rounds.forEach { round ->
-                val turns = if (round.customTurns.isNotEmpty()) round.customTurns else listOf(OmniTurnSettings(durationMs = round.turnDurationMs))
+                // One turn stands for all of a FIXED round's: they share its duration and phases.
+                val turns = omniTurnsOf(round, 1)
                 turns.forEachIndexed { tIdx, turn ->
                     val totalPhasesMs = turn.phases.sumOf { it.durationMs }
                     if (totalPhasesMs > turn.durationMs) {
@@ -561,8 +562,16 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
             }
         }
 
-        val turns = if (currentRound.customTurns.isNotEmpty()) currentRound.customTurns else listOf(OmniTurnSettings(durationMs = currentRound.turnDurationMs))
-        
+        // A FIXED round is edited as the one turn that stands for all of its turns, and kept in the
+        // round's own fields -- turnDurationMs and fixedTurnPhases, which are what the engine reads
+        // for it. The duration used to be written into customTurns instead, which a FIXED round
+        // never reads: every FIXED turn stayed at the 10:00 default whatever was typed here.
+        val turns = omniTurnsOf(currentRound, 1)
+        // Back to one turn, a round is FIXED again and takes that turn's duration and phases.
+        fun withTurns(newList: List<OmniTurnSettings>): OmniRoundSettings = newList.singleOrNull()
+            ?.let { only -> currentRound.copy(turnLogic = RoundTurnLogic.FIXED, customTurns = emptyList(), turnDurationMs = only.durationMs, fixedTurnPhases = only.phases) }
+            ?: currentRound.copy(turnLogic = RoundTurnLogic.SEQUENCE, customTurns = newList)
+
         turns.forEachIndexed { tIdx, turn ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -577,7 +586,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
                                 val newList = turns.toMutableList().apply { removeAt(tIdx) }
                                 onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                                     this[selectedGameIdx] = currentGame.copy(rounds = currentGame.rounds.toMutableList().apply {
-                                        this[selectedRoundIdx] = currentRound.copy(customTurns = newList, turnLogic = if (newList.size <= 1) RoundTurnLogic.FIXED else RoundTurnLogic.SEQUENCE)
+                                        this[selectedRoundIdx] = withTurns(newList)
                                     })
                                 }))
                             }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_turn, tIdx + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
@@ -588,7 +597,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
                         val newList = turns.toMutableList().apply { this[tIdx] = turn.copy(durationMs = duration) }
                         onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                             this[selectedGameIdx] = currentGame.copy(rounds = currentGame.rounds.toMutableList().apply {
-                                this[selectedRoundIdx] = currentRound.copy(customTurns = newList, turnLogic = if (newList.size <= 1) RoundTurnLogic.FIXED else RoundTurnLogic.SEQUENCE)
+                                this[selectedRoundIdx] = withTurns(newList)
                             })
                         }))
                     }
@@ -602,7 +611,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
                 val nextTurn = last.copy(id = java.util.UUID.randomUUID().toString())
                 onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                     this[selectedGameIdx] = currentGame.copy(rounds = currentGame.rounds.toMutableList().apply {
-                        this[selectedRoundIdx] = currentRound.copy(customTurns = turns + nextTurn, turnLogic = RoundTurnLogic.SEQUENCE)
+                        this[selectedRoundIdx] = withTurns(turns + nextTurn)
                     })
                 }))
             },
@@ -641,7 +650,8 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
     
     val currentGame = settings.games.getOrNull(selectedGameIdx) ?: settings.games.first()
     val currentRound = currentGame.rounds.getOrNull(selectedRoundIdx) ?: currentGame.rounds.first()
-    val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else listOf(OmniTurnSettings(durationMs = currentRound.turnDurationMs))
+    // A FIXED round shows the one turn that stands for all of its turns.
+    val turnsList = omniTurnsOf(currentRound, 1)
     val currentTurn = turnsList.getOrNull(selectedTurnIdx) ?: turnsList.firstOrNull() ?: OmniTurnSettings()
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -748,7 +758,12 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
 }
 
 /**
- * Updates phases and ensures the change is replicated to ALL players for the given turn index.
+ * Sets the phases of turn [tIdx] -- or, in a FIXED round, of every turn at once.
+ *
+ * A FIXED round used to have nowhere to keep phases, so this turned it into a SEQUENCE of the one
+ * synthesised turn: the round shrank to a single turn and under LINEAR only Player 1 ever played
+ * it, while the doc here promised the change went to all players. It now does, through the
+ * round's fixedTurnPhases, and the round stays FIXED.
  */
 private fun updateReplicatedPhases(
     settings: OmniSettings,
@@ -760,25 +775,15 @@ private fun updateReplicatedPhases(
 ) {
     val game = settings.games.getOrNull(gIdx) ?: return
     val round = game.rounds.getOrNull(rIdx) ?: return
-    
-    // Ensure we are working with the actual turn list (custom or synthesized)
-    val turns = if (round.customTurns.isNotEmpty()) {
-        round.customTurns.toMutableList()
+
+    val updatedRound = if (round.turnLogic == RoundTurnLogic.FIXED) {
+        round.copy(fixedTurnPhases = newPhases)
     } else {
-        mutableListOf(OmniTurnSettings(durationMs = round.turnDurationMs))
-    }
-    
-    if (tIdx < turns.size) {
-        turns[tIdx] = turns[tIdx].copy(phases = newPhases)
-    }
-    
-    val updatedRound = if (round.customTurns.isNotEmpty()) {
+        val turns = round.customTurns.toMutableList()
+        if (tIdx < turns.size) turns[tIdx] = turns[tIdx].copy(phases = newPhases)
         round.copy(customTurns = turns)
-    } else {
-        // If we added phases to a fixed turn, it must become a custom sequence
-        round.copy(customTurns = turns, turnLogic = RoundTurnLogic.SEQUENCE)
     }
-    
+
     val newRounds = game.rounds.toMutableList().apply { this[rIdx] = updatedRound }
     val newGames = settings.games.toMutableList().apply { this[gIdx] = game.copy(rounds = newRounds) }
     onSettingsChanged(settings.copy(games = newGames))

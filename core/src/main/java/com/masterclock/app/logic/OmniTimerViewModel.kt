@@ -54,6 +54,24 @@ internal fun handleTimeBankScope(currentBanks: Map<Int, Long>, scope: TimeBankSc
     }
 }
 
+/**
+ * The turns [round] holds, in order: its own list for a SEQUENCE round, one per player for a
+ * FIXED one, each carrying the round's [OmniRoundSettings.fixedTurnPhases].
+ *
+ * The one place this is decided. The engine and the screens each built the list themselves, four
+ * times over, and a FIXED round's synthesised turns had no phases in any of them.
+ */
+fun omniTurnsOf(round: OmniRoundSettings, numberOfPlayers: Int): List<OmniTurnSettings> =
+    if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns
+    else List(numberOfPlayers.coerceAtLeast(0)) { OmniTurnSettings(durationMs = round.turnDurationMs, phases = round.fixedTurnPhases) }
+
+/** The phases of the turn [state] is in; empty when that turn has none. */
+internal fun omniCurrentTurnPhases(settings: OmniSettings, state: OmniState): List<OmniPhaseSettings> {
+    val game = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
+    val round = game.rounds.getOrNull(state.currentRoundIndex) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
+    return omniTurnsOf(round, settings.numberOfPlayers).getOrNull(state.turnCounterInRound)?.phases ?: emptyList()
+}
+
 internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int = 0, roundIdx: Int = 0, playerIdx: Int = 0, phaseIdx: Int = 0): Long {
     // Was always settings.games.firstOrNull(), so any per-game duration/structure was silently
     // ignored from Game 2 onward.
@@ -63,9 +81,11 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
         "ROUND" -> round.durationMs
         "TURN" -> if (round.turnLogic == RoundTurnLogic.SEQUENCE) { val turn = round.customTurns.getOrNull(playerIdx); turn?.durationMs ?: round.turnDurationMs } else round.turnDurationMs
         "PHASE" -> {
-            val turnsList = if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns else List(settings.numberOfPlayers) { OmniTurnSettings(durationMs = round.turnDurationMs) }
-            val turn = turnsList.getOrNull(playerIdx); val phaseList = turn?.phases ?: listOf(OmniPhaseSettings())
-            phaseList.getOrNull(phaseIdx)?.durationMs ?: 60_000L
+            val turn = omniTurnsOf(round, settings.numberOfPlayers).getOrNull(playerIdx)
+            when {
+                turn == null -> OmniPhaseSettings().durationMs
+                else -> turn.phases.getOrNull(phaseIdx)?.durationMs ?: OmniPhaseSettings().durationMs
+            }
         }
         else -> 0L
     }
@@ -77,12 +97,8 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
  * turnCounterInRound); defaults to true, matching OmniPhaseSettings, when no phase is configured.
  */
 internal fun omniPhaseAutoAdvances(settings: OmniSettings, state: OmniState): Boolean {
-    val game = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
-    val round = game.rounds.getOrNull(state.currentRoundIndex) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
-    val turnsList = if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns else List(settings.numberOfPlayers) { OmniTurnSettings(durationMs = round.turnDurationMs) }
-    val turn = turnsList.getOrNull(state.turnCounterInRound)
-    val phaseList = turn?.phases ?: listOf(OmniPhaseSettings())
-    return phaseList.getOrNull(state.currentPhaseIndex)?.autoAdvance ?: true
+    val phases = omniCurrentTurnPhases(settings, state)
+    return phases.getOrNull(state.currentPhaseIndex)?.autoAdvance ?: true
 }
 
 internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int {
@@ -250,7 +266,7 @@ internal fun computeOmniAdvance(
     // FIXED rounds always have exactly numberOfPlayers turns; customTurns left over from a
     // previous SEQUENCE configuration must not inflate the count (getOmniDuration, the UI and
     // omniPhaseAutoAdvances all already assume numberOfPlayers for FIXED).
-    val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else List(settings.numberOfPlayers) { OmniTurnSettings(durationMs = currentRound.turnDurationMs) }
+    val turnsList = omniTurnsOf(currentRound, settings.numberOfPlayers)
     val currentTurn = turnsList.getOrNull(nextTurnIdx) ?: OmniTurnSettings(durationMs = currentRound.turnDurationMs)
 
     var nextRoundIdx = state.currentRoundIndex

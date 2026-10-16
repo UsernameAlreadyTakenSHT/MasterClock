@@ -1132,6 +1132,9 @@ internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings 
                     name = round.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
                     durationMs = round.durationMs.coerceAtLeast(0),
                     turnDurationMs = round.turnDurationMs.coerceAtLeast(0),
+                    fixedTurnPhases = round.fixedTurnPhases.take(MAX_IMPORTED_PERIODS).map { phase ->
+                        phase.copy(name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS), durationMs = phase.durationMs.coerceAtLeast(0))
+                    },
                     customTurns = round.customTurns.take(MAX_IMPORTED_PERIODS).map { turn ->
                         turn.copy(
                             durationMs = turn.durationMs.coerceAtLeast(0),

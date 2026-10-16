@@ -213,7 +213,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
         if (settings.usePhaseClock) {
             val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
             val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
-            val turnsList = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns else List(numPlayers) { OmniTurnSettings(durationMs = currentRound.turnDurationMs) }
+            val turnsList = omniTurnsOf(currentRound, numPlayers)
             // turnsList (SEQUENCE mode) is indexed by the raw turn count within the round, same as the
             // engine (OmniTimerViewModel.advanceOmni), not by currentPlayerIndex.
             val currentTurn = turnsList.getOrNull(state.turnCounterInRound)

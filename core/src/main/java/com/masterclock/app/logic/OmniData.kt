@@ -67,7 +67,11 @@ data class OmniRoundSettings(
     val turnDurationMs: Long = 600_000L,
     val turnLogic: RoundTurnLogic = RoundTurnLogic.FIXED,
     val roundEndBehavior: RoundEndBehavior = RoundEndBehavior.ADVANCE,
-    val customTurns: List<OmniTurnSettings> = emptyList()
+    val customTurns: List<OmniTurnSettings> = emptyList(),
+    // The phases every turn of a FIXED round goes through. A FIXED round had nowhere to keep
+    // phases -- its turns are synthesised, one per player -- so adding one turned the round into a
+    // one-turn SEQUENCE, and under LINEAR only Player 1 ever played it. See omniTurnsOf.
+    val fixedTurnPhases: List<OmniPhaseSettings> = emptyList(),
 )
 
 @Serializable
