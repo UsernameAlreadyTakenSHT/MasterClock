@@ -14,7 +14,10 @@ Three Gradle modules produce **five** shipped apps:
 | `paper` | A **separate app**, not a flavor: the E-Ink build for Mudita devices. |
 
 `paper` duplicates some UI on purpose — an E-Ink screen needs different components, not a themed
-version of the same ones. It depends on `core` like `app` does. A change to shared behaviour usually
+version of the same ones. Those components are Mudita's own library, `com.mudita:MMD`; only what
+MMD lacks (the alert dialog, a scrollbar for a plain `Column`) is drawn in
+`paper/.../ui/components/MMDComponents.kt`. MMD's outlined-button border is a hard-coded black,
+so pass `outlinedButtonBorderMMD()` or it vanishes in reversed colours. It depends on `core` like `app` does. A change to shared behaviour usually
 belongs in `core` and must be checked in both.
 
 ## Build and verify

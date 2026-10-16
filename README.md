@@ -17,7 +17,7 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
 - Classic time controls: Sudden Death, Fischer, Bronstein, US Delay, Byoyomi (Japanese/Canadian/Progressive), Hourglass, Gong, Hidden/Random time, move counters, time banking.
 - Omni mode: sequential game lists, custom round behavior, multi-phase turns (Think > Move > Resolve).
 - Notebook, scoreboard, mini-games, game history with PGN/PDN/KIF export.
-- Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink version for Mudita devices with a minimal black-and-white UI.
+- Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink version for Mudita devices, built with Mudita's own [MMD](https://github.com/mudita/MMD) component library.
 
 ## Flavors
 
@@ -69,7 +69,8 @@ what each check proves and what it does not.
   - Beep: [Beep – u_edtmwfwu7c](https://pixabay.com/sound-effects/film-special-effects-beep-329314/)
   - Final beep: [Public Domain Beep Sound – qubodup](https://pixabay.com/sound-effects/public-domain-beep-sound-100267/)
   - Switch: [Light Switch – Pixabay](https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/)
-- **Font**: [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, [SIL Open Font License 1.1](https://openfontlicense.org/). Bundled by the E-Ink build.
+- **Font**: [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, [SIL Open Font License 1.1](https://openfontlicense.org/). Bundled by the E-Ink build, through MMD.
+- **E-Ink interface**: built with [Mudita Mindful Design (MMD)](https://github.com/mudita/MMD), Mudita's component library for its E Ink devices.
 
 ### Rules documents
 
@@ -95,6 +96,7 @@ Also listed in-app under the version footer → Licenses tab.
 | [AndroidX / Jetpack Compose](https://developer.android.com/jetpack) | The Android Open Source Project | Apache-2.0 |
 | [Kotlin & kotlinx](https://github.com/JetBrains/kotlin) | JetBrains s.r.o. and Kotlin contributors | Apache-2.0 |
 | [Material Components for Android](https://github.com/material-components/material-components-android) | Google LLC | Apache-2.0 |
+| [Mudita Mindful Design (MMD)](https://github.com/mudita/MMD) | Mudita Sp. z o.o., The Android Open Source Project | Apache-2.0 |
 | [Coil](https://github.com/coil-kt/coil) | Coil Contributors | Apache-2.0 |
 | [Accompanist](https://github.com/google/accompanist) (Drawable Painter, Permissions) | Google LLC | Apache-2.0 |
 | [AndroidSVG](https://github.com/BigBadaboom/androidsvg) | Paul LeBeau | Apache-2.0 |
@@ -104,8 +106,9 @@ Also listed in-app under the version footer → Licenses tab.
 | [Dagger](https://github.com/google/dagger) | Google LLC | Apache-2.0 |
 | [javax.inject (JSR-330)](https://github.com/javax-inject/javax-inject) | The JSR-330 Expert Group | Apache-2.0 |
 
-Only the first three ship in every build. Everything below them reaches Complete alone: R8 strips
-each one from Standard, Lite, Mini and E-Ink, none of which ever call it. The last three arrive
+Only the first three ship in every build. MMD ships in the E-Ink build alone, which is the only
+one that links it. Everything below it reaches Complete alone: R8 strips each one from Standard,
+Lite, Mini and E-Ink, none of which ever call it. The last three arrive
 through CameraX and amount to a handful of classes, but they are shipped and so are credited.
 
 Project licensed under the MIT License.
