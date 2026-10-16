@@ -1754,7 +1754,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
         val s = getPlayerSettings(playerIndex)
 
-        if (currentLog == null) {
+        // With no log, addEvent and finishCurrentLog have nothing to act on, so a build that keeps
+        // no history records nothing at all.
+        if (currentLog == null && FlavorConfig.keepsGameHistory()) {
             val playersInitialStates = _uiState.value.players.map { it.toProxy() }
             currentLog = GameLog(
                 settings = settings.value,
@@ -1907,7 +1909,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // two-hour game -- for a recovery that almost never happens. Fifteen bounds what a crash
         // costs to fifteen seconds of one player's clock, which is a fair price for a third of the
         // writes.
-        if (now - lastAutoSaveTime >= AUTO_SAVE_INTERVAL_MS) {
+        // Only the arbitre panel can resume a saved clock, so a build without it has no use for
+        // the snapshot -- Mini and the E-Ink build wrote one every fifteen seconds all the same.
+        if (FlavorConfig.hasArbitre() && now - lastAutoSaveTime >= AUTO_SAVE_INTERVAL_MS) {
             lastAutoSaveTime = now
             saveClockForLater()
         }
@@ -2142,7 +2146,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
     fun resume() {
         val active = _uiState.value.activePlayer ?: 1
-        if (currentLog == null) {
+        if (currentLog == null && FlavorConfig.keepsGameHistory()) {
             val playersInitialStates = _uiState.value.players.map { it.toProxy() }
             currentLog = GameLog(
                 settings = settings.value,

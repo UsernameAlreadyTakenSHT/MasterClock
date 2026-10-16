@@ -26,13 +26,20 @@ object FlavorConfig {
     }
 
     /**
-     * Deliberately wider than [hasMoreTab]: the game-log screen it complements lives behind the
-     * More tab and is therefore COMPLETE-only, but statistics are worth having anywhere games are
-     * recorded at all.
+     * Complete only, beside the game logs and the More tab that manages them. Standard and Lite
+     * used to show statistics too, while offering no way to clear the history behind them or to
+     * set how long it is kept -- both of which live in the More tab.
      */
     fun hasStatistics(): Boolean {
-        return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
+        return currentFlavor == AppFlavor.COMPLETE
     }
+
+    /**
+     * Whether games are recorded at all. Only where something reads them back: Complete's logs and
+     * statistics, and the Last Games tab and launcher shortcuts that Standard and Lite share with
+     * it. Mini and the E-Ink build recorded every game into a history no screen of theirs shows.
+     */
+    fun keepsGameHistory(): Boolean = hasPresets()
 
     /**
      * Whether this build can talk to an electronic board.
