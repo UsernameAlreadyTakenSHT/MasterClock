@@ -125,6 +125,20 @@ fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
     )
 }
 
+/**
+ * The time a player's clock face shows. CHRONO and PHASES run one clock for everyone, kept in
+ * [ChessClockState.globalTimeMs] (or, between phases, in the pause countdown), while each player's
+ * own timeRemainingMs sits still. The tick rate, the haptic countdown, the low-time flash and the
+ * TalkBack label all read timeRemainingMs regardless: hundredths stepped in tenths below ten
+ * seconds, nothing vibrated or flashed, and TalkBack read out "5 minutes" for the whole game.
+ * Everything that is about the time on screen asks here now, the screen included.
+ */
+fun displayedTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode): Long = when {
+    mode == TimerMode.PHASES && player.isInInterPhasePause -> player.pauseTimeRemainingMs
+    mode == TimerMode.PHASES || mode == TimerMode.CHRONO_COUNTDOWN || mode == TimerMode.CHRONO_COUNTUP -> state.globalTimeMs
+    else -> player.timeRemainingMs
+}
+
 /** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
 fun isUrgentAnnouncement(state: ChessClockState): Boolean =
     state.firstToFlag != null || state.players.any { it.isOutOfTime }
@@ -2159,8 +2173,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         if (!settings.showHundredths) return SLOW_TICK_MS
 
-        val active = _uiState.value.activePlayer ?: return SLOW_TICK_MS
-        val remaining = _uiState.value.players.getOrNull(active - 1)?.timeRemainingMs ?: return SLOW_TICK_MS
+        val state = _uiState.value
+        val active = state.activePlayer ?: return SLOW_TICK_MS
+        val player = state.players.getOrNull(active - 1) ?: return SLOW_TICK_MS
+        val remaining = displayedTimeMs(state, player, getPlayerSettings(active).mode)
         return if (settings.showsHundredthsAt(kotlin.math.abs(remaining))) FAST_TICK_MS else SLOW_TICK_MS
     }
 

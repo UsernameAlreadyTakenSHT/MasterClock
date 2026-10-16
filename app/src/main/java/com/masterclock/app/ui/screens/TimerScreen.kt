@@ -81,9 +81,11 @@ fun TimerScreen(
         state.activePlayer?.let { state.players.getOrNull(it - 1) }
     }
     
-    val secondsLeft = remember(activePlayerState?.timeRemainingMs) {
-        activePlayerState?.let { it.timeRemainingMs / 1000 } ?: -1L
+    val activeMode = state.activePlayer?.let { idx ->
+        (if (settings.differentSettingsPerPlayer) when (idx) { 1 -> settings.p1Custom; 2 -> settings.p2Custom; 3 -> settings.p3Custom; 4 -> settings.p4Custom; else -> settings.main } else settings.main).mode
     }
+    // The time on the active clock's face -- the shared clock in CHRONO and PHASES.
+    val secondsLeft = activePlayerState?.let { p -> activeMode?.let { displayedTimeMs(state, p, it) / 1000 } } ?: -1L
     
     val isGlobalMode = remember(settings.main.mode) {
         settings.main.mode == TimerMode.PHASES
@@ -100,14 +102,12 @@ fun TimerScreen(
         animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
 
-    // The haptic countdown is one more way to read a clock, so Hidden mode does without it.
-    val activeIsHidden = state.activePlayer?.let { idx ->
-        val p = if (settings.differentSettingsPerPlayer) when (idx) { 1 -> settings.p1Custom; 2 -> settings.p2Custom; 3 -> settings.p3Custom; 4 -> settings.p4Custom; else -> settings.main } else settings.main
-        p.mode == TimerMode.HIDDEN
-    } ?: false
+    // The haptic countdown is one more way to read a clock, so Hidden mode does without it; and a
+    // clock counting up has no countdown to give.
+    val noCountdown = activeMode == TimerMode.HIDDEN || activeMode == TimerMode.CHRONO_COUNTUP
 
     LaunchedEffect(secondsLeft, state.activePlayer, state.isPaused) {
-        if (!state.isPaused && !activeIsHidden && secondsLeft in 1L..10L) {
+        if (!state.isPaused && !noCountdown && secondsLeft in 1L..10L) {
             val hapticThreshold = when(settings.hapticCountdownThreshold) {
                 BeepCountdownThreshold.THREE_SEC -> 3L
                 BeepCountdownThreshold.TEN_SEC -> 10L
@@ -368,7 +368,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     
     // Not in Hidden mode: the flash starting at ten seconds would tell the player what ??:?? hides.
     val isHidden = pSettings.mode == TimerMode.HIDDEN
-    val isLowTime = isActive && !isHidden && playerState.timeRemainingMs in 1..10000 && settings.flashOnLowTime
+    // What the face shows, which in CHRONO and PHASES is the shared clock; see displayedTimeMs.
+    val shownTimeMs = displayedTimeMs(state, playerState, pSettings.mode)
+    val isLowTime = isActive && !isHidden && pSettings.mode != TimerMode.CHRONO_COUNTUP && shownTimeMs in 1..10000 && settings.flashOnLowTime
     val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
     val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
 
@@ -415,7 +417,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         playerState.isOutOfTime -> stringResource(R.string.a11y_out_of_time)
         // TalkBack read the exact remaining time while the screen showed ??:??.
         isHidden -> stringResource(R.string.a11y_time_hidden)
-        else -> spokenDurationText(playerState.timeRemainingMs)
+        else -> spokenDurationText(shownTimeMs)
     }
     val a11yLabel = if (isActive) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
@@ -500,7 +502,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     Text(text = text, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 50.sp else 84.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace))
                 }
                 else {
-                    val timeToDisplay = if (isChrono || pSettings.mode == TimerMode.PHASES) (if (playerState.isInInterPhasePause) playerState.pauseTimeRemainingMs else state.globalTimeMs) else playerState.timeRemainingMs
+                    val timeToDisplay = shownTimeMs
                     TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono || pSettings.mode == TimerMode.PHASES) 100.sp else 64.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace), settings = settings, isNegative = playerState.isNegative)
                 }
                 if (playerState.isOutOfTime || playerState.hasFlagged) {
