@@ -1203,6 +1203,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             return
         }
         active.release()
+        shredReplacedMedia(context, note.audioPath, file)
         onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L))
     }
     fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
@@ -1249,7 +1250,7 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success -> if (success) onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) }
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success -> if (success) { shredReplacedMedia(context, note.imagePath, photoFile); onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) } }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
 
     ToolScaffold(title = stringResource(R.string.tools_image_note), onBack = onBack) { padding ->
@@ -1274,7 +1275,7 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // the note tells the two apart. This counter is what does: it changes on every capture, and the
     // player reloads when it does.
     var captureCount by remember { mutableIntStateOf(0) }
-    val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success -> if (success) { captureCount++; onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) } }
+    val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success -> if (success) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) } }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
 
     ToolScaffold(title = stringResource(R.string.tools_video_note), onBack = onBack) { padding ->
@@ -1852,6 +1853,22 @@ fun generateChessPosition(v: ChessVariant): List<String> {
     } else {
         return mutableListOf("R", "N", "B", "Q", "K", "B", "N", "R").apply { shuffle() }
     }
+}
+
+/**
+ * Shreds the media a note pointed at before a retake, when the retake wrote somewhere else.
+ *
+ * A capture always writes under the note's current id. An imported or restored note gets a fresh
+ * id but keeps media named after its old one, so its first retake wrote a new file beside the old
+ * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
+ * of it. Off the main thread, since it may be exactly that video.
+ */
+private fun shredReplacedMedia(context: android.content.Context, oldPath: String?, newFile: File) {
+    if (oldPath == null) return
+    val old = File(oldPath)
+    if (runCatching { old.canonicalPath == newFile.canonicalPath }.getOrDefault(true)) return
+    val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
+    kotlin.concurrent.thread(name = "shred-replaced-media") { shredFile(old, sandboxRoots) }
 }
 
 /**
