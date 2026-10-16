@@ -56,6 +56,7 @@
     <string name="a11y_out_of_time">out of time</string>
     <string name="a11y_no_time_left">no time left</string>
     <string name="a11y_announce_out_of_time">Player %d is out of time</string>
+    <string name="a11y_announce_finished">The game is over</string>
     <string name="a11y_announce_paused">Paused</string>
     <string name="a11y_announce_to_move">Player %d to move</string>
     <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>

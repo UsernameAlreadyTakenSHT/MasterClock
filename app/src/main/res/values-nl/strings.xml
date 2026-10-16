@@ -135,9 +135,11 @@
     <string name="a11y_player_clock">Speler %1$d, %2$s</string>
     <string name="a11y_player_clock_active">Speler %1$d, %2$s, jij bent aan zet</string>
     <string name="a11y_out_of_time">tijd op</string>
+    <string name="a11y_finished">afgelopen</string>
     <string name="a11y_time_hidden">tijd verborgen</string>
     <string name="a11y_no_time_left">geen tijd meer</string>
     <string name="a11y_announce_out_of_time">Speler %d heeft geen tijd meer</string>
+    <string name="a11y_announce_finished">De partij is afgelopen</string>
     <string name="a11y_announce_paused">Gepauzeerd</string>
     <string name="a11y_announce_to_move">Speler %d is aan zet</string>
     <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
@@ -541,6 +543,7 @@
     <string name="timer_moves">ZETTEN: %d</string>
     <string name="timer_delay">VERTRAGING: %s</string>
     <string name="timer_flagged">GEVALLEN</string>
+    <string name="timer_finished">AFGELOPEN</string>
     <string name="timer_period_flag">EINDE PERIODE</string>
     <string name="timer_reflect">BEDENKEN</string>
     <string name="timer_move_alert">ZET!</string>

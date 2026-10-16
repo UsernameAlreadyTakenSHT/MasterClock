@@ -40,6 +40,9 @@ fun clockAnnouncementText(announcement: ClockAnnouncement): String = when (annou
     is ClockAnnouncement.OutOfTime ->
         stringResource(R.string.a11y_announce_out_of_time, announcement.playerIndex)
 
+    // Only a PHASES game finishes, and paper has no PHASES; here because the `when` must be total.
+    ClockAnnouncement.Finished -> stringResource(R.string.a11y_announce_finished)
+
     ClockAnnouncement.Paused -> stringResource(R.string.a11y_announce_paused)
 
     is ClockAnnouncement.ToMove -> {

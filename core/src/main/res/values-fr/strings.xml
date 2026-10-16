@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="voice_time_up">Temps écoulé pour le joueur %1$d</string>
+    <string name="voice_finished">Fin</string>
     <string name="voice_one_minute_left">Plus qu\'une minute</string>
     <string name="voice_thirty_seconds_left">Plus que trente secondes</string>
     <string name="voice_ten_seconds_left">Plus que dix secondes</string>

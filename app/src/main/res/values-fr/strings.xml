@@ -141,9 +141,11 @@
     <string name="a11y_player_clock">Joueur %1$d, %2$s</string>
     <string name="a11y_player_clock_active">Joueur %1$d, %2$s, à vous de jouer</string>
     <string name="a11y_out_of_time">temps écoulé</string>
+    <string name="a11y_finished">terminé</string>
     <string name="a11y_time_hidden">temps caché</string>
     <string name="a11y_no_time_left">plus de temps</string>
     <string name="a11y_announce_out_of_time">Le joueur %d n\'a plus de temps</string>
+    <string name="a11y_announce_finished">La partie est terminée</string>
     <string name="a11y_announce_paused">En pause</string>
     <string name="a11y_announce_to_move">Au joueur %d de jouer</string>
     <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
@@ -566,6 +568,7 @@
     <string name="timer_moves">COUPS : %d</string>
     <string name="timer_delay">DÉLAI : %s</string>
     <string name="timer_flagged">TOMBÉ</string>
+    <string name="timer_finished">TERMINÉ</string>
     <string name="timer_period_flag">PÉRIODE ÉCOULÉE</string>
     <string name="timer_reflect">RÉFLEXION</string>
     <string name="timer_move_alert">JOUEZ !</string>

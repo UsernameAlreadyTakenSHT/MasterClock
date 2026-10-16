@@ -62,6 +62,7 @@
     <string name="a11y_out_of_time">tijd op</string>
     <string name="a11y_no_time_left">geen tijd meer</string>
     <string name="a11y_announce_out_of_time">Speler %d heeft geen tijd meer</string>
+    <string name="a11y_announce_finished">De partij is afgelopen</string>
     <string name="a11y_announce_paused">Gepauzeerd</string>
     <string name="a11y_announce_to_move">Speler %d is aan zet</string>
     <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>

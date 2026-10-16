@@ -380,7 +380,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val reflectionColor = Color(settings.reflectionColor)
 
     val backgroundColor by animateColorAsState(
-        targetValue = when { 
+        targetValue = when {
+            // Over, but lost by nobody: not the loss colour. See ChessClockState.phasesFinished.
+            state.phasesFinished -> inactiveColor
             playerState.isOutOfTime -> if (settings.flagBehavior == FlagBehavior.FLAG) (if (state.firstToFlag == playerIndex) lossColor else if (isActive) activeColor else inactiveColor) else lossColor
             playerState.hasFlagged -> if (isActive) activeColor else inactiveColor
             // Turn-based Gong: only the player whose turn it is shows reflect/move color, everyone
@@ -414,6 +416,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     // Hoisted: the semantics lambda is not composable scope.
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
     val spokenTime = when {
+        state.phasesFinished -> stringResource(R.string.a11y_finished)
         playerState.isOutOfTime -> stringResource(R.string.a11y_out_of_time)
         // TalkBack read the exact remaining time while the screen showed ??:??.
         isHidden -> stringResource(R.string.a11y_time_hidden)
@@ -507,7 +510,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     val timeToDisplay = shownTimeMs
                     TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono || pSettings.mode == TimerMode.PHASES) 100.sp else 64.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace), settings = settings, isNegative = playerState.isNegative)
                 }
-                if (playerState.isOutOfTime || playerState.hasFlagged) {
+                if (state.phasesFinished) {
+                    Text(stringResource(R.string.timer_finished), style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = labelColor, fontWeight = FontWeight.ExtraBold)
+                } else if (playerState.isOutOfTime || playerState.hasFlagged) {
                     val flagText = if (pSettings.mode == TimerMode.FIDE_PERIODS && playerState.timeRemainingMs > 0) stringResource(R.string.timer_period_flag) else stringResource(R.string.timer_flagged)
                     Text(flagText, style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = alertTextColor, fontWeight = FontWeight.ExtraBold)
                 } else {

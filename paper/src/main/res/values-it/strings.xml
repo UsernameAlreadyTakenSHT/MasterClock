@@ -61,6 +61,7 @@
     <string name="a11y_out_of_time">tempo esaurito</string>
     <string name="a11y_no_time_left">tempo finito</string>
     <string name="a11y_announce_out_of_time">Il giocatore %d ha esaurito il tempo</string>
+    <string name="a11y_announce_finished">La partita è terminata</string>
     <string name="a11y_announce_paused">In pausa</string>
     <string name="a11y_announce_to_move">Tocca al giocatore %d</string>
     <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>

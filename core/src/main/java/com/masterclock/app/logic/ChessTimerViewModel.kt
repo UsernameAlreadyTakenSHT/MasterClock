@@ -56,6 +56,9 @@ data class ChessClockStateProxy(
     // zero, so Bronstein credited only what was spent after the interruption -- and the logged
     // time for that move lost everything before it.
     val moveElapsedMs: Long = 0,
+    // See ChessClockState.phasesFinished. False in snapshots older than the field: a finished
+    // PHASES game saved by them comes back reading as flagged, as it did when it was saved.
+    val phasesFinished: Boolean = false,
 )
 
 fun PlayerState.toProxy() = PlayerStateProxy(
@@ -73,11 +76,13 @@ fun PlayerStateProxy.toState() = PlayerState(
 )
 
 fun ChessClockState.toProxy() = ChessClockStateProxy(
-    players.map { it.toProxy() }, activePlayer, isPaused, cycleCount, globalTimeMs, isArbitreMode, firstToFlag
+    players.map { it.toProxy() }, activePlayer, isPaused, cycleCount, globalTimeMs, isArbitreMode, firstToFlag,
+    phasesFinished = phasesFinished,
 )
 
 fun ChessClockStateProxy.toState() = ChessClockState(
-    players.map { it.toState() }, activePlayer, isPaused, cycleCount, globalTimeMs, isArbitreMode, firstToFlag
+    players.map { it.toState() }, activePlayer, isPaused, cycleCount, globalTimeMs, isArbitreMode, firstToFlag,
+    phasesFinished = phasesFinished,
 )
 
 @Serializable
@@ -98,6 +103,8 @@ enum class TimerMode {
  */
 sealed interface ClockAnnouncement {
     data class OutOfTime(val playerIndex: Int) : ClockAnnouncement
+    /** A PHASES game run to its end with no flag on its last phase; see [ChessClockState.phasesFinished]. */
+    data object Finished : ClockAnnouncement
     data object Paused : ClockAnnouncement
     /** [byoyomiPeriodsRemaining] is null outside byoyomi, and 0 when in it but out of periods. */
     data class ToMove(val playerIndex: Int, val byoyomiPeriodsRemaining: Int?) : ClockAnnouncement
@@ -111,7 +118,39 @@ sealed interface ClockAnnouncement {
  * changes, so including the countdown would make the reader recite the seconds and drown out
  * everything else.
  */
+/**
+ * Moves [playerIndex] on to the next of [phases], or ends the game after the last one unless
+ * [loop]. Running out of phases is a finish, not a flag: it sets [ChessClockState.phasesFinished].
+ * A phase that flags on its own end never gets here -- startPhaseTransition stops the game first.
+ */
+internal fun nextPhaseState(state: ChessClockState, playerIndex: Int, phases: List<GamePhase>, loop: Boolean): ChessClockState {
+    val p = state.players[playerIndex - 1]
+    // With no phases at all there is nothing to advance to, and the loop branch below would
+    // otherwise send phases[0] into an empty list. Settings are persisted, so a crafted import
+    // reaching here once would crash the clock on every launch after it. Not a finish: there was
+    // no game to finish.
+    if (phases.isEmpty()) {
+        val newList = state.players.toMutableList()
+            .apply { this[playerIndex - 1] = p.copy(isOutOfTime = true, timeRemainingMs = 0) }
+        return state.copy(players = newList, globalTimeMs = 0)
+    }
+    var nextIdx = p.currentPhaseIndex + 1
+    if (nextIdx >= phases.size) {
+        nextIdx = if (loop) {
+            0
+        } else {
+            val newList = state.players.toMutableList().apply { this[playerIndex - 1] = p.copy(isOutOfTime = true, timeRemainingMs = 0) }
+            return state.copy(players = newList, globalTimeMs = 0, phasesFinished = true)
+        }
+    }
+    val nextPhase = phases[nextIdx]
+    val advancedPlayer = p.copy(currentPhaseIndex = nextIdx, timeRemainingMs = nextPhase.timeMs, isOutOfTime = false, isInInterPhasePause = false)
+    val newList = state.players.toMutableList().apply { this[playerIndex - 1] = advancedPlayer }
+    return state.copy(players = newList, globalTimeMs = nextPhase.timeMs, phasesFinished = false)
+}
+
 fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
+    if (state.phasesFinished) return ClockAnnouncement.Finished
     val flagged = state.firstToFlag
         ?: state.players.indexOfFirst { it.isOutOfTime }.takeIf { it >= 0 }?.plus(1)
     if (flagged != null) return ClockAnnouncement.OutOfTime(flagged)
@@ -748,7 +787,14 @@ data class ChessClockState(
     val cycleCount: Int = 1,
     val globalTimeMs: Long = 0,
     val isArbitreMode: Boolean = false,
-    val firstToFlag: Int? = null
+    val firstToFlag: Int? = null,
+    /**
+     * A PHASES game that ran through its last phase, with no flag set on that phase: it is over,
+     * but nobody lost. Player 1 is still marked out of time, so everything that stops a finished
+     * game stops this one; this only changes what the game is called. It read "FLAGGED" in loss
+     * colour and the voice said time was up, which is what [GamePhase.flagOnEnd] is there to mean.
+     */
+    val phasesFinished: Boolean = false,
 )
 
 /**
@@ -2166,8 +2212,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // A tap during the pause between phases skips it. It went to startPhaseTransition,
                 // which starts the pause -- so a tap with five seconds of it left put it back to
                 // its full length, and the pause could never be skipped at all.
-                p1.isInInterPhasePause -> _uiState.update { st -> performPhaseAdvance(st, 1).also { onPhaseTransition(st.players[0], it.players[0]) } }
-                p1.isOutOfTime || settings.value.allowPhaseSkip -> _uiState.update { st -> startPhaseTransition(st).also { onPhaseTransition(st.players[0], it.players[0]) } }
+                p1.isInInterPhasePause -> _uiState.update { st -> performPhaseAdvance(st, 1).also { onPhaseTransition(st.players[0], it) } }
+                p1.isOutOfTime || settings.value.allowPhaseSkip -> _uiState.update { st -> startPhaseTransition(st).also { onPhaseTransition(st.players[0], it) } }
             }
             return
         }
@@ -2326,7 +2372,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 val p1 = state.players[0]
                 if (p1.isInInterPhasePause) {
                     val newPause = (p1.pauseTimeRemainingMs - delta).coerceAtLeast(0)
-                    if (newPause <= 0) return@update performPhaseAdvance(state, 1).also { onPhaseTransition(p1, it.players[0]) }
+                    if (newPause <= 0) return@update performPhaseAdvance(state, 1).also { onPhaseTransition(p1, it) }
                     return@update state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = newPause) })
                 }
                 if (p1.isOutOfTime) {
@@ -2339,7 +2385,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
                 val newGlobal = (state.globalTimeMs - delta).coerceAtLeast(0)
                 if (newGlobal <= 0 && currentPhase.autoAdvance) {
-                    return@update startPhaseTransition(state).also { onPhaseTransition(p1, it.players[0]) }
+                    return@update startPhaseTransition(state).also { onPhaseTransition(p1, it) }
                 }
                 val newP1 = p1.copy(isOutOfTime = newGlobal <= 0)
                 handleAudio(p1.copy(timeRemainingMs = state.globalTimeMs), newP1.copy(timeRemainingMs = newGlobal), settings, 1)
@@ -2410,13 +2456,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * states of the same phase. Now: the end of the game sounds and is logged like any flag; the
      * start of a pause between phases sounds the gong; and a new phase sounds the gong (unless a
      * pause already did) and has its name spoken.
+     *
+     * A game that ran out of phases rather than flagged ([ChessClockState.phasesFinished]) sounds
+     * and is logged the same, but the voice says it is over instead of that time is up.
      */
-    private fun onPhaseTransition(before: PlayerState, after: PlayerState) {
+    private fun onPhaseTransition(before: PlayerState, afterState: ChessClockState) {
         val settings = _settings.value
+        val after = afterState.players[0]
         when {
             after.isOutOfTime -> if (!before.isOutOfTime) {
                 handleAudio(before, after, settings, 1)
-                handleVoice(before, after, settings, 1)
+                if (!afterState.phasesFinished) handleVoice(before, after, settings, 1)
+                else if (settings.voiceAnnouncementsEnabled) voiceManager.speak(CoreR.string.voice_finished, settings.voiceVolume)
             }
             after.isInInterPhasePause -> if (!before.isInInterPhasePause) soundManager.playGong()
             else -> {
@@ -2824,31 +2875,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         return performPhaseAdvance(state, 1)
     }
 
-    private fun performPhaseAdvance(state: ChessClockState, playerIndex: Int): ChessClockState {
-        val s = getPlayerSettings(playerIndex)
-        val p = state.players[playerIndex - 1]
-        // With no phases at all there is nothing to advance to, and the loopPhases branch below
-        // would otherwise send phases[0] into an empty list. Settings are persisted, so a crafted
-        // import reaching here once would crash the clock on every launch after it.
-        if (s.phases.isEmpty()) {
-            val newList = state.players.toMutableList()
-                .apply { this[playerIndex - 1] = p.copy(isOutOfTime = true, timeRemainingMs = 0) }
-            return state.copy(players = newList, globalTimeMs = 0)
-        }
-        var nextIdx = p.currentPhaseIndex + 1
-        if (nextIdx >= s.phases.size) {
-            nextIdx = if (settings.value.loopPhases) {
-                0
-            } else {
-                val newList = state.players.toMutableList().apply { this[playerIndex - 1] = p.copy(isOutOfTime = true, timeRemainingMs = 0) }
-                return state.copy(players = newList, globalTimeMs = 0)
-            }
-        }
-        val nextPhase = s.phases[nextIdx]
-        val advancedPlayer = p.copy(currentPhaseIndex = nextIdx, timeRemainingMs = nextPhase.timeMs, isOutOfTime = false, isInInterPhasePause = false)
-        val newList = state.players.toMutableList().apply { this[playerIndex - 1] = advancedPlayer }
-        return state.copy(players = newList, globalTimeMs = nextPhase.timeMs)
-    }
+    private fun performPhaseAdvance(state: ChessClockState, playerIndex: Int): ChessClockState =
+        nextPhaseState(state, playerIndex, getPlayerSettings(playerIndex).phases, settings.value.loopPhases)
 
     fun advancePhase(playerIndex: Int) { _uiState.update { performPhaseAdvance(it, playerIndex) } }
 

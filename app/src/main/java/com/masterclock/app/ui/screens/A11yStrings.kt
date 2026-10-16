@@ -45,6 +45,8 @@ fun clockAnnouncementText(announcement: ClockAnnouncement): String = when (annou
     is ClockAnnouncement.OutOfTime ->
         stringResource(R.string.a11y_announce_out_of_time, announcement.playerIndex)
 
+    ClockAnnouncement.Finished -> stringResource(R.string.a11y_announce_finished)
+
     ClockAnnouncement.Paused -> stringResource(R.string.a11y_announce_paused)
 
     is ClockAnnouncement.ToMove -> {
