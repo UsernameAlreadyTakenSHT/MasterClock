@@ -469,7 +469,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                         }
                         pSettings.mode == TimerMode.FIDE_PERIODS -> {
                             val currentP = pSettings.fidePeriods.getOrNull(playerState.currentPeriodIndex)
-                            val info = if (settings.forcedMoveCounter && currentP != null) stringResource(R.string.timer_moves, currentP.movesToNext - playerState.moveCount) else "PERIOD: ${playerState.currentPeriodIndex + 1}/${pSettings.fidePeriods.size}"
+                            // Moves left to the next period while there is one. The last period has no
+                            // move target (movesToNext is 0), and counting down to it read "MOVES: -41".
+                            val info = if (settings.forcedMoveCounter && currentP != null && currentP.movesToNext > 0) stringResource(R.string.timer_moves, currentP.movesToNext - playerState.moveCount) else "PERIOD: ${playerState.currentPeriodIndex + 1}/${pSettings.fidePeriods.size}"
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {

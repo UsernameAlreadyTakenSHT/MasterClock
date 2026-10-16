@@ -201,7 +201,9 @@ class ChessTimerLogicTest {
         val next = computePostMoveState(state, 1, 0, settings, s)
         assertEquals(1, next.players[0].currentPeriodIndex)
         assertEquals(15_000, next.players[0].timeRemainingMs)
-        assertTrue(next.players[0].hasFlagged)
+        // Reaching the move count is the normal end of a period, not a flag -- this used to assert
+        // the opposite, and the screen showed PERIOD FLAG for the rest of the game.
+        assertFalse(next.players[0].hasFlagged)
     }
 
     @Test

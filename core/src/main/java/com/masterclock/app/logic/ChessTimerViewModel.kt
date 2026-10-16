@@ -1593,7 +1593,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             val currentPeriod = s.fidePeriods.getOrNull(p.currentPeriodIndex) ?: FidePeriod()
             var nextTime = p.timeRemainingMs
             var periodIdx = p.currentPeriodIndex
-            var flagged = p.hasFlagged
+            val flagged = p.hasFlagged
             var activePeriod = currentPeriod
             if (currentPeriod.isFischer) nextTime += currentPeriod.incrementMs
             if (settings.forcedMoveCounter && currentPeriod.movesToNext > 0 && tempP.moveCount >= currentPeriod.movesToNext && p.currentPeriodIndex < s.fidePeriods.size - 1) {
@@ -1601,7 +1601,10 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
                 val nextPeriod = s.fidePeriods[nextIdx]
                 nextTime += nextPeriod.timeMs
                 periodIdx = nextIdx
-                flagged = true
+                // Not a flag: reaching the move count is how a period is meant to end. Setting
+                // hasFlagged here put a red PERIOD FLAG under the clock of everyone who reached
+                // move 40 with time to spare, for the rest of the game. Without the move counter
+                // a period ends by running out, and tickPlayer still marks that one.
                 activePeriod = nextPeriod
             }
             // Non-Fischer periods can optionally carry a per-move delay (US Chess Delay-style), reusing the
