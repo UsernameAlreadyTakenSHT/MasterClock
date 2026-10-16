@@ -620,7 +620,10 @@ class MainActivity : ComponentActivity() {
             }
             context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_settings)))
         } catch (e: Exception) {
+            // Logged and nothing else, so a failed share -- the cache unwritable, no app able to
+            // take the file -- looked exactly like a tap that did nothing.
             Log.e("MainActivity", "Failed to share settings", e)
+            Toast.makeText(context, context.getString(R.string.toast_export_failed), Toast.LENGTH_SHORT).show()
         }
     }
 }
