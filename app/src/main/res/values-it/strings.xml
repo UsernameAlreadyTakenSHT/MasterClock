@@ -133,6 +133,7 @@
     <string name="a11y_player_clock">Giocatore %1$d, %2$s</string>
     <string name="a11y_player_clock_active">Giocatore %1$d, %2$s, tocca a te</string>
     <string name="a11y_out_of_time">tempo esaurito</string>
+    <string name="a11y_time_hidden">tempo nascosto</string>
     <string name="a11y_no_time_left">tempo finito</string>
     <string name="a11y_announce_out_of_time">Il giocatore %d ha esaurito il tempo</string>
     <string name="a11y_announce_paused">In pausa</string>

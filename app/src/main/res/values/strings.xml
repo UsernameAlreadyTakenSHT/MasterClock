@@ -157,6 +157,7 @@
     <string name="a11y_player_clock">Player %1$d, %2$s</string>
     <string name="a11y_player_clock_active">Player %1$d, %2$s, your turn</string>
     <string name="a11y_out_of_time">out of time</string>
+    <string name="a11y_time_hidden">time hidden</string>
     <string name="a11y_no_time_left">no time left</string>
     <string name="a11y_announce_out_of_time">Player %d is out of time</string>
     <string name="a11y_announce_paused">Paused</string>

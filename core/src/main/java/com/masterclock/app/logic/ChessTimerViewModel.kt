@@ -2052,6 +2052,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             return
         }
 
+        // Hidden mode hides the clock, and a countdown beep in the last seconds says exactly what
+        // the screen withholds. The flag above is shown on screen anyway, so it still sounds.
+        if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN) return
+
         val seconds = newState.timeRemainingMs / 1000
         if (seconds != lastBeepSecond) {
             // Audio Beep
@@ -2078,9 +2082,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             return
         }
 
-        // 2. Thresholds (1m, 30s, 10s)
+        // 2. Thresholds (1m, 30s, 10s) -- never in Hidden mode, where "1 minute remaining" is the
+        // very thing the clock face replaces with ??:??.
         val time = newState.timeRemainingMs
-        val thresholds = listOf(60000L, 30000L, 10000L)
+        val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN) emptyList() else listOf(60000L, 30000L, 10000L)
         for (t in thresholds) {
             if (oldState.timeRemainingMs > t && time <= t) {
                 val lastT = lastAnnouncedThreshold[playerIdx] ?: 0L

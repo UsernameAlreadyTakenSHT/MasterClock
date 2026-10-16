@@ -100,8 +100,14 @@ fun TimerScreen(
         animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
 
+    // The haptic countdown is one more way to read a clock, so Hidden mode does without it.
+    val activeIsHidden = state.activePlayer?.let { idx ->
+        val p = if (settings.differentSettingsPerPlayer) when (idx) { 1 -> settings.p1Custom; 2 -> settings.p2Custom; 3 -> settings.p3Custom; 4 -> settings.p4Custom; else -> settings.main } else settings.main
+        p.mode == TimerMode.HIDDEN
+    } ?: false
+
     LaunchedEffect(secondsLeft, state.activePlayer, state.isPaused) {
-        if (!state.isPaused && secondsLeft in 1L..10L) {
+        if (!state.isPaused && !activeIsHidden && secondsLeft in 1L..10L) {
             val hapticThreshold = when(settings.hapticCountdownThreshold) {
                 BeepCountdownThreshold.THREE_SEC -> 3L
                 BeepCountdownThreshold.TEN_SEC -> 10L
@@ -360,7 +366,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val isMoveCounts = pSettings.mode.name.startsWith("MOVE_COUNTS")
     val isGong = pSettings.mode == TimerMode.GONG
     
-    val isLowTime = isActive && playerState.timeRemainingMs in 1..10000 && settings.flashOnLowTime
+    // Not in Hidden mode: the flash starting at ten seconds would tell the player what ??:?? hides.
+    val isHidden = pSettings.mode == TimerMode.HIDDEN
+    val isLowTime = isActive && !isHidden && playerState.timeRemainingMs in 1..10000 && settings.flashOnLowTime
     val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
     val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
 
@@ -403,9 +411,12 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
 
     // Hoisted: the semantics lambda is not composable scope.
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
-    val spokenTime = if (playerState.isOutOfTime) {
-        stringResource(R.string.a11y_out_of_time)
-    } else spokenDurationText(playerState.timeRemainingMs)
+    val spokenTime = when {
+        playerState.isOutOfTime -> stringResource(R.string.a11y_out_of_time)
+        // TalkBack read the exact remaining time while the screen showed ??:??.
+        isHidden -> stringResource(R.string.a11y_time_hidden)
+        else -> spokenDurationText(playerState.timeRemainingMs)
+    }
     val a11yLabel = if (isActive) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)

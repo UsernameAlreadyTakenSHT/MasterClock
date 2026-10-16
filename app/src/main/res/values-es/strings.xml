@@ -134,6 +134,7 @@
     <string name="a11y_player_clock">Jugador %1$d, %2$s</string>
     <string name="a11y_player_clock_active">Jugador %1$d, %2$s, te toca</string>
     <string name="a11y_out_of_time">sin tiempo</string>
+    <string name="a11y_time_hidden">tiempo oculto</string>
     <string name="a11y_no_time_left">no queda tiempo</string>
     <string name="a11y_announce_out_of_time">El jugador %d se ha quedado sin tiempo</string>
     <string name="a11y_announce_paused">En pausa</string>
