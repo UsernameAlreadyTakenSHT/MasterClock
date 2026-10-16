@@ -2249,7 +2249,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         @Suppress("NAME_SHADOWING")
         val newSettings = if (isImport) {
             sanitizeImportedSettings(getApplication(), newSettings).let { imported ->
-                imported.copy(notebookNotes = mergeImportedNotes(oldSettings.notebookNotes, imported.notebookNotes))
+                imported.copy(
+                    notebookNotes = mergeImportedNotes(oldSettings.notebookNotes, imported.notebookNotes),
+                    // How much history to keep decides what is deleted from this device, so it is
+                    // this device's choice. Taken from the file, a friend's configuration with a
+                    // limit of 10 trimmed hundreds of the user's own games to ten -- at once when
+                    // the file carried logs, otherwise at the end of the next game.
+                    logHistoryLimit = oldSettings.logHistoryLimit,
+                    logDurationLimit = oldSettings.logDurationLimit,
+                )
             }
         } else newSettings
         _settings.value = newSettings
