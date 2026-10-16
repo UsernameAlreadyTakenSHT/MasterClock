@@ -1482,7 +1482,20 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private sealed interface HistoryWrite {
         class Store(val log: GameLog) : HistoryWrite
         class Finish(val limit: Int, val durationLimit: LogDurationLimit, val finishedLogId: String, val discard: Boolean = false) : HistoryWrite
+        // The saved clock goes through the same queue so that a save and a clear land in the
+        // order they were asked for; see savedClockGeneration.
+        class SaveClock(val entity: com.masterclock.app.data.SavedClockEntity) : HistoryWrite
+        object ClearClock : HistoryWrite
     }
+
+    /**
+     * Bumped whenever the saved clock is cleared, so that an autosave taken before the clear is
+     * dropped instead of written after it. The autosave encodes off the main thread, and a Reset
+     * landing in that window used to clear the clock first and then have the stale snapshot
+     * written over the clear -- "Resume" came back for the game just reset. Read and written on
+     * the main thread only.
+     */
+    private var savedClockGeneration = 0
     private val historyWrites = Channel<HistoryWrite>(Channel.UNLIMITED)
 
     private val _hasSavedClock = MutableStateFlow(false)
@@ -2224,10 +2237,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // cleared it, so the arbitre overlay went on offering "Resume" for a game that had been
         // reset -- indefinitely, and long after its snapshot had stopped resembling anything the
         // user would recognise.
-        viewModelScope.launch {
-            gameDao.clearSavedClock()
-            _hasSavedClock.value = false
-        }
+        clearSavedClock()
         finishCurrentLog()
         lastAnnouncedThreshold.clear()
         _uiState.update { createInitialState(_settings.value, reuseRandomRoll = true) }
@@ -2264,6 +2274,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             is HistoryWrite.Store -> {
                 val entity = withContext(Dispatchers.Default) { converters.fromGameLog(write.log) }
                 gameDao.insertLog(entity)
+            }
+            is HistoryWrite.SaveClock -> {
+                gameDao.saveClock(write.entity)
+                _hasSavedClock.value = true
+            }
+            HistoryWrite.ClearClock -> {
+                gameDao.clearSavedClock()
+                _hasSavedClock.value = false
             }
             is HistoryWrite.Finish -> {
                 if (write.discard) gameDao.deleteLog(write.finishedLogId)
@@ -2515,6 +2533,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val moveElapsed = if (uiState.value.activePlayer != null) (SystemClock.elapsedRealtime() - moveStartTime).coerceAtLeast(0) else 0L
         val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed)
 
+        val generation = savedClockGeneration
         viewModelScope.launch {
             val entity = withContext(Dispatchers.Default) {
                 com.masterclock.app.data.SavedClockEntity(
@@ -2522,9 +2541,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     stateJson = json.encodeToString(ChessClockStateProxy.serializer(), stateSnapshot),
                 )
             }
-            gameDao.saveClock(entity)
-            _hasSavedClock.value = true
+            // Back on the main thread: a clear since the snapshot was taken means this game was
+            // reset or resumed while it encoded, and the snapshot no longer belongs anywhere.
+            if (generation == savedClockGeneration) historyWrites.trySend(HistoryWrite.SaveClock(entity))
         }
+    }
+
+    private fun clearSavedClock() {
+        savedClockGeneration++
+        historyWrites.trySend(HistoryWrite.ClearClock)
     }
 
     fun resumeSavedClock() {
@@ -2580,12 +2605,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 moveStartTime = now - resumed.second.moveElapsedMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS)
                 _uiState.value = resumed.second.toState().copy(isPaused = true)
 
-                gameDao.clearSavedClock()
-                _hasSavedClock.value = false
+                clearSavedClock()
             } catch (e: Exception) {
                 Log.w("ChessTimerViewModel", "Failed to resume saved clock, discarding it", e)
-                gameDao.clearSavedClock()
-                _hasSavedClock.value = false
+                clearSavedClock()
             }
         }
     }
