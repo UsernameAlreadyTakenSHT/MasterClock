@@ -1455,7 +1455,11 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
             val outGlobal = newGlobalTime <= 0
             val newPlayers = state.players.mapIndexed { idx, p ->
                 if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, isNegative = moveNeg, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
-                else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = outGlobal)
+                // A player keeps the flag their own move clock earned. This used to be the pool's
+                // state alone, so whoever ran out of move time was "back" as soon as someone else
+                // was on the clock -- under FLAG with three or four players no elimination stuck,
+                // and the game could never reach its last player.
+                else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = p.isOutOfTime || outGlobal)
             }
             return CoupledTick(
                 state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && (outMove || outGlobal)),

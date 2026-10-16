@@ -451,6 +451,20 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `MOVE_TIMER_GLOBAL_SHARED keeps an inactive player's own flag`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(numberOfPlayers = 3, main = s, flagBehavior = FlagBehavior.FLAG)
+        val players = listOf(
+            PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 600_000),
+            PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 600_000, isOutOfTime = true),
+            PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 600_000),
+        )
+        val next = tickCoupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings, s, 1)!!.state
+        assertTrue(next.players[1].isOutOfTime)
+        assertFalse(next.players[2].isOutOfTime)
+    }
+
+    @Test
     fun `CHRONO_COUNTDOWN runs the one shared clock and freezes the game when it ends`() {
         val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.CHRONO_COUNTDOWN), flagBehavior = FlagBehavior.FREEZE)
         val state = ChessClockState(players = listOf(PlayerState(0), PlayerState(0)), activePlayer = 1, globalTimeMs = 500)
