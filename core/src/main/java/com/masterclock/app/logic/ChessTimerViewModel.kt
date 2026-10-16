@@ -1479,7 +1479,23 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         return withContext(Dispatchers.Default) { entities.map { converters.toGameLog(it) } }
     }
 
-    /** Set once the init block below has finished; see [applyShortcut]. */
+    /**
+     * True once everything a screen can change has been read back: settings, presets, scoreboard,
+     * and whether a clock is saved. Both activities show nothing interactive before it.
+     *
+     * The screens used to be live on default settings for as long as the load took, and every
+     * tap in that window acted on the defaults and was then lost or worse when the load landed
+     * on top of it: the arbitre panel opened and shut again; a press started a game the load
+     * wiped, while its log lived on and claimed the next game; a settings change was written to
+     * disk built on the defaults; and saving a preset stored a list of one over every preset the
+     * user had, since the list had not been read yet. The game history comes after this flag --
+     * it can be large, nothing on the clock screen waits for it, and the screens that show it fill
+     * in when it arrives.
+     */
+    private val _isReady = MutableStateFlow(false)
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
+
+    /** Set once the init block below has finished, history included; see [applyShortcut]. */
     private var isLoaded = false
     private var pendingShortcutId: String? = null
 
@@ -1520,14 +1536,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         viewModelScope.launch {
-            val storedSettings = settingsRepo.settingsFlow.first()
             // DataStore is where an import writes, so what comes back out of it is exactly as
             // untrusted as what went in -- and until now nothing looked at it again on the way
             // back. Anything a pre-0.8.29 import left behind is repaired here, once, and written
             // back so the repair sticks and so the next export carries the repaired values rather
-            // than the poisoned ones. Decoding and checking both happen off the main thread.
-            val savedSettings = withContext(Dispatchers.Default) {
-                sanitizeStoredSettings(getApplication(), storedSettings)
+            // than the poisoned ones. Decoding and checking both happen off the main thread: the
+            // decode is settingsFlow's map, which runs in whatever context collects it, so reading
+            // it from viewModelScope parsed the whole notebook on the UI thread at every launch.
+            val (storedSettings, savedSettings) = withContext(Dispatchers.Default) {
+                val stored = settingsRepo.settingsFlow.first()
+                stored to sanitizeStoredSettings(getApplication(), stored)
             }
             if (savedSettings != storedSettings) {
                 Log.i("ChessTimerViewModel", "Repaired stored settings that failed validation")
@@ -1539,11 +1557,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // Sanitised like an import: it is the same shape of data, and a backup restore is what
             // usually put it there.
             _scoreboard.value = sanitizeImportedScoreboard(settingsRepo.scoreboardFlow.first())
-
-            _gameHistory.value = loadHistory(savedSettings.logHistoryLimit)
-
             _hasSavedClock.value = gameDao.getSavedClock() != null
             _customPresets.value = settingsRepo.customPresetsFlow.first()
+            _isReady.value = true
+
+            _gameHistory.value = loadHistory(savedSettings.logHistoryLimit)
 
             isLoaded = true
             pendingShortcutId?.let { id ->

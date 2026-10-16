@@ -80,6 +80,7 @@ class MainActivity : ComponentActivity() {
             val settings by timerViewModel.settings.collectAsState()
             val gameHistory by timerViewModel.gameHistory.collectAsState()
             val customPresets by timerViewModel.customPresets.collectAsState()
+            val isReady by timerViewModel.isReady.collectAsState()
             val json = remember { Json { ignoreUnknownKeys = true } }
             val context = LocalContext.current
             // Hoisted: these fire from document-picker callbacks, outside composable scope.
@@ -507,10 +508,13 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    NavDisplay(
-                        entries = navigationState.toEntries(entryProvider),
-                        onBack = { navigator.goBack() }
-                    )
+                    // Nothing to tap until the stored state is in; see ChessTimerViewModel.isReady.
+                    if (isReady) {
+                        NavDisplay(
+                            entries = navigationState.toEntries(entryProvider),
+                            onBack = { navigator.goBack() }
+                        )
+                    }
 
                     // Outside the scanner's navigation entry on purpose: the screen is left as soon
                     // as a code is read, so a dialog belonging to it would be torn down with it.

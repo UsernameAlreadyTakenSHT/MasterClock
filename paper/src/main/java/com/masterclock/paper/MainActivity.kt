@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val timerViewModel: ChessTimerViewModel = viewModel()
             val settings by timerViewModel.settings.collectAsState()
+            val isReady by timerViewModel.isReady.collectAsState()
             val context = LocalContext.current
 
             // Force Screen Awake, Brightness & Fullscreen logic
@@ -138,10 +139,13 @@ class MainActivity : ComponentActivity() {
                         // Missing screens in :paper module are commented out for now to allow building
                     }
 
-                    NavDisplay(
-                        entries = navigationState.toEntries(entryProvider),
-                        onBack = { navigator.goBack() }
-                    )
+                    // Nothing to tap until the stored state is in; see ChessTimerViewModel.isReady.
+                    if (isReady) {
+                        NavDisplay(
+                            entries = navigationState.toEntries(entryProvider),
+                            onBack = { navigator.goBack() }
+                        )
+                    }
                 }
             }
         }
