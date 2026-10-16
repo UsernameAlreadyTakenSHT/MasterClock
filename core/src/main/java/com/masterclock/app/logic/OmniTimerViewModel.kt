@@ -410,7 +410,12 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                     val state = _omniState.value
                     if (!state.isRunning) break
 
-                    val needsFastTick = state.currentTurnTimeMs < 10_000 || state.currentPhaseTimeMs < 10_000
+                    // The fast tick is for a clock in its last ten seconds. A clock frozen at zero,
+                    // waiting for Next, has nothing left to show -- with no cutoff that is the
+                    // normal end of a turn, and it held the ticker at 100 frames a second until
+                    // someone tapped. The phase clock only counts when it is in use.
+                    val needsFastTick = state.currentTurnTimeMs in 1 until 10_000 ||
+                        (settings.usePhaseClock && state.currentPhaseTimeMs in 1 until 10_000)
                     val delayMs = if (needsFastTick) 10L else 100L
 
                     delay(delayMs.milliseconds)
