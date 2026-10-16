@@ -2205,7 +2205,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         return true
     }
 
-    fun pause() { 
+    fun pause() {
+        // Already paused, there is nothing to stop and nothing to record. Backgrounding the app
+        // with pause-on-background calls this on a clock that is often paused already, and every
+        // call logged another PAUSE -- which the reconstruction of older logs' move durations
+        // reads as the start of a pause span.
+        if (_uiState.value.isPaused && timerJob == null) return
         timerJob?.cancel()
         timerJob = null
         _uiState.update { it.copy(isPaused = true) }
