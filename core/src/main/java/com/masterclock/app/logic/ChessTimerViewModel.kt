@@ -827,9 +827,13 @@ private fun sanitizeSettings(
         },
         main = validateImportedPlayerSettings(settings.main),
         p1Custom = validateImportedPlayerSettings(settings.p1Custom),
-        p2Custom = validateImportedPlayerSettings(settings.p2Custom),
-        p3Custom = validateImportedPlayerSettings(settings.p3Custom),
-        p4Custom = validateImportedPlayerSettings(settings.p4Custom),
+        // One mode per game, chosen by Player 1: the modes page writes P1's mode into the others
+        // and offers no way to change theirs. A file can still carry different ones, and with P2 in
+        // RANDOM under a P1 that is not, P2's time was never drawn -- it started at 0:00 and
+        // flagged on its first tick. The others follow P1 here too.
+        p2Custom = validateImportedPlayerSettings(settings.p2Custom).copy(mode = settings.p1Custom.mode),
+        p3Custom = validateImportedPlayerSettings(settings.p3Custom).copy(mode = settings.p1Custom.mode),
+        p4Custom = validateImportedPlayerSettings(settings.p4Custom).copy(mode = settings.p1Custom.mode),
     )
 }
 
