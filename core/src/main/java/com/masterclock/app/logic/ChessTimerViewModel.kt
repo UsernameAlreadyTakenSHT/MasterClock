@@ -1425,6 +1425,25 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
  * [ChessTimerViewModel.startOrSwitch] records a move) for every mode driven by [applyPostMoveLogic].
  * Exposed at the top level for the same testability reason as [tickPlayer].
  */
+/**
+ * The remaining time with its sign. NEGATIVE stores an overrun as a positive [PlayerState.timeRemainingMs]
+ * with [PlayerState.isNegative] beside it, and arithmetic on the bare field read the overrun as
+ * time left: an increment pushed -0:05 to -0:07 instead of -0:03, and Save & Cap banked an overrun
+ * as savings.
+ */
+private fun PlayerState.signedTimeMs(): Long = if (isNegative) -timeRemainingMs else timeRemainingMs
+
+/**
+ * Stores a signed remaining time back. Above zero again, an overrun player has time again and is
+ * no longer out -- firstToFlag still records who flagged first. Only an overrun (NEGATIVE) player
+ * can come back this way; one eliminated under FLAG is never negative and stays out.
+ */
+private fun PlayerState.withSignedTime(t: Long): PlayerState = when {
+    !isNegative -> copy(timeRemainingMs = t)
+    t > 0 -> copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false)
+    else -> copy(timeRemainingMs = -t)
+}
+
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
     val p = state.players[playerIndex - 1]
     val tempP = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) {
@@ -1457,10 +1476,14 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     }
 
     val newP = when (s.mode) {
-        TimerMode.FISCHER -> tempP.copy(timeRemainingMs = p.timeRemainingMs + s.incrementMs)
-        TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.copy(timeRemainingMs = p.timeRemainingMs + p.secondaryTimeMs)
-        TimerMode.BRONSTEIN -> tempP.copy(timeRemainingMs = p.timeRemainingMs + timeSpentOnMove.coerceAtMost(s.incrementMs))
-        TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> tempP.copy(timeRemainingMs = s.moveTimeMs)
+        TimerMode.FISCHER -> tempP.withSignedTime(p.signedTimeMs() + s.incrementMs)
+        TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.withSignedTime(p.signedTimeMs() + p.secondaryTimeMs)
+        TimerMode.BRONSTEIN -> tempP.withSignedTime(p.signedTimeMs() + timeSpentOnMove.coerceAtMost(s.incrementMs))
+        // Every move starts a fresh allowance, and an overrun of the last one is over with it. The
+        // reset restored the time and left isOutOfTime/isNegative set, so under NEGATIVE every
+        // later turn counted up from -0:30 and the player could never flag again.
+        TimerMode.MOVE_TIMER_STANDARD -> if (p.isNegative) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = false) else tempP.copy(timeRemainingMs = s.moveTimeMs)
+        TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> tempP.copy(timeRemainingMs = s.moveTimeMs)
         TimerMode.MOVE_TIMER_SAVE_CAP -> {
             // What is left of the pot at the moment of the press. SAVE_CAP is not named in
             // tickPlayer, so it burns through the generic branch as a single number: timeRemainingMs
@@ -1471,14 +1494,17 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             // second move on the bank grew by itself: with 30s moves and 10s spent, move two banked
             // 60s where 40s were left. The bank drove what the clock showed, so the player
             // watched a number that had stopped meaning anything.
-            val carried = p.timeRemainingMs.coerceAtLeast(0)
+            // Signed: under NEGATIVE an overrun is stored as a positive number, and this banked it
+            // -- forty seconds on a thirty-second move started the next turn at 0:40.
+            val carried = p.signedTimeMs().coerceAtLeast(0)
             // The cap is the ceiling on the clock as a whole, not on the bank alone: with 30s moves
             // and a 2:00 cap the clock stops at 2:00, never 2:30. A cap below the move time cannot
             // bind without handing the player less than one move, so it is floored there -- which
             // makes a cap of zero mean "save nothing", i.e. plain MOVE_TIMER_STANDARD.
             val cap = s.timeCapMs.coerceAtLeast(s.moveTimeMs)
             val newTotal = (s.moveTimeMs + carried).coerceAtMost(cap)
-            tempP.copy(timeRemainingMs = newTotal, secondaryTimeMs = (newTotal - s.moveTimeMs).coerceAtLeast(0))
+            val saved = tempP.copy(timeRemainingMs = newTotal, secondaryTimeMs = (newTotal - s.moveTimeMs).coerceAtLeast(0))
+            if (p.isNegative) saved.copy(isNegative = false, isOutOfTime = false) else saved
         }
         TimerMode.BYOYOMI_JAPANESE -> if (p.isInByoyomi) tempP.copy(timeRemainingMs = s.byoyomiTimeMs) else tempP
         TimerMode.BYOYOMI_CANADIAN -> if (p.isInByoyomi) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = s.byoyomiPeriods) else tempP.copy(movesRemainingInPeriod = rem) } else tempP

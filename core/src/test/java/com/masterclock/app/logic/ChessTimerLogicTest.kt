@@ -268,6 +268,67 @@ class ChessTimerLogicTest {
         assertEquals(1, state.players[1].moveCount)
     }
 
+    // --- NEGATIVE: an overrun is stored as a positive number with isNegative beside it ---
+
+    private fun negativeMove(s: PlayerSettings, p: PlayerState, spent: Long = 0): PlayerState {
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE)
+        return computePostMoveState(ChessClockState(players = listOf(p, PlayerState(60_000)), activePlayer = 1), 1, spent, settings, s).players[0]
+    }
+
+    private val overrun5s = PlayerState(timeRemainingMs = 5_000, isOutOfTime = true, isNegative = true)
+
+    @Test
+    fun `a Fischer increment takes an overrun back towards zero`() {
+        val next = negativeMove(PlayerSettings(mode = TimerMode.FISCHER, incrementMs = 2_000), overrun5s)
+        assertEquals(3_000, next.timeRemainingMs) // -0:05 + 2s = -0:03, not -0:07
+        assertTrue(next.isNegative)
+    }
+
+    @Test
+    fun `an increment past the overrun gives the player time again`() {
+        val next = negativeMove(PlayerSettings(mode = TimerMode.FISCHER, incrementMs = 8_000), overrun5s)
+        assertEquals(3_000, next.timeRemainingMs)
+        assertFalse(next.isNegative)
+        assertFalse(next.isOutOfTime)
+    }
+
+    @Test
+    fun `Bronstein credits against the overrun too`() {
+        val next = negativeMove(PlayerSettings(mode = TimerMode.BRONSTEIN, incrementMs = 3_000), overrun5s, spent = 10_000)
+        assertEquals(2_000, next.timeRemainingMs)
+        assertTrue(next.isNegative)
+    }
+
+    @Test
+    fun `Save and Cap banks nothing from an overrun`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_SAVE_CAP, moveTimeMs = 30_000, timeCapMs = 120_000)
+        val next = negativeMove(s, PlayerState(timeRemainingMs = 10_000, isOutOfTime = true, isNegative = true))
+        assertEquals(30_000, next.timeRemainingMs) // a fresh move, not 0:40
+        assertFalse(next.isNegative)
+        assertFalse(next.isOutOfTime)
+    }
+
+    @Test
+    fun `a move timer starts every move afresh after an overrun`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_STANDARD, moveTimeMs = 30_000)
+        val next = negativeMove(s, overrun5s)
+        assertEquals(30_000, next.timeRemainingMs)
+        assertFalse(next.isNegative)
+        assertFalse(next.isOutOfTime)
+        // And it counts down again, rather than up from -0:30 as it used to.
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE)
+        assertEquals(29_000, tickPlayer(next, 1_000, s, settings).timeRemainingMs)
+    }
+
+    @Test
+    fun `a player eliminated under FLAG is not brought back by a move`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_STANDARD, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.FLAG, numberOfPlayers = 3)
+        val out = PlayerState(timeRemainingMs = 0, isOutOfTime = true)
+        val state = ChessClockState(players = listOf(out, PlayerState(30_000), PlayerState(30_000)), activePlayer = 1)
+        assertTrue(computePostMoveState(state, 1, 0, settings, s).players[0].isOutOfTime)
+    }
+
     // --- flagsEndGame: one rule for a press and for Resume ---
 
     @Test
