@@ -1261,7 +1261,26 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
     // An overrun past the last stage goes on growing; see finalFlag.
     if (p.isOutOfTime && p.isNegative && s.mode in STAGED_MODES) return p.copy(timeRemainingMs = p.timeRemainingMs + delta)
     return when (s.mode) {
-        TimerMode.MOVE_TIMER_OVERTIME -> { val newTime = p.timeRemainingMs - delta; if (newTime < 0) { val newSec = p.secondaryTimeMs + newTime; p.copy(timeRemainingMs = 0, secondaryTimeMs = newSec, isOutOfTime = newSec <= 0) } else p.copy(timeRemainingMs = newTime) }
+        TimerMode.MOVE_TIMER_OVERTIME -> {
+            // The reserve running out was always the end, whatever FlagBehavior said: the clock
+            // froze at 0:00 under NEGATIVE and REVERSE too. Past the reserve the overrun now goes on
+            // the move clock and follows FlagBehavior like every other clock -- negative and growing
+            // under NEGATIVE, counting up under REVERSE, held at zero under FREEZE and FLAG.
+            if (p.isOutOfTime) {
+                val (t, out, neg) = applyFlagBehaviorDelta(p.timeRemainingMs, true, p.isNegative, delta, settings.flagBehavior)
+                return p.copy(timeRemainingMs = t, isOutOfTime = out, isNegative = neg)
+            }
+            val newTime = p.timeRemainingMs - delta
+            if (newTime >= 0) return p.copy(timeRemainingMs = newTime)
+            val newSec = p.secondaryTimeMs + newTime
+            if (newSec > 0) return p.copy(timeRemainingMs = 0, secondaryTimeMs = newSec)
+            val overrun = -newSec
+            when (settings.flagBehavior) {
+                FlagBehavior.NEGATIVE -> p.copy(timeRemainingMs = overrun, secondaryTimeMs = 0, isOutOfTime = true, isNegative = true)
+                FlagBehavior.REVERSE -> p.copy(timeRemainingMs = overrun, secondaryTimeMs = 0, isOutOfTime = true, isNegative = false)
+                else -> p.copy(timeRemainingMs = 0, secondaryTimeMs = 0, isOutOfTime = true)
+            }
+        }
         TimerMode.MOVE_TIMER_GLOBAL -> {
             // The move clock honours FlagBehavior like every other clock; see globalMoveClockTick.
             val (moveTime, moveOut, moveNeg) = globalMoveClockTick(p, delta, settings.flagBehavior)
@@ -1611,7 +1630,13 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED ->
             if (p.isNegative) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = p.secondaryTimeMs <= 0)
             else tempP.copy(timeRemainingMs = s.moveTimeMs)
-        TimerMode.MOVE_TIMER_OVERTIME -> tempP.copy(timeRemainingMs = s.moveTimeMs)
+        // A fresh move clock. Under NEGATIVE and REVERSE play goes on past an empty reserve, so the
+        // overrun ends with the move and the next one counts down again -- straight into a new
+        // overrun at zero, the reserve being gone. Under FLAG the player stays out.
+        TimerMode.MOVE_TIMER_OVERTIME ->
+            if (p.isOutOfTime && (settings.flagBehavior == FlagBehavior.NEGATIVE || settings.flagBehavior == FlagBehavior.REVERSE))
+                tempP.copy(timeRemainingMs = s.moveTimeMs, isOutOfTime = false, isNegative = false)
+            else tempP.copy(timeRemainingMs = s.moveTimeMs)
         TimerMode.MOVE_TIMER_SAVE_CAP -> {
             // What is left of the pot at the moment of the press. SAVE_CAP is not named in
             // tickPlayer, so it burns through the generic branch as a single number: timeRemainingMs

@@ -406,6 +406,36 @@ class ChessTimerLogicTest {
         assertFalse(frozen.isNegative)
     }
 
+    @Test
+    fun `OVERTIME counts the overrun past its reserve under NEGATIVE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000)
+        var p = negativeTick(s, PlayerState(timeRemainingMs = 0, secondaryTimeMs = 400))
+        assertTrue(p.isOutOfTime)
+        assertTrue(p.isNegative)
+        assertEquals(600, p.timeRemainingMs)
+        assertEquals(0, p.secondaryTimeMs)
+        p = negativeTick(s, p)
+        assertEquals(1_600, p.timeRemainingMs) // it used to sit at 0:00
+    }
+
+    @Test
+    fun `OVERTIME still stops at an empty reserve under FREEZE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000)
+        val p = tickPlayer(PlayerState(timeRemainingMs = 0, secondaryTimeMs = 400), 1_000, s, ChessClockSettings(main = s, flagBehavior = FlagBehavior.FREEZE))
+        assertTrue(p.isOutOfTime)
+        assertEquals(0, p.timeRemainingMs)
+        assertFalse(p.isNegative)
+    }
+
+    @Test
+    fun `an OVERTIME move after the reserve is gone starts a fresh move clock under NEGATIVE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000)
+        val next = negativeMove(s, PlayerState(timeRemainingMs = 5_000, secondaryTimeMs = 0, isOutOfTime = true, isNegative = true))
+        assertEquals(30_000, next.timeRemainingMs)
+        assertFalse(next.isOutOfTime)
+        assertEquals(0, next.secondaryTimeMs)
+    }
+
     // --- flagsEndGame: one rule for a press and for Resume ---
 
     @Test
