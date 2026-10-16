@@ -2449,7 +2449,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             val newList = state.players.toMutableList().apply { this[0] = p.copy(isOutOfTime = true, timeRemainingMs = 0) }
             return state.copy(players = newList, globalTimeMs = 0)
         }
-        if (settings.value.pauseBetweenPhasesMs > 0) {
+        // A pause is a wait for the next phase. After the last one of a non-looping game there is
+        // none, and a tap on the finished game used to start a fresh PAUSE countdown before the
+        // clock fell back to finished.
+        val isLastPhase = p.currentPhaseIndex >= s.phases.size - 1 && !settings.value.loopPhases
+        if (settings.value.pauseBetweenPhasesMs > 0 && !isLastPhase) {
             val pausedPlayer = p.copy(isInInterPhasePause = true, pauseTimeRemainingMs = settings.value.pauseBetweenPhasesMs)
             val newList = state.players.toMutableList().apply { this[0] = pausedPlayer }
             return state.copy(players = newList)
