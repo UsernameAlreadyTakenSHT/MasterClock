@@ -443,9 +443,17 @@ class OmniTimerLogicTest {
         assertFalse(omniPhaseAutoAdvances(settings, OmniState(currentPhaseIndex = 0, turnCounterInRound = 0)))
         assertTrue(omniPhaseAutoAdvances(settings, OmniState(currentPhaseIndex = 1, turnCounterInRound = 0)))
 
-        // FIXED round with no configured phases: matches OmniPhaseSettings' default of true.
+        // A turn with no configured phases has nothing to advance to. This used to say true, which
+        // with the phase clock on cut every such turn off after a default 60-second phase.
         val fixedSettings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(OmniRoundSettings()))), numberOfPlayers = 2)
-        assertTrue(omniPhaseAutoAdvances(fixedSettings, OmniState(currentPhaseIndex = 0, turnCounterInRound = 0)))
+        assertFalse(omniPhaseAutoAdvances(fixedSettings, OmniState(currentPhaseIndex = 0, turnCounterInRound = 0)))
+    }
+
+    @Test
+    fun `a turn with no phases has a phase clock as long as the turn`() {
+        val round = OmniRoundSettings(turnDurationMs = 600_000)
+        val settings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(round))), numberOfPlayers = 2)
+        assertEquals(600_000, getOmniDuration(settings, "PHASE", playerIdx = 1, phaseIdx = 0))
     }
 
     @Test

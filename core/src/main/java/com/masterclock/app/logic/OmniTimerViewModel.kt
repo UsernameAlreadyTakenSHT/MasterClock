@@ -84,6 +84,10 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
             val turn = omniTurnsOf(round, settings.numberOfPlayers).getOrNull(playerIdx)
             when {
                 turn == null -> OmniPhaseSettings().durationMs
+                // A turn with no phases is one phase as long as the turn. It used to get a default
+                // 60-second phase that advanced on its own, which ended the turn -- so with the
+                // phase clock on and no phase set up, every ten-minute turn stopped after one.
+                turn.phases.isEmpty() -> turn.durationMs
                 else -> turn.phases.getOrNull(phaseIdx)?.durationMs ?: OmniPhaseSettings().durationMs
             }
         }
@@ -97,7 +101,9 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
  * turnCounterInRound); defaults to true, matching OmniPhaseSettings, when no phase is configured.
  */
 internal fun omniPhaseAutoAdvances(settings: OmniSettings, state: OmniState): Boolean {
+    // No phases, nothing to advance to: the turn clock governs the turn. See getOmniDuration.
     val phases = omniCurrentTurnPhases(settings, state)
+    if (phases.isEmpty()) return false
     return phases.getOrNull(state.currentPhaseIndex)?.autoAdvance ?: true
 }
 
@@ -555,7 +561,10 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                 // Either the global phase cutoff or the current phase's own wizard "Auto Advance"
                 // toggle moves to the next phase when this one's clock runs out; without the
                 // latter, the per-phase toggle was never read by the engine at all.
+                // Only for a turn that has phases: the phase clock of one without is the turn
+                // itself, and cutting it off would end every turn whatever turnForcesCutoff says.
                 (settings.phaseForcesCutoff || omniPhaseAutoAdvances(settings, state)) &&
+                    omniCurrentTurnPhases(settings, state).isNotEmpty() &&
                     oldPhase > 0 && newState.currentPhaseTimeMs <= 0 -> "PHASE"
                 else -> null
             }
