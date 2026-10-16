@@ -1,0 +1,2 @@
+Taps made in the first moments after launch, before your settings had loaded, were acted on with the defaults and then undone. Nothing can be tapped now until loading is done.
+Mini no longer records your games or saves the clock in the background: it has no screen that shows a game history or resumes a saved clock.

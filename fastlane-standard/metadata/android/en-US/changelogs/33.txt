@@ -1,0 +1,3 @@
+Games are written to the history as they are played: a flag then closing the app, a crash, a time-control change or a re-roll no longer loses them, and a resumed clock continues its game.
+Nothing can be tapped until settings have loaded. Saving a preset just after launch could erase all the others.
+A launcher shortcut no longer re-applies itself when the screen is rebuilt. Statistics are now in the Complete build only.

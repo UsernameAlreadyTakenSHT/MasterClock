@@ -1,3 +1,33 @@
+## v0.8.32 — 2026-10-16
+
+Most of this is about what the app kept, and what it quietly failed to keep: games that never
+reached the history, a notebook that an import could empty, a backup that left your photos behind.
+
+### Fixed
+- **A game that did not end with Reset was never recorded.** The history only received a game when someone pressed Reset. Flagging and then closing the app, the phone reclaiming it overnight or a crash lost the game outright; changing the time control mid-game appended the next game to the previous one, under the old settings; and a re-roll in Random or Hidden threw the game away. A game is now written to the history as it is played, and every way of ending one stores it.
+- **Resuming a saved clock lost every move made before it.** It started a new record whose starting times were the mid-game ones, so a five-minute game came back in Last Games as 3:12. Resuming now continues the same game.
+- **Importing a settings file or a QR code emptied your notebook.** None of them carries the whole notebook — a QR code carries no notes at all — and an import replaced it with whatever they held, including when you imported your own export. An import now only ever adds notes.
+- **The full backup did not contain your photos, recordings or videos**, though it said it did — nor your saved presets or your Omni setup. It now holds all of them, and restoring it on a new phone brings them back. Nothing already on the device is overwritten.
+- **Saving a preset just after opening the app could erase every other preset.** For the first moments after launch the screens were live before your settings had loaded, and whatever you tapped acted on the defaults: the arbitre panel shut itself, a game started and vanished, a setting changed and changed back. Nothing can be tapped now until loading is done.
+- **The scoreboard emptied whenever the app closed.** It is kept now.
+- **A launcher shortcut re-applied itself** whenever the screen was rebuilt — switching to dark mode, resizing the window — and reset the game in progress.
+- **Importing someone else's settings could cut your game history to their limit.** How much history to keep is now always your own setting.
+- With history kept for one day, a game finished more than a day after it started was deleted the moment it was saved.
+- Imported games dated in the future pushed every new game out of a full history.
+- The notebook let you write a 501st note and then deleted it at the next launch. It now tells you it is full.
+- A Random range with its minimum above its maximum quietly became a fixed time after a restart. Each bound now moves the other along.
+- PGN export now produces files chess software accepts: the standard tags, a result, and no "???" for moves that were never recorded.
+
+### Changed
+- Importing a file now asks first, as scanning a QR code already did.
+- The export option says it includes text notes, which is what it has always included.
+- The arbitre panel's "Save Clock" button is now just "Save".
+- Statistics are in the Complete build only, beside the game logs and the settings that clear and limit the history behind them. Standard and Lite showed them with no way to do either.
+- Mini and the E-Ink build no longer record games or save the clock in the background. Neither has a screen that shows a game history or resumes a saved clock.
+- The E-Ink build's time input stops at 60:00. Its two fields were limited separately, which let them reach 60:59.
+- The Complete build no longer ships an HTTP client. It never connected to anything, but the image library brought one along; that library has been updated and the client is gone.
+- The toolchain, libraries and build tools are on their current releases.
+
 ## v0.8.31 — 2026-09-10
 
 Two small things on top of v0.8.30, one of them a consequence of it.

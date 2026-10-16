@@ -1,0 +1,4 @@
+Games are written to the history as they are played: a flag then closing the app, a crash, a time-control change or a re-roll no longer loses them, and a resumed clock continues its game.
+Imports only ever add notes, and ask first. A QR code or settings file used to empty the notebook.
+The full backup now holds your photos, recordings, videos, presets and Omni setup.
+Nothing can be tapped until settings have loaded. The scoreboard survives a restart. PGN export is valid.

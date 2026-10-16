@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-09-10"
+    const val BUILD_DATE = "2026-10-16"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,22 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.32",
+            date = "2026-10-16",
+            notes = listOf(
+                "A game that did not end with Reset was never recorded: closing the app after a flag, a crash, changing the time control mid-game or a re-roll all lost it. Games are now written to the history as they are played.",
+                "Resuming a saved clock lost every move made before it. It now continues the same game.",
+                "Importing a settings file or a QR code emptied your notebook. An import now only ever adds notes.",
+                "The full backup now really contains your photos, recordings and videos, as well as your presets and Omni setup.",
+                "Just after launch the screens were live before your settings had loaded, and saving a preset then could erase every other one. Nothing can be tapped until loading is done.",
+                "The scoreboard is kept when the app closes, and a launcher shortcut no longer re-applies itself when the screen is rebuilt.",
+                "Importing someone else's settings no longer changes how much of your history is kept, and a day-long retention no longer deletes the game just saved.",
+                "The notebook says it is full instead of deleting its 501st note at the next launch, and a Random range can no longer invert.",
+                "PGN export produces files chess software accepts, and importing a file asks first.",
+                "Statistics are in the Complete build only. Mini and the E-Ink build no longer record games they have no screen to show.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.31",
             date = "2026-09-10",
