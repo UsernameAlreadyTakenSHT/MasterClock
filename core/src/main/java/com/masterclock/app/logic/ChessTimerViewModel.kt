@@ -1379,6 +1379,33 @@ internal fun ChessClockState.withFirstFlag(before: ChessClockState, active: Int)
     return copy(firstToFlag = if (active in newlyOut) active else newlyOut.first())
 }
 
+/**
+ * What each other player gains in an HOURGLASS tick, by player index: exactly what the active
+ * player lost, and only that.
+ *
+ * The share was the tick divided between the other players with integer division, and the
+ * remainder went nowhere: at four players a 100ms tick handed out 99ms, and with hundredths showing
+ * (10ms ticks) 9ms of every 10 -- a tenth of all the time in the game draining away. The remainder
+ * now goes a millisecond at a time to whoever holds the least, which keeps the total exact without
+ * favouring a seat.
+ *
+ * What the active player loses is the time actually taken off a clock with time on it: nothing once
+ * it is out, so a flagged player's clock -- which no longer runs -- stops feeding the others. Those
+ * eliminated under FLAG take no share either; they used to go on gaining, and with two players the
+ * survivor's clock climbed for ever after the game had ended.
+ */
+private fun hourglassGains(players: List<PlayerState>, active: Int, before: PlayerState, after: PlayerState, flagBehavior: FlagBehavior): Map<Int, Long> {
+    val had = if (before.isOutOfTime) 0L else before.timeRemainingMs
+    val has = if (after.isOutOfTime) 0L else after.timeRemainingMs
+    val lost = (had - has).coerceAtLeast(0)
+    val recipients = players.indices.filter { it != active - 1 && !(flagBehavior == FlagBehavior.FLAG && players[it].isOutOfTime) }
+    if (lost == 0L || recipients.isEmpty()) return emptyMap()
+    val share = lost / recipients.size
+    val remainder = (lost % recipients.size).toInt()
+    val leastFirst = recipients.sortedBy { players[it].timeRemainingMs }
+    return recipients.associateWith { idx -> share + if (leastFirst.indexOf(idx) < remainder) 1 else 0 }
+}
+
 /** A player's state before and after a tick, for the audio and voice cues to compare. */
 internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int)
 
@@ -1436,12 +1463,12 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
             )
         }
         TimerMode.HOURGLASS -> {
-            val share = delta / (settings.numberOfPlayers - 1).coerceAtLeast(1)
             val activeP = state.players[active - 1]
             val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(activeP.timeRemainingMs, activeP.isOutOfTime, activeP.isNegative, delta, settings.flagBehavior)
             val newActiveP = activeP.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
+            val gains = hourglassGains(state.players, active, activeP, newActiveP, settings.flagBehavior)
             val newPlayers = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == active) newActiveP else p.copy(timeRemainingMs = p.timeRemainingMs + share)
+                if (idx + 1 == active) newActiveP else p.copy(timeRemainingMs = p.timeRemainingMs + (gains[idx] ?: 0L))
             }
             return CoupledTick(
                 state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut),

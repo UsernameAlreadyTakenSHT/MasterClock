@@ -425,6 +425,32 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `HOURGLASS with four players hands out every millisecond the active player loses`() {
+        val settings = ChessClockSettings(numberOfPlayers = 4, main = PlayerSettings(mode = TimerMode.HOURGLASS))
+        val before = ChessClockState(players = List(4) { PlayerState(60_000) }, activePlayer = 1)
+        val after = coupled(before, 10, settings).state
+        // 10ms over three players used to give 3 each and lose the tenth.
+        assertEquals(before.players.sumOf { it.timeRemainingMs }, after.players.sumOf { it.timeRemainingMs })
+    }
+
+    @Test
+    fun `HOURGLASS gives nothing to a player FLAG has eliminated`() {
+        val settings = ChessClockSettings(numberOfPlayers = 3, main = PlayerSettings(mode = TimerMode.HOURGLASS), flagBehavior = FlagBehavior.FLAG)
+        val players = listOf(PlayerState(60_000), PlayerState(0, isOutOfTime = true), PlayerState(60_000))
+        val after = coupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings).state
+        assertEquals(0, after.players[1].timeRemainingMs)
+        assertEquals(61_000, after.players[2].timeRemainingMs)
+    }
+
+    @Test
+    fun `HOURGLASS stops feeding the others once the active player is out`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.HOURGLASS), flagBehavior = FlagBehavior.FLAG)
+        val players = listOf(PlayerState(0, isOutOfTime = true), PlayerState(60_000))
+        // The game is over; the survivor's clock used to climb for ever.
+        assertEquals(60_000, coupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings).state.players[1].timeRemainingMs)
+    }
+
+    @Test
     fun `CHRONO_COUNTDOWN runs the one shared clock and freezes the game when it ends`() {
         val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.CHRONO_COUNTDOWN), flagBehavior = FlagBehavior.FREEZE)
         val state = ChessClockState(players = listOf(PlayerState(0), PlayerState(0)), activePlayer = 1, globalTimeMs = 500)
