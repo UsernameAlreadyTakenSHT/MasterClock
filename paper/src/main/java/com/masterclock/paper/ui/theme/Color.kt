@@ -1,47 +1,57 @@
 package com.masterclock.paper.ui.theme
 
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
+import com.mudita.mmd.eInkColorScheme
 
 /**
- * MASTERCLOCK COLOR PALETTE
- * Strict BW palette for E-Ink, aligned with Mudita standards.
+ * The light scheme is MMD's own `eInkColorScheme`, used as it is.
+ *
+ * MMD has no dark one, and the E-Ink build offers reversed colours ("E-Ink dark mode"), so this is
+ * MMD's scheme with black and white exchanged role for role -- nothing else changed, so the two stay
+ * the same design. The surface containers are set too: MMD leaves most of them unspecified, and any
+ * Material component that reads them would otherwise fall back to Material's tinted greys.
  */
+val EInkDarkColorScheme: ColorScheme = eInkColorScheme.invert()
 
-val EInkBlack = Color(0xFF000000)
-val EInkWhite = Color(0xFFFFFFFF)
+private fun ColorScheme.invert(): ColorScheme {
+    fun Color.flip(): Color = when (this) {
+        Color.Black -> Color.White
+        Color.White -> Color.Black
+        else -> this
+    }
+    return copy(
+        primary = primary.flip(), onPrimary = onPrimary.flip(),
+        primaryContainer = primaryContainer.flip(), onPrimaryContainer = onPrimaryContainer.flip(),
+        inversePrimary = inversePrimary.flip(),
+        secondary = secondary.flip(), onSecondary = onSecondary.flip(),
+        secondaryContainer = secondaryContainer.flip(), onSecondaryContainer = onSecondaryContainer.flip(),
+        tertiary = tertiary.flip(), onTertiary = onTertiary.flip(),
+        tertiaryContainer = tertiaryContainer.flip(), onTertiaryContainer = onTertiaryContainer.flip(),
+        background = background.flip(), onBackground = onBackground.flip(),
+        surface = surface.flip(), onSurface = onSurface.flip(),
+        surfaceVariant = surfaceVariant.flip(), onSurfaceVariant = onSurfaceVariant.flip(),
+        surfaceTint = surfaceTint.flip(),
+        inverseSurface = inverseSurface.flip(), inverseOnSurface = inverseOnSurface.flip(),
+        error = error.flip(), onError = onError.flip(),
+        errorContainer = errorContainer.flip(), onErrorContainer = onErrorContainer.flip(),
+        outline = outline.flip(), outlineVariant = outlineVariant.flip(),
+        scrim = scrim.flip(),
+        surfaceBright = Color.Black, surfaceDim = Color.Black,
+        surfaceContainer = Color.Black, surfaceContainerHigh = Color.Black,
+        surfaceContainerHighest = Color.Black, surfaceContainerLow = Color.Black,
+        surfaceContainerLowest = Color.Black,
+    )
+}
 
-val EInkColorScheme = lightColorScheme(
-    primary = EInkBlack,
-    onPrimary = EInkWhite,
-    primaryContainer = EInkBlack, // Main action color
-    onPrimaryContainer = EInkWhite,
-    inversePrimary = EInkWhite,
-    secondary = EInkWhite,
-    onSecondary = EInkBlack,
-    // Matches real ColorMMD.kt: containers stay black regardless of role.
-    secondaryContainer = EInkBlack,
-    onSecondaryContainer = EInkWhite,
-    tertiary = EInkWhite,
-    onTertiary = EInkBlack,
-    tertiaryContainer = EInkBlack,
-    onTertiaryContainer = EInkWhite,
-    background = EInkWhite,
-    onBackground = EInkBlack,
-    surface = EInkWhite,
-    onSurface = EInkBlack,
-    surfaceVariant = EInkWhite,
-    onSurfaceVariant = EInkBlack,
-    surfaceTint = EInkWhite,
-    // Matches real ColorMMD.kt: not a true color inversion (avoids a jarring
-    // full-swap redraw on e-ink hardware) — same mapping as the normal surface.
-    inverseSurface = EInkWhite,
-    inverseOnSurface = EInkBlack,
-    outline = EInkBlack,
-    outlineVariant = EInkBlack,
-    scrim = EInkBlack,
-    error = EInkBlack,
-    onError = EInkWhite,
-    errorContainer = EInkWhite,
-    onErrorContainer = EInkBlack
+/**
+ * MMD's light scheme with its surface containers made white, for the same reason as above: MMD
+ * leaves them unspecified, which a Material component reading them renders as transparent or
+ * falls back from.
+ */
+val EInkLightColorScheme: ColorScheme = eInkColorScheme.copy(
+    surfaceBright = Color.White, surfaceDim = Color.White,
+    surfaceContainer = Color.White, surfaceContainerHigh = Color.White,
+    surfaceContainerHighest = Color.White, surfaceContainerLow = Color.White,
+    surfaceContainerLowest = Color.White,
 )

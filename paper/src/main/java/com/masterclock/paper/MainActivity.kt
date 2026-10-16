@@ -90,11 +90,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val isDarkTheme = when (settings.themeMode) {
-                AppThemeMode.LIGHT -> false
-                AppThemeMode.DARK -> true
-                AppThemeMode.AUTO -> androidx.compose.foundation.isSystemInDarkTheme()
-            }
 
             val navigationState = rememberNavigationState(
                 startRoute = Route.Timer,
@@ -106,10 +101,7 @@ class MainActivity : ComponentActivity() {
                 navigator.goBack()
             }
 
-            MasterClockTheme(
-                darkTheme = isDarkTheme,
-                eInkDarkMode = settings.eInkDarkMode
-            ) {
+            MasterClockTheme(eInkDarkMode = settings.eInkDarkMode) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val entryProvider = entryProvider<NavKey> {
                         entry<Route.Timer> { _ ->

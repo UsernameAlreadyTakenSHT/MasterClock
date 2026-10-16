@@ -105,6 +105,10 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.material)
+    // Mudita Mindful Design, Mudita's own E Ink component library (Apache 2.0): the theme, the
+    // Lato type scale and the components the Kompakt's own apps are built from. The interface was
+    // hand-written in its shape until it was published; see MMDComponents.kt for what is left.
+    implementation(libs.mudita.mmd)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

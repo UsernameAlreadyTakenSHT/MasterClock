@@ -37,6 +37,7 @@ cameraCore = "1.6.2"
 datastorePreferences = "1.2.1"
 material = "1.14.0"
 zxing = "3.5.4"
+mmd = "1.0.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -84,6 +85,7 @@ androidx-camera-core = { group = "androidx.camera", name = "camera-core", versio
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+mudita-mmd = { group = "com.mudita", name = "MMD", version.ref = "mmd" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
