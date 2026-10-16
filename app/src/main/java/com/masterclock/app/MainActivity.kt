@@ -72,7 +72,16 @@ class MainActivity : ComponentActivity() {
 
         // The activity has no launchMode, so it defaults to "standard" and a shortcut launch always
         // arrives through onCreate with a fresh intent -- no onNewIntent needed.
-        val launchShortcutId = intent?.getStringExtra(PresetShortcuts.EXTRA_SHORTCUT_ID)
+        //
+        // Only on the launch itself, though. The activity is recreated with the same intent on a
+        // dark-mode switch, a font-scale change, a resize or a restore after process death, and
+        // relaunched with it from Recents -- and each of those re-applied the shortcut's time
+        // control, over whatever the user had chosen since and through updateSettings, so resetting
+        // the game in progress. A recreation carries saved state; a relaunch from Recents carries
+        // FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY.
+        val isFreshLaunch = savedInstanceState == null &&
+            ((intent?.flags ?: 0) and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0
+        val launchShortcutId = if (isFreshLaunch) intent?.getStringExtra(PresetShortcuts.EXTRA_SHORTCUT_ID) else null
 
         enableEdgeToEdge()
         setContent {
