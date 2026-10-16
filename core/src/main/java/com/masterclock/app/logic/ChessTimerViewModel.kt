@@ -1914,7 +1914,22 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         return ChessClockState(players = playerList, globalTimeMs = globalTime)
     }
 
+    /**
+     * Charges the running clock up to this instant, before a press or a pause stops it.
+     *
+     * The clock is charged a tick at a time, and stopping it used to cancel the ticker and move
+     * on: whatever had passed since the last tick -- up to 100ms, 10ms with hundredths showing --
+     * was charged to no one. About three seconds a player over a sixty-move game, and in Bronstein
+     * the credit, measured by wall time, could exceed what had been charged. A player with 80ms
+     * left who pressed before the next tick never flagged; now the flag lands first, and under
+     * FREEZE the press is refused, as it would be on a board.
+     */
+    private fun settleRunningClock() {
+        if (timerJob != null && !_uiState.value.isPaused) tick()
+    }
+
     fun startOrSwitch(playerIndex: Int, boardNotation: String? = null) {
+        settleRunningClock()
         val currentState = _uiState.value
         if (currentState.isArbitreMode) return
 
@@ -2263,6 +2278,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // call logged another PAUSE -- which the reconstruction of older logs' move durations
         // reads as the start of a pause span.
         if (_uiState.value.isPaused && timerJob == null) return
+        settleRunningClock()
         timerJob?.cancel()
         timerJob = null
         _uiState.update { it.copy(isPaused = true) }
