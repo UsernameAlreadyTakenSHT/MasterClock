@@ -51,6 +51,10 @@ data class ChessClockStateProxy(
     // than starting a new one whose "starting" times are the ones it had mid-game. Only the
     // autosave sets it; null in snapshots older than the field, which then resume as before.
     val gameLogId: String? = null,
+    // How long the move in progress had been running. Resuming started the move's clock from
+    // zero, so Bronstein credited only what was spent after the interruption -- and the logged
+    // time for that move lost everything before it.
+    val moveElapsedMs: Long = 0,
 )
 
 fun PlayerState.toProxy() = PlayerStateProxy(
@@ -2474,7 +2478,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     fun saveClockForLater() {
         val settingsSnapshot = settings.value
-        val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id)
+        val moveElapsed = if (uiState.value.activePlayer != null) (SystemClock.elapsedRealtime() - moveStartTime).coerceAtLeast(0) else 0L
+        val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed)
 
         viewModelScope.launch {
             val entity = withContext(Dispatchers.Default) {
@@ -2538,7 +2543,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 timerJob = null
                 val now = SystemClock.elapsedRealtime()
                 lastTickTime = now
-                moveStartTime = now
+                moveStartTime = now - resumed.second.moveElapsedMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS)
                 _uiState.value = resumed.second.toState().copy(isPaused = true)
 
                 gameDao.clearSavedClock()
