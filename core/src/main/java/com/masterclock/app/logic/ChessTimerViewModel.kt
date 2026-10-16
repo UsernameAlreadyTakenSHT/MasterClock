@@ -1447,7 +1447,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     private sealed interface HistoryWrite {
         class Store(val log: GameLog) : HistoryWrite
-        class Finish(val limit: Int, val durationLimit: LogDurationLimit) : HistoryWrite
+        class Finish(val limit: Int, val durationLimit: LogDurationLimit, val finishedLogId: String) : HistoryWrite
     }
     private val historyWrites = Channel<HistoryWrite>(Channel.UNLIMITED)
 
@@ -2179,13 +2179,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * settings and starting times, and the first game never appeared as a game of its own.
      */
     private fun finishCurrentLog() {
-        if (currentLog == null) return
+        val finishedId = currentLog?.id ?: return
         // Queues the final write. The log used to be captured before this event was added, so no
         // stored game ever carried its RESET.
         addEvent(GameEvent(eventType = "RESET"))
         currentLog = null
         val s = _settings.value
-        historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit))
+        historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit, finishedId))
     }
 
     private suspend fun applyHistoryWrite(write: HistoryWrite) {
@@ -2209,7 +2209,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     }
                     if (days > 0) {
                         val threshold = System.currentTimeMillis() - (days * 24 * 3600 * 1000L)
-                        gameDao.deleteLogsOlderThan(threshold)
+                        // Rows carry only their start time, so the game just finished is spared by
+                        // id: with "1 day", one paused overnight and ended 26 hours after it began
+                        // was deleted the moment it was saved.
+                        gameDao.deleteLogsOlderThan(threshold, keepId = write.finishedLogId)
                     }
                 }
 

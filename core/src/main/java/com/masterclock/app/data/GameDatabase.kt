@@ -28,8 +28,8 @@ interface GameLogDao {
     @Query("DELETE FROM game_logs")
     suspend fun clearAllLogs()
 
-    @Query("DELETE FROM game_logs WHERE startTime < :timestamp")
-    suspend fun deleteLogsOlderThan(timestamp: Long)
+    @Query("DELETE FROM game_logs WHERE startTime < :timestamp AND id != :keepId")
+    suspend fun deleteLogsOlderThan(timestamp: Long, keepId: String)
 
     @Query("SELECT * FROM saved_clocks LIMIT 1")
     suspend fun getSavedClock(): SavedClockEntity?
