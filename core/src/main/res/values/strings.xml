@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spoken by the voice announcements, in the language VoiceManager actually speaks. -->
+<resources>
+    <string name="voice_time_up">Time is up for player %1$d</string>
+    <string name="voice_one_minute_left">One minute remaining</string>
+    <string name="voice_thirty_seconds_left">Thirty seconds remaining</string>
+    <string name="voice_ten_seconds_left">Ten seconds remaining</string>
+    <string name="voice_period">Period %1$d</string>
+    <string name="voice_byoyomi">Entering byoyomi</string>
+    <string name="voice_move">Move</string>
+    <string name="voice_reflect">Reflect</string>
+    <string name="voice_phase">Phase %1$d</string>
+    <string name="voice_test">Testing voice volume</string>
+</resources>

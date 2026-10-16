@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.masterclock.core.R as CoreR
 import com.masterclock.app.data.Converters
 import com.masterclock.app.data.GameDatabase
 import com.masterclock.app.data.SettingsRepository
@@ -2342,9 +2343,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             else -> {
                 if (!before.isInInterPhasePause) soundManager.playGong()
                 if (settings.voiceAnnouncementsEnabled) {
+                    // The name the user gave the phase, as typed; a numbered one in the voice's language.
                     val name = getPlayerSettings(1).phases.getOrNull(after.currentPhaseIndex)?.name?.takeIf { it.isNotBlank() }
-                        ?: "Phase ${after.currentPhaseIndex + 1}"
-                    voiceManager.speak(name, settings.voiceVolume)
+                    if (name != null) voiceManager.speak(name, settings.voiceVolume)
+                    else voiceManager.speak(CoreR.string.voice_phase, settings.voiceVolume, after.currentPhaseIndex + 1)
                 }
             }
         }
@@ -2356,7 +2358,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val vol = settings.voiceVolume
         // 1. Time's Up
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
-            voiceManager.speak("Time is up for Player $playerIdx", vol)
+            voiceManager.speak(CoreR.string.voice_time_up, vol, playerIdx)
             return
         }
 
@@ -2370,22 +2372,20 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // second time on it said nothing. Several crossed in one tick speak the lowest, as the
         // flushing queue keeps only the last.
         val time = newState.timeRemainingMs
-        val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN) emptyList() else listOf(60000L, 30000L, 10000L)
-        for (t in thresholds) {
-            if (oldState.timeRemainingMs > t && time <= t) {
-                val label = if (t >= 60000L) "1 minute" else "${t/1000} seconds"
-                voiceManager.speak("$label remaining", vol)
-            }
+        val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN) emptyList()
+            else listOf(60000L to CoreR.string.voice_one_minute_left, 30000L to CoreR.string.voice_thirty_seconds_left, 10000L to CoreR.string.voice_ten_seconds_left)
+        for ((t, words) in thresholds) {
+            if (oldState.timeRemainingMs > t && time <= t) voiceManager.speak(words, vol)
         }
 
         // 3. FIDE Periods
         if (newState.currentPeriodIndex > oldState.currentPeriodIndex) {
-            voiceManager.speak("Period ${newState.currentPeriodIndex + 1}", vol)
+            voiceManager.speak(CoreR.string.voice_period, vol, newState.currentPeriodIndex + 1)
         }
 
         // 4. Byoyomi Entry
         if (newState.isInByoyomi && !oldState.isInByoyomi) {
-            voiceManager.speak("Entering Byoyomi", vol)
+            voiceManager.speak(CoreR.string.voice_byoyomi, vol)
         }
 
         // Phase names are announced by onPhaseTransition: this function is only ever handed two
@@ -2394,9 +2394,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // 5. Gong Mode
         if (getPlayerSettings(playerIdx).mode == TimerMode.GONG) {
             if (oldState.isGongReflectionPhase && !newState.isGongReflectionPhase) {
-                voiceManager.speak("Move", vol)
+                voiceManager.speak(CoreR.string.voice_move, vol)
             } else if (!oldState.isGongReflectionPhase && newState.isGongReflectionPhase) {
-                voiceManager.speak("Reflect", vol)
+                voiceManager.speak(CoreR.string.voice_reflect, vol)
             }
         }
     }
@@ -2692,7 +2692,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun previewBeep() = soundManager.playShortBeep()
     fun previewFinalBeep() = soundManager.playTripleBeep()
     fun previewGong() = soundManager.playGong()
-    fun previewVoice() = voiceManager.speak("Testing voice volume", settings.value.voiceVolume)
+    /**
+     * Plays the volume test, and returns whether there was a voice to play it with -- false when
+     * the device has no text-to-speech voice in its language or in English, which used to look
+     * exactly like a test that worked at zero volume.
+     */
+    fun previewVoice(): Boolean {
+        voiceManager.speak(CoreR.string.voice_test, settings.value.voiceVolume)
+        return voiceManager.isAvailable
+    }
 
     fun clearAllLogs() {
         viewModelScope.launch {

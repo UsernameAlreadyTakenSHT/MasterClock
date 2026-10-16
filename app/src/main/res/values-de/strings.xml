@@ -124,6 +124,7 @@
     <string name="toast_import_failed">Import fehlgeschlagen: Datei nicht lesbar.</string>
     <string name="toast_export_ok">Export erfolgreich!</string>
     <string name="toast_export_failed">Export fehlgeschlagen: Datei nicht beschreibbar.</string>
+    <string name="toast_no_voice">Keine Sprachausgabe verfügbar. Installiere eine in den Geräteeinstellungen, um Ansagen zu hören.</string>
     <string name="toast_sound_not_kept">Die App kann den Zugriff auf diese Datei nicht behalten, nach einem Neustart würde sie nicht mehr abgespielt. Wähle einen Ton aus dem Gerätespeicher.</string>
     <string name="qr_confirm_title">Gescannte Einstellungen übernehmen?</string>
     <string name="qr_confirm_message">Dieser Code ersetzt deine aktuellen Einstellungen und kann Partien und eine Punktetafel hinzufügen. Nimm nur Codes von jemandem an, dem du vertraust.</string>

@@ -118,15 +118,20 @@ fun SettingsScreen(
                 )
                 SettingsCategory.BEHAVIOR -> BehaviorSettingsPage(currentSettings, onSettingsChanged)
                 SettingsCategory.DISPLAY -> DisplaySettingsPage(currentSettings, onSettingsChanged)
-                SettingsCategory.AUDIO -> AudioSettingsPage(
+                SettingsCategory.AUDIO -> {
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    val noVoiceText = stringResource(R.string.toast_no_voice)
+                    AudioSettingsPage(
                     onPreviewSwitchSound = { viewModel.previewSwitchSound() },
                     onPreviewBeep = { viewModel.previewBeep() },
                     onPreviewGong = { viewModel.previewGong() },
                     onPreviewFinalBeep = { viewModel.previewFinalBeep() },
-                    onPreviewVoice = { viewModel.previewVoice() },
+                    // With no voice on the device the test said nothing, which read as a volume of zero.
+                    onPreviewVoice = { if (!viewModel.previewVoice()) android.widget.Toast.makeText(context, noVoiceText, android.widget.Toast.LENGTH_LONG).show() },
                     currentSettings = currentSettings,
                     onSettingsChanged = onSettingsChanged
-                )
+                    )
+                }
                 SettingsCategory.OMNI -> {
                     val omniViewModel: OmniTimerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                     SettingsOmniPage(

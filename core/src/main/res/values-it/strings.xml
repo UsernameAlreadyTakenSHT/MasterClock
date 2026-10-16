@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voice_time_up">Tempo scaduto per il giocatore %1$d</string>
+    <string name="voice_one_minute_left">Manca un minuto</string>
+    <string name="voice_thirty_seconds_left">Mancano trenta secondi</string>
+    <string name="voice_ten_seconds_left">Mancano dieci secondi</string>
+    <string name="voice_period">Periodo %1$d</string>
+    <string name="voice_byoyomi">Inizio del byoyomi</string>
+    <string name="voice_move">Muovi</string>
+    <string name="voice_reflect">Riflessione</string>
+    <string name="voice_phase">Fase %1$d</string>
+    <string name="voice_test">Prova del volume della voce</string>
+</resources>
