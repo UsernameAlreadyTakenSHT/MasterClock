@@ -1450,7 +1450,10 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
                 val updatedP = p.copy(timeRemainingMs = newTime, isGongReflectionPhase = isReflection, moveCount = moveCount)
                 newState = newState.copy(players = newState.players.toMutableList().apply { this[idx - 1] = updatedP }, activePlayer = nextActiveIdx)
             }
-            return CoupledTick(newState, playGong = gong)
+            // The cue for the player whose turn this tick was. GONG used to return none, so it was the
+            // one mode with no countdown beeps and no voice at all -- its "Move" and "Reflect" lines
+            // in handleVoice were dead code.
+            return CoupledTick(newState, TickCue(state.players[active - 1], newState.players[active - 1], active), playGong = gong)
         }
         else -> return null
     }

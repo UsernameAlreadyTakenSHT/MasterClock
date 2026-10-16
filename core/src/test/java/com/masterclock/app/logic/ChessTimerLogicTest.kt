@@ -455,6 +455,9 @@ class ChessTimerLogicTest {
         val reflecting = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 100, isGongReflectionPhase = true), PlayerState(5_000)), activePlayer = 1)
         val moving = coupled(reflecting, 200, settings)
         assertTrue(moving.playGong)
+        // The cue that drives the beeps and the "Move" line: reflection before, move after.
+        assertTrue(moving.cue!!.before.isGongReflectionPhase)
+        assertFalse(moving.cue!!.after.isGongReflectionPhase)
         assertEquals(3_000, moving.state.players[0].timeRemainingMs)
         assertFalse(moving.state.players[0].isGongReflectionPhase)
 
