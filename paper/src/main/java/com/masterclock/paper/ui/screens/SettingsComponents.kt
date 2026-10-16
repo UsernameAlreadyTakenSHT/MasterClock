@@ -109,6 +109,8 @@ fun BehaviorSwitch(
     }
 }
 
+private const val MAX_TIME_MS = 60 * 60_000L
+
 @Composable
 fun MSInput(label: String, timeMs: Long, onTimeChange: (Long) -> Unit) {
     val totalSeconds = timeMs / 1000
@@ -122,14 +124,16 @@ fun MSInput(label: String, timeMs: Long, onTimeChange: (Long) -> Unit) {
             color = MaterialTheme.colorScheme.onBackground, // AVOID GREY: 100% opacity
             fontWeight = FontWeight.Medium
         )
+        // An hour at most, so 60 minutes leaves no room for seconds: each field was clamped on its
+        // own, which let the pair reach 60:59.
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TimeField(m.toString(), "m", Modifier.weight(1f)) {
                 val newM = it.toIntOrNull()?.coerceIn(0, 60) ?: 0
-                onTimeChange((newM * 60000L) + (s * 1000L))
+                onTimeChange(((newM * 60000L) + (s * 1000L)).coerceAtMost(MAX_TIME_MS))
             }
             TimeField(s.toString(), "s", Modifier.weight(1f)) {
                 val newS = it.toIntOrNull()?.coerceIn(0, 59) ?: 0
-                onTimeChange((m * 60000L) + (newS * 1000L))
+                onTimeChange(((m * 60000L) + (newS * 1000L)).coerceAtMost(MAX_TIME_MS))
             }
         }
     }
