@@ -1785,19 +1785,7 @@ fun generateTxtLog(log: GameLog, padding: TimePadding = TimePadding.FULL): Strin
     return sb.toString()
 }
 
-fun generatePgn(log: GameLog): String {
-    val sb = StringBuilder("[Event \"Casual Match\"]\n[Date \"${SimpleDateFormat("yyyy.MM.dd", Locale.US).format(Date(log.startTime))}\"]\n\n")
-    val moves = log.events.filter { it.eventType == "MOVE" }
-    moves.forEachIndexed { i, m -> if (i % 2 == 0) sb.append("${(i/2)+1}. "); sb.append("${m.moveNotation ?: "???"} ") }
-    return sb.toString()
-}
-
-fun generatePdn(log: GameLog): String {
-    val sb = StringBuilder("[Event \"Draughts Match\"]\n[Date \"${SimpleDateFormat("yyyy.MM.dd", Locale.US).format(Date(log.startTime))}\"]\n\n")
-    val moves = log.events.filter { it.eventType == "MOVE" }
-    moves.forEachIndexed { i, m -> if (i % 2 == 0) sb.append("${(i/2)+1}. "); sb.append("${m.moveNotation ?: "???"} ") }
-    return sb.toString()
-}
+// generatePgn and generatePdn live in core (MoveExport.kt), where they are tested.
 
 fun generateKif(log: GameLog): String {
     val sb = StringBuilder("# Shogi Match Log\nStart: ${Date(log.startTime)}\n\n")
