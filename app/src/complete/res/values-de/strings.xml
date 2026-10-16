@@ -107,6 +107,11 @@
     <string name="tools_dark_square">SCHWARZ</string>
     <string name="tools_delete_recording">Aufnahme löschen</string>
     <string name="tools_detailed_moves">Züge im Detail</string>
+    <string name="tools_copied_to_clipboard">%1$s in die Zwischenablage kopiert</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">%d Zug insgesamt</item>
+        <item quantity="other">%d Züge insgesamt</item>
+    </plurals>
     <string name="tools_dice_roll">Würfelwurf</string>
     <string name="tools_draw">Zeichnen</string>
     <string name="tools_draw_again">Erneut ziehen</string>

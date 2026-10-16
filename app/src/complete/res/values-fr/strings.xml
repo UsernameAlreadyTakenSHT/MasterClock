@@ -105,6 +105,11 @@
     <string name="tools_dark_square">NOIRE</string>
     <string name="tools_delete_recording">Supprimer l\'enregistrement</string>
     <string name="tools_detailed_moves">Coups détaillés</string>
+    <string name="tools_copied_to_clipboard">%1$s copié dans le presse-papiers</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">%d coup au total</item>
+        <item quantity="other">%d coups au total</item>
+    </plurals>
     <string name="tools_dice_roll">Lancer de dés</string>
     <string name="tools_draw">Dessiner</string>
     <string name="tools_draw_again">Tirer à nouveau</string>

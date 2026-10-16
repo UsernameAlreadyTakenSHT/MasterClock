@@ -110,6 +110,11 @@
     <string name="tools_dark_square">PRETA</string>
     <string name="tools_delete_recording">Eliminar a gravação</string>
     <string name="tools_detailed_moves">Lances em detalhe</string>
+    <string name="tools_copied_to_clipboard">%1$s copiado para a área de transferência</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">%d lance no total</item>
+        <item quantity="other">%d lances no total</item>
+    </plurals>
     <string name="tools_dice_roll">Lançamento de dados</string>
     <string name="tools_draw">Desenhar</string>
     <string name="tools_draw_again">Sortear de novo</string>

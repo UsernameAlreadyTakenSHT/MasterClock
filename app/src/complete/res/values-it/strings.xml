@@ -107,6 +107,11 @@
     <string name="tools_dark_square">NERA</string>
     <string name="tools_delete_recording">Elimina la registrazione</string>
     <string name="tools_detailed_moves">Mosse in dettaglio</string>
+    <string name="tools_copied_to_clipboard">%1$s copiato negli appunti</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">%d mossa in tutto</item>
+        <item quantity="other">%d mosse in tutto</item>
+    </plurals>
     <string name="tools_dice_roll">Lancio di dadi</string>
     <string name="tools_draw">Disegna</string>
     <string name="tools_draw_again">Estrai di nuovo</string>

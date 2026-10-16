@@ -107,6 +107,11 @@
     <string name="tools_dark_square">NEGRA</string>
     <string name="tools_delete_recording">Eliminar la grabación</string>
     <string name="tools_detailed_moves">Jugadas detalladas</string>
+    <string name="tools_copied_to_clipboard">%1$s copiado al portapapeles</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">%d jugada en total</item>
+        <item quantity="other">%d jugadas en total</item>
+    </plurals>
     <string name="tools_dice_roll">Tirada de dados</string>
     <string name="tools_draw">Dibujar</string>
     <string name="tools_draw_again">Sortear otra vez</string>

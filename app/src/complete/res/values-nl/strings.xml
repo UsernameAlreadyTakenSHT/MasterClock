@@ -107,6 +107,11 @@
     <string name="tools_dark_square">ZWART</string>
     <string name="tools_delete_recording">Opname verwijderen</string>
     <string name="tools_detailed_moves">Zetten in detail</string>
+    <string name="tools_copied_to_clipboard">%1$s naar het klembord gekopieerd</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">%d zet in totaal</item>
+        <item quantity="other">%d zetten in totaal</item>
+    </plurals>
     <string name="tools_dice_roll">Dobbelworp</string>
     <string name="tools_draw">Tekenen</string>
     <string name="tools_draw_again">Opnieuw loten</string>

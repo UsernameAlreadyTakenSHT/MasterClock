@@ -137,6 +137,12 @@
     <string name="tools_dark_square">DARK</string>
     <string name="tools_delete_recording">Delete Recording</string>
     <string name="tools_detailed_moves">Detailed Moves</string>
+    <!-- %1$s is the export format: PGN, PDN or KIF. -->
+    <string name="tools_copied_to_clipboard">%1$s copied to clipboard</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">%d move total</item>
+        <item quantity="other">%d moves total</item>
+    </plurals>
     <string name="tools_dice_roll">Dice Roll</string>
     <string name="tools_draw">Draw</string>
     <string name="tools_draw_again">Draw again</string>

@@ -136,7 +136,8 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.AutoMirrored.Filled.TextSnippet, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("${logEntry.events.count { it.eventType == "MOVE" }} moves total", style = MaterialTheme.typography.bodyMedium)
+                                    val moveTotal = logEntry.events.count { it.eventType == "MOVE" }
+                                    Text(pluralStringResource(R.plurals.tools_moves_total, moveTotal, moveTotal), style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                         }
@@ -248,7 +249,7 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                             val format = moveExportFormatLabel(log.settings.gameType)
                             val clip = ClipData.newPlainText("Match $format", generateMoveExport(log))
                             clipboardManager.setPrimaryClip(clip)
-                            Toast.makeText(context, "$format copied to clipboard", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.tools_copied_to_clipboard, format), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -1781,7 +1782,14 @@ fun formatHms(ms: Long, padding: TimePadding = TimePadding.FULL): String {
 
 fun generateTxtLog(log: GameLog, padding: TimePadding = TimePadding.FULL): String {
     val sb = StringBuilder("MasterClock Log\nDate: ${Date(log.startTime)}\n\n")
-    log.events.forEach { e -> sb.append("${if (e.playerIndex != null) "P${e.playerIndex}" else "SYSTEM"}: ${e.eventType} ${e.detail ?: ""} at ${formatHms(e.timeRemainingMs ?: 0, padding)}\n") }
+    // A clock reading only for events that carry one. PAUSE, FLAG and the like have none, and they
+    // all used to read "at 00:00" -- which for a flag looks like a time, and is not one.
+    log.events.forEach { e ->
+        val who = if (e.playerIndex != null) "P${e.playerIndex}" else "SYSTEM"
+        val detail = e.detail?.let { " $it" } ?: ""
+        val at = e.timeRemainingMs?.let { " at ${formatHms(it, padding)}" } ?: ""
+        sb.append("$who: ${e.eventType}$detail$at\n")
+    }
     return sb.toString()
 }
 
