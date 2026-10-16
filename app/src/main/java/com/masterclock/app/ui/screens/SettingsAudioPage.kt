@@ -29,12 +29,19 @@ import com.masterclock.app.logic.*
  * the stored URI became unreadable on next launch, silently falling back to the default sound. This
  * helper takes the persistable grant right after picking, so callers only need
  * to switch their launcher to `ActivityResultContracts.OpenDocument()`.
+ *
+ * Returns whether it got one. A provider can refuse, and the URI used to be saved regardless: it
+ * played for that session, and at the next launch the stored-settings check dropped it for want of
+ * a grant -- correctly, since it could no longer be read -- with nothing to tell the user why their
+ * sound had gone back to the default.
  */
-private fun persistReadPermission(context: android.content.Context, uri: Uri) {
-    try {
+private fun persistReadPermission(context: android.content.Context, uri: Uri): Boolean {
+    return try {
         context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        true
     } catch (e: Exception) {
-        Log.w("AudioSettingsPage", "Could not persist read permission for $uri, sound may not survive app restart", e)
+        Log.w("AudioSettingsPage", "Could not persist read permission for $uri", e)
+        false
     }
 }
 
@@ -176,10 +183,17 @@ fun AudioSettingsPage(
 
         SettingsSection(stringResource(R.string.settings_custom_sounds)) {
             val context = LocalContext.current
-            val switchLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { persistReadPermission(context, it); onSettingsChanged(currentSettings.copy(customSwitchUri = it.toString())) } }
-            val beepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { persistReadPermission(context, it); onSettingsChanged(currentSettings.copy(customBeepUri = it.toString())) } }
-            val finalBeepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { persistReadPermission(context, it); onSettingsChanged(currentSettings.copy(customFinalBeepUri = it.toString())) } }
-            val gongLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { persistReadPermission(context, it); onSettingsChanged(currentSettings.copy(customGongUri = it.toString())) } }
+            val soundNotKeptText = stringResource(R.string.toast_sound_not_kept)
+            // A sound the app cannot keep access to is refused now rather than accepted for one
+            // session and dropped at the next launch.
+            fun keep(uri: Uri, apply: (String) -> ChessClockSettings) {
+                if (persistReadPermission(context, uri)) onSettingsChanged(apply(uri.toString()))
+                else android.widget.Toast.makeText(context, soundNotKeptText, android.widget.Toast.LENGTH_LONG).show()
+            }
+            val switchLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customSwitchUri = s) } } }
+            val beepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customBeepUri = s) } } }
+            val finalBeepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customFinalBeepUri = s) } } }
+            val gongLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customGongUri = s) } } }
 
             Column {
                 CustomSoundItem(
