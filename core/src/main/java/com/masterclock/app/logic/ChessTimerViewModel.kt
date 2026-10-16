@@ -1713,8 +1713,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var lastBeepSecond: Long = -1
     private var lastAutoSaveTime: Long = 0
     
-    // Tracking for voice announcements to prevent repetition
-    private val lastAnnouncedThreshold = mutableMapOf<Int, Long>() // PlayerIndex -> Threshold
 
     private val _gameHistory = MutableStateFlow<List<GameLog>>(emptyList())
     val gameHistory: StateFlow<List<GameLog>> = _gameHistory.asStateFlow()
@@ -2364,16 +2362,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
         // 2. Thresholds (1m, 30s, 10s) -- never in Hidden mode, where "1 minute remaining" is the
         // very thing the clock face replaces with ??:??.
+        //
+        // Announced every time the clock comes down through one. A threshold can only be crossed on
+        // the way down, so each crossing is new; the per-player "last announced" memory that used to
+        // sit here only ever suppressed real ones -- in a move timer, after a Fischer increment or in
+        // each byoyomi period the clock comes down through the same threshold again, and from the
+        // second time on it said nothing. Several crossed in one tick speak the lowest, as the
+        // flushing queue keeps only the last.
         val time = newState.timeRemainingMs
         val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN) emptyList() else listOf(60000L, 30000L, 10000L)
         for (t in thresholds) {
             if (oldState.timeRemainingMs > t && time <= t) {
-                val lastT = lastAnnouncedThreshold[playerIdx] ?: 0L
-                if (lastT != t) {
-                    val label = if (t >= 60000L) "1 minute" else "${t/1000} seconds"
-                    voiceManager.speak("$label remaining", vol)
-                    lastAnnouncedThreshold[playerIdx] = t
-                }
+                val label = if (t >= 60000L) "1 minute" else "${t/1000} seconds"
+                voiceManager.speak("$label remaining", vol)
             }
         }
 
@@ -2484,7 +2485,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // user would recognise.
         clearSavedClock()
         finishCurrentLog()
-        lastAnnouncedThreshold.clear()
         _uiState.update { createInitialState(_settings.value, reuseRandomRoll = true) }
     }
 
@@ -2643,7 +2643,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // ends it. Saved with the settings it was played under: _settings has moved on, but
             // the log carries its own copy from the first press.
             finishCurrentLog()
-            lastAnnouncedThreshold.clear()
             if (initialStates != null) {
                 // A "Last Games" preset carries its own already-rolled RANDOM/HIDDEN time in
                 // initialStates -- without updating the cache reset() reuses, Reset would silently
