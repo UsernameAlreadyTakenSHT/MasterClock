@@ -329,6 +329,38 @@ class ChessTimerLogicTest {
         assertTrue(computePostMoveState(state, 1, 0, settings, s).players[0].isOutOfTime)
     }
 
+    @Test
+    fun `MOVE_TIMER_GLOBAL shows a move overrun as negative under NEGATIVE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE)
+        var p = tickPlayer(PlayerState(timeRemainingMs = 500, secondaryTimeMs = 600_000), 1_000, s, settings)
+        assertEquals(500, p.timeRemainingMs)
+        assertTrue(p.isNegative) // drawn as -0:00.5, where it used to read 0:00.5 counting up
+        p = tickPlayer(p, 1_000, s, settings)
+        assertEquals(1_500, p.timeRemainingMs)
+        assertEquals(598_000, p.secondaryTimeMs) // the total keeps running
+    }
+
+    @Test
+    fun `MOVE_TIMER_GLOBAL freezes its move clock at zero under FREEZE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.FREEZE)
+        val p = tickPlayer(PlayerState(timeRemainingMs = 500, secondaryTimeMs = 600_000), 1_000, s, settings)
+        assertEquals(0, p.timeRemainingMs)
+        assertTrue(p.isOutOfTime)
+        assertFalse(p.isNegative)
+    }
+
+    @Test
+    fun `MOVE_TIMER_GLOBAL_SHARED shows a move overrun as negative under NEGATIVE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE)
+        val players = listOf(PlayerState(timeRemainingMs = 200, secondaryTimeMs = 600_000), PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 600_000))
+        val next = tickCoupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings, s, 1)!!.state.players[0]
+        assertEquals(800, next.timeRemainingMs)
+        assertTrue(next.isNegative)
+    }
+
     // --- flagsEndGame: one rule for a press and for Resume ---
 
     @Test

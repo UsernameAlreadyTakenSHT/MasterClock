@@ -1203,6 +1203,24 @@ internal fun applyFlagBehaviorDelta(currentTime: Long, isOut: Boolean, isNegativ
  * gone, main time is gone, a period is consumed -- so the recursion ends, even with a byoyomi
  * period of zero length.
  */
+/**
+ * One tick of the move clock of MOVE_TIMER_GLOBAL and MOVE_TIMER_GLOBAL_SHARED.
+ *
+ * These were the only clocks that never went through [applyFlagBehaviorDelta]: the move clock just
+ * kept falling below zero, with isNegative never set, and the display -- which draws the absolute
+ * value and relies on isNegative for the sign -- showed an overrun as 0:01, 0:02, 0:03 counting up
+ * under the FLAGGED label, like time being gained.
+ *
+ * Their isOutOfTime also covers the total clock running out, so whether the move clock itself is
+ * already past zero has to be read off the move clock: under NEGATIVE that is isNegative, and
+ * under FREEZE and FLAG a move clock that has run out sits at zero. (REVERSE stays approximate
+ * here as it does everywhere else.)
+ */
+private fun globalMoveClockTick(p: PlayerState, delta: Long, flagBehavior: FlagBehavior): Triple<Long, Boolean, Boolean> {
+    val moveOverrun = p.isNegative || (p.isOutOfTime && p.timeRemainingMs <= 0)
+    return applyFlagBehaviorDelta(p.timeRemainingMs, moveOverrun, p.isNegative, delta, flagBehavior)
+}
+
 internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
     if (p.delayRemainingMs > 0) {
         if (delta <= p.delayRemainingMs) return p.copy(delayRemainingMs = p.delayRemainingMs - delta)
@@ -1210,7 +1228,12 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
     }
     return when (s.mode) {
         TimerMode.MOVE_TIMER_OVERTIME -> { val newTime = p.timeRemainingMs - delta; if (newTime < 0) { val newSec = p.secondaryTimeMs + newTime; p.copy(timeRemainingMs = 0, secondaryTimeMs = newSec, isOutOfTime = newSec <= 0) } else p.copy(timeRemainingMs = newTime) }
-        TimerMode.MOVE_TIMER_GLOBAL -> { val newTime = p.timeRemainingMs - delta; val newSec = p.secondaryTimeMs - delta; p.copy(timeRemainingMs = newTime, secondaryTimeMs = newSec, isOutOfTime = newTime <= 0 || newSec <= 0) }
+        TimerMode.MOVE_TIMER_GLOBAL -> {
+            // The move clock honours FlagBehavior like every other clock; see globalMoveClockTick.
+            val (moveTime, moveOut, moveNeg) = globalMoveClockTick(p, delta, settings.flagBehavior)
+            val newSec = (p.secondaryTimeMs - delta).coerceAtLeast(0)
+            p.copy(timeRemainingMs = moveTime, isNegative = moveNeg, secondaryTimeMs = newSec, isOutOfTime = moveOut || newSec <= 0)
+        }
         TimerMode.BYOYOMI_JAPANESE -> {
             val newTime = p.timeRemainingMs - delta
             when {
@@ -1350,12 +1373,11 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
         }
         TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
             val pActive = state.players[active - 1]
-            val newMoveTime = pActive.timeRemainingMs - delta
+            val (newMoveTime, outMove, moveNeg) = globalMoveClockTick(pActive, delta, settings.flagBehavior)
             val newGlobalTime = (pActive.secondaryTimeMs - delta).coerceAtLeast(0)
-            val outMove = newMoveTime <= 0
             val outGlobal = newGlobalTime <= 0
             val newPlayers = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
+                if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, isNegative = moveNeg, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
                 else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = outGlobal)
             }
             return CoupledTick(
@@ -1483,7 +1505,12 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         // reset restored the time and left isOutOfTime/isNegative set, so under NEGATIVE every
         // later turn counted up from -0:30 and the player could never flag again.
         TimerMode.MOVE_TIMER_STANDARD -> if (p.isNegative) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = false) else tempP.copy(timeRemainingMs = s.moveTimeMs)
-        TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> tempP.copy(timeRemainingMs = s.moveTimeMs)
+        // A fresh move clock; an overrun of the last one ends with it, and the player stays out
+        // only if the total (or the shared pool) is gone too.
+        TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED ->
+            if (p.isNegative) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = p.secondaryTimeMs <= 0)
+            else tempP.copy(timeRemainingMs = s.moveTimeMs)
+        TimerMode.MOVE_TIMER_OVERTIME -> tempP.copy(timeRemainingMs = s.moveTimeMs)
         TimerMode.MOVE_TIMER_SAVE_CAP -> {
             // What is left of the pot at the moment of the press. SAVE_CAP is not named in
             // tickPlayer, so it burns through the generic branch as a single number: timeRemainingMs
