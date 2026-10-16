@@ -1292,6 +1292,20 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
     }
 }
 
+/**
+ * Whether flags have ended the game. FREEZE stops at the first flag; FLAG plays on until one
+ * player is left (or the only one is out); NEGATIVE and REVERSE never stop on a flag -- the
+ * overrun is shown and play continues.
+ */
+internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior, numberOfPlayers: Int): Boolean {
+    val out = players.count { it.isOutOfTime }
+    return when (flagBehavior) {
+        FlagBehavior.FREEZE -> out > 0
+        FlagBehavior.FLAG -> if (numberOfPlayers <= 1) out > 0 else out >= numberOfPlayers - 1
+        FlagBehavior.NEGATIVE, FlagBehavior.REVERSE -> false
+    }
+}
+
 /** A player's state before and after a tick, for the audio and voice cues to compare. */
 internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int)
 
@@ -1970,11 +1984,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             return
         }
 
-        val flagMode = settings.value.flagBehavior
         val playerCount = settings.value.numberOfPlayers.coerceAtLeast(1)
-        val outOfTimeCount = currentState.players.count { it.isOutOfTime }
-        if (flagMode == FlagBehavior.FREEZE && outOfTimeCount > 0) return
-        if (flagMode == FlagBehavior.FLAG && playerCount > 1 && outOfTimeCount >= playerCount - 1) return
+        if (flagsEndGame(currentState.players, settings.value.flagBehavior, playerCount)) return
 
         if (currentState.activePlayer == playerIndex) {
             val p = currentState.players.getOrNull(playerIndex - 1) ?: return
@@ -2312,7 +2323,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val s = _settings.value
         val mode = getPlayerSettings(active).mode
         if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll) || mode == TimerMode.PHASES) { startClock(active, armDelay = false); return }
-        if (_uiState.value.players.none { it.isOutOfTime }) startClock(active, armDelay = false)
+        // The same rule a press goes by. This used to refuse to restart while anyone at all was out
+        // of time, so under NEGATIVE -- or FLAG with three or four players, where play goes on
+        // after a flag -- a single pause stopped the game for good: Resume did nothing, and the
+        // active player's button, which resumes a paused clock, did nothing either.
+        if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = false)
     }
     fun reset() {
         timerJob?.cancel()

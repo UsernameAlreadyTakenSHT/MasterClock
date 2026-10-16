@@ -268,6 +268,31 @@ class ChessTimerLogicTest {
         assertEquals(1, state.players[1].moveCount)
     }
 
+    // --- flagsEndGame: one rule for a press and for Resume ---
+
+    @Test
+    fun `a flag ends the game under FREEZE only once someone is out`() {
+        val oneOut = listOf(PlayerState(0, isOutOfTime = true), PlayerState(60_000))
+        assertTrue(flagsEndGame(oneOut, FlagBehavior.FREEZE, 2))
+        assertFalse(flagsEndGame(listOf(PlayerState(1), PlayerState(1)), FlagBehavior.FREEZE, 2))
+    }
+
+    @Test
+    fun `NEGATIVE plays on after a flag, so Resume must too`() {
+        // Resume used to refuse while anyone was out, which froze a NEGATIVE game at its first pause.
+        val oneOut = listOf(PlayerState(5_000, isOutOfTime = true, isNegative = true), PlayerState(60_000))
+        assertFalse(flagsEndGame(oneOut, FlagBehavior.NEGATIVE, 2))
+    }
+
+    @Test
+    fun `FLAG with four players plays on until one is left`() {
+        val players = { out: Int -> List(4) { PlayerState(if (it < out) 0 else 60_000, isOutOfTime = it < out) } }
+        assertFalse(flagsEndGame(players(1), FlagBehavior.FLAG, 4))
+        assertFalse(flagsEndGame(players(2), FlagBehavior.FLAG, 4))
+        assertTrue(flagsEndGame(players(3), FlagBehavior.FLAG, 4))
+        assertTrue(flagsEndGame(players(1).take(2), FlagBehavior.FLAG, 2))
+    }
+
     // --- tickCoupled: the modes whose players share or trade time ---
 
     private fun coupled(state: ChessClockState, delta: Long, settings: ChessClockSettings): CoupledTick =
