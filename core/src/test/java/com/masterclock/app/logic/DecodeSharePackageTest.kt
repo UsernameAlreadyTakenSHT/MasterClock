@@ -70,6 +70,19 @@ class DecodeSharePackageTest {
     }
 
     @Test
+    fun `refuses another app's settings object`() {
+        assertThrows(NotASettingsFileException::class.java) {
+            decodeSharePackage("""{"settings":{"theme":"dark","fontSize":14}}""")
+        }
+    }
+
+    @Test
+    fun `accepts this app's export of settings left at their defaults`() {
+        // Defaults are not encoded, so that is exactly what such an export looks like.
+        assertEquals(ChessClockSettings(), decodeSharePackage("""{"settings":{}}""").settings)
+    }
+
+    @Test
     fun `accepts a legacy file carrying a single known field`() {
         // Older exports omit defaulted fields, so one recognised key has to be enough.
         val decoded = decodeSharePackage("""{"numberOfPlayers":3}""")

@@ -77,9 +77,14 @@ fun decodeSharePackage(content: String): SharePackage {
     val root = importJson.parseToJsonElement(content) as? JsonObject
         ?: throw NotASettingsFileException("Import file is not a JSON object")
 
-    if ("settings" in root) {
-        // The current format. A failure here falls through rather than aborting, so a legacy file
-        // that happens to carry a "settings" field of its own is still read below.
+    // The current format, held to the same test as the legacy one below: any object under a
+    // "settings" key decodes, every field having a default, so another app's {"settings": {...}}
+    // used to come through as factory settings and "Import successful". Empty is allowed -- it is
+    // what this app writes for settings left entirely at their defaults. A failure falls through
+    // rather than aborting, so a legacy file that carries a "settings" field of its own is still
+    // read below.
+    val wrapped = root["settings"] as? JsonObject
+    if (wrapped != null && (wrapped.isEmpty() || wrapped.keys.any { it in settingsFieldNames })) {
         runCatching { importJson.decodeFromJsonElement(SharePackage.serializer(), root) }
             .onSuccess { return it }
     }
