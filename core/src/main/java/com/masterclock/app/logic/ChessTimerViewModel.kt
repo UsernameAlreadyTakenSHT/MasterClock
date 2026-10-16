@@ -2053,8 +2053,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // A tap during the pause between phases skips it. It went to startPhaseTransition,
                 // which starts the pause -- so a tap with five seconds of it left put it back to
                 // its full length, and the pause could never be skipped at all.
-                p1.isInInterPhasePause -> _uiState.update { performPhaseAdvance(it, 1) }
-                p1.isOutOfTime || settings.value.allowPhaseSkip -> _uiState.update { startPhaseTransition(it) }
+                p1.isInInterPhasePause -> _uiState.update { st -> performPhaseAdvance(st, 1).also { onPhaseTransition(st.players[0], it.players[0]) } }
+                p1.isOutOfTime || settings.value.allowPhaseSkip -> _uiState.update { st -> startPhaseTransition(st).also { onPhaseTransition(st.players[0], it.players[0]) } }
             }
             return
         }
@@ -2213,7 +2213,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 val p1 = state.players[0]
                 if (p1.isInInterPhasePause) {
                     val newPause = (p1.pauseTimeRemainingMs - delta).coerceAtLeast(0)
-                    if (newPause <= 0) return@update performPhaseAdvance(state, 1)
+                    if (newPause <= 0) return@update performPhaseAdvance(state, 1).also { onPhaseTransition(p1, it.players[0]) }
                     return@update state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = newPause) })
                 }
                 if (p1.isOutOfTime) {
@@ -2226,7 +2226,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
                 val newGlobal = (state.globalTimeMs - delta).coerceAtLeast(0)
                 if (newGlobal <= 0 && currentPhase.autoAdvance) {
-                    return@update startPhaseTransition(state)
+                    return@update startPhaseTransition(state).also { onPhaseTransition(p1, it.players[0]) }
                 }
                 val newP1 = p1.copy(isOutOfTime = newGlobal <= 0)
                 handleAudio(p1.copy(timeRemainingMs = state.globalTimeMs), newP1.copy(timeRemainingMs = newGlobal), settings, 1)
@@ -2284,6 +2284,36 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
 
             lastBeepSecond = seconds
+        }
+    }
+
+    /**
+     * Sound and voice for a PHASES transition, from [before] to [after] (both Player 1's state, which
+     * carries the phase).
+     *
+     * Transitions never went through tick()'s audio: a phase that advanced on its own changed in
+     * silence, the end of a non-looping game sounded no flag and logged no FLAG event, and the
+     * voice line naming the next phase could never fire -- handleVoice was only ever handed two
+     * states of the same phase. Now: the end of the game sounds and is logged like any flag; the
+     * start of a pause between phases sounds the gong; and a new phase sounds the gong (unless a
+     * pause already did) and has its name spoken.
+     */
+    private fun onPhaseTransition(before: PlayerState, after: PlayerState) {
+        val settings = _settings.value
+        when {
+            after.isOutOfTime -> if (!before.isOutOfTime) {
+                handleAudio(before, after, settings, 1)
+                handleVoice(before, after, settings, 1)
+            }
+            after.isInInterPhasePause -> if (!before.isInInterPhasePause) soundManager.playGong()
+            else -> {
+                if (!before.isInInterPhasePause) soundManager.playGong()
+                if (settings.voiceAnnouncementsEnabled) {
+                    val name = getPlayerSettings(1).phases.getOrNull(after.currentPhaseIndex)?.name?.takeIf { it.isNotBlank() }
+                        ?: "Phase ${after.currentPhaseIndex + 1}"
+                    voiceManager.speak(name, settings.voiceVolume)
+                }
+            }
         }
     }
 
