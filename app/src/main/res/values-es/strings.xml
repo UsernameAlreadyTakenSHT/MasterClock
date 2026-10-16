@@ -552,6 +552,7 @@
     <string name="timer_arbitre">Árbitro</string>
     <string name="timer_save_clock">Guardar</string>
     <string name="timer_resume">Reanudar</string>
+    <string name="timer_start">Iniciar</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CICLO: %d</string>
     <string name="timer_moves">JUGADAS: %d</string>

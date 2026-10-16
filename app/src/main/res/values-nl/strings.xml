@@ -535,6 +535,7 @@
     <string name="timer_arbitre">Arbiter</string>
     <string name="timer_save_clock">Opslaan</string>
     <string name="timer_resume">Hervatten</string>
+    <string name="timer_start">Starten</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CYCLUS: %d</string>
     <string name="timer_moves">ZETTEN: %d</string>

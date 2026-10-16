@@ -557,7 +557,14 @@ fun ControlBar(
                 contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary, 
                 modifier = Modifier.size(64.dp).graphicsLayer { rotationZ = iconRotation }
             ) { 
-                Icon(imageVector = if (isPaused || !isStarted) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = if (isPaused) "Resume" else stringResource(R.string.timer_pause), modifier = Modifier.size(36.dp)) 
+                // Spoken by TalkBack: it was a hard-coded English "Resume", even in a French app and
+                // even before the first move, when the button starts the game rather than resumes it.
+                val pauseResumeLabel = when {
+                    !isStarted -> stringResource(R.string.timer_start)
+                    isPaused -> stringResource(R.string.timer_resume)
+                    else -> stringResource(R.string.timer_pause)
+                }
+                Icon(imageVector = if (isPaused || !isStarted) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = pauseResumeLabel, modifier = Modifier.size(36.dp))
             }
             if (showArbitre) {
                 ControlBarItem(onClick = onToggleArbitre, rotation = iconRotation, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer, contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)) { Icon(imageVector = if (isArbitreMode) Icons.Default.Gavel else Icons.Default.Edit, contentDescription = stringResource(R.string.timer_arbitre), tint = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else LocalContentColor.current) }
