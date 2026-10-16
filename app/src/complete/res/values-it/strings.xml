@@ -137,7 +137,7 @@
     <string name="tools_new_draw_note">Nuova nota disegnata</string>
     <string name="tools_new_image_note">Nuova nota immagine</string>
     <string name="tools_new_note">Nuova nota</string>
-    <string name="tools_notebook_full">Il taccuino è pieno (%1$d note). Eliminane una per aggiungerne una nuova.</string>
+    <string name="tools_notebook_full">Il taccuino è pieno. Elimina una nota per aggiungerne una nuova.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Nuova nota video</string>
     <string name="tools_no_games">Nessuna partita registrata finora.</string>
     <string name="tools_no_notes">Nessuna nota. Tocca + per crearne una.</string>

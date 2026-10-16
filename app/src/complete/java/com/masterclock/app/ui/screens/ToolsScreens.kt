@@ -970,7 +970,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val newImageNoteTitle = stringResource(R.string.tools_new_image_note)
     val newVideoNoteTitle = stringResource(R.string.tools_new_video_note)
     val newBoardNoteTitle = stringResource(R.string.tools_new_board_note)
-    val notebookFullText = stringResource(R.string.tools_notebook_full, MAX_NOTEBOOK_NOTES)
+    val notebookFullText = stringResource(R.string.tools_notebook_full)
     val locale = LocalConfiguration.current.locales[0]
     val settings by viewModel.settings.collectAsState()
     val context = LocalContext.current

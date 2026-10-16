@@ -165,7 +165,7 @@
     <string name="tools_new_draw_note">New Draw Note</string>
     <string name="tools_new_image_note">New Image Note</string>
     <string name="tools_new_note">New Note</string>
-    <string name="tools_notebook_full">The notebook is full (%1$d notes). Delete one to add another.</string>
+    <string name="tools_notebook_full">The notebook is full. Delete a note to add another.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">New Video Note</string>
     <string name="tools_no_games">No games recorded yet.</string>
     <string name="tools_no_notes">No notes yet. Tap + to create one.</string>

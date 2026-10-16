@@ -137,7 +137,7 @@
     <string name="tools_new_draw_note">Neue Zeichennotiz</string>
     <string name="tools_new_image_note">Neue Bildnotiz</string>
     <string name="tools_new_note">Neue Notiz</string>
-    <string name="tools_notebook_full">Das Notizbuch ist voll (%1$d Notizen). Lösche eine, um eine neue hinzuzufügen.</string>
+    <string name="tools_notebook_full">Das Notizbuch ist voll. Lösche eine Notiz, um eine neue hinzuzufügen.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Neue Videonotiz</string>
     <string name="tools_no_games">Noch keine Partien aufgezeichnet.</string>
     <string name="tools_no_notes">Noch keine Notizen. Zum Anlegen auf + tippen.</string>

@@ -137,7 +137,7 @@
     <string name="tools_new_draw_note">Nieuwe tekennotitie</string>
     <string name="tools_new_image_note">Nieuwe afbeeldingsnotitie</string>
     <string name="tools_new_note">Nieuwe notitie</string>
-    <string name="tools_notebook_full">Het notitieboek is vol (%1$d notities). Verwijder er een om een nieuwe toe te voegen.</string>
+    <string name="tools_notebook_full">Het notitieboek is vol. Verwijder een notitie om een nieuwe toe te voegen.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Nieuwe videonotitie</string>
     <string name="tools_no_games">Nog geen partijen opgeslagen.</string>
     <string name="tools_no_notes">Nog geen notities. Tik op + om er een te maken.</string>
