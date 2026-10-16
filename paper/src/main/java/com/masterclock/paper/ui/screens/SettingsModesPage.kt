@@ -15,7 +15,12 @@ import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.ScrollbarMMD
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
+import com.mudita.mmd.components.divider.HorizontalDividerMMD
+import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
+import com.mudita.mmd.components.tabs.TabMMD
 
+// PrimaryTabRowMMD carries Material's experimental marker, inherited from the tab row it wraps.
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModesSettingsPage(
     currentSettings: ChessClockSettings,
@@ -49,18 +54,22 @@ fun ModesSettingsPage(
                 .verticalScroll(scrollState)
         ) {
             if (currentSettings.differentSettingsPerPlayer) {
-                PrimaryTabRow(
+                PrimaryTabRowMMD(
                     selectedTabIndex = selectedPlayerTab,
                     modifier = Modifier.padding(vertical = 4.dp),
                     containerColor = MaterialTheme.colorScheme.background,
                     contentColor = MaterialTheme.colorScheme.onBackground
                 ) {
-                    Tab(selected = selectedPlayerTab == 0, onClick = { selectedPlayerTab = 0 }) {
-                        Text(stringResource(R.string.common_player_n, 1), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
-                    }
-                    Tab(selected = selectedPlayerTab == 1, onClick = { selectedPlayerTab = 1 }) {
-                        Text(stringResource(R.string.common_player_n, 2), Modifier.padding(12.dp), fontWeight = FontWeight.Bold)
-                    }
+                    TabMMD(
+                        selected = selectedPlayerTab == 0,
+                        onClick = { selectedPlayerTab = 0 },
+                        text = { Text(stringResource(R.string.common_player_n, 1), fontWeight = FontWeight.Bold) }
+                    )
+                    TabMMD(
+                        selected = selectedPlayerTab == 1,
+                        onClick = { selectedPlayerTab = 1 },
+                        text = { Text(stringResource(R.string.common_player_n, 2), fontWeight = FontWeight.Bold) }
+                    )
                 }
             }
 
@@ -100,10 +109,9 @@ fun ModesSettingsPage(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 ) {
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                    )
+                    // Solid and thin rather than MMD's 3dp default: this only separates two groups
+                    // on one page. The 20% grey it replaced was a dither pattern on E Ink.
+                    HorizontalDividerMMD(thickness = 1.dp)
                 
                     SettingsSection(stringResource(R.string.settings_system_behavior)) {
                         BehaviorSwitch(
@@ -149,8 +157,10 @@ fun ModesSettingsPage(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                    Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                    // Full ink, like everything else on this screen: the dimmed footer was grey,
+                    // which E Ink renders as a dither rather than a lighter shade.
+                    Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

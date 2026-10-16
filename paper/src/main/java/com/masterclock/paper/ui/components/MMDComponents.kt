@@ -1,38 +1,31 @@
 /*
- * Compose components in the shape of MMD, the design language Mudita's own software uses on its
- * E Ink devices. Buttons, switches, text fields, dialogs and a scrollbar, sized and drawn to sit
- * beside that software rather than to look like stock Material on a screen that cannot render it
- * well -- no elevation, no ripple, hard borders, and a scrollbar that is visible because E Ink
- * offers none of the motion cues that normally say "there is more below".
+ * What the E-Ink build still draws for itself. Everything else comes from Mudita Mindful Design
+ * (MMD), Mudita's own component library for its E Ink devices (com.mudita:MMD, Apache 2.0): the
+ * theme, the type scale and the buttons, switches, fields, tabs and bars.
  *
- * They are written from how that interface behaves, not adapted from Mudita's code: nothing here
- * is derived from their source, and the deviations are deliberate and noted where they occur (see
- * ScrollbarMMD). That is why this file carries no upstream licence -- there is no upstream code in
- * it. The debt is one of design, and it is acknowledged in the credits, which the E-Ink build alone
- * shows.
+ * MMD has no counterpart for what is left here:
+ * - an alert dialog. It has bottom sheets and menus, but no dialog, so MMDAlertDialog draws one in
+ *   its manner -- no elevation, a hard border -- around MMD's own buttons.
+ * - a scrollbar for a plain scrolling Column. MMD's scrollbar lives inside LazyColumnMMD, which
+ *   turns drag scrolling off and steps a fixed number of items at a time. That suits a list of
+ *   like rows; the settings page is a few panels of very different heights, where one step would
+ *   skip most of it. ScrollbarMMD follows MMD's scrollbar, for a ScrollState instead.
  *
- * "MMD" is the abbreviation Mudita's own material uses; this file does not expand it because the
- * expansion has never been checked against a primary source.
+ * Neither is copied from MMD's source: both were written from how the interface behaves, before the
+ * library was published. The library itself is credited where the E-Ink build lists its licences.
  */
 package com.masterclock.paper.ui.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -40,102 +33,44 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.mudita.mmd.components.buttons.ButtonDefaultsMMD
+import com.mudita.mmd.components.buttons.ButtonMMD
+import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import kotlinx.coroutines.launch
 
+/** MMD's button corner and border, for the surfaces drawn here that sit beside its buttons. */
 object MMDDefaults {
-    val CornerRadius = 8.dp
-    val BorderWidth = 2.dp
-    val SwitchTrackWidth = 52.dp
-    val SwitchTrackHeight = 32.dp
-    val SwitchThumbSize = 20.dp
-    val MinButtonWidth = 50.dp
-    val MinButtonHeight = 32.dp
-    val ContentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    val CornerRadius = ButtonDefaultsMMD.buttonCornerRadius
+    val BorderWidth = ButtonDefaultsMMD.borderWidth
 }
 
-// --- BUTTONS ---
-
+/**
+ * The border for every [OutlinedButtonMMD] in this app. MMD's own default is `Color.Black` written
+ * as a constant rather than read from the scheme, so with reversed colours the outline vanished
+ * into the black background and the buttons were bare words. This is the same stroke on the
+ * colour MMD fills its other buttons with, which the reversed scheme does flip.
+ */
 @Composable
-fun ButtonMMD(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(MMDDefaults.CornerRadius),
-    colors: ButtonColors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.75f),
-        disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
-    ),
-    border: BorderStroke? = null,
-    contentPadding: PaddingValues = MMDDefaults.ContentPadding,
-    content: @Composable RowScope.() -> Unit
-) {
-    Button(
-        modifier = modifier.defaultMinSize(
-            minWidth = MMDDefaults.MinButtonWidth,
-            minHeight = MMDDefaults.MinButtonHeight,
-        ),
-        contentPadding = contentPadding,
-        shape = shape,
-        border = border,
-        colors = colors,
-        elevation = null,
-        enabled = enabled,
-        interactionSource = remember { MutableInteractionSource() },
-        onClick = onClick,
-        content = content
-    )
-}
-
-@Composable
-fun OutlinedButtonMMD(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(MMDDefaults.CornerRadius),
-    colors: ButtonColors = ButtonDefaults.buttonColors(
-        containerColor = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.primaryContainer,
-        disabledContainerColor = Color.Transparent,
-        disabledContentColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.75f)
-    ),
-    border: BorderStroke = BorderStroke(
-        width = MMDDefaults.BorderWidth,
-        color = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.75f)
-    ),
-    contentPadding: PaddingValues = MMDDefaults.ContentPadding,
-    content: @Composable RowScope.() -> Unit
-) {
-    ButtonMMD(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        shape = shape,
-        colors = colors,
-        border = border,
-        contentPadding = contentPadding,
-        content = content
+fun outlinedButtonBorderMMD(enabled: Boolean = true): BorderStroke {
+    val color = MaterialTheme.colorScheme.primaryContainer
+    return BorderStroke(
+        ButtonDefaultsMMD.borderWidth,
+        if (enabled) color else color.copy(alpha = 0.75f),
     )
 }
 
@@ -310,128 +245,6 @@ private fun ChevronMMD(
     }
 }
 
-// --- SWITCHER ---
-
-@Composable
-fun SwitchMMD(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val disabledColor = colorScheme.onSurface.copy(alpha = 0.25f)
-    val trackColor = when {
-        !enabled -> disabledColor
-        checked -> colorScheme.primaryContainer
-        else -> colorScheme.background
-    }
-    val thumbColor = when {
-        !enabled -> disabledColor
-        checked -> colorScheme.onPrimaryContainer
-        else -> colorScheme.primaryContainer
-    }
-    val borderColor = if (enabled) colorScheme.primaryContainer else disabledColor
-
-    Box(
-        modifier = modifier
-            .size(MMDDefaults.SwitchTrackWidth, MMDDefaults.SwitchTrackHeight)
-            .clip(RoundedCornerShape(50))
-            .background(trackColor)
-            .border(MMDDefaults.BorderWidth, borderColor, RoundedCornerShape(50))
-            .toggleable(
-                value = checked,
-                enabled = enabled,
-                role = Role.Switch,
-                onValueChange = onCheckedChange,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ),
-        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 6.dp)
-                .size(MMDDefaults.SwitchThumbSize)
-                .clip(CircleShape)
-                .background(thumbColor)
-        )
-    }
-}
-
-// --- TEXT FIELD (AVOID GREY) ---
-
-@Composable
-fun MMDTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    isError: Boolean = false,
-    placeholder: String = "",
-    suffix: String = "",
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    textStyle: TextStyle = MaterialTheme.typography.bodyLarge
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val textColor = colorScheme.onSurface
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-
-    val indicatorColor by animateColorAsState(
-        targetValue = when {
-            !enabled -> colorScheme.onSurface.copy(alpha = 0.25f)
-            isError -> colorScheme.error
-            isFocused -> colorScheme.onSurface
-            else -> colorScheme.outline
-        },
-        label = "MMDTextFieldIndicator"
-    )
-    val indicatorThickness = if (isFocused) MMDDefaults.BorderWidth else 1.dp
-
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        enabled = enabled,
-        interactionSource = interactionSource,
-        modifier = modifier.defaultMinSize(minWidth = 280.dp, minHeight = 56.dp),
-        textStyle = textStyle.copy(color = textColor),
-        keyboardOptions = keyboardOptions,
-        cursorBrush = SolidColor(textColor),
-        decorationBox = { innerTextField ->
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (value.isEmpty() && placeholder.isNotEmpty()) {
-                            // AVOID GREY: Use Ink color at full opacity
-                            Text(
-                                text = placeholder,
-                                style = textStyle,
-                                color = textColor
-                            )
-                        }
-                        innerTextField()
-                    }
-                    if (suffix.isNotEmpty()) {
-                        Text(
-                            text = suffix,
-                            style = textStyle,
-                            color = textColor,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
-                HorizontalDivider(thickness = indicatorThickness, color = indicatorColor)
-            }
-        }
-    )
-}
-
 // --- DIALOGS ---
 @Composable
 fun MMDAlertDialog(
@@ -500,7 +313,8 @@ fun MMDAlertDialog(
                     if (dismissButtonText != null && onDismiss != null) {
                         OutlinedButtonMMD(
                             onClick = onDismiss,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            border = outlinedButtonBorderMMD()
                         ) {
                             Text(
                                 text = dismissButtonText,

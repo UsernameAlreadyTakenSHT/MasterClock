@@ -31,6 +31,7 @@ import androidx.compose.ui.zIndex
 import com.masterclock.paper.R
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.*
+import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import java.util.Locale
 
 @Composable
@@ -75,7 +76,8 @@ fun TimerScreen(
             ) {
                 OutlinedButtonMMD(
                     onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    border = outlinedButtonBorderMMD()
                 ) {
                     Text(
                         text = stringResource(R.string.common_reset),
@@ -85,7 +87,8 @@ fun TimerScreen(
     
                 OutlinedButtonMMD(
                     onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    border = outlinedButtonBorderMMD()
                 ) {
                     // Before the first press there is nothing to resume: the button starts P1's clock.
                     val label = when {
@@ -101,7 +104,8 @@ fun TimerScreen(
     
                 OutlinedButtonMMD(
                     onClick = onSettingsClick,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    border = outlinedButtonBorderMMD()
                 ) {
                     Text(
                         text = stringResource(R.string.timer_settings),

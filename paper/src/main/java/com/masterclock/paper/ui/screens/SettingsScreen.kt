@@ -14,6 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.*
 import com.masterclock.paper.R
+import com.mudita.mmd.components.nav_bar.NavigationBarItemMMD
+import com.mudita.mmd.components.nav_bar.NavigationBarMMD
+import com.mudita.mmd.components.top_app_bar.TopAppBarMMD
 
 /** [labelRes] rather than a String: an enum cannot call stringResource, so it carries the id. */
 enum class SettingsCategory(@StringRes val labelRes: Int, val icon: ImageVector) {
@@ -66,43 +69,29 @@ fun SettingsScreen(
 ) {
 
     Scaffold(
+        // MMD's bars bring their own rule against the content, so the dividers that used to be
+        // drawn beside them are gone.
         topBar = {
-            Column {
-                TopAppBar(
-                    title = { Text(stringResource(category.labelRes).uppercase(), style = MaterialTheme.typography.titleLarge) },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-                HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outline)
-            }
+            TopAppBarMMD(
+                title = { Text(stringResource(category.labelRes).uppercase(), style = MaterialTheme.typography.titleLarge) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+                }
+            )
         },
         bottomBar = {
             val visibleCategories = SettingsCategory.getVisibleCategories()
             if (visibleCategories.size > 1) {
-                Column {
-                    HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outline)
-                    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                        visibleCategories.forEach { cat ->
-                            NavigationBarItem(
-                                selected = category == cat,
-                                onClick = { onCategoryChanged(cat) },
-                                icon = { Icon(cat.icon, stringResource(cat.labelRes)) },
-                                label = { Text(stringResource(cat.labelRes).uppercase(), style = MaterialTheme.typography.labelMedium) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
-                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                    indicatorColor = androidx.compose.ui.graphics.Color.Transparent
-                                )
-                            )
-                        }
+                // MMD marks the selected item with a bar and leaves the others solid: the half-
+                // alpha grey they were given here dithers on E Ink.
+                NavigationBarMMD {
+                    visibleCategories.forEach { cat ->
+                        NavigationBarItemMMD(
+                            selected = category == cat,
+                            onClick = { onCategoryChanged(cat) },
+                            icon = { Icon(cat.icon, stringResource(cat.labelRes)) },
+                            label = { Text(stringResource(cat.labelRes).uppercase(), style = MaterialTheme.typography.labelMedium) }
+                        )
                     }
                 }
             }

@@ -34,6 +34,12 @@ import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.*
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
+import com.mudita.mmd.components.buttons.ButtonMMD
+import com.mudita.mmd.components.buttons.OutlinedButtonMMD
+import com.mudita.mmd.components.switcher.SwitchMMD
+import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
+import com.mudita.mmd.components.tabs.TabMMD
+import com.mudita.mmd.components.text_field.TextFieldMMD
 
 @Composable
 fun SettingsSection(title: String, content: @Composable () -> Unit) {
@@ -66,7 +72,8 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, on
     } else {
         OutlinedButtonMMD(
             onClick = onClick,
-            modifier = modifier.height(44.dp)
+            modifier = modifier.height(44.dp),
+            border = outlinedButtonBorderMMD()
         ) {
             Text(
                 text = title, 
@@ -141,13 +148,14 @@ fun MSInput(label: String, timeMs: Long, onTimeChange: (Long) -> Unit) {
 
 @Composable
 fun TimeField(value: String, suffix: String, modifier: Modifier = Modifier, onValueChange: (String) -> Unit) {
-    MMDTextField(
+    // No placeholder: an empty field already reads as zero.
+    TextFieldMMD(
         value = if (value == "0") "" else value,
         onValueChange = { if (it.length <= 2) onValueChange(it) },
         modifier = modifier,
-        placeholder = "", // NO PLACEHOLDER (Clean/Minimal)
-        suffix = suffix,
+        suffix = { Text(suffix) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
         textStyle = MaterialTheme.typography.bodyLarge
     )
 }
@@ -232,6 +240,8 @@ private fun CreditRow(entry: AppInfo.CreditEntry) {
     }
 }
 
+// PrimaryTabRowMMD carries Material's experimental marker, inherited from the tab row it wraps.
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -268,13 +278,13 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                     )
                 }
 
-                PrimaryTabRow(
+                PrimaryTabRowMMD(
                     selectedTabIndex = selectedTab,
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
                     tabs.forEachIndexed { index, label ->
-                        Tab(
+                        TabMMD(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
                             // A third tab leaves each one about a third of the dialog, where the
