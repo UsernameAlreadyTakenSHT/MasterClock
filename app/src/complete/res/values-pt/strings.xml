@@ -113,6 +113,7 @@
     <string name="tools_copied_to_clipboard">%1$s copiado para a área de transferência</string>
     <plurals name="tools_moves_total">
         <item quantity="one">%d lance no total</item>
+        <item quantity="many">%d de lances no total</item>
         <item quantity="other">%d lances no total</item>
     </plurals>
     <string name="tools_dice_roll">Lançamento de dados</string>

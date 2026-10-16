@@ -110,6 +110,7 @@
     <string name="tools_copied_to_clipboard">%1$s copiato negli appunti</string>
     <plurals name="tools_moves_total">
         <item quantity="one">%d mossa in tutto</item>
+        <item quantity="many">%d di mosse in tutto</item>
         <item quantity="other">%d mosse in tutto</item>
     </plurals>
     <string name="tools_dice_roll">Lancio di dadi</string>

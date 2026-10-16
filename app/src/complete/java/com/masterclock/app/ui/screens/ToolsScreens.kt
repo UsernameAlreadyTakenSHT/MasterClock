@@ -166,6 +166,10 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
             // moveDurations() skipped a MOVE the display list kept. Hoisted out of the lazy
             // builder below, whose scope is not composable.
             val durations = remember(log) { moveDurations(log) }
+            // Read in composition: the click handler is not, and lint rightly refuses resource
+            // reads through LocalContext there.
+            val exportFormat = moveExportFormatLabel(log.settings.gameType)
+            val copiedText = stringResource(R.string.tools_copied_to_clipboard, exportFormat)
 
             // A lazy list, not a scrolling Column: this screen composes one Row per move, and a
             // long game -- or an imported log sitting at the sanitiser's event ceiling -- would
@@ -246,10 +250,9 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                     Spacer(Modifier.height(24.dp))
                     Button(
                         onClick = {
-                            val format = moveExportFormatLabel(log.settings.gameType)
-                            val clip = ClipData.newPlainText("Match $format", generateMoveExport(log))
+                            val clip = ClipData.newPlainText("Match $exportFormat", generateMoveExport(log))
                             clipboardManager.setPrimaryClip(clip)
-                            Toast.makeText(context, context.getString(R.string.tools_copied_to_clipboard, format), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, copiedText, Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
