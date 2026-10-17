@@ -1,0 +1,3 @@
+A Phases game that runs through all its phases reads FINISHED, not FLAGGED, unless its last phase flags at its end.
+Random and Hidden times are never drawn below the minimum you set.
+TalkBack no longer says "your turn" once the game is over.

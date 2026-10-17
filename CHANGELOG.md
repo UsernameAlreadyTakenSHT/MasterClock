@@ -1,3 +1,12 @@
+## v0.8.34 — 2026-10-17
+
+Three small corrections found while testing v0.8.33 on a device.
+
+### Fixed
+- **A Phases game that ran through all its phases read as a loss.** It showed "FLAGGED" in the loss colour and the voice said time was up, even with "flag on end (defeat)" off on the last phase — the setting that exists to tell the two apart. It now reads "FINISHED" in a neutral colour, TalkBack says the game is over and the voice says "Finished". A phase set to flag at its end still flags.
+- **A Random or Hidden time could be drawn below the minimum you set.** With rounded time on, the draw rounded the minimum down to ten seconds: a 1:05–10:00 range could give 1:00, and 12–15 seconds always gave 10. The minimum now rounds up, a range with no ten-second step in it is drawn to the second, and the result always stays in the range. The increment's draw had the same flaw and is fixed too.
+- **TalkBack went on saying "your turn" after the game was over** — "Player 1, out of time, your turn". It now stops once play has stopped. Under negative time, and under the "flag" behaviour while more than one player is left, play goes on after a flag, and so does "your turn".
+
 ## v0.8.33 — 2026-10-16
 
 Mostly the clock itself: what it charges, when, and what it says about it. The E-Ink build is now

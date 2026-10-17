@@ -1,0 +1,1 @@
+TalkBack no longer says "your turn" once the game is over.

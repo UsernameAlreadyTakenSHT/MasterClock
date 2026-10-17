@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-10-16"
+    const val BUILD_DATE = "2026-10-17"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,15 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.34",
+            date = "2026-10-17",
+            notes = listOf(
+                "A Phases game that runs through all its phases reads FINISHED, not FLAGGED, unless its last phase is set to flag at its end.",
+                "Random and Hidden times are never drawn below the minimum you set. Rounded time could go up to ten seconds under it.",
+                "TalkBack no longer says \"your turn\" once the game is over.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.33",
             date = "2026-10-16",
