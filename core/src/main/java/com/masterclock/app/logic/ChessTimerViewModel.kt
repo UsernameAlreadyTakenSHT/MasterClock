@@ -1450,6 +1450,14 @@ internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior
 }
 
 /**
+ * Whether the game on the clock is over: a PHASES game that ran through its phases, or a flag
+ * that [flagsEndGame] says stops play. The player who was to move stays active once it is, so
+ * TalkBack went on telling them "your turn" -- "Player 1, out of time, your turn".
+ */
+fun isGameOver(state: ChessClockState, flagBehavior: FlagBehavior, numberOfPlayers: Int): Boolean =
+    state.phasesFinished || flagsEndGame(state.players, flagBehavior, numberOfPlayers.coerceAtLeast(1))
+
+/**
  * Who moves after [current]: the next player round the table, skipping those FLAG has eliminated.
  *
  * Turns went round every seat regardless, so with three or four players under FLAG an eliminated

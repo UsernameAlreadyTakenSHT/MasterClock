@@ -422,7 +422,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         isHidden -> stringResource(R.string.a11y_time_hidden)
         else -> spokenDurationText(shownTimeMs)
     }
-    val a11yLabel = if (isActive) {
+    // Nobody's turn once the game is over, though the last player to move is still the active one.
+    val a11yLabel = if (isActive && !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 

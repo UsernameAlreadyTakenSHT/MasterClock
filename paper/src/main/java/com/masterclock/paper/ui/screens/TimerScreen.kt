@@ -64,6 +64,7 @@ fun TimerScreen(
                     playerIndex = 1,
                     state = state,
                     padding = settings.effectiveTimePadding(),
+                    gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
                     onClick = { viewModel.startOrSwitch(1) }
                 )
             }
@@ -120,6 +121,7 @@ fun TimerScreen(
                     playerIndex = 2,
                     state = state,
                     padding = settings.effectiveTimePadding(),
+                    gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
                     onClick = { viewModel.startOrSwitch(2) }
                 )
             }
@@ -170,6 +172,7 @@ fun EInkPlayerArea(
     playerIndex: Int,
     state: ChessClockState,
     padding: TimePadding,
+    gameOver: Boolean,
     onClick: () -> Unit
 ) {
     val playerState = state.players.getOrNull(playerIndex - 1) ?: PlayerState(0)
@@ -181,7 +184,8 @@ fun EInkPlayerArea(
     val spokenTime = if (isOutOfTime) {
         stringResource(R.string.a11y_out_of_time)
     } else spokenDurationText(playerState.timeRemainingMs)
-    val a11yLabel = if (isActive) {
+    // Nobody's turn once the game is over, though the last player to move is still the active one.
+    val a11yLabel = if (isActive && !gameOver) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 
