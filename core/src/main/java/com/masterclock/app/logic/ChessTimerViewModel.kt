@@ -95,22 +95,24 @@ enum class TimerMode {
 
     /**
      * The modes that run one clock for the whole table: a single move time, and in Global Shared a
-     * single reserve, that every player draws on in turn. Per-player settings have nothing to give
-     * them -- both read the move time from whoever was on the clock, so player 2's setting timed
-     * player 3's turn, and a reserve set per player was ignored outright -- so they are turned off
-     * for these modes; see [wholeTableForSharedModes].
+     * single reserve, that every player draws on in turn, and the single clock of PHASES. Per-player
+     * settings have nothing to give them. The shared modes read the move time from whoever was on
+     * the clock, so player 2's setting timed player 3's turn and a reserve set per player was
+     * ignored outright; PHASES ran player 1's phases while the screen went by the main settings and
+     * player 2's phase editor changed nothing. They are turned off for these modes; see
+     * [wholeTableSettings].
      */
-    val isShared: Boolean get() = this == MOVE_TIMER_SHARED || this == MOVE_TIMER_GLOBAL_SHARED
+    val isWholeTable: Boolean get() = this == MOVE_TIMER_SHARED || this == MOVE_TIMER_GLOBAL_SHARED || this == PHASES
 }
 
 /**
- * The settings with per-player customisation turned off when the game's mode is a shared one
- * ([TimerMode.isShared]), Player 1's settings becoming everyone's. Applied to every settings
- * change and to what is read back from storage, so neither the settings screens, a preset nor an
- * import can combine the two.
+ * The settings with per-player customisation turned off when the game's mode runs one clock for
+ * the table ([TimerMode.isWholeTable]), Player 1's settings becoming everyone's. Applied to every
+ * settings change and to what is read back from storage, so neither the settings screens, a
+ * preset nor an import can combine the two.
  */
-fun ChessClockSettings.wholeTableForSharedModes(): ChessClockSettings =
-    if (differentSettingsPerPlayer && p1Custom.mode.isShared) copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
+fun ChessClockSettings.wholeTableSettings(): ChessClockSettings =
+    if (differentSettingsPerPlayer && p1Custom.mode.isWholeTable) copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
     else this
 
 /**
@@ -2100,7 +2102,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // it from viewModelScope parsed the whole notebook on the UI thread at every launch.
             val (storedSettings, savedSettings) = withContext(Dispatchers.Default) {
                 val stored = settingsRepo.settingsFlow.first()
-                stored to sanitizeStoredSettings(getApplication(), stored).wholeTableForSharedModes()
+                stored to sanitizeStoredSettings(getApplication(), stored).wholeTableSettings()
             }
             if (savedSettings != storedSettings) {
                 Log.i("ChessTimerViewModel", "Repaired stored settings that failed validation")
@@ -2852,7 +2854,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     logDurationLimit = oldSettings.logDurationLimit,
                 )
             }
-        } else newSettings).wholeTableForSharedModes()
+        } else newSettings).wholeTableSettings()
         _settings.value = newSettings
         
         // isImport guards this for the same reason it guards newSettings above: the scoreboard
