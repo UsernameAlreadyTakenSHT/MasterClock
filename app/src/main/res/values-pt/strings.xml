@@ -179,10 +179,11 @@
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">TOTAL</string>
     <!--
-      "OT" holds move time the player did not spend, not extra time granted, so "prolongamento"
-      would say the opposite. SOBRA is the leftover it actually is.
+      "OT" labels the Overtime reserve: a fixed amount set at the start, spent once a move
+      clock runs out and never refilled by move time left unused. It is not saved time,
+      which the earlier wording said. "RESERVA" is the plain word for it.
     -->
-    <string name="timer_overtime">SOBRA</string>
+    <string name="timer_overtime">RESERVA</string>
     <string name="timer_switch_turn">Trocar de vez</string>
     <string name="timer_presets">Predefinições</string>
     <string name="timer_settings">Definições</string>

@@ -184,11 +184,11 @@
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">TOTAL</string>
     <!--
-      "OT" labels the reserve built from move time the player did not spend, not extra time granted
-      to them, so "prolongation" would say the opposite. "Report" is the accounting term for a
-      carried-over balance, and it is the same width as BANQUE, which already fits this slot.
+      "OT" labels the Overtime reserve: a fixed amount set at the start, spent once a move
+      clock runs out and never refilled by move time left unused. It is not saved time,
+      which the earlier wording said. "RÉSERVE" is the plain word for it.
     -->
-    <string name="timer_overtime">REPORT</string>
+    <string name="timer_overtime">RÉSERVE</string>
     <string name="timer_switch_turn">Changer de tour</string>
     <string name="timer_presets">Préréglages</string>
     <string name="timer_settings">Réglages</string>

@@ -263,6 +263,20 @@ fun displayedTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode
 fun tableClockRanOut(state: ChessClockState): Boolean =
     state.firstToFlag == null && state.players.size > 1 && state.players.all { it.isOutOfTime }
 
+/**
+ * The time that is running out, for what warns of it -- the countdown beeps and voice, the low-time
+ * flash, the haptic countdown, TalkBack. It is what the face shows, except in Overtime once the move
+ * clock is spent: the face then holds 0:00 while the reserve drains beside it, and everything read
+ * the 0:00 -- no beep, no voice, no flash, "no time left" from TalkBack with two minutes of reserve
+ * to go -- until the reserve flagged the player without a warning.
+ */
+fun alertTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode): Long =
+    if (mode == TimerMode.MOVE_TIMER_OVERTIME) player.withOvertimeClock().timeRemainingMs else displayedTimeMs(state, player, mode)
+
+/** An Overtime player with the reserve in place of a spent move clock; see [alertTimeMs]. */
+internal fun PlayerState.withOvertimeClock(): PlayerState =
+    if (!isOutOfTime && timeRemainingMs <= 0) copy(timeRemainingMs = secondaryTimeMs) else this
+
 /** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
 fun isUrgentAnnouncement(state: ChessClockState): Boolean =
     clockAnnouncement(state) is ClockAnnouncement.OutOfTime
@@ -710,9 +724,11 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         return if (high > 0) "$name $low-$high min" else name
     }
 
-    // These move timers ignore initialTimeMs entirely. Global Shared does not -- it is the reserve
-    // the table shares -- and is labelled with both below.
-    if (s.mode == TimerMode.MOVE_TIMER_STANDARD || s.mode == TimerMode.MOVE_TIMER_SHARED) {
+    // These move timers ignore initialTimeMs entirely; Save & Cap was labelled from its default,
+    // "10 min". Global, Overtime and Global Shared do not -- it is the total, the reserve, the
+    // table's reserve -- and are labelled with both below; the first two read "10 min" alone, as a
+    // sudden death would.
+    if (s.mode == TimerMode.MOVE_TIMER_STANDARD || s.mode == TimerMode.MOVE_TIMER_SHARED || s.mode == TimerMode.MOVE_TIMER_SAVE_CAP) {
         if (s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move"
     }
 
@@ -741,7 +757,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         seconds == 0L -> "$minutes min"
         else -> "${minutes}m${seconds}s"
     }
-    if (s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move, $base"
+    if ((s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || s.mode == TimerMode.MOVE_TIMER_GLOBAL || s.mode == TimerMode.MOVE_TIMER_OVERTIME) && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move, $base"
     // Byoyomi's own time was left out, so a 10-minute game with five 30-second periods read
     // "10 min" -- and, with the increment field's default, "10 min + 10s".
     val byoyomi = s.byoyomiTimeMs.let { if (it % 60_000 == 0L && it > 0) "${it / 60_000}min" else "${it / 1000}s" }
@@ -2694,7 +2710,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
             val pActive = state.players[active - 1]
             val newStateP = tickPlayer(pActive, delta, s, settings)
-            val (cueBefore, cueAfter) = if (s.mode == TimerMode.MOVE_TIMER_GLOBAL) pActive.withBindingClock() to newStateP.withBindingClock() else pActive to newStateP
+            val (cueBefore, cueAfter) = when (s.mode) {
+                TimerMode.MOVE_TIMER_GLOBAL -> pActive.withBindingClock() to newStateP.withBindingClock()
+                TimerMode.MOVE_TIMER_OVERTIME -> pActive.withOvertimeClock() to newStateP.withOvertimeClock()
+                else -> pActive to newStateP
+            }
             handleAudio(cueBefore, cueAfter, settings, active)
             handleVoice(cueBefore, cueAfter, settings, active)
             

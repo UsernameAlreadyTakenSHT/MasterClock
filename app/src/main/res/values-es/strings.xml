@@ -178,11 +178,11 @@
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">TOTAL</string>
     <!--
-      "OT" labels the reserve built from move time the player did not spend, not extra time granted
-      to them, so "prórroga" would say the opposite. "Ahorro" is what it actually holds, and fits
-      the same slot as GLOBAL beside it.
+      "OT" labels the Overtime reserve: a fixed amount set at the start, spent once a move
+      clock runs out and never refilled by move time left unused. It is not saved time,
+      which the earlier wording said. "RESERVA" is the plain word for it.
     -->
-    <string name="timer_overtime">AHORRO</string>
+    <string name="timer_overtime">RESERVA</string>
     <string name="timer_switch_turn">Cambiar de turno</string>
     <string name="timer_presets">Preajustes</string>
     <string name="timer_settings">Ajustes</string>

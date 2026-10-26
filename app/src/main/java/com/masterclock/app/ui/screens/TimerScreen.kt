@@ -86,7 +86,7 @@ fun TimerScreen(
     }
     val activeMode = activeSettings?.mode
     // The time on the active clock's face -- the shared clock in CHRONO and PHASES.
-    val secondsLeft = activePlayerState?.let { p -> activeMode?.let { displayedTimeMs(state, p, it) / 1000 } } ?: -1L
+    val secondsLeft = activePlayerState?.let { p -> activeMode?.let { alertTimeMs(state, p, it) / 1000 } } ?: -1L
     
     val isGlobalMode = remember(settings.main.mode) {
         settings.main.mode == TimerMode.PHASES
@@ -408,7 +408,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val isHidden = pSettings.mode == TimerMode.HIDDEN
     // What the face shows, which in CHRONO and PHASES is the shared clock; see displayedTimeMs.
     val shownTimeMs = displayedTimeMs(state, playerState, pSettings.mode)
-    val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && shownTimeMs in 1..10000 && settings.flashOnLowTime
+    // What is running out, which in Overtime past the move clock is the reserve; see alertTimeMs.
+    val alertMs = alertTimeMs(state, playerState, pSettings.mode)
+    val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && alertMs in 1..10000 && settings.flashOnLowTime
     val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
     val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
 
@@ -471,7 +473,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             stringResource(R.string.timer_period_flag).takeIf { playerState.hasFlagged },
             spokenDurationText(shownTimeMs),
         ).joinToString(", ")
-        else -> spokenDurationText(shownTimeMs)
+        else -> spokenDurationText(alertMs)
     }
     // Nobody's turn once the game is over, though the last player to move is still the active one --
     // nor on a clock running for the whole table, where it was "Player 1, your turn" all game.
