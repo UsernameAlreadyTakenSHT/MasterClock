@@ -1177,25 +1177,30 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
             return
         }
+        // Into the pending file, never the note's own: see pendingMediaFile.
+        val pending = pendingMediaFile(File(context.filesDir, "audio_${note.id}.mp4"))
+        @Suppress("DEPRECATION")
+        val newRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(context)
+        } else {
+            MediaRecorder()
+        }
         try {
-            val file = File(context.filesDir, "audio_${note.id}.mp4")
-            @Suppress("DEPRECATION")
-            val newRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(context)
-            } else {
-                MediaRecorder()
-            }
             newRecorder.apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setOutputFile(file.absolutePath)
+                setOutputFile(pending.absolutePath)
                 prepare()
                 start()
             }
             recorder = newRecorder
             isRecording = true
         } catch (_: Exception) {
+            // A recorder that failed to prepare or start still holds the microphone until it is
+            // released, which nothing did -- the next attempt, or another app, then found it busy.
+            newRecorder.release()
+            pending.delete()
             Toast.makeText(context, startFailedText, Toast.LENGTH_SHORT).show()
         }
     }
@@ -1206,18 +1211,21 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         recorder = null
         isRecording = false
         val file = File(context.filesDir, "audio_${note.id}.mp4")
+        val pending = pendingMediaFile(file)
         try {
             active.stop()
         } catch (_: Exception) {
             // stop() throws when the recorder has captured nothing yet, which is any take under
             // about a second. What it leaves on disk is a stub with no playable audio in it, so it
-            // is deleted rather than offered to the note as a recording. Releasing here matters:
-            // the old catch left the recorder holding the microphone.
+            // is deleted rather than offered to the note as a recording -- and since it was never
+            // the note's own file, the recording the note already had is still there. Releasing
+            // here matters: the old catch left the recorder holding the microphone.
             active.release()
-            file.delete()
+            pending.delete()
             return
         }
         active.release()
+        if (!commitTake(context, pending, file)) return
         shredReplacedMedia(context, note.audioPath, file)
         onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L))
     }
@@ -1262,10 +1270,15 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
 @Composable
 fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     val cameraPermissionText = stringResource(R.string.toast_camera_permission)
-    val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile) }
+    val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }
+    // The camera writes into the pending file, never the note's own; see pendingMediaFile.
+    val pendingFile = remember { pendingMediaFile(photoFile) }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pendingFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success -> if (success) { shredReplacedMedia(context, note.imagePath, photoFile); onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) } }
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success && commitTake(context, pendingFile, photoFile)) { shredReplacedMedia(context, note.imagePath, photoFile); onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) }
+        else pendingFile.delete()
+    }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
 
     ToolScaffold(title = stringResource(R.string.tools_image_note), onBack = onBack) { padding ->
@@ -1283,14 +1296,19 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
 @Composable
 fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
     val cameraPermissionText = stringResource(R.string.toast_camera_permission)
-    val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }; val videoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile) }
+    val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }
+    // The camera writes into the pending file, never the note's own; see pendingMediaFile.
+    val pendingFile = remember { pendingMediaFile(videoFile) }; val videoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pendingFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
-    // A retake writes over video_<id>.mp4, so the path is identical before and after and nothing in
-    // the note tells the two apart. This counter is what does: it changes on every capture, and the
-    // player reloads when it does.
+    // A retake ends up at video_<id>.mp4 again, so the path is identical before and after and nothing
+    // in the note tells the two apart. This counter is what does: it changes on every capture, and
+    // the player reloads when it does.
     var captureCount by remember { mutableIntStateOf(0) }
-    val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success -> if (success) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) } }
+    val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success ->
+        if (success && commitTake(context, pendingFile, videoFile)) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) }
+        else pendingFile.delete()
+    }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
 
     ToolScaffold(title = stringResource(R.string.tools_video_note), onBack = onBack) { padding ->
@@ -1879,6 +1897,17 @@ fun generateChessPosition(v: ChessVariant): List<String> {
  * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
  * of it. Off the main thread, since it may be exactly that video.
  */
+/**
+ * Moves a finished take from [pending] over [target], shredding the take it replaces off the main
+ * thread; false when there was no take to commit, with [target] untouched. See commitPendingMedia.
+ */
+private fun commitTake(context: android.content.Context, pending: File, target: File): Boolean {
+    val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
+    return commitPendingMedia(pending, target) { replaced ->
+        kotlin.concurrent.thread(name = "shred-replaced-take") { shredFile(replaced, sandboxRoots) }
+    }
+}
+
 private fun shredReplacedMedia(context: android.content.Context, oldPath: String?, newFile: File) {
     if (oldPath == null) return
     val old = File(oldPath)
