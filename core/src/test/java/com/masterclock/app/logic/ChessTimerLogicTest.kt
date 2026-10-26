@@ -246,8 +246,30 @@ class ChessTimerLogicTest {
         val settings = ChessClockSettings(main = s, numberOfPlayers = 2)
         val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 5000), PlayerState(timeRemainingMs = 8000)), activePlayer = 1)
         val next = computePostMoveState(state, playerIndex = 1, timeSpentOnMove = 3000, settings = settings, s = s)
-        assertEquals(30_000, next.players[0].timeRemainingMs) // mover resets to moveTimeMs
+        assertEquals(5000, next.players[0].timeRemainingMs) // cumulative: the mover keeps what is left
         assertEquals(11_000, next.players[1].timeRemainingMs) // opponent gains the 3s spent on the move
+    }
+
+    @Test
+    fun `FAST_MOVE TRANSFER gives the time to the next player still in the game`() {
+        val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = true, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, numberOfPlayers = 3, flagBehavior = FlagBehavior.FLAG)
+        val players = listOf(PlayerState(5000), PlayerState(0, isOutOfTime = true), PlayerState(8000))
+        val next = computePostMoveState(ChessClockState(players = players, activePlayer = 1), 1, 3000, settings, s)
+        assertEquals(0, next.players[1].timeRemainingMs)
+        assertEquals(11_000, next.players[2].timeRemainingMs)
+    }
+
+    @Test
+    fun `FAST_MOVE counts an overrun under NEGATIVE, and the next move starts afresh`() {
+        val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.SHRINK, fastMoveShrinkDecrementMs = 0, fastMoveShrinkFloorMs = 0)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE)
+        val over = tickPlayer(PlayerState(timeRemainingMs = 500, initialTotalTimeMs = 30_000), 1_500, s, settings)
+        assertTrue(over.isOutOfTime && over.isNegative)
+        assertEquals(1_000, over.timeRemainingMs)
+        val after = computePostMoveState(ChessClockState(players = listOf(over, PlayerState(0)), activePlayer = 1), 1, 0, settings, s).players[0]
+        assertEquals(30_000, after.timeRemainingMs)
+        assertFalse(after.isOutOfTime || after.isNegative)
     }
 
     @Test

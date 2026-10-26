@@ -1549,20 +1549,20 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
         }
         TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN -> p
         TimerMode.FAST_MOVE -> {
-            if (s.fastMoveMode == FastMoveType.ACCELERATE) {
+            val effectiveDelta = if (s.fastMoveMode == FastMoveType.ACCELERATE && !p.isOutOfTime) {
                 val timeSpent = p.initialTotalTimeMs - p.timeRemainingMs
                 val accel = when {
                     timeSpent >= s.fastMoveFastPeriodMs -> s.fastMoveFullAccelRate
                     timeSpent >= s.fastMoveGracePeriodMs -> s.fastMoveAccelRate
                     else -> 0f
                 }
-                val effectiveDelta = (delta * (1f + accel)).toLong()
-                val newTime = (p.timeRemainingMs - effectiveDelta).coerceAtLeast(0)
-                p.copy(timeRemainingMs = newTime, isOutOfTime = newTime <= 0)
-            } else {
-                val newTime = (p.timeRemainingMs - delta).coerceAtLeast(0)
-                p.copy(timeRemainingMs = newTime, isOutOfTime = newTime <= 0)
-            }
+                (delta * (1f + accel)).toLong()
+            } else delta
+            // Through FlagBehavior like every other clock. It was clamped at 0:00 whatever the setting:
+            // under NEGATIVE and REVERSE no overrun was counted, so the move had no limit at all, and
+            // the next tick, finding time "left" at zero, cleared the flag.
+            val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(p.timeRemainingMs, p.isOutOfTime, p.isNegative, effectiveDelta, settings.flagBehavior)
+            p.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
         }
         else -> {
             val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(p.timeRemainingMs, p.isOutOfTime, p.isNegative, delta, settings.flagBehavior)
@@ -1852,19 +1852,23 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     // early return. (Previously computed into a local `updatedPlayers` list that nothing ever read, so
     // the opponent's transferred time was silently discarded.)
     if (s.mode == TimerMode.FAST_MOVE && s.fastMoveMode == FastMoveType.TRANSFER) {
-        val opponentIndex = playerIndex % settings.numberOfPlayers
-        val opponent = state.players[opponentIndex]
-        // Per-move, not tied to any base "initial time": cumulative keeps stacking onto whatever the
-        // opponent already has, non-cumulative replaces it outright with exactly what was just spent.
-        val updatedOpponent = if (s.fastMoveTransferCumulative) {
-            opponent.copy(timeRemainingMs = opponent.timeRemainingMs + timeSpentOnMove)
-        } else {
-            opponent.copy(timeRemainingMs = timeSpentOnMove)
-        }
-        val movedP = tempP.copy(timeRemainingMs = s.moveTimeMs)
-        val newList = state.players.toMutableList().apply {
-            this[playerIndex - 1] = movedP
-            this[opponentIndex] = updatedOpponent
+        val fb = settings.flagBehavior
+        // The time goes to whoever moves next. It went to the next seat, so with three or four
+        // players under FLAG it could go to a player already eliminated, and the one about to move
+        // got nothing.
+        val recipient = nextPlayerInTurn(playerIndex, state.players, settings.numberOfPlayers, fb) - 1
+        // Cumulative: the time spent is added to the opponent's, and the mover keeps what is left of
+        // their own -- time moves across the table and nothing is lost. The mover's clock used to be
+        // refilled to the move time all the same, so nothing ever accumulated: "cumulative" meant the
+        // base time plus the last move. Not cumulative: the opponent gets exactly the time just
+        // spent, and the mover starts again from the move time.
+        val movedP = if (s.fastMoveTransferCumulative) tempP
+            else tempP.copy(timeRemainingMs = s.moveTimeMs).let { if (p.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
+        val newList = state.players.toMutableList().apply { this[playerIndex - 1] = movedP }
+        if (recipient != playerIndex - 1) {
+            val opponent = state.players[recipient]
+            newList[recipient] = if (s.fastMoveTransferCumulative) opponent.credited(timeSpentOnMove, fb)
+                else opponent.copy(timeRemainingMs = timeSpentOnMove).let { if (opponent.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
         }
         return state.copy(players = newList)
     }
@@ -1960,11 +1964,13 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         }
         TimerMode.FAST_MOVE -> {
             // TRANSFER is handled above (needs to update the opponent too); only SHRINK/ACCELERATE reach here.
+            // Each move starts a fresh allowance, so an overrun of the last one ends with it.
+            val fresh = if (p.isOverrun(settings.flagBehavior)) tempP.copy(isNegative = false, isOutOfTime = false) else tempP
             if (s.fastMoveMode == FastMoveType.SHRINK) {
                 val nextTurnStartTime = (p.initialTotalTimeMs - s.fastMoveShrinkDecrementMs).coerceAtLeast(s.fastMoveShrinkFloorMs)
-                tempP.copy(timeRemainingMs = nextTurnStartTime, initialTotalTimeMs = nextTurnStartTime)
+                fresh.copy(timeRemainingMs = nextTurnStartTime, initialTotalTimeMs = nextTurnStartTime)
             } else {
-                tempP.copy(timeRemainingMs = s.initialTimeMs, initialTotalTimeMs = s.initialTimeMs)
+                fresh.copy(timeRemainingMs = s.initialTimeMs, initialTotalTimeMs = s.initialTimeMs)
             }
         }
         else -> tempP
