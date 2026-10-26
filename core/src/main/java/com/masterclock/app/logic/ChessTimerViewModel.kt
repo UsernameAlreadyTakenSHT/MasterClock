@@ -2935,9 +2935,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun adjustTime(playerIndex: Int, amountMs: Long) {
         if (!_uiState.value.isArbitreMode) return
         val flagBehavior = _settings.value.flagBehavior
+        // Shared (Auto) keeps one move clock, copied into every player and ticked from player 1's,
+        // so an adjustment to anyone else's was overwritten by the next tick. It is the table's.
+        val wholeTable = getPlayerSettings(playerIndex).mode == TimerMode.MOVE_TIMER_SHARED
         _uiState.update { state ->
             val newList = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == playerIndex) p.credited(amountMs, flagBehavior)
+                if (wholeTable || idx + 1 == playerIndex) p.credited(amountMs, flagBehavior)
                 else p
             }
             state.copy(players = newList)
