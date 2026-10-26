@@ -1331,7 +1331,7 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // in the note tells the two apart. This counter is what does: it changes on every capture, and
     // the player reloads when it does.
     var captureCount by remember { mutableIntStateOf(0) }
-    val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { success ->
+    val videoLauncher = rememberLauncherForActivityResult(CaptureVideoUpToAMinute()) { success ->
         if (success && commitTake(context, pendingFile, videoFile)) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) }
         else pendingFile.delete()
     }
@@ -1346,9 +1346,13 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                 // recording playing, since the path it compared had not changed. Loading it from
                 // update, keyed on the capture counter, is what actually picks up a new take. The
                 // view also has to give the decoder back, which nothing did.
+                //
+                // It no longer starts by itself: opening a note played it, sound and all, which is
+                // the last thing wanted at a board. Once loaded it shows its first frame and the
+                // controls, and plays when asked.
                 if (videoPath != null) AndroidView(
-                    factory = { ctx -> VideoView(ctx).apply { val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller) } },
-                    update = { view -> if (view.tag != captureCount) { view.tag = captureCount; view.setVideoPath(videoPath); view.start() } },
+                    factory = { ctx -> VideoView(ctx).apply { val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller); setOnPreparedListener { seekTo(1); controller.show() } } },
+                    update = { view -> if (view.tag != captureCount) { view.tag = captureCount; view.setVideoPath(videoPath) } },
                     onRelease = { view -> view.stopPlayback() },
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -1924,6 +1928,19 @@ fun generateChessPosition(v: ChessVariant): List<String> {
  * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
  * of it. Off the main thread, since it may be exactly that video.
  */
+/**
+ * The camera, asked to stop recording at a minute.
+ *
+ * The editor has always said "Max 1 min" and nothing asked for it: a camera recorded for as long as
+ * it was left running, at whatever quality it liked, into the app's own storage -- and every full
+ * backup carried it. Voice notes already stop themselves at sixty seconds. EXTRA_DURATION_LIMIT is
+ * Android's documented way to ask; it is the camera app that applies it, not this one.
+ */
+private class CaptureVideoUpToAMinute : ActivityResultContracts.CaptureVideo() {
+    override fun createIntent(context: android.content.Context, input: android.net.Uri): Intent =
+        super.createIntent(context, input).putExtra(android.provider.MediaStore.EXTRA_DURATION_LIMIT, 60)
+}
+
 /**
  * A media note's delete action. It asks first: the file is shredded, so there is no way back.
  *
