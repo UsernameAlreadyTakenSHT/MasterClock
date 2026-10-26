@@ -51,6 +51,46 @@ class PhasesEndTest {
     }
 
     @Test
+    fun `phases that all last nothing finish rather than loop for ever`() {
+        val empty = listOf(GamePhase("A", 0), GamePhase("B", 0))
+        val end = nextPhaseState(stateAt(1), 1, empty, loop = true)
+        assertTrue(end.phasesFinished)
+    }
+
+    @Test
+    fun `moving on ends the wait for a tap`() {
+        val waiting = stateAt(0).let { it.copy(players = it.players.toMutableList().apply { this[0] = this[0].copy(isPhaseAwaitingTap = true) }) }
+        assertFalse(nextPhaseState(waiting, 1, phases, loop = false).players[0].isPhaseAwaitingTap)
+        // Saved with the clock, so a resumed game still waits instead of reading as flagged.
+        assertTrue(waiting.toProxy().toState().players[0].isPhaseAwaitingTap)
+    }
+
+    @Test
+    fun `what a tick ran past a phase's end comes off the next`() {
+        val running = stateAt(0).copy(isPaused = false)
+        val next = nextPhaseState(running, 1, phases, loop = false).carryPhaseOvershoot(60)
+        assertEquals(4_940, next.globalTimeMs)
+        val pause = running.let { it.copy(players = it.players.toMutableList().apply { this[0] = this[0].copy(isInInterPhasePause = true, pauseTimeRemainingMs = 3_000) }) }
+        assertEquals(2_940, pause.carryPhaseOvershoot(60).players[0].pauseTimeRemainingMs)
+        // A finished game has nothing to take it from.
+        val end = nextPhaseState(stateAt(1), 1, phases, loop = false)
+        assertSame(end, end.carryPhaseOvershoot(60))
+    }
+
+    @Test
+    fun `the table's clock starts on the first phase`() {
+        assertEquals(5_000, initialGlobalTimeMs(PlayerSettings(mode = TimerMode.PHASES, phases = phases)))
+    }
+
+    @Test
+    fun `PHASES turns per-player settings off`() {
+        val p1 = PlayerSettings(mode = TimerMode.PHASES, phases = phases)
+        val s = ChessClockSettings(differentSettingsPerPlayer = true, p1Custom = p1, p2Custom = PlayerSettings(mode = TimerMode.PHASES)).wholeTableSettings()
+        assertFalse(s.differentSettingsPerPlayer)
+        assertEquals(p1, s.main)
+    }
+
+    @Test
     fun `a finished game survives being saved and restored`() {
         val end = nextPhaseState(stateAt(1), 1, phases, loop = false)
 
