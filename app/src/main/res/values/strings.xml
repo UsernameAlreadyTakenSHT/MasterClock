@@ -106,6 +106,7 @@
     <string name="settings_phases_config">Phases Configuration</string>
     <string name="settings_repeat_phases">Repeat Phases (Loop)</string>
     <string name="settings_pause_between_phases">Pause between phases</string>
+    <string name="settings_pause_until_tap">Pause between phases until a tap</string>
     <string name="settings_auto_advance">Auto Advance</string>
     <string name="settings_allow_skip">Allow manual skip (tap to advance early)</string>
     <string name="settings_phase_placeholder">Preparation, Round X…</string>

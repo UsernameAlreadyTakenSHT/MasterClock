@@ -103,6 +103,7 @@
     <string name="settings_phases_config">Configuratie van de fases</string>
     <string name="settings_repeat_phases">Fases herhalen (lus)</string>
     <string name="settings_pause_between_phases">Pauze tussen de fases</string>
+    <string name="settings_pause_until_tap">Pauze tussen de fases tot een tik</string>
     <string name="settings_auto_advance">Automatisch doorgaan</string>
     <string name="settings_allow_skip">Handmatig overslaan toestaan (tik om door te gaan)</string>
     <string name="settings_phase_placeholder">Voorbereiding, ronde X…</string>

@@ -606,6 +606,9 @@ data class ChessClockSettings(
     // expires), on top of the normal auto/manual advance rules.
     val allowPhaseSkip: Boolean = false,
     val pauseBetweenPhasesMs: Long = 0,
+    // The pause between phases lasts until a tap rather than for pauseBetweenPhasesMs: for a
+    // break whose length nobody can know beforehand.
+    val pauseUntilTap: Boolean = false,
     val notebookNotes: List<NotebookNote> = emptyList()
 )
 
@@ -2521,6 +2524,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             if (s.mode == TimerMode.PHASES) {
                 val p1 = state.players[0]
                 if (p1.isInInterPhasePause) {
+                    // Waiting for the tap that ends it (startOrSwitch); nothing runs.
+                    if (settings.pauseUntilTap) return@update state
                     val newPause = p1.pauseTimeRemainingMs - delta
                     if (newPause <= 0) return@update performPhaseAdvance(state, 1).carryPhaseOvershoot(-newPause).also { onPhaseTransition(p1, it) }
                     return@update state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = newPause) })
@@ -3090,9 +3095,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // none, and a tap on the finished game used to start a fresh PAUSE countdown before the
         // clock fell back to finished.
         val isLastPhase = p.currentPhaseIndex >= s.phases.size - 1 && !settings.value.loopPhases
-        if (settings.value.pauseBetweenPhasesMs > 0 && !isLastPhase) {
+        if ((settings.value.pauseBetweenPhasesMs > 0 || settings.value.pauseUntilTap) && !isLastPhase) {
             // A phase that waited for its tap was still flagged here, so the whole pause read as out of time.
-            val pausedPlayer = p.copy(isInInterPhasePause = true, pauseTimeRemainingMs = settings.value.pauseBetweenPhasesMs, isPhaseAwaitingTap = false)
+            // A pause until a tap has no countdown; tick() holds it, and the face shows 0:00.
+            val pauseMs = if (settings.value.pauseUntilTap) 0L else settings.value.pauseBetweenPhasesMs
+            val pausedPlayer = p.copy(isInInterPhasePause = true, pauseTimeRemainingMs = pauseMs, isPhaseAwaitingTap = false)
             val newList = state.players.toMutableList().apply { this[0] = pausedPlayer }
             return state.copy(players = newList)
         }

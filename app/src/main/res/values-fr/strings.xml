@@ -109,6 +109,7 @@
     <string name="settings_phases_config">Configuration des phases</string>
     <string name="settings_repeat_phases">Répéter les phases (boucle)</string>
     <string name="settings_pause_between_phases">Pause entre les phases</string>
+    <string name="settings_pause_until_tap">Pause entre les phases jusqu\'à un appui</string>
     <string name="settings_auto_advance">Avance automatique</string>
     <string name="settings_allow_skip">Autoriser le passage manuel (appuyer pour avancer)</string>
     <string name="settings_phase_placeholder">Préparation, manche X…</string>

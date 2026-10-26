@@ -61,11 +61,9 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
 
         TimeParameterPanel(
             p = targetP,
-            loopPhases = currentSettings.loopPhases,
-            pauseMs = currentSettings.pauseBetweenPhasesMs,
-            allowPhaseSkip = currentSettings.allowPhaseSkip,
+            settings = currentSettings,
             onUpdate = { p: PlayerSettings -> updateTarget(p) },
-            onUpdateGlobal = { loop: Boolean, pause: Long, allowSkip: Boolean -> onSettingsChanged(currentSettings.copy(loopPhases = loop, pauseBetweenPhasesMs = pause, allowPhaseSkip = allowSkip)) }
+            onUpdateSettings = onSettingsChanged
         )
 
         if (!FlavorConfig.hasFullSettingsTabs()) {

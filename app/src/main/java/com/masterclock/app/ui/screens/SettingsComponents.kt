@@ -303,19 +303,21 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 @Composable
 fun PhasesPanel(
     p: PlayerSettings,
-    loopPhases: Boolean,
-    pauseMs: Long,
-    allowPhaseSkip: Boolean,
+    settings: ChessClockSettings,
     onUpdateP: (PlayerSettings) -> Unit,
-    onUpdateGlobal: (Boolean, Long, Boolean) -> Unit
+    onUpdateSettings: (ChessClockSettings) -> Unit
 ) {
     SettingsSection(stringResource(R.string.settings_phases_config)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            BehaviorSwitch(stringResource(R.string.settings_repeat_phases), loopPhases, topRounded = true, bottomRounded = true) { onUpdateGlobal(it, pauseMs, allowPhaseSkip) }
+            BehaviorSwitch(stringResource(R.string.settings_repeat_phases), settings.loopPhases, topRounded = true, bottomRounded = true) { onUpdateSettings(settings.copy(loopPhases = it)) }
 
-            HMSInput(stringResource(R.string.settings_pause_between_phases), pauseMs) { onUpdateGlobal(loopPhases, it, allowPhaseSkip) }
+            BehaviorSwitch(stringResource(R.string.settings_pause_until_tap), settings.pauseUntilTap, topRounded = true, bottomRounded = true) { onUpdateSettings(settings.copy(pauseUntilTap = it)) }
+            // A pause that waits for a tap has no length to set.
+            if (!settings.pauseUntilTap) {
+                HMSInput(stringResource(R.string.settings_pause_between_phases), settings.pauseBetweenPhasesMs) { onUpdateSettings(settings.copy(pauseBetweenPhasesMs = it)) }
+            }
 
-            BehaviorSwitch(stringResource(R.string.settings_allow_skip), allowPhaseSkip, topRounded = true, bottomRounded = true) { onUpdateGlobal(loopPhases, pauseMs, it) }
+            BehaviorSwitch(stringResource(R.string.settings_allow_skip), settings.allowPhaseSkip, topRounded = true, bottomRounded = true) { onUpdateSettings(settings.copy(allowPhaseSkip = it)) }
 
             val phases = p.phases
             phases.forEachIndexed { index, phase ->
@@ -966,7 +968,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
 }
 
 @Composable
-fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, allowPhaseSkip: Boolean, onUpdate: (PlayerSettings) -> Unit, onUpdateGlobal: (Boolean, Long, Boolean) -> Unit) {
+fun TimeParameterPanel(p: PlayerSettings, settings: ChessClockSettings, onUpdate: (PlayerSettings) -> Unit, onUpdateSettings: (ChessClockSettings) -> Unit) {
     val mode = p.mode
     val mainModeIdx = when {
         mode == TimerMode.SUDDEN_DEATH -> 0
@@ -1035,7 +1037,7 @@ fun TimeParameterPanel(p: PlayerSettings, loopPhases: Boolean, pauseMs: Long, al
             if (showMaxMoves) { NumericInput(stringResource(R.string.settings_max_moves), p.maxMoves) { onUpdate(p.copy(maxMoves = it)) } }
             if (showGong) { GongPanel(p, onUpdate) }
             if (showFidePeriods) { FidePeriodsPanel(p, onUpdate) }
-            if (showPhases) { PhasesPanel(p = p, loopPhases = loopPhases, pauseMs = pauseMs, allowPhaseSkip = allowPhaseSkip, onUpdateP = onUpdate, onUpdateGlobal = onUpdateGlobal) }
+            if (showPhases) { PhasesPanel(p = p, settings = settings, onUpdateP = onUpdate, onUpdateSettings = onUpdateSettings) }
             if (showRandom) { RandomModePanel(p, onUpdate) }
             if (showFastMove) { FastMovePanel(p, onUpdate) }
         }

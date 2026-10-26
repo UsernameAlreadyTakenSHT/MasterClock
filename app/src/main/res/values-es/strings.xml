@@ -104,6 +104,7 @@
     <string name="settings_phases_config">Configuración de las fases</string>
     <string name="settings_repeat_phases">Repetir las fases (bucle)</string>
     <string name="settings_pause_between_phases">Pausa entre fases</string>
+    <string name="settings_pause_until_tap">Pausa entre fases hasta un toque</string>
     <string name="settings_auto_advance">Avance automático</string>
     <string name="settings_allow_skip">Permitir avanzar manualmente (pulsar para adelantar)</string>
     <string name="settings_phase_placeholder">Preparación, ronda X…</string>
