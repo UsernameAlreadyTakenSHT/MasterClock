@@ -1235,7 +1235,13 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         shredReplacedMedia(context, note.audioPath, file)
         onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L))
     }
-    fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true; scope.launch { while (isPlaying) { playbackTime = newPlayer.currentPosition / 1000; delay(100) }; playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
+    fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true
+        // Each loop follows its own player and stops as soon as that is no longer the one playing.
+        // It used to run on isPlaying alone, so Stop then Play -- or Play right after a playback
+        // ended -- inside its 100 ms sleep set isPlaying back to true before the old loop woke,
+        // and it read currentPosition off a player already released: an IllegalStateException
+        // nothing caught, and the app closed.
+        scope.launch { while (isPlaying && player === newPlayer) { playbackTime = runCatching { newPlayer.currentPosition }.getOrDefault(0) / 1000; delay(100) }; if (player == null) playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
     fun stopPlayback() { player?.stop(); player?.release(); player = null; isPlaying = false; playbackTime = 0 }
 
     // Below stopRecording() rather than above, because it has to call it. Reaching the one-minute
