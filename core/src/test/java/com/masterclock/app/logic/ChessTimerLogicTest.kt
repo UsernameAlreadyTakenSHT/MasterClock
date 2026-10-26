@@ -583,6 +583,52 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `MOVE_TIMER_GLOBAL_SHARED stops drawing on the reserve once the active player is out under FLAG`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.FLAG)
+        val players = listOf(
+            PlayerState(timeRemainingMs = 0, secondaryTimeMs = 500, isOutOfTime = true),
+            PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 500),
+        )
+        val next = tickCoupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings, s, 1)!!.state
+        // The reserve used to run out here and flag the winner too.
+        assertEquals(500, next.players[1].secondaryTimeMs)
+        assertFalse(next.players[1].isOutOfTime)
+    }
+
+    @Test
+    fun `MOVE_TIMER_GLOBAL_SHARED counts a move overrun up under REVERSE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.REVERSE)
+        var state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 200, secondaryTimeMs = 600_000), PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 600_000)), activePlayer = 1)
+        state = tickCoupled(state, 1_000, settings, s, 1)!!.state
+        assertEquals(800, state.players[0].timeRemainingMs)
+        assertTrue(state.players[0].isOutOfTime)
+        state = tickCoupled(state, 1_000, settings, s, 1)!!.state
+        // It used to be counted down again, and sat at 0:00.
+        assertEquals(1_800, state.players[0].timeRemainingMs)
+        // The press ends the overrun, the reserve being far from gone.
+        val after = computePostMoveState(state, 1, 0, settings, s).players[0]
+        assertEquals(30_000, after.timeRemainingMs)
+        assertFalse(after.isOutOfTime)
+    }
+
+    @Test
+    fun `MOVE_TIMER_GLOBAL counts from zero once the total is gone under REVERSE`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.REVERSE)
+        var p = tickPlayer(PlayerState(timeRemainingMs = 20_000, secondaryTimeMs = 500), 1_000, s, settings)
+        assertEquals(0, p.timeRemainingMs)
+        assertTrue(p.isOutOfTime)
+        p = tickPlayer(p, 1_000, s, settings)
+        assertEquals(1_000, p.timeRemainingMs)
+        // No move time is left to give: the next overrun starts from zero, and the player stays out.
+        val after = computePostMoveState(ChessClockState(players = listOf(p, PlayerState(30_000)), activePlayer = 1), 1, 0, settings, s).players[0]
+        assertEquals(0, after.timeRemainingMs)
+        assertTrue(after.isOutOfTime)
+    }
+
+    @Test
     fun `CHRONO_COUNTDOWN runs the one shared clock and freezes the game when it ends`() {
         val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.CHRONO_COUNTDOWN), flagBehavior = FlagBehavior.FREEZE)
         val state = ChessClockState(players = listOf(PlayerState(0), PlayerState(0)), activePlayer = 1, globalTimeMs = 500)

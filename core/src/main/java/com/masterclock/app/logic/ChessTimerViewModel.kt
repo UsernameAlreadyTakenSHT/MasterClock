@@ -1320,13 +1320,26 @@ internal fun applyFlagBehaviorDelta(currentTime: Long, isOut: Boolean, isNegativ
  *
  * Their isOutOfTime also covers the total clock running out, so whether the move clock itself is
  * already past zero has to be read off the move clock: under NEGATIVE that is isNegative, and
- * under FREEZE and FLAG a move clock that has run out sits at zero. (REVERSE stays approximate
- * here as it does everywhere else.)
+ * under FREEZE and FLAG a move clock that has run out sits at zero.
+ *
+ * REVERSE marks an overrun with nothing but the flag, and this read it as time left: a move clock
+ * counting its overrun up was counted down again, flagged at zero, came back up a tick and went
+ * down again, and sat at 0:00 for the rest of the move. Under REVERSE a player who is out is
+ * counting an overrun -- of the move clock, or of the total, which [reverseTotalGone] starts from
+ * zero for the same reason.
  */
 private fun globalMoveClockTick(p: PlayerState, delta: Long, flagBehavior: FlagBehavior): Triple<Long, Boolean, Boolean> {
-    val moveOverrun = p.isNegative || (p.isOutOfTime && p.timeRemainingMs <= 0)
+    val moveOverrun = p.isNegative || (p.isOutOfTime && (p.timeRemainingMs <= 0 || flagBehavior == FlagBehavior.REVERSE))
     return applyFlagBehaviorDelta(p.timeRemainingMs, moveOverrun, p.isNegative, delta, flagBehavior)
 }
+
+/**
+ * Whether this tick is the one that empties the total (or the shared reserve) under REVERSE, so
+ * the move clock is to start counting the overrun from zero: a player out under REVERSE counts up
+ * from whatever the move clock shows, and the move time still left on it is not an overrun.
+ */
+private fun reverseTotalGone(before: Long, after: Long, flagBehavior: FlagBehavior): Boolean =
+    flagBehavior == FlagBehavior.REVERSE && before > 0 && after <= 0
 
 /**
  * The modes whose clocks run in stages of their own -- byoyomi periods, FIDE periods, Hidden's
@@ -1373,7 +1386,8 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             // The move clock honours FlagBehavior like every other clock; see globalMoveClockTick.
             val (moveTime, moveOut, moveNeg) = globalMoveClockTick(p, delta, settings.flagBehavior)
             val newSec = (p.secondaryTimeMs - delta).coerceAtLeast(0)
-            p.copy(timeRemainingMs = moveTime, isNegative = moveNeg, secondaryTimeMs = newSec, isOutOfTime = moveOut || newSec <= 0)
+            val fromZero = !moveOut && reverseTotalGone(p.secondaryTimeMs, newSec, settings.flagBehavior)
+            p.copy(timeRemainingMs = if (fromZero) 0 else moveTime, isNegative = moveNeg, secondaryTimeMs = newSec, isOutOfTime = moveOut || newSec <= 0)
         }
         TimerMode.BYOYOMI_JAPANESE -> {
             val newTime = p.timeRemainingMs - delta
@@ -1593,15 +1607,20 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
         TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
             val pActive = state.players[active - 1]
             val (newMoveTime, outMove, moveNeg) = globalMoveClockTick(pActive, delta, settings.flagBehavior)
-            val newGlobalTime = (pActive.secondaryTimeMs - delta).coerceAtLeast(0)
+            // Under FLAG a player who is out has stopped playing, and the reserve is everyone's: it
+            // went on draining all the same, until it emptied and put the survivors out with it --
+            // the winner of a two-player game ended it flagged too.
+            val drains = !(pActive.isOutOfTime && settings.flagBehavior == FlagBehavior.FLAG)
+            val newGlobalTime = if (drains) (pActive.secondaryTimeMs - delta).coerceAtLeast(0) else pActive.secondaryTimeMs
             val outGlobal = newGlobalTime <= 0
+            val fromZero = reverseTotalGone(pActive.secondaryTimeMs, newGlobalTime, settings.flagBehavior)
             val newPlayers = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == active) p.copy(timeRemainingMs = newMoveTime, isNegative = moveNeg, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
+                if (idx + 1 == active) p.copy(timeRemainingMs = if (fromZero && !outMove) 0 else newMoveTime, isNegative = moveNeg, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
                 // A player keeps the flag their own move clock earned. This used to be the pool's
                 // state alone, so whoever ran out of move time was "back" as soon as someone else
                 // was on the clock -- under FLAG with three or four players no elimination stuck,
                 // and the game could never reach its last player.
-                else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = p.isOutOfTime || outGlobal)
+                else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = p.isOutOfTime || outGlobal, timeRemainingMs = if (fromZero) 0 else p.timeRemainingMs)
             }
             return CoupledTick(
                 state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && (outMove || outGlobal)),
@@ -1756,10 +1775,15 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         // later turn counted up from -0:30 and the player could never flag again.
         TimerMode.MOVE_TIMER_STANDARD -> if (p.isNegative) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = false) else tempP.copy(timeRemainingMs = s.moveTimeMs)
         // A fresh move clock; an overrun of the last one ends with it, and the player stays out
-        // only if the total (or the shared pool) is gone too.
-        TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED ->
-            if (p.isNegative) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = p.secondaryTimeMs <= 0)
-            else tempP.copy(timeRemainingMs = s.moveTimeMs)
+        // only if the total (or the shared pool) is gone too. REVERSE marks the overrun with the
+        // flag alone, which no reset cleared: the player stayed FLAGGED on every later move. Once
+        // the total is gone there is no move time left to give, and the next overrun counts from zero.
+        TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> when {
+            p.isNegative -> tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = p.secondaryTimeMs <= 0)
+            settings.flagBehavior == FlagBehavior.REVERSE && p.isOutOfTime ->
+                if (p.secondaryTimeMs > 0) tempP.copy(timeRemainingMs = s.moveTimeMs, isOutOfTime = false) else tempP.copy(timeRemainingMs = 0)
+            else -> tempP.copy(timeRemainingMs = s.moveTimeMs)
+        }
         // A fresh move clock. Under NEGATIVE and REVERSE play goes on past an empty reserve, so the
         // overrun ends with the move and the next one counts down again -- straight into a new
         // overrun at zero, the reserve being gone. Under FLAG the player stays out.
