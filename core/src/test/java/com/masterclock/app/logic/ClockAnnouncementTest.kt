@@ -66,10 +66,10 @@ class ClockAnnouncementTest {
     }
 
     @Test
-    fun `a flag is announced and takes priority over whose turn it is`() {
+    fun `a flag is announced, urgently, on the clock it falls on`() {
         val flagged = state(
             players = listOf(player(), player(timeMs = 0, outOfTime = true)),
-            activePlayer = 1,
+            activePlayer = 2,
             firstToFlag = 2,
         )
 
@@ -78,14 +78,16 @@ class ClockAnnouncementTest {
     }
 
     @Test
-    fun `a flag is still caught when no first-to-flag was recorded`() {
-        val flagged = state(
-            players = listOf(player(), player(timeMs = 0, outOfTime = true)),
-            activePlayer = 1,
+    fun `once play goes on past a flag, turns are announced again`() {
+        // Player 2 flagged earlier -- eliminated with three players, or still over under NEGATIVE.
+        val playingOn = state(
+            players = listOf(player(), player(timeMs = 0, outOfTime = true), player()),
+            activePlayer = 3,
+            firstToFlag = 2,
         )
 
-        assertEquals(ClockAnnouncement.OutOfTime(2), clockAnnouncement(flagged))
-        assertTrue(isUrgentAnnouncement(flagged))
+        assertEquals(ClockAnnouncement.ToMove(3, null), clockAnnouncement(playingOn))
+        assertFalse(isUrgentAnnouncement(playingOn))
     }
 
     @Test

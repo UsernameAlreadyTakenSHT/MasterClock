@@ -221,14 +221,17 @@ internal fun drawInRange(
 
 fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
     if (state.phasesFinished) return ClockAnnouncement.Finished
-    val flagged = state.firstToFlag
-        ?: state.players.indexOfFirst { it.isOutOfTime }.takeIf { it >= 0 }?.plus(1)
-    if (flagged != null) return ClockAnnouncement.OutOfTime(flagged)
-
-    val active = state.activePlayer ?: return null
+    // A flag falls on the clock that is running, so it is the player on the move who is out when it
+    // is news. Any flag anywhere used to win for the rest of the game: once one player had flagged,
+    // the live region said "Player 2, out of time" whoever was to move -- after a NEGATIVE overrun
+    // was paid back, or with three or four players playing on after an elimination -- and no later
+    // turn was ever announced.
+    val active = state.activePlayer
+        ?: return state.players.indexOfFirst { it.isOutOfTime }.takeIf { it >= 0 }?.let { ClockAnnouncement.OutOfTime(it + 1) }
+    val player = state.players.getOrNull(active - 1) ?: return null
+    if (player.isOutOfTime) return ClockAnnouncement.OutOfTime(active)
     if (state.isPaused) return ClockAnnouncement.Paused
 
-    val player = state.players.getOrNull(active - 1) ?: return null
     return ClockAnnouncement.ToMove(
         playerIndex = active,
         byoyomiPeriodsRemaining = if (player.isInByoyomi) player.byoyomiPeriodsRemaining else null,
@@ -251,7 +254,7 @@ fun displayedTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode
 
 /** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
 fun isUrgentAnnouncement(state: ChessClockState): Boolean =
-    state.firstToFlag != null || state.players.any { it.isOutOfTime }
+    clockAnnouncement(state) is ClockAnnouncement.OutOfTime
 
 /**
  * A duration split into the parts a screen reader should say, for the same reason as
@@ -1401,7 +1404,7 @@ internal fun applyFlagBehaviorDelta(currentTime: Long, isOut: Boolean, isNegativ
  * REVERSE marks an overrun with nothing but the flag, and this read it as time left: a move clock
  * counting its overrun up was counted down again, flagged at zero, came back up a tick and went
  * down again, and sat at 0:00 for the rest of the move. Under REVERSE a player who is out is
- * counting an overrun -- of the move clock, or of the total, which [reverseTotalGone] starts from
+ * counting an overrun -- of the move clock, or of the total, which [totalGoneIntoOverrun] starts from
  * zero for the same reason.
  */
 private fun globalMoveClockTick(p: PlayerState, delta: Long, flagBehavior: FlagBehavior): Triple<Long, Boolean, Boolean> {
@@ -1409,11 +1412,6 @@ private fun globalMoveClockTick(p: PlayerState, delta: Long, flagBehavior: FlagB
     return applyFlagBehaviorDelta(p.timeRemainingMs, moveOverrun, p.isNegative, delta, flagBehavior)
 }
 
-/**
- * Whether this tick is the one that empties the total (or the shared reserve) under REVERSE, so
- * the move clock is to start counting the overrun from zero: a player out under REVERSE counts up
- * from whatever the move clock shows, and the move time still left on it is not an overrun.
- */
 /**
  * A Global or Global Shared player as the countdown cues should see them: with the clock that will
  * run out first, the move clock or the total (the shared reserve). The cues read the move clock
@@ -1423,8 +1421,14 @@ private fun globalMoveClockTick(p: PlayerState, delta: Long, flagBehavior: FlagB
 internal fun PlayerState.withBindingClock(): PlayerState =
     if (isOutOfTime || isNegative) this else copy(timeRemainingMs = minOf(timeRemainingMs, secondaryTimeMs))
 
-private fun reverseTotalGone(before: Long, after: Long, flagBehavior: FlagBehavior): Boolean =
-    flagBehavior == FlagBehavior.REVERSE && before > 0 && after <= 0
+/**
+ * Whether this tick is the one that empties the total (or the shared reserve) under NEGATIVE or
+ * REVERSE, so the move clock is to start counting the overrun from zero: the move time still left
+ * on it is not time the player has. Under NEGATIVE it went on counting down as if it were, and once
+ * it reached zero every later move handed out a full move time again.
+ */
+private fun totalGoneIntoOverrun(before: Long, after: Long, flagBehavior: FlagBehavior): Boolean =
+    (flagBehavior == FlagBehavior.REVERSE || flagBehavior == FlagBehavior.NEGATIVE) && before > 0 && after <= 0
 
 /**
  * The modes whose clocks run in stages of their own -- byoyomi periods, FIDE periods, Hidden's
@@ -1477,8 +1481,9 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             // The move clock honours FlagBehavior like every other clock; see globalMoveClockTick.
             val (moveTime, moveOut, moveNeg) = globalMoveClockTick(p, delta, settings.flagBehavior)
             val newSec = (p.secondaryTimeMs - delta).coerceAtLeast(0)
-            val fromZero = !moveOut && reverseTotalGone(p.secondaryTimeMs, newSec, settings.flagBehavior)
-            p.copy(timeRemainingMs = if (fromZero) 0 else moveTime, isNegative = moveNeg, secondaryTimeMs = newSec, isOutOfTime = moveOut || newSec <= 0)
+            val fromZero = !moveOut && totalGoneIntoOverrun(p.secondaryTimeMs, newSec, settings.flagBehavior)
+            val overrunSign = settings.flagBehavior == FlagBehavior.NEGATIVE
+            p.copy(timeRemainingMs = if (fromZero) 0 else moveTime, isNegative = if (fromZero) overrunSign else moveNeg, secondaryTimeMs = newSec, isOutOfTime = moveOut || newSec <= 0)
         }
         TimerMode.BYOYOMI_JAPANESE -> {
             val newTime = p.timeRemainingMs - delta
@@ -1716,14 +1721,15 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
             val drains = !(pActive.isOutOfTime && settings.flagBehavior == FlagBehavior.FLAG)
             val newGlobalTime = if (drains) (pActive.secondaryTimeMs - delta).coerceAtLeast(0) else pActive.secondaryTimeMs
             val outGlobal = newGlobalTime <= 0
-            val fromZero = reverseTotalGone(pActive.secondaryTimeMs, newGlobalTime, settings.flagBehavior)
+            val fromZero = totalGoneIntoOverrun(pActive.secondaryTimeMs, newGlobalTime, settings.flagBehavior)
+            val overrunSign = settings.flagBehavior == FlagBehavior.NEGATIVE
             val newPlayers = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == active) p.copy(timeRemainingMs = if (fromZero && !outMove) 0 else newMoveTime, isNegative = moveNeg, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
+                if (idx + 1 == active) p.copy(timeRemainingMs = if (fromZero && !outMove) 0 else newMoveTime, isNegative = if (fromZero && !outMove) overrunSign else moveNeg, secondaryTimeMs = newGlobalTime, isOutOfTime = outMove || outGlobal)
                 // A player keeps the flag their own move clock earned. This used to be the pool's
                 // state alone, so whoever ran out of move time was "back" as soon as someone else
                 // was on the clock -- under FLAG with three or four players no elimination stuck,
                 // and the game could never reach its last player.
-                else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = p.isOutOfTime || outGlobal, timeRemainingMs = if (fromZero) 0 else p.timeRemainingMs)
+                else p.copy(secondaryTimeMs = newGlobalTime, isOutOfTime = p.isOutOfTime || outGlobal, timeRemainingMs = if (fromZero) 0 else p.timeRemainingMs, isNegative = if (fromZero) overrunSign else p.isNegative)
             }
             return CoupledTick(
                 state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && (outMove || outGlobal)),
@@ -1817,6 +1823,9 @@ private fun PlayerState.signedTimeMs(flagBehavior: FlagBehavior): Long =
  * back this way; one eliminated under FLAG has no overrun and stays out.
  */
 private fun PlayerState.withSignedTime(t: Long, flagBehavior: FlagBehavior): PlayerState = when {
+    // Eliminated (FLAG) or frozen out: no overrun to pay off and no time to give. The increment
+    // used to go onto the stopped clock, which then read 0:02 in the loss colour.
+    isOutOfTime && !isOverrun(flagBehavior) -> this
     !isOverrun(flagBehavior) -> copy(timeRemainingMs = t)
     t > 0 -> copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false)
     else -> copy(timeRemainingMs = -t)
@@ -1887,9 +1896,9 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         // flag alone, which no reset cleared: the player stayed FLAGGED on every later move. Once
         // the total is gone there is no move time left to give, and the next overrun counts from zero.
         TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> when {
-            p.isNegative -> tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = p.secondaryTimeMs <= 0)
-            settings.flagBehavior == FlagBehavior.REVERSE && p.isOutOfTime ->
-                if (p.secondaryTimeMs > 0) tempP.copy(timeRemainingMs = s.moveTimeMs, isOutOfTime = false) else tempP.copy(timeRemainingMs = 0)
+            p.isOverrun(settings.flagBehavior) ->
+                if (p.secondaryTimeMs > 0) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = false)
+                else tempP.copy(timeRemainingMs = 0)
             else -> tempP.copy(timeRemainingMs = s.moveTimeMs)
         }
         // A fresh move clock. Under NEGATIVE and REVERSE play goes on past an empty reserve, so the
@@ -2794,8 +2803,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // each byoyomi period the clock comes down through the same threshold again, and from the
         // second time on it said nothing. Several crossed in one tick speak the lowest, as the
         // flushing queue keeps only the last.
+        // Not either side of a flag: an overrun is stored as a positive time, and an increment taking
+        // 1:01.5 over down to 0:59.5 over read as coming down through a minute -- "one minute left"
+        // to a player a minute past their time.
         val time = newState.timeRemainingMs
-        val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN) emptyList()
+        val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN || oldState.isOutOfTime || newState.isOutOfTime) emptyList()
             else listOf(60000L to CoreR.string.voice_one_minute_left, 30000L to CoreR.string.voice_thirty_seconds_left, 10000L to CoreR.string.voice_ten_seconds_left)
         for ((t, words) in thresholds) {
             if (oldState.timeRemainingMs > t && time <= t) voiceManager.speak(words, vol)
