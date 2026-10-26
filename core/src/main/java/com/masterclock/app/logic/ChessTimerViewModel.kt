@@ -1460,22 +1460,22 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             }
         }
         TimerMode.FIDE_PERIODS -> {
-            var newTime = p.timeRemainingMs - delta
-            var isOut = p.isOutOfTime
-            var periodIdx = p.currentPeriodIndex
-            var flagged = p.hasFlagged
-            if (newTime <= 0) {
-                if (!settings.forcedMoveCounter && periodIdx < s.fidePeriods.size - 1) {
-                    val nextPeriod = s.fidePeriods[periodIdx + 1]
-                    newTime = nextPeriod.timeMs
-                    periodIdx++
-                    flagged = true
-                    isOut = false
-                } else {
-                    return p.copy(hasFlagged = true).finalFlag(-newTime, settings.flagBehavior)
-                }
+            val newTime = p.timeRemainingMs - delta
+            if (newTime > 0) return p.copy(timeRemainingMs = newTime)
+            val periodIdx = p.currentPeriodIndex
+            // A period ends on its time when no move count ends it: always without the move
+            // counter, and with it for a period that has no count. Such a middle period -- one
+            // left at 0 in the editor, or the old last one when a period is added after it -- used
+            // to flag the player instead, and the periods after it were never reached.
+            val endsOnTime = !settings.forcedMoveCounter || (s.fidePeriods.getOrNull(periodIdx)?.movesToNext ?: 0) <= 0
+            if (endsOnTime && periodIdx < s.fidePeriods.size - 1) {
+                // What the tick ran past the end comes off the next period, which it used to start
+                // in full; a long tick runs on through it into the one after, as byoyomi does.
+                val next = p.copy(timeRemainingMs = s.fidePeriods[periodIdx + 1].timeMs, currentPeriodIndex = periodIdx + 1, hasFlagged = true)
+                tickPlayer(next, -newTime, s, settings)
+            } else {
+                p.copy(hasFlagged = true).finalFlag(-newTime, settings.flagBehavior)
             }
-            p.copy(timeRemainingMs = newTime, isOutOfTime = isOut, currentPeriodIndex = periodIdx, hasFlagged = flagged)
         }
         TimerMode.HIDDEN -> {
             val newTime = p.timeRemainingMs - delta
@@ -1879,7 +1879,6 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             var periodIdx = p.currentPeriodIndex
             val flagged = p.hasFlagged
             var activePeriod = currentPeriod
-            if (currentPeriod.isFischer) nextTime += currentPeriod.incrementMs
             if (settings.forcedMoveCounter && currentPeriod.movesToNext > 0 && tempP.moveCount >= currentPeriod.movesToNext && p.currentPeriodIndex < s.fidePeriods.size - 1) {
                 val nextIdx = p.currentPeriodIndex + 1
                 val nextPeriod = s.fidePeriods[nextIdx]
@@ -1891,6 +1890,14 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
                 // a period ends by running out, and tickPlayer still marks that one.
                 activePeriod = nextPeriod
             }
+            // The bonus is for the move to come, as a FIDE clock gives it: the DGT2500 adds it
+            // "before each move from the start of the game", so the first is on the clock before
+            // move 1 (createInitialState) and each press adds the one for the player's next move,
+            // from the period that move is played in. It was added after each move instead, from
+            // the period just finished, so the player was always one bonus short -- 90:00 rather
+            // than 90:30 to start a 90' + 30s game -- and a bonus that begins with a period, as in
+            // the DGT manual's "30 seconds from move 61", began a move late.
+            if (activePeriod.isFischer) nextTime += activePeriod.incrementMs
             // Non-Fischer periods can optionally carry a per-move delay (US Chess Delay-style), reusing the
             // same generic delayRemainingMs mechanism US_DELAY uses. hasDelay distinguishes plain Sudden
             // Death (no delay) from US Delay -- both are non-Fischer, only the latter reads incrementMs.
@@ -2279,7 +2286,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 TimerMode.FIDE_PERIODS -> {
                     val first = pSettings.fidePeriods.firstOrNull() ?: FidePeriod()
                     PlayerState(
-                        timeRemainingMs = first.timeMs,
+                        // The bonus for move 1; see computePostMoveState.
+                        timeRemainingMs = first.timeMs + if (first.isFischer) first.incrementMs else 0L,
                         currentPeriodIndex = 0,
                         // Same rule computePostMoveState applies to every later move. Without it the
                         // first move of each player had no delay at all -- delayRemainingMs took
@@ -2606,6 +2614,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Under NEGATIVE and REVERSE the clock runs on past the flag, counting the overrun, and its
         // first seconds used to beep as if they were the last ones left.
         if (newState.isOutOfTime) return
+
+        // A FIDE period that ran out on its time -- the move count ends one in a press, never here.
+        // The screen marked it PERIOD FLAG and nothing else did: no sound, and no trace in the log
+        // of a flag an arbiter may need to know fell. A plain beep, not the flag's triple one: the
+        // player plays on in the next period.
+        if (newState.currentPeriodIndex > oldState.currentPeriodIndex) {
+            soundManager.playShortBeep()
+            addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIdx, detail = "Period ${oldState.currentPeriodIndex + 1} ran out"))
+            lastBeepSecond = -1
+            return
+        }
 
         // Hidden mode hides the clock, and a countdown beep in the last seconds says exactly what
         // the screen withholds. The flag above is shown on screen anyway, so it still sounds.

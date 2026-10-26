@@ -130,7 +130,8 @@ class ChessTimerLogicTest {
         val settings = ChessClockSettings(main = s, forcedMoveCounter = false)
         val next = tickPlayer(PlayerState(timeRemainingMs = 50, currentPeriodIndex = 0), delta = 100, s = s, settings = settings)
         assertEquals(1, next.currentPeriodIndex)
-        assertEquals(5000, next.timeRemainingMs)
+        // The 50ms the tick ran past period 1 comes off period 2.
+        assertEquals(4950, next.timeRemainingMs)
         assertTrue(next.hasFlagged)
         assertFalse(next.isOutOfTime)
     }
@@ -200,7 +201,8 @@ class ChessTimerLogicTest {
         )
         val next = computePostMoveState(state, 1, 0, settings, s)
         assertEquals(1, next.players[0].currentPeriodIndex)
-        assertEquals(15_000, next.players[0].timeRemainingMs)
+        // Period 2's time, and its bonus for the move about to be played in it.
+        assertEquals(45_000, next.players[0].timeRemainingMs)
         // Reaching the move count is the normal end of a period, not a flag -- this used to assert
         // the opposite, and the screen showed PERIOD FLAG for the rest of the game.
         assertFalse(next.players[0].hasFlagged)
