@@ -395,6 +395,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val inactiveColor = Color(settings.inactiveColor)
     val lossColor = Color(settings.lossColor) 
     val reflectionColor = Color(settings.reflectionColor)
+    // The pause between phases is no phase being played, so it takes the colour of a clock at rest.
+    // It showed the active colour, the same as the phase either side of it.
+    val inPhasePause = pSettings.mode == TimerMode.PHASES && playerState.isInInterPhasePause
 
     val backgroundColor by animateColorAsState(
         targetValue = when {
@@ -410,13 +413,14 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             } else {
                 if (playerState.isGongReflectionPhase) reflectionColor else activeColor
             }
+            inPhasePause -> inactiveColor
             isActive || runsForAll -> activeColor
             else -> inactiveColor 
         }, animationSpec = tween(300), label = "backgroundColor"
     )
     
     val contentColor by animateColorAsState(
-        targetValue = if (isActive || runsForAll) {
+        targetValue = if ((isActive || runsForAll) && !inPhasePause) {
             Color(settings.activeTextColor)
         } else {
             Color(settings.inactiveTextColor)
