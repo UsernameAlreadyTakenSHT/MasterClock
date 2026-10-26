@@ -1396,10 +1396,16 @@ private fun reverseTotalGone(before: Long, after: Long, flagBehavior: FlagBehavi
  */
 private val STAGED_MODES = setOf(TimerMode.BYOYOMI_JAPANESE, TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE, TimerMode.FIDE_PERIODS, TimerMode.HIDDEN)
 
-/** The last stage running out: an overrun to count under NEGATIVE, a clock held at zero otherwise. */
-private fun PlayerState.finalFlag(overrunMs: Long, flagBehavior: FlagBehavior): PlayerState =
-    if (flagBehavior == FlagBehavior.NEGATIVE) copy(timeRemainingMs = overrunMs.coerceAtLeast(0), isOutOfTime = true, isNegative = true)
-    else copy(timeRemainingMs = 0, isOutOfTime = true)
+/**
+ * The last stage running out: an overrun to count under NEGATIVE and REVERSE, a clock held at zero
+ * otherwise. REVERSE held it at zero too, and the next tick, finding the clock at 0:00 and nothing
+ * marking an overrun, ran the stage out again: the clock sat at 0:00 for the rest of the game.
+ */
+private fun PlayerState.finalFlag(overrunMs: Long, flagBehavior: FlagBehavior): PlayerState = when (flagBehavior) {
+    FlagBehavior.NEGATIVE -> copy(timeRemainingMs = overrunMs.coerceAtLeast(0), isOutOfTime = true, isNegative = true)
+    FlagBehavior.REVERSE -> copy(timeRemainingMs = overrunMs.coerceAtLeast(0), isOutOfTime = true, isNegative = false)
+    else -> copy(timeRemainingMs = 0, isOutOfTime = true)
+}
 
 internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
     if (p.delayRemainingMs > 0) {
@@ -1407,7 +1413,7 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
         return tickPlayer(p.copy(delayRemainingMs = 0), delta - p.delayRemainingMs, s, settings)
     }
     // An overrun past the last stage goes on growing; see finalFlag.
-    if (p.isOutOfTime && p.isNegative && s.mode in STAGED_MODES) return p.copy(timeRemainingMs = p.timeRemainingMs + delta)
+    if (p.isOverrun(settings.flagBehavior) && s.mode in STAGED_MODES) return p.copy(timeRemainingMs = p.timeRemainingMs + delta)
     return when (s.mode) {
         TimerMode.MOVE_TIMER_OVERTIME -> {
             // The reserve running out was always the end, whatever FlagBehavior said: the clock
@@ -1739,32 +1745,32 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
  * [ChessTimerViewModel.startOrSwitch] records a move) for every mode driven by [applyPostMoveLogic].
  * Exposed at the top level for the same testability reason as [tickPlayer].
  */
-/**
- * The remaining time with its sign. NEGATIVE stores an overrun as a positive [PlayerState.timeRemainingMs]
- * with [PlayerState.isNegative] beside it, and arithmetic on the bare field read the overrun as
- * time left: an increment pushed -0:05 to -0:07 instead of -0:03, and Save & Cap banked an overrun
- * as savings.
- */
-private fun PlayerState.signedTimeMs(): Long = if (isNegative) -timeRemainingMs else timeRemainingMs
-
-/**
- * Stores a signed remaining time back. Above zero again, an overrun player has time again and is
- * no longer out -- firstToFlag still records who flagged first. Only an overrun (NEGATIVE) player
- * can come back this way; one eliminated under FLAG is never negative and stays out.
- */
-private fun PlayerState.withSignedTime(t: Long): PlayerState = when {
-    !isNegative -> copy(timeRemainingMs = t)
-    t > 0 -> copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false)
-    else -> copy(timeRemainingMs = -t)
-}
-
 /** Whether this player's [PlayerState.timeRemainingMs] is an overrun rather than time left. */
 private fun PlayerState.isOverrun(flagBehavior: FlagBehavior): Boolean =
     isOutOfTime && (isNegative || flagBehavior == FlagBehavior.REVERSE)
 
-/** The remaining time with its sign, reading a REVERSE overrun as well as a NEGATIVE one. */
+/**
+ * The remaining time with its sign. NEGATIVE and REVERSE store an overrun as a positive
+ * [PlayerState.timeRemainingMs] -- NEGATIVE with [PlayerState.isNegative] beside it, REVERSE with
+ * nothing but the flag -- and arithmetic on the bare field read the overrun as time left: an
+ * increment pushed -0:05 to -0:07 instead of -0:03, and Save & Cap banked an overrun as savings.
+ * Under REVERSE it still did, the sign being read off isNegative alone: a player who had flagged
+ * was handed every increment, and in FIDE the whole of the next period at move 40, while still
+ * shown as flagged.
+ */
 private fun PlayerState.signedTimeMs(flagBehavior: FlagBehavior): Long =
     if (isOverrun(flagBehavior)) -timeRemainingMs else timeRemainingMs
+
+/**
+ * Stores a signed remaining time back. Above zero again, an overrun player has time again and is
+ * no longer out -- firstToFlag still records who flagged first. Only an overrun player can come
+ * back this way; one eliminated under FLAG has no overrun and stays out.
+ */
+private fun PlayerState.withSignedTime(t: Long, flagBehavior: FlagBehavior): PlayerState = when {
+    !isOverrun(flagBehavior) -> copy(timeRemainingMs = t)
+    t > 0 -> copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false)
+    else -> copy(timeRemainingMs = -t)
+}
 
 /**
  * Gives a player [amountMs] (taken away when negative), counted against an overrun first.
@@ -1814,13 +1820,14 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     }
 
     val newP = when (s.mode) {
-        TimerMode.FISCHER -> tempP.withSignedTime(p.signedTimeMs() + s.incrementMs)
-        TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.withSignedTime(p.signedTimeMs() + p.secondaryTimeMs)
-        TimerMode.BRONSTEIN -> tempP.withSignedTime(p.signedTimeMs() + timeSpentOnMove.coerceAtMost(s.incrementMs))
+        TimerMode.FISCHER -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + s.incrementMs, settings.flagBehavior)
+        TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + p.secondaryTimeMs, settings.flagBehavior)
+        TimerMode.BRONSTEIN -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + timeSpentOnMove.coerceAtMost(s.incrementMs), settings.flagBehavior)
         // Every move starts a fresh allowance, and an overrun of the last one is over with it. The
         // reset restored the time and left isOutOfTime/isNegative set, so under NEGATIVE every
-        // later turn counted up from -0:30 and the player could never flag again.
-        TimerMode.MOVE_TIMER_STANDARD -> if (p.isNegative) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = false) else tempP.copy(timeRemainingMs = s.moveTimeMs)
+        // later turn counted up from -0:30 and the player could never flag again. Under REVERSE,
+        // whose overrun has no isNegative to clear, it still did.
+        TimerMode.MOVE_TIMER_STANDARD -> if (p.isOverrun(settings.flagBehavior)) tempP.copy(timeRemainingMs = s.moveTimeMs, isNegative = false, isOutOfTime = false) else tempP.copy(timeRemainingMs = s.moveTimeMs)
         // A fresh move clock; an overrun of the last one ends with it, and the player stays out
         // only if the total (or the shared pool) is gone too. REVERSE marks the overrun with the
         // flag alone, which no reset cleared: the player stayed FLAGGED on every later move. Once
@@ -1850,7 +1857,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             // watched a number that had stopped meaning anything.
             // Signed: under NEGATIVE an overrun is stored as a positive number, and this banked it
             // -- forty seconds on a thirty-second move started the next turn at 0:40.
-            val carried = p.signedTimeMs().coerceAtLeast(0)
+            val carried = p.signedTimeMs(settings.flagBehavior).coerceAtLeast(0)
             // The cap is the ceiling on the clock as a whole, not on the bank alone: with 30s moves
             // and a 2:00 cap the clock stops at 2:00, never 2:30. A cap below the move time cannot
             // bind without handing the player less than one move, so it is floored there -- which
@@ -1858,7 +1865,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             val cap = s.timeCapMs.coerceAtLeast(s.moveTimeMs)
             val newTotal = (s.moveTimeMs + carried).coerceAtMost(cap)
             val saved = tempP.copy(timeRemainingMs = newTotal, secondaryTimeMs = (newTotal - s.moveTimeMs).coerceAtLeast(0))
-            if (p.isNegative) saved.copy(isNegative = false, isOutOfTime = false) else saved
+            if (p.isOverrun(settings.flagBehavior)) saved.copy(isNegative = false, isOutOfTime = false) else saved
         }
         // A move refills a period only for a player who still has one: after the last has run out,
         // under NEGATIVE, a move would otherwise hand a fresh period to someone already out.
@@ -1868,7 +1875,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         TimerMode.FIDE_PERIODS -> {
             val currentPeriod = s.fidePeriods.getOrNull(p.currentPeriodIndex) ?: FidePeriod()
             // Signed, as for the increment modes: under NEGATIVE an overrun is stored positive.
-            var nextTime = p.signedTimeMs()
+            var nextTime = p.signedTimeMs(settings.flagBehavior)
             var periodIdx = p.currentPeriodIndex
             val flagged = p.hasFlagged
             var activePeriod = currentPeriod
@@ -1888,7 +1895,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             // same generic delayRemainingMs mechanism US_DELAY uses. hasDelay distinguishes plain Sudden
             // Death (no delay) from US Delay -- both are non-Fischer, only the latter reads incrementMs.
             val nextDelay = if (!activePeriod.isFischer && activePeriod.hasDelay) activePeriod.incrementMs else 0L
-            tempP.copy(currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay).withSignedTime(nextTime)
+            tempP.copy(currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay).withSignedTime(nextTime, settings.flagBehavior)
         }
         TimerMode.FAST_MOVE -> {
             // TRANSFER is handled above (needs to update the opponent too); only SHRINK/ACCELERATE reach here.
