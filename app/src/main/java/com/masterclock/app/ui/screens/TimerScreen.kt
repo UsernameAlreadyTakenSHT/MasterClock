@@ -103,8 +103,9 @@ fun TimerScreen(
     )
 
     // The haptic countdown is one more way to read a clock, so Hidden mode does without it; and a
-    // clock counting up has no countdown to give.
-    val noCountdown = activeMode == TimerMode.HIDDEN || activeMode == TimerMode.CHRONO_COUNTUP
+    // clock counting up has no countdown to give. Nor has one already out: under NEGATIVE and
+    // REVERSE the face goes on to show the overrun, and its first ten seconds buzzed as a countdown.
+    val noCountdown = activeMode == TimerMode.HIDDEN || activeMode == TimerMode.CHRONO_COUNTUP || activePlayerState?.isOutOfTime == true
 
     LaunchedEffect(secondsLeft, state.activePlayer, state.isPaused) {
         if (!state.isPaused && !noCountdown && secondsLeft in 1L..10L) {
@@ -367,10 +368,11 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val isGong = pSettings.mode == TimerMode.GONG
     
     // Not in Hidden mode: the flash starting at ten seconds would tell the player what ??:?? hides.
+    // Not once out either, when the face shows an overrun rather than time left.
     val isHidden = pSettings.mode == TimerMode.HIDDEN
     // What the face shows, which in CHRONO and PHASES is the shared clock; see displayedTimeMs.
     val shownTimeMs = displayedTimeMs(state, playerState, pSettings.mode)
-    val isLowTime = isActive && !isHidden && pSettings.mode != TimerMode.CHRONO_COUNTUP && shownTimeMs in 1..10000 && settings.flashOnLowTime
+    val isLowTime = isActive && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && shownTimeMs in 1..10000 && settings.flashOnLowTime
     val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
     val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
 

@@ -2474,6 +2474,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             addEvent(GameEvent(eventType = "FLAG", playerIndex = playerIdx, detail = "Time Up"))
             return
         }
+        // Under NEGATIVE and REVERSE the clock runs on past the flag, counting the overrun, and its
+        // first seconds used to beep as if they were the last ones left.
+        if (newState.isOutOfTime) return
 
         // Hidden mode hides the clock, and a countdown beep in the last seconds says exactly what
         // the screen withholds. The flag above is shown on screen anyway, so it still sounds.
