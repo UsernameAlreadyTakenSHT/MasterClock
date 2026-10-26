@@ -89,7 +89,8 @@
     <string name="settings_actions">Acties</string>
     <string name="settings_period_n">Periode %d</string>
     <string name="settings_moves_unlock">Zetten om de volgende vrij te spelen (0 = laatste)</string>
-    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Zetten tot periode %d</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Totaal aantal zetten tot periode %d</string>
+    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Meer dan %d: er wordt geteld vanaf het begin van de partij</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Naam van fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Rood: %d</string>
@@ -546,6 +547,8 @@
     <string name="timer_flagged">GEVALLEN</string>
     <string name="timer_finished">AFGELOPEN</string>
     <string name="timer_period_flag">EINDE PERIODE</string>
+    <string name="timer_period">PERIODE: %1$d/%2$d</string>
+    <string name="timer_periods">PERIODES: %1$d</string>
     <string name="timer_reflect">BEDENKEN</string>
     <string name="timer_move_alert">ZET!</string>
     <string name="timer_pause_label">PAUZE</string>

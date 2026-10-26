@@ -258,13 +258,22 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 
                         if (index < periods.size - 1 || periods.size < 5) {
                             val isLast = index == periods.size - 1
+                            // The count is a total from the start of the game -- 60 for "60'/20" after
+                            // a 40-move first period -- so each must pass the one before it, or the next
+                            // period starts the move after this one does.
+                            val movesBefore = if (index == 0) 0 else periods[index - 1].movesToNext
+                            val tooFew = !isLast && period.movesToNext in 1..movesBefore
                             OutlinedTextField(
                                 value = if (period.movesToNext == 0) "" else period.movesToNext.toString(),
                                 onValueChange = {
-                                    val moves = it.toIntOrNull() ?: 0
+                                    // Digits only, and no more than four: anything else parsed to
+                                    // nothing and emptied the field while it was being typed.
+                                    val digits = it.filter(Char::isDigit).take(4)
+                                    val moves = digits.toIntOrNull() ?: 0
                                     val newList = periods.toMutableList().apply { this[index] = period.copy(movesToNext = moves) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
+                                isError = tooFew,
                                 label = {
                                     Text(if (isLast) stringResource(R.string.settings_moves_unlock) else stringResource(R.string.settings_moves_until_period, index + 2))
                                 },
@@ -272,9 +281,11 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                supportingText = if (isLast && period.movesToNext == 0) {
-                                    { Text(stringResource(R.string.settings_final_period)) }
-                                } else null,
+                                supportingText = when {
+                                    tooFew -> { { Text(stringResource(R.string.settings_moves_must_exceed, movesBefore)) } }
+                                    isLast && period.movesToNext == 0 -> { { Text(stringResource(R.string.settings_final_period)) } }
+                                    else -> null
+                                },
                                 colors = OutlinedTextFieldDefaults.colors()
                             )
                         }
@@ -285,7 +296,15 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
             if (periods.size < 5) {
                 Button(
                     onClick = {
-                        val newList = periods + FidePeriod()
+                        // The period that was last becomes a middle one and needs a move count to end
+                        // on: left at none it ended only when its time ran out, which with the move
+                        // counter on is a flag, and the new period could never be reached. It gets
+                        // the FIDE pattern -- 40 moves, then 20 more each -- unless it has one; the
+                        // new period is the last and has none.
+                        val last = periods.last()
+                        val movesBefore = if (periods.size < 2) 0 else periods[periods.size - 2].movesToNext
+                        val ended = if (last.movesToNext > movesBefore) last else last.copy(movesToNext = movesBefore + if (movesBefore == 0) 40 else 20)
+                        val newList = periods.dropLast(1) + ended + FidePeriod(movesToNext = 0)
                         onUpdate(p.copy(fidePeriods = newList))
                     },
                     modifier = Modifier.fillMaxWidth()

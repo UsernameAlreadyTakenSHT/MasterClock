@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +17,9 @@ import com.masterclock.app.logic.*
 
 @Composable
 fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (ChessClockSettings) -> Unit, onOmniClick: () -> Unit) {
-    var selectedPlayerTab by remember { mutableIntStateOf(0) }
+    // Saveable: a theme or language change recreated the page on Player 1's tab, and the next edit
+    // meant for Player 2 went to Player 1.
+    var selectedPlayerTab by rememberSaveable { mutableIntStateOf(0) }
     var showChangelog by remember { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         if (currentSettings.differentSettingsPerPlayer) {

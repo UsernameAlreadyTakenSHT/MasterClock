@@ -88,7 +88,8 @@
     <string name="settings_period_n">Period %d</string>
     <string name="settings_moves_unlock">Moves to unlock next (0 = Final)</string>
     <!-- The number is a period index, not a count, so plurals would be wrong here. -->
-    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Moves until period %d</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Total moves before period %d</string>
+    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">More than %d: the count runs from the start of the game</string>
     <!-- Also an index, not a count: "Phase 2 Name". -->
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Phase %d Name</string>
     <string name="settings_phase_n">Phase %d</string>
@@ -599,6 +600,8 @@
     <string name="timer_flagged">FLAGGED</string>
     <string name="timer_finished">FINISHED</string>
     <string name="timer_period_flag">PERIOD FLAG</string>
+    <string name="timer_period">PERIOD: %1$d/%2$d</string>
+    <string name="timer_periods">PERIODS: %1$d</string>
     <string name="timer_reflect">REFLECT</string>
     <string name="timer_move_alert">MOVE!</string>
     <string name="timer_pause_label">PAUSE</string>

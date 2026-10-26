@@ -95,7 +95,8 @@
     <string name="settings_actions">Actions</string>
     <string name="settings_period_n">Période %d</string>
     <string name="settings_moves_unlock">Coups pour débloquer la suivante (0 = finale)</string>
-    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Coups avant la période %d</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Coups au total avant la période %d</string>
+    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Plus de %d : le compte part du début de la partie</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nom de la phase %d</string>
     <string name="settings_phase_n">Phase %d</string>
     <string name="settings_color_red">Rouge : %d</string>
@@ -571,6 +572,8 @@
     <string name="timer_flagged">TOMBÉ</string>
     <string name="timer_finished">TERMINÉ</string>
     <string name="timer_period_flag">PÉRIODE ÉCOULÉE</string>
+    <string name="timer_period">PÉRIODE : %1$d/%2$d</string>
+    <string name="timer_periods">PÉRIODES : %1$d</string>
     <string name="timer_reflect">RÉFLEXION</string>
     <string name="timer_move_alert">JOUEZ !</string>
     <string name="timer_pause_label">PAUSE</string>

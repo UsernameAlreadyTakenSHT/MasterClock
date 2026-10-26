@@ -81,9 +81,10 @@ fun TimerScreen(
         state.activePlayer?.let { state.players.getOrNull(it - 1) }
     }
     
-    val activeMode = state.activePlayer?.let { idx ->
-        (if (settings.differentSettingsPerPlayer) when (idx) { 1 -> settings.p1Custom; 2 -> settings.p2Custom; 3 -> settings.p3Custom; 4 -> settings.p4Custom; else -> settings.main } else settings.main).mode
+    val activeSettings = state.activePlayer?.let { idx ->
+        if (settings.differentSettingsPerPlayer) when (idx) { 1 -> settings.p1Custom; 2 -> settings.p2Custom; 3 -> settings.p3Custom; 4 -> settings.p4Custom; else -> settings.main } else settings.main
     }
+    val activeMode = activeSettings?.mode
     // The time on the active clock's face -- the shared clock in CHRONO and PHASES.
     val secondsLeft = activePlayerState?.let { p -> activeMode?.let { displayedTimeMs(state, p, it) / 1000 } } ?: -1L
     
@@ -128,7 +129,11 @@ fun TimerScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        ClockAnnouncer(state, if (isGlobalMode) phaseLabel(settings.main, state.players[0]) else null)
+        ClockAnnouncer(
+            state,
+            if (isGlobalMode) phaseLabel(settings.main, state.players[0]) else null,
+            if (activeMode == TimerMode.FIDE_PERIODS && activeSettings != null && activePlayerState != null) fidePeriodLabel(activeSettings, activePlayerState) else null,
+        )
 
         if (isGlobalMode) {
             Box(Modifier.fillMaxSize()) {
@@ -334,6 +339,11 @@ private fun phaseLabel(s: PlayerSettings, p1: PlayerState): String =
     if (p1.isInInterPhasePause || p1.isPhaseAwaitingTap) stringResource(R.string.timer_pause_label)
     else s.phases.getOrNull(p1.currentPhaseIndex)?.name?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_phase_n, p1.currentPhaseIndex + 1)
 
+/** Which FIDE period a player is in, as the face shows it. */
+@Composable
+private fun fidePeriodLabel(s: PlayerSettings, p: PlayerState): String =
+    stringResource(R.string.timer_period, p.currentPeriodIndex + 1, s.fidePeriods.size)
+
 /**
  * A zero-content live region that speaks state changes: a flag, a new turn, a pause, a byoyomi
  * period.
@@ -345,12 +355,18 @@ private fun phaseLabel(s: PlayerSettings, p1: PlayerState): String =
  * Nothing here reacts to the countdown, only to transitions -- see clockAnnouncement.
  */
 @Composable
-private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?) {
+private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLabel: String?) {
     val announcement = clockAnnouncement(state) ?: return
     // PHASES has no turn to announce, only the phase: "Player 1 to move" was all a screen reader
     // heard for the whole game, and a new phase or a pause between phases went unannounced. The
     // label changing is what makes the live region speak.
-    val message = if (phaseLabel != null && announcement is ClockAnnouncement.ToMove) phaseLabel else clockAnnouncementText(announcement)
+    // A FIDE period changing was announced by voice alone, if the voice was on; the period beside
+    // the turn makes the live region speak it.
+    val message = when {
+        phaseLabel != null && announcement is ClockAnnouncement.ToMove -> phaseLabel
+        periodLabel != null && announcement is ClockAnnouncement.ToMove -> "${clockAnnouncementText(announcement)}, $periodLabel"
+        else -> clockAnnouncementText(announcement)
+    }
     val urgent = isUrgentAnnouncement(state)
 
     Box(
@@ -447,6 +463,12 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         isHidden -> stringResource(R.string.a11y_time_hidden)
         // The phase, or the pause, is on the face beside the time; TalkBack read the time alone.
         pSettings.mode == TimerMode.PHASES -> "${phaseLabel(pSettings, playerState)}, ${spokenDurationText(shownTimeMs)}"
+        // The period, and a period that ran out, are on the face too.
+        pSettings.mode == TimerMode.FIDE_PERIODS -> listOfNotNull(
+            fidePeriodLabel(pSettings, playerState),
+            stringResource(R.string.timer_period_flag).takeIf { playerState.hasFlagged },
+            spokenDurationText(shownTimeMs),
+        ).joinToString(", ")
         else -> spokenDurationText(shownTimeMs)
     }
     // Nobody's turn once the game is over, though the last player to move is still the active one.
@@ -495,14 +517,17 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = if (!playerState.isGongReflectionPhase) alertTextColor else labelColor)
                         }
                         playerState.isInByoyomi -> {
-                            val text = if (pSettings.mode == TimerMode.BYOYOMI_JAPANESE) { if (settings.showCurrentPeriod) "PERIOD: ${pSettings.byoyomiPeriods - playerState.byoyomiPeriodsRemaining + 1}/${pSettings.byoyomiPeriods}" else "PERIODS: ${playerState.byoyomiPeriodsRemaining}" } else stringResource(R.string.timer_moves, playerState.movesRemainingInPeriod)
+                            val text = if (pSettings.mode == TimerMode.BYOYOMI_JAPANESE) { if (settings.showCurrentPeriod) stringResource(R.string.timer_period, pSettings.byoyomiPeriods - playerState.byoyomiPeriodsRemaining + 1, pSettings.byoyomiPeriods) else stringResource(R.string.timer_periods, playerState.byoyomiPeriodsRemaining) } else stringResource(R.string.timer_moves, playerState.movesRemainingInPeriod)
                             Text(text, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = if (isActive) labelColor else labelColor.copy(alpha = 0.7f))
                         }
                         pSettings.mode == TimerMode.FIDE_PERIODS -> {
                             val currentP = pSettings.fidePeriods.getOrNull(playerState.currentPeriodIndex)
                             // Moves left to the next period while there is one. The last period has no
-                            // move target (movesToNext is 0), and counting down to it read "MOVES: -41".
-                            val info = if (settings.forcedMoveCounter && currentP != null && currentP.movesToNext > 0) stringResource(R.string.timer_moves, currentP.movesToNext - playerState.moveCount) else "PERIOD: ${playerState.currentPeriodIndex + 1}/${pSettings.fidePeriods.size}"
+                            // next period, whatever its move count says -- the default period keeps 40
+                            // -- and counting down to it read "MOVES: 0", then -1, -2 for the rest of
+                            // the game.
+                            val hasNext = playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1
+                            val info = if (settings.forcedMoveCounter && hasNext && currentP != null && currentP.movesToNext > 0) stringResource(R.string.timer_moves, currentP.movesToNext - playerState.moveCount) else stringResource(R.string.timer_period, playerState.currentPeriodIndex + 1, pSettings.fidePeriods.size)
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
@@ -538,7 +563,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                 if (state.phasesFinished) {
                     Text(stringResource(R.string.timer_finished), style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = labelColor, fontWeight = FontWeight.ExtraBold)
                 } else if (playerState.isOutOfTime || playerState.hasFlagged) {
-                    val flagText = if (pSettings.mode == TimerMode.FIDE_PERIODS && playerState.timeRemainingMs > 0) stringResource(R.string.timer_period_flag) else stringResource(R.string.timer_flagged)
+                    // A period that ran out leaves the player in the game; the last one does not. It was told apart
+                    // by time left on the clock, which under NEGATIVE and REVERSE is the overrun.
+                    val flagText = if (pSettings.mode == TimerMode.FIDE_PERIODS && !playerState.isOutOfTime) stringResource(R.string.timer_period_flag) else stringResource(R.string.timer_flagged)
                     Text(flagText, style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = alertTextColor, fontWeight = FontWeight.ExtraBold)
                 } else {
                     // heightIn rather than height: at the default font scale this still reserves

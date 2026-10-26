@@ -90,7 +90,8 @@
     <string name="settings_actions">Acciones</string>
     <string name="settings_period_n">Periodo %d</string>
     <string name="settings_moves_unlock">Jugadas para desbloquear el siguiente (0 = final)</string>
-    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Jugadas hasta el periodo %d</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Jugadas totales hasta el periodo %d</string>
+    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Más de %d: se cuenta desde el inicio de la partida</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nombre de la fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Rojo: %d</string>
@@ -563,6 +564,8 @@
     <string name="timer_flagged">CAÍDA</string>
     <string name="timer_finished">TERMINADO</string>
     <string name="timer_period_flag">FIN DE PERIODO</string>
+    <string name="timer_period">PERIODO: %1$d/%2$d</string>
+    <string name="timer_periods">PERIODOS: %1$d</string>
     <string name="timer_reflect">REFLEXIÓN</string>
     <string name="timer_move_alert">¡JUEGA!</string>
     <string name="timer_pause_label">PAUSA</string>

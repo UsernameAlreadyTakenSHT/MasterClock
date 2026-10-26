@@ -94,7 +94,8 @@
     <string name="settings_actions">Ações</string>
     <string name="settings_period_n">Período %d</string>
     <string name="settings_moves_unlock">Lances para desbloquear o seguinte (0 = final)</string>
-    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Lances até ao período %d</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Lances no total até ao período %d</string>
+    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Mais de %d: a contagem começa no início da partida</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nome da fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Vermelho: %d</string>
@@ -559,6 +560,8 @@
     <string name="timer_flagged">QUEDA</string>
     <string name="timer_finished">TERMINADO</string>
     <string name="timer_period_flag">FIM DE PERÍODO</string>
+    <string name="timer_period">PERÍODO: %1$d/%2$d</string>
+    <string name="timer_periods">PERÍODOS: %1$d</string>
     <string name="timer_reflect">REFLEXÃO</string>
     <string name="timer_move_alert">JOGUE!</string>
     <string name="timer_pause_label">PAUSA</string>

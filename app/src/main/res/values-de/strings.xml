@@ -90,7 +90,8 @@
     <string name="settings_actions">Aktionen</string>
     <string name="settings_period_n">Periode %d</string>
     <string name="settings_moves_unlock">Züge bis zur nächsten (0 = letzte)</string>
-    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Züge bis Periode %d</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Züge insgesamt bis Periode %d</string>
+    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Mehr als %d: gezählt wird ab Partiebeginn</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Name der Phase %d</string>
     <string name="settings_phase_n">Phase %d</string>
     <string name="settings_color_red">Rot: %d</string>
@@ -547,6 +548,8 @@
     <string name="timer_flagged">GEFALLEN</string>
     <string name="timer_finished">BEENDET</string>
     <string name="timer_period_flag">PERIODENENDE</string>
+    <string name="timer_period">PERIODE: %1$d/%2$d</string>
+    <string name="timer_periods">PERIODEN: %1$d</string>
     <string name="timer_reflect">BEDENKEN</string>
     <string name="timer_move_alert">ZIEHEN!</string>
     <string name="timer_pause_label">PAUSE</string>
