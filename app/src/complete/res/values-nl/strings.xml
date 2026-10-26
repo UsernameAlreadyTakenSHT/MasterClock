@@ -106,6 +106,10 @@
     <string name="tools_copy_format">%s kopiëren</string>
     <string name="tools_dark_square">ZWART</string>
     <string name="tools_delete_recording">Opname verwijderen</string>
+    <string name="tools_delete_photo">Foto verwijderen</string>
+    <string name="tools_delete_video">Video verwijderen</string>
+    <string name="tools_record_again">Opnieuw opnemen</string>
+    <string name="tools_delete_media_message">Dit kan niet ongedaan worden gemaakt.</string>
     <string name="tools_detailed_moves">Zetten in detail</string>
     <string name="tools_copied_to_clipboard">%1$s naar het klembord gekopieerd</string>
     <plurals name="tools_moves_total">

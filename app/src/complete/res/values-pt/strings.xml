@@ -109,6 +109,10 @@
     <string name="tools_copy_format">Copiar %s</string>
     <string name="tools_dark_square">PRETA</string>
     <string name="tools_delete_recording">Eliminar a gravação</string>
+    <string name="tools_delete_photo">Eliminar a foto</string>
+    <string name="tools_delete_video">Eliminar o vídeo</string>
+    <string name="tools_record_again">Gravar novamente</string>
+    <string name="tools_delete_media_message">Esta ação não pode ser anulada.</string>
     <string name="tools_detailed_moves">Lances em detalhe</string>
     <string name="tools_copied_to_clipboard">%1$s copiado para a área de transferência</string>
     <plurals name="tools_moves_total">

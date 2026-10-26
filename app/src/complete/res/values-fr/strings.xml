@@ -104,6 +104,10 @@
     <string name="tools_copy_format">Copier %s</string>
     <string name="tools_dark_square">NOIRE</string>
     <string name="tools_delete_recording">Supprimer l\'enregistrement</string>
+    <string name="tools_delete_photo">Supprimer la photo</string>
+    <string name="tools_delete_video">Supprimer la vidéo</string>
+    <string name="tools_record_again">Réenregistrer</string>
+    <string name="tools_delete_media_message">Cette action est définitive.</string>
     <string name="tools_detailed_moves">Coups détaillés</string>
     <string name="tools_copied_to_clipboard">%1$s copié dans le presse-papiers</string>
     <plurals name="tools_moves_total">

@@ -106,6 +106,10 @@
     <string name="tools_copy_format">Copiar %s</string>
     <string name="tools_dark_square">NEGRA</string>
     <string name="tools_delete_recording">Eliminar la grabación</string>
+    <string name="tools_delete_photo">Eliminar la foto</string>
+    <string name="tools_delete_video">Eliminar el vídeo</string>
+    <string name="tools_record_again">Volver a grabar</string>
+    <string name="tools_delete_media_message">Esta acción no se puede deshacer.</string>
     <string name="tools_detailed_moves">Jugadas detalladas</string>
     <string name="tools_copied_to_clipboard">%1$s copiado al portapapeles</string>
     <plurals name="tools_moves_total">

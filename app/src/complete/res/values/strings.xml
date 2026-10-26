@@ -136,6 +136,10 @@
     <string name="tools_copy_format">Copy %s</string>
     <string name="tools_dark_square">DARK</string>
     <string name="tools_delete_recording">Delete Recording</string>
+    <string name="tools_delete_photo">Delete Photo</string>
+    <string name="tools_delete_video" tools:ignore="Typos">Delete Video</string>
+    <string name="tools_record_again">Record Again</string>
+    <string name="tools_delete_media_message">This cannot be undone.</string>
     <string name="tools_detailed_moves">Detailed Moves</string>
     <!-- %1$s is the export format: PGN, PDN or KIF. -->
     <string name="tools_copied_to_clipboard">%1$s copied to clipboard</string>

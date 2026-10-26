@@ -106,6 +106,10 @@
     <string name="tools_copy_format">%s kopieren</string>
     <string name="tools_dark_square">SCHWARZ</string>
     <string name="tools_delete_recording">Aufnahme löschen</string>
+    <string name="tools_delete_photo">Foto löschen</string>
+    <string name="tools_delete_video">Video löschen</string>
+    <string name="tools_record_again">Neu aufnehmen</string>
+    <string name="tools_delete_media_message">Das kann nicht rückgängig gemacht werden.</string>
     <string name="tools_detailed_moves">Züge im Detail</string>
     <string name="tools_copied_to_clipboard">%1$s in die Zwischenablage kopiert</string>
     <plurals name="tools_moves_total">

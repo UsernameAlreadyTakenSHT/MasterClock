@@ -106,6 +106,10 @@
     <string name="tools_copy_format">Copia %s</string>
     <string name="tools_dark_square">NERA</string>
     <string name="tools_delete_recording">Elimina la registrazione</string>
+    <string name="tools_delete_photo">Elimina la foto</string>
+    <string name="tools_delete_video">Elimina il video</string>
+    <string name="tools_record_again">Registra di nuovo</string>
+    <string name="tools_delete_media_message">Questa azione non può essere annullata.</string>
     <string name="tools_detailed_moves">Mosse in dettaglio</string>
     <string name="tools_copied_to_clipboard">%1$s copiato negli appunti</string>
     <plurals name="tools_moves_total">

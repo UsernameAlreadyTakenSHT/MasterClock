@@ -29,6 +29,10 @@
     <!-- Tools -->
     <string name="tools_checkbox">Caixa de seleção</string>
     <string name="tools_delete_recording">Excluir a gravação</string>
+    <string name="tools_delete_photo">Excluir a foto</string>
+    <string name="tools_delete_video">Excluir o vídeo</string>
+    <string name="tools_record_again">Gravar novamente</string>
+    <string name="tools_delete_media_message">Esta ação não pode ser desfeita.</string>
     <string name="tools_game_logs">Registros de partidas</string>
     <string name="tools_log_details">Detalhes do registro</string>
     <string name="tools_share_log">Compartilhar o registro</string>

@@ -1267,8 +1267,8 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             Box(modifier = Modifier.size(160.dp).clip(CircleShape).background(if (isRecording) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(imageVector = if (isRecording) Icons.Default.Mic else Icons.Default.MicNone, contentDescription = null, modifier = Modifier.size(64.dp).scale(if (isRecording) 1.2f else 1f), tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
             if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
             else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else String.format(locale, "%02d:%02d", (note.audioDurationMs / 1000) / 60, (note.audioDurationMs / 1000) % 60), style = MaterialTheme.typography.headlineMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) { if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(if (isRecording) stringResource(R.string.tools_stop) else stringResource(R.string.tools_record)) }; if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play)) } }
-            if (note.audioPath != null && !isRecording && !isPlaying) TextButton(onClick = { onUpdate(note.copy(audioPath = null, audioDurationMs = 0)) }) { Icon(Icons.Default.Delete, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.tools_delete_recording)) }; Spacer(Modifier.weight(1f))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) { if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) }) }; if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play)) } }
+            if (note.audioPath != null && !isRecording && !isPlaying) DeleteMediaButton(stringResource(R.string.tools_delete_recording)) { shredNoteMedia(context, note.audioPath); onUpdate(note.copy(title = title, audioPath = null, audioDurationMs = 0)) }; Spacer(Modifier.weight(1f))
         }
     }
 }
@@ -1308,6 +1308,7 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_photo), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
             Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(photoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.imagePath == null) stringResource(R.string.tools_take_photo) else stringResource(R.string.tools_retake_photo)) }
+            if (note.imagePath != null) DeleteMediaButton(stringResource(R.string.tools_delete_photo)) { shredNoteMedia(context, note.imagePath); onUpdate(note.copy(title = title, imagePath = null)) }
         }
     }
 }
@@ -1348,6 +1349,7 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_video), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
             Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) videoLauncher.launch(videoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.videoPath == null) Icons.Default.Videocam else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.videoPath == null) stringResource(R.string.tools_record_video) else stringResource(R.string.tools_retake_video)) }
+            if (note.videoPath != null) DeleteMediaButton(stringResource(R.string.tools_delete_video)) { shredNoteMedia(context, note.videoPath); onUpdate(note.copy(title = title, videoPath = null)) }
         }
     }
 }
@@ -1916,6 +1918,32 @@ fun generateChessPosition(v: ChessVariant): List<String> {
  * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
  * of it. Off the main thread, since it may be exactly that video.
  */
+/**
+ * A media note's delete action. It asks first: the file is shredded, so there is no way back.
+ *
+ * Only the voice note had one, and it only cleared the note's path -- the recording stayed on disk
+ * until the whole note was deleted, and for good when the file carried an older note's id.
+ */
+@Composable
+private fun DeleteMediaButton(label: String, onConfirm: () -> Unit) {
+    var asking by remember { mutableStateOf(false) }
+    TextButton(onClick = { asking = true }) { Icon(Icons.Default.Delete, null); Spacer(Modifier.width(8.dp)); Text(label) }
+    if (asking) AlertDialog(
+        onDismissRequest = { asking = false },
+        title = { Text(label) },
+        text = { Text(stringResource(R.string.tools_delete_media_message)) },
+        confirmButton = { TextButton(onClick = { asking = false; onConfirm() }) { Text(stringResource(R.string.common_delete)) } },
+        dismissButton = { TextButton(onClick = { asking = false }) { Text(stringResource(R.string.common_cancel)) } },
+    )
+}
+
+/** Shreds a note's media file off the main thread, within the app's own storage only. */
+private fun shredNoteMedia(context: android.content.Context, path: String?) {
+    if (path == null) return
+    val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
+    kotlin.concurrent.thread(name = "shred-note-media") { shredFile(File(path), sandboxRoots) }
+}
+
 /**
  * Moves a finished take from [pending] over [target], shredding the take it replaces off the main
  * thread; false when there was no take to commit, with [target] untouched. See commitPendingMedia.
