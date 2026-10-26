@@ -78,6 +78,7 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.toColorInt
 import coil3.compose.AsyncImage
 import coil3.ImageLoader
+import coil3.request.ImageRequest
 import coil3.svg.SvgDecoder
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
@@ -1275,8 +1276,10 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     val pendingFile = remember { pendingMediaFile(photoFile) }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pendingFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
+    // Bumped on every new photo; see the image below.
+    var captureCount by remember { mutableIntStateOf(0) }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && commitTake(context, pendingFile, photoFile)) { shredReplacedMedia(context, note.imagePath, photoFile); onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) }
+        if (success && commitTake(context, pendingFile, photoFile)) { captureCount++; shredReplacedMedia(context, note.imagePath, photoFile); onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) }
         else pendingFile.delete()
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
@@ -1285,7 +1288,18 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) ) {
-                if (note.imagePath != null) AsyncImage(model = note.imagePath, contentDescription = stringResource(R.string.tools_note_image), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                val imagePath = note.imagePath
+                // A retake lands at the same path, and Coil caches a file by its path alone, so the
+                // old photo went on showing -- until the app was restarted, sometimes. The key adds
+                // the file's modification time, which a retake changes, and is worked out again on
+                // every capture even when nothing else about the note has changed.
+                val imageModel = remember(imagePath, captureCount) {
+                    imagePath?.let { path ->
+                        val key = "$path#${File(path).lastModified()}"
+                        ImageRequest.Builder(context).data(path).memoryCacheKey(key).diskCacheKey(key).build()
+                    }
+                }
+                if (imageModel != null) AsyncImage(model = imageModel, contentDescription = stringResource(R.string.tools_note_image), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_photo), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
             Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(photoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.imagePath == null) stringResource(R.string.tools_take_photo) else stringResource(R.string.tools_retake_photo)) }
