@@ -35,6 +35,7 @@ import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -980,8 +981,12 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val settings by viewModel.settings.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var selectedNoteId by remember { mutableStateOf<String?>(null) }
-    var showTypeSelection by remember { mutableStateOf(false) }
+    // Saveable because the camera is another app: Android may destroy this one while it is open --
+    // a camera is memory-hungry -- and recreate it for the result. With a plain remember that
+    // recreation came back to the list, the editor's launcher was no longer there to receive the
+    // capture, and the new photo or video was left in a file the note never learnt about.
+    var selectedNoteId by rememberSaveable { mutableStateOf<String?>(null) }
+    var showTypeSelection by rememberSaveable { mutableStateOf(false) }
     val selectedNote = remember(selectedNoteId, settings.notebookNotes) { settings.notebookNotes.find { it.id == selectedNoteId } }
     if (selectedNote == null) {
         val sortedNotes = remember(settings.notebookNotes) { settings.notebookNotes.sortedByDescending { it.timestamp } }
