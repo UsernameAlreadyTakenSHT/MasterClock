@@ -34,6 +34,12 @@
     <string name="board_last_move">Última jugada: %s</string>
     <string name="board_looking">Buscando tableros…</string>
     <string name="board_nearby">Dispositivos cercanos</string>
+    <string name="board_usb_section">Conectado</string>
+    <string name="board_paired_section">Emparejado</string>
+    <string name="board_needs_calibration">Coloca las piezas en la posición inicial. Este tablero lee un chip bajo cada pieza, así que debe aprender cuál es cuál antes de poder seguir una partida.</string>
+    <string name="board_paired_none">Ningún tablero emparejado. Emparéjalo primero en los ajustes de Bluetooth del sistema.</string>
+    <string name="board_usb_none">Ningún tablero conectado.</string>
+    <string name="board_usb_charging_warning">Mientras un tablero ocupa el puerto USB, el teléfono no se carga.</string>
     <string name="board_none_found">No se ha encontrado ningún dispositivo. Pulsa actualizar para buscar.</string>
     <string name="board_scan">Buscar</string>
     <string name="board_scanning">Buscando tableros…</string>
@@ -169,6 +175,10 @@
     <string name="tools_roll_dice">Tirar los dados</string>
     <string name="tools_score">Puntuación: %d</string>
     <string name="tools_select_piece">Elegir una pieza</string>
+    <string name="tools_board_eraser_hint">Ninguna pieza seleccionada — toca una casilla para vaciarla</string>
+    <string name="tools_board_variant_draughts_10">Damas 10×10</string>
+    <string name="tools_board_variant_draughts_8">Damas 8×8</string>
+    <string name="tools_board_deselect">Deseleccionar la pieza</string>
     <string name="tools_select_text_color">Elegir el color del texto</string>
     <string name="tools_share_log">Compartir el registro</string>
     <string name="tools_short_straw">Pajita corta</string>

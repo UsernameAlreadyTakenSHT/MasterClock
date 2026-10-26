@@ -34,6 +34,12 @@
     <string name="board_last_move">Laatste zet: %s</string>
     <string name="board_looking">Zoeken naar borden…</string>
     <string name="board_nearby">Apparaten in de buurt</string>
+    <string name="board_usb_section">Aangesloten</string>
+    <string name="board_paired_section">Gekoppeld</string>
+    <string name="board_needs_calibration">Zet de stukken in de beginstelling. Dit bord leest een chip onder elk stuk en moet eerst leren welk stuk welk is voordat het een partij kan volgen.</string>
+    <string name="board_paired_none">Geen gekoppeld bord. Koppel het eerst in de Bluetooth-instellingen van het systeem.</string>
+    <string name="board_usb_none">Geen bord aangesloten.</string>
+    <string name="board_usb_charging_warning">Zolang een bord de USB-poort bezet, laadt de telefoon niet op.</string>
     <string name="board_none_found">Geen apparaat gevonden. Tik op vernieuwen om te zoeken.</string>
     <string name="board_scan">Zoeken</string>
     <string name="board_scanning">Zoeken naar borden…</string>
@@ -168,6 +174,10 @@
     <string name="tools_roll_dice">Dobbelen</string>
     <string name="tools_score">Stand: %d</string>
     <string name="tools_select_piece">Stuk kiezen</string>
+    <string name="tools_board_eraser_hint">Geen stuk gekozen — tik op een veld om het leeg te maken</string>
+    <string name="tools_board_variant_draughts_10">Dammen 10×10</string>
+    <string name="tools_board_variant_draughts_8">Dammen 8×8</string>
+    <string name="tools_board_deselect">Stuk deselecteren</string>
     <string name="tools_select_text_color">Tekstkleur kiezen</string>
     <string name="tools_share_log">Logboek delen</string>
     <string name="tools_short_straw">Kortste strootje</string>

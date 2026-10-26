@@ -34,6 +34,12 @@
     <string name="board_last_move">Ultima mossa: %s</string>
     <string name="board_looking">Ricerca di scacchiere…</string>
     <string name="board_nearby">Dispositivi vicini</string>
+    <string name="board_usb_section">Collegata</string>
+    <string name="board_paired_section">Associata</string>
+    <string name="board_needs_calibration">Disponi i pezzi nella posizione iniziale. Questa scacchiera legge un chip sotto ogni pezzo, quindi deve imparare quale sia quale prima di poter seguire una partita.</string>
+    <string name="board_paired_none">Nessuna scacchiera associata. Associala prima nelle impostazioni Bluetooth del sistema.</string>
+    <string name="board_usb_none">Nessuna scacchiera collegata.</string>
+    <string name="board_usb_charging_warning">Finché una scacchiera occupa la porta USB, il telefono non si ricarica.</string>
     <string name="board_none_found">Nessun dispositivo trovato. Tocca aggiorna per cercare.</string>
     <string name="board_scan">Cerca</string>
     <string name="board_scanning">Ricerca di scacchiere…</string>
@@ -169,6 +175,10 @@
     <string name="tools_roll_dice">Lancia i dadi</string>
     <string name="tools_score">Punteggio: %d</string>
     <string name="tools_select_piece">Scegli un pezzo</string>
+    <string name="tools_board_eraser_hint">Nessun pezzo selezionato — tocca una casa per svuotarla</string>
+    <string name="tools_board_variant_draughts_10">Dama 10×10</string>
+    <string name="tools_board_variant_draughts_8">Dama 8×8</string>
+    <string name="tools_board_deselect">Deseleziona il pezzo</string>
     <string name="tools_select_text_color">Scegli il colore del testo</string>
     <string name="tools_share_log">Condividi il registro</string>
     <string name="tools_short_straw">Pagliuzza corta</string>

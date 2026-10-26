@@ -32,6 +32,12 @@
     <string name="board_last_move">Dernier coup : %s</string>
     <string name="board_looking">Recherche d\'échiquiers…</string>
     <string name="board_nearby">Appareils à proximité</string>
+    <string name="board_usb_section">Branché</string>
+    <string name="board_paired_section">Appairé</string>
+    <string name="board_needs_calibration">Placez les pièces en position de départ. Cet échiquier lit une puce sous chaque pièce : il doit apprendre laquelle est laquelle avant de pouvoir suivre une partie.</string>
+    <string name="board_paired_none">Aucun échiquier appairé. Appairez-le d\'abord dans les réglages Bluetooth du système.</string>
+    <string name="board_usb_none">Aucun échiquier branché.</string>
+    <string name="board_usb_charging_warning">Tant qu\'un échiquier occupe le port USB, le téléphone ne se recharge pas.</string>
     <string name="board_none_found">Aucun appareil trouvé. Appuyez sur actualiser pour lancer une recherche.</string>
     <string name="board_scan">Rechercher</string>
     <string name="board_scanning">Recherche d\'échiquiers…</string>
@@ -167,6 +173,10 @@
     <string name="tools_roll_dice">Lancer les dés</string>
     <string name="tools_score">Score : %d</string>
     <string name="tools_select_piece">Choisir une pièce</string>
+    <string name="tools_board_eraser_hint">Aucune pièce choisie — touchez une case pour la vider</string>
+    <string name="tools_board_variant_draughts_10">Dames 10×10</string>
+    <string name="tools_board_variant_draughts_8">Dames 8×8</string>
+    <string name="tools_board_deselect">Désélectionner la pièce</string>
     <string name="tools_select_text_color">Choisir la couleur du texte</string>
     <string name="tools_share_log">Partager le journal</string>
     <string name="tools_short_straw">Courte paille</string>

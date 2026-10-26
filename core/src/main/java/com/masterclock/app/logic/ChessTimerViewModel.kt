@@ -132,6 +132,19 @@ fun PlayerSettings.followingModeOf(p1: PlayerSettings): PlayerSettings = copy(
     gongSimultaneous = p1.gongSimultaneous,
 )
 
+/**
+ * The settings with a seat order that seats every player in play. The order is kept for four seats
+ * and the first [ChessClockSettings.numberOfPlayers] are used, so an order set for four -- players 3
+ * and 4 swapped -- read with three players put player 4 in the third seat and left player 3 with no
+ * button: player 2's press started a clock nobody could stop. A count whose seats are not exactly
+ * players 1 to n gets the plain order back.
+ */
+fun ChessClockSettings.withSeatsForPlayers(): ChessClockSettings {
+    val n = numberOfPlayers.coerceIn(1, 4)
+    val seated = playerMapping.take(n)
+    return if (playerMapping.size == 4 && seated.sorted() == (1..n).toList()) this else copy(playerMapping = listOf(1, 2, 3, 4))
+}
+
 fun ChessClockSettings.wholeTableSettings(): ChessClockSettings =
     if (differentSettingsPerPlayer && p1Custom.mode.isWholeTable) copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
     else this
@@ -2280,7 +2293,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // it from viewModelScope parsed the whole notebook on the UI thread at every launch.
             val (storedSettings, savedSettings) = withContext(Dispatchers.Default) {
                 val stored = settingsRepo.settingsFlow.first()
-                stored to sanitizeStoredSettings(getApplication(), stored).wholeTableSettings()
+                stored to sanitizeStoredSettings(getApplication(), stored).wholeTableSettings().withSeatsForPlayers()
             }
             if (savedSettings != storedSettings) {
                 Log.i("ChessTimerViewModel", "Repaired stored settings that failed validation")
@@ -3129,7 +3142,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     logDurationLimit = oldSettings.logDurationLimit,
                 )
             }
-        } else newSettings).wholeTableSettings()
+        } else newSettings).wholeTableSettings().withSeatsForPlayers()
         _settings.value = newSettings
         
         // isImport guards this for the same reason it guards newSettings above: the scoreboard

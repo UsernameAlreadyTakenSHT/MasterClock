@@ -844,47 +844,50 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (FlavorConfig.currentFlavor == AppFlavor.MINI) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
-                    ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
-                    ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
+                    ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { if (mainMode != 0) onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
+                    // Tapping the card already chosen changes nothing. Each card sets its family's first
+                    // variant, so a second tap on Bonus turned Bronstein or US Delay back into Fischer --
+                    // and Move Timer, Byoyomi, Chronos and Move Counts did the same to theirs.
+                    ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { if (mainMode != 1) onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
+                    ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { if (mainMode != 2) onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                 }
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (FlavorConfig.isModeAllowed(TimerMode.SUDDEN_DEATH)) {
-                        ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
+                        ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { if (mainMode != 0) onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
                     }
                     if (FlavorConfig.isModeAllowed(TimerMode.FISCHER)) {
-                        ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
+                        ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { if (mainMode != 1) onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_STANDARD)) {
-                        ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
+                        ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { if (mainMode != 2) onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                     }
                     if (FlavorConfig.isModeAllowed(TimerMode.BYOYOMI_JAPANESE)) {
-                        ModeCard("Byoyomi", mainMode == 4, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
+                        ModeCard("Byoyomi", mainMode == 4, Modifier.weight(1f)) { if (mainMode != 4) onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
                     }
                 }
             }
             if (FlavorConfig.currentFlavor != AppFlavor.MINI) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
-                    ModeCard("Chronos", mainMode == 5, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }
+                    ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { if (mainMode != 3) onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
+                    ModeCard("Chronos", mainMode == 5, Modifier.weight(1f)) { if (mainMode != 5) onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModeCard("Move Counts", mainMode == 6, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_COUNTS_UP)) }
-                    ModeCard("Gong", mainMode == 8, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.GONG)) }
+                    ModeCard("Move Counts", mainMode == 6, Modifier.weight(1f)) { if (mainMode != 6) onUpdateP(p.copy(mode = TimerMode.MOVE_COUNTS_UP)) }
+                    ModeCard("Gong", mainMode == 8, Modifier.weight(1f)) { if (mainMode != 8) onUpdateP(p.copy(mode = TimerMode.GONG)) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModeCard("FIDE Periods", mainMode == 9, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FIDE_PERIODS)) }
-                    ModeCard("Phases", mainMode == 10, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.PHASES)) }
+                    ModeCard("FIDE Periods", mainMode == 9, Modifier.weight(1f)) { if (mainMode != 9) onUpdateP(p.copy(mode = TimerMode.FIDE_PERIODS)) }
+                    ModeCard("Phases", mainMode == 10, Modifier.weight(1f)) { if (mainMode != 10) onUpdateP(p.copy(mode = TimerMode.PHASES)) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModeCard("Random", mainMode == 11, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.RANDOM)) }
-                    ModeCard("Hidden", mainMode == 12, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.HIDDEN)) }
+                    ModeCard("Random", mainMode == 11, Modifier.weight(1f)) { if (mainMode != 11) onUpdateP(p.copy(mode = TimerMode.RANDOM)) }
+                    ModeCard("Hidden", mainMode == 12, Modifier.weight(1f)) { if (mainMode != 12) onUpdateP(p.copy(mode = TimerMode.HIDDEN)) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModeCard("Fast Move", mainMode == 13, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FAST_MOVE)) }
+                    ModeCard("Fast Move", mainMode == 13, Modifier.weight(1f)) { if (mainMode != 13) onUpdateP(p.copy(mode = TimerMode.FAST_MOVE)) }
                     if (FlavorConfig.hasOmni()) {
                         ModeCard("Omni-Timer (alpha)", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
                     } else {

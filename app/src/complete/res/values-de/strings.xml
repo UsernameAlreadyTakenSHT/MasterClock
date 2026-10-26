@@ -34,6 +34,12 @@
     <string name="board_last_move">Letzter Zug: %s</string>
     <string name="board_looking">Suche nach Brettern…</string>
     <string name="board_nearby">Geräte in der Nähe</string>
+    <string name="board_usb_section">Angeschlossen</string>
+    <string name="board_paired_section">Gekoppelt</string>
+    <string name="board_needs_calibration">Stelle die Figuren in die Grundstellung. Dieses Brett liest einen Chip unter jeder Figur und muss erst lernen, welche Figur welche ist, bevor es einer Partie folgen kann.</string>
+    <string name="board_paired_none">Kein gekoppeltes Brett. Kopple es zuerst in den Bluetooth-Einstellungen des Systems.</string>
+    <string name="board_usb_none">Kein Brett angeschlossen.</string>
+    <string name="board_usb_charging_warning">Solange ein Brett den USB-Anschluss belegt, lädt das Telefon nicht.</string>
     <string name="board_none_found">Kein Gerät gefunden. Zum Suchen auf Aktualisieren tippen.</string>
     <string name="board_scan">Suchen</string>
     <string name="board_scanning">Suche nach Brettern…</string>
@@ -168,6 +174,10 @@
     <string name="tools_roll_dice">Würfeln</string>
     <string name="tools_score">Stand: %d</string>
     <string name="tools_select_piece">Figur wählen</string>
+    <string name="tools_board_eraser_hint">Keine Figur gewählt — tippe auf ein Feld, um es zu leeren</string>
+    <string name="tools_board_variant_draughts_10">Dame 10×10</string>
+    <string name="tools_board_variant_draughts_8">Dame 8×8</string>
+    <string name="tools_board_deselect">Figur abwählen</string>
     <string name="tools_select_text_color">Textfarbe wählen</string>
     <string name="tools_share_log">Protokoll teilen</string>
     <string name="tools_short_straw">Kurzer Halm</string>

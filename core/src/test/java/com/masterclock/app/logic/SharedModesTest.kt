@@ -45,6 +45,15 @@ class SharedModesTest {
     }
 
     @Test
+    fun `a seat order that leaves a player out is put back`() {
+        // Players 3 and 4 swapped with four, then down to three: player 3 had no seat.
+        val three = ChessClockSettings(numberOfPlayers = 3, playerMapping = listOf(1, 2, 4, 3)).withSeatsForPlayers()
+        assertEquals(listOf(1, 2, 3, 4), three.playerMapping)
+        val kept = ChessClockSettings(numberOfPlayers = 3, playerMapping = listOf(2, 1, 3, 4))
+        assertSame(kept, kept.withSeatsForPlayers())
+    }
+
+    @Test
     fun `any other mode keeps its per-player settings`() {
         val s = ChessClockSettings(differentSettingsPerPlayer = true, p1Custom = PlayerSettings(initialTimeMs = 300_000), p2Custom = PlayerSettings(initialTimeMs = 240_000))
         assertSame(s, s.wholeTableSettings())

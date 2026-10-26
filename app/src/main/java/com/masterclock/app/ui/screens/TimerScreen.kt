@@ -460,6 +460,19 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
 
     // Hoisted: the semantics lambda is not composable scope.
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
+    // The second clock the move timers show under the first: the total, the reserve, or Save &
+    // Cap's ceiling. Save & Cap shows its ceiling rather than its bank. The bank is the clock minus
+    // one move, so a 30s move under a 2:00 cap read "1:30" at saturation -- a number the player never
+    // typed and cannot act on, sitting under a clock that was in fact stopping at 2:00. The ceiling
+    // is the number they set, and it is the ceiling of the clock right above it. Floored at the move
+    // time for the same reason computePostMoveState floors it: a smaller cap cannot bind.
+    val secondaryClock: Pair<String, Long>? = when (pSettings.mode) {
+        TimerMode.MOVE_TIMER_OVERTIME -> stringResource(R.string.timer_overtime) to playerState.secondaryTimeMs
+        TimerMode.MOVE_TIMER_GLOBAL -> stringResource(R.string.timer_total) to playerState.secondaryTimeMs
+        TimerMode.MOVE_TIMER_GLOBAL_SHARED -> stringResource(R.string.timer_global) to playerState.secondaryTimeMs
+        TimerMode.MOVE_TIMER_SAVE_CAP -> stringResource(R.string.timer_cap) to pSettings.timeCapMs.coerceAtLeast(pSettings.moveTimeMs)
+        else -> null
+    }
     val spokenTime = when {
         state.phasesFinished || tableClockRanOut(state) -> stringResource(R.string.a11y_finished)
         playerState.isOutOfTime -> stringResource(R.string.a11y_out_of_time)
@@ -473,6 +486,11 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             stringResource(R.string.timer_period_flag).takeIf { playerState.hasFlagged },
             spokenDurationText(shownTimeMs),
         ).joinToString(", ")
+        // A move count on the face, not a time: TalkBack read "0 seconds".
+        isMoveCounts -> stringResource(R.string.timer_moves, playerState.moveCount)
+        // The second clock is on the face too, and with a few seconds of total left it is the one
+        // that matters; TalkBack read the move clock alone.
+        secondaryClock != null -> "${spokenDurationText(alertMs)}, ${secondaryClock.first} ${spokenDurationText(secondaryClock.second)}"
         else -> spokenDurationText(alertMs)
     }
     // Nobody's turn once the game is over, though the last player to move is still the active one --
@@ -516,7 +534,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     when {
                         pSettings.mode == TimerMode.MOVE_TIMER_SHARED -> { Text(stringResource(R.string.timer_cycle, state.cycleCount), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor) }
                         (isChrono && !settings.isOneForAll) || isMoveCounts -> { Text(stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor) }
-                        isActive && playerState.delayRemainingMs > 0 -> { Text(stringResource(R.string.timer_delay, String.format(Locale.US, "%.1f", playerState.delayRemainingMs / 1000f)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor) }
+                        // The player on the move, paused or not: a paused US Delay clock hid the
+                        // delay still left to the player, though it was there to resume.
+                        state.activePlayer == playerIndex && playerState.delayRemainingMs > 0 -> { Text(stringResource(R.string.timer_delay, String.format(Locale.US, "%.1f", playerState.delayRemainingMs / 1000f)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor) }
                         pSettings.mode == TimerMode.GONG -> {
                             val label = if (playerState.isGongReflectionPhase) stringResource(R.string.timer_reflect) else stringResource(R.string.timer_move_alert)
                             Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = if (!playerState.isGongReflectionPhase) alertTextColor else labelColor)
@@ -538,19 +558,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
-                            val label = when(pSettings.mode) { TimerMode.MOVE_TIMER_OVERTIME -> stringResource(R.string.timer_overtime); TimerMode.MOVE_TIMER_GLOBAL -> stringResource(R.string.timer_total); TimerMode.MOVE_TIMER_GLOBAL_SHARED -> stringResource(R.string.timer_global); else -> stringResource(R.string.timer_cap) }
-                            // Save & Cap shows its ceiling rather than its bank. The bank is the
-                            // clock minus one move, so a 30s move under a 2:00 cap read "1:30" at
-                            // saturation -- a number the player never typed and cannot act on,
-                            // sitting under a clock that was in fact stopping at 2:00. The ceiling
-                            // is the number they set, and it is the ceiling of the clock right
-                            // above it. Floored at the move time for the same reason
-                            // computePostMoveState floors it: a smaller cap cannot bind.
-                            val secondary = if (pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP) {
-                                pSettings.timeCapMs.coerceAtLeast(pSettings.moveTimeMs)
-                            } else {
-                                playerState.secondaryTimeMs
-                            }
+                            val (label, secondary) = secondaryClock ?: ("" to 0L)
                             Text("$label: ${formatSecondaryTime(secondary, settings.effectiveTimePadding())}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.PHASES -> {

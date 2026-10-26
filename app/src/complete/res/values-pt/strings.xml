@@ -37,6 +37,12 @@
     <string name="board_last_move">Último lance: %s</string>
     <string name="board_looking">À procura de tabuleiros…</string>
     <string name="board_nearby">Dispositivos próximos</string>
+    <string name="board_usb_section">Ligado</string>
+    <string name="board_paired_section">Emparelhado</string>
+    <string name="board_needs_calibration">Coloque as peças na posição inicial. Este tabuleiro lê um chip debaixo de cada peça, por isso tem de aprender qual é qual antes de poder seguir uma partida.</string>
+    <string name="board_paired_none">Nenhum tabuleiro emparelhado. Emparelhe-o primeiro nas definições de Bluetooth do sistema.</string>
+    <string name="board_usb_none">Nenhum tabuleiro ligado.</string>
+    <string name="board_usb_charging_warning">Enquanto um tabuleiro ocupar a porta USB, o telemóvel não carrega.</string>
     <string name="board_none_found">Nenhum dispositivo encontrado. Toque em atualizar para procurar.</string>
     <string name="board_scan">Procurar</string>
     <string name="board_scanning">À procura de tabuleiros…</string>
@@ -172,6 +178,10 @@
     <string name="tools_roll_dice">Lançar os dados</string>
     <string name="tools_score">Pontuação: %d</string>
     <string name="tools_select_piece">Escolher uma peça</string>
+    <string name="tools_board_eraser_hint">Nenhuma peça selecionada — toque numa casa para a esvaziar</string>
+    <string name="tools_board_variant_draughts_10">Damas 10×10</string>
+    <string name="tools_board_variant_draughts_8">Damas 8×8</string>
+    <string name="tools_board_deselect">Desmarcar a peça</string>
     <string name="tools_select_text_color">Escolher a cor do texto</string>
     <string name="tools_share_log">Partilhar o registo</string>
     <string name="tools_short_straw">Palhinha curta</string>
