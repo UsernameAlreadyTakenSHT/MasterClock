@@ -1515,7 +1515,7 @@ private fun hourglassGains(players: List<PlayerState>, active: Int, before: Play
     if (lost == 0L || recipients.isEmpty()) return emptyMap()
     val share = lost / recipients.size
     val remainder = (lost % recipients.size).toInt()
-    val leastFirst = recipients.sortedBy { players[it].timeRemainingMs }
+    val leastFirst = recipients.sortedBy { players[it].signedTimeMs(flagBehavior) }
     return recipients.associateWith { idx -> share + if (leastFirst.indexOf(idx) < remainder) 1 else 0 }
 }
 
@@ -1585,7 +1585,7 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
             val newActiveP = activeP.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
             val gains = hourglassGains(state.players, active, activeP, newActiveP, settings.flagBehavior)
             val newPlayers = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == active) newActiveP else p.copy(timeRemainingMs = p.timeRemainingMs + (gains[idx] ?: 0L))
+                if (idx + 1 == active) newActiveP else gains[idx]?.let { p.credited(it, settings.flagBehavior) } ?: p
             }
             return CoupledTick(
                 state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && isOut),
@@ -1661,6 +1661,30 @@ private fun PlayerState.withSignedTime(t: Long): PlayerState = when {
     !isNegative -> copy(timeRemainingMs = t)
     t > 0 -> copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false)
     else -> copy(timeRemainingMs = -t)
+}
+
+/** Whether this player's [PlayerState.timeRemainingMs] is an overrun rather than time left. */
+private fun PlayerState.isOverrun(flagBehavior: FlagBehavior): Boolean =
+    isOutOfTime && (isNegative || flagBehavior == FlagBehavior.REVERSE)
+
+/** The remaining time with its sign, reading a REVERSE overrun as well as a NEGATIVE one. */
+private fun PlayerState.signedTimeMs(flagBehavior: FlagBehavior): Long =
+    if (isOverrun(flagBehavior)) -timeRemainingMs else timeRemainingMs
+
+/**
+ * Gives a player [amountMs] (taken away when negative), counted against an overrun first.
+ *
+ * Both overflowing flag behaviours store the overrun as a positive [PlayerState.timeRemainingMs] --
+ * NEGATIVE with [PlayerState.isNegative] beside it, REVERSE with nothing but the flag -- and the
+ * hourglass and the arbiter's adjustment added to the bare field: a player at -0:02 handed a second
+ * went to -0:03, so every second the opponent spent pushed them further under. Credit now pays the
+ * overrun off, and past zero the player has time again and is no longer out, as [withSignedTime]
+ * already allows. Anyone else keeps a clock that does not go below zero.
+ */
+internal fun PlayerState.credited(amountMs: Long, flagBehavior: FlagBehavior): PlayerState {
+    if (!isOverrun(flagBehavior)) return copy(timeRemainingMs = (timeRemainingMs + amountMs).coerceAtLeast(0))
+    val t = amountMs - timeRemainingMs
+    return if (t > 0) copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false) else copy(timeRemainingMs = -t)
 }
 
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
@@ -2871,9 +2895,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun adjustTime(playerIndex: Int, amountMs: Long) {
         if (!_uiState.value.isArbitreMode) return
+        val flagBehavior = _settings.value.flagBehavior
         _uiState.update { state ->
             val newList = state.players.mapIndexed { idx, p ->
-                if (idx + 1 == playerIndex) p.copy(timeRemainingMs = (p.timeRemainingMs + amountMs).coerceAtLeast(0))
+                if (idx + 1 == playerIndex) p.credited(amountMs, flagBehavior)
                 else p
             }
             state.copy(players = newList)

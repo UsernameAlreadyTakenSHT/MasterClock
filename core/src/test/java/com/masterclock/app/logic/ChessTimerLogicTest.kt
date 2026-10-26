@@ -524,6 +524,51 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `HOURGLASS under NEGATIVE pays an overrun off before giving time`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.HOURGLASS), flagBehavior = FlagBehavior.NEGATIVE)
+        val players = listOf(PlayerState(60_000), PlayerState(2_000, isOutOfTime = true, isNegative = true))
+        val once = coupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings).state
+        // -0:02 plus a second is -0:01; it used to become -0:03.
+        assertEquals(1_000, once.players[1].timeRemainingMs)
+        assertTrue(once.players[1].isNegative && once.players[1].isOutOfTime)
+        val twice = coupled(once, 3_000, settings).state
+        assertEquals(2_000, twice.players[1].timeRemainingMs)
+        assertFalse(twice.players[1].isNegative || twice.players[1].isOutOfTime)
+    }
+
+    @Test
+    fun `HOURGLASS under REVERSE pays an overrun off before giving time`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.HOURGLASS), flagBehavior = FlagBehavior.REVERSE)
+        val players = listOf(PlayerState(60_000), PlayerState(2_000, isOutOfTime = true))
+        val once = coupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings).state
+        assertEquals(1_000, once.players[1].timeRemainingMs)
+        assertTrue(once.players[1].isOutOfTime)
+        val twice = coupled(once, 3_000, settings).state
+        assertEquals(2_000, twice.players[1].timeRemainingMs)
+        assertFalse(twice.players[1].isOutOfTime)
+    }
+
+    @Test
+    fun `HOURGLASS hands a remainder millisecond to the deepest overrun first`() {
+        val settings = ChessClockSettings(numberOfPlayers = 3, main = PlayerSettings(mode = TimerMode.HOURGLASS), flagBehavior = FlagBehavior.NEGATIVE)
+        // P2 holds the least time (-0:05), though its bare field is the larger one.
+        val players = listOf(PlayerState(60_000), PlayerState(5_000, isOutOfTime = true, isNegative = true), PlayerState(1_000))
+        val after = coupled(ChessClockState(players = players, activePlayer = 1), 11, settings).state
+        assertEquals(4_994, after.players[1].timeRemainingMs)
+        assertEquals(1_005, after.players[2].timeRemainingMs)
+    }
+
+    @Test
+    fun `an adjustment counts against an overrun`() {
+        val out = PlayerState(2_000, isOutOfTime = true, isNegative = true)
+        assertEquals(1_000, out.credited(1_000, FlagBehavior.NEGATIVE).timeRemainingMs)
+        assertEquals(3_000, out.credited(-1_000, FlagBehavior.NEGATIVE).timeRemainingMs)
+        assertFalse(out.credited(5_000, FlagBehavior.NEGATIVE).isOutOfTime)
+        // Time left still stops at zero.
+        assertEquals(0, PlayerState(2_000).credited(-5_000, FlagBehavior.NEGATIVE).timeRemainingMs)
+    }
+
+    @Test
     fun `MOVE_TIMER_GLOBAL_SHARED keeps an inactive player's own flag`() {
         val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
         val settings = ChessClockSettings(numberOfPlayers = 3, main = s, flagBehavior = FlagBehavior.FLAG)
