@@ -699,6 +699,21 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         if (s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move"
     }
 
+    // FIDE periods ignore initialTimeMs and incrementMs, and were labelled from them: a 90'/40 +
+    // 30' + 30s game read "10 min + 10s", the defaults those fields keep. In the notation a
+    // control is written in, with each period's moves counted within it.
+    if (s.mode == TimerMode.FIDE_PERIODS && s.fidePeriods.isNotEmpty()) {
+        val last = s.fidePeriods.lastIndex
+        val parts = s.fidePeriods.mapIndexed { i, period ->
+            val movesBefore = if (i == 0) 0 else s.fidePeriods[i - 1].movesToNext
+            val moves = period.movesToNext - movesBefore
+            "${period.timeMs / 60_000}'" + if (i < last && moves > 0) "/$moves" else ""
+        }
+        val first = s.fidePeriods.first()
+        val bonus = if (first.isFischer && first.incrementMs > 0) " + ${first.incrementMs / 1000}s" else ""
+        return parts.joinToString(" + ") + bonus
+    }
+
     if (s.initialTimeMs <= 0L) {
         return s.mode.displayName()
     }
@@ -710,7 +725,9 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         else -> "${minutes}m${seconds}s"
     }
     if (s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move, $base"
-    val increment = s.incrementMs / 1000
+    // Only the modes that have one. incrementMs keeps its default of ten seconds in every other
+    // mode, so a plain 10-minute sudden death read "10 min + 10s".
+    val increment = if (s.mode == TimerMode.FISCHER || s.mode == TimerMode.BRONSTEIN || s.mode == TimerMode.US_DELAY) s.incrementMs / 1000 else 0
     return if (increment > 0) "$base + ${increment}s" else base
 }
 
@@ -1024,13 +1041,16 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
         phases = settings.phases.take(MAX_IMPORTED_PERIODS).map { phase ->
             phase.copy(timeMs = phase.timeMs.coerceAtLeast(0), name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS))
         },
+        // Bounded above too: a period near Long.MAX_VALUE overflowed as its bonus was added, into a
+        // negative clock that flagged on the next tick. An empty list fell back to a default period
+        // here and there while the face counted "PERIOD: 1/0"; it gets one stated outright.
         fidePeriods = settings.fidePeriods.take(MAX_IMPORTED_PERIODS).map { period ->
             period.copy(
-                timeMs = period.timeMs.coerceAtLeast(0),
-                incrementMs = period.incrementMs.coerceAtLeast(0),
-                movesToNext = period.movesToNext.coerceAtLeast(0),
+                timeMs = period.timeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+                incrementMs = period.incrementMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+                movesToNext = period.movesToNext.coerceIn(0, MAX_FIDE_MOVES),
             )
-        },
+        }.ifEmpty { listOf(FidePeriod()) },
     )
 }
 
@@ -1165,6 +1185,9 @@ private const val MAX_IMPORTED_LOGS = 10_000
 
 /** A month per move is already absurd; anything past it is a crafted value, not a slow player. */
 private const val MAX_IMPORTED_DURATION_MS = 30L * 24 * 60 * 60 * 1000
+
+/** A move count no game reaches; the editor's field takes four digits. */
+const val MAX_FIDE_MOVES = 9_999
 
 /** Long enough for any real SAN/USI/PDN move, short enough not to be a payload. */
 private const val MAX_MOVE_NOTATION_CHARS = 32
@@ -2419,7 +2442,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // move, which is how the notation reaches the PGN when auto-switch is off.
             val notation = boardNotation ?: pendingBoardNotation
             pendingBoardNotation = null
-            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.timeRemainingMs, moveCount = p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
+            // An overrun is stored as a positive time, and was logged as time left: a player two
+            // minutes over counted, in the statistics, as one with two minutes to spare.
+            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.signedTimeMs(settings.value.flagBehavior).coerceAtLeast(0), moveCount = p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
             val flaggedByMove = applyPostMoveLogic(playerIndex, timeSpentOnMove)
             // Under FREEZE a flag stops the game, exactly as tick() stops it for one on the clock.
             if (flaggedByMove && settings.value.flagBehavior == FlagBehavior.FREEZE) {

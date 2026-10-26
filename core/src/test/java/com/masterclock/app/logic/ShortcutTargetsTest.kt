@@ -91,13 +91,28 @@ class ShortcutTargetsTest {
 
     @Test
     fun `a game with no base time falls back to its mode name`() {
-        val fide = ChessClockSettings(main = PlayerSettings(initialTimeMs = 0, mode = TimerMode.FIDE_PERIODS))
+        val hourglass = ChessClockSettings(main = PlayerSettings(initialTimeMs = 0, mode = TimerMode.HOURGLASS))
         val targets = buildShortcutTargets(
-            history = listOf(GameLog(startTime = 7, settings = fide)),
+            history = listOf(GameLog(startTime = 7, settings = hourglass)),
             presets = emptyList(),
         )
 
-        assertEquals("FIDE periods", targets.first().label)
+        assertEquals(TimerMode.HOURGLASS.displayName(), targets.first().label)
+    }
+
+    @Test
+    fun `a FIDE game is labelled with its periods, each counting its own moves`() {
+        val periods = listOf(FidePeriod(timeMs = 7_200_000, movesToNext = 40), FidePeriod(timeMs = 3_600_000, movesToNext = 60), FidePeriod(timeMs = 900_000, movesToNext = 0))
+        val fide = ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = periods))
+        val targets = buildShortcutTargets(history = listOf(GameLog(startTime = 7, settings = fide)), presets = emptyList())
+        assertEquals("120'/40 + 60'/20 + 15' + 30s", targets.first().label)
+    }
+
+    @Test
+    fun `a mode with no increment is labelled without one`() {
+        val sd = ChessClockSettings(main = PlayerSettings(initialTimeMs = 600_000, mode = TimerMode.SUDDEN_DEATH))
+        val targets = buildShortcutTargets(history = listOf(GameLog(startTime = 7, settings = sd)), presets = emptyList())
+        assertEquals("10 min", targets.first().label)
     }
 
     @Test
