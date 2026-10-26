@@ -1543,13 +1543,14 @@ internal class TickCue(val before: PlayerState, val after: PlayerState, val play
 
 /**
  * What [tickCoupled] decided: the next state, and the side effects the ViewModel is to carry out
- * for it -- a cue to compare for beeps (and for the voice too, when [speaks]), and the gong.
+ * for it -- a cue to compare for beeps and the voice, the gong, and in Shared (Auto) the player
+ * whose move the clock has just ended ([handedOverBy]), for a beep and a MOVE in the log.
  */
 internal class CoupledTick(
     val state: ChessClockState,
     val cue: TickCue? = null,
-    val speaks: Boolean = true,
     val playGong: Boolean = false,
+    val handedOverBy: Int? = null,
 )
 
 /**
@@ -1566,19 +1567,28 @@ internal class CoupledTick(
 internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClockSettings, s: PlayerSettings, active: Int): CoupledTick? {
     when (s.mode) {
         TimerMode.MOVE_TIMER_SHARED -> {
+            // With no move time at all, every tick would end a move and the turn would spin round
+            // the table ten times a second. Nothing runs instead.
+            if (s.moveTimeMs <= 0) return CoupledTick(state)
             val p1 = state.players[0]
             val newTime = p1.timeRemainingMs - delta
-            return if (newTime <= 0) {
-                val next = (active % settings.numberOfPlayers) + 1
-                val resetPlayers = state.players.map { it.copy(timeRemainingMs = s.moveTimeMs) }
-                val flaggedP = p1.copy(timeRemainingMs = 0, isOutOfTime = true)
-                CoupledTick(
-                    state.copy(players = resetPlayers, activePlayer = next, cycleCount = if (next == 1) state.cycleCount + 1 else state.cycleCount),
-                    TickCue(p1, flaggedP, active),
-                )
-            } else {
-                CoupledTick(state.copy(players = state.players.map { it.copy(timeRemainingMs = newTime) }), TickCue(p1, p1.copy(timeRemainingMs = newTime), active), speaks = false)
+            if (newTime > 0) {
+                return CoupledTick(state.copy(players = state.players.map { it.copy(timeRemainingMs = newTime) }), TickCue(p1, p1.copy(timeRemainingMs = newTime), active))
             }
+            // The move time running out is the move: nobody presses in this mode, so it is the end
+            // of a turn, not a flag. It used to be handed to the cues as one -- every turn logged as
+            // FLAG "Time Up", with the triple beep and "time is up" spoken, and no MOVE ever
+            // recorded. What the tick ran past zero is the next player's, as it is in every other
+            // mode that carries a remainder on.
+            val next = (active % settings.numberOfPlayers) + 1
+            val carried = (s.moveTimeMs + newTime).coerceAtLeast(0)
+            val newPlayers = state.players.mapIndexed { idx, p ->
+                p.copy(timeRemainingMs = carried, moveCount = if (idx == active - 1) p.moveCount + 1 else p.moveCount)
+            }
+            return CoupledTick(
+                state.copy(players = newPlayers, activePlayer = next, cycleCount = if (next == 1) state.cycleCount + 1 else state.cycleCount),
+                handedOverBy = active,
+            )
         }
         TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
             val pActive = state.players[active - 1]
@@ -2465,9 +2475,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             tickCoupled(state, delta, settings, s, active)?.let { result ->
                 result.cue?.let { cue ->
                     handleAudio(cue.before, cue.after, settings, cue.playerIndex)
-                    if (result.speaks) handleVoice(cue.before, cue.after, settings, cue.playerIndex)
+                    handleVoice(cue.before, cue.after, settings, cue.playerIndex)
                 }
                 if (result.playGong) soundManager.playGong()
+                result.handedOverBy?.let { mover ->
+                    // A plain beep where a press would have made the switch sound, and nothing
+                    // spoken: the turn passing is the ordinary course of this mode.
+                    if (settings.playSwitchSound) soundManager.playShortBeep()
+                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = 0, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = s.moveTimeMs))
+                    moveStartTime = now
+                }
                 return@update result.state.withFirstFlag(state, active)
             }
 

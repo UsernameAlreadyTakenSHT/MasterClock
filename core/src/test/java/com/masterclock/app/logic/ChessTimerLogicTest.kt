@@ -609,7 +609,38 @@ class ChessTimerLogicTest {
         val result = coupled(ChessClockState(players = players, activePlayer = 3, cycleCount = 1), 1_000, settings)
         assertEquals(1, result.state.activePlayer)
         assertEquals(2, result.state.cycleCount) // back to P1 starts a new cycle
-        assertTrue(result.state.players.all { it.timeRemainingMs == 10_000L })
+        // The 600ms the tick ran past zero is the next player's.
+        assertTrue(result.state.players.all { it.timeRemainingMs == 9_400L })
+    }
+
+    @Test
+    fun `MOVE_TIMER_SHARED ends a move rather than flagging`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 10_000), flagBehavior = FlagBehavior.FLAG)
+        val players = List(2) { PlayerState(timeRemainingMs = 100) }
+        val result = coupled(ChessClockState(players = players, activePlayer = 1), 100, settings)
+        assertEquals(1, result.handedOverBy)
+        assertNull(result.cue) // no cue: a cue reaching zero would sound and log a flag
+        assertTrue(result.state.players.none { it.isOutOfTime })
+        assertEquals(listOf(1, 0), result.state.players.map { it.moveCount })
+    }
+
+    @Test
+    fun `MOVE_TIMER_SHARED counts a cycle each time the turn comes back to player 1`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 1_000))
+        var state = ChessClockState(players = List(2) { PlayerState(timeRemainingMs = 1_000) }, activePlayer = 1)
+        repeat(4) { state = coupled(state, 1_000, settings).state }
+        assertEquals(1, state.activePlayer)
+        assertEquals(3, state.cycleCount)
+        assertEquals(listOf(2, 2), state.players.map { it.moveCount })
+    }
+
+    @Test
+    fun `MOVE_TIMER_SHARED with no move time does not spin the turn round`() {
+        val settings = ChessClockSettings(numberOfPlayers = 2, main = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 0))
+        val state = ChessClockState(players = List(2) { PlayerState(timeRemainingMs = 0) }, activePlayer = 1)
+        val result = coupled(state, 100, settings)
+        assertEquals(1, result.state.activePlayer)
+        assertNull(result.handedOverBy)
     }
 
     @Test
