@@ -128,7 +128,7 @@ fun TimerScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        ClockAnnouncer(state)
+        ClockAnnouncer(state, if (isGlobalMode) phaseLabel(settings.main, state.players[0]) else null)
 
         if (isGlobalMode) {
             Box(Modifier.fillMaxSize()) {
@@ -325,6 +325,12 @@ fun TimerScreen(
     }
 }
 
+/** What a PHASES clock is on: the pause between phases, or the phase's name, "Phase N" if it has none. */
+@Composable
+private fun phaseLabel(s: PlayerSettings, p1: PlayerState): String =
+    if (p1.isInInterPhasePause) stringResource(R.string.timer_pause_label)
+    else s.phases.getOrNull(p1.currentPhaseIndex)?.name?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_phase_n, p1.currentPhaseIndex + 1)
+
 /**
  * A zero-content live region that speaks state changes: a flag, a new turn, a pause, a byoyomi
  * period.
@@ -336,9 +342,12 @@ fun TimerScreen(
  * Nothing here reacts to the countdown, only to transitions -- see clockAnnouncement.
  */
 @Composable
-private fun ClockAnnouncer(state: ChessClockState) {
+private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?) {
     val announcement = clockAnnouncement(state) ?: return
-    val message = clockAnnouncementText(announcement)
+    // PHASES has no turn to announce, only the phase: "Player 1 to move" was all a screen reader
+    // heard for the whole game, and a new phase or a pause between phases went unannounced. The
+    // label changing is what makes the live region speak.
+    val message = if (phaseLabel != null && announcement is ClockAnnouncement.ToMove) phaseLabel else clockAnnouncementText(announcement)
     val urgent = isUrgentAnnouncement(state)
 
     Box(
@@ -428,6 +437,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         playerState.isOutOfTime -> stringResource(R.string.a11y_out_of_time)
         // TalkBack read the exact remaining time while the screen showed ??:??.
         isHidden -> stringResource(R.string.a11y_time_hidden)
+        // The phase, or the pause, is on the face beside the time; TalkBack read the time alone.
+        pSettings.mode == TimerMode.PHASES -> "${phaseLabel(pSettings, playerState)}, ${spokenDurationText(shownTimeMs)}"
         else -> spokenDurationText(shownTimeMs)
     }
     // Nobody's turn once the game is over, though the last player to move is still the active one.
@@ -503,10 +514,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             Text("$label: ${formatSecondaryTime(secondary, settings.effectiveTimePadding())}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.PHASES -> {
-                            val phase = pSettings.phases.getOrNull(playerState.currentPhaseIndex)
-                            val name = phase?.name?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_phase_n, playerState.currentPhaseIndex + 1)
-                            val label = if (playerState.isInInterPhasePause) stringResource(R.string.timer_pause_label) else name
-                            Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
+                            Text(phaseLabel(pSettings, playerState), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                     }
                 }
