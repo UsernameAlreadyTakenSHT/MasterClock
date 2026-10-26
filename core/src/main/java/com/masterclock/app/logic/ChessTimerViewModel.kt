@@ -662,11 +662,9 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         return if (high > 0) "$name $low-$high min" else name
     }
 
-    // The move-timer family ignores initialTimeMs entirely.
-    if (s.mode == TimerMode.MOVE_TIMER_STANDARD ||
-        s.mode == TimerMode.MOVE_TIMER_SHARED ||
-        s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED
-    ) {
+    // These move timers ignore initialTimeMs entirely. Global Shared does not -- it is the reserve
+    // the table shares -- and is labelled with both below.
+    if (s.mode == TimerMode.MOVE_TIMER_STANDARD || s.mode == TimerMode.MOVE_TIMER_SHARED) {
         if (s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move"
     }
 
@@ -680,6 +678,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         seconds == 0L -> "$minutes min"
         else -> "${minutes}m${seconds}s"
     }
+    if (s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move, $base"
     val increment = s.incrementMs / 1000
     return if (increment > 0) "$base + ${increment}s" else base
 }
@@ -1338,6 +1337,15 @@ private fun globalMoveClockTick(p: PlayerState, delta: Long, flagBehavior: FlagB
  * the move clock is to start counting the overrun from zero: a player out under REVERSE counts up
  * from whatever the move clock shows, and the move time still left on it is not an overrun.
  */
+/**
+ * A Global or Global Shared player as the countdown cues should see them: with the clock that will
+ * run out first, the move clock or the total (the shared reserve). The cues read the move clock
+ * alone, so a reserve running down below the move time reached zero -- and flagged the player, or
+ * everyone at once in Global Shared -- with no beep and no voice line on the way.
+ */
+internal fun PlayerState.withBindingClock(): PlayerState =
+    if (isOutOfTime || isNegative) this else copy(timeRemainingMs = minOf(timeRemainingMs, secondaryTimeMs))
+
 private fun reverseTotalGone(before: Long, after: Long, flagBehavior: FlagBehavior): Boolean =
     flagBehavior == FlagBehavior.REVERSE && before > 0 && after <= 0
 
@@ -1624,7 +1632,7 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
             }
             return CoupledTick(
                 state.copy(players = newPlayers, isPaused = settings.flagBehavior == FlagBehavior.FREEZE && (outMove || outGlobal)),
-                TickCue(pActive, newPlayers[active - 1], active),
+                TickCue(pActive.withBindingClock(), newPlayers[active - 1].withBindingClock(), active),
             )
         }
         TimerMode.HOURGLASS -> {
@@ -2514,8 +2522,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
             val pActive = state.players[active - 1]
             val newStateP = tickPlayer(pActive, delta, s, settings)
-            handleAudio(pActive, newStateP, settings, active)
-            handleVoice(pActive, newStateP, settings, active)
+            val (cueBefore, cueAfter) = if (s.mode == TimerMode.MOVE_TIMER_GLOBAL) pActive.withBindingClock() to newStateP.withBindingClock() else pActive to newStateP
+            handleAudio(cueBefore, cueAfter, settings, active)
+            handleVoice(cueBefore, cueAfter, settings, active)
             
             val newFirstFlag = if (newStateP.isOutOfTime && state.firstToFlag == null) active else state.firstToFlag
             val newPlayers = state.players.toMutableList().apply { this[active - 1] = newStateP }

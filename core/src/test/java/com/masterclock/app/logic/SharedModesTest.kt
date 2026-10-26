@@ -16,6 +16,24 @@ class SharedModesTest {
     }
 
     @Test
+    fun `Global Shared counts down whichever clock runs out first`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s)
+        val players = List(2) { PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = 4_500) }
+        val cue = tickCoupled(ChessClockState(players = players, activePlayer = 1), 1_000, settings, s, 1)!!.cue!!
+        // The reserve is the one about to flag everyone, so it is what the beeps follow.
+        assertEquals(4_500, cue.before.timeRemainingMs)
+        assertEquals(3_500, cue.after.timeRemainingMs)
+    }
+
+    @Test
+    fun `a Global Shared shortcut names the reserve too`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000, initialTimeMs = 600_000))
+        val targets = buildShortcutTargets(history = listOf(GameLog(startTime = 7, settings = settings)), presets = emptyList())
+        assertEquals("30s / move, 10 min", targets.first().label)
+    }
+
+    @Test
     fun `any other mode keeps its per-player settings`() {
         val s = ChessClockSettings(differentSettingsPerPlayer = true, p1Custom = PlayerSettings(initialTimeMs = 300_000), p2Custom = PlayerSettings(initialTimeMs = 240_000))
         assertSame(s, s.wholeTableForSharedModes())
