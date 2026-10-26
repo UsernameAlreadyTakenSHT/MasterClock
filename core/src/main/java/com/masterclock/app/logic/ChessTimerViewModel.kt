@@ -104,10 +104,12 @@ enum class TimerMode {
      * settings have nothing to give them. The shared modes read the move time from whoever was on
      * the clock, so player 2's setting timed player 3's turn and a reserve set per player was
      * ignored outright; PHASES ran player 1's phases while the screen went by the main settings and
-     * player 2's phase editor changed nothing. They are turned off for these modes; see
+     * player 2's phase editor changed nothing. CHRONO's clock is the table's too, timed from player
+     * 1's settings, and player 2's were never read. They are turned off for these modes; see
      * [wholeTableSettings].
      */
-    val isWholeTable: Boolean get() = this == MOVE_TIMER_SHARED || this == MOVE_TIMER_GLOBAL_SHARED || this == PHASES
+    val isWholeTable: Boolean get() = this == MOVE_TIMER_SHARED || this == MOVE_TIMER_GLOBAL_SHARED || this == PHASES ||
+        this == CHRONO_COUNTDOWN || this == CHRONO_COUNTUP
 }
 
 /**
@@ -220,7 +222,7 @@ internal fun drawInRange(
 }
 
 fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
-    if (state.phasesFinished) return ClockAnnouncement.Finished
+    if (state.phasesFinished || tableClockRanOut(state)) return ClockAnnouncement.Finished
     // A flag falls on the clock that is running, so it is the player on the move who is out when it
     // is news. Any flag anywhere used to win for the rest of the game: once one player had flagged,
     // the live region said "Player 2, out of time" whoever was to move -- after a NEGATIVE overrun
@@ -251,6 +253,15 @@ fun displayedTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode
     mode == TimerMode.PHASES || mode == TimerMode.CHRONO_COUNTDOWN || mode == TimerMode.CHRONO_COUNTUP -> state.globalTimeMs
     else -> player.timeRemainingMs
 }
+
+/**
+ * Whether everyone is out at once with no one flagged first: the table's own clock ran out -- a
+ * CHRONO countdown -- and the game is over with nobody to blame. It was the flag of whoever was on
+ * the move, always player 1 in a CHRONO for everyone: their box alone in the loss colour, and
+ * "Player 1, out of time" spoken and announced.
+ */
+fun tableClockRanOut(state: ChessClockState): Boolean =
+    state.firstToFlag == null && state.players.size > 1 && state.players.all { it.isOutOfTime }
 
 /** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
 fun isUrgentAnnouncement(state: ChessClockState): Boolean =
@@ -2677,7 +2688,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = 0, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = s.moveTimeMs))
                     moveStartTime = now
                 }
-                return@update result.state.withFirstFlag(state, active)
+                // The CHRONO countdown is the table's clock; no one flags first on it. See tableClockRanOut.
+                return@update if (s.mode == TimerMode.CHRONO_COUNTDOWN) result.state else result.state.withFirstFlag(state, active)
             }
 
             val pActive = state.players[active - 1]
@@ -2809,9 +2821,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (!settings.voiceAnnouncementsEnabled) return
 
         val vol = settings.voiceVolume
-        // 1. Time's Up
+        // 1. Time's Up -- or, the table's CHRONO countdown running out, the end of the game.
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
-            voiceManager.speak(CoreR.string.voice_time_up, vol, playerIdx)
+            if (getPlayerSettings(playerIdx).mode == TimerMode.CHRONO_COUNTDOWN) voiceManager.speak(CoreR.string.voice_finished, vol)
+            else voiceManager.speak(CoreR.string.voice_time_up, vol, playerIdx)
             return
         }
 
@@ -2940,7 +2953,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
             return
         }
-        if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll)) { startClock(active, armDelay = false); return }
+        // Past the flag check like every other mode: a CHRONO countdown that had run out under FREEZE
+        // was started again, logged a RESUME and lit up, until the next tick stopped it.
+        if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll)) {
+            if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = false)
+            return
+        }
         // The same rule a press goes by. This used to refuse to restart while anyone at all was out
         // of time, so under NEGATIVE -- or FLAG with three or four players, where play goes on
         // after a flag -- a single pause stopped the game for good: Resume did nothing, and the
@@ -2978,7 +2996,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // the game went, so it is taken back out rather than left as a "0 moves" tile in Last
         // Games and one more game played in the statistics. PHASES has no moves, and a phase
         // change is what shows its game went somewhere; see onPhaseTransition.
-        if (log.events.none { it.eventType == "MOVE" || it.eventType == "FLAG" || it.eventType == "PHASE" }) {
+        // A CHRONO for everyone takes no taps either: its clock having been started is the game.
+        val s1 = if (log.settings.differentSettingsPerPlayer) log.settings.p1Custom else log.settings.main
+        val tableClock = s1.mode == TimerMode.CHRONO_COUNTDOWN || s1.mode == TimerMode.CHRONO_COUNTUP
+        if (log.events.none { it.eventType == "MOVE" || it.eventType == "FLAG" || it.eventType == "PHASE" || (tableClock && it.eventType == "RESUME") }) {
             currentLog = null
             historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit, log.id, discard = true))
             return
@@ -3195,13 +3216,30 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val flagBehavior = _settings.value.flagBehavior
         // Shared (Auto) keeps one move clock, copied into every player and ticked from player 1's,
         // so an adjustment to anyone else's was overwritten by the next tick. It is the table's.
-        val wholeTable = getPlayerSettings(playerIndex).mode == TimerMode.MOVE_TIMER_SHARED
+        val mode = getPlayerSettings(playerIndex).mode
+        val wholeTable = mode == TimerMode.MOVE_TIMER_SHARED
         _uiState.update { state ->
-            val newList = state.players.mapIndexed { idx, p ->
-                if (wholeTable || idx + 1 == playerIndex) p.credited(amountMs, flagBehavior)
-                else p
+            when (mode) {
+                // CHRONO's clock is the table's, globalTimeMs; adjusting a player's own field, which
+                // the face never shows, changed nothing.
+                TimerMode.CHRONO_COUNTDOWN, TimerMode.CHRONO_COUNTUP -> {
+                    val p1 = state.players[0]
+                    val clock = PlayerState(state.globalTimeMs, isOutOfTime = p1.isOutOfTime, isNegative = p1.isNegative).credited(amountMs, flagBehavior)
+                    state.copy(globalTimeMs = clock.timeRemainingMs, players = state.players.map { it.copy(isOutOfTime = clock.isOutOfTime, isNegative = clock.isNegative) })
+                }
+                // Time given in these modes is the total, or the reserve. It landed on the move
+                // clock, which the next press refills to the move time: the adjustment was gone.
+                // Global Shared's reserve is everyone's.
+                TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> state.copy(
+                    players = state.players.mapIndexed { idx, p ->
+                        if (mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || idx + 1 == playerIndex) p.copy(secondaryTimeMs = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)) else p
+                    },
+                )
+                else -> state.copy(players = state.players.mapIndexed { idx, p ->
+                    if (wholeTable || idx + 1 == playerIndex) p.credited(amountMs, flagBehavior)
+                    else p
+                })
             }
-            state.copy(players = newList)
         }
     }
 

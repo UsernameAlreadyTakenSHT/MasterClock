@@ -424,7 +424,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val backgroundColor by animateColorAsState(
         targetValue = when {
             // Over, but lost by nobody: not the loss colour. See ChessClockState.phasesFinished.
-            state.phasesFinished -> inactiveColor
+            state.phasesFinished || tableClockRanOut(state) -> inactiveColor
             playerState.isOutOfTime -> if (settings.flagBehavior == FlagBehavior.FLAG) (if (state.firstToFlag == playerIndex) lossColor else if (isActive) activeColor else inactiveColor) else lossColor
             playerState.hasFlagged -> if (isActive) activeColor else inactiveColor
             // Turn-based Gong: only the player whose turn it is shows reflect/move color, everyone
@@ -459,7 +459,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     // Hoisted: the semantics lambda is not composable scope.
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
     val spokenTime = when {
-        state.phasesFinished -> stringResource(R.string.a11y_finished)
+        state.phasesFinished || tableClockRanOut(state) -> stringResource(R.string.a11y_finished)
         playerState.isOutOfTime -> stringResource(R.string.a11y_out_of_time)
         // TalkBack read the exact remaining time while the screen showed ??:??.
         isHidden -> stringResource(R.string.a11y_time_hidden)
@@ -473,8 +473,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         ).joinToString(", ")
         else -> spokenDurationText(shownTimeMs)
     }
-    // Nobody's turn once the game is over, though the last player to move is still the active one.
-    val a11yLabel = if (isActive && !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) {
+    // Nobody's turn once the game is over, though the last player to move is still the active one --
+    // nor on a clock running for the whole table, where it was "Player 1, your turn" all game.
+    val a11yLabel = if (isActive && !runsForAll && !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 
@@ -564,7 +565,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     val timeToDisplay = shownTimeMs
                     TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono || pSettings.mode == TimerMode.PHASES) 100.sp else 64.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace), settings = settings, isNegative = playerState.isNegative)
                 }
-                if (state.phasesFinished) {
+                if (state.phasesFinished || tableClockRanOut(state)) {
                     Text(stringResource(R.string.timer_finished), style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = labelColor, fontWeight = FontWeight.ExtraBold)
                 } else if (playerState.isOutOfTime || playerState.hasFlagged) {
                     // A period that ran out leaves the player in the game; the last one does not. It was told apart
