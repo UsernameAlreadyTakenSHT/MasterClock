@@ -91,13 +91,15 @@ fun TimerScreen(
         settings.main.mode == TimerMode.PHASES
     }
     
+    // Shared (Auto) has no one player on the clock to give the bigger side to; see runsForAll.
+    val growsActiveSide = settings.activePlayerSideBigger && !isGlobalMode && settings.main.mode != TimerMode.MOVE_TIMER_SHARED
     val p1Weight by animateFloatAsState(
-        targetValue = if (settings.activePlayerSideBigger && (state.activePlayer == 1) && !isGlobalMode) 1.5f else 1f, 
+        targetValue = if (growsActiveSide && (state.activePlayer == 1)) 1.5f else 1f,
         label = "p1Weight",
         animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
     val p2Weight by animateFloatAsState(
-        targetValue = if (settings.activePlayerSideBigger && (state.activePlayer == 2) && !isGlobalMode) 1.5f else 1f, 
+        targetValue = if (growsActiveSide && (state.activePlayer == 2)) 1.5f else 1f,
         label = "p2Weight",
         animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
@@ -366,13 +368,17 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val isChrono = pSettings.mode.name.startsWith("CHRONO")
     val isMoveCounts = pSettings.mode.name.startsWith("MOVE_COUNTS")
     val isGong = pSettings.mode == TimerMode.GONG
-    
+    // One clock running for the whole table, which every player watches at once: a shared CHRONO,
+    // and Shared (Auto), whose move time every box shows and where nobody presses. Shared (Auto)
+    // lit only the box whose turn it nominally was, as if one player were on the clock.
+    val runsForAll = !state.isPaused && ((isChrono && settings.isOneForAll) || pSettings.mode == TimerMode.MOVE_TIMER_SHARED)
+
     // Not in Hidden mode: the flash starting at ten seconds would tell the player what ??:?? hides.
     // Not once out either, when the face shows an overrun rather than time left.
     val isHidden = pSettings.mode == TimerMode.HIDDEN
     // What the face shows, which in CHRONO and PHASES is the shared clock; see displayedTimeMs.
     val shownTimeMs = displayedTimeMs(state, playerState, pSettings.mode)
-    val isLowTime = isActive && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && shownTimeMs in 1..10000 && settings.flashOnLowTime
+    val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && shownTimeMs in 1..10000 && settings.flashOnLowTime
     val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
     val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
 
@@ -395,13 +401,13 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             } else {
                 if (playerState.isGongReflectionPhase) reflectionColor else activeColor
             }
-            isActive || (isChrono && settings.isOneForAll && !state.isPaused) -> activeColor 
+            isActive || runsForAll -> activeColor
             else -> inactiveColor 
         }, animationSpec = tween(300), label = "backgroundColor"
     )
     
     val contentColor by animateColorAsState(
-        targetValue = if (isActive || (isChrono && settings.isOneForAll && !state.isPaused)) {
+        targetValue = if (isActive || runsForAll) {
             Color(settings.activeTextColor)
         } else {
             Color(settings.inactiveTextColor)
