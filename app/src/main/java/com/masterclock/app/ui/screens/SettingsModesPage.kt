@@ -32,7 +32,7 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
         val targetP = if (!currentSettings.differentSettingsPerPlayer) {
             currentSettings.main
         } else {
-            if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.copy(mode = currentSettings.p1Custom.mode)
+            if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.followingModeOf(currentSettings.p1Custom)
         }
 
         fun updateTarget(newP: PlayerSettings) {
@@ -42,7 +42,7 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
                 if (selectedPlayerTab == 0) {
                     currentSettings.copy(
                         p1Custom = newP,
-                        p2Custom = currentSettings.p2Custom.copy(mode = newP.mode)
+                        p2Custom = currentSettings.p2Custom.followingModeOf(newP)
                     )
                 } else {
                     currentSettings.copy(p2Custom = newP)

@@ -34,6 +34,17 @@ class SharedModesTest {
     }
 
     @Test
+    fun `player 2 follows player 1's Fast Move variant, not only the mode`() {
+        val p1 = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = false)
+        val p2 = PlayerSettings(mode = TimerMode.SUDDEN_DEATH, fastMoveMode = FastMoveType.ACCELERATE, initialTimeMs = 123_000).followingModeOf(p1)
+        assertEquals(TimerMode.FAST_MOVE, p2.mode)
+        assertEquals(FastMoveType.TRANSFER, p2.fastMoveMode)
+        assertFalse(p2.fastMoveTransferCumulative)
+        // Player 2's own times stay theirs.
+        assertEquals(123_000, p2.initialTimeMs)
+    }
+
+    @Test
     fun `any other mode keeps its per-player settings`() {
         val s = ChessClockSettings(differentSettingsPerPlayer = true, p1Custom = PlayerSettings(initialTimeMs = 300_000), p2Custom = PlayerSettings(initialTimeMs = 240_000))
         assertSame(s, s.wholeTableSettings())

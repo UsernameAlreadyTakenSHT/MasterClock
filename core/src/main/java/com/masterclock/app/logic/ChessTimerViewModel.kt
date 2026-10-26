@@ -118,6 +118,20 @@ enum class TimerMode {
  * settings change and to what is read back from storage, so neither the settings screens, a
  * preset nor an import can combine the two.
  */
+/**
+ * These settings with the game's mode taken from [p1]: the mode, and the choices that make it one
+ * game rather than several -- Fast Move's variant and whether its transfer accumulates, and whether
+ * Gong plays at once. Only the mode itself used to follow player 1, so player 2 could play Fast Move's
+ * Accelerate against player 1's Transfer, and the time player 1 handed over was thrown away at
+ * player 2's next move.
+ */
+fun PlayerSettings.followingModeOf(p1: PlayerSettings): PlayerSettings = copy(
+    mode = p1.mode,
+    fastMoveMode = p1.fastMoveMode,
+    fastMoveTransferCumulative = p1.fastMoveTransferCumulative,
+    gongSimultaneous = p1.gongSimultaneous,
+)
+
 fun ChessClockSettings.wholeTableSettings(): ChessClockSettings =
     if (differentSettingsPerPlayer && p1Custom.mode.isWholeTable) copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
     else this
@@ -1015,9 +1029,9 @@ private fun sanitizeSettings(
         // and offers no way to change theirs. A file can still carry different ones, and with P2 in
         // RANDOM under a P1 that is not, P2's time was never drawn -- it started at 0:00 and
         // flagged on its first tick. The others follow P1 here too.
-        p2Custom = validateImportedPlayerSettings(settings.p2Custom).copy(mode = settings.p1Custom.mode),
-        p3Custom = validateImportedPlayerSettings(settings.p3Custom).copy(mode = settings.p1Custom.mode),
-        p4Custom = validateImportedPlayerSettings(settings.p4Custom).copy(mode = settings.p1Custom.mode),
+        p2Custom = validateImportedPlayerSettings(settings.p2Custom).followingModeOf(settings.p1Custom),
+        p3Custom = validateImportedPlayerSettings(settings.p3Custom).followingModeOf(settings.p1Custom),
+        p4Custom = validateImportedPlayerSettings(settings.p4Custom).followingModeOf(settings.p1Custom),
     )
 }
 
