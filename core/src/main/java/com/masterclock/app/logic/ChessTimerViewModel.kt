@@ -725,6 +725,14 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         else -> "${minutes}m${seconds}s"
     }
     if (s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move, $base"
+    // Byoyomi's own time was left out, so a 10-minute game with five 30-second periods read
+    // "10 min" -- and, with the increment field's default, "10 min + 10s".
+    val byoyomi = s.byoyomiTimeMs.let { if (it % 60_000 == 0L && it > 0) "${it / 60_000}min" else "${it / 1000}s" }
+    when (s.mode) {
+        TimerMode.BYOYOMI_JAPANESE -> if (s.byoyomiPeriods > 0) return "$base + ${s.byoyomiPeriods}×$byoyomi"
+        TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> return "$base + ${s.byoyomiPeriods.coerceAtLeast(1)}/$byoyomi"
+        else -> {}
+    }
     // Only the modes that have one. incrementMs keeps its default of ten seconds in every other
     // mode, so a plain 10-minute sudden death read "10 min + 10s".
     val increment = if (s.mode == TimerMode.FISCHER || s.mode == TimerMode.BRONSTEIN || s.mode == TimerMode.US_DELAY) s.incrementMs / 1000 else 0
@@ -1019,9 +1027,10 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
         moveTimeMs = settings.moveTimeMs.coerceAtLeast(0),
         incrementMs = settings.incrementMs.coerceAtLeast(0),
         timeCapMs = settings.timeCapMs.coerceAtLeast(0),
-        byoyomiPeriods = settings.byoyomiPeriods.coerceAtLeast(0),
-        byoyomiTimeMs = settings.byoyomiTimeMs.coerceAtLeast(0),
-        byoyomiProgression = settings.byoyomiProgression.coerceAtLeast(0),
+        // Bounded above as well: a huge progression overflowed the growing goal into unlimited time.
+        byoyomiPeriods = settings.byoyomiPeriods.coerceIn(0, MAX_BYOYOMI_COUNT),
+        byoyomiTimeMs = settings.byoyomiTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        byoyomiProgression = settings.byoyomiProgression.coerceIn(0, MAX_BYOYOMI_COUNT),
         maxMoves = settings.maxMoves.coerceAtLeast(0),
         randomMinTimeMs = randomMinTimeMs,
         randomMaxTimeMs = randomMaxTimeMs,
@@ -1188,6 +1197,9 @@ private const val MAX_IMPORTED_DURATION_MS = 30L * 24 * 60 * 60 * 1000
 
 /** A move count no game reaches; the editor's field takes four digits. */
 const val MAX_FIDE_MOVES = 9_999
+
+/** The same for byoyomi's periods, block moves and progression, entered in the same kind of field. */
+const val MAX_BYOYOMI_COUNT = 9_999
 
 /** Long enough for any real SAN/USI/PDN move, short enough not to be a payload. */
 private const val MAX_MOVE_NOTATION_CHARS = 32
@@ -1467,12 +1479,24 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
         }
         TimerMode.BYOYOMI_JAPANESE -> {
             val newTime = p.timeRemainingMs - delta
-            when {
-                newTime > 0 -> p.copy(timeRemainingMs = newTime)
-                !p.isInByoyomi -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, isInByoyomi = true), -newTime, s, settings)
-                p.byoyomiPeriodsRemaining - 1 <= 0 -> p.copy(byoyomiPeriodsRemaining = 0).finalFlag(-newTime, settings.flagBehavior)
-                else -> tickPlayer(p.copy(timeRemainingMs = s.byoyomiTimeMs, byoyomiPeriodsRemaining = p.byoyomiPeriodsRemaining - 1), -newTime, s, settings)
+            if (newTime > 0) return p.copy(timeRemainingMs = newTime)
+            // Worked out at once rather than a period at a time. The recursion that did it went one
+            // call deeper per period the tick ran through, and a period of 0s runs through all of
+            // them in a single tick: a million periods of nothing overflowed the stack the moment
+            // main time ran out, and closed the app.
+            val overrun = -newTime
+            val period = s.byoyomiTimeMs
+            // byoyomiPeriodsRemaining counts the period being played; once it has run out, those
+            // left are the ones not yet begun. Main time running out begins the first of them --
+            // and with no periods at all that is the end. It used to hand out a full period anyway,
+            // so 0 periods played as 1.
+            val notBegun = if (p.isInByoyomi) p.byoyomiPeriodsRemaining - 1 else p.byoyomiPeriodsRemaining
+            val usedUp = if (period > 0) overrun / period else Long.MAX_VALUE
+            if (notBegun <= 0 || usedUp >= notBegun) {
+                val past = if (period > 0) overrun - notBegun.coerceAtLeast(0) * period else overrun
+                return p.copy(isInByoyomi = true, byoyomiPeriodsRemaining = 0).finalFlag(past, settings.flagBehavior)
             }
+            p.copy(isInByoyomi = true, byoyomiPeriodsRemaining = (notBegun - usedUp).toInt(), timeRemainingMs = period - (overrun - usedUp * period))
         }
         TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> {
             val newTime = p.timeRemainingMs - delta
@@ -1893,8 +1917,12 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         // A move refills a period only for a player who still has one: after the last has run out,
         // under NEGATIVE, a move would otherwise hand a fresh period to someone already out.
         TimerMode.BYOYOMI_JAPANESE -> if (p.isInByoyomi && !p.isOutOfTime) tempP.copy(timeRemainingMs = s.byoyomiTimeMs) else tempP
-        TimerMode.BYOYOMI_CANADIAN -> if (p.isInByoyomi && !p.isOutOfTime) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = s.byoyomiPeriods) else tempP.copy(movesRemainingInPeriod = rem) } else tempP
-        TimerMode.BYOYOMI_PROGRESSIVE -> if (p.isInByoyomi && !p.isOutOfTime) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) { val goal = p.currentByoyomiMovesGoal + s.byoyomiProgression; tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = goal, currentByoyomiMovesGoal = goal) } else tempP.copy(movesRemainingInPeriod = rem) } else tempP
+        // A block is at least one move. A quota of 0 renewed the block on every move -- a full block
+        // of time per move, for the rest of the game -- while the face read "MOVES: 0".
+        TimerMode.BYOYOMI_CANADIAN -> if (p.isInByoyomi && !p.isOutOfTime) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = s.byoyomiPeriods.coerceAtLeast(1)) else tempP.copy(movesRemainingInPeriod = rem) } else tempP
+        // The goal grows by the progression each block, and saturates: added as plain Ints, a large
+        // progression wrapped it negative, and every move after renewed the block.
+        TimerMode.BYOYOMI_PROGRESSIVE -> if (p.isInByoyomi && !p.isOutOfTime) { val rem = p.movesRemainingInPeriod - 1; if (rem <= 0) { val goal = (p.currentByoyomiMovesGoal.toLong() + s.byoyomiProgression).coerceIn(1, MAX_BYOYOMI_COUNT.toLong()).toInt(); tempP.copy(timeRemainingMs = s.byoyomiTimeMs, movesRemainingInPeriod = goal, currentByoyomiMovesGoal = goal) } else tempP.copy(movesRemainingInPeriod = rem) } else tempP
         TimerMode.FIDE_PERIODS -> {
             val currentPeriod = s.fidePeriods.getOrNull(p.currentPeriodIndex) ?: FidePeriod()
             // Signed, as for the increment modes: under NEGATIVE an overrun is stored positive.
@@ -2303,7 +2331,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 TimerMode.MOVE_TIMER_SAVE_CAP -> PlayerState(timeRemainingMs = pSettings.moveTimeMs, secondaryTimeMs = 0)
                 TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> PlayerState(timeRemainingMs = pSettings.moveTimeMs, secondaryTimeMs = pSettings.initialTimeMs)
                 TimerMode.BYOYOMI_JAPANESE -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, byoyomiPeriodsRemaining = pSettings.byoyomiPeriods)
-                TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, movesRemainingInPeriod = pSettings.byoyomiPeriods, currentByoyomiMovesGoal = pSettings.byoyomiPeriods)
+                TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> pSettings.byoyomiPeriods.coerceAtLeast(1).let { quota -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, movesRemainingInPeriod = quota, currentByoyomiMovesGoal = quota) }
                 TimerMode.MOVE_COUNTS_UP -> PlayerState(timeRemainingMs = 0, moveCount = 0)
                 TimerMode.MOVE_COUNTS_DOWN -> PlayerState(timeRemainingMs = 0, moveCount = pSettings.maxMoves)
                 TimerMode.FIDE_PERIODS -> {
@@ -2650,6 +2678,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             lastBeepSecond = -1
             return
         }
+        // A Japanese byoyomi period run out, the clock starting the next: it changed in silence,
+        // with no trace in the log, and the player learned of it only by the clock jumping back.
+        if (newState.isInByoyomi && oldState.isInByoyomi && newState.byoyomiPeriodsRemaining < oldState.byoyomiPeriodsRemaining) {
+            soundManager.playShortBeep()
+            addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIdx, detail = "Byoyomi period lost, ${newState.byoyomiPeriodsRemaining} left"))
+            lastBeepSecond = -1
+            return
+        }
 
         // Hidden mode hides the clock, and a countdown beep in the last seconds says exactly what
         // the screen withholds. The flag above is shown on screen anyway, so it still sounds.
@@ -2764,6 +2800,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // 4. Byoyomi Entry
         if (newState.isInByoyomi && !oldState.isInByoyomi) {
             voiceManager.speak(CoreR.string.voice_byoyomi, vol)
+        } else if (newState.isInByoyomi && newState.byoyomiPeriodsRemaining < oldState.byoyomiPeriodsRemaining && !newState.isOutOfTime) {
+            // A period lost; see handleAudio.
+            voiceManager.speak(CoreR.string.voice_byoyomi_periods_left, vol, newState.byoyomiPeriodsRemaining)
         }
 
         // Phase names are announced by onPhaseTransition: this function is only ever handed two

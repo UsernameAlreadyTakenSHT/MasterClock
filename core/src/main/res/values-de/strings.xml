@@ -7,6 +7,7 @@
     <string name="voice_ten_seconds_left">Noch zehn Sekunden</string>
     <string name="voice_period">Periode %1$d</string>
     <string name="voice_byoyomi">Byoyomi beginnt</string>
+    <string name="voice_byoyomi_periods_left">Verbleibende Perioden: %1$d</string>
     <string name="voice_move">Zug</string>
     <string name="voice_reflect">Bedenkzeit</string>
     <string name="voice_phase">Phase %1$d</string>

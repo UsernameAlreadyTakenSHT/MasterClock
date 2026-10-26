@@ -68,7 +68,8 @@ class ChessTimerLogicTest {
     fun `BYOYOMI_JAPANESE enters byoyomi once main time is exhausted`() {
         val s = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, byoyomiTimeMs = 30_000, byoyomiPeriods = 3)
         val settings = ChessClockSettings(main = s)
-        val next = tickPlayer(PlayerState(timeRemainingMs = 500), delta = 1000, s = s, settings = settings)
+        // The periods as createInitialState sets them up; with none left there is no byoyomi to enter.
+        val next = tickPlayer(PlayerState(timeRemainingMs = 500, byoyomiPeriodsRemaining = 3), delta = 1000, s = s, settings = settings)
         assertTrue(next.isInByoyomi)
         // The 500ms the main clock could not cover come out of the first period.
         assertEquals(29_500, next.timeRemainingMs)

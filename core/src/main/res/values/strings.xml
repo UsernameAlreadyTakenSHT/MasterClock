@@ -8,6 +8,7 @@
     <string name="voice_ten_seconds_left">Ten seconds remaining</string>
     <string name="voice_period">Period %1$d</string>
     <string name="voice_byoyomi">Entering byoyomi</string>
+    <string name="voice_byoyomi_periods_left">Periods left: %1$d</string>
     <string name="voice_move">Move</string>
     <string name="voice_reflect">Reflect</string>
     <string name="voice_phase">Phase %1$d</string>
