@@ -91,8 +91,27 @@ enum class TimerMode {
     MOVE_TIMER_STANDARD, MOVE_TIMER_SAVE_CAP, MOVE_TIMER_OVERTIME, MOVE_TIMER_GLOBAL, MOVE_TIMER_SHARED, MOVE_TIMER_GLOBAL_SHARED,
     HOURGLASS, BYOYOMI_JAPANESE, BYOYOMI_CANADIAN, BYOYOMI_PROGRESSIVE,
     CHRONO_COUNTDOWN, CHRONO_COUNTUP, MOVE_COUNTS_UP, MOVE_COUNTS_DOWN,
-    FIDE_PERIODS, PHASES, RANDOM, HIDDEN, GONG, FAST_MOVE
+    FIDE_PERIODS, PHASES, RANDOM, HIDDEN, GONG, FAST_MOVE;
+
+    /**
+     * The modes that run one clock for the whole table: a single move time, and in Global Shared a
+     * single reserve, that every player draws on in turn. Per-player settings have nothing to give
+     * them -- both read the move time from whoever was on the clock, so player 2's setting timed
+     * player 3's turn, and a reserve set per player was ignored outright -- so they are turned off
+     * for these modes; see [wholeTableForSharedModes].
+     */
+    val isShared: Boolean get() = this == MOVE_TIMER_SHARED || this == MOVE_TIMER_GLOBAL_SHARED
 }
+
+/**
+ * The settings with per-player customisation turned off when the game's mode is a shared one
+ * ([TimerMode.isShared]), Player 1's settings becoming everyone's. Applied to every settings
+ * change and to what is read back from storage, so neither the settings screens, a preset nor an
+ * import can combine the two.
+ */
+fun ChessClockSettings.wholeTableForSharedModes(): ChessClockSettings =
+    if (differentSettingsPerPlayer && p1Custom.mode.isShared) copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
+    else this
 
 /**
  * What a screen reader should hear when the clock changes state.
@@ -2039,7 +2058,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // it from viewModelScope parsed the whole notebook on the UI thread at every launch.
             val (storedSettings, savedSettings) = withContext(Dispatchers.Default) {
                 val stored = settingsRepo.settingsFlow.first()
-                stored to sanitizeStoredSettings(getApplication(), stored)
+                stored to sanitizeStoredSettings(getApplication(), stored).wholeTableForSharedModes()
             }
             if (savedSettings != storedSettings) {
                 Log.i("ChessTimerViewModel", "Repaired stored settings that failed validation")
@@ -2771,7 +2790,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // argument at call sites still binds by the original parameter name, so this is transparent
         // to callers.
         @Suppress("NAME_SHADOWING")
-        val newSettings = if (isImport) {
+        val newSettings = (if (isImport) {
             sanitizeImportedSettings(getApplication(), newSettings).let { imported ->
                 imported.copy(
                     notebookNotes = mergeImportedNotes(oldSettings.notebookNotes, imported.notebookNotes),
@@ -2783,7 +2802,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     logDurationLimit = oldSettings.logDurationLimit,
                 )
             }
-        } else newSettings
+        } else newSettings).wholeTableForSharedModes()
         _settings.value = newSettings
         
         // isImport guards this for the same reason it guards newSettings above: the scoreboard

@@ -71,11 +71,14 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
 
         SettingsSection(stringResource(R.string.settings_advanced)) {
             val morePlayersEnabled = currentSettings.numberOfPlayers > 2
+            // A shared mode runs one clock for the table; core turns per-player settings off for it
+            // (wholeTableForSharedModes), so the switch would only spring back.
+            val sharedMode = currentSettings.main.mode.isShared
             Column {
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_different_per_player),
                     checked = currentSettings.differentSettingsPerPlayer && !morePlayersEnabled,
-                    enabled = !morePlayersEnabled,
+                    enabled = !morePlayersEnabled && !sharedMode,
                     topRounded = true
                 ) { onSettingsChanged(currentSettings.copy(differentSettingsPerPlayer = it)) }
 
