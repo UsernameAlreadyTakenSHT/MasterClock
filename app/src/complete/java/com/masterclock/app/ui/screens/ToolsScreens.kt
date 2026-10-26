@@ -1073,9 +1073,21 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
             NotebookNoteType.BOARD -> BoardNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
             else -> {
                 var title by remember(selectedNoteId) { mutableStateOf(selectedNote.title) }; var rawText by remember(selectedNoteId) { mutableStateOf(selectedNote.content) }; var contentValue by remember(selectedNoteId) { mutableStateOf(TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(selectedNote.content), selection = TextRange(selectedNote.content.length))) }; var showColorPicker by remember { mutableStateOf(false) }
+                // What Undo steps back through; see TextEditHistory. Only changes to the text are
+                // recorded, never a cursor that merely moved.
+                var history by remember(selectedNoteId) { mutableStateOf(TextEditHistory()) }
+                fun recordBeforeEdit(typing: Boolean) { history = history.beforeEdit(TextSnapshot(rawText, contentValue.selection.start, contentValue.selection.end), android.os.SystemClock.uptimeMillis(), typing) }
                 PersistDebounced(title to rawText) { (newTitle, newText) -> val newList = settings.notebookNotes.map { if (it.id == selectedNoteId) it.copy(title = newTitle, content = newText) else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }
-                fun applyFormat(prefix: String, suffix: String = prefix) { val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.start, selection.end); val newText = text.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.start + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
-                ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = { selectedNoteId = null }) { padding ->
+                fun applyFormat(prefix: String, suffix: String = prefix) { recordBeforeEdit(typing = false); val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.start, selection.end); val newText = text.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.start + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
+                ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = { selectedNoteId = null }, actions = {
+                    IconButton(onClick = {
+                        history.undo()?.let { (snapshot, rest) ->
+                            history = rest
+                            rawText = snapshot.text
+                            contentValue = TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(snapshot.text), selection = TextRange(snapshot.selectionStart, snapshot.selectionEnd))
+                        }
+                    }, enabled = history.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }
+                }) { padding ->
                     Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true, textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                         Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)) {
@@ -1084,7 +1096,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                             }
                         }
                         if (showColorPicker) { Dialog(onDismissRequest = { showColorPicker = false }) { Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) { Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.tools_select_text_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold); Spacer(Modifier.height(16.dp)); val colors = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF); FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { colors.forEach { colorVal -> Surface(modifier = Modifier.size(40.dp).clickable { val hex = String.format("%08X", colorVal); applyFormat("<color:$hex>", "</color>"); showColorPicker = false }, shape = CircleShape, color = Color(colorVal), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {} } }; Spacer(Modifier.height(16.dp)); TextButton(onClick = { showColorPicker = false }) { Text(stringResource(R.string.common_cancel)) } } } } }
-                        OutlinedTextField(value = contentValue, onValueChange = { if (it.text.length <= MAX_NOTE_CONTENT_CHARS) { contentValue = it; rawText = it.text; contentValue = it.copy(annotatedString = parseMarkdownToAnnotatedString(it.text)) } }, modifier = Modifier.fillMaxWidth().weight(1f), placeholder = { Text(stringResource(R.string.tools_format_hint)) }, shape = RoundedCornerShape(12.dp))
+                        OutlinedTextField(value = contentValue, onValueChange = { if (it.text.length <= MAX_NOTE_CONTENT_CHARS) { if (it.text != rawText) recordBeforeEdit(typing = true); contentValue = it; rawText = it.text; contentValue = it.copy(annotatedString = parseMarkdownToAnnotatedString(it.text)) } }, modifier = Modifier.fillMaxWidth().weight(1f), placeholder = { Text(stringResource(R.string.tools_format_hint)) }, shape = RoundedCornerShape(12.dp))
                     }
                 }
             }
