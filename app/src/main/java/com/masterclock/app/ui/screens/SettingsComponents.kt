@@ -354,8 +354,11 @@ fun PhasesPanel(
                         }
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            BehaviorSwitch(stringResource(R.string.settings_auto_advance), phase.autoAdvance, topRounded = true, bottomRounded = true) { auto ->
-                                val newList = phases.toMutableList().apply { this[index] = phase.copy(autoAdvance = auto) }
+                            // Said the other way round from the stored flag: "Auto Advance" named what the
+                            // phase does by default and left unsaid what turning it off did, which was
+                            // read as a way to move on early -- the skip setting's job.
+                            BehaviorSwitch(stringResource(R.string.settings_wait_tap_at_end), !phase.autoAdvance, topRounded = true, bottomRounded = true) { wait ->
+                                val newList = phases.toMutableList().apply { this[index] = phase.copy(autoAdvance = !wait) }
                                 onUpdateP(p.copy(phases = newList))
                             }
                         }

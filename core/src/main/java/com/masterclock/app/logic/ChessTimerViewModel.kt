@@ -2365,7 +2365,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // which starts the pause -- so a tap with five seconds of it left put it back to
                 // its full length, and the pause could never be skipped at all.
                 p1.isInInterPhasePause -> _uiState.update { st -> performPhaseAdvance(st, 1).also { onPhaseTransition(st.players[0], it) } }
-                p1.isPhaseAwaitingTap -> _uiState.update { st -> startPhaseTransition(st).also { onPhaseTransition(st.players[0], it) } }
+                // Waiting for a tap at a phase's end is the pause between phases, held until the tap.
+                // The tap went through startPhaseTransition, which then started the timed pause as
+                // well: the game waited twice over before the next phase.
+                p1.isPhaseAwaitingTap -> _uiState.update { st -> performPhaseAdvance(st, 1).also { onPhaseTransition(st.players[0], it) } }
                 settings.value.allowPhaseSkip -> _uiState.update { st -> startPhaseTransition(st, skipped = true).also { onPhaseTransition(st.players[0], it) } }
             }
             return

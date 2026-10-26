@@ -325,10 +325,13 @@ fun TimerScreen(
     }
 }
 
-/** What a PHASES clock is on: the pause between phases, or the phase's name, "Phase N" if it has none. */
+/**
+ * What a PHASES clock is on: a pause -- between phases, or after a phase that waits for a tap at
+ * its end, which is the same wait -- or the phase's name, "Phase N" if it has none.
+ */
 @Composable
 private fun phaseLabel(s: PlayerSettings, p1: PlayerState): String =
-    if (p1.isInInterPhasePause) stringResource(R.string.timer_pause_label)
+    if (p1.isInInterPhasePause || p1.isPhaseAwaitingTap) stringResource(R.string.timer_pause_label)
     else s.phases.getOrNull(p1.currentPhaseIndex)?.name?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_phase_n, p1.currentPhaseIndex + 1)
 
 /**
@@ -395,9 +398,10 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val inactiveColor = Color(settings.inactiveColor)
     val lossColor = Color(settings.lossColor) 
     val reflectionColor = Color(settings.reflectionColor)
-    // The pause between phases is no phase being played, so it takes the colour of a clock at rest.
-    // It showed the active colour, the same as the phase either side of it.
-    val inPhasePause = pSettings.mode == TimerMode.PHASES && playerState.isInInterPhasePause
+    // A pause between phases is no phase being played, so it takes the colour of a clock at rest. It
+    // showed the active colour, the same as the phase either side of it. A phase waiting for a tap
+    // at its end is in the same pause, and looked like a phase stuck at 0:00.
+    val inPhasePause = pSettings.mode == TimerMode.PHASES && (playerState.isInInterPhasePause || playerState.isPhaseAwaitingTap)
 
     val backgroundColor by animateColorAsState(
         targetValue = when {

@@ -104,7 +104,7 @@
     <string name="settings_repeat_phases">Ripeti le fasi (ciclo)</string>
     <string name="settings_pause_between_phases">Pausa tra le fasi</string>
     <string name="settings_pause_until_tap">Pausa tra le fasi fino a un tocco</string>
-    <string name="settings_auto_advance">Avanzamento automatico</string>
+    <string name="settings_wait_tap_at_end">Attendere un tocco alla fine</string>
     <string name="settings_allow_skip">Consenti di saltare a mano (tocca per anticipare)</string>
     <string name="settings_phase_placeholder">Preparazione, manche X…</string>
     <string name="settings_cumulative_transfer">Trasferimento cumulativo</string>

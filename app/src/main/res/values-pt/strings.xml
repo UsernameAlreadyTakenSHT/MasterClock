@@ -109,7 +109,7 @@
     <string name="settings_repeat_phases">Repetir as fases (ciclo)</string>
     <string name="settings_pause_between_phases">Pausa entre as fases</string>
     <string name="settings_pause_until_tap">Pausa entre as fases até um toque</string>
-    <string name="settings_auto_advance">Avanço automático</string>
+    <string name="settings_wait_tap_at_end">Aguardar um toque no fim</string>
     <string name="settings_allow_skip">Permitir avançar manualmente (tocar para adiantar)</string>
     <string name="settings_phase_placeholder">Preparação, ronda X…</string>
     <string name="settings_cumulative_transfer">Transferência cumulativa</string>

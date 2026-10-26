@@ -105,7 +105,7 @@
     <string name="settings_repeat_phases">Phasen wiederholen (Schleife)</string>
     <string name="settings_pause_between_phases">Pause zwischen den Phasen</string>
     <string name="settings_pause_until_tap">Pause zwischen den Phasen bis zum Tippen</string>
-    <string name="settings_auto_advance">Automatisch weiter</string>
+    <string name="settings_wait_tap_at_end">Am Ende auf Tippen warten</string>
     <string name="settings_allow_skip">Manuelles Überspringen erlauben (tippen, um vorzurücken)</string>
     <string name="settings_phase_placeholder">Vorbereitung, Runde X…</string>
     <string name="settings_cumulative_transfer">Kumulative Übertragung</string>
