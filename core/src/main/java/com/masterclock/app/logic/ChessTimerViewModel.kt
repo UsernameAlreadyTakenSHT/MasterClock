@@ -1543,7 +1543,10 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
                 if (initial > 0 && s.showHiddenPercentages) {
                     val currentPerc = ((newTime * 100) / initial).toInt()
                     val thresholds = listOf(50, 25, 10, 5, 2, 1)
-                    val trigger = thresholds.find { it in (currentPerc + 1)..lastPerc }
+                    // Below the last one shown, not at it: with lastPerc included, 50 matched every
+                    // later tick once it had been shown, so the face read "50%" until the flag and
+                    // 25, 10, 5, 2 and 1 never came. Several crossed at once show the lowest.
+                    val trigger = thresholds.lastOrNull { it in (currentPerc + 1) until lastPerc }
                     if (trigger != null) {
                         revealUntil = 5000L
                         lastPerc = trigger
@@ -1666,13 +1669,16 @@ internal class TickCue(val before: PlayerState, val after: PlayerState, val play
 /**
  * What [tickCoupled] decided: the next state, and the side effects the ViewModel is to carry out
  * for it -- a cue to compare for beeps and the voice, the gong, and in Shared (Auto) the player
- * whose move the clock has just ended ([handedOverBy]), for a beep and a MOVE in the log.
+ * whose move the clock has just ended ([handedOverBy]), for a beep and a MOVE in the log, and in
+ * Gong the players whose move phase ended ([gongMoves]: player and the time the move took), for a
+ * MOVE in the log -- the gong itself is the sound.
  */
 internal class CoupledTick(
     val state: ChessClockState,
     val cue: TickCue? = null,
     val playGong: Boolean = false,
     val handedOverBy: Int? = null,
+    val gongMoves: List<Pair<Int, Long>> = emptyList(),
 )
 
 /**
@@ -1761,26 +1767,37 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
         }
         TimerMode.CHRONO_COUNTUP -> return CoupledTick(state.copy(globalTimeMs = state.globalTimeMs + delta))
         TimerMode.GONG -> {
-            val isSim = s.gongSimultaneous
+            // Whether the table plays at once is one choice for the game, player 1's; each player's
+            // own times are their own. Both used to come from whoever was on the clock and applied to
+            // everyone, so a player's own reflection time held for their first reflection only.
+            val isSim = (if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main).gongSimultaneous
+            fun own(idx: Int) = if (!settings.differentSettingsPerPlayer) settings.main else when (idx) { 1 -> settings.p1Custom; 2 -> settings.p2Custom; 3 -> settings.p3Custom; 4 -> settings.p4Custom; else -> settings.main }
             val playersToUpdate = if (isSim) (1..settings.numberOfPlayers).toList() else listOf(active)
             var newState = state
             var gong = false
+            val moves = mutableListOf<Pair<Int, Long>>()
             for (idx in playersToUpdate) {
                 val p = newState.players[idx - 1]
+                val ps = own(idx)
                 var newTime = p.timeRemainingMs - delta
                 var isReflection = p.isGongReflectionPhase
                 var nextActiveIdx = newState.activePlayer ?: 1
                 var moveCount = p.moveCount
 
+                // What the tick ran past the end of a phase comes off the next one, which started in
+                // full: up to a tick per phase, the drift the other clocks no longer have.
                 if (newTime <= 0) {
                     if (isReflection) {
-                        newTime = s.gongMoveMs
+                        newTime = (ps.gongMoveMs + newTime).coerceAtLeast(0)
                         isReflection = false
                         if (idx == active) gong = true
                     } else {
-                        newTime = s.gongReflectionMs
+                        newTime = (ps.gongReflectionMs + newTime).coerceAtLeast(0)
                         isReflection = true
                         moveCount++
+                        // The end of the move phase is the move. Nothing was logged for it, so a Gong
+                        // game held no MOVE, never flags, and was deleted from the history on Reset.
+                        moves += idx to (ps.gongReflectionMs + ps.gongMoveMs)
                         if (!isSim) { nextActiveIdx = (active % settings.numberOfPlayers) + 1 }
                     }
                 }
@@ -1790,7 +1807,7 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
             // The cue for the player whose turn this tick was. GONG used to return none, so it was the
             // one mode with no countdown beeps and no voice at all -- its "Move" and "Reflect" lines
             // in handleVoice were dead code.
-            return CoupledTick(newState, TickCue(state.players[active - 1], newState.players[active - 1], active), playGong = gong)
+            return CoupledTick(newState, TickCue(state.players[active - 1], newState.players[active - 1], active), playGong = gong, gongMoves = moves)
         }
         else -> return null
     }
@@ -2649,6 +2666,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     handleVoice(cue.before, cue.after, settings, cue.playerIndex)
                 }
                 if (result.playGong) soundManager.playGong()
+                for ((mover, spent) in result.gongMoves) {
+                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = 0, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = spent))
+                    moveStartTime = now
+                }
                 result.handedOverBy?.let { mover ->
                     // A plain beep where a press would have made the switch sound, and nothing
                     // spoken: the turn passing is the ordinary course of this mode.
@@ -3315,6 +3336,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // Installed paused, so the wait until Resume is pressed is a pause like any other.
                 pausedAt = now
                 _uiState.value = resumed.second.toState().copy(isPaused = true)
+                // The roll Reset replays is the resumed game's, as for a game started from Last
+                // Games. It was whatever this launch had drawn on its way up, so Reset after resuming
+                // a 7:00 + 3s Random game started a 4:20 + 1s one.
+                val s1 = if (resumedSettings.differentSettingsPerPlayer) resumedSettings.p1Custom else resumedSettings.main
+                val first = resumed.second.players.firstOrNull()
+                if ((s1.mode == TimerMode.RANDOM || s1.mode == TimerMode.HIDDEN) && first != null) {
+                    lastRandomRoll = first.initialTotalTimeMs to first.secondaryTimeMs
+                }
 
                 clearSavedClock()
             } catch (e: Exception) {

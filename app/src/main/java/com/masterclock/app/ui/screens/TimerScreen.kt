@@ -251,7 +251,9 @@ fun TimerScreen(
                 // deliberately keeps the drawn time, so this is the only way to ask for a new one.
                 // Hidden while the clock runs -- drawing a new time restarts the game, which is not
                 // something to offer a thumb mid-move; it comes back on pause.
-                val isRandomMode = settings.main.mode == TimerMode.RANDOM || settings.main.mode == TimerMode.HIDDEN
+                // Player 1's mode, the one the roll is made for; main lags it with per-player settings on.
+                val rollMode = (if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main).mode
+                val isRandomMode = rollMode == TimerMode.RANDOM || rollMode == TimerMode.HIDDEN
                 if (isRandomMode && (state.activePlayer == null || state.isPaused)) {
                     Surface(
                         modifier = Modifier.clip(CircleShape),

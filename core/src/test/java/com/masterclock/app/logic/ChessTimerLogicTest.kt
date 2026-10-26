@@ -124,6 +124,21 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `HIDDEN reveals each threshold once, then the next`() {
+        val s = PlayerSettings(mode = TimerMode.HIDDEN, showHiddenPercentages = true)
+        val settings = ChessClockSettings(main = s)
+        var p = tickPlayer(PlayerState(timeRemainingMs = 10_000, initialTotalTimeMs = 10_000), 5_100, s, settings)
+        // The window runs out, and 50 does not come back on every tick below it.
+        p = tickPlayer(p.copy(timeRemainingMs = 4_800, revealTimeUntilMs = 0), 10, s, settings)
+        assertEquals(50, p.lastRevealPercentage)
+        assertEquals(0L, p.revealTimeUntilMs)
+        // Down past 25 and 10 in one tick: the lowest is shown.
+        p = tickPlayer(p.copy(timeRemainingMs = 1_100), 200, s, settings)
+        assertEquals(10, p.lastRevealPercentage)
+        assertEquals(5000L, p.revealTimeUntilMs)
+    }
+
+    @Test
     fun `FIDE_PERIODS advances to the next period when time runs out and forced counter is off`() {
         val period1 = FidePeriod(timeMs = 100, incrementMs = 0, movesToNext = 0, isFischer = false)
         val period2 = FidePeriod(timeMs = 5000, incrementMs = 0, movesToNext = 0, isFischer = false)
@@ -733,12 +748,16 @@ class ChessTimerLogicTest {
         // The cue that drives the beeps and the "Move" line: reflection before, move after.
         assertTrue(moving.cue!!.before.isGongReflectionPhase)
         assertFalse(moving.cue!!.after.isGongReflectionPhase)
-        assertEquals(3_000, moving.state.players[0].timeRemainingMs)
+        // The 100ms the tick ran past the reflection come off the move phase.
+        assertEquals(2_900, moving.state.players[0].timeRemainingMs)
         assertFalse(moving.state.players[0].isGongReflectionPhase)
+        assertTrue(moving.gongMoves.isEmpty())
 
         val done = coupled(moving.state.copy(players = moving.state.players.toMutableList().apply { this[0] = this[0].copy(timeRemainingMs = 100) }), 200, settings)
         assertEquals(2, done.state.activePlayer)
         assertEquals(1, done.state.players[0].moveCount)
+        // The end of the move phase is a move, for the log.
+        assertEquals(listOf(1 to 8_000L), done.gongMoves)
     }
 
     @Test
