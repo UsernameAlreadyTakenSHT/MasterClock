@@ -517,7 +517,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = if (!playerState.isGongReflectionPhase) alertTextColor else labelColor)
                         }
                         playerState.isInByoyomi -> {
-                            val text = if (pSettings.mode == TimerMode.BYOYOMI_JAPANESE) { if (settings.showCurrentPeriod) stringResource(R.string.timer_period, pSettings.byoyomiPeriods - playerState.byoyomiPeriodsRemaining + 1, pSettings.byoyomiPeriods) else stringResource(R.string.timer_periods, playerState.byoyomiPeriodsRemaining) } else stringResource(R.string.timer_moves, playerState.movesRemainingInPeriod)
+                            // Held to the periods there are: the last one running out leaves none
+                            // remaining, and the count read "PERIOD: 4/3" above FLAGGED.
+                            val text = if (pSettings.mode == TimerMode.BYOYOMI_JAPANESE) { if (settings.showCurrentPeriod) stringResource(R.string.timer_period, (pSettings.byoyomiPeriods - playerState.byoyomiPeriodsRemaining + 1).coerceIn(1, pSettings.byoyomiPeriods.coerceAtLeast(1)), pSettings.byoyomiPeriods) else stringResource(R.string.timer_periods, playerState.byoyomiPeriodsRemaining) } else stringResource(R.string.timer_moves, playerState.movesRemainingInPeriod)
                             Text(text, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = if (isActive) labelColor else labelColor.copy(alpha = 0.7f))
                         }
                         pSettings.mode == TimerMode.FIDE_PERIODS -> {

@@ -1121,7 +1121,9 @@ fun NumericInput(label: String, value: Int, onValueChange: (Int) -> Unit) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(
             value = if (value == 0) "" else value.toString(),
-            onValueChange = { onValueChange(it.toIntOrNull() ?: 0) },
+            // Digits only, four at most: an eleventh digit overflowed toIntOrNull, the value went to 0
+            // and the field emptied while it was being typed.
+            onValueChange = { onValueChange(it.filter(Char::isDigit).take(4).toIntOrNull() ?: 0) },
             modifier = Modifier.fillMaxWidth().height(54.dp),
             shape = RoundedCornerShape(12.dp),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

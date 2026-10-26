@@ -634,10 +634,13 @@ fun applyPresetTimeControl(current: ChessClockSettings, preset: ChessClockSettin
     current.copy(
         gameType = preset.gameType,
         main = preset.main,
-        p1Custom = preset.p1Custom,
-        p2Custom = preset.p2Custom,
-        p3Custom = preset.p3Custom,
-        p4Custom = preset.p4Custom,
+        // A preset for everyone sets main alone, and the per-player copies kept the default sudden
+        // death: turning on per-player settings after it threw the preset away -- a byoyomi preset
+        // became 10 minutes sudden death, on both Modes tabs. Everyone starts from its settings.
+        p1Custom = if (preset.differentSettingsPerPlayer) preset.p1Custom else preset.main,
+        p2Custom = if (preset.differentSettingsPerPlayer) preset.p2Custom else preset.main,
+        p3Custom = if (preset.differentSettingsPerPlayer) preset.p3Custom else preset.main,
+        p4Custom = if (preset.differentSettingsPerPlayer) preset.p4Custom else preset.main,
         differentSettingsPerPlayer = preset.differentSettingsPerPlayer,
         numberOfPlayers = preset.numberOfPlayers,
         playerMapping = preset.playerMapping,
