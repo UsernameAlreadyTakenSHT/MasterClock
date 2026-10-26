@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
-import java.util.Locale
 import com.masterclock.app.BuildConfig
 
 @Composable
@@ -310,8 +309,6 @@ fun PhasesPanel(
     onUpdateP: (PlayerSettings) -> Unit,
     onUpdateGlobal: (Boolean, Long, Boolean) -> Unit
 ) {
-    // Hoisted: the default name is assigned inside onClick.
-    val newPhaseNameTemplate = stringResource(R.string.settings_phase_n)
     SettingsSection(stringResource(R.string.settings_phases_config)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             BehaviorSwitch(stringResource(R.string.settings_repeat_phases), loopPhases, topRounded = true, bottomRounded = true) { onUpdateGlobal(it, pauseMs, allowPhaseSkip) }
@@ -372,7 +369,10 @@ fun PhasesPanel(
             if (phases.size < 10) {
                 Button(
                     onClick = {
-                        val newList = phases + GamePhase(String.format(Locale.getDefault(), newPhaseNameTemplate, phases.size + 1))
+                        // Unnamed: the clock shows "Phase N" and the voice says it in its own language.
+                        // A name written in at creation was fixed in the language of the screen, and
+                        // the voice read it as typed whatever language it spoke.
+                        val newList = phases + GamePhase()
                         onUpdateP(p.copy(phases = newList))
                     },
                     modifier = Modifier.fillMaxWidth()

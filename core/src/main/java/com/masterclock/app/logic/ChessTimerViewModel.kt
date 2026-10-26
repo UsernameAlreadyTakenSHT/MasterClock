@@ -399,7 +399,7 @@ data class PlayerSettings(
     val byoyomiProgression: Int = 5,
     val maxMoves: Int = 20,
     val fidePeriods: List<FidePeriod> = listOf(FidePeriod()),
-    val phases: List<GamePhase> = listOf(GamePhase("Phase 1")),
+    val phases: List<GamePhase> = listOf(GamePhase()),
     val randomMinTimeMs: Long = 60_000,
     val randomMaxTimeMs: Long = 600_000,
     val randomMinIncMs: Long = 0,
