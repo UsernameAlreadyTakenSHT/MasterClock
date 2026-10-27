@@ -1315,10 +1315,29 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
             moveNotation = event.moveNotation?.take(MAX_MOVE_NOTATION_CHARS),
         )
     },
-    // The app supports at most four players, so a longer list can only come from outside it.
-    initialPlayerStates = log.initialPlayerStates.take(4).map { state ->
-        state.copy(timeRemainingMs = state.timeRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS))
-    },
+    // The app supports at most four players, so a longer list can only come from outside it. Last
+    // Games starts the clock from these states as they are: one per player, or none, which starts
+    // from the settings instead -- a single state under four players built a one-player clock. And
+    // each index into the game's phases or periods is held to them, since a phase or period change
+    // indexed past the list and closed the app.
+    initialPlayerStates = log.initialPlayerStates.take(4)
+        .takeIf { it.size == log.settings.numberOfPlayers.coerceIn(1, 4) }.orEmpty()
+        .mapIndexed { idx, state ->
+            val own = if (log.settings.differentSettingsPerPlayer) when (idx) { 0 -> log.settings.p1Custom; 1 -> log.settings.p2Custom; 2 -> log.settings.p3Custom; else -> log.settings.p4Custom } else log.settings.main
+            state.copy(
+                timeRemainingMs = state.timeRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+                secondaryTimeMs = state.secondaryTimeMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+                delayRemainingMs = state.delayRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+                pauseTimeRemainingMs = state.pauseTimeRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+                initialTotalTimeMs = state.initialTotalTimeMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+                currentPhaseIndex = state.currentPhaseIndex.coerceIn(0, (own.phases.size.coerceAtMost(MAX_IMPORTED_PERIODS) - 1).coerceAtLeast(0)),
+                currentPeriodIndex = state.currentPeriodIndex.coerceIn(0, (own.fidePeriods.size.coerceAtMost(MAX_IMPORTED_PERIODS) - 1).coerceAtLeast(0)),
+                byoyomiPeriodsRemaining = state.byoyomiPeriodsRemaining.coerceIn(0, MAX_BYOYOMI_COUNT),
+                movesRemainingInPeriod = state.movesRemainingInPeriod.coerceIn(0, MAX_BYOYOMI_COUNT),
+                currentByoyomiMovesGoal = state.currentByoyomiMovesGoal.coerceIn(0, MAX_BYOYOMI_COUNT),
+                moveCount = state.moveCount.coerceIn(0, MAX_IMPORTED_EVENTS_PER_LOG),
+            )
+        },
 )
 
 /**
@@ -1404,6 +1423,18 @@ internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings 
         )
     },
 )
+
+/**
+ * The scoreboard with [imported]'s games added to [local]'s, a game already there -- same result at
+ * the same moment -- not twice, and the local names kept. An import used to replace the scoreboard
+ * outright: a friend's settings file "with games", or an older backup, wiped every game on it under
+ * "Import successful", the loss the notebook merge was written to prevent.
+ */
+internal fun mergeImportedScoreboard(local: ScoreboardSession, imported: ScoreboardSession): ScoreboardSession {
+    val seen = local.games.map { it.result to it.timestamp }.toHashSet()
+    val added = imported.games.filter { seen.add(it.result to it.timestamp) }
+    return if (added.isEmpty()) local else local.copy(games = (local.games + added).sortedBy { it.timestamp })
+}
 
 internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardSession = session.copy(
     id = java.util.UUID.randomUUID().toString(),
@@ -3170,7 +3201,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         
         // isImport guards this for the same reason it guards newSettings above: the scoreboard
         // arrives from the same untrusted QR/JSON/ZIP payload.
-        scoreboardToImport?.let { setScoreboard(if (isImport) sanitizeImportedScoreboard(it) else it) }
+        scoreboardToImport?.let { setScoreboard(if (isImport) mergeImportedScoreboard(_scoreboard.value, sanitizeImportedScoreboard(it)) else it) }
         presetsToImport?.let { presets ->
             val imported = if (isImport) sanitizeImportedPresets(getApplication(), presets) else presets
             persistCustomPresets(mergeImportedPresets(_customPresets.value, imported))

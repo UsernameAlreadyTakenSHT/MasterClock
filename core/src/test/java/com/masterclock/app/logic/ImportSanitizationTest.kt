@@ -85,7 +85,35 @@ class ImportSanitizationTest {
     @Test
     fun `caps initial player states at four`() {
         val states = List(50) { PlayerStateProxy(timeRemainingMs = 600_000) }
-        assertEquals(4, sanitizeImportedLog(log(emptyList(), states)).initialPlayerStates.size)
+        val four = log(emptyList(), states).copy(settings = ChessClockSettings(numberOfPlayers = 4))
+        assertEquals(4, sanitizeImportedLog(four).initialPlayerStates.size)
+    }
+
+    @Test
+    fun `player states that do not match the player count are dropped`() {
+        // One state under four players built a one-player clock from Last Games.
+        val one = log(emptyList(), listOf(PlayerStateProxy(600_000))).copy(settings = ChessClockSettings(numberOfPlayers = 4))
+        assertTrue(sanitizeImportedLog(one).initialPlayerStates.isEmpty())
+    }
+
+    @Test
+    fun `phase and period indices are held to the game's lists`() {
+        val phases = ChessClockSettings(main = PlayerSettings(mode = TimerMode.PHASES, phases = listOf(GamePhase(), GamePhase())))
+        val states = List(2) { PlayerStateProxy(600_000, currentPhaseIndex = -3, currentPeriodIndex = 99) }
+        val sanitized = sanitizeImportedLog(log(emptyList(), states).copy(settings = phases)).initialPlayerStates
+        assertEquals(0, sanitized[0].currentPhaseIndex)
+        assertEquals(0, sanitized[0].currentPeriodIndex)
+        val last = sanitizeImportedLog(log(emptyList(), List(2) { PlayerStateProxy(600_000, currentPhaseIndex = 7) }).copy(settings = phases)).initialPlayerStates
+        assertEquals(1, last[0].currentPhaseIndex)
+    }
+
+    @Test
+    fun `an imported scoreboard adds its games to the local one`() {
+        val local = ScoreboardSession(player1Name = "Me", games = listOf(ScoreboardGame(result = "1-0", timestamp = 10)))
+        val imported = ScoreboardSession(player1Name = "Friend", games = listOf(ScoreboardGame(result = "1-0", timestamp = 10), ScoreboardGame(result = "0-1", timestamp = 20)))
+        val merged = mergeImportedScoreboard(local, imported)
+        assertEquals("Me", merged.player1Name)
+        assertEquals(listOf(10L, 20L), merged.games.map { it.timestamp })
     }
 
     @Test

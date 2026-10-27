@@ -444,7 +444,11 @@ class MainActivity : ComponentActivity() {
                                     // replaced the settings and added its logs and scoreboard
                                     // immediately, and a code on a poster or a table works as well
                                     // as one on a friend's screen.
-                                    val parsed = runCatching { json.decodeFromString<SharePackage>(scanResult) }
+                                    // Through the same reader as a file: decoded straight into a
+                                    // SharePackage, any {"settings": {...}} from another app came
+                                    // through as factory settings, and a legacy bare-settings code
+                                    // was refused outright.
+                                    val parsed = runCatching { decodeSharePackage(scanResult) }
                                     parsed.exceptionOrNull()?.let { e ->
                                         Log.w("MainActivity", "Failed to read scanned QR share package", e)
                                     }
