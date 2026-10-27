@@ -554,4 +554,26 @@
     <string name="timer_reflect">BEDENKEN</string>
     <string name="timer_move_alert">ZIEHEN!</string>
     <string name="timer_pause_label">PAUSE</string>
+    <string name="preset_desc_1_min">Sudden Death 1:00</string>
+    <string name="preset_desc_5_min">Sudden Death 5:00</string>
+    <string name="preset_desc_10_min">Sudden Death 10:00</string>
+    <string name="preset_desc_30_min">Sudden Death 30:00</string>
+    <string name="preset_desc_60_min">Sudden Death 60:00</string>
+    <string name="preset_desc_fisch_3_2s">Fischer 3:00 +2s</string>
+    <string name="preset_desc_fisch_15_10s">Fischer 15:00 +10s</string>
+    <string name="preset_desc_90_40_30_30s">90 min/40 + 30 min (Fischer 30 s)</string>
+    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 min (Fischer 30 s)</string>
+    <string name="preset_desc_us_5_2s">Sudden Death 5:00, Verzögerung 2 s</string>
+    <string name="preset_desc_us_25_5s">Sudden Death 25:00, Verzögerung 5 s</string>
+    <string name="preset_desc_us_80_40_30_30s">80 min/40 + 30 min (Verzögerung 30 s)</string>
+    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, Verzögerung 5 s</string>
+    <string name="preset_desc_jap_byo_20">Japanisches Byoyomi: 20 min + 1×30 s</string>
+    <string name="preset_desc_jap_byo_60">Japanisches Byoyomi: 60 min + 3×20 s</string>
+    <string name="preset_desc_can_byo_60">Kanadisches Byoyomi: 60 min + 5 min/20 Züge</string>
+    <string name="preset_desc_armag_5_4">Weiß 5:00, Schwarz 4:00</string>
+    <string name="preset_desc_hourgl_1_min">Hourglass je 1:00</string>
+    <string name="preset_desc_30s_move">Move Timer Standard 30 s/Zug</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, Rückwärtszählung</string>
+    <string name="preset_desc_random_1_10">Random 1–10 min, gerundet</string>
+    <string name="preset_shortcut_deleted">Diese Voreinstellung wurde gelöscht</string>
 </resources>

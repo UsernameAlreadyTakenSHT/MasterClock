@@ -553,4 +553,26 @@
     <string name="timer_reflect">BEDENKEN</string>
     <string name="timer_move_alert">ZET!</string>
     <string name="timer_pause_label">PAUZE</string>
+    <string name="preset_desc_1_min">Sudden Death 1:00</string>
+    <string name="preset_desc_5_min">Sudden Death 5:00</string>
+    <string name="preset_desc_10_min">Sudden Death 10:00</string>
+    <string name="preset_desc_30_min">Sudden Death 30:00</string>
+    <string name="preset_desc_60_min">Sudden Death 60:00</string>
+    <string name="preset_desc_fisch_3_2s">Fischer 3:00 +2s</string>
+    <string name="preset_desc_fisch_15_10s">Fischer 15:00 +10s</string>
+    <string name="preset_desc_90_40_30_30s">90 min/40 + 30 min (Fischer 30 s)</string>
+    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 min (Fischer 30 s)</string>
+    <string name="preset_desc_us_5_2s">Sudden Death 5:00, vertraging 2 s</string>
+    <string name="preset_desc_us_25_5s">Sudden Death 25:00, vertraging 5 s</string>
+    <string name="preset_desc_us_80_40_30_30s">80 min/40 + 30 min (vertraging 30 s)</string>
+    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, vertraging 5 s</string>
+    <string name="preset_desc_jap_byo_20">Japans byoyomi: 20 min + 1×30 s</string>
+    <string name="preset_desc_jap_byo_60">Japans byoyomi: 60 min + 3×20 s</string>
+    <string name="preset_desc_can_byo_60">Canadees byoyomi: 60 min + 5 min/20 zetten</string>
+    <string name="preset_desc_armag_5_4">Wit 5:00, zwart 4:00</string>
+    <string name="preset_desc_hourgl_1_min">Hourglass 1:00 elk</string>
+    <string name="preset_desc_30s_move">Move Timer Standard 30 s/zet</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, terugtellen</string>
+    <string name="preset_desc_random_1_10">Random 1–10 min, afgerond</string>
+    <string name="preset_shortcut_deleted">Deze voorinstelling is verwijderd</string>
 </resources>

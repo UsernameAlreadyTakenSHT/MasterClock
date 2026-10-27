@@ -28,11 +28,23 @@ import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.annotation.StringRes
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.runtime.saveable.rememberSaveable
 
+/**
+ * A built-in preset. Its [name] is made of mode names, which stay as they are in every language;
+ * the [description] says it in full, and is what TalkBack reads -- it was written and never shown,
+ * so a screen reader heard "Fisch." and "Armag.". [setsFlagBehavior] marks a preset that is about
+ * its flag behaviour; the others keep the player's, see applyPresetTimeControl.
+ */
 data class ClockPreset(
     val name: String,
-    val description: String,
-    val settings: ChessClockSettings
+    @param:StringRes val description: Int,
+    val settings: ChessClockSettings,
+    val setsFlagBehavior: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,44 +52,50 @@ data class ClockPreset(
 fun PresetsScreen(
     history: List<GameLog>,
     customPresets: List<SavedPreset>,
-    onPresetSelected: (ChessClockSettings, List<PlayerStateProxy>?) -> Unit,
+    /** The settings, the starting states for a game from Last Games, and whether it is a built-in, with whether that one sets the flag behaviour. */
+    onPresetSelected: (ChessClockSettings, List<PlayerStateProxy>?, ClockPreset?) -> Unit,
     onSavePreset: (String) -> Unit,
     onRenamePreset: (String, String) -> Unit,
     onDeletePreset: (String) -> Unit,
     onStatisticsClick: () -> Unit,
     onBack: () -> Unit
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var showSaveDialog by remember { mutableStateOf(false) }
-    var presetBeingRenamed by remember { mutableStateOf<SavedPreset?>(null) }
-    var presetBeingDeleted by remember { mutableStateOf<SavedPreset?>(null) }
+    // Saveable, the presets by id: a dark-mode or font-size change recreated the screen on the
+    // first tab with any dialog closed and the name being typed gone.
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var showSaveDialog by rememberSaveable { mutableStateOf(false) }
+    var renamingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var deletingId by rememberSaveable { mutableStateOf<String?>(null) }
+    val presetBeingRenamed = customPresets.firstOrNull { it.id == renamingId }
+    val presetBeingDeleted = customPresets.firstOrNull { it.id == deletingId }
     
     val presets = listOf(
-        ClockPreset("1 min", "Sudden Death 1:00", ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000, mode = TimerMode.SUDDEN_DEATH))),
-        ClockPreset("5 min", "Sudden Death 5:00", ChessClockSettings(main = PlayerSettings(initialTimeMs = 300_000, mode = TimerMode.SUDDEN_DEATH))),
-        ClockPreset("10 min", "Sudden Death 10:00", ChessClockSettings(main = PlayerSettings(initialTimeMs = 600_000, mode = TimerMode.SUDDEN_DEATH))),
-        ClockPreset("30 min", "Sudden Death 30:00", ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_800_000, mode = TimerMode.SUDDEN_DEATH))),
-        ClockPreset("60 min", "Sudden Death 60:00", ChessClockSettings(main = PlayerSettings(initialTimeMs = 3_600_000, mode = TimerMode.SUDDEN_DEATH))),
-        ClockPreset("Fisch. 3 + 2s", "Fischer 3:00 +2s", ChessClockSettings(main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISCHER))),
-        ClockPreset("Fisch. 15 + 10s", "Fischer 15:00 +10s", ChessClockSettings(main = PlayerSettings(initialTimeMs = 900_000, incrementMs = 10_000, mode = TimerMode.FISCHER))),
-        ClockPreset("90'/40 + 30' + 30s", "90min/40 + 30min (Fischer 30s)", ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(FidePeriod(timeMs = 5400_000, incrementMs = 30_000, movesToNext = 40, isFischer = true), FidePeriod(timeMs = 1800_000, incrementMs = 30_000, movesToNext = 0, isFischer = true))))),
-        ClockPreset("120'/40 + 60'/20 + 15' + 30s", "120/40 + 60/20 + 15min (Fischer 30s)", ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(FidePeriod(timeMs = 7200_000, incrementMs = 30_000, movesToNext = 40, isFischer = true), FidePeriod(timeMs = 3600_000, incrementMs = 30_000, movesToNext = 60, isFischer = true), FidePeriod(timeMs = 900_000, incrementMs = 30_000, movesToNext = 0, isFischer = true))))),
-        ClockPreset("US 5 + 2s", "Sudden Death 5:00, delay 2s", ChessClockSettings(main = PlayerSettings(initialTimeMs = 300_000, incrementMs = 2_000, mode = TimerMode.US_DELAY))),
-        ClockPreset("US 25 + 5s", "Sudden Death 25:00, delay 5s", ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_500_000, incrementMs = 5_000, mode = TimerMode.US_DELAY))),
-        ClockPreset("US 80'/40 + 30' + 30s", "80min/40 + 30min (Delay 30s)", ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(FidePeriod(timeMs = 4800_000, incrementMs = 30_000, movesToNext = 40, isFischer = false, hasDelay = true), FidePeriod(timeMs = 1800_000, incrementMs = 30_000, movesToNext = 0, isFischer = false, hasDelay = true))))),
-        ClockPreset("Bronst. 90 + 5s", "Bronstein 90:00, delay 5s", ChessClockSettings(main = PlayerSettings(initialTimeMs = 5400_000, incrementMs = 5_000, mode = TimerMode.BRONSTEIN))),
-        ClockPreset("Jap. Byo 20'", "Byoyomi Japanese: 20min + 1x30s", ChessClockSettings(main = PlayerSettings(initialTimeMs = 1200_000, byoyomiTimeMs = 30_000, byoyomiPeriods = 1, mode = TimerMode.BYOYOMI_JAPANESE))),
-        ClockPreset("Jap. Byo 60'", "Byoyomi Japanese: 60min + 3x20s", ChessClockSettings(main = PlayerSettings(initialTimeMs = 3600_000, byoyomiTimeMs = 20_000, byoyomiPeriods = 3, mode = TimerMode.BYOYOMI_JAPANESE))),
-        ClockPreset("Can. Byo 60'", "Byoyomi Canadian: 60min + 5min/20 moves", ChessClockSettings(main = PlayerSettings(initialTimeMs = 3600_000, byoyomiTimeMs = 300_000, byoyomiPeriods = 20, mode = TimerMode.BYOYOMI_CANADIAN))),
-        ClockPreset("Armag. 5 / 4", "White 5:00, Black 4:00", ChessClockSettings(differentSettingsPerPlayer = true, p1Custom = PlayerSettings(initialTimeMs = 300_000, mode = TimerMode.SUDDEN_DEATH), p2Custom = PlayerSettings(initialTimeMs = 240_000, mode = TimerMode.SUDDEN_DEATH))),
-        ClockPreset("Hourgl. 1 min", "Hourglass 1:00 each", ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000, mode = TimerMode.HOURGLASS))),
-        ClockPreset("30s / Move", "Move Timer Standard 30s/move", ChessClockSettings(main = PlayerSettings(moveTimeMs = 30_000, mode = TimerMode.MOVE_TIMER_STANDARD))),
-        ClockPreset(
-            "Scrabble 25'", "Sudden Death 25:00, flag reverse", 
-            ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_500_000, mode = TimerMode.SUDDEN_DEATH), flagBehavior = FlagBehavior.REVERSE)
+        ClockPreset("1 min", R.string.preset_desc_1_min, ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000, mode = TimerMode.SUDDEN_DEATH))),
+        ClockPreset("5 min", R.string.preset_desc_5_min, ChessClockSettings(main = PlayerSettings(initialTimeMs = 300_000, mode = TimerMode.SUDDEN_DEATH))),
+        ClockPreset("10 min", R.string.preset_desc_10_min, ChessClockSettings(main = PlayerSettings(initialTimeMs = 600_000, mode = TimerMode.SUDDEN_DEATH))),
+        ClockPreset("30 min", R.string.preset_desc_30_min, ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_800_000, mode = TimerMode.SUDDEN_DEATH))),
+        ClockPreset("60 min", R.string.preset_desc_60_min, ChessClockSettings(main = PlayerSettings(initialTimeMs = 3_600_000, mode = TimerMode.SUDDEN_DEATH))),
+        ClockPreset("Fisch. 3 + 2s", R.string.preset_desc_fisch_3_2s, ChessClockSettings(main = PlayerSettings(initialTimeMs = 180_000, incrementMs = 2_000, mode = TimerMode.FISCHER))),
+        ClockPreset("Fisch. 15 + 10s", R.string.preset_desc_fisch_15_10s, ChessClockSettings(main = PlayerSettings(initialTimeMs = 900_000, incrementMs = 10_000, mode = TimerMode.FISCHER))),
+        ClockPreset("90'/40 + 30' + 30s", R.string.preset_desc_90_40_30_30s, ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(FidePeriod(timeMs = 5400_000, incrementMs = 30_000, movesToNext = 40, isFischer = true), FidePeriod(timeMs = 1800_000, incrementMs = 30_000, movesToNext = 0, isFischer = true))))),
+        ClockPreset("120'/40 + 60'/20 + 15' + 30s", R.string.preset_desc_120_40_60_20_15_30s, ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(FidePeriod(timeMs = 7200_000, incrementMs = 30_000, movesToNext = 40, isFischer = true), FidePeriod(timeMs = 3600_000, incrementMs = 30_000, movesToNext = 60, isFischer = true), FidePeriod(timeMs = 900_000, incrementMs = 30_000, movesToNext = 0, isFischer = true))))),
+        ClockPreset("US 5 + 2s", R.string.preset_desc_us_5_2s, ChessClockSettings(main = PlayerSettings(initialTimeMs = 300_000, incrementMs = 2_000, mode = TimerMode.US_DELAY))),
+        ClockPreset("US 25 + 5s", R.string.preset_desc_us_25_5s, ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_500_000, incrementMs = 5_000, mode = TimerMode.US_DELAY))),
+        ClockPreset("US 80'/40 + 30' + 30s", R.string.preset_desc_us_80_40_30_30s, ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(FidePeriod(timeMs = 4800_000, incrementMs = 30_000, movesToNext = 40, isFischer = false, hasDelay = true), FidePeriod(timeMs = 1800_000, incrementMs = 30_000, movesToNext = 0, isFischer = false, hasDelay = true))))),
+        ClockPreset("Bronst. 90 + 5s", R.string.preset_desc_bronst_90_5s, ChessClockSettings(main = PlayerSettings(initialTimeMs = 5400_000, incrementMs = 5_000, mode = TimerMode.BRONSTEIN))),
+        ClockPreset("Jap. Byo 20'", R.string.preset_desc_jap_byo_20, ChessClockSettings(main = PlayerSettings(initialTimeMs = 1200_000, byoyomiTimeMs = 30_000, byoyomiPeriods = 1, mode = TimerMode.BYOYOMI_JAPANESE))),
+        ClockPreset("Jap. Byo 60'", R.string.preset_desc_jap_byo_60, ChessClockSettings(main = PlayerSettings(initialTimeMs = 3600_000, byoyomiTimeMs = 20_000, byoyomiPeriods = 3, mode = TimerMode.BYOYOMI_JAPANESE))),
+        ClockPreset("Can. Byo 60'", R.string.preset_desc_can_byo_60, ChessClockSettings(main = PlayerSettings(initialTimeMs = 3600_000, byoyomiTimeMs = 300_000, byoyomiPeriods = 20, mode = TimerMode.BYOYOMI_CANADIAN))),
+        // main is White's side too: Last Games names a game by it, and turning per-player settings
+        // off after this preset left a 10-minute sudden death.
+        ClockPreset("Armag. 5 / 4", R.string.preset_desc_armag_5_4, ChessClockSettings(differentSettingsPerPlayer = true, main = PlayerSettings(initialTimeMs = 300_000, mode = TimerMode.SUDDEN_DEATH), p1Custom = PlayerSettings(initialTimeMs = 300_000, mode = TimerMode.SUDDEN_DEATH), p2Custom = PlayerSettings(initialTimeMs = 240_000, mode = TimerMode.SUDDEN_DEATH))),
+        ClockPreset("Hourgl. 1 min", R.string.preset_desc_hourgl_1_min, ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000, mode = TimerMode.HOURGLASS))),
+        ClockPreset("30s / Move", R.string.preset_desc_30s_move, ChessClockSettings(main = PlayerSettings(moveTimeMs = 30_000, mode = TimerMode.MOVE_TIMER_STANDARD))),
+        ClockPreset("Scrabble 25'", R.string.preset_desc_scrabble_25, 
+            ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_500_000, mode = TimerMode.SUDDEN_DEATH), flagBehavior = FlagBehavior.REVERSE),
+            setsFlagBehavior = true,
         ),
-        ClockPreset(
-            "Random (1/10)", "Random 1-10 min, Rounded",
+        ClockPreset("Random (1/10)", R.string.preset_desc_random_1_10,
             ChessClockSettings(main = PlayerSettings(mode = TimerMode.RANDOM, randomMinTimeMs = 60_000, randomMaxTimeMs = 600_000, randomMinIncMs = 0, randomMaxIncMs = 0, roundedTime = true))
         )
     )
@@ -106,7 +124,7 @@ fun PresetsScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(presets, key = { it.name }) { preset ->
-                        PresetCard(preset.name) { onPresetSelected(preset.settings, null) }
+                        PresetCard(preset.name, description = stringResource(preset.description)) { onPresetSelected(preset.settings, null, preset) }
                     }
                 }
             } else if (selectedTab == 1) {
@@ -148,9 +166,9 @@ fun PresetsScreen(
                             items(customPresets, key = { it.id }) { preset ->
                                 PresetCard(
                                     text = preset.name,
-                                    onEdit = { presetBeingRenamed = preset },
-                                    onDelete = { presetBeingDeleted = preset },
-                                    onClick = { onPresetSelected(preset.settings, null) }
+                                    onEdit = { renamingId = preset.id },
+                                    onDelete = { deletingId = preset.id },
+                                    onClick = { onPresetSelected(preset.settings, null, null) }
                                 )
                             }
                         }
@@ -203,7 +221,7 @@ fun PresetsScreen(
                             }
 
                             PresetCard("$modeName\n$timeInfo\n($date)") {
-                                onPresetSelected(log.settings, log.initialPlayerStates.ifEmpty { null })
+                                onPresetSelected(log.settings, log.initialPlayerStates.ifEmpty { null }, null)
                             }
                         }
                     }
@@ -227,23 +245,23 @@ fun PresetsScreen(
             title = stringResource(R.string.preset_rename_title),
             initialName = preset.name,
             confirmLabel = stringResource(R.string.common_rename),
-            onDismiss = { presetBeingRenamed = null },
-            onConfirm = { onRenamePreset(preset.id, it); presetBeingRenamed = null }
+            onDismiss = { renamingId = null },
+            onConfirm = { onRenamePreset(preset.id, it); renamingId = null }
         )
     }
 
     presetBeingDeleted?.let { preset ->
         AlertDialog(
-            onDismissRequest = { presetBeingDeleted = null },
+            onDismissRequest = { deletingId = null },
             title = { Text(stringResource(R.string.preset_delete_title, preset.name)) },
             text = { Text(stringResource(R.string.preset_delete_message)) },
             confirmButton = {
                 TextButton(
-                    onClick = { onDeletePreset(preset.id); presetBeingDeleted = null },
+                    onClick = { onDeletePreset(preset.id); deletingId = null },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) { Text(stringResource(R.string.common_delete)) }
             },
-            dismissButton = { TextButton(onClick = { presetBeingDeleted = null }) { Text(stringResource(R.string.common_cancel)) } }
+            dismissButton = { TextButton(onClick = { deletingId = null }) { Text(stringResource(R.string.common_cancel)) } }
         )
     }
 }
@@ -256,6 +274,7 @@ fun PresetsScreen(
 @Composable
 fun PresetCard(
     text: String,
+    description: String? = null,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onClick: () -> Unit
@@ -283,6 +302,7 @@ fun PresetCard(
                     } else null,
                     onLongClickLabel = if (hasActions) manageLabel else null
                 )
+                .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier)
         ) {
             Column(
                 modifier = Modifier.padding(6.dp).heightIn(min = 36.dp),
@@ -291,6 +311,8 @@ fun PresetCard(
             ) {
                 Text(
                     text = text,
+                    // The description stands for it, when there is one.
+                    modifier = if (description != null) Modifier.clearAndSetSemantics {} else Modifier,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -332,14 +354,14 @@ private fun PresetNameDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var name by remember { mutableStateOf(initialName) }
+    var name by rememberSaveable { mutableStateOf(initialName) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = { name = it.take(MAX_PRESET_NAME_CHARS) },
                 label = { Text(stringResource(R.string.common_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),

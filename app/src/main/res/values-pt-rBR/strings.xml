@@ -131,4 +131,6 @@
 
     <!-- Timer screen -->
     <string name="timer_switch_turn">Trocar o turno</string>
+    <string name="preset_desc_can_byo_60">Byoyomi canadense: 60 min + 5 min/20 lances</string>
+    <string name="preset_shortcut_deleted">Esta predefinição foi excluída</string>
 </resources>

@@ -685,7 +685,19 @@ data class SavedPreset(
  * what the built-in presets used to do, each being a fresh ChessClockSettings() with two fields
  * overridden, silently resetting the user's colours and audio on every tap.
  */
-fun applyPresetTimeControl(current: ChessClockSettings, preset: ChessClockSettings): ChessClockSettings =
+/*
+ * [keepFlagBehavior] and [keepFirstMoveBonus] are for the built-in presets, which are fresh
+ * ChessClockSettings() carrying the defaults of those two choices: every tap on "5 min" put the
+ * player's NEGATIVE back to FREEZE and turned their first-move bonus off. A built-in keeps the
+ * player's own unless it is about one of them -- Scrabble is about counting back -- while a preset
+ * the player saved, and a game from Last Games, bring back what was set when it was saved.
+ */
+fun applyPresetTimeControl(
+    current: ChessClockSettings,
+    preset: ChessClockSettings,
+    keepFlagBehavior: Boolean = false,
+    keepFirstMoveBonus: Boolean = false,
+): ChessClockSettings =
     current.copy(
         gameType = preset.gameType,
         main = preset.main,
@@ -701,8 +713,14 @@ fun applyPresetTimeControl(current: ChessClockSettings, preset: ChessClockSettin
         playerMapping = preset.playerMapping,
         multiPlayerLayout = preset.multiPlayerLayout,
         isOneForAll = preset.isOneForAll,
-        flagBehavior = preset.flagBehavior,
-        fischerFideFirstMove = preset.fischerFideFirstMove,
+        flagBehavior = if (keepFlagBehavior) current.flagBehavior else preset.flagBehavior,
+        fischerFideFirstMove = if (keepFirstMoveBonus) current.fischerFideFirstMove else preset.fischerFideFirstMove,
+        // PHASES keeps these beside the phases rather than in them, and they were left behind: a
+        // looping preset with a pause between phases came back with neither.
+        loopPhases = preset.loopPhases,
+        allowPhaseSkip = preset.allowPhaseSkip,
+        pauseBetweenPhasesMs = preset.pauseBetweenPhasesMs,
+        pauseUntilTap = preset.pauseUntilTap,
     )
 
 /**
@@ -1363,9 +1381,10 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
  * is exactly as dangerous as a crafted settings file. Presets never carry a notebook.
  */
 internal fun sanitizeImportedPresets(context: android.content.Context, presets: List<SavedPreset>): List<SavedPreset> =
-    presets.take(MAX_IMPORTED_PRESETS).map { preset ->
+    // A blank name showed as an empty tile, and as Delete ""?; such a preset is not worth keeping.
+    presets.filter { it.name.isNotBlank() }.take(MAX_IMPORTED_PRESETS).map { preset ->
         preset.copy(
-            name = preset.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
+            name = preset.name.trim().take(MAX_PRESET_NAME_CHARS),
             settings = sanitizeImportedSettings(context, preset.settings).copy(notebookNotes = emptyList()),
         )
     }
@@ -1377,8 +1396,13 @@ internal fun sanitizeImportedPresets(context: android.content.Context, presets: 
  */
 internal fun mergeImportedPresets(local: List<SavedPreset>, imported: List<SavedPreset>): List<SavedPreset> {
     val present = local.mapTo(HashSet()) { it.id }
-    return local + imported.filter { present.add(it.id) }
+    // Held to the cap an import applies, the device's own first: past it, restoring this backup
+    // elsewhere kept the first 500 and silently dropped the newest.
+    return (local + imported.filter { present.add(it.id) }).take(MAX_IMPORTED_PRESETS.coerceAtLeast(local.size))
 }
+
+/** A preset's name: what the tile has room for and then some; saving, renaming and restoring all hold to it. */
+const val MAX_PRESET_NAME_CHARS = 200
 
 /**
  * Omni settings from a backup. The engine already falls back to a default for every list it finds
@@ -2382,7 +2406,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun applyShortcutNow(id: String) {
         val target = resolveShortcut(id) ?: return
-        updateSettings(applyPresetTimeControl(_settings.value, target))
+        // A built-in keeps the player's flag behaviour and first-move bonus, as on the presets
+        // screen; and a shortcut always starts a game, even one matching the clock's.
+        val builtIn = !id.startsWith("preset:") && !id.startsWith("game:")
+        updateSettings(applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn, keepFirstMoveBonus = builtIn), newGame = true)
     }
 
     /** A shortcut can outlive the preset or game it points at, hence the nullable result. */
@@ -2412,11 +2439,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             customFinalBeepUri = null,
             customSwitchUri = null,
         )
-        persistCustomPresets(_customPresets.value + SavedPreset(name = name.trim(), settings = snapshot))
+        persistCustomPresets(_customPresets.value + SavedPreset(name = name.trim().take(MAX_PRESET_NAME_CHARS), settings = snapshot))
     }
 
     fun renamePreset(id: String, name: String) {
-        persistCustomPresets(_customPresets.value.map { if (it.id == id) it.copy(name = name.trim()) else it })
+        persistCustomPresets(_customPresets.value.map { if (it.id == id) it.copy(name = name.trim().take(MAX_PRESET_NAME_CHARS)) else it })
     }
 
     fun deletePreset(id: String) {
@@ -3177,7 +3204,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         logsToImport: List<GameLog>? = null,
         scoreboardToImport: ScoreboardSession? = null,
         presetsToImport: List<SavedPreset>? = null,
-        isImport: Boolean = false
+        isImport: Boolean = false,
+        /**
+         * A preset or a launcher shortcut: a new game, whatever the clock holds. One whose time
+         * control matched the current one changed nothing the comparison below looks at, so the
+         * game went on and its log was never finished.
+         */
+        newGame: Boolean = false,
     ) {
         val oldSettings = _settings.value
         // Shadow the parameter so every use below this line sees the sanitized value; the named
@@ -3231,7 +3264,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 oldSettings.numberOfPlayers != newSettings.numberOfPlayers ||
                 oldSettings.differentSettingsPerPlayer != newSettings.differentSettingsPerPlayer ||
                 oldSettings.gameType != newSettings.gameType ||
-                initialStates != null
+                // It changes the clock a game starts from -- the first-move bonus -- and a fresh clock
+                // kept showing 3:02 for a 3+2 after it was turned off.
+                oldSettings.fischerFideFirstMove != newSettings.fischerFideFirstMove ||
+                initialStates != null || newGame
 
         if (coreChanged) {
             timerJob?.cancel()

@@ -139,8 +139,11 @@ class MainActivity : ComponentActivity() {
             }
 
             // Republish whenever the sources change: saving, renaming or deleting a preset moves
-            // customPresets, and finishing a game moves gameHistory.
-            LaunchedEffect(customPresets, gameHistory) {
+            // customPresets, and finishing a game moves gameHistory. Not before the stored state is
+            // in: the first composition published from the empty lists -- the two built-ins alone --
+            // and a process killed in that window left the launcher with nothing else.
+            LaunchedEffect(customPresets, gameHistory, isReady) {
+                if (!isReady) return@LaunchedEffect
                 PresetShortcuts.publish(context, buildShortcutTargets(gameHistory, customPresets))
             }
 
@@ -468,6 +471,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         entry<Route.Presets> { _ ->
+                            // Hoisted: the delete callback is not composable scope.
+                            val shortcutDeleted = stringResource(R.string.preset_shortcut_deleted)
                             PresetsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
                                 customPresets = timerViewModel.customPresets.collectAsState().value,
@@ -475,16 +480,29 @@ class MainActivity : ComponentActivity() {
                                 // are each a fresh ChessClockSettings() with a field or two
                                 // overridden, so applying them wholesale used to reset the user's
                                 // colours, sounds and other preferences on every tap.
-                                onPresetSelected = { set, states ->
+                                // A built-in keeps the player's flag behaviour, unless it is about it,
+                                // and first-move bonus; see applyPresetTimeControl. Every preset
+                                // starts a game, even one matching the clock's.
+                                onPresetSelected = { set, states, builtIn ->
                                     timerViewModel.updateSettings(
-                                        applyPresetTimeControl(timerViewModel.settings.value, set),
-                                        states
+                                        applyPresetTimeControl(
+                                            timerViewModel.settings.value, set,
+                                            keepFlagBehavior = builtIn != null && !builtIn.setsFlagBehavior,
+                                            keepFirstMoveBonus = builtIn != null,
+                                        ),
+                                        states,
+                                        newGame = true,
                                     )
                                     navigator.goBack()
                                 },
                                 onSavePreset = { timerViewModel.saveCurrentAsPreset(it) },
                                 onRenamePreset = { id, name -> timerViewModel.renamePreset(id, name) },
-                                onDeletePreset = { timerViewModel.deletePreset(it) },
+                                onDeletePreset = {
+                                    timerViewModel.deletePreset(it)
+                                    // A shortcut pinned to the home screen outlives the dynamic list;
+                                    // left enabled it opened the app and did nothing.
+                                    PresetShortcuts.disable(context, "preset:$it", shortcutDeleted)
+                                },
                                 onStatisticsClick = { navigator.navigate(Route.Statistics) },
                                 onBack = { navigator.goBack() }
                             )

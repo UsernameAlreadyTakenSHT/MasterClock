@@ -50,6 +50,14 @@ object PresetShortcuts {
     }
 
     /**
+     * Disables a shortcut whose target is gone, pinned copies included: the launcher greys it out
+     * and shows [message] when it is tapped.
+     */
+    fun disable(context: Context, id: String, message: String) {
+        runCatching { ShortcutManagerCompat.disableShortcuts(context, listOf(id), message) }
+    }
+
+    /**
      * Tells the launcher a shortcut was actually used, so it can rank and predict them. Without
      * this the shortcut list is static from the system's point of view.
      */

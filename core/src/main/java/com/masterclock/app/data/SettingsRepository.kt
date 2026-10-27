@@ -13,6 +13,7 @@ import com.masterclock.app.logic.ScoreboardSession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.encodeToString
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -53,8 +54,13 @@ class SettingsRepository(private val context: Context) {
     val customPresetsFlow: Flow<List<SavedPreset>> = context.dataStore.data.map { preferences ->
         val jsonStr = preferences[CUSTOM_PRESETS_KEY]
         if (jsonStr != null) {
+            // One preset at a time: a single one that no longer decodes -- an enum value renamed in an
+            // update, or a downgrade -- made the whole list come back empty, and the next save wrote
+            // that empty list over every preset the player had.
             try {
-                json.decodeFromString<List<SavedPreset>>(jsonStr)
+                json.parseToJsonElement(jsonStr).jsonArray.mapNotNull { element ->
+                    runCatching { json.decodeFromJsonElement(SavedPreset.serializer(), element) }.getOrNull()
+                }
             } catch (_: Exception) {
                 emptyList()
             }
