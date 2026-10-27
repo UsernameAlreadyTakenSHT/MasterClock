@@ -887,7 +887,9 @@ data class GameLog(
     val startTime: Long = System.currentTimeMillis(),
     val settings: ChessClockSettings,
     val events: List<GameEvent> = emptyList(),
-    val initialPlayerStates: List<PlayerStateProxy> = emptyList() // Store actual starting times
+    val initialPlayerStates: List<PlayerStateProxy> = emptyList(), // Store actual starting times
+    /** Arrived in an import; the history trim removes these before the player's own games. */
+    val imported: Boolean = false,
 )
 
 @Serializable
@@ -2494,7 +2496,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (currentLog == null && FlavorConfig.keepsGameHistory()) {
             val playersInitialStates = _uiState.value.players.map { it.toProxy() }
             currentLog = GameLog(
-                settings = settings.value,
+                // The time control, not the notebook: every game carried the whole notebook --
+                // drawings, boards, media paths -- into the history, out with every share "with
+                // games", and into a database row that a large one could push past what Room reads.
+                settings = settings.value.copy(notebookNotes = emptyList()),
                 initialPlayerStates = playersInitialStates
             )
             addEvent(GameEvent(eventType = "START", detail = "Game started by P$playerIndex"))
@@ -2982,7 +2987,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (currentLog == null && FlavorConfig.keepsGameHistory()) {
             val playersInitialStates = _uiState.value.players.map { it.toProxy() }
             currentLog = GameLog(
-                settings = settings.value,
+                // The time control, not the notebook: every game carried the whole notebook --
+                // drawings, boards, media paths -- into the history, out with every share "with
+                // games", and into a database row that a large one could push past what Room reads.
+                settings = settings.value.copy(notebookNotes = emptyList()),
                 initialPlayerStates = playersInitialStates
             )
             addEvent(GameEvent(eventType = "START", detail = "Game started by P$active"))
@@ -3219,9 +3227,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // saveLogWithTrim, which enforces logHistoryLimit, while this one inserts whatever
                 // arrives. A backup is allowed to be large, but not unbounded.
                 logs.take(MAX_IMPORTED_LOGS).forEach { log ->
-                    val sanitizedLog = sanitizeImportedLog(log)
-                        .copy(settings = sanitizeImportedSettings(app, log.settings))
-                    gameDao.insertLog(converters.fromGameLog(sanitizedLog))
+                    // One that will not go in is skipped, not the rest of the import with it: an
+                    // insert throwing here ended the coroutine half-way, under a toast that had
+                    // already said the import succeeded.
+                    try {
+                        // A game already here is the player's, and stays theirs: REPLACE turned it
+                        // into an imported one, first in line for the trim.
+                        if (gameDao.getLog(log.id) != null) return@forEach
+                        val sanitizedLog = sanitizeImportedLog(log)
+                            .copy(settings = sanitizeImportedSettings(app, log.settings).copy(notebookNotes = emptyList()), imported = true)
+                        gameDao.insertLog(converters.fromGameLog(sanitizedLog))
+                    } catch (e: Exception) {
+                        Log.w("ChessTimerViewModel", "Skipped an imported game log", e)
+                    }
                 }
                 trimLimitFor(_settings.value.logHistoryLimit)?.let { gameDao.trimLogs(it) }
                 _gameHistory.value = loadHistory(_settings.value.logHistoryLimit)

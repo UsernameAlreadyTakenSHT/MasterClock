@@ -16,7 +16,10 @@ interface GameLogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: GameLogEntity)
 
-    @Query("DELETE FROM game_logs WHERE id NOT IN (SELECT id FROM game_logs ORDER BY startTime DESC LIMIT :limit)")
+    // Imported games go first, the oldest of them first, and only then the player's own. Trimming
+    // by date alone let a friend's hundred newer games, imported under the default limit of 100,
+    // delete every game played on this device.
+    @Query("DELETE FROM game_logs WHERE id NOT IN (SELECT id FROM game_logs ORDER BY imported ASC, startTime DESC LIMIT :limit)")
     suspend fun trimLogs(limit: Int)
 
     @Transaction
@@ -58,7 +61,9 @@ data class GameLogEntity(
     val startTime: Long,
     val settingsJson: String,
     val eventsJson: String,
-    val initialStatesJson: String? = null // New column
+    val initialStatesJson: String? = null, // New column
+    /** Arrived in an import rather than played here; see trimLogs. */
+    @ColumnInfo(defaultValue = "0") val imported: Boolean = false,
 )
 
 class Converters {
@@ -66,7 +71,8 @@ class Converters {
 
     fun toGameLog(entity: GameLogEntity): com.masterclock.app.logic.GameLog {
         return try {
-            val settings = json.decodeFromString<ChessClockSettings>(entity.settingsJson)
+            // Read without the notebook, for games recorded before they stopped carrying it.
+            val settings = json.decodeFromString<ChessClockSettings>(entity.settingsJson).copy(notebookNotes = emptyList())
             val events = json.decodeFromString<List<com.masterclock.app.logic.GameEvent>>(entity.eventsJson)
             val initialStates: List<com.masterclock.app.logic.PlayerStateProxy> = if (entity.initialStatesJson.isNullOrBlank()) emptyList() else json.decodeFromString(entity.initialStatesJson)
             
@@ -75,7 +81,8 @@ class Converters {
                 startTime = entity.startTime,
                 settings = settings,
                 events = events,
-                initialPlayerStates = initialStates
+                initialPlayerStates = initialStates,
+                imported = entity.imported,
             )
         } catch (_: Exception) {
             com.masterclock.app.logic.GameLog(
@@ -91,14 +98,40 @@ class Converters {
         return GameLogEntity(
             id = log.id,
             startTime = log.startTime,
-            settingsJson = json.encodeToString(log.settings),
+            settingsJson = json.encodeToString(log.settings.copy(notebookNotes = emptyList())),
             eventsJson = json.encodeToString(log.events),
-            initialStatesJson = json.encodeToString(log.initialPlayerStates)
+            initialStatesJson = json.encodeToString(log.initialPlayerStates),
+            imported = log.imported,
         )
     }
 }
 
-@Database(entities = [GameLogEntity::class, SavedClockEntity::class], version = 3, exportSchema = true)
+/**
+ * v4 marks imported games, which the trim removes first, and takes the notebook out of every game
+ * recorded before games stopped carrying it: each held the whole notebook, drawings and media paths
+ * included, which went out with every share "with games" and made rows that a large notebook could
+ * push past the roughly 2 MB Room reads a row through.
+ */
+internal val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
+    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE game_logs ADD COLUMN imported INTEGER NOT NULL DEFAULT 0")
+        val json = Json { ignoreUnknownKeys = true }
+        val ids = mutableListOf<String>()
+        db.query("SELECT id FROM game_logs").use { c -> while (c.moveToNext()) ids += c.getString(0) }
+        for (id in ids) {
+            // One row at a time, and one that cannot be read or rewritten is left as it was.
+            try {
+                val old = db.query("SELECT settingsJson FROM game_logs WHERE id = ?", arrayOf(id)).use { c -> if (c.moveToFirst()) c.getString(0) else null } ?: continue
+                if (!old.contains("notebookNotes")) continue
+                val stripped = json.encodeToString(json.decodeFromString<ChessClockSettings>(old).copy(notebookNotes = emptyList()))
+                db.execSQL("UPDATE game_logs SET settingsJson = ? WHERE id = ?", arrayOf(stripped, id))
+            } catch (_: Exception) {
+            }
+        }
+    }
+}
+
+@Database(entities = [GameLogEntity::class, SavedClockEntity::class], version = 4, exportSchema = true)
 abstract class GameDatabase : RoomDatabase() {
     abstract fun gameLogDao(): GameLogDao
 
@@ -118,6 +151,9 @@ abstract class GameDatabase : RoomDatabase() {
                 // saved_clocks are a local cache (not synced, no account data), so destructive fallback
                 // just clears that local cache instead of hard-crashing the app on the next version
                 // bump. exportSchema=true above means real Migrations can be written from here on.
+                // The history is the player's; from v4 on a version step is a real migration, and the
+                // destructive fallback is left only for downgrades and versions without one.
+                .addMigrations(MIGRATION_3_4)
                 .fallbackToDestructiveMigration(true)
                 .build()
                 INSTANCE = instance
