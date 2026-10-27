@@ -1,5 +1,6 @@
 package com.masterclock.app.ui.screens
 
+import androidx.activity.compose.BackHandler
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -103,10 +104,11 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
     val shareLogTitle = stringResource(R.string.tools_share_log)
     val context = LocalContext.current
     val clipboardManager = remember { context.getSystemService(AndroidContext.CLIPBOARD_SERVICE) as ClipboardManager }
-    val locale = LocalConfiguration.current.locales[0]
-    var selectedLog by remember { mutableStateOf<GameLog?>(null) }
-
-    val openLog = selectedLog
+    // By id, so it survives a recreation; and Back closes the detail first. The detail was local
+    // state with no BackHandler, so the system Back left Game Logs altogether from it.
+    var selectedLogId by rememberSaveable { mutableStateOf<String?>(null) }
+    val openLog = history.firstOrNull { it.id == selectedLogId }
+    BackHandler(enabled = openLog != null) { selectedLogId = null }
     if (openLog == null) {
         val sortedHistory = remember(history) { history.sortedByDescending { it.startTime } }
         ToolScaffold(title = stringResource(R.string.tools_game_logs), onBack = onBack) { padding ->
@@ -125,9 +127,9 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                     // duplicate key. id is the entity's Room primary key, so the database itself
                     // guarantees it is unique here.
                     items(sortedHistory, key = { it.id }) { logEntry ->
-                        val date = SimpleDateFormat("dd MMM yyyy, HH:mm", locale).format(Date(logEntry.startTime))
+                        val date = isoDateTime(logEntry.startTime)
                         Card(
-                            onClick = { selectedLog = logEntry },
+                            onClick = { selectedLogId = logEntry.id },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
@@ -151,7 +153,7 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
         val log = openLog
         ToolScaffold(
             title = stringResource(R.string.tools_log_details), 
-            onBack = { selectedLog = null },
+            onBack = { selectedLogId = null },
             actions = {
                 IconButton(onClick = { 
                     val shareText = generateTxtLog(log, timePadding)
@@ -977,7 +979,6 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val newVideoNoteTitle = stringResource(R.string.tools_new_video_note)
     val newBoardNoteTitle = stringResource(R.string.tools_new_board_note)
     val notebookFullText = stringResource(R.string.tools_notebook_full)
-    val locale = LocalConfiguration.current.locales[0]
     val settings by viewModel.settings.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -1026,7 +1027,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                                 Column(Modifier.weight(1f)) { 
                                     Text(note.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                     Text(
-                                        SimpleDateFormat("dd MMM yyyy, HH:mm", locale).format(Date(note.timestamp)),
+                                        isoDateTime(note.timestamp),
                                         style = MaterialTheme.typography.labelSmall, 
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     ) 
@@ -1846,8 +1847,14 @@ fun formatHms(ms: Long, padding: TimePadding = TimePadding.FULL): String {
     return formatClockReading(h, m, s, showHours = h > 0, showMinutes = true, padding = padding)
 }
 
+/**
+ * A game's date, year first as everywhere in the app; see isoDateTime. It was Date.toString(),
+ * "Mon Oct 26 14:30:00 CET 2026", which sorts by weekday and reads in English alone.
+ */
+private fun logDate(startTime: Long): String = isoDateTime(startTime)
+
 fun generateTxtLog(log: GameLog, padding: TimePadding = TimePadding.FULL): String {
-    val sb = StringBuilder("MasterClock Log\nDate: ${Date(log.startTime)}\n\n")
+    val sb = StringBuilder("MasterClock Log\nDate: ${logDate(log.startTime)}\n\n")
     // A clock reading only for events that carry one. PAUSE, FLAG and the like have none, and they
     // all used to read "at 00:00" -- which for a flag looks like a time, and is not one.
     log.events.forEach { e ->
@@ -1861,9 +1868,14 @@ fun generateTxtLog(log: GameLog, padding: TimePadding = TimePadding.FULL): Strin
 
 // generatePgn and generatePdn live in core (MoveExport.kt), where they are tested.
 
-fun generateKif(log: GameLog): String {
-    val sb = StringBuilder("# Shogi Match Log\nStart: ${Date(log.startTime)}\n\n")
-    log.events.filter { it.eventType == "MOVE" }.forEachIndexed { i, m -> sb.append("${i+1}: ${m.moveNotation ?: "???"}\n") }
+/**
+ * A shogi game's moves as plain numbered text. It was called KIF, and is not: KIF has its own
+ * header and columns, and shogi software refused what this wrote. It is offered as text for what
+ * it is -- shogi is withdrawn from the game picker, so only a game recorded before reaches it.
+ */
+fun generateMoveListText(log: GameLog): String {
+    val sb = StringBuilder("MasterClock\n${logDate(log.startTime)}\n\n")
+    log.events.filter { it.eventType == "MOVE" }.forEachIndexed { i, m -> sb.append("${i+1}: ${m.moveNotation ?: "?"}\n") }
     return sb.toString()
 }
 
@@ -1871,13 +1883,13 @@ fun generateKif(log: GameLog): String {
 fun moveExportFormatLabel(gameType: GameType): String = when (gameType) {
     GameType.CHESS -> "PGN"
     GameType.DRAUGHTS -> "PDN"
-    GameType.SHOGI -> "KIF"
+    GameType.SHOGI -> "Text"
 }
 
 fun generateMoveExport(log: GameLog): String = when (log.settings.gameType) {
     GameType.CHESS -> generatePgn(log)
     GameType.DRAUGHTS -> generatePdn(log)
-    GameType.SHOGI -> generateKif(log)
+    GameType.SHOGI -> generateMoveListText(log)
 }
 
 fun generateChessPosition(v: ChessVariant): List<String> {

@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
-import java.text.SimpleDateFormat
 import java.util.*
 import androidx.annotation.StringRes
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -204,21 +203,18 @@ fun PresetsScreen(
                         // Keyed on id rather than startTime, which an imported log controls
                         // verbatim; see the game history list for the crash that caused.
                         items(lastTen, key = { it.id }) { log ->
-                            val date = remember(log.startTime) {
-                                SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(log.startTime))
+                            // Year first, as everywhere in the app: "dd/MM" read as month/day where
+                            // that is the order. See isoDateTime.
+                            val date = remember(log.startTime) { isoDateTime(log.startTime) }
+                            // Player 1's mode, the game's, as the statistics read it: with per-player
+                            // settings main can hold anything.
+                            val modeName = remember(log.settings) {
+                                (if (log.settings.differentSettingsPerPlayer) log.settings.p1Custom else log.settings.main).mode.displayName()
                             }
-                            val modeName = remember(log.settings.main.mode) {
-                                log.settings.main.mode.displayName()
-                            }
-                            
-                            val timeInfo = remember(log.initialPlayerStates) {
-                                log.initialPlayerStates.firstOrNull()?.let {
-                                    val seconds = it.timeRemainingMs / 1000
-                                    val m = seconds / 60
-                                    val s = seconds % 60
-                                    if (m > 0) "${m}m${s}s" else "${s}s"
-                                } ?: ""
-                            }
+                            // The time control, not player 1's starting clock: that read "90m0s"
+                            // for 1:30, counted a first-move bonus into the time -- 5+3 as "5m3s" --
+                            // and never showed an increment, so 5+0 and 5+3 looked the same.
+                            val timeInfo = remember(log.settings) { timeControlLabel(log.settings) }
 
                             PresetCard("$modeName\n$timeInfo\n($date)") {
                                 onPresetSelected(log.settings, log.initialPlayerStates.ifEmpty { null }, null)

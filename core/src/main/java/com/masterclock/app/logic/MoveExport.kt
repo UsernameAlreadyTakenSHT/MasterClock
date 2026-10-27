@@ -16,6 +16,14 @@ import java.util.Locale
  * mating material, or the arbiter may rule otherwise -- and the clock knows nothing else about how
  * the game ended. The players' names are not something the clock records either.
  */
+
+/**
+ * A date and time as the app writes them everywhere, year first: 2026-10-27 14:30 -- the order
+ * the changelog uses, the same in every language, and one that sorts as it reads. The PGN keeps its
+ * own "yyyy.MM.dd", which its standard prescribes.
+ */
+fun isoDateTime(epochMs: Long): String = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(Date(epochMs))
+
 fun generatePgn(log: GameLog): String = movetextExport(log, event = "Casual game")
 
 /** The same for draughts. PDN takes PGN's tags and reads "*" as an unfinished game too. */

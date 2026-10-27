@@ -141,7 +141,7 @@
     <string name="tools_record_again">Record Again</string>
     <string name="tools_delete_media_message">This cannot be undone.</string>
     <string name="tools_detailed_moves">Detailed Moves</string>
-    <!-- %1$s is the export format: PGN, PDN or KIF. -->
+    <!-- %1$s is the export format: PGN, PDN or Text. -->
     <string name="tools_copied_to_clipboard">%1$s copied to clipboard</string>
     <plurals name="tools_moves_total">
         <item quantity="one">%d move total</item>

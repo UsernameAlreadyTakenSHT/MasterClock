@@ -756,6 +756,9 @@ val BUILTIN_SHORTCUT_PRESETS: List<ShortcutTarget> = listOf(
     ),
 )
 
+/** A time control in short, as a shortcut and a Last Games tile name it; see shortcutLabelFor. */
+fun timeControlLabel(settings: ChessClockSettings): String = shortcutLabelFor(settings)
+
 /** Short "5 min" / "3 min + 2s" label for a shortcut, falling back to the mode name. */
 private fun shortcutLabelFor(settings: ChessClockSettings): String {
     val s = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
