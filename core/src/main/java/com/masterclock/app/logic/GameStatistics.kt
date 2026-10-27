@@ -14,8 +14,11 @@ data class MoveDuration(
     /** 1-based, counted per player. */
     val moveNumber: Int,
     val durationMs: Long,
-    /** Clock left when the move was made, *before* any increment was applied. */
-    val timeRemainingMs: Long,
+    /**
+     * Clock left when the move was made, *before* any increment was applied; null for a move the
+     * clock made on its own -- Gong's, Shared (Auto)'s -- where there is nothing left to judge.
+     */
+    val timeRemainingMs: Long?,
     /** SAN/USI/PDN notation when the game type records one. */
     val moveNotation: String? = null,
 )
@@ -34,7 +37,11 @@ data class GameStatistics(
     val timePressureShare: Float,
     val perMode: List<ModeTally>,
 ) {
-    val isEmpty: Boolean get() = totalMoves == 0
+    /**
+     * No game at all. It was no move at all, and a history of PHASES or CHRONO games -- which log no
+     * moves -- showed the empty screen, hiding the games played and the modes it had counted.
+     */
+    val isEmpty: Boolean get() = gamesPlayed == 0
 }
 
 /**
@@ -48,6 +55,9 @@ data class GameStatistics(
  * Note the first press logs INITIAL_PRESS rather than MOVE, so it opens the first turn without
  * being counted as one; per-player move numbering starts at the first real move.
  */
+/** A month: past it a move's duration is not a slow player but a clock change or a crafted log. */
+private const val MAX_MOVE_DURATION_MS = 30L * 24 * 60 * 60 * 1000
+
 fun moveDurations(log: GameLog): List<MoveDuration> {
     val result = mutableListOf<MoveDuration>()
     val moveNumbers = mutableMapOf<Int, Int>()
@@ -80,8 +90,10 @@ fun moveDurations(log: GameLog): List<MoveDuration> {
                 result += MoveDuration(
                     playerIndex = player,
                     moveNumber = number,
-                    durationMs = event.timeSpentMs ?: reconstructed,
-                    timeRemainingMs = event.timeRemainingMs ?: 0L,
+                    // Bounded: an imported log may carry any timestamps, and gaps near Long.MAX_VALUE
+                    // overflowed the total and the average into negative numbers.
+                    durationMs = (event.timeSpentMs ?: reconstructed).coerceIn(0L, MAX_MOVE_DURATION_MS),
+                    timeRemainingMs = event.timeRemainingMs,
                     moveNotation = event.moveNotation,
                 )
 
@@ -119,11 +131,12 @@ fun computeStatistics(history: List<GameLog>): GameStatistics {
     val slowest = durations.maxByOrNull { it.second.durationMs }
 
     // A move counts as played under pressure when less than a tenth of the starting clock is left.
-    // Games with no recorded starting time (imported logs, move-timer modes) are excluded from the
-    // denominator rather than silently counted as unpressured.
-    val judgeable = durations.filter { (log, move) -> startingTimeMs(log, move.playerIndex) > 0 }
+    // Games with no recorded starting time (imported logs) are excluded from the denominator rather
+    // than silently counted as unpressured, and so are the moves the clock makes on its own, which
+    // were logged as made with nothing left: a Gong history read 100% under pressure.
+    val judgeable = durations.filter { (log, move) -> move.timeRemainingMs != null && startingTimeMs(log, move.playerIndex) > 0 }
     val pressured = judgeable.count { (log, move) ->
-        move.timeRemainingMs < startingTimeMs(log, move.playerIndex) / 10
+        (move.timeRemainingMs ?: 0L) < startingTimeMs(log, move.playerIndex) / 10
     }
 
     return GameStatistics(

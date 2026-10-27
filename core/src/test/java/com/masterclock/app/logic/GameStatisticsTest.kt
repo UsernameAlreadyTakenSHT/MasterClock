@@ -142,7 +142,16 @@ class GameStatisticsTest {
 
         assertEquals(1, stats.gamesPlayed)
         assertEquals(0, stats.totalMoves)
-        assertTrue(stats.isEmpty)
+        // Not empty: a PHASES or CHRONO game logs no moves, and is still a game played.
+        assertFalse(stats.isEmpty)
+    }
+
+    @Test
+    fun `a move the clock made on its own is not judged for time pressure`() {
+        val events = listOf(GameEvent(timestamp = 0, eventType = "START"), GameEvent(timestamp = 1_000, eventType = "MOVE", playerIndex = 1, timeRemainingMs = null, timeSpentMs = 1_000))
+        val stats = computeStatistics(listOf(log(events)))
+        assertEquals(1, stats.totalMoves)
+        assertEquals(0f, stats.timePressureShare, 0.001f)
     }
 
     @Test

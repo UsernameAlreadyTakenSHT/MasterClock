@@ -191,22 +191,26 @@ fun StatisticsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: (
                 StatTile(stringResource(R.string.stats_games_played), "${stats.gamesPlayed}", Modifier.weight(1f))
                 StatTile(stringResource(R.string.stats_moves), "${stats.totalMoves}", Modifier.weight(1f))
             }
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatTile(stringResource(R.string.stats_average_move), formatDuration(stats.averageMoveMs, timePadding), Modifier.weight(1f))
-                StatTile(stringResource(R.string.stats_median_move), formatDuration(stats.medianMoveMs, timePadding), Modifier.weight(1f))
+            // The move tiles only for games with moves: PHASES and CHRONO games log none, and their
+            // games played and modes are still worth showing.
+            if (stats.totalMoves > 0) {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    StatTile(stringResource(R.string.stats_average_move), formatDuration(stats.averageMoveMs, timePadding), Modifier.weight(1f))
+                    StatTile(stringResource(R.string.stats_median_move), formatDuration(stats.medianMoveMs, timePadding), Modifier.weight(1f))
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    StatTile(stringResource(R.string.stats_slowest_move), formatDuration(stats.slowestMoveMs, timePadding), Modifier.weight(1f))
+                    StatTile(stringResource(R.string.stats_time_on_clock), formatDuration(stats.totalThinkTimeMs, timePadding), Modifier.weight(1f))
+                }
+                Spacer(Modifier.height(8.dp))
+                StatTile(
+                    stringResource(R.string.stats_time_pressure),
+                    "${(stats.timePressureShare * 100).toInt()}%",
+                    Modifier.fillMaxWidth(),
+                )
             }
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                StatTile(stringResource(R.string.stats_slowest_move), formatDuration(stats.slowestMoveMs, timePadding), Modifier.weight(1f))
-                StatTile(stringResource(R.string.stats_time_on_clock), formatDuration(stats.totalThinkTimeMs, timePadding), Modifier.weight(1f))
-            }
-            Spacer(Modifier.height(8.dp))
-            StatTile(
-                stringResource(R.string.stats_time_pressure),
-                "${(stats.timePressureShare * 100).toInt()}%",
-                Modifier.fillMaxWidth(),
-            )
 
             if (recentDurations.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))

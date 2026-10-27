@@ -239,7 +239,7 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            formatHms(duration.timeRemainingMs, timePadding),
+                            duration.timeRemainingMs?.let { formatHms(it, timePadding) } ?: "",
                             modifier = Modifier.width(64.dp),
                             textAlign = TextAlign.End,
                             fontFamily = FontFamily.Monospace

@@ -892,6 +892,17 @@ data class GameLog(
     val imported: Boolean = false,
 )
 
+/**
+ * Whether something happened in a game, so that it belongs in the history: a move, a flag, a phase
+ * change -- PHASES has no moves -- or, for a CHRONO that runs for everyone and takes no taps, its
+ * clock having been started.
+ */
+internal fun GameLog.isWorthKeeping(): Boolean {
+    val s1 = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
+    val tableClock = s1.mode == TimerMode.CHRONO_COUNTDOWN || s1.mode == TimerMode.CHRONO_COUNTUP
+    return events.any { it.eventType == "MOVE" || it.eventType == "FLAG" || it.eventType == "PHASE" || (tableClock && it.eventType == "RESUME") }
+}
+
 @Serializable
 data class SharePackage(
     val settings: ChessClockSettings,
@@ -2175,6 +2186,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // order they were asked for; see savedClockGeneration.
         class SaveClock(val entity: com.masterclock.app.data.SavedClockEntity) : HistoryWrite
         object ClearClock : HistoryWrite
+        object ClearAll : HistoryWrite
     }
 
     /**
@@ -2566,7 +2578,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             pendingBoardNotation = null
             // An overrun is stored as a positive time, and was logged as time left: a player two
             // minutes over counted, in the statistics, as one with two minutes to spare.
-            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.signedTimeMs(settings.value.flagBehavior).coerceAtLeast(0), moveCount = p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
+            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.signedTimeMs(settings.value.flagBehavior).coerceAtLeast(0), moveCount = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) (p.moveCount - 1).coerceAtLeast(0) else p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
             val flaggedByMove = applyPostMoveLogic(playerIndex, timeSpentOnMove)
             // Under FREEZE a flag stops the game, exactly as tick() stops it for one on the clock.
             if (flaggedByMove && settings.value.flagBehavior == FlagBehavior.FREEZE) {
@@ -2601,7 +2613,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             )
         )
         currentLog = updated
-        historyWrites.trySend(HistoryWrite.Store(updated))
+        // Not written until something has happened in it. START went to the database at the first
+        // press, and only finishCurrentLog took an empty game back out: one closed in its first
+        // seconds -- Play, then the app swiped away -- stayed as a "0 moves" game for good.
+        if (updated.isWorthKeeping()) historyWrites.trySend(HistoryWrite.Store(updated))
     }
 
     /**
@@ -2726,14 +2741,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 }
                 if (result.playGong) soundManager.playGong()
                 for ((mover, spent) in result.gongMoves) {
-                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = 0, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = spent))
+                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = spent))
                     moveStartTime = now
                 }
                 result.handedOverBy?.let { mover ->
                     // A plain beep where a press would have made the switch sound, and nothing
                     // spoken: the turn passing is the ordinary course of this mode.
                     if (settings.playSwitchSound) soundManager.playShortBeep()
-                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = 0, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = s.moveTimeMs))
+                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = s.moveTimeMs))
                     moveStartTime = now
                 }
                 // The CHRONO countdown is the table's clock; no one flags first on it. See tableClockRanOut.
@@ -3047,14 +3062,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private fun finishCurrentLog() {
         val log = currentLog ?: return
         val s = _settings.value
-        // Nothing happened: Play and then Reset, or a stray press. It has already been written as
-        // the game went, so it is taken back out rather than left as a "0 moves" tile in Last
-        // Games and one more game played in the statistics. PHASES has no moves, and a phase
-        // change is what shows its game went somewhere; see onPhaseTransition.
-        // A CHRONO for everyone takes no taps either: its clock having been started is the game.
-        val s1 = if (log.settings.differentSettingsPerPlayer) log.settings.p1Custom else log.settings.main
-        val tableClock = s1.mode == TimerMode.CHRONO_COUNTDOWN || s1.mode == TimerMode.CHRONO_COUNTUP
-        if (log.events.none { it.eventType == "MOVE" || it.eventType == "FLAG" || it.eventType == "PHASE" || (tableClock && it.eventType == "RESUME") }) {
+        // Nothing happened: Play and then Reset, or a stray press. It is taken back out, should it
+        // have been written, rather than left as a "0 moves" tile in Last Games and one more game
+        // played in the statistics; see isWorthKeeping.
+        if (!log.isWorthKeeping()) {
             currentLog = null
             historyWrites.trySend(HistoryWrite.Finish(s.logHistoryLimit, s.logDurationLimit, log.id, discard = true))
             return
@@ -3079,6 +3090,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             HistoryWrite.ClearClock -> {
                 gameDao.clearSavedClock()
                 _hasSavedClock.value = false
+            }
+            HistoryWrite.ClearAll -> {
+                gameDao.clearAllLogs()
+                _gameHistory.value = emptyList()
             }
             is HistoryWrite.Finish -> {
                 if (write.discard) gameDao.deleteLog(write.finishedLogId)
@@ -3195,6 +3210,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // ends it. Saved with the settings it was played under: _settings has moved on, but
             // the log carries its own copy from the first press.
             finishCurrentLog()
+            // Its autosave ends with it, as Reset clears it. Left behind, the arbitre's Resume
+            // brought back the ended game, and new moves were logged after its RESET.
+            clearSavedClock()
             if (initialStates != null) {
                 // A "Last Games" preset carries its own already-rolled RANDOM/HIDDEN time in
                 // initialStates -- without updating the cache reset() reuses, Reset would silently
@@ -3264,11 +3282,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         return voiceManager.isAvailable
     }
 
+    /**
+     * Empties the history, the game on the clock included. The delete ran beside the write queue and
+     * left that game's log in place: a write already queued could land after it, and the next move
+     * wrote the whole game back, earlier moves and all. Through the queue it lands after whatever was
+     * asked before it, and the game being played starts a fresh record at its next press, without
+     * the moves before the clear.
+     */
     fun clearAllLogs() {
-        viewModelScope.launch {
-            gameDao.clearAllLogs()
-            _gameHistory.value = emptyList()
-        }
+        currentLog = null
+        historyWrites.trySend(HistoryWrite.ClearAll)
     }
 
     fun resetAllSettings() {
@@ -3410,6 +3433,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                         ?.let { entity -> withContext(Dispatchers.Default) { converters.toGameLog(entity) } }
                         // toGameLog degrades an unreadable row to an empty log rather than throwing.
                         ?.takeIf { it.events.isNotEmpty() }
+                }?.let { log ->
+                    // Back to the moment of the save, as the clock is: the moves played after it
+                    // stayed in the log, and played again from the restored clock were logged
+                    // twice -- four moves in the PGN and the statistics for two played.
+                    val upToSave = log.events.filter { it.timestamp <= saved.timestamp }
+                    if (upToSave.size == log.events.size) log
+                    else log.copy(events = upToSave).also { historyWrites.trySend(HistoryWrite.Store(it)) }
                 }
                 // Whatever was on screen is replaced, so it ends here like any other game -- unless
                 // it is the very game being resumed.
