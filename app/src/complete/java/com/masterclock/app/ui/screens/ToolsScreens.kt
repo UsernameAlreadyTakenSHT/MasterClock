@@ -1216,7 +1216,9 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // Saves the title continuously instead of only on the toolbar back arrow: MainActivity's system
     // back handler (gesture/button) calls navigator.goBack() directly and never runs ToolScaffold's
     // onBack lambda, so a title edit followed by a system back used to be silently lost.
-    LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
+    // Debounced like every other note: this wrote the whole settings on each character of the title,
+    // and once on merely opening the note. See PersistDebounced.
+    PersistDebounced(title) { onUpdate(note.copy(title = it)) }
     val scope = rememberCoroutineScope()
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else Toast.makeText(context, micPermissionText, Toast.LENGTH_SHORT).show() }
     fun startRecording() {
@@ -1327,7 +1329,9 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // The camera writes into the pending file, never the note's own; see pendingMediaFile.
     val pendingFile = remember { pendingMediaFile(photoFile) }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pendingFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
-    LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
+    // Debounced like every other note: this wrote the whole settings on each character of the title,
+    // and once on merely opening the note. See PersistDebounced.
+    PersistDebounced(title) { onUpdate(note.copy(title = it)) }
     // Bumped on every new photo; see the image below.
     var captureCount by remember { mutableIntStateOf(0) }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
@@ -1367,7 +1371,9 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // The camera writes into the pending file, never the note's own; see pendingMediaFile.
     val pendingFile = remember { pendingMediaFile(videoFile) }; val videoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pendingFile) }
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
-    LaunchedEffect(title) { onUpdate(note.copy(title = title)) }
+    // Debounced like every other note: this wrote the whole settings on each character of the title,
+    // and once on merely opening the note. See PersistDebounced.
+    PersistDebounced(title) { onUpdate(note.copy(title = it)) }
     // A retake ends up at video_<id>.mp4 again, so the path is identical before and after and nothing
     // in the note tells the two apart. This counter is what does: it changes on every capture, and
     // the player reloads when it does.
