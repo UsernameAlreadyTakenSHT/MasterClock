@@ -1180,8 +1180,20 @@ fun parseMarkdownToAnnotatedString(text: String): AnnotatedString {
     return buildAnnotatedString {
         val boldRegex = Regex("\\*\\*(.*?)\\*\\*"); val italicRegex = Regex("\\*(.*?)\\*"); val underlineRegex = Regex("<u>(.*?)</u>"); val h1Regex = Regex("^# (.*)$", RegexOption.MULTILINE); val h2Regex = Regex("^## (.*)$", RegexOption.MULTILINE); val colorRegex = Regex("<color:([0-9A-F]{8})>(.*?)</color>")
         append(text)
-        val markerRegex = Regex("[*#]|<u>|</u>|<color:[0-9A-F]{8}>|</color>|\\[[ x]\\]")
-        markerRegex.findAll(text).forEach { addStyle(SpanStyle(color = Color.Transparent, fontSize = 0.1.sp), it.range.first, it.range.last + 1) }
+        // The markers of what is formatted are hidden, and those alone. Every '*' and '#' was, and the
+        // "[ ]" of a checkbox, which nothing draws as a box: "Game #3" lost its '#', a lone '*' its
+        // star, and the checkbox button inserted text that could not be seen.
+        val hidden = SpanStyle(color = Color.Transparent, fontSize = 0.1.sp)
+        fun hideEnds(match: MatchResult, open: Int, close: Int) {
+            addStyle(hidden, match.range.first, match.range.first + open)
+            if (close > 0) addStyle(hidden, match.range.last + 1 - close, match.range.last + 1)
+        }
+        boldRegex.findAll(text).forEach { hideEnds(it, 2, 2) }
+        italicRegex.findAll(text).forEach { hideEnds(it, 1, 1) }
+        underlineRegex.findAll(text).forEach { hideEnds(it, 3, 4) }
+        h1Regex.findAll(text).forEach { hideEnds(it, 2, 0) }
+        h2Regex.findAll(text).forEach { hideEnds(it, 3, 0) }
+        colorRegex.findAll(text).forEach { hideEnds(it, 16, 8) }
         boldRegex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(fontWeight = FontWeight.Bold), range.first, range.last + 1) } }
         italicRegex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(fontStyle = FontStyle.Italic), range.first, range.last + 1) } }
         underlineRegex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(textDecoration = TextDecoration.Underline), range.first, range.last + 1) } }
