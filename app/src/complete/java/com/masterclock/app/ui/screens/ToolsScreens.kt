@@ -92,7 +92,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.io.File
 import java.io.RandomAccessFile
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.random.Random
 import android.content.Context as AndroidContext
@@ -220,8 +219,8 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
                         Text("", modifier = Modifier.width(28.dp))
                         Text(stringResource(R.string.tools_move), modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(stringResource(R.string.tools_spent), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(stringResource(R.string.tools_left), modifier = Modifier.width(64.dp), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.tools_spent), modifier = Modifier.width(LOG_TIME_COLUMN), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.tools_left), modifier = Modifier.width(LOG_TIME_COLUMN), textAlign = TextAlign.End, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -236,14 +235,16 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                         Text(duration.moveNotation ?: stringResource(R.string.tools_move), modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
                         Text(
                             formatMoveSpent(duration.durationMs, timePadding),
-                            modifier = Modifier.width(64.dp),
+                            modifier = Modifier.width(LOG_TIME_COLUMN),
+                            maxLines = 1,
                             textAlign = TextAlign.End,
                             fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             duration.timeRemainingMs?.let { formatHms(it, timePadding) } ?: "",
-                            modifier = Modifier.width(64.dp),
+                            modifier = Modifier.width(LOG_TIME_COLUMN),
+                            maxLines = 1,
                             textAlign = TextAlign.End,
                             fontFamily = FontFamily.Monospace
                         )
@@ -958,7 +959,6 @@ fun Chess960Screen(onBack: () -> Unit) {
 
 @Composable
 fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
-    val locale = LocalConfiguration.current.locales[0]
     val session by viewModel.scoreboard.collectAsState(); var newResultText by remember { mutableStateOf("") }; val sortedGames = remember(session.games) { session.games.asReversed() }
     // Asked first: one tap on the icon in the bar wiped every result, with no way back.
     var confirmingReset by rememberSaveable { mutableStateOf(false) }
@@ -973,7 +973,7 @@ fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { OutlinedTextField(value = session.player1Name, onValueChange = { viewModel.updateScoreboardNames(it, session.player2Name) }, label = { Text(stringResource(R.string.common_player_n, 1)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); OutlinedTextField(value = session.player2Name, onValueChange = { viewModel.updateScoreboardNames(session.player1Name, it) }, label = { Text(stringResource(R.string.common_player_n, 2)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true) }
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
                 if (session.games.isEmpty()) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_no_games), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
-                else { LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(sortedGames, key = { it.id }) { game -> Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)) { Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(game.result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold); Text(SimpleDateFormat("HH:mm", locale).format(Date(game.timestamp)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } }
+                else { LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(sortedGames, key = { it.id }) { game -> Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)) { Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(game.result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold); Text(isoDateTime(game.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it }, placeholder = { Text(stringResource(R.string.tools_add_result_placeholder)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, stringResource(R.string.tools_add_result)) } }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { viewModel.addScoreboardGame("1 - 0") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("1 - 0") }; Button(onClick = { viewModel.addScoreboardGame("½ - ½") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("½ - ½") }; Button(onClick = { viewModel.addScoreboardGame("0 - 1") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("0 - 1") } }
@@ -1446,6 +1446,12 @@ private const val MAX_BOARD_HISTORY = 50
 
 /** Side of one square in the board note's grid. */
 private val BOARD_SQUARE_SIZE = 40.dp
+
+/**
+ * The width of a game log's time columns. At 64dp a clock of an hour or more -- "1:23:45" in
+ * monospace -- did not fit, and wrapped onto a second line.
+ */
+private val LOG_TIME_COLUMN = 80.dp
 
 /**
  * The side of a square on a board [squares] across: [preferred], or less where the window is too
