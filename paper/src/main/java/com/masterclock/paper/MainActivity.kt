@@ -15,6 +15,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.core.content.edit
+import androidx.core.graphics.drawable.toDrawable
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
@@ -48,12 +50,31 @@ class MainActivity : ComponentActivity() {
         // Initialize Core Flavor
         FlavorConfig.currentFlavor = AppFlavor.E_INK
 
+        // The reversed colours as last seen, read before the first frame. The stored settings load
+        // after it, so the window and the theme began white whatever was set: with reversed colours
+        // every launch flashed white -- one more full refresh on E Ink, and a ghost of it after.
+        val uiPrefs = getSharedPreferences(UI_PREFS, MODE_PRIVATE)
+        val startReversed = uiPrefs.getBoolean(KEY_REVERSED, false)
+        if (startReversed) window.setBackgroundDrawable(android.graphics.Color.BLACK.toDrawable())
+
         enableEdgeToEdge()
         setContent {
             val timerViewModel: ChessTimerViewModel = viewModel()
             val settings by timerViewModel.settings.collectAsState()
             val isReady by timerViewModel.isReady.collectAsState()
             val context = LocalContext.current
+            val reversed = if (isReady) settings.eInkDarkMode else startReversed
+            LaunchedEffect(isReady, settings.eInkDarkMode) {
+                if (!isReady) return@LaunchedEffect
+                uiPrefs.edit { putBoolean(KEY_REVERSED, settings.eInkDarkMode) }
+                window.setBackgroundDrawable((if (settings.eInkDarkMode) android.graphics.Color.BLACK else android.graphics.Color.WHITE).toDrawable())
+                // The splash screen comes before even that: the system draws it from the theme
+                // before the app runs, white. Android 13 lets an app choose the theme it uses on
+                // later launches; Android 12 does not, and keeps the white one.
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    splashScreen.setSplashScreenTheme(if (settings.eInkDarkMode) R.style.Theme_MasterClock_Reversed else android.content.res.Resources.ID_NULL)
+                }
+            }
 
             // Force Screen Awake, Brightness & Fullscreen logic
             LaunchedEffect(settings.forceScreenOn, settings.forceFullBrightness, settings.fullscreenMode) {
@@ -121,7 +142,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MasterClockTheme(eInkDarkMode = settings.eInkDarkMode) {
+            MasterClockTheme(eInkDarkMode = reversed) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val entryProvider = entryProvider<NavKey> {
                         entry<Route.Timer> { _ ->
@@ -169,6 +190,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+/** Where the reversed-colours flag is kept for the next launch's first frame. */
+private const val UI_PREFS = "eink_ui"
+private const val KEY_REVERSED = "reversed"
 
 /** How soon a second Back on the clock must follow the first to leave the app. */
 private const val DOUBLE_BACK_WINDOW_MS = 2_000L

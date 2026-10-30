@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12 and later draw a splash screen before the app runs, in this colour rather than
+         the window's. -->
+    <style name="Theme.MasterClock.Reversed">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+    </style>
+</resources>

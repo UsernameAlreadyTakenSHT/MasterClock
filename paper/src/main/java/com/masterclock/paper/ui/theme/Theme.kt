@@ -21,7 +21,12 @@ fun MasterClockTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         val window = (view.context as Activity).window
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !eInkDarkMode
+        // Both bars: only the status bar followed, so with reversed colours the navigation bar's
+        // buttons stayed dark on black.
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = !eInkDarkMode
+            isAppearanceLightNavigationBars = !eInkDarkMode
+        }
     }
 
     ThemeMMD(

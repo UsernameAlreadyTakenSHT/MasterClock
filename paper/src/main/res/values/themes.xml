@@ -4,4 +4,9 @@
         <!-- Prevent flicker on older versions -->
         <item name="android:windowBackground">@android:color/white</item>
     </style>
+
+    <!-- The reversed colours' window, for the splash screen of the next launch; see MainActivity. -->
+    <style name="Theme.MasterClock.Reversed">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>
