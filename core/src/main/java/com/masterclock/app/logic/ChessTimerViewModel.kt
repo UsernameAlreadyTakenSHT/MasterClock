@@ -2006,6 +2006,17 @@ internal fun PlayerState.credited(amountMs: Long, flagBehavior: FlagBehavior): P
     return if (t > 0) copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false) else copy(timeRemainingMs = -t)
 }
 
+/**
+ * [credited], for time an arbiter gives. Under FREEZE and FLAG a player who ran out has no overrun
+ * to pay off, so credit left them out: two minutes given after a clock malfunction showed 2:00 in
+ * the loss colour, and the game stayed over. An arbiter's credit that leaves time on the clock puts
+ * the player back in play. The flag that fell is still on record in firstToFlag and the log.
+ */
+internal fun PlayerState.arbiterCredited(amountMs: Long, flagBehavior: FlagBehavior): PlayerState {
+    val c = credited(amountMs, flagBehavior)
+    return if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false) else c
+}
+
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
     val p = state.players[playerIndex - 1]
     val tempP = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) {
@@ -3432,31 +3443,58 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Shared (Auto) keeps one move clock, copied into every player and ticked from player 1's,
         // so an adjustment to anyone else's was overwritten by the next tick. It is the table's.
         val mode = getPlayerSettings(playerIndex).mode
+        // A move count is not a time; there is nothing here to give or take (the buttons are off).
+        if (!isTimeAdjustable(playerIndex)) return
         val wholeTable = mode == TimerMode.MOVE_TIMER_SHARED
         _uiState.update { state ->
-            when (mode) {
+            val adjusted = when (mode) {
                 // CHRONO's clock is the table's, globalTimeMs; adjusting a player's own field, which
                 // the face never shows, changed nothing.
                 TimerMode.CHRONO_COUNTDOWN, TimerMode.CHRONO_COUNTUP -> {
                     val p1 = state.players[0]
-                    val clock = PlayerState(state.globalTimeMs, isOutOfTime = p1.isOutOfTime, isNegative = p1.isNegative).credited(amountMs, flagBehavior)
+                    val clock = PlayerState(state.globalTimeMs, isOutOfTime = p1.isOutOfTime, isNegative = p1.isNegative).arbiterCredited(amountMs, flagBehavior)
                     state.copy(globalTimeMs = clock.timeRemainingMs, players = state.players.map { it.copy(isOutOfTime = clock.isOutOfTime, isNegative = clock.isNegative) })
+                }
+                // PHASES shows the phase's clock, globalTimeMs, or during a timed pause what is left
+                // of it; time went to the player's own field, which the face never shows and the next
+                // phase overwrites. A phase over, waiting for its tap, or a game finished, is left be.
+                TimerMode.PHASES -> {
+                    val p1 = state.players[0]
+                    when {
+                        p1.isOutOfTime || p1.isPhaseAwaitingTap || state.phasesFinished -> state
+                        p1.isInInterPhasePause -> if (_settings.value.pauseUntilTap) state
+                            else state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = (p1.pauseTimeRemainingMs + amountMs).coerceAtLeast(0)) })
+                        else -> state.copy(globalTimeMs = (state.globalTimeMs + amountMs).coerceAtLeast(0))
+                    }
                 }
                 // Time given in these modes is the total, or the reserve. It landed on the move
                 // clock, which the next press refills to the move time: the adjustment was gone.
                 // Global Shared's reserve is everyone's.
+                // Reserve given to a player it ran out on puts them back in play, as arbiterCredited
+                // does for a plain clock -- under Global only while their move clock has time too,
+                // since that one running out is a flag of its own.
                 TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> state.copy(
                     players = state.players.mapIndexed { idx, p ->
-                        if (mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || idx + 1 == playerIndex) p.copy(secondaryTimeMs = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)) else p
+                        if (mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || idx + 1 == playerIndex) {
+                            val reserve = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)
+                            val back = p.isOutOfTime && !p.isOverrun(flagBehavior) && reserve > 0 &&
+                                (mode == TimerMode.MOVE_TIMER_OVERTIME || p.timeRemainingMs > 0)
+                            p.copy(secondaryTimeMs = reserve, isOutOfTime = p.isOutOfTime && !back)
+                        } else p
                     },
                 )
                 else -> state.copy(players = state.players.mapIndexed { idx, p ->
-                    if (wholeTable || idx + 1 == playerIndex) p.credited(amountMs, flagBehavior)
+                    if (wholeTable || idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior)
                     else p
                 })
             }
+            // Nobody out any more: no flag stands, so none is first.
+            if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
         }
     }
+
+    /** Whether the arbiter's ±1m/±1s means anything for this player: a move count is not a time. */
+    fun isTimeAdjustable(playerIndex: Int): Boolean = !getPlayerSettings(playerIndex).mode.name.startsWith("MOVE_COUNTS")
 
     /**
      * Ends the current phase: the game flags if the phase says so, otherwise the pause between

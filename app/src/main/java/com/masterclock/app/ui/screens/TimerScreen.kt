@@ -279,7 +279,8 @@ fun TimerScreen(
                 numberOfPlayers = settings.numberOfPlayers,
                 hasSavedClock = viewModel.hasSavedClock.collectAsState().value,
                 contentRotation = iconRotation,
-                onAdjust = { idx, amt -> viewModel.adjustTime(idx, amt) }, 
+                onAdjust = { idx, amt -> viewModel.adjustTime(idx, amt) },
+                canAdjust = { viewModel.isTimeAdjustable(it) },
                 onSave = { viewModel.saveClockForLater() },
                 onResume = { viewModel.resumeSavedClock() },
                 onClose = { viewModel.toggleArbitreMode() }
@@ -652,7 +653,7 @@ fun ControlBarItem(onClick: () -> Unit, rotation: Float, colors: IconButtonColor
 }
 
 @Composable
-fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit) {
+fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, canAdjust: (Int) -> Boolean, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)).clickable(enabled = false) {}, contentAlignment = Alignment.Center) {
         Surface(
             shape = RoundedCornerShape(24.dp), 
@@ -665,15 +666,15 @@ fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation
                 
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 1), modifier = Modifier.weight(1f)) { onAdjust(1, it) }
-                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 2), modifier = Modifier.weight(1f)) { onAdjust(2, it) }
+                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 1), modifier = Modifier.weight(1f), enabled = canAdjust(1)) { onAdjust(1, it) }
+                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 2), modifier = Modifier.weight(1f), enabled = canAdjust(2)) { onAdjust(2, it) }
                     }
                     
                     if (numberOfPlayers >= 3) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            ArbitrePlayerControl(stringResource(R.string.common_player_n, 3), modifier = Modifier.weight(1f)) { onAdjust(3, it) }
+                            ArbitrePlayerControl(stringResource(R.string.common_player_n, 3), modifier = Modifier.weight(1f), enabled = canAdjust(3)) { onAdjust(3, it) }
                             if (numberOfPlayers == 4) {
-                                ArbitrePlayerControl(stringResource(R.string.common_player_n, 4), modifier = Modifier.weight(1f)) { onAdjust(4, it) }
+                                ArbitrePlayerControl(stringResource(R.string.common_player_n, 4), modifier = Modifier.weight(1f), enabled = canAdjust(4)) { onAdjust(4, it) }
                             } else {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
@@ -722,18 +723,19 @@ fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation
 }
 
 @Composable
-fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, onAdjust: (Long) -> Unit) {
+// [enabled] is off where a time means nothing -- a move count -- rather than the buttons doing nothing.
+fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, onAdjust: (Long) -> Unit) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { 
-            FilledTonalIconButton(onClick = { onAdjust(-60_000) }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, "-1m") }
-            FilledTonalIconButton(onClick = { onAdjust(60_000) }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, "+1m") }
+            FilledTonalIconButton(onClick = { onAdjust(-60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, "-1m") }
+            FilledTonalIconButton(onClick = { onAdjust(60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, "+1m") }
         }
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { 
-            FilledTonalIconButton(onClick = { onAdjust(-1_000) }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, "-1s") }
-            FilledTonalIconButton(onClick = { onAdjust(1_000) }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, "+1s") }
+            FilledTonalIconButton(onClick = { onAdjust(-1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, "-1s") }
+            FilledTonalIconButton(onClick = { onAdjust(1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, "+1s") }
         }
     }
 }

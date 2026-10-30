@@ -609,6 +609,22 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `time an arbiter gives a flagged player puts them back in play`() {
+        val flagged = PlayerState(0, isOutOfTime = true)
+        for (fb in listOf(FlagBehavior.FREEZE, FlagBehavior.FLAG)) {
+            val back = flagged.arbiterCredited(120_000, fb)
+            assertEquals(120_000, back.timeRemainingMs)
+            assertFalse(back.isOutOfTime)
+            // Taking time from a flagged clock leaves it flagged.
+            assertTrue(flagged.arbiterCredited(-1_000, fb).isOutOfTime)
+        }
+        // The hourglass and every other credit still leave a frozen player out.
+        assertTrue(flagged.credited(120_000, FlagBehavior.FREEZE).isOutOfTime)
+        // An overrun is paid off first, as before.
+        assertTrue(PlayerState(5_000, isOutOfTime = true, isNegative = true).arbiterCredited(1_000, FlagBehavior.NEGATIVE).isOutOfTime)
+    }
+
+    @Test
     fun `MOVE_TIMER_GLOBAL_SHARED keeps an inactive player's own flag`() {
         val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED, moveTimeMs = 30_000)
         val settings = ChessClockSettings(numberOfPlayers = 3, main = s, flagBehavior = FlagBehavior.FLAG)
