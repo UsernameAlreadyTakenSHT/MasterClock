@@ -637,9 +637,14 @@ fun ColorRow(selectedColor: Long, compact: Boolean = false, onColorSelected: (Lo
     // compact keeps the row narrow enough to share its line with a leading label (Omni's
     // per-player color list) instead of overflowing the last swatch off-screen.
     val pickerSize = if (compact) 32.dp else 36.dp
-    val swatchSize = if (compact) 28.dp else 32.dp
     val gap = if (compact) 6.dp else 8.dp
 
+    // The swatches share what width there is. At a fixed 32dp the row was some 365dp wide, and on a
+    // 360dp phone the last of them -- white, part of grey -- fell off the edge and could not be
+    // tapped, on every colour row of the Display tab. Wide enough, nothing changes.
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+    val fitting = (maxWidth - pickerSize - 1.dp - gap * (colors.size + 1)) / colors.size
+    val swatchSize = minOf(if (compact) 28.dp else 32.dp, fitting).coerceAtLeast(20.dp)
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
         Surface(onClick = { showPicker = true }, modifier = Modifier.size(pickerSize), shape = CircleShape, color = Color.Transparent, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
             val gradient = remember { androidx.compose.ui.graphics.Brush.sweepGradient(listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)) }
@@ -658,6 +663,7 @@ fun ColorRow(selectedColor: Long, compact: Boolean = false, onColorSelected: (Lo
                 border = BorderStroke(width = if (isSelected) 2.dp else 1.dp, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
             ) {}
         }
+    }
     }
 
     if (showPicker) {

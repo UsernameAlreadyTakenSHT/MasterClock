@@ -53,6 +53,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -810,7 +811,8 @@ fun NameSquareScreen(onBack: () -> Unit) {
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(target.uppercase(Locale.US), style = MaterialTheme.typography.displayLarge.copy(fontSize = 110.sp), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(32.dp))
-                        Column(Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(6.dp).shadow(4.dp, RoundedCornerShape(12.dp))) { for (r in 8 downTo 1) { Row { for (f in 1..8) { val square = files[f-1] + ranks[r-1]; val isDark = (r + f) % 2 == 0; Box(modifier = Modifier.size(42.dp).background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2)).semantics { contentDescription = square }.clickable { if (square == target) { score++; nextRound() } }) } } } }
+                        val nameSquareSize = boardSquareSize(42.dp, 8, chrome = 60.dp)
+                        Column(Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(6.dp).shadow(4.dp, RoundedCornerShape(12.dp))) { for (r in 8 downTo 1) { Row { for (f in 1..8) { val square = files[f-1] + ranks[r-1]; val isDark = (r + f) % 2 == 0; Box(modifier = Modifier.size(nameSquareSize).background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2)).semantics { contentDescription = square }.clickable { if (square == target) { score++; nextRound() } }) } } } }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -1425,6 +1427,18 @@ private const val MAX_BOARD_HISTORY = 50
 private val BOARD_SQUARE_SIZE = 40.dp
 
 /**
+ * The side of a square on a board [squares] across: [preferred], or less where the window is too
+ * narrow for it once [chrome] -- the page's padding and the board's own, both sides -- is taken off.
+ * The boards were drawn at a fixed size, eight squares of 40 or 42dp, and on a 360dp phone the files
+ * on the right were cut off: the h-file of a Chess960 position, and squares Name Square asks for.
+ */
+@Composable
+private fun boardSquareSize(preferred: Dp, squares: Int, chrome: Dp): Dp {
+    val windowWidth = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    return minOf(preferred, (windowWidth - chrome) / squares)
+}
+
+/**
  * A piece being dragged, and where the finger currently is in the screen's own coordinates.
  *
  * Root coordinates rather than any one container's, because a drag that starts in the palette ends
@@ -1565,7 +1579,7 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     var boardBounds by remember { mutableStateOf<Rect?>(null) }
     // Ten squares of forty would run off a phone, so the bigger board gets smaller squares and both
     // end up the same width.
-    val squareSize = if (variant.side > 8) BOARD_SQUARE_SIZE * 8 / variant.side else BOARD_SQUARE_SIZE
+    val squareSize = boardSquareSize(if (variant.side > 8) BOARD_SQUARE_SIZE * 8 / variant.side else BOARD_SQUARE_SIZE, variant.side, chrome = 50.dp)
     val squarePx = with(LocalDensity.current) { squareSize.toPx() }
 
     // Read inside the gesture detector rather than captured when it starts, so a drag is not
@@ -1781,6 +1795,7 @@ fun FullChessBoardDisplay(whitePos: List<String>, blackPos: List<String>) {
             .components { add(SvgDecoder.Factory()) }
             .build()
     }
+    val square = boardSquareSize(40.dp, 8, chrome = 66.dp)
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         shape = RoundedCornerShape(12.dp),
@@ -1800,14 +1815,14 @@ fun FullChessBoardDisplay(whitePos: List<String>, blackPos: List<String>) {
                         }
                         
                         Box(
-                            modifier = Modifier.size(40.dp).background(squareColor), 
+                            modifier = Modifier.size(square).background(squareColor), 
                             contentAlignment = Alignment.Center
                         ) {
                             if (rawPiece.isNotEmpty()) {
                                 AsyncImage(
                                     model = getPieceSvgPath(rawPiece),
                                     contentDescription = rawPiece,
-                                    modifier = Modifier.size(32.dp),
+                                    modifier = Modifier.size(square * 4 / 5),
                                     imageLoader = imageLoader
                                 )
                             }
