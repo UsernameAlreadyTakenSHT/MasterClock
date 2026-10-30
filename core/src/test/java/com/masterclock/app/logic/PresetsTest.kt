@@ -23,6 +23,22 @@ class PresetsTest {
     }
 
     @Test
+    fun `a built-in keeps the table -- the game, the players and their seats`() {
+        val table = ChessClockSettings(gameType = GameType.DRAUGHTS, numberOfPlayers = 4, playerMapping = listOf(2, 1, 4, 3), isOneForAll = false)
+        val applied = applyPresetTimeControl(table, ChessClockSettings(main = PlayerSettings(initialTimeMs = 300_000)), keepTable = true)
+        assertEquals(table.gameType, applied.gameType)
+        assertEquals(4, applied.numberOfPlayers)
+        assertEquals(listOf(2, 1, 4, 3), applied.playerMapping)
+        assertFalse(applied.isOneForAll)
+        assertEquals(300_000, applied.p4Custom.initialTimeMs)
+        // One that sets each player's time is for two.
+        val armageddon = ChessClockSettings(differentSettingsPerPlayer = true, p2Custom = PlayerSettings(initialTimeMs = 240_000))
+        assertEquals(2, applyPresetTimeControl(table, armageddon, keepTable = true).numberOfPlayers)
+        // A preset the player saved still brings back its own table.
+        assertEquals(2, applyPresetTimeControl(table, ChessClockSettings()).numberOfPlayers)
+    }
+
+    @Test
     fun `a PHASES preset brings back its loop and pause`() {
         val preset = ChessClockSettings(loopPhases = true, allowPhaseSkip = true, pauseBetweenPhasesMs = 30_000, pauseUntilTap = true)
         val applied = applyPresetTimeControl(ChessClockSettings(), preset)

@@ -489,6 +489,7 @@ class MainActivity : ComponentActivity() {
                                             timerViewModel.settings.value, set,
                                             keepFlagBehavior = builtIn != null && !builtIn.setsFlagBehavior,
                                             keepFirstMoveBonus = builtIn != null,
+                                            keepTable = builtIn != null,
                                         ),
                                         states,
                                         newGame = true,

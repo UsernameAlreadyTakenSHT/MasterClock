@@ -691,15 +691,21 @@ data class SavedPreset(
  * player's NEGATIVE back to FREEZE and turned their first-move bonus off. A built-in keeps the
  * player's own unless it is about one of them -- Scrabble is about counting back -- while a preset
  * the player saved, and a game from Last Games, bring back what was set when it was saved.
+ *
+ * [keepTable] is the same for the table: the game played, how many play and where they sit. Every
+ * tap on a built-in turned a draughts player back to chess -- the export became PGN -- and a table
+ * of four back to two. A built-in that sets each player's time (Armageddon) needs two players.
  */
 fun applyPresetTimeControl(
     current: ChessClockSettings,
     preset: ChessClockSettings,
     keepFlagBehavior: Boolean = false,
     keepFirstMoveBonus: Boolean = false,
-): ChessClockSettings =
-    current.copy(
-        gameType = preset.gameType,
+    keepTable: Boolean = false,
+): ChessClockSettings {
+    val keepSeats = keepTable && !preset.differentSettingsPerPlayer
+    return current.copy(
+        gameType = if (keepTable) current.gameType else preset.gameType,
         main = preset.main,
         // A preset for everyone sets main alone, and the per-player copies kept the default sudden
         // death: turning on per-player settings after it threw the preset away -- a byoyomi preset
@@ -709,10 +715,10 @@ fun applyPresetTimeControl(
         p3Custom = if (preset.differentSettingsPerPlayer) preset.p3Custom else preset.main,
         p4Custom = if (preset.differentSettingsPerPlayer) preset.p4Custom else preset.main,
         differentSettingsPerPlayer = preset.differentSettingsPerPlayer,
-        numberOfPlayers = preset.numberOfPlayers,
-        playerMapping = preset.playerMapping,
-        multiPlayerLayout = preset.multiPlayerLayout,
-        isOneForAll = preset.isOneForAll,
+        numberOfPlayers = if (keepSeats) current.numberOfPlayers else preset.numberOfPlayers,
+        playerMapping = if (keepSeats) current.playerMapping else preset.playerMapping,
+        multiPlayerLayout = if (keepSeats) current.multiPlayerLayout else preset.multiPlayerLayout,
+        isOneForAll = if (keepTable) current.isOneForAll else preset.isOneForAll,
         flagBehavior = if (keepFlagBehavior) current.flagBehavior else preset.flagBehavior,
         fischerFideFirstMove = if (keepFirstMoveBonus) current.fischerFideFirstMove else preset.fischerFideFirstMove,
         // PHASES keeps these beside the phases rather than in them, and they were left behind: a
@@ -722,6 +728,7 @@ fun applyPresetTimeControl(
         pauseBetweenPhasesMs = preset.pauseBetweenPhasesMs,
         pauseUntilTap = preset.pauseUntilTap,
     )
+}
 
 /**
  * The settings a resumed clock runs under: the game's own time control and rules from [saved], and
@@ -2440,7 +2447,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // A built-in keeps the player's flag behaviour and first-move bonus, as on the presets
         // screen; and a shortcut always starts a game, even one matching the clock's.
         val builtIn = !id.startsWith("preset:") && !id.startsWith("game:")
-        updateSettings(applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn, keepFirstMoveBonus = builtIn), newGame = true)
+        updateSettings(applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn, keepFirstMoveBonus = builtIn, keepTable = builtIn), newGame = true)
     }
 
     /** A shortcut can outlive the preset or game it points at, hence the nullable result. */
