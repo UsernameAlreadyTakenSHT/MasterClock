@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -43,6 +45,13 @@ fun TimerScreen(
     val state by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    // The "Haptic feedback" switch of the settings was read nowhere in this build: it did nothing.
+    // A press now vibrates when it is on, as on the phone app.
+    val haptic = LocalHapticFeedback.current
+    fun press(playerIndex: Int) {
+        if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        viewModel.startOrSwitch(playerIndex)
+    }
 
     // The announcer overlays the clock rather than sitting in the Column below. It emits nothing
     // until there is something to announce, and the Column spaces its children by 16dp, so as a
@@ -65,7 +74,7 @@ fun TimerScreen(
                     state = state,
                     padding = settings.effectiveTimePadding(),
                     gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
-                    onClick = { viewModel.startOrSwitch(1) }
+                    onClick = { press(1) }
                 )
             }
     
@@ -122,7 +131,7 @@ fun TimerScreen(
                     state = state,
                     padding = settings.effectiveTimePadding(),
                     gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
-                    onClick = { viewModel.startOrSwitch(2) }
+                    onClick = { press(2) }
                 )
             }
         }
