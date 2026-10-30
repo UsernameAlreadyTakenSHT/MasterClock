@@ -15,6 +15,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
@@ -150,9 +153,15 @@ class MainActivity : ComponentActivity() {
 
                     // Nothing to tap until the stored state is in; see ChessTimerViewModel.isReady.
                     if (isReady) {
+                        // No transition. Navigation 3 cross-fades every change of screen over 700ms by
+                        // default, and E Ink renders each half-faded frame: a grey, ghosting change,
+                        // every time Settings was opened or left. A page turns at once here.
                         NavDisplay(
                             entries = navigationState.toEntries(entryProvider),
-                            onBack = { navigator.goBack() }
+                            onBack = { navigator.goBack() },
+                            transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                            popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                            predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
                         )
                     }
                 }

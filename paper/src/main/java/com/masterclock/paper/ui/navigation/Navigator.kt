@@ -13,6 +13,10 @@ class Navigator(val state: NavigationState) {
             state.topLevelRoute = route
         } else {
             val stack = state.backStacks[state.topLevelRoute] ?: return
+            // Already showing it: a second tap before the screen had changed -- easy on E Ink, which
+            // gives no feedback until it redraws -- pushed the same screen twice, and the first Back
+            // then seemed to do nothing.
+            if (!replace && stack.lastOrNull() == route) return
             if (replace) stack.removeLastOrNull()
             stack.add(route)
         }
