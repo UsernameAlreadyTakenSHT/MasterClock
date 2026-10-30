@@ -76,15 +76,26 @@ class UsbBoardManager(private val context: Context) {
     /** The game this round is, for makes that have to be told before play starts. */
     private var gameType: GameType = GameType.CHESS
 
-    /** Holds the previous position, since boards report state rather than moves. */
-    private val moveTracker = BoardMoveTracker()
+    /**
+     * Holds the previous position, since boards report state rather than moves.
+     *
+     * A new one per connection, as for [assembler]: a read loop keeps the ones it started with. Reset
+     * in place, the tracker of a new connection was cleared on the main thread while the previous
+     * loop, still inside its last read, could decode into it.
+     */
+    @Volatile
+    private var moveTracker = BoardMoveTracker()
 
     /**
      * Reassembles messages for makes that need it. Null for the ones whose reads are already whole
      * messages, which is every HID board.
      */
+    @Volatile
     private var assembler: StreamAssembler? = null
     private var connection: UsbDeviceConnection? = null
+
+    /** The device [connection] is open on, to tell its unplugging from another's. */
+    private var connectedDevice: UsbDevice? = null
     private var claimedInterface: UsbInterface? = null
     private var readJob: Job? = null
 
@@ -119,11 +130,34 @@ class UsbBoardManager(private val context: Context) {
         }
     }
 
+    /**
+     * Ends the connection when its board is unplugged.
+     *
+     * Nothing watched for it. Once the cable was out, every read failed at once rather than after its
+     * timeout, so the loop spun as fast as the processor allowed, for as long as the app was open, on
+     * a screen still saying "Connected". The device list is refreshed too, so the board leaves it.
+     */
+    private val detachReceiver = object : BroadcastReceiver() {
+        override fun onReceive(receivedContext: Context?, intent: Intent?) {
+            if (intent?.action != UsbManager.ACTION_USB_DEVICE_DETACHED) return
+            val device = intent.getUsbDevice() ?: return
+            if (device.deviceName == connectedDevice?.deviceName) disconnect()
+            refreshDevices()
+        }
+    }
+
     init {
         ContextCompat.registerReceiver(
             context,
             permissionReceiver,
             IntentFilter(ACTION_USB_PERMISSION),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        // A system broadcast, delivered whatever the export flag says.
+        ContextCompat.registerReceiver(
+            context,
+            detachReceiver,
+            IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED),
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
     }
@@ -153,7 +187,7 @@ class UsbBoardManager(private val context: Context) {
             device.manufacturerName,
         )
         assembler = protocol.framing?.let { StreamAssembler(it) }
-        moveTracker.reset()
+        moveTracker = BoardMoveTracker()
         _needsCalibration.value = protocol.needsPieceCalibration
         _connectionState.value = ConnectionState.Connecting
 
@@ -196,11 +230,12 @@ class UsbBoardManager(private val context: Context) {
         }
 
         connection = opened
+        connectedDevice = device
         claimedInterface = serialInterface
         // Only a serial line has a baud rate to set; asking a HID interface for one achieves
         // nothing and can upset devices that answer control requests strictly.
         if (serialInterface.interfaceClass == UsbConstants.USB_CLASS_CDC_DATA) {
-            opened.configureCdcLine(serialInterface.id, protocol.usbBaudRate)
+            opened.configureCdcLine(device.cdcControlInterfaceId() ?: serialInterface.id, protocol.usbBaudRate)
         }
         _connectionState.value = ConnectionState.Connected(device.productName ?: device.deviceName)
         // Several makes report nothing until asked; Chessnut is one of them.
@@ -215,22 +250,28 @@ class UsbBoardManager(private val context: Context) {
     private fun startReading(connection: UsbDeviceConnection, endpoint: UsbEndpoint) {
         readJob?.cancel()
         val session = ++readSession
+        val tracker = moveTracker
+        val assembler = assembler
+        val protocol = protocol
         readJob = scope.launch {
             val buffer = ByteArray(READ_BUFFER_BYTES)
             while (isActive && session == readSession) {
                 // bulkTransfer blocks up to the timeout and returns -1 when it expires, which is the
                 // normal state between moves rather than an error.
                 val read = connection.bulkTransfer(endpoint, buffer, buffer.size, READ_TIMEOUT_MS)
+                // Checked again after the read, which can outlast the session it began in: what it
+                // returns then belongs to a board that has since been let go.
+                if (session != readSession) break
                 if (read <= 0) continue
 
                 val chunk = buffer.copyOf(minOf(read, MAX_PAYLOAD_BYTES))
                 // A serial read is a slice of a byte stream, not a message. Where the make says how
                 // its messages are delimited, put them back together first.
                 val payloads = assembler?.offer(chunk) ?: listOf(chunk)
-                val moves = payloads.flatMap { moveTracker.onReport(protocol.decode(it)) }
+                val moves = payloads.flatMap { tracker.onReport(protocol.decode(it)) }
                 // The hint disappears the moment the board has been shown its pieces, which is the
                 // only feedback the player gets that the setup worked.
-                _needsCalibration.value = protocol.needsPieceCalibration && moveTracker.needsCalibration
+                _needsCalibration.value = protocol.needsPieceCalibration && tracker.needsCalibration
                 if (moves.isEmpty()) continue
                 withContext(Dispatchers.Main) {
                     moves.forEach { move ->
@@ -253,6 +294,7 @@ class UsbBoardManager(private val context: Context) {
         claimedInterface?.let { connection?.releaseInterface(it) }
         connection?.close()
         connection = null
+        connectedDevice = null
         claimedInterface = null
         // The callback holds the view model; there is no reason to keep it after the board it was
         // given for has gone. The calibration flag belongs to that board too.
@@ -266,6 +308,7 @@ class UsbBoardManager(private val context: Context) {
         disconnect()
         scope.cancel()
         runCatching { context.unregisterReceiver(permissionReceiver) }
+        runCatching { context.unregisterReceiver(detachReceiver) }
     }
 
     private fun UsbDevice.toCandidate(): BoardCandidate = BoardCandidate(
@@ -297,6 +340,18 @@ private fun UsbDevice.findCdcDataInterface(): UsbInterface? {
             it.interfaceClass == UsbConstants.USB_CLASS_VENDOR_SPEC && it.findEndpoint(UsbConstants.USB_DIR_IN) != null
         }
 }
+
+/**
+ * The CDC communication interface, the one class requests are addressed to.
+ *
+ * The line coding and DTR/RTS were sent to the data interface's number, which the CDC specification
+ * does not address them to: a device that holds to it ignored both, and opened at the wrong speed
+ * and silent -- the very failure configureCdcLine exists to prevent. A device without one keeps the
+ * data interface, as before.
+ */
+private fun UsbDevice.cdcControlInterfaceId(): Int? =
+    (0 until interfaceCount).map { getInterface(it) }
+        .firstOrNull { it.interfaceClass == UsbConstants.USB_CLASS_COMM }?.id
 
 /** Bulk for serial, interrupt for HID; [UsbDeviceConnection.bulkTransfer] drives both. */
 private fun UsbInterface.findEndpoint(direction: Int): UsbEndpoint? =
