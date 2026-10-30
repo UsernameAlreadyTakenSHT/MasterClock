@@ -176,6 +176,13 @@ class OpenBoardProtocolTest {
     }
 
     @Test
+    fun `commands sent together are read one by one, and each move answered`() {
+        val both = message("move e2e4\nstate rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR\nmove e7e5\n")
+        assertEquals(BoardReport.Moves(listOf("e2e4", "e7e5")), OpenBoardProtocol.decode(both))
+        assertEquals("ok\nok\n", OpenBoardProtocol.replyTo(both)?.toString(Charsets.US_ASCII))
+    }
+
+    @Test
     fun `the board is found by the service it announces, not by its name`() {
         val service = OpenBoardProtocol.ble!!.serviceUuid!!
         assertSame(OpenBoardProtocol, BoardProtocols.forAdvertisedServices(listOf(service)))

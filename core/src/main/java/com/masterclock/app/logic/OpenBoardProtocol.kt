@@ -68,11 +68,28 @@ object OpenBoardProtocol : BoardProtocol {
         else -> initCommand
     }
 
-    override fun decode(payload: ByteArray): BoardReport {
-        val text = String(payload, Charsets.US_ASCII).trim()
-        val command = text.substringBefore(' ')
-        val argument = text.substringAfter(' ', "").trim()
+    /**
+     * The commands in [payload], one per line.
+     *
+     * Commands end with a newline, and nothing stops a board from sending two in one notification.
+     * The payload was read as a single command: "move e2e4\nstate ..." became a move named
+     * "e2e4\nstate ...", and only the first command was answered.
+     */
+    private fun commandsIn(payload: ByteArray): List<Pair<String, String>> =
+        String(payload, Charsets.US_ASCII).split('\n', '\r')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map { it.substringBefore(' ') to it.substringAfter(' ', "").trim() }
 
+    override fun decode(payload: ByteArray): BoardReport {
+        val moves = commandsIn(payload).flatMap { (command, argument) ->
+            (decodeCommand(command, argument) as? BoardReport.Moves)?.moves.orEmpty()
+        }
+        return if (moves.isEmpty()) BoardReport.Ignored else BoardReport.Moves(moves)
+    }
+
+    /** What one command means. */
+    private fun decodeCommand(command: String, argument: String): BoardReport {
         return when (command) {
             // The board has decided a move was played. No inference needed, and no assumption that
             // the game is chess: whatever notation it uses is carried through untouched.
@@ -105,8 +122,9 @@ object OpenBoardProtocol : BoardProtocol {
      * is never coming.
      */
     override fun replyTo(payload: ByteArray): ByteArray? {
-        val command = String(payload, Charsets.US_ASCII).trim().substringBefore(' ')
-        return if (command == MOVE) "$OK\n".toByteArray(Charsets.US_ASCII) else null
+        // One "ok" per move, however many arrived together; see commandsIn.
+        val moves = commandsIn(payload).count { (command, _) -> command == MOVE }
+        return if (moves == 0) null else "$OK\n".repeat(moves).toByteArray(Charsets.US_ASCII)
     }
 
     private const val MOVE = "move"
