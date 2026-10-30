@@ -839,8 +839,11 @@ enum class ChessVariant(
 fun Chess960Screen(onBack: () -> Unit) {
     val fenCopiedText = stringResource(R.string.toast_fen_copied)
     var variant by remember { mutableStateOf(ChessVariant.CHESS960) }
-    var whitePos by remember { mutableStateOf(generateChessPosition(ChessVariant.CHESS960)) }
-    var blackPos by remember { mutableStateOf(generateChessPosition(ChessVariant.CHESS960)) }
+    // One draw for both sides, as refresh() makes for a symmetric variant. Each side was drawn on its
+    // own, so the first position shown -- labelled Chess960 -- was not one, nor was its FEN.
+    val firstDraw = remember { generateChessPosition(ChessVariant.CHESS960) }
+    var whitePos by remember { mutableStateOf(firstDraw) }
+    var blackPos by remember { mutableStateOf(firstDraw) }
 
     fun refresh() {
         whitePos = generateChessPosition(variant)
@@ -935,7 +938,7 @@ fun Chess960Screen(onBack: () -> Unit) {
                 
                 Surface(
                     onClick = { 
-                        val clip = ClipData.newPlainText("Chess FEN", generateFen(whitePos, blackPos))
+                        val clip = ClipData.newPlainText("Chess FEN", generateFen(whitePos, blackPos, castling = variant.kingBetweenRooks))
                         clipboardManager.setPrimaryClip(clip)
                         Toast.makeText(context, fenCopiedText, Toast.LENGTH_SHORT).show()
                     },
@@ -1859,10 +1862,15 @@ fun VariantCard(label: String, selected: Boolean, modifier: Modifier = Modifier,
     }
 }
 
-fun generateFen(white: List<String>, black: List<String>): String {
+/**
+ * The starting FEN. [castling] is for a variant whose king starts between its rooks; the others --
+ * Shuffle, Transcendental, 2880 -- have no castling, and "KQkq" claimed it, so an engine given the
+ * position would play it. With two rooks a side, KQkq reads as Chess960's castling (X-FEN).
+ */
+fun generateFen(white: List<String>, black: List<String>, castling: Boolean = true): String {
     val b = black.joinToString("").lowercase(Locale.US)
     val w = white.joinToString("")
-    return "$b/pppppppp/8/8/8/8/PPPPPPPP/$w w KQkq - 0 1"
+    return "$b/pppppppp/8/8/8/8/PPPPPPPP/$w w ${if (castling) "KQkq" else "-"} - 0 1"
 }
 
 /** Compact think-time for one move: "8.4s" below a minute, "2m05s" above it. */
