@@ -431,14 +431,16 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         }
     }
 
-    var selectedGameIdx by remember { mutableIntStateOf(0) }
+    var gameTab by remember { mutableIntStateOf(0) }
+    // Clamped like the tabs of the Turns and Phases steps.
+    val selectedGameIdx = gameTab.coerceIn(0, (settings.games.size - 1).coerceAtLeast(0))
     val currentGame = settings.games.getOrNull(selectedGameIdx) ?: settings.games.first()
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.games.size > 1) {
             PrimaryScrollableTabRow(selectedTabIndex = selectedGameIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 settings.games.forEachIndexed { index, game ->
-                    Tab(selected = selectedGameIdx == index, onClick = { selectedGameIdx = index }) {
+                    Tab(selected = selectedGameIdx == index, onClick = { gameTab = index }) {
                         Text(game.name.ifBlank { stringResource(R.string.omni_cfg_game_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -520,16 +522,21 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
         return
     }
 
-    var selectedGameIdx by remember { mutableIntStateOf(0) }
-    var selectedRoundIdx by remember { mutableIntStateOf(0) }
+    var gameTab by remember { mutableIntStateOf(0) }
+    var roundTab by remember { mutableIntStateOf(0) }
+    // The tabs are clamped every time they are read. A round chosen on one game outlived a switch to
+    // a game with fewer rounds: the screen fell back to the first round, while every edit still
+    // wrote this[selectedRoundIdx] past the end of the list, and the wizard crashed.
+    val selectedGameIdx = gameTab.coerceIn(0, (settings.games.size - 1).coerceAtLeast(0))
     val currentGame = settings.games.getOrNull(selectedGameIdx) ?: settings.games.first()
+    val selectedRoundIdx = roundTab.coerceIn(0, (currentGame.rounds.size - 1).coerceAtLeast(0))
     val currentRound = currentGame.rounds.getOrNull(selectedRoundIdx) ?: currentGame.rounds.first()
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.games.size > 1) {
             PrimaryScrollableTabRow(selectedTabIndex = selectedGameIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 settings.games.forEachIndexed { index, game ->
-                    Tab(selected = selectedGameIdx == index, onClick = { selectedGameIdx = index }) {
+                    Tab(selected = selectedGameIdx == index, onClick = { gameTab = index }) {
                         Text(game.name.ifBlank { stringResource(R.string.omni_cfg_game_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -538,7 +545,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
         if (currentGame.rounds.size > 1) {
             PrimaryScrollableTabRow(selectedTabIndex = selectedRoundIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 currentGame.rounds.forEachIndexed { index, round ->
-                    Tab(selected = selectedRoundIdx == index, onClick = { selectedRoundIdx = index }) {
+                    Tab(selected = selectedRoundIdx == index, onClick = { roundTab = index }) {
                         Text(round.name.ifBlank { stringResource(R.string.omni_cfg_round_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -644,21 +651,27 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         return
     }
 
-    var selectedGameIdx by remember { mutableIntStateOf(0) }
-    var selectedRoundIdx by remember { mutableIntStateOf(0) }
-    var selectedTurnIdx by remember { mutableIntStateOf(0) }
-    
+    var gameTab by remember { mutableIntStateOf(0) }
+    var roundTab by remember { mutableIntStateOf(0) }
+    var turnTab by remember { mutableIntStateOf(0) }
+
+    // The tabs are clamped every time they are read. A round chosen on one game outlived a switch to
+    // a game with fewer rounds: the screen fell back to the first round, while every edit still
+    // wrote this[selectedRoundIdx] past the end of the list, and the wizard crashed. Here an edit was dropped instead, with round 1 on screen.
+    val selectedGameIdx = gameTab.coerceIn(0, (settings.games.size - 1).coerceAtLeast(0))
     val currentGame = settings.games.getOrNull(selectedGameIdx) ?: settings.games.first()
+    val selectedRoundIdx = roundTab.coerceIn(0, (currentGame.rounds.size - 1).coerceAtLeast(0))
     val currentRound = currentGame.rounds.getOrNull(selectedRoundIdx) ?: currentGame.rounds.first()
     // A FIXED round shows the one turn that stands for all of its turns.
     val turnsList = omniTurnsOf(currentRound, 1)
+    val selectedTurnIdx = turnTab.coerceIn(0, (turnsList.size - 1).coerceAtLeast(0))
     val currentTurn = turnsList.getOrNull(selectedTurnIdx) ?: turnsList.firstOrNull() ?: OmniTurnSettings()
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.games.size > 1) {
             PrimaryScrollableTabRow(selectedTabIndex = selectedGameIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 settings.games.forEachIndexed { index, game ->
-                    Tab(selected = selectedGameIdx == index, onClick = { selectedGameIdx = index }) {
+                    Tab(selected = selectedGameIdx == index, onClick = { gameTab = index }) {
                         Text(game.name.ifBlank { stringResource(R.string.omni_cfg_game_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -667,7 +680,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         if (currentGame.rounds.size > 1) {
             PrimaryScrollableTabRow(selectedTabIndex = selectedRoundIdx, edgePadding = 0.dp, containerColor = Color.Transparent, divider = {}) {
                 currentGame.rounds.forEachIndexed { index, round ->
-                    Tab(selected = selectedRoundIdx == index, onClick = { selectedRoundIdx = index }) {
+                    Tab(selected = selectedRoundIdx == index, onClick = { roundTab = index }) {
                         Text(round.name.ifBlank { stringResource(R.string.omni_cfg_round_short, index + 1) }, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -676,7 +689,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         if (turnsList.size > 1) {
             PrimaryScrollableTabRow(selectedTabIndex = selectedTurnIdx, edgePadding = 0.dp, containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), divider = {}) {
                 turnsList.forEachIndexed { index, _ ->
-                    Tab(selected = selectedTurnIdx == index, onClick = { selectedTurnIdx = index }) {
+                    Tab(selected = selectedTurnIdx == index, onClick = { turnTab = index }) {
                         Text(stringResource(R.string.omni_cfg_turn_short, index + 1), modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
                     }
                 }
