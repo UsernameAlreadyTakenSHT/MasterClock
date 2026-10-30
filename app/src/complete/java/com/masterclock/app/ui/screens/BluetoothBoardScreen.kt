@@ -6,6 +6,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -84,6 +86,9 @@ fun BluetoothBoardScreen(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
         if (results.values.all { it }) {
+            // The paired list too: it needs the same Bluetooth permission, so on a first visit it
+            // came up empty and stayed so until the scan button was pressed a second time.
+            serialManager.refreshPairedDevices()
             manager.startScan()
         }
     }
@@ -233,6 +238,10 @@ fun BluetoothBoardScreen(
             if (pairedDevices.isEmpty()) {
                 Text(stringResource(R.string.board_paired_none), style = MaterialTheme.typography.bodyMedium)
             } else {
+                // Every device paired with the phone is listed -- headphones, a car, a watch -- and the
+                // screen does not scroll, so a long list pushed the nearby boards below off the screen.
+                // The list scrolls within a bounded height instead.
+                Column(Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
                 pairedDevices.forEach { candidate ->
                     Surface(
                         onClick = { serialManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
@@ -249,6 +258,7 @@ fun BluetoothBoardScreen(
                             }
                         }
                     }
+                }
                 }
             }
 
