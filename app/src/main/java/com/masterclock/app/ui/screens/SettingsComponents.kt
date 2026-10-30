@@ -1133,7 +1133,9 @@ fun NumericInput(label: String, value: Int, onValueChange: (Int) -> Unit) {
             // Digits only, four at most: an eleventh digit overflowed toIntOrNull, the value went to 0
             // and the field emptied while it was being typed.
             onValueChange = { onValueChange(it.filter(Char::isDigit).take(4).toIntOrNull() ?: 0) },
-            modifier = Modifier.fillMaxWidth().height(54.dp),
+            // At least, not exactly: the text field's own minimum is 56dp, and a fixed 54 cut the
+            // digits off, more so at a large font size.
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             shape = RoundedCornerShape(12.dp),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             textStyle = MaterialTheme.typography.bodyMedium,

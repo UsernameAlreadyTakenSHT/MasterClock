@@ -486,9 +486,10 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(32.dp))
                     Slider(
                         value = strawCount.toFloat(),
-                        onValueChange = { strawCount = it.toInt() },
+                        onValueChange = { strawCount = Math.round(it) },
                         valueRange = 2f..10f,
-                        steps = 8,
+                        // Seven stops between the ends for the nine values; see the Omni player count.
+                        steps = 7,
                         modifier = Modifier.padding(horizontal = 48.dp)
                     )
                     Spacer(Modifier.height(64.dp))

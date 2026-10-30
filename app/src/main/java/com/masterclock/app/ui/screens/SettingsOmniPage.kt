@@ -221,9 +221,11 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
         )
         Slider(
             value = settings.numberOfPlayers.toFloat(),
-            onValueChange = { onSettingsChanged(settings.copy(numberOfPlayers = it.toInt())) },
+            onValueChange = { onSettingsChanged(settings.copy(numberOfPlayers = Math.round(it))) },
             valueRange = 1f..20f,
-            steps = 19
+            // Stops between the ends: 18 for the 20 values. 19 made 21 positions for 20 values, so
+            // the thumb could rest between two numbers and read as the one below.
+            steps = 18
         )
     }
 

@@ -174,8 +174,8 @@ fun PresetsScreen(
                     }
                 }
             } else {
-                // Standard and Lite have no More tab, so this is their only route to the
-                // statistics screen; Complete additionally lists it under More > Game Data.
+                // Complete only (FlavorConfig.hasStatistics); it also lists them under More >
+                // Game Data.
                 if (FlavorConfig.hasStatistics()) {
                     TextButton(
                         onClick = onStatisticsClick,
@@ -216,7 +216,9 @@ fun PresetsScreen(
                             // and never showed an increment, so 5+0 and 5+3 looked the same.
                             val timeInfo = remember(log.settings) { timeControlLabel(log.settings) }
 
-                            PresetCard("$modeName\n$timeInfo\n($date)") {
+                            // Room for a time control that wraps -- a FIDE one runs long -- before
+                            // the date, which three lines cut off with no sign anything was missing.
+                            PresetCard("$modeName\n$timeInfo\n($date)", maxLines = 5) {
                                 onPresetSelected(log.settings, log.initialPlayerStates.ifEmpty { null }, null)
                             }
                         }
@@ -273,6 +275,7 @@ fun PresetCard(
     description: String? = null,
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
+    maxLines: Int = 3,
     onClick: () -> Unit
 ) {
     val hasActions = onEdit != null || onDelete != null
@@ -312,7 +315,8 @@ fun PresetCard(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    maxLines = 3,
+                    maxLines = maxLines,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     lineHeight = 14.sp
                 )
             }
