@@ -2917,6 +2917,27 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             )
         }
         stopIfGameOver(now)
+        passTurnFromEliminated(now)
+    }
+
+    /**
+     * Under FLAG with three or four players, play goes on past a flag, and the turn passes to the
+     * next player still in. It stayed with the one just eliminated: their clock stopped, and the
+     * table waited for them to press a side that was out of the game -- a press logged as a move.
+     * Not a move, so nothing is logged and no increment is given; the FLAG is already recorded.
+     */
+    private fun passTurnFromEliminated(now: Long) {
+        val state = _uiState.value
+        val s = _settings.value
+        val active = state.activePlayer ?: return
+        if (timerJob == null || state.isPaused || s.flagBehavior != FlagBehavior.FLAG || s.numberOfPlayers < 3) return
+        if (getPlayerSettings(active).mode.isWholeTable || state.players.getOrNull(active - 1)?.isOutOfTime != true) return
+        if (isGameOver(state, s.flagBehavior, s.numberOfPlayers)) return
+        val next = nextPlayerInTurn(active, state.players, s.numberOfPlayers, s.flagBehavior)
+        if (next == active) return
+        moveStartTime = now
+        startClock(next)
+        if (s.playSwitchSound) soundManager.playSwitch()
     }
 
     /**
