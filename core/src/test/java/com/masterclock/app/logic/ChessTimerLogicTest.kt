@@ -755,6 +755,16 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `a GONG phase set to nothing still lasts a second`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.GONG, gongReflectionMs = 0, gongMoveMs = 0))
+        val reflecting = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 0, isGongReflectionPhase = true), PlayerState(0)), activePlayer = 1)
+        val moving = coupled(reflecting, 100, settings).state
+        assertFalse(moving.players[0].isGongReflectionPhase)
+        // The next tick does not flip it back.
+        assertFalse(coupled(moving, 100, settings).state.players[0].isGongReflectionPhase)
+    }
+
+    @Test
     fun `GONG moves from reflection to move with a gong, then on to the next player`() {
         val s = PlayerSettings(mode = TimerMode.GONG, gongReflectionMs = 5_000, gongMoveMs = 3_000)
         val settings = ChessClockSettings(main = s)

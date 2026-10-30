@@ -1328,6 +1328,13 @@ private const val MAX_IMPORTED_EVENT_TYPE_CHARS = 64
 /** More than anyone has played, and far below what makes the history screen or the database suffer. */
 private const val MAX_IMPORTED_LOGS = 10_000
 
+/**
+ * The shortest a Gong phase runs. The editor takes 0, and a phase of nothing ended on every tick:
+ * the clock flipped between reflection and move ten times a second, logging a move, striking the
+ * gong and speaking at each flip.
+ */
+private const val MIN_GONG_PHASE_MS = 1_000L
+
 /** An id this app makes is a UUID, 36 characters. */
 private const val MAX_IMPORTED_ID_CHARS = 64
 
@@ -1974,16 +1981,16 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
                 // full: up to a tick per phase, the drift the other clocks no longer have.
                 if (newTime <= 0) {
                     if (isReflection) {
-                        newTime = (ps.gongMoveMs + newTime).coerceAtLeast(0)
+                        newTime = (ps.gongMoveMs.coerceAtLeast(MIN_GONG_PHASE_MS) + newTime).coerceAtLeast(0)
                         isReflection = false
                         if (idx == active) gong = true
                     } else {
-                        newTime = (ps.gongReflectionMs + newTime).coerceAtLeast(0)
+                        newTime = (ps.gongReflectionMs.coerceAtLeast(MIN_GONG_PHASE_MS) + newTime).coerceAtLeast(0)
                         isReflection = true
                         moveCount++
                         // The end of the move phase is the move. Nothing was logged for it, so a Gong
                         // game held no MOVE, never flags, and was deleted from the history on Reset.
-                        moves += idx to (ps.gongReflectionMs + ps.gongMoveMs)
+                        moves += idx to (ps.gongReflectionMs.coerceAtLeast(MIN_GONG_PHASE_MS) + ps.gongMoveMs.coerceAtLeast(MIN_GONG_PHASE_MS))
                         if (!isSim) { nextActiveIdx = (active % settings.numberOfPlayers) + 1 }
                     }
                 }
@@ -2589,7 +2596,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     val first = pSettings.phases.firstOrNull() ?: GamePhase()
                     PlayerState(timeRemainingMs = first.timeMs, currentPhaseIndex = 0)
                 }
-                TimerMode.GONG -> PlayerState(timeRemainingMs = pSettings.gongReflectionMs, isGongReflectionPhase = true)
+                TimerMode.GONG -> PlayerState(timeRemainingMs = pSettings.gongReflectionMs.coerceAtLeast(MIN_GONG_PHASE_MS), isGongReflectionPhase = true)
                 TimerMode.FAST_MOVE -> PlayerState(
                     timeRemainingMs = if (pSettings.fastMoveMode == FastMoveType.TRANSFER) pSettings.moveTimeMs else pSettings.initialTimeMs,
                     initialTotalTimeMs = pSettings.initialTimeMs
