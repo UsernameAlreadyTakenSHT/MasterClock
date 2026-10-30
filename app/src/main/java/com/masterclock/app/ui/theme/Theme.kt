@@ -65,7 +65,13 @@ fun MasterClockTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         val window = (view.context as Activity).window
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = (!darkTheme && !isEInk) || (isEInk && !eInkDarkMode)
+        // Both bars follow the app's theme. Only the status bar did, so with the app dark on a light
+        // system -- or the other way round -- the navigation bar's buttons could vanish into it.
+        val lightBars = (!darkTheme && !isEInk) || (isEInk && !eInkDarkMode)
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = lightBars
+            isAppearanceLightNavigationBars = lightBars
+        }
     }
 
     CompositionLocalProvider(

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- values-v31 with values-night's window; a night qualifier outranks the API level, so without
+         this file Android 12+ in the dark would lose the splash settings below. -->
+    <style name="Theme.MasterClock" parent="Theme.MaterialComponents.Light">
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The window before the first frame, under a dark system theme: it was white, and every launch
+         in the dark flashed white before the app drew. The app's own theme may still differ; this
+         covers the default, which follows the system. -->
+    <style name="Theme.MasterClock" parent="Theme.MaterialComponents.Light">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>
