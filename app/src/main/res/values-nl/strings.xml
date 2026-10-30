@@ -584,4 +584,5 @@
     <string name="omni_in_reserve">+%1$s in reserve</string>
     <string name="omni_cfg_unbalanced_explain">Elke speler heeft elke beurt evenveel kans – één van hen kan echt het grootste deel van een ronde krijgen.</string>
     <string name="tools_player_short">S%d</string>
+    <string name="back_press_again_to_exit">Druk nog een keer op Terug om af te sluiten</string>
 </resources>

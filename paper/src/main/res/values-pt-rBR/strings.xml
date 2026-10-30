@@ -15,4 +15,5 @@
     <string name="settings_not_optimized">Esta página de configurações ainda não está otimizada para tinta eletrônica.</string>
     <string name="settings_keep_awake">Manter a tela ligada</string>
     <string name="settings_fullscreen">Tela cheia</string>
+    <string name="back_press_again_to_exit">Toque em Voltar de novo para sair</string>
 </resources>

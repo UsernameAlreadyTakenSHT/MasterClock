@@ -99,4 +99,5 @@
     </plurals>
 
     <string name="settings_version">Versão %s</string>
+    <string name="back_press_again_to_exit">Prime Voltar outra vez para sair</string>
 </resources>

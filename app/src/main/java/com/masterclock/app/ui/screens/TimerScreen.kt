@@ -274,6 +274,9 @@ fun TimerScreen(
             }
         }
 
+        // Back closes the arbiter's panel, as its own button does, before it can count towards
+        // leaving the app (MainActivity).
+        androidx.activity.compose.BackHandler(enabled = state.isArbitreMode) { viewModel.toggleArbitreMode() }
         AnimatedVisibility(visible = state.isArbitreMode, enter = fadeIn(tween()), exit = fadeOut(tween())) { 
             ArbitreOverlay(
                 numberOfPlayers = settings.numberOfPlayers,

@@ -341,8 +341,24 @@ class MainActivity : ComponentActivity() {
             )
             val navigator = remember { Navigator(navigationState) }
 
+            // Back on the clock -- the root, where there is nothing to go back to -- leaves the app on
+            // a second press within two seconds; the first says so. It did nothing at all, however
+            // often it was pressed. Two presses, because the clock is held in the hands during a game
+            // and one stray press must not take the players out of it. The app goes to the
+            // background, as Android sends a root activity there itself, so the game is kept.
+            var lastRootBackAt by remember { mutableLongStateOf(0L) }
+            val pressBackAgainText = stringResource(R.string.back_press_again_to_exit)
             BackHandler {
-                navigator.goBack()
+                if (!navigator.goBack()) {
+                    val now = android.os.SystemClock.elapsedRealtime()
+                    if (now - lastRootBackAt < DOUBLE_BACK_WINDOW_MS) {
+                        lastRootBackAt = 0L
+                        moveTaskToBack(true)
+                    } else {
+                        lastRootBackAt = now
+                        android.widget.Toast.makeText(context, pressBackAgainText, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
 
             MasterClockTheme(
@@ -656,3 +672,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+/** How soon a second Back on the clock must follow the first to leave the app. */
+private const val DOUBLE_BACK_WINDOW_MS = 2_000L

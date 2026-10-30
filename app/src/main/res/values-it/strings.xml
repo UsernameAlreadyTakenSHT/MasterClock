@@ -592,4 +592,5 @@
     <string name="omni_in_reserve">+%1$s di riserva</string>
     <string name="omni_cfg_unbalanced_explain">Ogni giocatore ha la stessa probabilità a ogni turno: uno di loro può davvero prendersi gran parte di un round.</string>
     <string name="tools_player_short">G%d</string>
+    <string name="back_press_again_to_exit">Premi di nuovo Indietro per uscire</string>
 </resources>

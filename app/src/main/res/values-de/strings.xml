@@ -585,4 +585,5 @@
     <string name="omni_in_reserve">+%1$s in Reserve</string>
     <string name="omni_cfg_unbalanced_explain">Jeder Spieler ist bei jedem Zug gleich wahrscheinlich dran – einer von ihnen kann wirklich den Großteil einer Runde bekommen.</string>
     <string name="tools_player_short">S%d</string>
+    <string name="back_press_again_to_exit">Zum Beenden noch einmal auf Zurück drücken</string>
 </resources>

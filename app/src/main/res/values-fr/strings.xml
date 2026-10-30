@@ -608,4 +608,5 @@
     <string name="omni_in_reserve">+%1$s en réserve</string>
     <string name="omni_cfg_unbalanced_explain">Chaque joueur a autant de chances à chaque tour : l\'un d\'eux peut vraiment jouer la plus grande partie d\'une manche.</string>
     <string name="tools_player_short">J%d</string>
+    <string name="back_press_again_to_exit">Appuyez à nouveau sur Retour pour quitter</string>
 </resources>

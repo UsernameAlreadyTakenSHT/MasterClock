@@ -135,4 +135,5 @@
     <string name="preset_shortcut_deleted">Esta predefinição foi excluída</string>
     <string name="omni_cfg_unbalanced_explain">Todos os jogadores têm a mesma probabilidade a cada turno: um deles pode realmente ficar com a maior parte de uma rodada.</string>
     <string name="import_confirm_message">Este arquivo substitui suas configurações atuais. As partidas, predefinições, notas e resultados do placar dele são adicionados aos seus: nada seu é apagado.</string>
+    <string name="back_press_again_to_exit">Toque em Voltar de novo para sair</string>
 </resources>
