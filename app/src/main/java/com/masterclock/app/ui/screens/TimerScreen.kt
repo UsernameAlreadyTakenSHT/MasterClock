@@ -136,10 +136,11 @@ fun TimerScreen(
             if (activeMode == TimerMode.FIDE_PERIODS && activeSettings != null && activePlayerState != null) fidePeriodLabel(activeSettings, activePlayerState) else null,
         )
 
+        // PlayerButton gives the press its haptic. The layouts for two players and for PHASES gave it
+        // again from out here, so those presses buzzed twice where three and four players' buzzed once.
         if (isGlobalMode) {
             Box(Modifier.fillMaxSize()) {
                 PlayerButton(Modifier.fillMaxSize(), state, 1, settings, contentRotation = iconRotation) { 
-                    if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     viewModel.startOrSwitch(1) 
                 }
             }
@@ -156,7 +157,6 @@ fun TimerScreen(
                             else -> 180f
                         }
                         PlayerButton(Modifier.weight(p1Weight), state, 1, settings, contentRotation = p1Rotation) { 
-                            if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.startOrSwitch(1) 
                         }
 
@@ -166,7 +166,6 @@ fun TimerScreen(
                             else -> 0f
                         }
                         PlayerButton(Modifier.weight(p2Weight), state, 2, settings, contentRotation = p2Rotation) { 
-                            if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.startOrSwitch(2) 
                         }
                     }
