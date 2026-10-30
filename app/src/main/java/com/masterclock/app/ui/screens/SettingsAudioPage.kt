@@ -3,6 +3,7 @@ package com.masterclock.app.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -186,37 +187,46 @@ fun AudioSettingsPage(
             val soundNotKeptText = stringResource(R.string.toast_sound_not_kept)
             // A sound the app cannot keep access to is refused now rather than accepted for one
             // session and dropped at the next launch.
-            fun keep(uri: Uri, apply: (String) -> ChessClockSettings) {
-                if (persistReadPermission(context, uri)) onSettingsChanged(apply(uri.toString()))
+            // A sound replaced or cleared gives its grant back. Each pick took a persistable grant and
+            // none was ever released: they piled up -- Android caps them per app -- for files the app
+            // no longer plays. Kept while another of the four sounds is the same file.
+            fun change(old: String?, next: ChessClockSettings) {
+                onSettingsChanged(next)
+                if (old == null) return
+                val inUse = listOf(next.customBeepUri, next.customGongUri, next.customFinalBeepUri, next.customSwitchUri).contains(old)
+                if (!inUse) runCatching { context.contentResolver.releasePersistableUriPermission(old.toUri(), Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            }
+            fun keep(uri: Uri, old: String?, apply: (String) -> ChessClockSettings) {
+                if (persistReadPermission(context, uri)) change(old, apply(uri.toString()))
                 else android.widget.Toast.makeText(context, soundNotKeptText, android.widget.Toast.LENGTH_LONG).show()
             }
-            val switchLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customSwitchUri = s) } } }
-            val beepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customBeepUri = s) } } }
-            val finalBeepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customFinalBeepUri = s) } } }
-            val gongLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it) { s -> currentSettings.copy(customGongUri = s) } } }
+            val switchLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it, currentSettings.customSwitchUri) { s -> currentSettings.copy(customSwitchUri = s) } } }
+            val beepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it, currentSettings.customBeepUri) { s -> currentSettings.copy(customBeepUri = s) } } }
+            val finalBeepLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it, currentSettings.customFinalBeepUri) { s -> currentSettings.copy(customFinalBeepUri = s) } } }
+            val gongLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { keep(it, currentSettings.customGongUri) { s -> currentSettings.copy(customGongUri = s) } } }
 
             Column {
                 CustomSoundItem(
                     label = stringResource(R.string.settings_beep_countdown_sound),
                     uri = currentSettings.customBeepUri,
                     topRounded = true,
-                    onClear = { onSettingsChanged(currentSettings.copy(customBeepUri = null)) }
+                    onClear = { change(currentSettings.customBeepUri, currentSettings.copy(customBeepUri = null)) }
                 ) { beepLauncher.launch(arrayOf("audio/*")) }
                 CustomSoundItem(
                     label = stringResource(R.string.settings_gong_mode_sound),
                     uri = currentSettings.customGongUri,
-                    onClear = { onSettingsChanged(currentSettings.copy(customGongUri = null)) }
+                    onClear = { change(currentSettings.customGongUri, currentSettings.copy(customGongUri = null)) }
                 ) { gongLauncher.launch(arrayOf("audio/*")) }
                 CustomSoundItem(
                     label = stringResource(R.string.settings_final_beep_sound),
                     uri = currentSettings.customFinalBeepUri,
-                    onClear = { onSettingsChanged(currentSettings.copy(customFinalBeepUri = null)) }
+                    onClear = { change(currentSettings.customFinalBeepUri, currentSettings.copy(customFinalBeepUri = null)) }
                 ) { finalBeepLauncher.launch(arrayOf("audio/*")) }
                 CustomSoundItem(
                     label = stringResource(R.string.settings_switch_sound),
                     uri = currentSettings.customSwitchUri,
                     bottomRounded = true,
-                    onClear = { onSettingsChanged(currentSettings.copy(customSwitchUri = null)) }
+                    onClear = { change(currentSettings.customSwitchUri, currentSettings.copy(customSwitchUri = null)) }
                 ) { switchLauncher.launch(arrayOf("audio/*")) }
             }
         }
