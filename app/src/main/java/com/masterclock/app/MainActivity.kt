@@ -96,6 +96,12 @@ class MainActivity : ComponentActivity() {
             val gameHistory by timerViewModel.gameHistory.collectAsState()
             val customPresets by timerViewModel.customPresets.collectAsState()
             val isReady by timerViewModel.isReady.collectAsState()
+            // The volume keys follow where the sounds go. With "Use media output" off the beeps play
+            // as system sounds, and the keys still moved the media volume; the voice stays on media,
+            // so the keys do too while it speaks.
+            LaunchedEffect(settings.audioOutputMedia, settings.voiceAnnouncementsEnabled) {
+                volumeControlStream = if (settings.audioOutputMedia || settings.voiceAnnouncementsEnabled) AudioManager.STREAM_MUSIC else AudioManager.STREAM_SYSTEM
+            }
             val json = remember { Json { ignoreUnknownKeys = true } }
             val context = LocalContext.current
             // Hoisted: these fire from document-picker callbacks, outside composable scope.
