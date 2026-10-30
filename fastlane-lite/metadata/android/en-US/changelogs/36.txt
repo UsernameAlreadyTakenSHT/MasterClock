@@ -1,0 +1,3 @@
+A full review fixed close to a hundred issues across every mode, presets and the game history.
+Play charges the first move correctly, and a finished game stops ticking.
+Back pressed twice leaves the app.

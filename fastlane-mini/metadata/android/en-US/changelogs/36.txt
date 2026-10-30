@@ -1,0 +1,2 @@
+Play charges the first move correctly, and a finished game stops ticking.
+Back pressed twice leaves the app.

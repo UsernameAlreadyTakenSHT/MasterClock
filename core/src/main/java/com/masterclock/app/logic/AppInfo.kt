@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-10-17"
+    const val BUILD_DATE = "2026-10-30"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,19 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.35",
+            date = "2026-10-30",
+            notes = listOf(
+                "A full review of the app fixed close to a hundred issues, across every mode, the game history, presets, imports and the notebook.",
+                "Play charges the first move from the moment it is pressed. It was charged the time since the phone was switched on.",
+                "A finished game stops ticking, and resuming a saved game or resetting the settings no longer loses your notes.",
+                "The arbiter's adjustments reach the clock on screen, and can give a flagged player time back.",
+                "Back pressed twice on the clock leaves the app.",
+                "Texts that were in English in every language are translated. Electronic boards are handled more reliably.",
+                "The game history is converted once on the first launch; nothing you can see is lost.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.34",
             date = "2026-10-17",

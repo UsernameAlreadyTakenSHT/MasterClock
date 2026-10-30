@@ -1,0 +1,3 @@
+A full review fixed close to a hundred issues across every mode, the history, presets, imports and the notebook.
+Play charges the first move correctly, a finished game stops, and resuming a saved game keeps your notes.
+Back pressed twice leaves the app. Texts that were in English everywhere are translated.

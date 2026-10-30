@@ -1,3 +1,55 @@
+## v0.8.35 — 2026-10-30
+
+A large release: a full review of the app, every mode and option, settings and screens, found close
+to a hundred things to put right. Most are in how the clock behaves at the edges — a flag, a pause,
+a game resumed — and in what the app keeps.
+
+**Stored data.** The game history is converted once, on the first launch: the notebook is taken out
+of the games it was being copied into. Nothing you can see is lost, and the history takes far less
+space.
+
+### Fixed
+- **Starting a game with Play charged its first move the time since the phone was switched on.** It showed in the statistics, Bronstein refunded the whole delay, and Fast Move Transfer could hand the opponent hours. US Delay gave that first move no delay at all.
+- **Resuming a saved game brought back every setting from the moment of the save** — notes written since were lost, notes deleted since came back, colours and sounds reverted. Only the game's time control comes back now.
+- **"Reset all settings" erased the whole notebook.** It keeps your notes now.
+- **A finished game kept running**: under the "flag" behaviour, with three or four players down to one, or in Phases, the clock kept ticking, showed Pause, and was offered for resuming. It stops when the game ends.
+- **The Omni setup could crash** when switching to a game with fewer rounds in its Turns or Phases step.
+- **The arbiter's ±1 minute / ±1 second did nothing in Phases** and nothing meaningful in Move Counts, and could not bring back a player who had flagged after a clock fault. They now adjust the clock on screen, are off for move counts, and give time back to a flagged player.
+- **Turning per-player settings off**, or turning on more players, brought back an old time control and lost Player 1's.
+- **Built-in presets reset the game and the table**: a draughts player was put back to chess, four players back to two. They keep yours now.
+- **Settings that could not be read cost the whole notebook.** A value from a newer version now falls back to its default, and the notebook is kept in any case.
+- Under the "flag" behaviour with three or four players, the turn now passes on by itself when a player is eliminated.
+- A Gong phase set to zero ended on every tick; each phase lasts a second at least.
+- Omni: the time bank in each player's own bank now reaches their next turn; the launch countdown starts at 10, not 11; Play on a finished session starts a new one; leaving the screen pauses the session.
+- FIDE periods run as a FIDE clock does: the increment is added before the move, so 90 + 30 starts at 90:30; a final period with no move count ends on its time; reaching a new period beeps and is logged.
+- Byoyomi: a period of 0 seconds or 0 periods no longer crashes or misbehaves; a lost period beeps and is announced.
+- Hourglass time pays an overrun off instead of deepening it, and a flagged clock no longer counts down.
+- Shared (Auto) hands the turn on as a move, lights every box and takes the arbiter's adjustments on the table's clock. Global Shared works under "flag", and the reserve is counted down when it is what runs out first.
+- Phases: no gong any more (it is Gong's), the first phase is announced, the pause between phases can last until a tap, and the end of a phase was reworked.
+- Fast Move follows the flag behaviour, hands its transfer to the right player, and Player 2 follows Player 1's variant.
+- Hidden's reveals, Gong's moves in the history, Chrono as the table's clock and Overtime's reserve warnings are fixed.
+- Game history and statistics: moves, pauses, imports and the notebook are recorded as they happened; dates are written year first everywhere (2026-10-30).
+- Presets, Last Games tiles and launcher shortcuts name each mode by what it uses ("Gong 30s / 5s", "Phases (3), 60 min", "40 moves").
+- Notebook: deleting a note and resetting the scoreboard ask first; Back from a note goes back to the list; formatting a selection made leftwards no longer crashes; a lone "#" or "*" stays visible; Undo after Clear brings a drawing back, and text notes have an Undo.
+- Media notes: a retake replaces the old one only once it exists; photos and videos can be deleted; videos stop at one minute and no longer play by themselves.
+- On a 360dp-wide phone the colour rows and the boards fit the screen.
+- Chess960 starts on a real Chess960 position, and only Chess960 and Double 960 claim castling rights in the FEN.
+- Electronic boards: Bluetooth boards are handled on the main thread, ask for a larger packet size so the open protocol's boards can start a game, and say when a connection fails; USB boards get their line settings on the right interface and notice being unplugged; open-protocol messages sent together are read one by one; a DGT stream recovers from noise at once.
+- Imports are bounded: durations, scoreboards and game ids.
+- The volume keys follow where the beeps are played; the launch screen is black under a dark system theme; the navigation bar's buttons follow the app's theme.
+- One vibration per press with two players and in Phases, not two; the vibration countdown follows the same clock as the beeps in Global.
+- The rulebooks open without freezing the screen, and an updated rulebook is shown after an update; the Wikipedia link no longer closes the app on a phone without a browser.
+- A custom sound replaced or cleared gives its file access back. A camera refused for good can be granted from the QR screen.
+- The paired-boards list fills on the first visit and scrolls.
+- E-Ink: the "Haptic feedback" switch now does something; the player tab survives a recreation.
+
+### Changed
+- **Back on the clock leaves the app on a second press** within two seconds; the first says so. With the arbiter's panel open, Back closes it first.
+- Texts that were in English in every language are translated: the arbiter's buttons (which TalkBack now reads with the player's name), Left and Right, the short player name, and Omni's turn, player and reserve.
+- The English interface says "Arbiter", not "Arbitre".
+- The shogi export is plain text, which is what it is.
+- Built with AGP 9.5.0.
+
 ## v0.8.34 — 2026-10-17
 
 Three small corrections found while testing v0.8.33 on a device.

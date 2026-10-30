@@ -1,0 +1,3 @@
+A full review fixed close to a hundred issues across every mode, presets and the game history.
+Play charges the first move correctly, a finished game stops, and per-player settings no longer lose Player 1's.
+Back pressed twice leaves the app.
