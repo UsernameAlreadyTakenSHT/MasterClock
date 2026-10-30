@@ -54,6 +54,18 @@ private const val SCAN_TIMEOUT_MS = 30_000L
  */
 private const val GATT_OPERATION_TIMEOUT_MS = 5_000L
 
+/** BLE's default ATT MTU, and what a link keeps if a larger one is refused. */
+private const val DEFAULT_MTU = 23
+
+/** The largest MTU Android negotiates; boards answer with what they support. */
+private const val REQUESTED_MTU = 517
+
+/** What each write loses to the ATT header. */
+private const val ATT_HEADER_BYTES = 3
+
+/** How long to wait on the MTU's answer before discovering services anyway. */
+private const val MTU_TIMEOUT_MS = 2_000L
+
 /** Far more than a working board ever has outstanding: subscriptions plus a reply per move. */
 private const val MAX_QUEUED_GATT_OPERATIONS = 64
 
@@ -129,8 +141,9 @@ class BluetoothBoardManager(private val context: Context) {
     private var operationInFlight = false
 
     /**
-     * Callbacks arrive on the main executor, so everything scheduled here runs on the same thread
-     * the queue and the scan state are touched from. No locking needed, and none would help.
+     * Where everything here runs: the GATT callbacks are posted to it (see [gattCallback]), and so
+     * is everything scheduled. The queue and the scan state are touched from this thread alone, so
+     * no locking is needed, and none would help.
      */
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -145,6 +158,15 @@ class BluetoothBoardManager(private val context: Context) {
      * board falls silent and the app looks connected.
      */
     private val operationTimeout = Runnable { operationFinished() }
+
+    /** The negotiated ATT MTU; a write carries this less [ATT_HEADER_BYTES]. */
+    private var mtu = DEFAULT_MTU
+
+    /** Whether service discovery has been asked for on this connection; see [discoverServices]. */
+    private var servicesRequested = false
+
+    /** Goes ahead without a larger MTU when the board never answers the request. */
+    private val mtuFallback = Runnable { activeGatt?.let { discoverServices(it) } }
 
     // `as?`, not `as`, and for a reason that has nothing to do with boards. ChessTimerViewModel
     // constructs this manager as an eager field for every consumer -- all four app flavours and
@@ -224,93 +246,157 @@ class BluetoothBoardManager(private val context: Context) {
         }
     }
 
+    /**
+     * Every callback is handed to the main thread before it does anything.
+     *
+     * The comment on [mainHandler] said they arrived there, and everything here was written for it:
+     * the queue, [operationInFlight], the protocol, the move tracker, and the call into the clock.
+     * That is true of the API 37 route alone, which passes the main executor. The route every device
+     * takes today, connectGatt without a handler, calls back on a Binder thread -- so the timeout
+     * on the main thread and a completion on that one could both start an operation, two went out
+     * at once and the radio dropped one, an acknowledgement among them; and each move from the board
+     * pressed the clock from off the main thread, racing its own tick. USB and Bluetooth serial
+     * already moved to the main thread before passing a move on. A payload is copied before the hop,
+     * since the characteristic it was read from may be reused for the next one.
+     */
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                if (!hasConnectPermission()) {
-                    // Bailing out used to leave this client open with nothing holding a reference
-                    // that could ever close it.
-                    if (activeGatt === gatt) activeGatt = null
-                    closeGattQuietly(gatt)
-                    _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
-                    return
-                }
-                _connectionState.value = ConnectionState.Connected(gatt.device.name ?: "Unknown Board")
-                gatt.discoverServices()
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                // Android hands out a fixed number of GATT clients and only close() gives one back.
-                // A board that goes out of range or is switched off arrives here, and without this
-                // the client is kept forever: a handful of those and no further connection succeeds
-                // at all, in this app or any other, until it is restarted.
-                //
-                // Only when we did not close it ourselves. disconnect() clears activeGatt after
-                // closing, so this comparison is what tells an unsolicited drop from a deliberate
-                // one and keeps the object from being closed twice.
-                if (activeGatt === gatt) {
-                    closeGattQuietly(gatt)
-                    activeGatt = null
-                    clearGattQueue()
-                }
-                _connectionState.value = ConnectionState.Idle
-            }
+            mainHandler.post { connectionStateChanged(gatt, status, newState) }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            if (!hasConnectPermission()) return
-            if (status != BluetoothGatt.GATT_SUCCESS) {
-                _connectionState.value = ConnectionState.Error("Could not read the board's services")
-                return
-            }
+            mainHandler.post { servicesDiscovered(gatt, status) }
+        }
 
-            // A service the board exposes is a fact; its advertised name is a guess. So if any make
-            // names a service and this board has it, that make wins over whatever the name suggested.
-            BoardProtocols.forAdvertisedServices(gatt.services.map { it.uuid })?.let { byService ->
-                if (byService !== protocol) {
-                    protocol = byService
-                    assembler = protocol.framing?.let { StreamAssembler(it) }
-                }
-            }
-
-            val services = protocol.ble?.serviceUuid
-                ?.let { listOfNotNull(gatt.getService(it)) }
-                ?: gatt.services
-            val characteristics = services
-                .flatMap { it.characteristics }
-                .filter { protocol.ble?.notifyCharacteristicUuid == null || it.uuid == protocol.ble?.notifyCharacteristicUuid }
-                .filter { it.properties and NOTIFY_OR_INDICATE != 0 }
-
-            if (characteristics.isEmpty()) {
-                _connectionState.value = ConnectionState.Error("This device reports nothing this app can listen to")
-                return
-            }
-
-            clearGattQueue()
-            characteristics.forEach { gattQueue += GattOperation.Subscribe(it) }
-            // Queued behind the subscriptions on purpose: a board asked to report before it has
-            // been subscribed to would answer into a void.
-            protocol.initCommandFor(gameType)?.let { gattQueue += GattOperation.Write(it) }
-            runNextOperation()
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            mainHandler.post { mtuChanged(gatt, mtu, status) }
         }
 
         override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
             // Failures are not fatal in raw-capture mode: a board may expose characteristics it will
             // not actually let us subscribe to, and the others still work.
-            operationFinished()
+            mainHandler.post { operationFinished() }
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-            operationFinished()
+            mainHandler.post { operationFinished() }
         }
 
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             @Suppress("DEPRECATION")
-            handlePayload(characteristic.value)
+            val copy = characteristic.value?.copyOf()
+            mainHandler.post { handlePayload(copy) }
         }
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
-            handlePayload(value)
+            val copy = value.copyOf()
+            mainHandler.post { handlePayload(copy) }
         }
+    }
+
+    private fun connectionStateChanged(gatt: BluetoothGatt, status: Int, newState: Int) {
+        if (newState == BluetoothProfile.STATE_CONNECTED) {
+            if (!hasConnectPermission()) {
+                // Bailing out used to leave this client open with nothing holding a reference
+                // that could ever close it.
+                if (activeGatt === gatt) activeGatt = null
+                closeGattQuietly(gatt)
+                _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+                return
+            }
+            _connectionState.value = ConnectionState.Connected(runCatching { gatt.device.name }.getOrNull() ?: "Unknown Board")
+            // A larger MTU first, then the services. At the default of 23 a write carries 20 bytes,
+            // and the open protocol's opening is longer -- 52 bytes for chess, some 130 for
+            // draughts -- which the stack can only send as a long write, one many boards built on
+            // small modules refuse: the game never began. A board that does not answer the request
+            // is not waited on for long.
+            mtu = DEFAULT_MTU
+            servicesRequested = false
+            val requested = runCatching { gatt.requestMtu(REQUESTED_MTU) }.getOrDefault(false)
+            if (requested) mainHandler.postDelayed(mtuFallback, MTU_TIMEOUT_MS) else discoverServices(gatt)
+        } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            mainHandler.removeCallbacks(mtuFallback)
+            // An attempt that never connected says so. It went back to Idle as quietly as a board
+            // switched off mid-game: the button's spinner stopped, and nothing said the board was
+            // out of range or refused -- status 133, Android's catch-all, being the usual answer.
+            val failedToConnect = status != BluetoothGatt.GATT_SUCCESS && _connectionState.value is ConnectionState.Connecting
+            // Android hands out a fixed number of GATT clients and only close() gives one back.
+            // A board that goes out of range or is switched off arrives here, and without this
+            // the client is kept forever: a handful of those and no further connection succeeds
+            // at all, in this app or any other, until it is restarted.
+            //
+            // Only when we did not close it ourselves. disconnect() clears activeGatt after
+            // closing, so this comparison is what tells an unsolicited drop from a deliberate
+            // one and keeps the object from being closed twice.
+            if (activeGatt === gatt) {
+                closeGattQuietly(gatt)
+                activeGatt = null
+                clearGattQueue()
+            }
+            _connectionState.value = if (failedToConnect) ConnectionState.Error("Could not connect to the board") else ConnectionState.Idle
+        }
+    }
+
+    private fun mtuChanged(gatt: BluetoothGatt, newMtu: Int, status: Int) {
+        if (status == BluetoothGatt.GATT_SUCCESS) mtu = newMtu
+        mainHandler.removeCallbacks(mtuFallback)
+        discoverServices(gatt)
+    }
+
+    /** Once per connection, whichever comes first: the MTU's answer or its fallback. */
+    private fun discoverServices(gatt: BluetoothGatt) {
+        if (servicesRequested || activeGatt !== gatt) return
+        servicesRequested = true
+        if (runCatching { gatt.discoverServices() }.getOrDefault(false) != true) {
+            _connectionState.value = ConnectionState.Error("Could not read the board's services")
+        }
+    }
+
+    private fun servicesDiscovered(gatt: BluetoothGatt, status: Int) {
+        if (!hasConnectPermission()) return
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            _connectionState.value = ConnectionState.Error("Could not read the board's services")
+            return
+        }
+
+        // A service the board exposes is a fact; its advertised name is a guess. So if any make
+        // names a service and this board has it, that make wins over whatever the name suggested.
+        BoardProtocols.forAdvertisedServices(gatt.services.map { it.uuid })?.let { byService ->
+            if (byService !== protocol) {
+                protocol = byService
+                assembler = protocol.framing?.let { StreamAssembler(it) }
+            }
+        }
+
+        val services = protocol.ble?.serviceUuid
+            ?.let { listOfNotNull(gatt.getService(it)) }
+            ?: gatt.services
+        val characteristics = services
+            .flatMap { it.characteristics }
+            .filter { protocol.ble?.notifyCharacteristicUuid == null || it.uuid == protocol.ble?.notifyCharacteristicUuid }
+            .filter { it.properties and NOTIFY_OR_INDICATE != 0 }
+
+        if (characteristics.isEmpty()) {
+            _connectionState.value = ConnectionState.Error("This device reports nothing this app can listen to")
+            return
+        }
+
+        clearGattQueue()
+        characteristics.forEach { gattQueue += GattOperation.Subscribe(it) }
+        // Queued behind the subscriptions on purpose: a board asked to report before it has
+        // been subscribed to would answer into a void.
+        protocol.initCommandFor(gameType)?.let { gattQueue += writesOf(it) }
+        runNextOperation()
+    }
+
+    /**
+     * [bytes] as writes the link can carry each in one: no longer than the MTU allows, in order.
+     * Short messages -- every acknowledgement, every vendor make's command -- stay one write.
+     */
+    private fun writesOf(bytes: ByteArray): List<GattOperation.Write> {
+        val size = (mtu - ATT_HEADER_BYTES).coerceAtLeast(1)
+        return (bytes.indices step size).map { GattOperation.Write(bytes.copyOfRange(it, minOf(it + size, bytes.size))) }
     }
 
     private fun handlePayload(payload: ByteArray?) {
@@ -319,7 +405,7 @@ class BluetoothBoardManager(private val context: Context) {
         payloads.forEach { message ->
             // Answer before acting on it: a board waiting for an acknowledgement sends nothing more
             // until it arrives, so a slow reply costs the next move, not just this one.
-            protocol.replyTo(message)?.let { enqueue(GattOperation.Write(it)) }
+            protocol.replyTo(message)?.let { reply -> writesOf(reply).forEach { enqueue(it) } }
             moveTracker.onReport(protocol.decode(message)).forEach { move ->
                 _lastMove.value = move
                 _onMoveReceivedCallback?.invoke(move)
@@ -495,8 +581,7 @@ class BluetoothBoardManager(private val context: Context) {
         stopScan()
         _connectionState.value = ConnectionState.Connecting
         _onMoveReceivedCallback = onMoveReceived
-        // Nothing implements a real make yet, so this resolves to raw capture for every board. Once
-        // one does, the same call picks it up with no change here.
+        // By name for now; the services found on connecting can still overrule it.
         protocol = BoardProtocols.forDeviceName(device.name)
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
@@ -560,6 +645,7 @@ class BluetoothBoardManager(private val context: Context) {
             closeGattQuietly(gatt)
         }
         clearGattQueue()
+        mainHandler.removeCallbacks(mtuFallback)
         // The callback holds the view model; there is no reason to keep it once the board it was
         // given for has gone.
         _onMoveReceivedCallback = null
