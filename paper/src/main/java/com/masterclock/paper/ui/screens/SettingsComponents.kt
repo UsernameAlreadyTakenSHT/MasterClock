@@ -1,13 +1,11 @@
 package com.masterclock.paper.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -17,7 +15,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -45,10 +49,10 @@ import com.mudita.mmd.components.text_field.TextFieldMMD
 fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Column {
         Text(
-            text = title, 
-            style = MaterialTheme.typography.titleSmall, 
-            color = MaterialTheme.colorScheme.onBackground, 
-            fontWeight = FontWeight.Medium, 
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = 16.dp)
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -62,21 +66,22 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, on
     if (selected) {
         ButtonMMD(
             onClick = onClick,
-            modifier = modifier.height(44.dp)
+            // 48dp, the smallest target Android recommends; 44 was under it.
+            modifier = modifier.height(48.dp)
         ) {
             Text(
-                text = title, 
+                text = title,
                 style = MaterialTheme.typography.labelLarge
             )
         }
     } else {
         OutlinedButtonMMD(
             onClick = onClick,
-            modifier = modifier.height(44.dp),
+            modifier = modifier.height(48.dp),
             border = outlinedButtonBorderMMD()
         ) {
             Text(
-                text = title, 
+                text = title,
                 style = MaterialTheme.typography.labelLarge
             )
         }
@@ -90,14 +95,20 @@ fun BehaviorSwitch(
     enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    // One switch for TalkBack: the row, with its label, its state and the role. The row was a bare
+    // clickable and the switch kept its own node, so TalkBack stopped twice -- on the label with no
+    // state, then on an unlabelled "Switch, off".
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
+            .toggleable(
+                value = checked,
                 enabled = enabled,
+                role = Role.Switch,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onCheckedChange(!checked) }
+                indication = null,
+                onValueChange = onCheckedChange,
+            )
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -109,9 +120,10 @@ fun BehaviorSwitch(
             color = if (enabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
         )
         SwitchMMD(
-            checked = checked, 
-            onCheckedChange = onCheckedChange, 
-            enabled = enabled
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+            modifier = Modifier.clearAndSetSemantics {},
         )
     }
 }
@@ -126,19 +138,19 @@ fun MSInput(label: String, timeMs: Long, onTimeChange: (Long) -> Unit) {
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 8.dp)) {
         Text(
-            text = label, 
-            style = MaterialTheme.typography.labelSmall, 
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onBackground, // AVOID GREY: 100% opacity
             fontWeight = FontWeight.Medium
         )
         // An hour at most, so 60 minutes leaves no room for seconds: each field was clamped on its
         // own, which let the pair reach 60:59.
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TimeField(m.toString(), "m", Modifier.weight(1f)) {
+            TimeField(m.toString(), "m", stringResource(R.string.a11y_field_minutes, label), Modifier.weight(1f)) {
                 val newM = it.toIntOrNull()?.coerceIn(0, 60) ?: 0
                 onTimeChange(((newM * 60000L) + (s * 1000L)).coerceAtMost(MAX_TIME_MS))
             }
-            TimeField(s.toString(), "s", Modifier.weight(1f)) {
+            TimeField(s.toString(), "s", stringResource(R.string.a11y_field_seconds, label), Modifier.weight(1f)) {
                 val newS = it.toIntOrNull()?.coerceIn(0, 59) ?: 0
                 onTimeChange(((m * 60000L) + (newS * 1000L)).coerceAtMost(MAX_TIME_MS))
             }
@@ -147,12 +159,16 @@ fun MSInput(label: String, timeMs: Long, onTimeChange: (Long) -> Unit) {
 }
 
 @Composable
-fun TimeField(value: String, suffix: String, modifier: Modifier = Modifier, onValueChange: (String) -> Unit) {
+fun TimeField(value: String, suffix: String, description: String, modifier: Modifier = Modifier, onValueChange: (String) -> Unit) {
     // No placeholder: an empty field already reads as zero.
     TextFieldMMD(
         value = if (value == "0") "" else value,
-        onValueChange = { if (it.length <= 2) onValueChange(it) },
-        modifier = modifier,
+        // Digits only. The number keyboard also offers "-" and ".", which read as no number at all
+        // and emptied the field.
+        onValueChange = { typed -> typed.filter(Char::isDigit).take(2).let { if (it.length == typed.length) onValueChange(it) } },
+        // Which time and which unit: TalkBack read only "edit box, m", the label above not being
+        // part of the field.
+        modifier = modifier.semantics { contentDescription = description },
         suffix = { Text(suffix) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true,
@@ -162,11 +178,11 @@ fun TimeField(value: String, suffix: String, modifier: Modifier = Modifier, onVa
 
 @Composable
 fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
-    val mainMode = when (p.mode) { 
+    val mainMode = when (p.mode) {
         TimerMode.SUDDEN_DEATH -> 0
         TimerMode.FISCHER -> 1
         TimerMode.MOVE_TIMER_STANDARD -> 2
-        else -> 0 
+        else -> 0
     }
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -174,37 +190,18 @@ fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
         ModeCard("Fischer", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
         ModeCard("Move", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
     }
-    
+
     Spacer(Modifier.height(8.dp))
-    
+
     if (mainMode != 2) { // NO Initial Time for Move Timer
         MSInput(stringResource(R.string.settings_initial_time), p.initialTimeMs) { onUpdateP(p.copy(initialTimeMs = it)) }
     }
-    
-    if (mainMode == 1) { 
-        MSInput(stringResource(R.string.settings_increment), p.incrementMs) { onUpdateP(p.copy(incrementMs = it)) } 
-    }
-    if (mainMode == 2) { 
-        MSInput(stringResource(R.string.settings_move_time), p.moveTimeMs) { onUpdateP(p.copy(moveTimeMs = it)) }
-    }
-}
 
-@Composable
-fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
-    val colors = remember { listOf(0xFF000000, 0xFFFFFFFF) }
-    
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        colors.forEach { colorVal ->
-            val isSelected = selectedColor == colorVal
-            Surface(
-                onClick = { if (!isSelected) onColorSelected(colorVal) }, 
-                modifier = Modifier.size(48.dp), 
-                shape = CircleShape, 
-                color = Color(colorVal), 
-                border = BorderStroke(width = if (isSelected) 4.dp else 2.dp, color = MaterialTheme.colorScheme.onBackground),
-                interactionSource = remember { MutableInteractionSource() }
-            ) {}
-        }
+    if (mainMode == 1) {
+        MSInput(stringResource(R.string.settings_increment), p.incrementMs) { onUpdateP(p.copy(incrementMs = it)) }
+    }
+    if (mainMode == 2) {
+        MSInput(stringResource(R.string.settings_move_time), p.moveTimeMs) { onUpdateP(p.copy(moveTimeMs = it)) }
     }
 }
 
@@ -212,6 +209,9 @@ fun ColorRow(selectedColor: Long, onColorSelected: (Long) -> Unit) {
 @Composable
 private fun CreditRow(entry: AppInfo.CreditEntry) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    // Hoisted: shown from the link's handler, not composable scope.
+    val noBrowserText = stringResource(R.string.toast_no_browser)
     Column {
         Text(entry.title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
         Text(entry.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
@@ -231,7 +231,11 @@ private fun CreditRow(entry: AppInfo.CreditEntry) {
                                     textDecoration = TextDecoration.Underline
                                 )
                             )
-                        ) { runCatching { uriHandler.openUri(url) } }
+                        ) {
+                            // A Kompakt has no browser, and the tap did nothing at all; it says why.
+                            runCatching { uriHandler.openUri(url) }
+                                .onFailure { android.widget.Toast.makeText(context, noBrowserText, android.widget.Toast.LENGTH_SHORT).show() }
+                        }
                     ) { append(url) }
                 },
                 style = MaterialTheme.typography.bodySmall,
@@ -244,7 +248,7 @@ private fun CreditRow(entry: AppInfo.CreditEntry) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(stringResource(R.string.credits_tab_changes), stringResource(R.string.credits_tab_credits), stringResource(R.string.credits_tab_licenses))
 
     Dialog(onDismissRequest = onDismiss) {

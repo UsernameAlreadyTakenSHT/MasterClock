@@ -95,4 +95,7 @@
 
     <string name="settings_version">Versione %s</string>
     <string name="back_press_again_to_exit">Premi di nuovo Indietro per uscire</string>
+    <string name="a11y_field_minutes">%1$s, minuti</string>
+    <string name="a11y_field_seconds">%1$s, secondi</string>
+    <string name="toast_no_browser">Nessun browser installato</string>
 </resources>

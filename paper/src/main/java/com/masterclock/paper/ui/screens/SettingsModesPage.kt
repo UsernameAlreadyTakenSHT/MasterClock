@@ -30,7 +30,8 @@ fun ModesSettingsPage(
     // Saveable, as on the phone app: a recreation -- the colours reversed, a font size changed --
     // put the page back on Player 1's tab, and the next edit meant for Player 2 went to Player 1.
     var selectedPlayerTab by rememberSaveable { mutableIntStateOf(0) }
-    var showChangelog by remember { mutableStateOf(false) }
+    // Saveable, like the tab: a recreation closed the version dialog.
+    var showChangelog by rememberSaveable { mutableStateOf(false) }
     
     // One scrolling column for the whole page, deliberately.
     //
@@ -38,7 +39,7 @@ fun ModesSettingsPage(
     // they stayed pinned to the bottom while the modes and the time fields scrolled above them. In
     // a Column the children without a weight are served first: those two take the roughly 550dp
     // they ask for, and weight(1f) gets whatever is left. On a 4.3" Mudita screen that leaves about
-    // 95dp for everything else, which is not enough to show the hour/minute/second boxes at all --
+    // 95dp for everything else, which is not enough to show the minute and second boxes at all --
     // the setting became unreachable on the very device this module exists for.
     //
     // Pinning traded away the primary content to keep the switches always visible. Scrolling the
@@ -54,6 +55,9 @@ fun ModesSettingsPage(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
+                // Above the keyboard: the window does not resize edge-to-edge, and the time fields
+                // sit where the keyboard rises on a 533dp screen.
+                .imePadding()
                 .verticalScroll(scrollState)
         ) {
             if (currentSettings.differentSettingsPerPlayer) {
