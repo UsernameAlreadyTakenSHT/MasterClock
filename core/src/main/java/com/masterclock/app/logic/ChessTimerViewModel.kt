@@ -724,6 +724,23 @@ fun applyPresetTimeControl(
     )
 
 /**
+ * The settings a resumed clock runs under: the game's own time control and rules from [saved], and
+ * everything else -- the notebook above all -- as it is now in [current].
+ *
+ * The autosave used to come back whole. Notes written since it were lost and their media orphaned,
+ * deleted ones returned pointing at shredded files, and colours, sounds and history limits went
+ * back to what they were. Unlike a preset, the per-player settings come back exactly as saved: this
+ * is the same game, not a new one built from a time control.
+ */
+fun restoreSavedTimeControl(current: ChessClockSettings, saved: ChessClockSettings): ChessClockSettings =
+    applyPresetTimeControl(current, saved).copy(
+        p1Custom = saved.p1Custom,
+        p2Custom = saved.p2Custom,
+        p3Custom = saved.p3Custom,
+        p4Custom = saved.p4Custom,
+    )
+
+/**
  * A time control reachable from a launcher shortcut.
  *
  * [id] carries its own source so the intent handler resolves one without guessing: "preset:<uuid>"
@@ -3460,7 +3477,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * clock looked like at the moment the save was due, not whenever the encode happens to run.
      */
     fun saveClockForLater() {
-        val settingsSnapshot = settings.value
+        // Without the notebook, which resuming no longer takes from here; see restoreSavedTimeControl.
+        val settingsSnapshot = settings.value.copy(notebookNotes = emptyList())
         // Up to the pause, if paused: the Save button is pressed on a paused clock.
         val moveElapsed = if (uiState.value.activePlayer != null) ((pausedAt ?: SystemClock.elapsedRealtime()) - moveStartTime).coerceAtLeast(0) else 0L
         val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed)
@@ -3489,12 +3507,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             val saved = gameDao.getSavedClock() ?: return@launch
             try {
                 // The mirror of saveClockForLater, which was moved off the main thread in v0.8.28
-                // while this side was left on it. Both blobs carry the notebook.
+                // while this side was left on it. A save from before v0.8.35 carries the notebook;
+                // only its time control is used.
                 val resumed = withContext(Dispatchers.Default) {
                     json.decodeFromString(ChessClockSettings.serializer(), saved.settingsJson) to
                         json.decodeFromString(ChessClockStateProxy.serializer(), saved.stateJson)
                 }
-                val resumedSettings = resumed.first
+                val resumedSettings = restoreSavedTimeControl(_settings.value, resumed.first)
 
                 // The game the clock belongs to, read back from the history it has been written to
                 // as it was played. Resuming used to leave currentLog null, so the next press opened
