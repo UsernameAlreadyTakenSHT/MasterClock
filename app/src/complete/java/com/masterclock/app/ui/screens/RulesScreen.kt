@@ -170,11 +170,19 @@ private fun RuleButton(
  */
 private fun openBundledPdf(context: Context, rawResId: Int, fileName: String) {
     try {
-        val file = File(File(context.cacheDir, "pdfs").apply { mkdirs() }, fileName)
+        // One folder per version, the others cleared: the copy was made once and reused for good, so a
+        // rulebook updated in a release never showed. Written aside and moved into place, so a copy cut
+        // short -- the app closed mid-write -- is never taken for a finished one.
+        val root = File(context.cacheDir, "pdfs")
+        val dir = File(root, com.masterclock.app.BuildConfig.VERSION_CODE.toString()).apply { mkdirs() }
+        root.listFiles()?.filter { it != dir }?.forEach { it.deleteRecursively() }
+        val file = File(dir, fileName)
         if (!file.exists() || file.length() == 0L) {
+            val part = File(dir, "$fileName.part")
             context.resources.openRawResource(rawResId).use { input ->
-                FileOutputStream(file).use { output -> input.copyTo(output) }
+                FileOutputStream(part).use { output -> input.copyTo(output) }
             }
+            if (!part.renameTo(file)) throw java.io.IOException("Could not move $part into place")
         }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         context.startActivity(
