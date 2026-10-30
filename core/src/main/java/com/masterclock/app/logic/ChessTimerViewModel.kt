@@ -1151,15 +1151,18 @@ internal fun mergeImportedNotes(local: List<NotebookNote>, imported: List<Notebo
  * empty/inverted range.
  */
 private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSettings {
-    val randomMinTimeMs = settings.randomMinTimeMs.coerceAtLeast(0)
-    val randomMaxTimeMs = settings.randomMaxTimeMs.coerceAtLeast(randomMinTimeMs)
-    val randomMinIncMs = settings.randomMinIncMs.coerceAtLeast(0)
-    val randomMaxIncMs = settings.randomMaxIncMs.coerceAtLeast(randomMinIncMs)
+    // Bounded above too, as every duration below is: FIDE and byoyomi were, and nothing else. An
+    // initial time near Long.MAX_VALUE overflowed as the first increment was added, into a negative
+    // clock that flagged on the next tick, and a random range there overflowed the draw.
+    val randomMinTimeMs = settings.randomMinTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS)
+    val randomMaxTimeMs = settings.randomMaxTimeMs.coerceIn(randomMinTimeMs, MAX_IMPORTED_DURATION_MS)
+    val randomMinIncMs = settings.randomMinIncMs.coerceIn(0, MAX_IMPORTED_DURATION_MS)
+    val randomMaxIncMs = settings.randomMaxIncMs.coerceIn(randomMinIncMs, MAX_IMPORTED_DURATION_MS)
     return settings.copy(
-        initialTimeMs = settings.initialTimeMs.coerceAtLeast(0),
-        moveTimeMs = settings.moveTimeMs.coerceAtLeast(0),
-        incrementMs = settings.incrementMs.coerceAtLeast(0),
-        timeCapMs = settings.timeCapMs.coerceAtLeast(0),
+        initialTimeMs = settings.initialTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        moveTimeMs = settings.moveTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        incrementMs = settings.incrementMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        timeCapMs = settings.timeCapMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         // Bounded above as well: a huge progression overflowed the growing goal into unlimited time.
         byoyomiPeriods = settings.byoyomiPeriods.coerceIn(0, MAX_BYOYOMI_COUNT),
         byoyomiTimeMs = settings.byoyomiTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
@@ -1169,19 +1172,19 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
         randomMaxTimeMs = randomMaxTimeMs,
         randomMinIncMs = randomMinIncMs,
         randomMaxIncMs = randomMaxIncMs,
-        gongReflectionMs = settings.gongReflectionMs.coerceAtLeast(0),
-        gongMoveMs = settings.gongMoveMs.coerceAtLeast(0),
-        fastMoveGracePeriodMs = settings.fastMoveGracePeriodMs.coerceAtLeast(0),
-        fastMoveFastPeriodMs = settings.fastMoveFastPeriodMs.coerceAtLeast(0),
+        gongReflectionMs = settings.gongReflectionMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        gongMoveMs = settings.gongMoveMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        fastMoveGracePeriodMs = settings.fastMoveGracePeriodMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        fastMoveFastPeriodMs = settings.fastMoveFastPeriodMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         fastMoveAccelRate = settings.fastMoveAccelRate.coerceAtLeast(0f),
         fastMoveFullAccelRate = settings.fastMoveFullAccelRate.coerceAtLeast(0f),
-        fastMoveShrinkDecrementMs = settings.fastMoveShrinkDecrementMs.coerceAtLeast(0),
-        fastMoveShrinkFloorMs = settings.fastMoveShrinkFloorMs.coerceAtLeast(0),
+        fastMoveShrinkDecrementMs = settings.fastMoveShrinkDecrementMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+        fastMoveShrinkFloorMs = settings.fastMoveShrinkFloorMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         // Every scalar above was clamped and both lists were left alone. Their length drives how
         // much the settings screen composes at once, and phases additionally drives the clock:
         // see performPhaseAdvance, which loops back to phases[0] and needs there to be one.
         phases = settings.phases.take(MAX_IMPORTED_PERIODS).map { phase ->
-            phase.copy(timeMs = phase.timeMs.coerceAtLeast(0), name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS))
+            phase.copy(timeMs = phase.timeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS), name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS))
         },
         // Bounded above too: a period near Long.MAX_VALUE overflowed as its bonus was added, into a
         // negative clock that flagged on the next tick. An empty list fell back to a default period
@@ -1325,6 +1328,15 @@ private const val MAX_IMPORTED_EVENT_TYPE_CHARS = 64
 /** More than anyone has played, and far below what makes the history screen or the database suffer. */
 private const val MAX_IMPORTED_LOGS = 10_000
 
+/** An id this app makes is a UUID, 36 characters. */
+private const val MAX_IMPORTED_ID_CHARS = 64
+
+/** More results than any club night records; the scoreboard composes them all. */
+const val MAX_SCOREBOARD_GAMES = 5_000
+
+/** A result is "1 - 0" or a few words, a name a name. */
+private const val MAX_SCOREBOARD_TEXT_CHARS = 100
+
 /** A month per move is already absurd; anything past it is a crafted value, not a slow player. */
 private const val MAX_IMPORTED_DURATION_MS = 30L * 24 * 60 * 60 * 1000
 
@@ -1353,6 +1365,9 @@ private const val MAX_MOVE_NOTATION_CHARS = 32
 // their history back rather than two of everything. What it buys an attacker is the replacement of
 // one local game record, with no path out of the sandbox.
 internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
+    // Kept, as above -- unless it is no id this app could have made. Nothing bounded it, and it is
+    // the row's primary key, stored and compared on every write of that game.
+    id = if (log.id.length <= MAX_IMPORTED_ID_CHARS) log.id else java.util.UUID.randomUUID().toString(),
     // The history is trimmed by count keeping the newest rows by startTime, so an imported log
     // dated in the future ranks above every game played from then on: ten of them dated 2100, under
     // a limit of ten, and each new game was deleted by the trim that stored it. Nothing imported
@@ -1498,13 +1513,20 @@ internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings 
  */
 internal fun mergeImportedScoreboard(local: ScoreboardSession, imported: ScoreboardSession): ScoreboardSession {
     val seen = local.games.map { it.result to it.timestamp }.toHashSet()
-    val added = imported.games.filter { seen.add(it.result to it.timestamp) }
+    // Within the cap, the device's own first, as presets and notes are merged.
+    val added = imported.games.filter { seen.add(it.result to it.timestamp) }.take((MAX_SCOREBOARD_GAMES - local.games.size).coerceAtLeast(0))
     return if (added.isEmpty()) local else local.copy(games = (local.games + added).sortedBy { it.timestamp })
 }
 
+// The ids were the only thing bounded: the number of games and the length of every string went
+// straight into the stored settings and the scoreboard screen, which composes each game.
 internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardSession = session.copy(
     id = java.util.UUID.randomUUID().toString(),
-    games = session.games.map { game -> game.copy(id = java.util.UUID.randomUUID().toString()) },
+    player1Name = session.player1Name.take(MAX_SCOREBOARD_TEXT_CHARS),
+    player2Name = session.player2Name.take(MAX_SCOREBOARD_TEXT_CHARS),
+    games = session.games.take(MAX_SCOREBOARD_GAMES).map { game ->
+        game.copy(id = java.util.UUID.randomUUID().toString(), result = game.result.take(MAX_SCOREBOARD_TEXT_CHARS))
+    },
 )
 
 /**

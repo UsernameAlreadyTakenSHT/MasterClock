@@ -205,4 +205,27 @@ class ImportSanitizationTest {
     fun `handles an empty scoreboard`() {
         assertEquals(emptyList<ScoreboardGame>(), sanitizeImportedScoreboard(ScoreboardSession()).games)
     }
+
+    @Test
+    fun `bounds the scoreboard's games, results and names`() {
+        val huge = ScoreboardSession(
+            player1Name = "a".repeat(10_000),
+            games = List(MAX_SCOREBOARD_GAMES + 50) { ScoreboardGame(result = "r".repeat(10_000), timestamp = it.toLong()) },
+        )
+        val out = sanitizeImportedScoreboard(huge)
+        assertEquals(MAX_SCOREBOARD_GAMES, out.games.size)
+        assertTrue(out.player1Name.length <= 100)
+        assertTrue(out.games.all { it.result.length <= 100 })
+        // A merge stays within the cap too, the device's own games kept.
+        val local = ScoreboardSession(games = List(MAX_SCOREBOARD_GAMES - 1) { ScoreboardGame(result = "1-0", timestamp = -it.toLong() - 1) })
+        assertEquals(MAX_SCOREBOARD_GAMES, mergeImportedScoreboard(local, out).games.size)
+    }
+
+    @Test
+    fun `keeps a log's own id and replaces one no app could have made`() {
+        val log = log(emptyList())
+        assertEquals(log.id, sanitizeImportedLog(log).id)
+        val forged = log.copy(id = "x".repeat(100_000))
+        assertTrue(sanitizeImportedLog(forged).id.length <= 64)
+    }
 }
