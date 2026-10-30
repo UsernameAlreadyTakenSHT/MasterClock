@@ -29,6 +29,13 @@ fun OmniTimerScreen(
     val state by viewModel.omniState.collectAsState()
     val settings by viewModel.omniSettings.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    // Leaving the screen pauses the session. It ran on behind the rest of the app -- the clocks
+    // counting down and the cues sounding from the timer or the settings -- with nothing on screen to
+    // stop it. A recreation (rotation, theme) is not leaving.
+    val activity = androidx.activity.compose.LocalActivity.current
+    DisposableEffect(Unit) {
+        onDispose { if (activity?.isChangingConfigurations != true) viewModel.pauseOmni() }
+    }
     
     if (showResetDialog) {
         AlertDialog(
@@ -145,7 +152,8 @@ fun LaunchCountdownOverlay(timeRemainingMs: Long) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(R.string.omni_get_ready), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(16.dp))
-            val seconds = (timeRemainingMs / 1000) + 1
+            // Rounded up, so a ten-second countdown starts at 10 and reaches 1, not 11 then 1.
+            val seconds = (timeRemainingMs + 999) / 1000
             Text("$seconds", fontSize = 120.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         }
     }

@@ -426,7 +426,10 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     fun startOmni() {
         val settings = _omniSettings.value
 
-        if (!_omniState.value.hasStarted) {
+        // A finished session starts over. Play on its closing screen restarted the ticker on dead
+        // clocks, and an automatic transition then cleared the screen over them.
+        val sessionOver = _omniState.value.isInTransition && _omniState.value.transitionLabel == "SESSION"
+        if (!_omniState.value.hasStarted || sessionOver) {
             val initial = createInitialOmniState(settings)
             _omniState.value = initial.copy(
                 isRunning = true,
