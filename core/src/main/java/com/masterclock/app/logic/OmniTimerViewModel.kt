@@ -386,7 +386,15 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
             // after an app restart. Same reload-vs-setVolume split as ChessTimerViewModel's
             // updateSettings (volume alone must not reload samples on every slider drag frame).
             var prev: ChessClockSettings? = null
-            settingsRepo.settingsFlow.collect { s ->
+            // Read off the main thread. The stored settings are decoded whole, notebook and all, at
+            // every write -- a volume slider writes on every frame of a drag -- and that ran on the
+            // main thread here once Omni had been opened: settings edits stuttered in proportion to
+            // the notebook. A note edited, or settings written back unchanged, no longer reach it.
+            settingsRepo.settingsFlow
+                .map { it.copy(notebookNotes = emptyList()) }
+                .distinctUntilChanged()
+                .flowOn(Dispatchers.Default)
+                .collect { s ->
                 val p = prev
                 if (p == null ||
                     p.customBeepUri != s.customBeepUri || p.customGongUri != s.customGongUri ||
