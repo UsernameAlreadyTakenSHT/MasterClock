@@ -119,6 +119,16 @@ class DgtProtocolTest {
     }
 
     @Test
+    fun `a length no DGT message has is noise, not a wait`() {
+        // 0x80 0x7F 0x7F claims 16383 bytes; the update behind it must not wait for them.
+        val assembler = StreamAssembler(DgtProtocol.framing!!)
+        val update = fieldUpdate(indexOf("e4"), 'P')
+        val messages = assembler.offer(byteArrayOf(0x80.toByte(), 0x7F, 0x7F) + update)
+        assertEquals(1, messages.size)
+        assertArrayEquals(update, messages.single())
+    }
+
+    @Test
     fun `a whole move arrives as two field updates`() {
         val tracker = BoardMoveTracker()
         tracker.onReport(DgtProtocol.decode(boardDump(BoardPosition.STARTING)))

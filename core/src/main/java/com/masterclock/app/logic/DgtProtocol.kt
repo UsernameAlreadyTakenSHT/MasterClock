@@ -50,8 +50,10 @@ object DgtProtocol : BoardProtocol {
             else -> {
                 val length = ((buffer[1].toInt() and 0x7F) shl 7) or (buffer[2].toInt() and 0x7F)
                 // A message is at least its own header; anything shorter is noise that happened to
-                // have the top bit set.
-                if (length < HEADER_SIZE) StreamFraming.RESYNC else length
+                // have the top bit set. Anything longer than this make sends is noise too: two
+                // seven-bit halves reach 16383, and a length read from noise had the stream wait for
+                // up to four kilobytes -- every real message in them lost -- before starting over.
+                if (length < HEADER_SIZE || length > MAX_MESSAGE_SIZE) StreamFraming.RESYNC else length
             }
         }
     }
@@ -111,6 +113,12 @@ object DgtProtocol : BoardProtocol {
 
     private const val MESSAGE_BIT = 0x80
     private const val HEADER_SIZE = 3
+
+    /**
+     * The longest message read here, with room to spare: the board dump is 67 bytes. The one longer
+     * kind DGT has, the stored-moves dump, is never asked for, so it never arrives.
+     */
+    private const val MAX_MESSAGE_SIZE = 256
 
     private const val SEND_RESET: Byte = 0x40
     private const val SEND_BOARD: Byte = 0x42
