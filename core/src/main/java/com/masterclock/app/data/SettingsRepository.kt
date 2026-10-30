@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.masterclock.app.logic.ChessClockSettings
+import com.masterclock.app.logic.NotebookNote
 import com.masterclock.app.logic.OmniSettings
 import com.masterclock.app.logic.SavedPreset
 import com.masterclock.app.logic.ScoreboardSession
@@ -14,28 +15,44 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.encodeToString
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
+/**
+ * How everything stored here is read. [Json.coerceInputValues] makes a value this build does not
+ * know -- an enum constant from a newer version, after a downgrade -- fall back to that field's
+ * default, where it used to fail the whole object.
+ */
+internal val storedJson = Json { ignoreUnknownKeys = true; coerceInputValues = true }
+
+/**
+ * The stored settings, or the defaults if they cannot be read -- with the notebook, which they also
+ * hold. Defaults alone dropped every note, and the next save wrote that over the stored copy: a
+ * setting this build could not read cost the player their notebook. What is lost now is preferences.
+ * Each note is read on its own, so one that cannot be costs only itself.
+ */
+internal fun decodeStoredSettings(text: String): ChessClockSettings = try {
+    storedJson.decodeFromString<ChessClockSettings>(text)
+} catch (_: Exception) {
+    val notes = runCatching {
+        storedJson.parseToJsonElement(text).jsonObject["notebookNotes"]?.jsonArray?.mapNotNull { element ->
+            runCatching { storedJson.decodeFromJsonElement(NotebookNote.serializer(), element) }.getOrNull()
+        }
+    }.getOrNull().orEmpty()
+    ChessClockSettings(notebookNotes = notes)
+}
+
 class SettingsRepository(private val context: Context) {
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = storedJson
     private val SETTINGS_KEY = stringPreferencesKey("chess_clock_settings")
     private val OMNI_SETTINGS_KEY = stringPreferencesKey("omni_timer_settings")
     private val CUSTOM_PRESETS_KEY = stringPreferencesKey("custom_presets")
     private val SCOREBOARD_KEY = stringPreferencesKey("scoreboard_session")
 
     val settingsFlow: Flow<ChessClockSettings> = context.dataStore.data.map { preferences ->
-        val settingsJson = preferences[SETTINGS_KEY]
-        if (settingsJson != null) {
-            try {
-                json.decodeFromString<ChessClockSettings>(settingsJson)
-            } catch (_: Exception) {
-                ChessClockSettings()
-            }
-        } else {
-            ChessClockSettings()
-        }
+        preferences[SETTINGS_KEY]?.let(::decodeStoredSettings) ?: ChessClockSettings()
     }
 
     val omniSettingsFlow: Flow<OmniSettings> = context.dataStore.data.map { preferences ->
