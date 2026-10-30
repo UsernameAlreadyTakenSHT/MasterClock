@@ -1,8 +1,7 @@
 package com.masterclock.paper.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -13,6 +12,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -27,8 +28,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.mudita.mmd.components.buttons.ButtonDefaultsMMD
 import androidx.compose.ui.zIndex
 import com.masterclock.paper.R
 import com.masterclock.app.logic.*
@@ -44,7 +47,8 @@ fun TimerScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState()
-    var showResetDialog by remember { mutableStateOf(false) }
+    // Saveable: a font-size or language change recreated the screen and closed the confirmation.
+    var showResetDialog by rememberSaveable { mutableStateOf(false) }
     // The "Haptic feedback" switch of the settings was read nowhere in this build: it did nothing.
     // A press now vibrates when it is on, as on the phone app.
     val haptic = LocalHapticFeedback.current
@@ -64,6 +68,10 @@ fun TimerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
+                // Clear of the system bars, which edge-to-edge draws over the content: Player 2's area
+                // ran under the navigation bar, where a hard press mid-game could land on Home.
+                // Nothing when the bars are hidden in fullscreen.
+                .windowInsetsPadding(WindowInsets.systemBars)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -74,11 +82,16 @@ fun TimerScreen(
                     state = state,
                     padding = settings.effectiveTimePadding(),
                     gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
+                    triggerOnPress = settings.triggerOnPress,
                     onClick = { press(1) }
                 )
             }
     
             // Control Row (Official MMD Outlined Buttons - Sentence Case)
+            // MMD pads a button's label by 16dp a side, which left about 56dp for it in a third of the
+            // Kompakt's width: "Hervatten", "Reprendre" broke over two lines and the row grew. The
+            // labels get the width, on one line.
+            val controlPadding = PaddingValues(horizontal = 4.dp, vertical = ButtonDefaultsMMD.buttonVerticalPadding)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -87,18 +100,22 @@ fun TimerScreen(
                 OutlinedButtonMMD(
                     onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
                     modifier = Modifier.weight(1f),
-                    border = outlinedButtonBorderMMD()
+                    border = outlinedButtonBorderMMD(),
+                    contentPadding = controlPadding,
                 ) {
                     Text(
                         text = stringResource(R.string.common_reset),
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 }
     
                 OutlinedButtonMMD(
                     onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
                     modifier = Modifier.weight(1f),
-                    border = outlinedButtonBorderMMD()
+                    border = outlinedButtonBorderMMD(),
+                    contentPadding = controlPadding,
                 ) {
                     // Before the first press there is nothing to resume: the button starts P1's clock.
                     val label = when {
@@ -108,18 +125,23 @@ fun TimerScreen(
                     }
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 }
     
                 OutlinedButtonMMD(
                     onClick = onSettingsClick,
                     modifier = Modifier.weight(1f),
-                    border = outlinedButtonBorderMMD()
+                    border = outlinedButtonBorderMMD(),
+                    contentPadding = controlPadding,
                 ) {
                     Text(
                         text = stringResource(R.string.timer_settings),
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 }
             }
@@ -131,6 +153,7 @@ fun TimerScreen(
                     state = state,
                     padding = settings.effectiveTimePadding(),
                     gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
+                    triggerOnPress = settings.triggerOnPress,
                     onClick = { press(2) }
                 )
             }
@@ -182,8 +205,10 @@ fun EInkPlayerArea(
     state: ChessClockState,
     padding: TimePadding,
     gameOver: Boolean,
+    triggerOnPress: Boolean,
     onClick: () -> Unit
 ) {
+    val currentOnClick by rememberUpdatedState(onClick)
     val playerState = state.players.getOrNull(playerIndex - 1) ?: PlayerState(0)
     val isActive = state.activePlayer == playerIndex && !state.isPaused
     val isOutOfTime = playerState.isOutOfTime
@@ -205,12 +230,15 @@ fun EInkPlayerArea(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClickLabel = switchTurnLabel,
-                role = Role.Button
-            ) { onClick() }
+            // On touch, as the phone app does by default (triggerOnPress), or on release. It was
+            // always on release: every switch came as late as the finger left the glass, and a quick
+            // press that slid on the panel did not count at all.
+            .pointerInput(triggerOnPress) {
+                detectTapGestures(
+                    onPress = { if (triggerOnPress) currentOnClick() },
+                    onTap = { if (!triggerOnPress) currentOnClick() },
+                )
+            }
             // Unlike the main app this area was already reachable, but it announced as an unlabelled
             // clickable wrapping loose digits; collapsing it gives one target that names the player.
             .clearAndSetSemantics {
@@ -220,11 +248,10 @@ fun EInkPlayerArea(
             }
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceEvenly
     ) {
         // Minimal Active Indicator (Dot or Slash)
         Box(
-            modifier = Modifier.size(32.dp), 
+            modifier = Modifier.size(32.dp),
             contentAlignment = Alignment.Center
         ) {
             if (isOutOfTime) {
@@ -244,26 +271,37 @@ fun EInkPlayerArea(
             }
         }
 
-        TimerDisplay(
-            timeMs = playerState.timeRemainingMs,
-            style = MaterialTheme.typography.displayLarge.copy(
-                fontSize = 90.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onBackground
-            ),
-            padding = padding,
-            isNegative = playerState.isNegative
-        )
-        
-        // Final empty spacer/box to ensure the timer is truly centered in its zone
-        // when considering SpaceEvenly logic with the indicator.
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            TimerDisplay(
+                timeMs = playerState.timeRemainingMs,
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onBackground
+                ),
+                width = maxWidth,
+                height = maxHeight,
+                padding = padding,
+                isNegative = playerState.isNegative
+            )
+        }
+
+        // Final empty spacer/box to ensure the timer is truly centered in its zone.
         Box(modifier = Modifier.size(32.dp))
     }
 }
 
+/**
+ * The reading, as large as [width] and [height] allow and at most 90dp, on one line.
+ *
+ * It was 90sp in four separate texts. Sp follows the system font size, and at 90 a five-character
+ * reading is about 270dp against the Kompakt's 288 -- so from a font size just above the default
+ * the seconds broke onto a line of their own, or were cut, and a reading past 99 minutes did not fit
+ * at all. The size is worked out in dp from the room there is, which the font setting does not
+ * change; the digits on a clock are not body text.
+ */
 @Composable
-fun TimerDisplay(timeMs: Long, style: TextStyle, padding: TimePadding = TimePadding.FULL, isNegative: Boolean = false) {
+fun TimerDisplay(timeMs: Long, style: TextStyle, width: Dp, height: Dp, padding: TimePadding = TimePadding.FULL, isNegative: Boolean = false) {
     val absTimeMs = kotlin.math.abs(timeMs)
     val totalSeconds = absTimeMs / 1000
     val minutes = totalSeconds / 60
@@ -275,10 +313,11 @@ fun TimerDisplay(timeMs: Long, style: TextStyle, padding: TimePadding = TimePadd
     val mText = padTimeUnit(minutes, isLeading = true, padding = padding)
     val sText = padTimeUnit(seconds, isLeading = false, padding = padding)
     
-    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
-        if (isNegative) Text(text = "-", style = style)
-        Text(text = mText, style = style)
-        Text(text = ":", style = style)
-        Text(text = sText, style = style)
-    }
+    val text = (if (isNegative) "-" else "") + mText + ":" + sText
+    // A monospace digit is about 0.6 of the font size wide, and a line about 1.2 of it tall.
+    val size = minOf(MAX_DIGIT_SIZE, width / (text.length * 0.62f), height / 1.2f)
+    val fontSize = with(LocalDensity.current) { size.toSp() }
+    Text(text = text, style = style.copy(fontSize = fontSize, lineHeight = fontSize * 1.15f), maxLines = 1, softWrap = false)
 }
+
+private val MAX_DIGIT_SIZE = 90.dp
