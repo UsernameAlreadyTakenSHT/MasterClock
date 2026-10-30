@@ -2663,6 +2663,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 timerJob?.cancel()
                 timerJob = null
                 _uiState.update { it.copy(isPaused = true) }
+                // As stopIfGameOver ends the autosave of a game the clock ended.
+                clearSavedClock()
                 return
             }
             moveStartTime = SystemClock.elapsedRealtime(); startClock(nextPlayer)
@@ -2847,11 +2849,35 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             val newPlayers = state.players.toMutableList().apply { this[active - 1] = newStateP }
             
             state.copy(
-                players = newPlayers, 
+                players = newPlayers,
                 isPaused = settings.flagBehavior == FlagBehavior.FREEZE && newStateP.isOutOfTime,
                 firstToFlag = newFirstFlag
             )
         }
+        stopIfGameOver(now)
+    }
+
+    /**
+     * Ends the ticking once the game is over. Only FREEZE marked it paused, and nothing stopped the
+     * ticker under any behaviour: a game lost on the flag under FLAG, or by three of four players,
+     * or a PHASES game run to its end went on ticking up to a hundred times a second, kept the
+     * screen awake, showed Pause, and was autosaved every fifteen seconds -- so the arbitre went on
+     * offering to resume a game that was over. Its autosave ends with it, as Reset clears it.
+     *
+     * An arbiter who gives a flagged player time back puts the game in play again (adjustTime), and
+     * Resume then starts the ticker as after any pause.
+     */
+    private fun stopIfGameOver(now: Long) {
+        val state = _uiState.value
+        if (state.activePlayer == null || timerJob == null) return
+        val s = _settings.value
+        val phasesOver = getPlayerSettings(1).mode == TimerMode.PHASES && state.players.firstOrNull()?.isOutOfTime == true
+        if (!phasesOver && !isGameOver(state, s.flagBehavior, s.numberOfPlayers)) return
+        timerJob?.cancel()
+        timerJob = null
+        if (pausedAt == null) pausedAt = now
+        if (!state.isPaused) _uiState.update { it.copy(isPaused = true) }
+        clearSavedClock()
     }
 
     private fun handleAudio(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int) {
@@ -3074,6 +3100,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val starting = _uiState.value
         // A PHASES game that is over -- finished, or flagged by its phase -- has nothing to restart.
         if (getPlayerSettings(1).mode == TimerMode.PHASES && starting.players.firstOrNull()?.isOutOfTime == true) return
+        // Nor has any other game that is over. Play on one logged a RESUME, and the check further
+        // down then refused to start it; a finished game now shows Play, so it is pressed.
+        val st = _settings.value
+        if (starting.activePlayer != null && isGameOver(starting, st.flagBehavior, st.numberOfPlayers)) return
         pausedAt?.let { moveStartTime += SystemClock.elapsedRealtime() - it }
         pausedAt = null
         // Play on a game that has never run starts its first move, as a first press does. The move
