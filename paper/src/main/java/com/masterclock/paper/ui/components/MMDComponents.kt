@@ -31,6 +31,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.SideEffect
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -83,10 +89,14 @@ object ScrollbarMMDDefaults {
     val ChevronWidth = 18.dp
     val ChevronHeight = 10.dp
     val ChevronStrokeWidth = 2.dp
-    /** The drawn chevron is small; the box that catches the tap must not be. */
-    val ChevronTapSize = 28.dp
-    val ChevronOuterPadding = 8.dp
-    val HorizontalPadding = 8.dp
+    /**
+     * The drawn chevron is small; the box that catches the tap must not be. 48dp, the target Android
+     * recommends: it was 28, with 8dp of padding around it on every side that caught nothing. The
+     * padding is inside the target now, so the bar is barely wider than it was.
+     */
+    val ChevronTapSize = 48.dp
+    val ChevronOuterPadding = 0.dp
+    val HorizontalPadding = 0.dp
     val MinThumbHeight = 24.dp
 }
 
@@ -204,6 +214,11 @@ private fun ChevronMMD(
     onTap: () -> Unit,
     onLongPress: () -> Unit
 ) {
+    // The gesture outlives the composition it was set up in, and the lambdas read the scroll range
+    // of that one: once the page grew -- Timer switched to Fischer adds a field -- a long press on the
+    // down chevron scrolled to the old bottom and stopped a field short.
+    val currentOnTap by rememberUpdatedState(onTap)
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
     Canvas(
         modifier = Modifier
             .padding(vertical = ScrollbarMMDDefaults.ChevronOuterPadding)
@@ -211,8 +226,8 @@ private fun ChevronMMD(
             // detectTapGestures rather than clickable: no ripple to leave behind on E Ink.
             .pointerInput(dashed) {
                 detectTapGestures(
-                    onTap = { onTap() },
-                    onLongPress = { onLongPress() }
+                    onTap = { currentOnTap() },
+                    onLongPress = { currentOnLongPress() }
                 )
             }
     ) {
@@ -246,6 +261,18 @@ private fun ChevronMMD(
 }
 
 // --- DIALOGS ---
+
+/**
+ * Keeps the screen behind a dialog as it is. A Compose dialog dims its window by default, which E
+ * Ink renders as a grey dither over the whole screen, reversed colours or not. The dialog's hard
+ * border already sets it apart.
+ */
+@Composable
+fun NoDialogDim() {
+    val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+    SideEffect { window?.setDimAmount(0f) }
+}
+
 @Composable
 fun MMDAlertDialog(
     onDismissRequest: () -> Unit,
@@ -257,12 +284,13 @@ fun MMDAlertDialog(
     onDismiss: (() -> Unit)? = null
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
+        NoDialogDim()
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(
-                    MMDDefaults.BorderWidth, 
-                    MaterialTheme.colorScheme.onSurface, 
+                    MMDDefaults.BorderWidth,
+                    MaterialTheme.colorScheme.onSurface,
                     RoundedCornerShape(MMDDefaults.CornerRadius)
                 ),
             shape = RoundedCornerShape(MMDDefaults.CornerRadius),
@@ -275,7 +303,11 @@ fun MMDAlertDialog(
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Scrolls if it ever outgrows the screen, before the buttons below are squeezed out of
+                // it: the failure ChangelogCreditsDialog already had and fixed. Today's one message
+                // fits with room to spare.
                 Column(
+                    modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -286,7 +318,7 @@ fun MMDAlertDialog(
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Text(
                         text = text,
                         style = MaterialTheme.typography.bodyMedium,

@@ -252,6 +252,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
     val tabs = listOf(stringResource(R.string.credits_tab_changes), stringResource(R.string.credits_tab_credits), stringResource(R.string.credits_tab_licenses))
 
     Dialog(onDismissRequest = onDismiss) {
+        NoDialogDim()
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
