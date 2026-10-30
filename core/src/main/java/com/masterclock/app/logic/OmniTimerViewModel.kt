@@ -251,9 +251,14 @@ internal fun computeOmniAdvance(
     // (turn/round/game/session advance). The pure phase-advance return below must NOT apply
     // this: the turn keeps its remaining time, so crediting it there banked the full remainder
     // again at every phase boundary — banks ballooned with phases + time bank enabled.
-    // In the turn scope a bank lasts one turn, so whatever an earlier turn left undrawn is
-    // dropped before this turn makes its own deposit.
-    val bankBase = if (settings.timeBankScope == TimeBankScope.TURN_TO_TURN) state.copy(playerTimeBanks = emptyMap()) else state
+    // In the turn scope a bank lasts one turn, so whatever an earlier turn left undrawn in this
+    // bank is dropped before this turn makes its own deposit. This bank only: every bank was
+    // emptied, and with one bank per player (Accumulative) the next player's turn wiped each
+    // deposit before its owner played again -- nobody ever got any time. The shared reserve is one
+    // bank, and is emptied as before.
+    val bankBase = if (settings.timeBankScope == TimeBankScope.TURN_TO_TURN)
+        state.copy(playerTimeBanks = state.playerTimeBanks - bankKeyFor(settings, state.currentPlayerIndex))
+    else state
     val updatedBanks = applyOmniTimeBanking(bankBase, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
 
     if (forceLevel == "SESSION") {
