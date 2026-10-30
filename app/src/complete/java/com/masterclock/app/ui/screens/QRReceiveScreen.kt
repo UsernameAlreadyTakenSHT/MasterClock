@@ -163,8 +163,19 @@ fun QRReceiveScreen(
                 }
             }
         } else {
-            Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.qr_camera_permission))
+            // A way to grant it. Refused with "don't ask again", Android shows no prompt any more and
+            // the screen was a sentence with nothing to do about it; the app's settings page is
+            // where the permission can still be given.
+            val context = androidx.compose.ui.platform.LocalContext.current
+            Column(Modifier.fillMaxSize().padding(pad).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Text(stringResource(R.string.qr_camera_permission), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = {
+                    context.startActivity(
+                        android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            .setData(android.net.Uri.fromParts("package", context.packageName, null))
+                    )
+                }) { Text(stringResource(R.string.qr_open_settings)) }
             }
         }
     }
