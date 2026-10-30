@@ -3059,6 +3059,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (getPlayerSettings(1).mode == TimerMode.PHASES && starting.players.firstOrNull()?.isOutOfTime == true) return
         pausedAt?.let { moveStartTime += SystemClock.elapsedRealtime() - it }
         pausedAt = null
+        // Play on a game that has never run starts its first move, as a first press does. The move
+        // timer was left wherever the last game put it -- zero on a fresh process -- so that move
+        // lasted the device's uptime: in the statistics, in Bronstein's refund, in what Fast Move
+        // Transfer handed the opponent. And US Delay granted no delay to a move started this way.
+        val freshStart = starting.activePlayer == null
+        if (freshStart) moveStartTime = SystemClock.elapsedRealtime()
         val active = starting.activePlayer ?: 1
         if (currentLog == null && FlavorConfig.keepsGameHistory()) {
             val playersInitialStates = _uiState.value.players.map { it.toProxy() }
@@ -3094,7 +3100,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // of time, so under NEGATIVE -- or FLAG with three or four players, where play goes on
         // after a flag -- a single pause stopped the game for good: Resume did nothing, and the
         // active player's button, which resumes a paused clock, did nothing either.
-        if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = false)
+        if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = freshStart)
     }
     fun reset() {
         timerJob?.cancel()
