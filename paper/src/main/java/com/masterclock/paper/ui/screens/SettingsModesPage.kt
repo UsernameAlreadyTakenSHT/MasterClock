@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +27,9 @@ fun ModesSettingsPage(
     currentSettings: ChessClockSettings,
     onSettingsChanged: (ChessClockSettings) -> Unit
 ) {
-    var selectedPlayerTab by remember { mutableIntStateOf(0) }
+    // Saveable, as on the phone app: a recreation -- the colours reversed, a font size changed --
+    // put the page back on Player 1's tab, and the next edit meant for Player 2 went to Player 1.
+    var selectedPlayerTab by rememberSaveable { mutableIntStateOf(0) }
     var showChangelog by remember { mutableStateOf(false) }
     
     // One scrolling column for the whole page, deliberately.
@@ -76,7 +79,7 @@ fun ModesSettingsPage(
             val targetP = if (!currentSettings.differentSettingsPerPlayer) {
                 currentSettings.main
             } else {
-                if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.copy(mode = currentSettings.p1Custom.mode)
+                if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.followingModeOf(currentSettings.p1Custom)
             }
 
             fun updateTarget(newP: PlayerSettings) {
@@ -86,7 +89,7 @@ fun ModesSettingsPage(
                     if (selectedPlayerTab == 0) {
                         currentSettings.copy(
                             p1Custom = newP,
-                            p2Custom = currentSettings.p2Custom.copy(mode = newP.mode)
+                            p2Custom = currentSettings.p2Custom.followingModeOf(newP)
                         )
                     } else {
                         currentSettings.copy(p2Custom = newP)
