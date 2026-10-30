@@ -300,6 +300,16 @@ fun tableClockRanOut(state: ChessClockState): Boolean =
 fun alertTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode): Long =
     if (mode == TimerMode.MOVE_TIMER_OVERTIME) player.withOvertimeClock().timeRemainingMs else displayedTimeMs(state, player, mode)
 
+/**
+ * The time the countdown cues count down: [alertTimeMs], but in Global and Global Shared the clock
+ * that runs out first, as the beeps and the voice take it (withBindingClock). The haptic countdown
+ * read the move clock alone, so with the reserve below the move time it buzzed out of step with the
+ * beeps, or not at all before the reserve flagged the player.
+ */
+fun countdownTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode): Long =
+    if (mode == TimerMode.MOVE_TIMER_GLOBAL || mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED) player.withBindingClock().timeRemainingMs
+    else alertTimeMs(state, player, mode)
+
 /** An Overtime player with the reserve in place of a spent move clock; see [alertTimeMs]. */
 internal fun PlayerState.withOvertimeClock(): PlayerState =
     if (!isOutOfTime && timeRemainingMs <= 0) copy(timeRemainingMs = secondaryTimeMs) else this

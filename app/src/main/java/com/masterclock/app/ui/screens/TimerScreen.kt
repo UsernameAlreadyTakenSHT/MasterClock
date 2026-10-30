@@ -85,8 +85,9 @@ fun TimerScreen(
         if (settings.differentSettingsPerPlayer) when (idx) { 1 -> settings.p1Custom; 2 -> settings.p2Custom; 3 -> settings.p3Custom; 4 -> settings.p4Custom; else -> settings.main } else settings.main
     }
     val activeMode = activeSettings?.mode
-    // The time on the active clock's face -- the shared clock in CHRONO and PHASES.
-    val secondsLeft = activePlayerState?.let { p -> activeMode?.let { alertTimeMs(state, p, it) / 1000 } } ?: -1L
+    // The time the countdown beeps count down -- the shared clock in CHRONO and PHASES, the clock that
+    // runs out first in Global; see countdownTimeMs.
+    val secondsLeft = activePlayerState?.let { p -> activeMode?.let { countdownTimeMs(state, p, it) / 1000 } } ?: -1L
     
     val isGlobalMode = remember(settings.main.mode) {
         settings.main.mode == TimerMode.PHASES
