@@ -74,13 +74,18 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
             // A shared mode or PHASES runs one clock for the table; core turns per-player settings off for it
             // (wholeTableSettings), so the switch would only spring back.
             val sharedMode = currentSettings.main.mode.isWholeTable
+            // Leaving per-player settings, everyone plays Player 1's. Edits made per player go to
+            // p1Custom and p2Custom only, so main still held whatever was set before: turning the
+            // switch off -- or turning on more players, which turns it off -- brought back a time
+            // control from before, and Player 1's was gone.
+            val mainFromP1 = if (currentSettings.differentSettingsPerPlayer) currentSettings.p1Custom else currentSettings.main
             Column {
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_different_per_player),
                     checked = currentSettings.differentSettingsPerPlayer && !morePlayersEnabled,
                     enabled = !morePlayersEnabled && !sharedMode,
                     topRounded = true
-                ) { onSettingsChanged(currentSettings.copy(differentSettingsPerPlayer = it)) }
+                ) { onSettingsChanged(currentSettings.copy(differentSettingsPerPlayer = it, main = if (it) currentSettings.main else mainFromP1)) }
 
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_more_players),
@@ -89,7 +94,8 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                 ) { enabled ->
                     onSettingsChanged(currentSettings.copy(
                         numberOfPlayers = if (enabled) 3 else 2,
-                        differentSettingsPerPlayer = if (enabled) false else currentSettings.differentSettingsPerPlayer
+                        differentSettingsPerPlayer = if (enabled) false else currentSettings.differentSettingsPerPlayer,
+                        main = if (enabled) mainFromP1 else currentSettings.main
                     ))
                 }
 
