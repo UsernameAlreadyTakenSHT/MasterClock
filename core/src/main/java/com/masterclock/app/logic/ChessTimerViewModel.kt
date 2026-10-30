@@ -3387,9 +3387,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         historyWrites.trySend(HistoryWrite.ClearAll)
     }
 
+    /**
+     * Settings back to their defaults, the notebook kept. It lives in the settings for storage's
+     * sake only, and went with them: one confirmation that spoke of settings deleted every note, and
+     * left its photos, recordings and videos on disk with nothing pointing at them.
+     */
     fun resetAllSettings() {
-        val defaultSettings = ChessClockSettings()
-        updateSettings(defaultSettings)
+        updateSettings(ChessClockSettings(notebookNotes = _settings.value.notebookNotes))
     }
 
     fun adjustTime(playerIndex: Int, amountMs: Long) {
