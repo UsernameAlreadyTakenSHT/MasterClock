@@ -819,16 +819,31 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         return parts.joinToString(" + ") + bonus
     }
 
+    fun duration(ms: Long): String {
+        val minutes = ms / 60_000
+        val seconds = (ms % 60_000) / 1000
+        return when {
+            minutes == 0L -> "${seconds}s"
+            seconds == 0L -> "$minutes min"
+            else -> "${minutes}m${seconds}s"
+        }
+    }
+
+    // More modes that never read initialTimeMs, and read "10 min", its default, whatever was set:
+    // a Gong of 30s and 5s, three phases of 20 minutes, a count of 40 moves, a stopwatch.
+    when (s.mode) {
+        TimerMode.GONG -> return "Gong ${duration(s.gongReflectionMs)} / ${duration(s.gongMoveMs)}"
+        TimerMode.PHASES -> return "Phases (${s.phases.size}), ${duration(s.phases.sumOf { it.timeMs })}"
+        TimerMode.MOVE_COUNTS_DOWN -> return "${s.maxMoves} moves"
+        TimerMode.MOVE_COUNTS_UP, TimerMode.CHRONO_COUNTUP -> return s.mode.displayName()
+        TimerMode.FAST_MOVE -> if (s.fastMoveMode == FastMoveType.TRANSFER && s.moveTimeMs > 0) return "${duration(s.moveTimeMs)} / move"
+        else -> {}
+    }
+
     if (s.initialTimeMs <= 0L) {
         return s.mode.displayName()
     }
-    val minutes = s.initialTimeMs / 60_000
-    val seconds = (s.initialTimeMs % 60_000) / 1000
-    val base = when {
-        minutes == 0L -> "${seconds}s"
-        seconds == 0L -> "$minutes min"
-        else -> "${minutes}m${seconds}s"
-    }
+    val base = duration(s.initialTimeMs)
     if ((s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || s.mode == TimerMode.MOVE_TIMER_GLOBAL || s.mode == TimerMode.MOVE_TIMER_OVERTIME) && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move, $base"
     // Byoyomi's own time was left out, so a 10-minute game with five 30-second periods read
     // "10 min" -- and, with the increment field's default, "10 min + 10s".

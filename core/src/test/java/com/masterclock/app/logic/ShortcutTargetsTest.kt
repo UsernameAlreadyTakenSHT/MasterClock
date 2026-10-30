@@ -147,6 +147,18 @@ class ShortcutTargetsTest {
     }
 
     @Test
+    fun `modes that never read the base time are labelled by what they do read`() {
+        fun label(p: PlayerSettings) = timeControlLabel(ChessClockSettings(main = p))
+        assertEquals("Gong 30s / 5s", label(PlayerSettings(mode = TimerMode.GONG, gongReflectionMs = 30_000, gongMoveMs = 5_000)))
+        assertEquals("Phases (3), 60 min", label(PlayerSettings(mode = TimerMode.PHASES, phases = List(3) { GamePhase(timeMs = 1_200_000) })))
+        assertEquals("40 moves", label(PlayerSettings(mode = TimerMode.MOVE_COUNTS_DOWN, maxMoves = 40)))
+        assertEquals(TimerMode.CHRONO_COUNTUP.displayName(), label(PlayerSettings(mode = TimerMode.CHRONO_COUNTUP)))
+        assertEquals("45s / move", label(PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, moveTimeMs = 45_000)))
+        // Accelerate and Shrink start from the base time, and say so.
+        assertEquals("10 min", label(PlayerSettings(mode = TimerMode.FAST_MOVE)))
+    }
+
+    @Test
     fun `an unnamed preset is dropped rather than published as a blank shortcut`() {
         val targets = buildShortcutTargets(
             history = emptyList(),
