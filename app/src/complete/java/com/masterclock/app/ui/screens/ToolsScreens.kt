@@ -955,7 +955,15 @@ fun Chess960Screen(onBack: () -> Unit) {
 fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
     val session by viewModel.scoreboard.collectAsState(); var newResultText by remember { mutableStateOf("") }; val sortedGames = remember(session.games) { session.games.asReversed() }
-    ToolScaffold(title = stringResource(R.string.settings_more_scoreboard), onBack = onBack, actions = { IconButton(onClick = { viewModel.resetScoreboard() }) { Icon(Icons.Default.Refresh, stringResource(R.string.tools_reset_scoreboard)) } }) { padding ->
+    // Asked first: one tap on the icon in the bar wiped every result, with no way back.
+    var confirmingReset by rememberSaveable { mutableStateOf(false) }
+    if (confirmingReset) ConfirmDestructiveDialog(
+        title = stringResource(R.string.tools_reset_scoreboard),
+        confirmLabel = stringResource(R.string.common_reset),
+        onConfirm = { viewModel.resetScoreboard() },
+        onDismiss = { confirmingReset = false },
+    )
+    ToolScaffold(title = stringResource(R.string.settings_more_scoreboard), onBack = onBack, actions = { IconButton(onClick = { confirmingReset = true }) { Icon(Icons.Default.Refresh, stringResource(R.string.tools_reset_scoreboard)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { OutlinedTextField(value = session.player1Name, onValueChange = { viewModel.updateScoreboardNames(it, session.player2Name) }, label = { Text(stringResource(R.string.common_player_n, 1)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); OutlinedTextField(value = session.player2Name, onValueChange = { viewModel.updateScoreboardNames(session.player1Name, it) }, label = { Text(stringResource(R.string.common_player_n, 2)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true) }
             Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
@@ -989,6 +997,11 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     var selectedNoteId by rememberSaveable { mutableStateOf<String?>(null) }
     var showTypeSelection by rememberSaveable { mutableStateOf(false) }
     val selectedNote = remember(selectedNoteId, settings.notebookNotes) { settings.notebookNotes.find { it.id == selectedNoteId } }
+    // Back from a note goes back to the list, as the arrow in its bar does. With nothing to catch
+    // it, the system Back left the notebook altogether -- as it left Game Logs from a game's detail.
+    BackHandler(enabled = selectedNote != null) { selectedNoteId = null }
+    // The note whose deletion is being confirmed; see the trash icon below.
+    var deletingNoteId by rememberSaveable { mutableStateOf<String?>(null) }
     if (selectedNote == null) {
         val sortedNotes = remember(settings.notebookNotes) { settings.notebookNotes.sortedByDescending { it.timestamp } }
         ToolScaffold(title = stringResource(R.string.settings_more_notebook), onBack = onBack, actions = { IconButton(onClick = {
@@ -1032,7 +1045,23 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     ) 
                                 }
-                                IconButton(onClick = {
+                                // Asked first, as deleting a note's photo or recording is: one tap shredded the
+                                // note and its media for good.
+                                IconButton(onClick = { deletingNoteId = note.id }) {
+                                    Icon(Icons.Default.DeleteForever, stringResource(R.string.tools_shred), tint = MaterialTheme.colorScheme.error)
+                                }
+                            } 
+                        } 
+                    } 
+                } 
+            }
+        }
+        sortedNotes.firstOrNull { it.id == deletingNoteId }?.let { note ->
+            ConfirmDestructiveDialog(
+                title = note.title.ifBlank { stringResource(R.string.tools_shred) },
+                confirmLabel = stringResource(R.string.tools_shred),
+                onDismiss = { deletingNoteId = null },
+                onConfirm = {
                                     scope.launch(Dispatchers.IO) {
                                         val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
                                         note.audioPath?.let { shredFile(File(it), sandboxRoots) }
@@ -1049,14 +1078,8 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                                             Toast.makeText(context, noteDeletedText, Toast.LENGTH_SHORT).show() 
                                         } 
                                     } 
-                                }) { 
-                                    Icon(Icons.Default.DeleteForever, stringResource(R.string.tools_shred), tint = MaterialTheme.colorScheme.error) 
-                                } 
-                            } 
-                        } 
-                    } 
-                } 
-            }
+                },
+            )
         }
         if (showTypeSelection) { Dialog(onDismissRequest = { showTypeSelection = false }) { Surface(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) { Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) { Text(text = stringResource(R.string.tools_new_note), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold);                         FlowRow(
                             modifier = Modifier.fillMaxWidth(), 
@@ -1085,7 +1108,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 var history by remember(selectedNoteId) { mutableStateOf(TextEditHistory()) }
                 fun recordBeforeEdit(typing: Boolean) { history = history.beforeEdit(TextSnapshot(rawText, contentValue.selection.start, contentValue.selection.end), android.os.SystemClock.uptimeMillis(), typing) }
                 PersistDebounced(title to rawText) { (newTitle, newText) -> val newList = settings.notebookNotes.map { if (it.id == selectedNoteId) it.copy(title = newTitle, content = newText) else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }
-                fun applyFormat(prefix: String, suffix: String = prefix) { recordBeforeEdit(typing = false); val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.start, selection.end); val newText = text.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.start + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
+                fun applyFormat(prefix: String, suffix: String = prefix) { recordBeforeEdit(typing = false); val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.min, selection.max); val newText = text.replaceRange(selection.min, selection.max, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.min + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
                 ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = { selectedNoteId = null }, actions = {
                     IconButton(onClick = {
                         history.undo()?.let { (snapshot, rest) ->
@@ -1969,6 +1992,18 @@ private fun DeleteMediaButton(label: String, onConfirm: () -> Unit) {
         text = { Text(stringResource(R.string.tools_delete_media_message)) },
         confirmButton = { TextButton(onClick = { asking = false; onConfirm() }) { Text(stringResource(R.string.common_delete)) } },
         dismissButton = { TextButton(onClick = { asking = false }) { Text(stringResource(R.string.common_cancel)) } },
+    )
+}
+
+/** Asks before something that cannot be undone; the message is the one the media deletions use. */
+@Composable
+private fun ConfirmDestructiveDialog(title: String, confirmLabel: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(stringResource(R.string.tools_delete_media_message)) },
+        confirmButton = { TextButton(onClick = { onDismiss(); onConfirm() }) { Text(confirmLabel) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
