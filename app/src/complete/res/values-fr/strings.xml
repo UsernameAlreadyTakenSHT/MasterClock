@@ -162,7 +162,6 @@
     <string name="tools_offset">Écart : %1$s%2$d ms</string>
     <string name="tools_pick_straw">Tirer la paille %d</string>
     <string name="tools_play">Lire</string>
-    <string name="tools_player_short">J%d</string>
     <string name="tools_prepare">PRÉPAREZ-VOUS</string>
     <string name="tools_random_card">Carte au hasard</string>
     <string name="tools_record">Enregistrer</string>
@@ -212,4 +211,5 @@
         <item quantity="many">Pailles : %d</item>
         <item quantity="other">Pailles : %d</item>
     </plurals>
+    <string name="qr_open_settings">Ouvrir les réglages de l\'appli</string>
 </resources>

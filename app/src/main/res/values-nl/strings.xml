@@ -131,7 +131,7 @@
     <string name="qr_confirm_message">Deze code vervangt je huidige instellingen en kan partijen en een scorebord toevoegen. Accepteer alleen een code van iemand die je vertrouwt.</string>
     <string name="qr_confirm_apply">Toepassen</string>
     <string name="import_confirm_title">Dit bestand importeren?</string>
-    <string name="import_confirm_message">Dit bestand vervangt je huidige instellingen en het scorebord. De partijen, voorinstellingen en notities erin komen bij de jouwe: niets van jou wordt verwijderd.</string>
+    <string name="import_confirm_message">Dit bestand vervangt je huidige instellingen. De partijen, voorinstellingen, notities en scorebordresultaten erin komen bij de jouwe: niets van jou wordt verwijderd.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Speler %1$d, %2$s</string>
@@ -506,7 +506,7 @@
     <string name="stats_median_move">Mediane zet</string>
     <string name="stats_slowest_move">Traagste zet</string>
     <string name="stats_time_on_clock">Tijd op de klok</string>
-    <string name="stats_time_pressure">Zetten gespeeld onder 10 % van de starttijd</string>
+    <string name="stats_time_pressure" formatted="false">Zetten gespeeld onder 10 % van de starttijd</string>
     <string name="stats_recent_game">Meest recente partij</string>
     <string name="stats_modes_played">Gespeelde modi</string>
 
@@ -575,4 +575,13 @@
     <string name="preset_desc_scrabble_25">Sudden Death 25:00, terugtellen</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, afgerond</string>
     <string name="preset_shortcut_deleted">Deze voorinstelling is verwijderd</string>
+    <string name="arbiter_remove_minute">%1$s, min 1 minuut</string>
+    <string name="arbiter_add_minute">%1$s, plus 1 minuut</string>
+    <string name="arbiter_remove_second">%1$s, min 1 seconde</string>
+    <string name="arbiter_add_second">%1$s, plus 1 seconde</string>
+    <string name="settings_horiz_left">Links</string>
+    <string name="settings_horiz_right">Rechts</string>
+    <string name="omni_in_reserve">+%1$s in reserve</string>
+    <string name="omni_cfg_unbalanced_explain">Elke speler heeft elke beurt evenveel kans – één van hen kan echt het grootste deel van een ronde krijgen.</string>
+    <string name="tools_player_short">S%d</string>
 </resources>

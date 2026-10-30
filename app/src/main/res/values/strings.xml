@@ -143,7 +143,7 @@
     <string name="qr_confirm_message">This code replaces your current settings, and can add games and a scoreboard. Only accept a code from someone you trust.</string>
     <string name="qr_confirm_apply">Apply</string>
     <string name="import_confirm_title">Import this file?</string>
-    <string name="import_confirm_message">This file replaces your current settings and scoreboard. Its games, presets and notes are added to yours: nothing of yours is deleted.</string>
+    <string name="import_confirm_message">This file replaces your current settings. Its games, presets, notes and scoreboard results are added to yours: nothing of yours is deleted.</string>
 
     <!--
       Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,
@@ -552,7 +552,7 @@
     <string name="stats_median_move">Median move</string>
     <string name="stats_slowest_move">Slowest move</string>
     <string name="stats_time_on_clock">Time on clock</string>
-    <string name="stats_time_pressure">Moves played under 10% of the starting clock</string>
+    <string name="stats_time_pressure" formatted="false">Moves played under 10% of the starting clock</string>
     <string name="stats_recent_game">Most recent game</string>
     <string name="stats_modes_played">Modes played</string>
     <!--
@@ -588,8 +588,8 @@
     <string name="timer_reroll">New random time</string>
     <string name="timer_reroll_title">Draw a new time?</string>
     <string name="timer_reroll_message">The game restarts with a new random time.</string>
-    <string name="timer_arbitre_control">Arbitre Control</string>
-    <string name="timer_arbitre">Arbitre</string>
+    <string name="timer_arbitre_control">Arbiter Control</string>
+    <string name="timer_arbitre">Arbiter</string>
     <string name="timer_save_clock">Save</string>
     <string name="timer_resume">Resume</string>
     <string name="timer_start">Start</string>
@@ -627,4 +627,13 @@
     <string name="preset_desc_scrabble_25">Sudden Death 25:00, flag reverse</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, Rounded</string>
     <string name="preset_shortcut_deleted">This preset was deleted</string>
+    <string name="arbiter_remove_minute">%1$s, minus 1 minute</string>
+    <string name="arbiter_add_minute">%1$s, plus 1 minute</string>
+    <string name="arbiter_remove_second">%1$s, minus 1 second</string>
+    <string name="arbiter_add_second">%1$s, plus 1 second</string>
+    <string name="settings_horiz_left">Left</string>
+    <string name="settings_horiz_right">Right</string>
+    <string name="omni_in_reserve">+%1$s in reserve</string>
+    <string name="omni_cfg_unbalanced_explain">Every player is equally likely every turn — one of them really can take most of a round.</string>
+    <string name="tools_player_short">P%d</string>
 </resources>

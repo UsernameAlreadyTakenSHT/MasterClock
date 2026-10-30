@@ -136,7 +136,7 @@
     <string name="qr_confirm_message">Este código substitui as tuas definições atuais e pode acrescentar partidas e um placar. Aceita um código apenas de alguém em quem confias.</string>
     <string name="qr_confirm_apply">Aplicar</string>
     <string name="import_confirm_title">Importar este ficheiro?</string>
-    <string name="import_confirm_message">Este ficheiro substitui as tuas definições atuais e o placar. As suas partidas, predefinições e notas juntam-se às tuas: nada teu é apagado.</string>
+    <string name="import_confirm_message">Este ficheiro substitui as tuas definições atuais. As suas partidas, predefinições, notas e resultados do placar juntam-se aos teus: nada teu é apagado.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jogador %1$d, %2$s</string>
@@ -515,7 +515,7 @@
     <string name="stats_median_move">Lance mediano</string>
     <string name="stats_slowest_move">Lance mais lento</string>
     <string name="stats_time_on_clock">Tempo no relógio</string>
-    <string name="stats_time_pressure">Lances jogados abaixo de 10 % do tempo inicial</string>
+    <string name="stats_time_pressure" formatted="false">Lances jogados abaixo de 10 % do tempo inicial</string>
     <string name="stats_recent_game">Partida mais recente</string>
     <string name="stats_modes_played">Modos jogados</string>
 
@@ -588,4 +588,13 @@
     <string name="preset_desc_scrabble_25">Sudden Death 25:00, contagem inversa</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, arredondado</string>
     <string name="preset_shortcut_deleted">Esta predefinição foi eliminada</string>
+    <string name="arbiter_remove_minute">%1$s, menos 1 minuto</string>
+    <string name="arbiter_add_minute">%1$s, mais 1 minuto</string>
+    <string name="arbiter_remove_second">%1$s, menos 1 segundo</string>
+    <string name="arbiter_add_second">%1$s, mais 1 segundo</string>
+    <string name="settings_horiz_left">Esquerda</string>
+    <string name="settings_horiz_right">Direita</string>
+    <string name="omni_in_reserve">+%1$s em reserva</string>
+    <string name="omni_cfg_unbalanced_explain">Todos os jogadores têm a mesma probabilidade a cada vez: um deles pode mesmo ficar com a maior parte de uma ronda.</string>
+    <string name="tools_player_short">J%d</string>
 </resources>

@@ -144,8 +144,8 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                         ClockOrientation.entries.forEachIndexed { i, o ->
                             val label = when(o) {
                                 ClockOrientation.VERTICAL -> stringResource(R.string.settings_vert)
-                                ClockOrientation.HORIZONTAL_LEFT -> "L"
-                                ClockOrientation.HORIZONTAL_RIGHT -> "R"
+                                ClockOrientation.HORIZONTAL_LEFT -> stringResource(R.string.settings_horiz_left)
+                                ClockOrientation.HORIZONTAL_RIGHT -> stringResource(R.string.settings_horiz_right)
                             }
                             SegmentedButton(
                                 selected = currentSettings.clockOrientation == o,

@@ -333,7 +333,7 @@ private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniS
                 text = if (settings.randomAutoBalance) {
                     stringResource(R.string.omni_cfg_balance_explain)
                 } else {
-                    "Every player is equally likely every turn — one of them really can take most of a round."
+                    stringResource(R.string.omni_cfg_unbalanced_explain)
                 },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,

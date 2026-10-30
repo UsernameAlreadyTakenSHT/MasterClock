@@ -163,7 +163,6 @@
     <string name="tools_offset">Afwijking: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Strootje %d trekken</string>
     <string name="tools_play">Afspelen</string>
-    <string name="tools_player_short">S%d</string>
     <string name="tools_prepare">MAAK JE KLAAR</string>
     <string name="tools_random_card">Willekeurige kaart</string>
     <string name="tools_record">Opnemen</string>
@@ -212,4 +211,5 @@
         <item quantity="one">Strootjes: %d</item>
         <item quantity="other">Strootjes: %d</item>
     </plurals>
+    <string name="qr_open_settings">App-instellingen openen</string>
 </resources>

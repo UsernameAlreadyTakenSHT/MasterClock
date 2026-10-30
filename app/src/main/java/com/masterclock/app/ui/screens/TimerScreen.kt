@@ -588,7 +588,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     // the same 48dp, but a larger scale can grow instead of clipping the label.
                     Box(modifier = Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
                         if (playerState.isInByoyomi) Text(stringResource(R.string.timer_byoyomi), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f))
-                        else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll)) { Text("P$playerIndex " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
+                        else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll)) { Text(stringResource(R.string.tools_player_short, playerIndex) + " " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                         else if (settings.numberOfPlayers > 2) { Text(stringResource(R.string.common_player_n, playerIndex), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                     }
                 }
@@ -724,18 +724,20 @@ fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation
 
 @Composable
 // [enabled] is off where a time means nothing -- a move count -- rather than the buttons doing nothing.
+// Each button says whose clock and by how much. They read "-1m", "+1m", "-1s", "+1s" in English, in
+// every language, and never which of the players' clocks the button would change.
 fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, onAdjust: (Long) -> Unit) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { 
-            FilledTonalIconButton(onClick = { onAdjust(-60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, "-1m") }
-            FilledTonalIconButton(onClick = { onAdjust(60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, "+1m") }
+            FilledTonalIconButton(onClick = { onAdjust(-60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_minute, label)) }
+            FilledTonalIconButton(onClick = { onAdjust(60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_minute, label)) }
         }
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { 
-            FilledTonalIconButton(onClick = { onAdjust(-1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, "-1s") }
-            FilledTonalIconButton(onClick = { onAdjust(1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, "+1s") }
+            FilledTonalIconButton(onClick = { onAdjust(-1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_second, label)) }
+            FilledTonalIconButton(onClick = { onAdjust(1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_second, label)) }
         }
     }
 }

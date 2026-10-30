@@ -167,7 +167,6 @@
     <string name="tools_offset">Desvio: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Tirar a palhinha %d</string>
     <string name="tools_play">Reproduzir</string>
-    <string name="tools_player_short">J%d</string>
     <string name="tools_prepare">PREPAREM-SE</string>
     <string name="tools_random_card">Carta ao acaso</string>
     <string name="tools_record">Gravar</string>
@@ -217,4 +216,5 @@
         <item quantity="many">Palhinhas: %d</item>
         <item quantity="other">Palhinhas: %d</item>
     </plurals>
+    <string name="qr_open_settings">Abrir definições da app</string>
 </resources>

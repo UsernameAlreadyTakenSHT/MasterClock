@@ -163,7 +163,6 @@
     <string name="tools_offset">Abweichung: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Halm %d ziehen</string>
     <string name="tools_play">Abspielen</string>
-    <string name="tools_player_short">S%d</string>
     <string name="tools_prepare">BEREIT MACHEN</string>
     <string name="tools_random_card">Zufällige Karte</string>
     <string name="tools_record">Aufnehmen</string>
@@ -212,4 +211,5 @@
         <item quantity="one">Halme: %d</item>
         <item quantity="other">Halme: %d</item>
     </plurals>
+    <string name="qr_open_settings">App-Einstellungen öffnen</string>
 </resources>

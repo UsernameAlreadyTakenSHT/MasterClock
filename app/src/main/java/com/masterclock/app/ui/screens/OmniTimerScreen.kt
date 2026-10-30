@@ -183,9 +183,9 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
                     val turnsPerPlayer = totalTurnsInRound / numPlayers
                     
                     if (turnsPerPlayer > 1 || currentRound.roundEndBehavior == RoundEndBehavior.LOOP) {
-                        Text("TURN $turnNumber", style = MaterialTheme.typography.labelSmall, color = pColor)
+                        Text(stringResource(R.string.omni_cfg_turn_n, turnNumber).uppercase(androidx.compose.ui.platform.LocalConfiguration.current.locales[0]), style = MaterialTheme.typography.labelSmall, color = pColor)
                     }
-                    Text("PLAYER $playerNumber", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = pColor)
+                    Text(stringResource(R.string.common_player_n, playerNumber).uppercase(androidx.compose.ui.platform.LocalConfiguration.current.locales[0]), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = pColor)
                 }
             }
         }
@@ -201,7 +201,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
             val bankedMs = state.playerTimeBanks.values.sum()
             if (bankedMs > 0) {
                 Text(
-                    "+${formatTime(bankedMs)} in reserve",
+                    stringResource(R.string.omni_in_reserve, formatTime(bankedMs)),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = pColor,

@@ -164,7 +164,6 @@
     <string name="tools_offset">Desfase: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Sacar la pajita %d</string>
     <string name="tools_play">Reproducir</string>
-    <string name="tools_player_short">J%d</string>
     <string name="tools_prepare">PREPÁRATE</string>
     <string name="tools_random_card">Carta al azar</string>
     <string name="tools_record">Grabar</string>
@@ -214,4 +213,5 @@
         <item quantity="many">Pajitas: %d</item>
         <item quantity="other">Pajitas: %d</item>
     </plurals>
+    <string name="qr_open_settings">Abrir ajustes de la app</string>
 </resources>

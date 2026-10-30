@@ -137,7 +137,7 @@
     <string name="qr_confirm_message">Ce code remplace vos réglages actuels et peut ajouter des parties et un tableau des scores. N\'acceptez un code que d\'une personne de confiance.</string>
     <string name="qr_confirm_apply">Appliquer</string>
     <string name="import_confirm_title">Importer ce fichier ?</string>
-    <string name="import_confirm_message">Ce fichier remplace vos réglages actuels et le tableau des scores. Ses parties, préréglages et notes s\'ajoutent aux vôtres : rien de ce qui est à vous n\'est supprimé.</string>
+    <string name="import_confirm_message">Ce fichier remplace vos réglages actuels. Ses parties, préréglages, notes et résultats du tableau des scores s\'ajoutent aux vôtres : rien de ce qui est à vous n\'est supprimé.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Joueur %1$d, %2$s</string>
@@ -526,7 +526,7 @@
     <string name="stats_median_move">Coup médian</string>
     <string name="stats_slowest_move">Coup le plus lent</string>
     <string name="stats_time_on_clock">Temps à la pendule</string>
-    <string name="stats_time_pressure">Coups joués sous 10 % du temps initial</string>
+    <string name="stats_time_pressure" formatted="false">Coups joués sous 10 % du temps initial</string>
     <string name="stats_recent_game">Partie la plus récente</string>
     <string name="stats_modes_played">Modes joués</string>
 
@@ -599,4 +599,13 @@
     <string name="preset_desc_scrabble_25">Sudden Death 25:00, drapeau inversé</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, arrondi</string>
     <string name="preset_shortcut_deleted">Ce préréglage a été supprimé</string>
+    <string name="arbiter_remove_minute">%1$s, moins 1 minute</string>
+    <string name="arbiter_add_minute">%1$s, plus 1 minute</string>
+    <string name="arbiter_remove_second">%1$s, moins 1 seconde</string>
+    <string name="arbiter_add_second">%1$s, plus 1 seconde</string>
+    <string name="settings_horiz_left">Gauche</string>
+    <string name="settings_horiz_right">Droite</string>
+    <string name="omni_in_reserve">+%1$s en réserve</string>
+    <string name="omni_cfg_unbalanced_explain">Chaque joueur a autant de chances à chaque tour : l\'un d\'eux peut vraiment jouer la plus grande partie d\'une manche.</string>
+    <string name="tools_player_short">J%d</string>
 </resources>

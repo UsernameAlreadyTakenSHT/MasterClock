@@ -164,7 +164,6 @@
     <string name="tools_offset">Scarto: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Estrai la pagliuzza %d</string>
     <string name="tools_play">Riproduci</string>
-    <string name="tools_player_short">G%d</string>
     <string name="tools_prepare">PREPARATI</string>
     <string name="tools_random_card">Carta a caso</string>
     <string name="tools_record">Registra</string>
@@ -214,4 +213,5 @@
         <item quantity="many">Pagliuzze: %d</item>
         <item quantity="other">Pagliuzze: %d</item>
     </plurals>
+    <string name="qr_open_settings">Apri le impostazioni dell\'app</string>
 </resources>

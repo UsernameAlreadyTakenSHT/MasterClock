@@ -132,7 +132,7 @@
     <string name="qr_confirm_message">Dieser Code ersetzt deine aktuellen Einstellungen und kann Partien und eine Punktetafel hinzufügen. Nimm nur Codes von jemandem an, dem du vertraust.</string>
     <string name="qr_confirm_apply">Übernehmen</string>
     <string name="import_confirm_title">Diese Datei importieren?</string>
-    <string name="import_confirm_message">Diese Datei ersetzt deine aktuellen Einstellungen und die Punktetafel. Ihre Partien, Vorlagen und Notizen kommen zu deinen hinzu: Von deinen wird nichts gelöscht.</string>
+    <string name="import_confirm_message">Diese Datei ersetzt deine aktuellen Einstellungen. Ihre Partien, Vorlagen, Notizen und Ergebnisse der Punktetafel kommen zu deinen hinzu: Von deinen wird nichts gelöscht.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Spieler %1$d, %2$s</string>
@@ -507,7 +507,7 @@
     <string name="stats_median_move">Median-Zug</string>
     <string name="stats_slowest_move">Langsamster Zug</string>
     <string name="stats_time_on_clock">Zeit auf der Uhr</string>
-    <string name="stats_time_pressure">Züge unter 10 % der Startzeit gespielt</string>
+    <string name="stats_time_pressure" formatted="false">Züge unter 10 % der Startzeit gespielt</string>
     <string name="stats_recent_game">Letzte Partie</string>
     <string name="stats_modes_played">Gespielte Modi</string>
 
@@ -576,4 +576,13 @@
     <string name="preset_desc_scrabble_25">Sudden Death 25:00, Rückwärtszählung</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, gerundet</string>
     <string name="preset_shortcut_deleted">Diese Voreinstellung wurde gelöscht</string>
+    <string name="arbiter_remove_minute">%1$s, minus 1 Minute</string>
+    <string name="arbiter_add_minute">%1$s, plus 1 Minute</string>
+    <string name="arbiter_remove_second">%1$s, minus 1 Sekunde</string>
+    <string name="arbiter_add_second">%1$s, plus 1 Sekunde</string>
+    <string name="settings_horiz_left">Links</string>
+    <string name="settings_horiz_right">Rechts</string>
+    <string name="omni_in_reserve">+%1$s in Reserve</string>
+    <string name="omni_cfg_unbalanced_explain">Jeder Spieler ist bei jedem Zug gleich wahrscheinlich dran – einer von ihnen kann wirklich den Großteil einer Runde bekommen.</string>
+    <string name="tools_player_short">S%d</string>
 </resources>

@@ -132,7 +132,7 @@
     <string name="qr_confirm_message">Este código sustituye tus ajustes actuales y puede añadir partidas y un marcador. Acepta códigos solo de alguien de confianza.</string>
     <string name="qr_confirm_apply">Aplicar</string>
     <string name="import_confirm_title">¿Importar este archivo?</string>
-    <string name="import_confirm_message">Este archivo sustituye tus ajustes actuales y el marcador. Sus partidas, preajustes y notas se añaden a los tuyos: no se borra nada tuyo.</string>
+    <string name="import_confirm_message">Este archivo sustituye tus ajustes actuales. Sus partidas, preajustes, notas y resultados del marcador se añaden a los tuyos: no se borra nada tuyo.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jugador %1$d, %2$s</string>
@@ -518,7 +518,7 @@
     <string name="stats_median_move">Jugada mediana</string>
     <string name="stats_slowest_move">Jugada más lenta</string>
     <string name="stats_time_on_clock">Tiempo en el reloj</string>
-    <string name="stats_time_pressure">Jugadas realizadas con menos del 10 % del tiempo inicial</string>
+    <string name="stats_time_pressure" formatted="false">Jugadas realizadas con menos del 10 % del tiempo inicial</string>
     <string name="stats_recent_game">Partida más reciente</string>
     <string name="stats_modes_played">Modos jugados</string>
 
@@ -591,4 +591,13 @@
     <string name="preset_desc_scrabble_25">Sudden Death 25:00, cuenta inversa</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, redondeado</string>
     <string name="preset_shortcut_deleted">Este preajuste se ha eliminado</string>
+    <string name="arbiter_remove_minute">%1$s, menos 1 minuto</string>
+    <string name="arbiter_add_minute">%1$s, más 1 minuto</string>
+    <string name="arbiter_remove_second">%1$s, menos 1 segundo</string>
+    <string name="arbiter_add_second">%1$s, más 1 segundo</string>
+    <string name="settings_horiz_left">Izquierda</string>
+    <string name="settings_horiz_right">Derecha</string>
+    <string name="omni_in_reserve">+%1$s en reserva</string>
+    <string name="omni_cfg_unbalanced_explain">Cada jugador tiene la misma probabilidad en cada turno: uno de ellos puede llevarse de verdad la mayor parte de una ronda.</string>
+    <string name="tools_player_short">J%d</string>
 </resources>

@@ -186,7 +186,6 @@
     <string name="tools_offset">Offset: %1$s%2$dms</string>
     <string name="tools_pick_straw">Pick straw %d</string>
     <string name="tools_play">Play</string>
-    <string name="tools_player_short">P%d</string>
     <string name="tools_prepare">PREPARE</string>
     <string name="tools_random_card">Random Card</string>
     <string name="tools_record">Record</string>
@@ -234,4 +233,5 @@
         <item quantity="one">Straws: %d</item>
         <item quantity="other">Straws: %d</item>
     </plurals>
+    <string name="qr_open_settings">Open app settings</string>
 </resources>
