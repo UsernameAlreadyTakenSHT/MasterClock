@@ -25,12 +25,23 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import com.masterclock.core.R as CoreR
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
 import com.masterclock.app.R
 
 @Composable
 fun RulesScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    // Hoisted: shown from a click handler, not composable scope.
+    val noBrowserText = stringResource(R.string.toast_no_browser)
+    // The copy runs off the main thread: the largest rulebook is over four megabytes, and copying it
+    // there froze the screen on the first tap.
+    fun open(rawResId: Int, fileName: String) {
+        scope.launch { openBundledPdf(context, rawResId, fileName) }
+    }
     ToolScaffold(
         title = stringResource(R.string.rules_title),
         onBack = onBack
@@ -48,7 +59,7 @@ fun RulesScreen(onBack: () -> Unit) {
             // --- CHESS ---
             RulesGroup(stringResource(R.string.rules_group_chess)) {
                 RuleButton("FIDE Laws", Modifier.fillMaxWidth()) {
-                    openBundledPdf(context, CoreR.raw.rules_chess, "chess.pdf")
+                    open(CoreR.raw.rules_chess, "chess.pdf")
                 }
             }
 
@@ -56,10 +67,10 @@ fun RulesScreen(onBack: () -> Unit) {
             RulesGroup(stringResource(R.string.rules_group_draughts)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RuleButton("FMJD Annexes", Modifier.weight(1f)) {
-                        openBundledPdf(context, CoreR.raw.rules_draughts_fmjd, "draughts_fmjd.pdf")
+                        open(CoreR.raw.rules_draughts_fmjd, "draughts_fmjd.pdf")
                     }
                     RuleButton("IDF Rules", Modifier.weight(1f)) {
-                        openBundledPdf(context, CoreR.raw.rules_draughts_idf, "draughts_idf.pdf")
+                        open(CoreR.raw.rules_draughts_idf, "draughts_idf.pdf")
                     }
                 }
             }
@@ -67,7 +78,7 @@ fun RulesScreen(onBack: () -> Unit) {
             // --- SHOGI ---
             RulesGroup(stringResource(R.string.rules_group_shogi)) {
                 RuleButton("FESA Rules", Modifier.fillMaxWidth()) {
-                    openBundledPdf(context, CoreR.raw.rules_shogi, "shogi.pdf")
+                    open(CoreR.raw.rules_shogi, "shogi.pdf")
                 }
             }
 
@@ -76,26 +87,26 @@ fun RulesScreen(onBack: () -> Unit) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RuleButton("Morris", Modifier.weight(1f)) {
-                            openBundledPdf(context, CoreR.raw.rules_morris, "morris.pdf")
+                            open(CoreR.raw.rules_morris, "morris.pdf")
                         }
                         RuleButton("Tafl", Modifier.weight(1f)) {
-                            openBundledPdf(context, CoreR.raw.rules_tafl, "tafl.pdf")
+                            open(CoreR.raw.rules_tafl, "tafl.pdf")
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RuleButton("Quoridor", Modifier.weight(1f)) {
-                            openBundledPdf(context, CoreR.raw.rules_quoridor, "quoridor.pdf")
+                            open(CoreR.raw.rules_quoridor, "quoridor.pdf")
                         }
                         RuleButton("Abalone", Modifier.weight(1f)) {
-                            openBundledPdf(context, CoreR.raw.rules_abalone, "abalone.pdf")
+                            open(CoreR.raw.rules_abalone, "abalone.pdf")
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RuleButton("Hex", Modifier.weight(1f)) {
-                            openBundledPdf(context, CoreR.raw.rules_hex, "hex.pdf")
+                            open(CoreR.raw.rules_hex, "hex.pdf")
                         }
                         RuleButton("Santorini", Modifier.weight(1f)) {
-                            openBundledPdf(context, CoreR.raw.rules_santorini, "santorini.pdf")
+                            open(CoreR.raw.rules_santorini, "santorini.pdf")
                         }
                     }
                 }
@@ -109,7 +120,14 @@ fun RulesScreen(onBack: () -> Unit) {
                     trailingIcon = Icons.AutoMirrored.Filled.OpenInNew
                 ) {
                     val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, "https://en.wikipedia.org/wiki/List_of_abstract_strategy_games".toUri())
-                    context.startActivity(intent)
+                    // With no browser installed, startActivity threw and the app closed. The rulebooks
+                    // below already say so when there is no PDF viewer; this says the same.
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        Log.w("RulesScreen", "No browser to open the link", e)
+                        Toast.makeText(context, noBrowserText, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
 
@@ -168,21 +186,24 @@ private fun RuleButton(
  * whitelisted in `res/xml/file_paths.xml`) -- a raw resource has no path a viewer could open on its
  * own. Serving from the APK is what makes this screen's "offline use" promise true.
  */
-private fun openBundledPdf(context: Context, rawResId: Int, fileName: String) {
+private suspend fun openBundledPdf(context: Context, rawResId: Int, fileName: String) {
     try {
         // One folder per version, the others cleared: the copy was made once and reused for good, so a
         // rulebook updated in a release never showed. Written aside and moved into place, so a copy cut
         // short -- the app closed mid-write -- is never taken for a finished one.
-        val root = File(context.cacheDir, "pdfs")
-        val dir = File(root, com.masterclock.app.BuildConfig.VERSION_CODE.toString()).apply { mkdirs() }
-        root.listFiles()?.filter { it != dir }?.forEach { it.deleteRecursively() }
-        val file = File(dir, fileName)
-        if (!file.exists() || file.length() == 0L) {
-            val part = File(dir, "$fileName.part")
-            context.resources.openRawResource(rawResId).use { input ->
-                FileOutputStream(part).use { output -> input.copyTo(output) }
+        val file = withContext(Dispatchers.IO) {
+            val root = File(context.cacheDir, "pdfs")
+            val dir = File(root, com.masterclock.app.BuildConfig.VERSION_CODE.toString()).apply { mkdirs() }
+            root.listFiles()?.filter { it != dir }?.forEach { it.deleteRecursively() }
+            val file = File(dir, fileName)
+            if (!file.exists() || file.length() == 0L) {
+                val part = File(dir, "$fileName.part")
+                context.resources.openRawResource(rawResId).use { input ->
+                    FileOutputStream(part).use { output -> input.copyTo(output) }
+                }
+                if (!part.renameTo(file)) throw java.io.IOException("Could not move $part into place")
             }
-            if (!part.renameTo(file)) throw java.io.IOException("Could not move $part into place")
+            file
         }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         context.startActivity(

@@ -212,4 +212,5 @@
         <item quantity="other">Halme: %d</item>
     </plurals>
     <string name="qr_open_settings">App-Einstellungen öffnen</string>
+    <string name="toast_no_browser">Kein Browser installiert</string>
 </resources>

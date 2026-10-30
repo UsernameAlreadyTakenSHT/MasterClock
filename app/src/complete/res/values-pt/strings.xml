@@ -217,4 +217,5 @@
         <item quantity="other">Palhinhas: %d</item>
     </plurals>
     <string name="qr_open_settings">Abrir definições da app</string>
+    <string name="toast_no_browser">Nenhum navegador instalado</string>
 </resources>

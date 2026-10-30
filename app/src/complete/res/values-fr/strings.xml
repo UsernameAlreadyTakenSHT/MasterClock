@@ -212,4 +212,5 @@
         <item quantity="other">Pailles : %d</item>
     </plurals>
     <string name="qr_open_settings">Ouvrir les réglages de l\'appli</string>
+    <string name="toast_no_browser">Aucun navigateur installé</string>
 </resources>

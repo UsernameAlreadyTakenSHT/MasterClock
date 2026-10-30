@@ -212,4 +212,5 @@
         <item quantity="other">Strootjes: %d</item>
     </plurals>
     <string name="qr_open_settings">App-instellingen openen</string>
+    <string name="toast_no_browser">Geen browser geïnstalleerd</string>
 </resources>

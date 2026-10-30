@@ -214,4 +214,5 @@
         <item quantity="other">Pagliuzze: %d</item>
     </plurals>
     <string name="qr_open_settings">Apri le impostazioni dell\'app</string>
+    <string name="toast_no_browser">Nessun browser installato</string>
 </resources>

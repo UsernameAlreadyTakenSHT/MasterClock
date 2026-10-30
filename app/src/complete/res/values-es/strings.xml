@@ -214,4 +214,5 @@
         <item quantity="other">Pajitas: %d</item>
     </plurals>
     <string name="qr_open_settings">Abrir ajustes de la app</string>
+    <string name="toast_no_browser">No hay ningún navegador instalado</string>
 </resources>
