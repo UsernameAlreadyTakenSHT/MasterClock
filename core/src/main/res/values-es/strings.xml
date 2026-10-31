@@ -5,10 +5,10 @@
     <string name="voice_one_minute_left">Queda un minuto</string>
     <string name="voice_thirty_seconds_left">Quedan treinta segundos</string>
     <string name="voice_ten_seconds_left">Quedan diez segundos</string>
-    <string name="voice_period">Período %1$d</string>
+    <string name="voice_period">Periodo %1$d</string>
     <string name="voice_byoyomi">Comienza el byoyomi</string>
-    <string name="voice_byoyomi_periods_left">Períodos restantes: %1$d</string>
-    <string name="voice_move">Mueve</string>
+    <string name="voice_byoyomi_periods_left">Periodos restantes: %1$d</string>
+    <string name="voice_move">Juega</string>
     <string name="voice_reflect">Reflexión</string>
     <string name="voice_phase">Fase %1$d</string>
     <string name="voice_test">Prueba del volumen de voz</string>

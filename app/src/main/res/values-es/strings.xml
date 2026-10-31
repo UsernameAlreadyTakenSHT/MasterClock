@@ -27,7 +27,7 @@
     <string name="common_remove">Quitar</string>
     <string name="common_select">Seleccionar</string>
     <string name="common_optional">Opcional</string>
-    <string name="common_off">Ninguno</string>
+    <string name="common_off">No</string>
 
     <!-- Presets -->
     <string name="preset_title">Preajustes</string>
@@ -48,11 +48,11 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Elegir el modo de juego</string>
-    <string name="settings_bonus_type">Tipo de bonificación</string>
+    <string name="settings_bonus_type">Tipo de Bonus</string>
     <string name="settings_move_timer_type">Tipo de Move Timer</string>
     <string name="settings_byoyomi_type">Tipo de byoyomi</string>
-    <string name="settings_chrono_type">Tipo de cronómetro</string>
-    <string name="settings_move_counts_type">Tipo de recuento de jugadas</string>
+    <string name="settings_chrono_type">Tipo de Chronos</string>
+    <string name="settings_move_counts_type">Tipo de Move Counts</string>
     <string name="settings_fast_move_type">Tipo de Fast Move</string>
     <string name="settings_time_parameters">Parámetros de tiempo</string>
     <string name="settings_initial_time">Tiempo inicial</string>
@@ -86,7 +86,7 @@
     <string name="settings_random_config">Configuración del modo Random</string>
     <string name="settings_hidden_config">Configuración del modo Hidden</string>
     <string name="settings_show_percentage">Mostrar alertas de porcentaje</string>
-    <string name="settings_fide_config">Configuración de los periodos FIDE</string>
+    <string name="settings_fide_config">Configuración de FIDE Periods</string>
     <string name="settings_add_period">Añadir un periodo</string>
     <string name="settings_actions">Acciones</string>
     <string name="settings_period_n">Periodo %d</string>
@@ -110,7 +110,7 @@
     <string name="settings_wait_tap_at_end">Esperar un toque al final</string>
     <string name="settings_allow_skip">Permitir avanzar manualmente (pulsar para adelantar)</string>
     <string name="settings_phase_placeholder">Preparación, ronda X…</string>
-    <string name="settings_cumulative_transfer">Transferencia acumulativa</string>
+    <string name="settings_cumulative_transfer">Transfer acumulativo</string>
     <string name="settings_cumulative_explain">Cada jugada recibe el tiempo por jugada más el tiempo que el rival empleó en su última jugada. Activado, se conserva lo que quedaba de las jugadas anteriores; desactivado, se pierde.</string>
     <string name="settings_one_for_all">One for All (sin pulsar)</string>
 
@@ -340,7 +340,7 @@
     <string name="omni_cfg_previous">Anterior</string>
     <string name="omni_cfg_next_step">Paso siguiente</string>
     <string name="omni_cfg_launch_game">Iniciar la partida</string>
-    <string name="omni_cfg_launch_station">ESTACIÓN DE LANZAMIENTO</string>
+    <string name="omni_cfg_launch_station">LANZAMIENTO</string>
     <string name="omni_cfg_ready">Listo para jugar</string>
     <string name="omni_cfg_summary">Resumen</string>
 
@@ -583,18 +583,18 @@
     <string name="preset_desc_fisch_3_2s">Fischer 3:00 +2s</string>
     <string name="preset_desc_fisch_15_10s">Fischer 15:00 +10s</string>
     <string name="preset_desc_90_40_30_30s">90 min/40 + 30 min (Fischer 30 s)</string>
-    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 min (Fischer 30 s)</string>
-    <string name="preset_desc_us_5_2s">Sudden Death 5:00, retardo 2 s</string>
-    <string name="preset_desc_us_25_5s">Sudden Death 25:00, retardo 5 s</string>
-    <string name="preset_desc_us_80_40_30_30s">80 min/40 + 30 min (retardo 30 s)</string>
-    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, retardo 5 s</string>
-    <string name="preset_desc_jap_byo_20">Byoyomi japonés: 20 min + 1×30 s</string>
-    <string name="preset_desc_jap_byo_60">Byoyomi japonés: 60 min + 3×20 s</string>
-    <string name="preset_desc_can_byo_60">Byoyomi canadiense: 60 min + 5 min/20 jugadas</string>
+    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 min (Fischer 30 s desde la jugada 61)</string>
+    <string name="preset_desc_us_5_2s">Sudden Death 5:00, demora 2 s</string>
+    <string name="preset_desc_us_25_5s">Sudden Death 25:00, demora 5 s</string>
+    <string name="preset_desc_us_80_40_30_30s">80 min/40 + 30 min (demora 30 s)</string>
+    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, demora 5 s</string>
+    <string name="preset_desc_jap_byo_20">Byoyomi Japanese: 20 min + 1×30 s</string>
+    <string name="preset_desc_jap_byo_60">Byoyomi Japanese: 60 min + 3×20 s</string>
+    <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 min + 5 min/20 jugadas</string>
     <string name="preset_desc_armag_5_4">Blancas 5:00, negras 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 cada uno</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/jugada</string>
-    <string name="preset_desc_scrabble_25">Sudden Death 25:00, cuenta inversa</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bandera: invertido</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, redondeado</string>
     <string name="preset_shortcut_deleted">Este preajuste se ha eliminado</string>
     <string name="arbiter_remove_minute">%1$s, menos 1 minuto</string>
