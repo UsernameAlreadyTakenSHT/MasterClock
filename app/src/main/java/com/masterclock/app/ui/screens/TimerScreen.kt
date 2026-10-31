@@ -427,6 +427,10 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val shownTimeMs = displayedTimeMs(state, playerState, pSettings.mode)
     // What is running out, which in Overtime past the move clock is the reserve; see alertTimeMs.
     val alertMs = alertTimeMs(state, playerState, pSettings.mode)
+    // The face counts down the moves to the next FIDE period under the move counter, while there is one.
+    val fideShowsMovesLeft = pSettings.mode == TimerMode.FIDE_PERIODS && settings.forcedMoveCounter &&
+        playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1 &&
+        (fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex) ?: 0) > 0
     // The flash warns as the beeps do, of the clock that runs out first in Global and Global Shared;
     // see countdownTimeMs. It followed the move clock alone, so a reserve at 0:08 under a 0:25 move
     // clock beeped without flashing.
@@ -509,7 +513,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             // The moves left to the next period, which the face shows under the move counter.
             fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex)
                 ?.takeIf { settings.forcedMoveCounter && it > 0 && playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1 }
-                ?.let { stringResource(R.string.timer_moves, it - playerState.moveCount) },
+                ?.let { stringResource(R.string.timer_moves, (it - playerState.moveCount).coerceAtLeast(0)) },
             stringResource(R.string.timer_period_flag).takeIf { playerState.hasFlagged },
             spokenDurationText(shownTimeMs),
         ).joinToString(", ")
@@ -585,7 +589,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             // the game.
                             val hasNext = playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1
                             val total = fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex) ?: 0
-                            val info = if (settings.forcedMoveCounter && hasNext && currentP != null && total > 0) stringResource(R.string.timer_moves, total - playerState.moveCount) else stringResource(R.string.timer_period, playerState.currentPeriodIndex + 1, pSettings.fidePeriods.size)
+                            val info = if (settings.forcedMoveCounter && hasNext && currentP != null && total > 0) stringResource(R.string.timer_moves, (total - playerState.moveCount).coerceAtLeast(0)) else stringResource(R.string.timer_period, playerState.currentPeriodIndex + 1, pSettings.fidePeriods.size)
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
@@ -619,7 +623,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     Box(modifier = Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
                         if (playerState.isInByoyomi) Text(stringResource(R.string.timer_byoyomi), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f))
                         // Not in PHASES, whose taps count no moves: it read "P1 MOVES: 0" all game.
-                        else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll) && pSettings.mode != TimerMode.PHASES) { Text(stringResource(R.string.tools_player_short, playerIndex) + " " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
+                        // Nor in FIDE while the moves left to the next period are on the face: "MOVES: 12"
+                        // above "P1 MOVES: 28", one word for two counts.
+                        else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll) && pSettings.mode != TimerMode.PHASES && !fideShowsMovesLeft) { Text(stringResource(R.string.tools_player_short, playerIndex) + " " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                         else if (settings.numberOfPlayers > 2 && pSettings.mode != TimerMode.PHASES) { Text(stringResource(R.string.common_player_n, playerIndex), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                     }
                 }

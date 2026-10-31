@@ -2,6 +2,7 @@ package com.masterclock.app.logic
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Covers [fideMoveTotals] and [adjustFideMoveCount]. */
@@ -51,15 +52,28 @@ class FideMoveTotalsTest {
     }
 
     @Test
-    fun `the arbiter's move taken back leaves the period and the clock`() {
+    fun `the arbiter's move taken back undoes the period it started`() {
         val s = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = periods(40, 0))
         val settings = ChessClockSettings(main = s, forcedMoveCounter = true)
-        val p = PlayerState(timeRemainingMs = 60_000, moveCount = 40, currentPeriodIndex = 1)
-        val back = adjustFideMoveCount(p, -1, s, settings)
+        val p = PlayerState(timeRemainingMs = 60_000, moveCount = 39)
+        val there = adjustFideMoveCount(p, 1, s, settings)
+        val back = adjustFideMoveCount(there, -1, s, settings)
         assertEquals(39, back.moveCount)
-        assertEquals(1, back.currentPeriodIndex)
+        assertEquals(0, back.currentPeriodIndex)
         assertEquals(60_000, back.timeRemainingMs)
         assertEquals(0, adjustFideMoveCount(p.copy(moveCount = 0), -1, s, settings).moveCount)
+    }
+
+    @Test
+    fun `a period the arbiter starts brings its own bonus for the move to come`() {
+        val s = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(
+            FidePeriod(timeMs = 7_200_000, incrementMs = 0, movesToNext = 40, isFischer = true),
+            FidePeriod(timeMs = 3_600_000, incrementMs = 0, movesToNext = 60, isFischer = true),
+            FidePeriod(timeMs = 900_000, incrementMs = 30_000, movesToNext = 0, isFischer = true),
+        ))
+        val settings = ChessClockSettings(main = s, forcedMoveCounter = true)
+        val p = PlayerState(timeRemainingMs = 100_000, moveCount = 59, currentPeriodIndex = 1)
+        assertEquals(100_000 + 900_000 + 30_000, adjustFideMoveCount(p, 1, s, settings).timeRemainingMs)
     }
 
     @Test
@@ -70,8 +84,20 @@ class FideMoveTotalsTest {
     }
 
     @Test
-    fun `a saved game keeps its own move counter rule`() {
-        val saved = ChessClockSettings(forcedMoveCounter = false)
+    fun `a saved FIDE game keeps its own move counter rule, and another control leaves the switch`() {
+        val fide = PlayerSettings(mode = TimerMode.FIDE_PERIODS)
+        val saved = ChessClockSettings(main = fide, p1Custom = fide, forcedMoveCounter = false)
         assertFalse(restoreSavedTimeControl(ChessClockSettings(forcedMoveCounter = true), saved).forcedMoveCounter)
+        val fischer = ChessClockSettings(main = PlayerSettings(mode = TimerMode.FISCHER), forcedMoveCounter = false)
+        assertTrue(applyPresetTimeControl(ChessClockSettings(forcedMoveCounter = true), fischer).forcedMoveCounter)
+    }
+
+    @Test
+    fun `the label counts a period's moves from the last period a count ended`() {
+        val s = ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(
+            FidePeriod(timeMs = 7_200_000, incrementMs = 0, movesToNext = 40), FidePeriod(timeMs = 1_800_000, incrementMs = 0, movesToNext = 0),
+            FidePeriod(timeMs = 3_600_000, incrementMs = 0, movesToNext = 20), FidePeriod(timeMs = 900_000, incrementMs = 0, movesToNext = 0),
+        )))
+        assertEquals("120'/40 + 30' + 60'/20 + 15'", timeControlLabel(s))
     }
 }
