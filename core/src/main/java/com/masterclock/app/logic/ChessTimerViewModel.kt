@@ -1118,6 +1118,11 @@ private fun sanitizeSettings(
         customFinalBeepUri = sanitizeImportedContentUri(grants, settings.customFinalBeepUri),
         customSwitchUri = sanitizeImportedContentUri(grants, settings.customSwitchUri),
         numberOfPlayers = sanitizedNumberOfPlayers,
+        // Volumes are fractions the sliders keep between 0 and 1, and the pause between phases a
+        // duration like the others; none of the three was bounded.
+        soundsVolume = settings.soundsVolume.coerceIn(0f, 1f),
+        voiceVolume = settings.voiceVolume.coerceIn(0f, 1f),
+        pauseBetweenPhasesMs = settings.pauseBetweenPhasesMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
         // The one integer that reaches SQL directly, and the one this function used to miss.
         // trimLogs(0) runs DELETE ... WHERE id NOT IN (SELECT id ... LIMIT 0), whose subquery
         // selects nothing, so every row goes -- silently, at the end of the next game. And SQLite
@@ -1191,7 +1196,7 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
         byoyomiPeriods = settings.byoyomiPeriods.coerceIn(0, MAX_BYOYOMI_COUNT),
         byoyomiTimeMs = settings.byoyomiTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         byoyomiProgression = settings.byoyomiProgression.coerceIn(0, MAX_BYOYOMI_COUNT),
-        maxMoves = settings.maxMoves.coerceAtLeast(0),
+        maxMoves = settings.maxMoves.coerceIn(0, MAX_FIDE_MOVES),
         randomMinTimeMs = randomMinTimeMs,
         randomMaxTimeMs = randomMaxTimeMs,
         randomMinIncMs = randomMinIncMs,
@@ -1200,8 +1205,10 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
         gongMoveMs = settings.gongMoveMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         fastMoveGracePeriodMs = settings.fastMoveGracePeriodMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         fastMoveFastPeriodMs = settings.fastMoveFastPeriodMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
-        fastMoveAccelRate = settings.fastMoveAccelRate.coerceAtLeast(0f),
-        fastMoveFullAccelRate = settings.fastMoveFullAccelRate.coerceAtLeast(0f),
+        // Bounded above by the slider: a rate of 3e38 made each tick's delta Long.MAX_VALUE, and the
+        // overrun under NEGATIVE wrapped round to a negative number.
+        fastMoveAccelRate = settings.fastMoveAccelRate.coerceIn(0f, MAX_FAST_MOVE_RATE),
+        fastMoveFullAccelRate = settings.fastMoveFullAccelRate.coerceIn(0f, MAX_FAST_MOVE_RATE),
         fastMoveShrinkDecrementMs = settings.fastMoveShrinkDecrementMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         fastMoveShrinkFloorMs = settings.fastMoveShrinkFloorMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         // Every scalar above was clamped and both lists were left alone. Their length drives how
@@ -1487,14 +1494,22 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
  * configuration gets: applying a preset copies its time control onto the clock, so a crafted one
  * is exactly as dangerous as a crafted settings file. Presets never carry a notebook.
  */
-internal fun sanitizeImportedPresets(context: android.content.Context, presets: List<SavedPreset>): List<SavedPreset> =
+internal fun sanitizeImportedPresets(context: android.content.Context, presets: List<SavedPreset>): List<SavedPreset> {
+    val grants = persistedReadGrants(context)
     // A blank name showed as an empty tile, and as Delete ""?; such a preset is not worth keeping.
-    presets.filter { it.name.isNotBlank() }.take(MAX_IMPORTED_PRESETS).map { preset ->
+    return presets.filter { it.name.isNotBlank() }.take(MAX_IMPORTED_PRESETS).map { preset ->
         preset.copy(
+            // Kept, so a restore onto the same device doubles nothing -- unless it is no id this
+            // app could have made: it was unbounded, and it becomes a launcher shortcut's id.
+            id = if (preset.id.isNotBlank() && preset.id.length <= MAX_IMPORTED_ID_CHARS) preset.id else java.util.UUID.randomUUID().toString(),
             name = preset.name.trim().take(MAX_PRESET_NAME_CHARS),
-            settings = sanitizeImportedSettings(context, preset.settings).copy(notebookNotes = emptyList()),
+            settings = sanitizeImportedSettings(context, preset.settings, grants).copy(notebookNotes = emptyList()),
         )
     }
+}
+
+/** The fastest a Fast Move rate goes, as its slider does. */
+const val MAX_FAST_MOVE_RATE = 20f
 
 /**
  * The device's presets plus each restored one it does not already have, by id -- a preset keeps
@@ -2542,7 +2557,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // usually put it there.
             _scoreboard.value = sanitizeImportedScoreboard(settingsRepo.scoreboardFlow.first())
             _hasSavedClock.value = gameDao.getSavedClock() != null
-            _customPresets.value = settingsRepo.customPresetsFlow.first()
+            // Sanitised like the settings and the scoreboard above: a restore is what usually wrote
+            // them, and a preset is applied to the clock as it stands.
+            _customPresets.value = sanitizeImportedPresets(getApplication(), settingsRepo.customPresetsFlow.first())
             _isReady.value = true
 
             _gameHistory.value = loadHistory(savedSettings.logHistoryLimit)
