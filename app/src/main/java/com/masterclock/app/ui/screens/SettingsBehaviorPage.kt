@@ -47,6 +47,13 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                     checked = currentSettings.forcedMoveCounter,
                     bottomRounded = true
                 ) { onSettingsChanged(currentSettings.copy(forcedMoveCounter = it)) }
+                // Each applies to one mode, under a heading that reads as if both applied to all.
+                Text(
+                    stringResource(R.string.settings_tournament_rules_explain),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp),
+                )
             }
         }
 

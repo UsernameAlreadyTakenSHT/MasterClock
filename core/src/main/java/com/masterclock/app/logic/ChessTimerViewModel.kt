@@ -754,6 +754,10 @@ fun applyPresetTimeControl(
         isOneForAll = if (keepTable) current.isOneForAll else preset.isOneForAll,
         flagBehavior = if (keepFlagBehavior) current.flagBehavior else preset.flagBehavior,
         fischerFideFirstMove = if (keepFirstMoveBonus) current.fischerFideFirstMove else preset.fischerFideFirstMove,
+        // How a FIDE period ends is the game's rule as much as the bonus is. Left to the switch as it
+        // stood, a game saved with the move counter came back without it: move 40 added nothing,
+        // and 0:00 gave a PERIOD FLAG and the next period.
+        forcedMoveCounter = if (keepFirstMoveBonus) current.forcedMoveCounter else preset.forcedMoveCounter,
         // PHASES keeps these beside the phases rather than in them, and they were left behind: a
         // looping preset with a pause between phases came back with neither.
         loopPhases = preset.loopPhases,
@@ -843,9 +847,10 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
     // control is written in, with each period's moves counted within it.
     if (s.mode == TimerMode.FIDE_PERIODS && s.fidePeriods.isNotEmpty()) {
         val last = s.fidePeriods.lastIndex
+        val totals = fideMoveTotals(s.fidePeriods)
         val parts = s.fidePeriods.mapIndexed { i, period ->
-            val movesBefore = if (i == 0) 0 else s.fidePeriods[i - 1].movesToNext
-            val moves = period.movesToNext - movesBefore
+            val movesBefore = if (i == 0) 0 else totals[i - 1]
+            val moves = totals[i] - movesBefore
             "${period.timeMs / 60_000}'" + if (i < last && moves > 0) "/$moves" else ""
         }
         // The bonus of whichever period has one -- it was read off the first alone, so a bonus that
@@ -2183,7 +2188,9 @@ internal fun PlayerState.credited(amountMs: Long, flagBehavior: FlagBehavior): P
  */
 internal fun PlayerState.arbiterCredited(amountMs: Long, flagBehavior: FlagBehavior): PlayerState {
     val c = credited(amountMs, flagBehavior)
-    return if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false) else c
+    // Back in play, the flag is gone with it: hasFlagged left behind read PERIOD FLAG under a FIDE
+    // clock that had flagged for real.
+    return if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false, hasFlagged = false) else c
 }
 
 /**
@@ -2196,6 +2203,51 @@ internal fun PlayerState.withAccelerateMarkFrom(before: PlayerState): PlayerStat
     isOutOfTime -> this
     before.isOutOfTime -> copy(initialTotalTimeMs = timeRemainingMs)
     else -> copy(initialTotalTimeMs = before.initialTotalTimeMs + (timeRemainingMs - before.timeRemainingMs))
+}
+
+/**
+ * The move totals at which each FIDE period ends, counted from the start of the game; 0 for a
+ * period that ends on its time.
+ *
+ * A count that does not pass the one before it -- 20 after 40, typed per period rather than from
+ * the start -- is read as moves within its period: 40 and 20 make 60. It was taken as a total, so
+ * the third period of 2h/40 + 1h/20 + 30' came the move after the second, at move 41, and the face
+ * counted MOVES: -21. The editor still marks such a count; the clock no longer skips a period over it.
+ */
+fun fideMoveTotals(periods: List<FidePeriod>): List<Int> {
+    var previous = 0
+    return periods.map { period ->
+        val n = period.movesToNext
+        val total = when {
+            n <= 0 -> 0
+            n <= previous -> previous + n
+            else -> n
+        }
+        if (total > 0) previous = total
+        total
+    }
+}
+
+/**
+ * The arbiter's correction to a FIDE move count: an illegal move taken back, or a press too many.
+ * The count was the one thing about the clock that could not be put right, and a period then began
+ * a move early or late for the rest of the game. DGT clocks let the arbiter set it.
+ *
+ * A count raised to a period's total starts the next period, as the move would have: its time is
+ * added. Lowered below where the current period began, the period stays: its time is already on the
+ * clock, and the arbiter's minutes and seconds take it off.
+ */
+internal fun adjustFideMoveCount(p: PlayerState, delta: Int, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
+    var next = p.copy(moveCount = (p.moveCount + delta).coerceIn(0, MAX_FIDE_MOVES))
+    val totals = fideMoveTotals(s.fidePeriods)
+    while (settings.forcedMoveCounter) {
+        val idx = next.currentPeriodIndex
+        val total = totals.getOrNull(idx) ?: 0
+        if (total <= 0 || next.moveCount < total || idx >= s.fidePeriods.size - 1) break
+        next = next.withSignedTime(next.signedTimeMs(settings.flagBehavior) + s.fidePeriods[idx + 1].timeMs, settings.flagBehavior)
+            .copy(currentPeriodIndex = idx + 1)
+    }
+    return next
 }
 
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
@@ -2301,7 +2353,8 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             var periodIdx = p.currentPeriodIndex
             val flagged = p.hasFlagged
             var activePeriod = currentPeriod
-            if (settings.forcedMoveCounter && currentPeriod.movesToNext > 0 && tempP.moveCount >= currentPeriod.movesToNext && p.currentPeriodIndex < s.fidePeriods.size - 1) {
+            val moveTotal = fideMoveTotals(s.fidePeriods).getOrNull(p.currentPeriodIndex) ?: 0
+            if (settings.forcedMoveCounter && moveTotal > 0 && tempP.moveCount >= moveTotal && p.currentPeriodIndex < s.fidePeriods.size - 1) {
                 val nextIdx = p.currentPeriodIndex + 1
                 val nextPeriod = s.fidePeriods[nextIdx]
                 nextTime += nextPeriod.timeMs
@@ -3558,6 +3611,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // It changes the clock a game starts from -- the first-move bonus -- and a fresh clock
                 // kept showing 3:02 for a 3+2 after it was turned off.
                 oldSettings.fischerFideFirstMove != newSettings.fischerFideFirstMove ||
+                // It decides how a FIDE period ends; switched mid-game it changed the rule on the spot.
+                oldSettings.forcedMoveCounter != newSettings.forcedMoveCounter ||
                 initialStates != null || newGame
 
         if (coreChanged) {
@@ -3771,6 +3826,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
             // Nobody out any more: no flag stands, so none is first.
             if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
+        }
+    }
+
+    /** Whether the arbiter's ±1 move means anything for this player: FIDE periods ended by moves. */
+    fun isMoveCountAdjustable(playerIndex: Int): Boolean =
+        getPlayerSettings(playerIndex).mode == TimerMode.FIDE_PERIODS && _settings.value.forcedMoveCounter
+
+    /** The arbiter's correction to a player's move count; see [adjustFideMoveCount]. */
+    fun adjustMoveCount(playerIndex: Int, delta: Int) {
+        if (!_uiState.value.isArbitreMode || !isMoveCountAdjustable(playerIndex)) return
+        val s = getPlayerSettings(playerIndex)
+        val settings = _settings.value
+        _uiState.update { state ->
+            val p = state.players.getOrNull(playerIndex - 1) ?: return@update state
+            state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = adjustFideMoveCount(p, delta, s, settings) })
         }
     }
 

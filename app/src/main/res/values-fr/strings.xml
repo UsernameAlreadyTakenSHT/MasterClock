@@ -303,6 +303,7 @@
     <string name="settings_tournament_rules">Règles de tournoi</string>
     <string name="settings_fischer_fide">Fischer FIDE (bonus dès le coup 0)</string>
     <string name="settings_forced_move_counter">Compteur de coups obligatoire</string>
+    <string name="settings_tournament_rules_explain">Le premier ne concerne que Fischer : le bonus est donné avant le 1er coup. Le second ne concerne que FIDE Periods : activé, une période se termine au nombre de coups prévu ; désactivé, quand son temps est écoulé.</string>
     <string name="settings_interaction">Interaction</string>
     <string name="settings_confirm_reset">Confirmer la réinitialisation</string>
     <string name="settings_trigger_on_press">Déclencher à l\'appui (sinon au relâchement)</string>
@@ -609,6 +610,8 @@
     <string name="arbiter_add_minute">%1$s, plus 1 minute</string>
     <string name="arbiter_remove_second">%1$s, moins 1 seconde</string>
     <string name="arbiter_add_second">%1$s, plus 1 seconde</string>
+    <string name="arbiter_remove_move">Retirer un coup à %1$s</string>
+    <string name="arbiter_add_move">Ajouter un coup à %1$s</string>
     <string name="settings_horiz_left">Gauche</string>
     <string name="settings_horiz_right">Droite</string>
     <string name="omni_in_reserve">+%1$s en réserve</string>

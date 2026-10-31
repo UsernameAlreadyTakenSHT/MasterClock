@@ -309,6 +309,7 @@
     <string name="settings_tournament_rules">Tournament Rules</string>
     <string name="settings_fischer_fide">Fischer FIDE (Bonus on move 0)</string>
     <string name="settings_forced_move_counter">Forced move counter</string>
+    <string name="settings_tournament_rules_explain">The first applies to Fischer only: the bonus comes before move 1. The second to FIDE Periods only: on, a period ends when its move count is reached; off, when its time runs out.</string>
     <string name="settings_interaction">Interaction</string>
     <string name="settings_confirm_reset">Confirm reset</string>
     <string name="settings_trigger_on_press">Trigger on Press (else on Release)</string>
@@ -637,6 +638,8 @@
     <string name="arbiter_add_minute">%1$s, plus 1 minute</string>
     <string name="arbiter_remove_second">%1$s, minus 1 second</string>
     <string name="arbiter_add_second">%1$s, plus 1 second</string>
+    <string name="arbiter_remove_move">Remove a move from %1$s</string>
+    <string name="arbiter_add_move">Add a move to %1$s</string>
     <string name="settings_horiz_left">Left</string>
     <string name="settings_horiz_right">Right</string>
     <string name="omni_in_reserve">+%1$s in reserve</string>

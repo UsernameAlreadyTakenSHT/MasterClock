@@ -288,6 +288,8 @@ fun TimerScreen(
                 contentRotation = iconRotation,
                 onAdjust = { idx, amt -> viewModel.adjustTime(idx, amt) },
                 canAdjust = { viewModel.isTimeAdjustable(it) },
+                moveCountOf = { idx -> if (viewModel.isMoveCountAdjustable(idx)) state.players.getOrNull(idx - 1)?.moveCount else null },
+                onAdjustMoves = { idx, delta -> viewModel.adjustMoveCount(idx, delta) },
                 onSave = { viewModel.saveClockForLater() },
                 onResume = { viewModel.resumeSavedClock() },
                 onClose = { viewModel.toggleArbitreMode() }
@@ -498,6 +500,10 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         // The period, and a period that ran out, are on the face too.
         pSettings.mode == TimerMode.FIDE_PERIODS -> listOfNotNull(
             fidePeriodLabel(pSettings, playerState),
+            // The moves left to the next period, which the face shows under the move counter.
+            fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex)
+                ?.takeIf { settings.forcedMoveCounter && it > 0 && playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1 }
+                ?.let { stringResource(R.string.timer_moves, it - playerState.moveCount) },
             stringResource(R.string.timer_period_flag).takeIf { playerState.hasFlagged },
             spokenDurationText(shownTimeMs),
         ).joinToString(", ")
@@ -569,7 +575,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             // -- and counting down to it read "MOVES: 0", then -1, -2 for the rest of
                             // the game.
                             val hasNext = playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1
-                            val info = if (settings.forcedMoveCounter && hasNext && currentP != null && currentP.movesToNext > 0) stringResource(R.string.timer_moves, currentP.movesToNext - playerState.moveCount) else stringResource(R.string.timer_period, playerState.currentPeriodIndex + 1, pSettings.fidePeriods.size)
+                            val total = fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex) ?: 0
+                            val info = if (settings.forcedMoveCounter && hasNext && currentP != null && total > 0) stringResource(R.string.timer_moves, total - playerState.moveCount) else stringResource(R.string.timer_period, playerState.currentPeriodIndex + 1, pSettings.fidePeriods.size)
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
@@ -602,7 +609,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                     // the same 48dp, but a larger scale can grow instead of clipping the label.
                     Box(modifier = Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
                         if (playerState.isInByoyomi) Text(stringResource(R.string.timer_byoyomi), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f))
-                        else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll)) { Text(stringResource(R.string.tools_player_short, playerIndex) + " " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
+                        // Not in PHASES, whose taps count no moves: it read "P1 MOVES: 0" all game.
+                        else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll) && pSettings.mode != TimerMode.PHASES) { Text(stringResource(R.string.tools_player_short, playerIndex) + " " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                         else if (settings.numberOfPlayers > 2) { Text(stringResource(R.string.common_player_n, playerIndex), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                     }
                 }
@@ -667,7 +675,7 @@ fun ControlBarItem(onClick: () -> Unit, rotation: Float, colors: IconButtonColor
 }
 
 @Composable
-fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, canAdjust: (Int) -> Boolean, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit) {
+fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, canAdjust: (Int) -> Boolean, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit, moveCountOf: (Int) -> Int? = { null }, onAdjustMoves: (Int, Int) -> Unit = { _, _ -> }) {
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)).clickable(enabled = false) {}, contentAlignment = Alignment.Center) {
         Surface(
             shape = RoundedCornerShape(24.dp), 
@@ -680,15 +688,15 @@ fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation
                 
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 1), modifier = Modifier.weight(1f), enabled = canAdjust(1)) { onAdjust(1, it) }
-                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 2), modifier = Modifier.weight(1f), enabled = canAdjust(2)) { onAdjust(2, it) }
+                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 1), modifier = Modifier.weight(1f), enabled = canAdjust(1), moveCount = moveCountOf(1), onAdjustMoves = { onAdjustMoves(1, it) }) { onAdjust(1, it) }
+                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 2), modifier = Modifier.weight(1f), enabled = canAdjust(2), moveCount = moveCountOf(2), onAdjustMoves = { onAdjustMoves(2, it) }) { onAdjust(2, it) }
                     }
                     
                     if (numberOfPlayers >= 3) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            ArbitrePlayerControl(stringResource(R.string.common_player_n, 3), modifier = Modifier.weight(1f), enabled = canAdjust(3)) { onAdjust(3, it) }
+                            ArbitrePlayerControl(stringResource(R.string.common_player_n, 3), modifier = Modifier.weight(1f), enabled = canAdjust(3), moveCount = moveCountOf(3), onAdjustMoves = { onAdjustMoves(3, it) }) { onAdjust(3, it) }
                             if (numberOfPlayers == 4) {
-                                ArbitrePlayerControl(stringResource(R.string.common_player_n, 4), modifier = Modifier.weight(1f), enabled = canAdjust(4)) { onAdjust(4, it) }
+                                ArbitrePlayerControl(stringResource(R.string.common_player_n, 4), modifier = Modifier.weight(1f), enabled = canAdjust(4), moveCount = moveCountOf(4), onAdjustMoves = { onAdjustMoves(4, it) }) { onAdjust(4, it) }
                             } else {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
@@ -740,7 +748,8 @@ fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation
 // [enabled] is off where a time means nothing -- a move count -- rather than the buttons doing nothing.
 // Each button says whose clock and by how much. They read "-1m", "+1m", "-1s", "+1s" in English, in
 // every language, and never which of the players' clocks the button would change.
-fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, onAdjust: (Long) -> Unit) {
+// [moveCount] is the player's FIDE move count when the arbiter may correct it, null otherwise.
+fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, moveCount: Int? = null, onAdjustMoves: (Int) -> Unit = {}, onAdjust: (Long) -> Unit) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
@@ -752,6 +761,14 @@ fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { 
             FilledTonalIconButton(onClick = { onAdjust(-1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_second, label)) }
             FilledTonalIconButton(onClick = { onAdjust(1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_second, label)) }
+        }
+        if (moveCount != null) {
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalIconButton(onClick = { onAdjustMoves(-1) }, enabled = moveCount > 0, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_move, label)) }
+                Text(moveCount.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                FilledTonalIconButton(onClick = { onAdjustMoves(1) }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_move, label)) }
+            }
         }
     }
 }

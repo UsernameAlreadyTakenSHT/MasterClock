@@ -283,6 +283,7 @@
     <string name="settings_tournament_rules">Toernooiregels</string>
     <string name="settings_fischer_fide">Fischer FIDE (bonus vanaf zet 0)</string>
     <string name="settings_forced_move_counter">Zettenteller verplicht</string>
+    <string name="settings_tournament_rules_explain">Het eerste geldt alleen voor Fischer: de bonus komt vóór zet 1. Het tweede alleen voor FIDE Periods: aan, een periode eindigt bij haar aantal zetten; uit, wanneer haar tijd op is.</string>
     <string name="settings_interaction">Bediening</string>
     <string name="settings_confirm_reset">Resetten bevestigen</string>
     <string name="settings_trigger_on_press">Activeren bij indrukken (anders bij loslaten)</string>
@@ -585,6 +586,8 @@
     <string name="arbiter_add_minute">%1$s, plus 1 minuut</string>
     <string name="arbiter_remove_second">%1$s, min 1 seconde</string>
     <string name="arbiter_add_second">%1$s, plus 1 seconde</string>
+    <string name="arbiter_remove_move">Haal een zet af bij %1$s</string>
+    <string name="arbiter_add_move">Tel een zet op bij %1$s</string>
     <string name="settings_horiz_left">Links</string>
     <string name="settings_horiz_right">Rechts</string>
     <string name="omni_in_reserve">+%1$s in reserve</string>

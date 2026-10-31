@@ -179,4 +179,7 @@
     <string name="omni_cfg_cutoff_session">Interromper ao esgotar o tempo de sessão</string>
     <string name="omni_cfg_cutoff_game">Interromper ao esgotar o tempo de partida</string>
     <string name="omni_cfg_cutoff_phase">Interromper ao esgotar o tempo de fase</string>
+    <string name="arbiter_remove_move">Remover um lance de %1$s</string>
+    <string name="arbiter_add_move">Adicionar um lance a %1$s</string>
+    <string name="settings_tournament_rules_explain">O primeiro vale só para o Fischer: o bônus vem antes do lance 1. O segundo só para FIDE Periods: ligado, um período termina ao atingir seu número de lances; desligado, quando seu tempo se esgota.</string>
 </resources>

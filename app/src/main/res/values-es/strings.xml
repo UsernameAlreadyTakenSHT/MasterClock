@@ -295,6 +295,7 @@
     <string name="settings_tournament_rules">Reglas de torneo</string>
     <string name="settings_fischer_fide">Fischer FIDE (bonificación desde la jugada 0)</string>
     <string name="settings_forced_move_counter">Contador de jugadas obligatorio</string>
+    <string name="settings_tournament_rules_explain">El primero solo afecta a Fischer: el bonus llega antes de la jugada 1. El segundo solo a FIDE Periods: activado, un periodo termina al alcanzar su número de jugadas; desactivado, cuando se agota su tiempo.</string>
     <string name="settings_interaction">Interacción</string>
     <string name="settings_confirm_reset">Confirmar el reinicio</string>
     <string name="settings_trigger_on_press">Activar al pulsar (si no, al soltar)</string>
@@ -601,6 +602,8 @@
     <string name="arbiter_add_minute">%1$s, más 1 minuto</string>
     <string name="arbiter_remove_second">%1$s, menos 1 segundo</string>
     <string name="arbiter_add_second">%1$s, más 1 segundo</string>
+    <string name="arbiter_remove_move">Quitar una jugada a %1$s</string>
+    <string name="arbiter_add_move">Añadir una jugada a %1$s</string>
     <string name="settings_horiz_left">Izquierda</string>
     <string name="settings_horiz_right">Derecha</string>
     <string name="omni_in_reserve">+%1$s en reserva</string>
