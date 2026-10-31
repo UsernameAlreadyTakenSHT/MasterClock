@@ -46,7 +46,7 @@
     <string name="common_share">Partager</string>
 
     <!-- Mode guide: names stay English, descriptions are translated -->
-    <string name="guide_intro">Documentation exhaustive des moteurs de temps de MasterClock et de leurs sous-modes, dans l\'ordre de l\'interface.</string>
+    <string name="guide_intro">Documentation des modes de temps de MasterClock et de leurs variantes, dans l\'ordre de l\'interface.</string>
     <string name="guide_bonus_bronstein_desc">Restitue le temps passé sur le coup, sans jamais dépasser le délai réglé. Non cumulatif.</string>
     <string name="guide_bonus_fischer_desc">Ajoute un temps fixe (incrément) APRÈS chaque coup.</string>
     <string name="guide_bonus_us_delay_desc">Un délai avant décompte. La pendule attend la durée du délai avant de commencer à tourner.</string>
@@ -58,10 +58,10 @@
     <string name="guide_chrono_one_for_all_desc">Chrono global qui ne change pas de joueur lorsqu\'on appuie sur les boutons.</string>
     <string name="guide_counts_down_desc">Part d\'une limite et décompte jusqu\'à zéro coup restant.</string>
     <string name="guide_counts_up_desc">Affiche le nombre total de coups joués depuis le début.</string>
-    <string name="guide_fast_move_desc">Ajustement dynamique de la vitesse selon la fréquence des coups ou une pénalité cumulée.</string>
-    <string name="guide_fide_desc">Cadence de tournoi à plusieurs étapes (par ex. 40 coups en 90 min + 30 min de bonus).</string>
+    <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate : plus vous réfléchissez, plus votre pendule va vite. Shrink : chaque coup a moins de temps, jusqu\'à un plancher. Transfer : le temps que vous passez va à l\'adversaire.</string>
+    <string name="guide_fide_desc">Cadence de tournoi par périodes : par exemple 90 min pour 40 coups, puis 30 min pour la fin, avec 30 s ajoutées par coup.</string>
     <string name="guide_gong_desc">Coups imposés à intervalles fixes (simultanés ou à tour de rôle).</string>
-    <string name="guide_hidden_desc">Masque les chiffres de la pendule à certains seuils pour faire monter la tension.</string>
+    <string name="guide_hidden_desc">Un temps tiré au hasard et caché. Avec les pourcentages, il s\'affiche un instant en passant 50, 25, 10, 5, 2 et 1 %.</string>
     <string name="guide_hourglass_desc">Le temps perdu par un joueur est ajouté à l\'adversaire. Le temps total reste constant.</string>
     <string name="guide_move_global_desc">Le temps de coup et le temps global s\'écoulent en même temps. Les deux doivent rester au-dessus de zéro.</string>
     <string name="guide_move_global_shared_desc">Tous les joueurs partagent une réserve globale tout en ayant un chrono de coup personnel.</string>

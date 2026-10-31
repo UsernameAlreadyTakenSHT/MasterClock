@@ -101,7 +101,7 @@ fun ModeGuideScreen(onBack: () -> Unit) {
 @Composable
 private fun EngineSection(title: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // MasterClock Label Style: Simple, bold, noir et blanc
+        // The section label: plain and bold, in the theme's own colours.
         Surface(
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
             shape = RoundedCornerShape(8.dp)

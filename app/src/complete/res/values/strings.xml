@@ -70,16 +70,16 @@
     <string name="guide_counts_up" translatable="false">Count Up</string>
     <string name="guide_counts_up_desc">Displays the total number of moves made since the start.</string>
     <string name="guide_fast_move" translatable="false">Fast Move</string>
-    <string name="guide_fast_move_desc">Dynamic speed adjustments based on move frequency or cumulative penalty.</string>
+    <string name="guide_fast_move_desc">Rewards quick moves. Accelerate: the longer you think, the faster your clock runs. Shrink: each move gets less time, down to a floor. Transfer: the time you spend goes to your opponent.</string>
     <string name="guide_fide" translatable="false">FIDE Periods</string>
-    <string name="guide_fide_desc">Multi-stage tournament timing (e.g., 40 moves in 90m + 30m bonus).</string>
+    <string name="guide_fide_desc">Tournament time controls in periods: for example 90 min for 40 moves, then 30 min for the rest, with 30 s added per move.</string>
     <string name="guide_gong" translatable="false">Gong Mode</string>
     <string name="guide_gong_desc">Forced moves at fixed intervals (Simultaneous or Turn-based).</string>
     <string name="guide_hidden" translatable="false">Hidden</string>
-    <string name="guide_hidden_desc">Masks the clock digits at specific thresholds to increase tension.</string>
+    <string name="guide_hidden_desc">A random time is drawn and kept hidden. With percentages on, it shows for a moment as it passes 50, 25, 10, 5, 2 and 1%.</string>
     <string name="guide_hourglass" translatable="false">Hourglass</string>
     <string name="guide_hourglass_desc">One player\'s time loss is added to the opponent. Total time is constant.</string>
-    <string name="guide_intro">Exhaustive documentation of MasterClock timing engines and sub-modes, following the interface sequence.</string>
+    <string name="guide_intro">Documentation of MasterClock\'s timing modes and their variants, in the order of the interface.</string>
     <string name="guide_move_global" translatable="false">Global</string>
     <string name="guide_move_global_desc">Move time and global time tick down simultaneously. Both must stay above zero.</string>
     <string name="guide_move_global_shared" translatable="false">Global Shared</string>

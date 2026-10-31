@@ -48,7 +48,7 @@
     <string name="common_share">Delen</string>
 
     <!-- Mode guide: names stay English, descriptions are translated -->
-    <string name="guide_intro">Volledige documentatie van de tijdmodi van MasterClock en hun submodi, in de volgorde van de interface.</string>
+    <string name="guide_intro">Documentatie van de tijdmodi van MasterClock en hun varianten, in de volgorde van de interface.</string>
     <string name="guide_bonus_bronstein_desc">Geeft de tijd van de zet terug, maar nooit meer dan de ingestelde vertraging. Niet cumulatief.</string>
     <string name="guide_bonus_fischer_desc">Voegt NA elke zet een vaste tijd (increment) toe.</string>
     <string name="guide_bonus_us_delay_desc">Een vertraging vóór het aftellen. De klok wacht de vertraging af voordat hij begint te lopen.</string>
@@ -60,10 +60,10 @@
     <string name="guide_chrono_one_for_all_desc">Globale klok die niet van speler wisselt wanneer op de knoppen wordt gedrukt.</string>
     <string name="guide_counts_down_desc">Begint bij een limiet en telt af tot nul resterende zetten.</string>
     <string name="guide_counts_up_desc">Toont het totale aantal zetten sinds het begin.</string>
-    <string name="guide_fast_move_desc">Dynamische aanpassing van het tempo op basis van zetfrequentie of opgebouwde straf.</string>
-    <string name="guide_fide_desc">Toernooitempo in meerdere fases (bijvoorbeeld 40 zetten in 90 min + 30 min bonus).</string>
+    <string name="guide_fast_move_desc">Beloont snelle zetten. Accelerate: hoe langer je nadenkt, hoe sneller je klok loopt. Shrink: elke zet krijgt minder tijd, tot een ondergrens. Transfer: de tijd die je gebruikt gaat naar je tegenstander.</string>
+    <string name="guide_fide_desc">Toernooitempo in periodes: bijvoorbeeld 90 min voor 40 zetten, daarna 30 min voor de rest, met 30 s per zet.</string>
     <string name="guide_gong_desc">Verplichte zetten op vaste intervallen (gelijktijdig of om beurten).</string>
-    <string name="guide_hidden_desc">Verbergt de cijfers van de klok bij bepaalde drempels om de spanning op te voeren.</string>
+    <string name="guide_hidden_desc">Een willekeurig getrokken tijd die verborgen blijft. Met percentages aan verschijnt hij even bij 50, 25, 10, 5, 2 en 1 %.</string>
     <string name="guide_hourglass_desc">De tijd die een speler verliest wordt bij de tegenstander opgeteld. De totale tijd blijft gelijk.</string>
     <string name="guide_move_global_desc">Zettijd en globale tijd lopen tegelijk. Beide moeten boven nul blijven.</string>
     <string name="guide_move_global_shared_desc">Alle spelers delen een globale voorraad en hebben daarnaast een eigen zetklok.</string>

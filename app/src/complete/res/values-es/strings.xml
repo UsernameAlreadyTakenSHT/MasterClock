@@ -48,7 +48,7 @@
     <string name="common_share">Compartir</string>
 
     <!-- Mode guide: names stay English, descriptions are translated -->
-    <string name="guide_intro">Documentación exhaustiva de los motores de tiempo de MasterClock y sus submodos, siguiendo el orden de la interfaz.</string>
+    <string name="guide_intro">Documentación de los modos de tiempo de MasterClock y sus variantes, en el orden de la interfaz.</string>
     <string name="guide_bonus_bronstein_desc">Devuelve el tiempo empleado en la jugada, sin superar nunca la demora configurada. No es acumulativo.</string>
     <string name="guide_bonus_fischer_desc">Añade una cantidad fija de tiempo (incremento) DESPUÉS de cada jugada.</string>
     <string name="guide_bonus_us_delay_desc">Una demora previa al descuento. El reloj espera la duración de la demora antes de empezar a correr.</string>
@@ -60,10 +60,10 @@
     <string name="guide_chrono_one_for_all_desc">Reloj global que no cambia de jugador cuando se pulsan los botones.</string>
     <string name="guide_counts_down_desc">Parte de un límite y descuenta hasta cero jugadas restantes.</string>
     <string name="guide_counts_up_desc">Muestra el número total de jugadas realizadas desde el inicio.</string>
-    <string name="guide_fast_move_desc">Ajuste dinámico de la velocidad según la frecuencia de jugadas o una penalización acumulada.</string>
-    <string name="guide_fide_desc">Ritmo de torneo por etapas (por ejemplo, 40 jugadas en 90 min + 30 min de bonificación).</string>
+    <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Shrink: cada jugada tiene menos tiempo, hasta un mínimo. Transfer: el tiempo que gastas pasa a tu rival.</string>
+    <string name="guide_fide_desc">Ritmo de torneo por periodos: por ejemplo, 90 min para 40 jugadas, luego 30 min para el resto, con 30 s por jugada.</string>
     <string name="guide_gong_desc">Jugadas forzadas a intervalos fijos (simultáneas o por turnos).</string>
-    <string name="guide_hidden_desc">Oculta las cifras del reloj en ciertos umbrales para aumentar la tensión.</string>
+    <string name="guide_hidden_desc">Un tiempo sorteado al azar y oculto. Con los porcentajes activados, se muestra un momento al pasar por el 50, 25, 10, 5, 2 y 1 %.</string>
     <string name="guide_hourglass_desc">El tiempo que pierde un jugador se suma al del rival. El tiempo total se mantiene constante.</string>
     <string name="guide_move_global_desc">El tiempo de jugada y el tiempo global corren a la vez. Ambos deben mantenerse por encima de cero.</string>
     <string name="guide_move_global_shared_desc">Todos los jugadores comparten una reserva global y además tienen un reloj de jugada propio.</string>

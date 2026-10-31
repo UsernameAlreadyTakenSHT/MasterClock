@@ -48,7 +48,7 @@
     <string name="common_share">Condividi</string>
 
     <!-- Mode guide: names stay English, descriptions are translated -->
-    <string name="guide_intro">Documentazione completa dei motori di tempo di MasterClock e delle loro sottomodalità, nell\'ordine dell\'interfaccia.</string>
+    <string name="guide_intro">Documentazione delle modalità di tempo di MasterClock e delle loro varianti, nell\'ordine dell\'interfaccia.</string>
     <string name="guide_bonus_bronstein_desc">Restituisce il tempo speso nella mossa, senza mai superare il ritardo impostato. Non cumulativo.</string>
     <string name="guide_bonus_fischer_desc">Aggiunge un tempo fisso (incremento) DOPO ogni mossa.</string>
     <string name="guide_bonus_us_delay_desc">Un ritardo prima del conteggio. L\'orologio attende la durata del ritardo prima di iniziare a scorrere.</string>
@@ -60,10 +60,10 @@
     <string name="guide_chrono_one_for_all_desc">Orologio globale che non cambia giocatore quando si premono i pulsanti.</string>
     <string name="guide_counts_down_desc">Parte da un limite e scende fino a zero mosse rimaste.</string>
     <string name="guide_counts_up_desc">Mostra il numero totale di mosse giocate dall\'inizio.</string>
-    <string name="guide_fast_move_desc">Regolazione dinamica della velocità in base alla frequenza delle mosse o a una penalità accumulata.</string>
-    <string name="guide_fide_desc">Cadenza da torneo a più fasi (per esempio 40 mosse in 90 min + 30 min di bonus).</string>
+    <string name="guide_fast_move_desc">Premia le mosse rapide. Accelerate: più pensi, più veloce corre il tuo orologio. Shrink: ogni mossa ha meno tempo, fino a un minimo. Transfer: il tempo che usi passa all\'avversario.</string>
+    <string name="guide_fide_desc">Cadenza da torneo a periodi: per esempio 90 min per 40 mosse, poi 30 min per il resto, con 30 s per mossa.</string>
     <string name="guide_gong_desc">Mosse imposte a intervalli fissi (simultanee o a turno).</string>
-    <string name="guide_hidden_desc">Nasconde le cifre dell\'orologio a certe soglie per aumentare la tensione.</string>
+    <string name="guide_hidden_desc">Un tempo estratto a caso e nascosto. Con le percentuali attive, compare per un attimo al 50, 25, 10, 5, 2 e 1 %.</string>
     <string name="guide_hourglass_desc">Il tempo perso da un giocatore viene aggiunto all\'avversario. Il tempo totale resta costante.</string>
     <string name="guide_move_global_desc">Tempo per mossa e tempo globale scorrono insieme. Entrambi devono restare sopra lo zero.</string>
     <string name="guide_move_global_shared_desc">Tutti i giocatori condividono una riserva globale e hanno inoltre un timer di mossa personale.</string>

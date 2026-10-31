@@ -51,7 +51,7 @@
     <string name="common_share">Partilhar</string>
 
     <!-- Mode guide: names stay English, descriptions are translated -->
-    <string name="guide_intro">Documentação exaustiva dos motores de tempo do MasterClock e dos seus submodos, pela ordem da interface.</string>
+    <string name="guide_intro">Documentação dos modos de tempo do MasterClock e das suas variantes, pela ordem da interface.</string>
     <string name="guide_bonus_bronstein_desc">Devolve o tempo gasto no lance, sem nunca exceder o atraso configurado. Não é cumulativo.</string>
     <string name="guide_bonus_fischer_desc">Acrescenta um tempo fixo (incremento) DEPOIS de cada lance.</string>
     <string name="guide_bonus_us_delay_desc">Um atraso antes da contagem. O relógio espera a duração do atraso antes de começar a correr.</string>
@@ -63,10 +63,10 @@
     <string name="guide_chrono_one_for_all_desc">Relógio global que não muda de jogador quando se premem os botões.</string>
     <string name="guide_counts_down_desc">Parte de um limite e desce até zero lances restantes.</string>
     <string name="guide_counts_up_desc">Mostra o número total de lances jogados desde o início.</string>
-    <string name="guide_fast_move_desc">Ajuste dinâmico da velocidade conforme a frequência dos lances ou uma penalização acumulada.</string>
-    <string name="guide_fide_desc">Ritmo de torneio por etapas (por exemplo, 40 lances em 90 min + 30 min de bónus).</string>
+    <string name="guide_fast_move_desc">Premeia os lances rápidos. Accelerate: quanto mais pensa, mais depressa corre o seu relógio. Shrink: cada lance tem menos tempo, até um mínimo. Transfer: o tempo que gasta passa para o adversário.</string>
+    <string name="guide_fide_desc">Ritmo de torneio por períodos: por exemplo, 90 min para 40 lances, depois 30 min para o resto, com 30 s por lance.</string>
     <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou à vez).</string>
-    <string name="guide_hidden_desc">Esconde os dígitos do relógio em certos limiares para aumentar a tensão.</string>
+    <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as percentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
     <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total mantém-se constante.</string>
     <string name="guide_move_global_desc">O tempo de lance e o tempo global correm ao mesmo tempo. Ambos têm de ficar acima de zero.</string>
     <string name="guide_move_global_shared_desc">Todos os jogadores partilham uma reserva global e têm ainda um relógio de lance próprio.</string>
