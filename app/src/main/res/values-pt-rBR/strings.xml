@@ -77,6 +77,8 @@
     <string name="settings_more_import">Importar / escanear</string>
     <string name="settings_more_share_apk">Compartilhar o aplicativo (APK)</string>
     <string name="settings_more_share_apk_via">Compartilhar o APK via</string>
+    <string name="settings_more_share_apk_format_title">Compartilhar o app como</string>
+    <string name="settings_more_share_apk_format_text">Um APK se instala diretamente. Alguns celulares recusam arquivos APK por Bluetooth: envie então um ZIP, do qual o destinatário extrai o APK para instalá-lo.</string>
     <string name="settings_more_clear_logs">Limpar os registros</string>
     <string name="toast_preparing_apk">Preparando o arquivo do aplicativo…</string>
     <string name="toast_apk_error">Erro: não foi possível preparar o arquivo</string>

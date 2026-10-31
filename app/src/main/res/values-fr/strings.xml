@@ -477,6 +477,8 @@
     <string name="settings_more_import">Importer / scanner</string>
     <string name="settings_more_share_apk">Partager l\'application (APK)</string>
     <string name="settings_more_share_apk_via">Partager l\'APK via</string>
+    <string name="settings_more_share_apk_format_title">Partager l\'app en</string>
+    <string name="settings_more_share_apk_format_text">Un APK s\'installe directement. Certains téléphones refusent les fichiers APK par Bluetooth : envoyez alors un ZIP, dont le destinataire extrait l\'APK pour l\'installer.</string>
     <string name="settings_more_danger">Zone sensible</string>
     <string name="settings_more_clear_logs">Effacer les journaux</string>
     <string name="settings_more_reset_settings">Réinitialiser les réglages</string>

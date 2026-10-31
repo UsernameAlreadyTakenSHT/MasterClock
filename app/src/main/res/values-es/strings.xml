@@ -469,6 +469,8 @@
     <string name="settings_more_import">Importar / escanear</string>
     <string name="settings_more_share_apk">Compartir la aplicación (APK)</string>
     <string name="settings_more_share_apk_via">Compartir el APK con</string>
+    <string name="settings_more_share_apk_format_title">Compartir la app como</string>
+    <string name="settings_more_share_apk_format_text">Un APK se instala directamente. Algunos teléfonos rechazan los archivos APK por Bluetooth: envía entonces un ZIP, del que el destinatario extrae el APK para instalarlo.</string>
     <string name="settings_more_danger">Zona sensible</string>
     <string name="settings_more_clear_logs">Borrar los registros</string>
     <string name="settings_more_reset_settings">Restablecer los ajustes</string>

@@ -457,6 +457,8 @@
     <string name="settings_more_import">Importeren / scannen</string>
     <string name="settings_more_share_apk">Applicatie delen (APK)</string>
     <string name="settings_more_share_apk_via">APK delen via</string>
+    <string name="settings_more_share_apk_format_title">App delen als</string>
+    <string name="settings_more_share_apk_format_text">Een APK installeer je direct. Sommige telefoons weigeren APK-bestanden via Bluetooth: stuur dan een ZIP, waaruit de ontvanger de APK haalt om te installeren.</string>
     <string name="settings_more_danger">Risicozone</string>
     <string name="settings_more_clear_logs">Logboeken wissen</string>
     <string name="settings_more_reset_settings">Instellingen resetten</string>

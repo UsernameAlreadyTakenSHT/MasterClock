@@ -496,6 +496,8 @@
     <string name="settings_more_import">Import / Scan</string>
     <string name="settings_more_share_apk">Share Application (APK)</string>
     <string name="settings_more_share_apk_via">Share APK via</string>
+    <string name="settings_more_share_apk_format_title">Share the app as</string>
+    <string name="settings_more_share_apk_format_text">An APK installs directly. Some phones refuse APK files over Bluetooth: send a ZIP then, and the recipient extracts the APK from it to install.</string>
     <string name="settings_more_danger">Danger Zone</string>
     <string name="settings_more_clear_logs">Clear logs</string>
     <string name="settings_more_reset_settings">Reset settings</string>

@@ -458,6 +458,8 @@
     <string name="settings_more_import">Importieren / scannen</string>
     <string name="settings_more_share_apk">Anwendung teilen (APK)</string>
     <string name="settings_more_share_apk_via">APK teilen über</string>
+    <string name="settings_more_share_apk_format_title">App teilen als</string>
+    <string name="settings_more_share_apk_format_text">Eine APK lässt sich direkt installieren. Manche Handys lehnen APK-Dateien per Bluetooth ab: Sende dann eine ZIP; der Empfänger entpackt daraus die APK zum Installieren.</string>
     <string name="settings_more_danger">Gefahrenzone</string>
     <string name="settings_more_clear_logs">Protokolle löschen</string>
     <string name="settings_more_reset_settings">Einstellungen zurücksetzen</string>

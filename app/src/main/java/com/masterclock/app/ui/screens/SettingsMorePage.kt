@@ -1,6 +1,7 @@
 package com.masterclock.app.ui.screens
 
 import android.content.Intent
+import com.masterclock.app.ApkShare
 import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -18,16 +19,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import com.masterclock.app.logic.*
 import com.masterclock.app.R
 import com.masterclock.app.BuildConfig
 import com.masterclock.app.ui.navigation.Route
 import kotlinx.coroutines.CoroutineScope
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 @Composable
 fun MoreSettingsPage(
@@ -316,57 +316,35 @@ fun MoreSettingsPage(
                 val preparingApkText = stringResource(R.string.toast_preparing_apk)
                 val shareApkViaText = stringResource(R.string.settings_more_share_apk_via)
                 val apkErrorText = stringResource(R.string.toast_apk_error)
+                // The copy takes seconds; a second tap meanwhile started a second copy, and the
+                // button gives no other sign that the first one is under way.
+                var apkPreparing by remember { mutableStateOf(false) }
+                var showApkFormat by remember { mutableStateOf(false) }
+
+                fun shareApp(asZip: Boolean) {
+                    showApkFormat = false
+                    apkPreparing = true
+                    Toast.makeText(localContext, preparingApkText, Toast.LENGTH_SHORT).show()
+                    scope.launch {
+                        try {
+                            val intent = withContext(Dispatchers.IO) { ApkShare.prepare(localContext, asZip) }
+                            localContext.startActivity(Intent.createChooser(intent, shareApkViaText))
+                        } catch (e: CancellationException) {
+                            // The page left: there is nobody to show the chooser to. It was caught
+                            // with the errors below, whose own switch to Main then threw again.
+                            throw e
+                        } catch (e: Exception) {
+                            android.util.Log.e("SettingsScreen", "Failed to share APK", e)
+                            Toast.makeText(localContext, apkErrorText, Toast.LENGTH_LONG).show()
+                        } finally {
+                            apkPreparing = false
+                        }
+                    }
+                }
 
                 OutlinedButton(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            try {
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(localContext, preparingApkText, Toast.LENGTH_SHORT).show()
-                                }
-
-                                val pm = localContext.packageManager
-                                val appInfo = pm.getApplicationInfo(localContext.packageName, 0)
-
-                                val shareFolder = File(localContext.cacheDir, "apk_share")
-                                if (!shareFolder.exists()) shareFolder.mkdirs()
-
-                                // A store that installs split APKs (Accrescent does) leaves the app
-                                // in several files, and the base one alone does not install. Every
-                                // part is shared then, under its own name, for an installer that
-                                // takes a split set; an ordinary install is still one APK.
-                                val parts = listOf(File(appInfo.publicSourceDir)) +
-                                    (appInfo.splitPublicSourceDirs ?: emptyArray()).map { File(it) }
-                                val uris = parts.mapIndexed { i, part ->
-                                    val name = if (parts.size == 1) "MasterClock.apk"
-                                        else if (i == 0) "MasterClock-base.apk" else "MasterClock-${part.name}"
-                                    val destinationFile = File(shareFolder, name)
-                                    part.inputStream().use { input ->
-                                        destinationFile.outputStream().use { output -> input.copyTo(output) }
-                                    }
-                                    FileProvider.getUriForFile(localContext, "${localContext.packageName}.fileprovider", destinationFile)
-                                }
-
-                                val intent = if (uris.size == 1) {
-                                    Intent(Intent.ACTION_SEND).apply { putExtra(Intent.EXTRA_STREAM, uris.single()) }
-                                } else {
-                                    Intent(Intent.ACTION_SEND_MULTIPLE).apply { putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris)) }
-                                }.apply {
-                                    type = "application/vnd.android.package-archive"
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-
-                                withContext(Dispatchers.Main) {
-                                    localContext.startActivity(Intent.createChooser(intent, shareApkViaText))
-                                }
-                            } catch (e: Exception) {
-                                android.util.Log.e("SettingsScreen", "Failed to share APK", e)
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(localContext, apkErrorText, Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        }
-                    },
+                    onClick = { showApkFormat = true },
+                    enabled = !apkPreparing,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(vertical = 12.dp)
@@ -374,6 +352,20 @@ fun MoreSettingsPage(
                     Icon(Icons.Default.Android, null, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.settings_more_share_apk), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                }
+
+                if (showApkFormat) {
+                    AlertDialog(
+                        onDismissRequest = { showApkFormat = false },
+                        title = { Text(stringResource(R.string.settings_more_share_apk_format_title)) },
+                        text = { Text(stringResource(R.string.settings_more_share_apk_format_text)) },
+                        confirmButton = {
+                            Row {
+                                TextButton(onClick = { shareApp(asZip = true) }) { Text("ZIP") }
+                                TextButton(onClick = { shareApp(asZip = false) }) { Text("APK") }
+                            }
+                        },
+                    )
                 }
             }
 
