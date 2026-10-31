@@ -156,6 +156,8 @@ class ShortcutTargetsTest {
         assertEquals("45s / move", label(PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, moveTimeMs = 45_000)))
         // Accelerate and Shrink start from the base time, and say so.
         assertEquals("10 min", label(PlayerSettings(mode = TimerMode.FAST_MOVE)))
+        // A move timer with no move time does not read its unused initial time.
+        assertEquals(TimerMode.MOVE_TIMER_SHARED.displayName(), label(PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 0)))
     }
 
     @Test

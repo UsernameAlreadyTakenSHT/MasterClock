@@ -810,8 +810,9 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
     // "10 min". Global, Overtime and Global Shared do not -- it is the total, the reserve, the
     // table's reserve -- and are labelled with both below; the first two read "10 min" alone, as a
     // sudden death would.
+    // With no move time they are named, not labelled "10 min" from the field they do not read.
     if (s.mode == TimerMode.MOVE_TIMER_STANDARD || s.mode == TimerMode.MOVE_TIMER_SHARED || s.mode == TimerMode.MOVE_TIMER_SAVE_CAP) {
-        if (s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move"
+        return if (s.moveTimeMs > 0) "${s.moveTimeMs / 1000}s / move" else s.mode.displayName()
     }
 
     // FIDE periods ignore initialTimeMs and incrementMs, and were labelled from them: a 90'/40 +
@@ -3237,6 +3238,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // down then refused to start it; a finished game now shows Play, so it is pressed.
         val st = _settings.value
         if (starting.activePlayer != null && isGameOver(starting, st.flagBehavior, st.numberOfPlayers)) return
+        // Shared (Auto) with no move time has nothing to run (tickCoupled): Play lit every box,
+        // showed Pause over 0:00, and ticked and autosaved for ever with nothing happening.
+        if (getPlayerSettings(1).mode == TimerMode.MOVE_TIMER_SHARED && getPlayerSettings(1).moveTimeMs <= 0) return
         pausedAt?.let { moveStartTime += SystemClock.elapsedRealtime() - it }
         pausedAt = null
         // Play on a game that has never run starts its first move, as a first press does. The move
@@ -3601,7 +3605,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                             val reserve = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)
                             val back = p.isOutOfTime && !p.isOverrun(flagBehavior) && reserve > 0 &&
                                 (mode == TimerMode.MOVE_TIMER_OVERTIME || p.timeRemainingMs > 0)
-                            p.copy(secondaryTimeMs = reserve, isOutOfTime = p.isOutOfTime && !back)
+                            // Under NEGATIVE and REVERSE an empty shared reserve puts every player
+                            // in overrun. Reserve given back left them there: each player's next
+                            // turn counted up from zero beside a reserve with time in it. Those not
+                            // on the move get their move clock back; the one on the move gets theirs
+                            // with their next press, as after any overrun with reserve left.
+                            val revived = mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && p.isOverrun(flagBehavior) &&
+                                p.secondaryTimeMs <= 0 && reserve > 0 && idx + 1 != state.activePlayer
+                            if (revived) p.copy(secondaryTimeMs = reserve, timeRemainingMs = getPlayerSettings(idx + 1).moveTimeMs, isOutOfTime = false, isNegative = false)
+                            else p.copy(secondaryTimeMs = reserve, isOutOfTime = p.isOutOfTime && !back)
                         } else p
                     },
                 )
@@ -3710,7 +3722,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     json.decodeFromString(ChessClockSettings.serializer(), saved.settingsJson) to
                         json.decodeFromString(ChessClockStateProxy.serializer(), saved.stateJson)
                 }
-                val resumedSettings = restoreSavedTimeControl(_settings.value, resumed.first)
+                // Through the whole-table rule, as every other way in is: a clock saved before it
+                // (per-player settings with a shared mode) came back with them on, and was stored so.
+                val resumedSettings = restoreSavedTimeControl(_settings.value, resumed.first).wholeTableSettings().withSeatsForPlayers()
 
                 // The game the clock belongs to, read back from the history it has been written to
                 // as it was played. Resuming used to leave currentLog null, so the next press opened
