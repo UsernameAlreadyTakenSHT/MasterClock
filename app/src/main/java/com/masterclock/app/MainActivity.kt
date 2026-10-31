@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -112,7 +113,9 @@ class MainActivity : ComponentActivity() {
             val exportFailedText = stringResource(R.string.toast_export_failed)
             val backupTooLargeText = stringResource(R.string.toast_backup_too_large)
             val exportTooLargeText = stringResource(R.string.toast_export_too_large)
-            var shouldIncludeLogs by remember { mutableStateOf(false) }
+            // Saveable: the choice is made before the picker opens and read when it returns, by
+            // which time the activity may have been recreated.
+            var shouldIncludeLogs by rememberSaveable { mutableStateOf(false) }
             // Held between the scan and the user's decision. A QR code is the one import that needs
             // no file and no picker -- framing it is the whole of the interaction -- so it is the
             // one that must not apply itself.
@@ -176,28 +179,23 @@ class MainActivity : ComponentActivity() {
 
             val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
                 uri?.let {
-                    // The package is assembled here, on the main thread, because it reads composition
-                    // state; encoding and writing it happen off it. Those were on the main thread
-                    // too, and what they encode is the settings plus the entire game history, over a
-                    // stream that can belong to a cloud provider -- the backup export beside this one
-                    // has always known better.
-                    val pkg = if (shouldIncludeLogs) {
-                        SharePackage(
-                            settings = settings.copy(
-                                notebookNotes = settings.notebookNotes.filter { it.type == NotebookNoteType.TEXT }
-                            ),
-                            logs = gameHistory,
-                            scoreboard = timerViewModel.scoreboard.value
-                        )
-                    } else {
-                        SharePackage(
-                            settings = settings.copy(notebookNotes = emptyList()),
-                            logs = null,
-                            scoreboard = null
-                        )
-                    }
+                    val includeLogs = shouldIncludeLogs
+                    // Assembled off the main thread from the ViewModel, once its stored state is in;
+                    // see exportSnapshot. It read the composition's copies, which are defaults until then.
                     scope.launch(Dispatchers.IO) {
                         val written = runCatching {
+                            val snapshot = timerViewModel.exportSnapshot()
+                            val pkg = if (includeLogs) {
+                                SharePackage(
+                                    settings = snapshot.settings.copy(
+                                        notebookNotes = snapshot.settings.notebookNotes.filter { note -> note.type == NotebookNoteType.TEXT }
+                                    ),
+                                    logs = snapshot.logs,
+                                    scoreboard = snapshot.scoreboard,
+                                )
+                            } else {
+                                SharePackage(settings = snapshot.settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null)
+                            }
                             val bytes = json.encodeToString(pkg).toByteArray()
                             // The import reads at most MAX_IMPORT_TEXT_BYTES, and this wrote whatever
                             // the history came to: some five hundred games made a file that "Export
@@ -228,24 +226,25 @@ class MainActivity : ComponentActivity() {
 
             val mediaExportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
                 uri?.let {
-                    val presets = customPresets
                     scope.launch(Dispatchers.IO) {
                         try {
+                            // See exportSnapshot: the composition's copies are defaults until the load ends.
+                            val snapshot = timerViewModel.exportSnapshot()
                             // Read from the store rather than from an Omni ViewModel, which need not
                             // exist yet and would hold the defaults until its own load finished.
                             // Every Omni edit is written there as it is made.
                             val omni = SettingsRepository(context).omniSettingsFlow.first()
-                            val media = ZipBackupManager.mediaFilesToBackUp(context.filesDir, settings.notebookNotes)
+                            val media = ZipBackupManager.mediaFilesToBackUp(context.filesDir, snapshot.settings.notebookNotes)
                             // Written straight to the destination. It used to be built in the cache
                             // and copied, and a provider returning no stream was reported as a
                             // successful backup.
                             context.contentResolver.openOutputStream(it)?.use { output ->
                                 ZipBackupManager.writeFullBackup(
                                     output = output,
-                                    settings = settings,
-                                    logs = gameHistory,
-                                    scoreboard = timerViewModel.scoreboard.value,
-                                    presets = presets,
+                                    settings = snapshot.settings,
+                                    logs = snapshot.logs,
+                                    scoreboard = snapshot.scoreboard,
+                                    presets = snapshot.presets,
                                     omniSettings = omni,
                                     mediaFiles = media,
                                 )
@@ -616,7 +615,9 @@ class MainActivity : ComponentActivity() {
                                                     // Only a backup carries these; a settings file's
                                                     // are ignored, as they always were.
                                                     presetsToImport = if (pending.archive != null) pkg.customPresets else null,
-                                                    isImport = true
+                                                    isImport = true,
+                                                    // A full backup is the user's own history coming back.
+                                                    isRestore = pending.archive != null,
                                                 )
                                                 // The Omni ViewModel is activity-scoped like this
                                                 // one, so this is the instance its screens use.

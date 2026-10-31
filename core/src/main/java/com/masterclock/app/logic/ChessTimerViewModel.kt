@@ -984,6 +984,14 @@ data class SharePackage(
     val omniSettings: OmniSettings? = null,
 )
 
+/** Everything an export writes, as one consistent read; see [ChessTimerViewModel.exportSnapshot]. */
+data class ExportSnapshot(
+    val settings: ChessClockSettings,
+    val logs: List<GameLog>,
+    val scoreboard: ScoreboardSession,
+    val presets: List<SavedPreset>,
+)
+
 @Serializable
 data class ScoreboardGame(
     val id: String = java.util.UUID.randomUUID().toString(),
@@ -1052,8 +1060,12 @@ data class ChessClockState(
  * on delete (an empty/crafted id can match every file in `filesDir`), and audioPath/imagePath/
  * videoPath/custom*Uri are read and written to directly.
  */
-private fun sanitizeImportedSettings(context: android.content.Context, settings: ChessClockSettings): ChessClockSettings =
-    sanitizeSettings(context, settings, freshNoteIds = true)
+private fun sanitizeImportedSettings(
+    context: android.content.Context,
+    settings: ChessClockSettings,
+    grants: Set<String> = persistedReadGrants(context),
+): ChessClockSettings =
+    sanitizeSettings(context, settings, freshNoteIds = true, grants = grants)
 
 /**
  * Re-checks settings that were read back from DataStore, rather than ones arriving from outside.
@@ -1075,6 +1087,7 @@ private fun sanitizeSettings(
     context: android.content.Context,
     settings: ChessClockSettings,
     freshNoteIds: Boolean,
+    grants: Set<String> = persistedReadGrants(context),
 ): ChessClockSettings {
     val sanitizedNotes = settings.notebookNotes.take(MAX_IMPORTED_NOTES).map { note ->
         note.copy(
@@ -1100,10 +1113,10 @@ private fun sanitizeSettings(
     val sanitizedNumberOfPlayers = settings.numberOfPlayers.coerceIn(1, 4)
     return settings.copy(
         notebookNotes = sanitizedNotes,
-        customBeepUri = sanitizeImportedContentUri(context, settings.customBeepUri),
-        customGongUri = sanitizeImportedContentUri(context, settings.customGongUri),
-        customFinalBeepUri = sanitizeImportedContentUri(context, settings.customFinalBeepUri),
-        customSwitchUri = sanitizeImportedContentUri(context, settings.customSwitchUri),
+        customBeepUri = sanitizeImportedContentUri(grants, settings.customBeepUri),
+        customGongUri = sanitizeImportedContentUri(grants, settings.customGongUri),
+        customFinalBeepUri = sanitizeImportedContentUri(grants, settings.customFinalBeepUri),
+        customSwitchUri = sanitizeImportedContentUri(grants, settings.customSwitchUri),
         numberOfPlayers = sanitizedNumberOfPlayers,
         // The one integer that reaches SQL directly, and the one this function used to miss.
         // trimLogs(0) runs DELETE ... WHERE id NOT IN (SELECT id ... LIMIT 0), whose subquery
@@ -1271,15 +1284,28 @@ internal fun sanitizeImportedMediaPath(filesDirRaw: java.io.File, path: String?)
  * latter also makes the state honest: without a grant the sound could never have played anyway, so
  * the setting silently fell back to the default while still displaying a custom file.
  */
-private fun sanitizeImportedContentUri(context: android.content.Context, uri: String?): String? {
+private fun sanitizeImportedContentUri(grants: Set<String>, uri: String?): String? {
     if (uri.isNullOrBlank() || !uri.startsWith("content://")) return null
-    val held = try {
-        context.contentResolver.persistedUriPermissions.any { it.isReadPermission && it.uri.toString() == uri }
-    } catch (_: Exception) {
-        false
-    }
-    return if (held) uri else null
+    return if (uri in grants) uri else null
 }
+
+/**
+ * The URIs this app holds a persisted read grant for. Read once per sanitising pass: it is a call
+ * into the system, and it was made four times per settings -- for each of the custom sounds -- so
+ * forty thousand times for a backup of ten thousand games, on the main thread.
+ */
+internal fun persistedReadGrants(context: android.content.Context): Set<String> = try {
+    context.contentResolver.persistedUriPermissions.filter { it.isReadPermission }.mapTo(HashSet()) { it.uri.toString() }
+} catch (_: Exception) {
+    emptySet()
+}
+
+/**
+ * The longer of two history limits, where -1 is no limit. A full backup restored onto a device
+ * keeps the more generous of the two: kept as the device's, a fresh install's 100 trimmed a backup
+ * of 800 games to its newest 100 the moment it was restored.
+ */
+internal fun longerHistoryLimit(a: Int, b: Int): Int = if (a == -1 || b == -1) -1 else maxOf(a, b)
 
 /**
  * The longest recorded competitive chess game ran 269 moves, so a log carrying more than this many
@@ -3399,6 +3425,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         presetsToImport: List<SavedPreset>? = null,
         isImport: Boolean = false,
         /**
+         * A full backup the user restores, rather than a configuration someone shared: its history
+         * is the user's own. It keeps the longer of the two history limits, and its games are not
+         * marked imported, which ranks them first to go when the history is trimmed.
+         */
+        isRestore: Boolean = false,
+        /**
          * A preset or a launcher shortcut: a new game, whatever the clock holds. One whose time
          * control matched the current one changed nothing the comparison below looks at, so the
          * game went on and its log was never finished.
@@ -3418,8 +3450,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     // this device's choice. Taken from the file, a friend's configuration with a
                     // limit of 10 trimmed hundreds of the user's own games to ten -- at once when
                     // the file carried logs, otherwise at the end of the next game.
-                    logHistoryLimit = oldSettings.logHistoryLimit,
-                    logDurationLimit = oldSettings.logDurationLimit,
+                    logHistoryLimit = if (isRestore) longerHistoryLimit(oldSettings.logHistoryLimit, imported.logHistoryLimit) else oldSettings.logHistoryLimit,
+                    logDurationLimit = if (isRestore) maxOf(oldSettings.logDurationLimit, imported.logDurationLimit) else oldSettings.logDurationLimit,
                 )
             }
         } else newSettings).wholeTableSettings().withSeatsForPlayers()
@@ -3504,17 +3536,29 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // Capped, unlike a game the user actually played: that path goes through
                 // saveLogWithTrim, which enforces logHistoryLimit, while this one inserts whatever
                 // arrives. A backup is allowed to be large, but not unbounded.
-                logs.take(MAX_IMPORTED_LOGS).forEach { log ->
+                //
+                // Sanitised and encoded off the main thread, where all of it ran: for ten thousand
+                // games, that and a system call per custom sound per game were an ANR.
+                val prepared = withContext(Dispatchers.Default) {
+                    val grants = persistedReadGrants(app)
+                    logs.take(MAX_IMPORTED_LOGS).mapNotNull { log ->
+                        // One that cannot be prepared is skipped, not the rest with it.
+                        runCatching {
+                            val sanitizedLog = sanitizeImportedLog(log)
+                                .copy(settings = sanitizeImportedSettings(app, log.settings, grants).copy(notebookNotes = emptyList()), imported = !isRestore)
+                            sanitizedLog.id to converters.fromGameLog(sanitizedLog)
+                        }.onFailure { Log.w("ChessTimerViewModel", "Skipped an imported game log", it) }.getOrNull()
+                    }
+                }
+                prepared.forEach { (id, entity) ->
                     // One that will not go in is skipped, not the rest of the import with it: an
                     // insert throwing here ended the coroutine half-way, under a toast that had
                     // already said the import succeeded.
                     try {
                         // A game already here is the player's, and stays theirs: REPLACE turned it
                         // into an imported one, first in line for the trim.
-                        if (gameDao.getLog(log.id) != null) return@forEach
-                        val sanitizedLog = sanitizeImportedLog(log)
-                            .copy(settings = sanitizeImportedSettings(app, log.settings).copy(notebookNotes = emptyList()), imported = true)
-                        gameDao.insertLog(converters.fromGameLog(sanitizedLog))
+                        if (gameDao.getLog(id) != null) return@forEach
+                        gameDao.insertLog(entity)
                     } catch (e: Exception) {
                         Log.w("ChessTimerViewModel", "Skipped an imported game log", e)
                     }
@@ -3526,6 +3570,20 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
         viewModelScope.launch { settingsRepo.saveSettings(newSettings) }
     }
+    /**
+     * What an export writes, read once the stored state is in.
+     *
+     * The exports read the screen's copies, which hold the defaults and empty lists until the load
+     * finishes: a picker result delivered to an activity recreated after the process was killed
+     * wrote default settings, no notes, no games and no presets -- as "Backup successful". The
+     * history is read from the database, since [isReady] comes before it is loaded.
+     */
+    suspend fun exportSnapshot(): ExportSnapshot {
+        isReady.first { it }
+        val settings = _settings.value
+        return ExportSnapshot(settings, loadHistory(settings.logHistoryLimit), _scoreboard.value, _customPresets.value)
+    }
+
     fun toggleArbitreMode() { if (_uiState.value.isPaused) _uiState.update { it.copy(isArbitreMode = !it.isArbitreMode) } }
     
     fun previewSwitchSound() = soundManager.playSwitch()
