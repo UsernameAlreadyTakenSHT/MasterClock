@@ -52,11 +52,11 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Escolher o modo de jogo</string>
-    <string name="settings_bonus_type">Tipo de bónus</string>
+    <string name="settings_bonus_type">Tipo de Bonus</string>
     <string name="settings_move_timer_type">Tipo de Move Timer</string>
     <string name="settings_byoyomi_type">Tipo de byoyomi</string>
-    <string name="settings_chrono_type">Tipo de cronómetro</string>
-    <string name="settings_move_counts_type">Tipo de contagem de lances</string>
+    <string name="settings_chrono_type">Tipo de Chronos</string>
+    <string name="settings_move_counts_type">Tipo de Move Counts</string>
     <string name="settings_fast_move_type">Tipo de Fast Move</string>
     <string name="settings_time_parameters">Parâmetros de tempo</string>
     <string name="settings_initial_time">Tempo inicial</string>
@@ -90,7 +90,7 @@
     <string name="settings_random_config">Configuração do modo Random</string>
     <string name="settings_hidden_config">Configuração do modo Hidden</string>
     <string name="settings_show_percentage">Mostrar os alertas de percentagem</string>
-    <string name="settings_fide_config">Configuração dos períodos FIDE</string>
+    <string name="settings_fide_config">Configuração dos FIDE Periods</string>
     <string name="settings_add_period">Adicionar um período</string>
     <string name="settings_actions">Ações</string>
     <string name="settings_period_n">Período %d</string>
@@ -114,7 +114,7 @@
     <string name="settings_wait_tap_at_end">Aguardar um toque no fim</string>
     <string name="settings_allow_skip">Permitir avançar manualmente (tocar para adiantar)</string>
     <string name="settings_phase_placeholder">Preparação, ronda X…</string>
-    <string name="settings_cumulative_transfer">Transferência cumulativa</string>
+    <string name="settings_cumulative_transfer">Transfer cumulativo</string>
     <string name="settings_cumulative_explain">Cada lance recebe o tempo por lance mais o tempo que o adversário gastou no seu último lance. Ligado, o que sobrava dos lances anteriores mantém-se; desligado, perde-se.</string>
     <string name="settings_one_for_all">One for All (sem toques)</string>
 
@@ -132,14 +132,14 @@
     <string name="toast_export_ok">Exportação concluída!</string>
     <string name="toast_export_failed">Falha na exportação: não foi possível escrever o ficheiro.</string>
     <string name="toast_backup_too_large">Cópia de segurança não guardada: seria demasiado grande para restaurar.</string>
-    <string name="toast_export_too_large">Demasiados jogos para um ficheiro de definições: use antes a cópia de segurança completa.</string>
-    <string name="toast_no_voice">Não há nenhuma voz de síntese disponível. Instala uma nas definições do dispositivo para ouvir os anúncios.</string>
-    <string name="toast_sound_not_kept">A app não consegue manter o acesso a esse ficheiro, por isso deixaria de tocar depois de reiniciar. Escolhe um som do armazenamento do dispositivo.</string>
+    <string name="toast_export_too_large">Demasiadas partidas para um ficheiro de definições: use antes a cópia de segurança completa.</string>
+    <string name="toast_no_voice">Não há nenhuma voz de síntese disponível. Instale uma nas definições do dispositivo para ouvir os anúncios.</string>
+    <string name="toast_sound_not_kept">A app não consegue manter o acesso a esse ficheiro, por isso deixaria de tocar depois de reiniciar. Escolha um som do armazenamento do dispositivo.</string>
     <string name="qr_confirm_title">Aplicar as definições lidas?</string>
-    <string name="qr_confirm_message">Este código substitui as tuas definições atuais e pode acrescentar partidas e um placar. Aceita um código apenas de alguém em quem confias.</string>
+    <string name="qr_confirm_message">Este código substitui as suas definições atuais e pode acrescentar partidas e um marcador. Aceite um código apenas de alguém em quem confia.</string>
     <string name="qr_confirm_apply">Aplicar</string>
     <string name="import_confirm_title">Importar este ficheiro?</string>
-    <string name="import_confirm_message">Este ficheiro substitui as tuas definições atuais. As suas partidas, predefinições, notas e resultados do placar juntam-se aos teus: nada teu é apagado.</string>
+    <string name="import_confirm_message">Este ficheiro substitui as suas definições atuais. As partidas, predefinições, notas e resultados do marcador que contém juntam-se aos seus: nada seu é apagado.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jogador %1$d, %2$s</string>
@@ -188,7 +188,7 @@
       which the earlier wording said. "RESERVA" is the plain word for it.
     -->
     <string name="timer_overtime">RESERVA</string>
-    <string name="timer_switch_turn">Trocar de vez</string>
+    <string name="timer_switch_turn">Trocar de turno</string>
     <string name="timer_presets">Predefinições</string>
     <string name="timer_settings">Definições</string>
     <string name="timer_pause">Pausa</string>
@@ -264,8 +264,8 @@
     <string name="settings_sound">Som</string>
     <string name="settings_voice_announcements">Anúncios de voz</string>
     <string name="settings_timer_alerts">Alertas do relógio</string>
-    <string name="settings_countdown_beep">Apito da contagem decrescente</string>
-    <string name="settings_triple_beep">Apito triplo ao esgotar o tempo</string>
+    <string name="settings_countdown_beep">Bip da contagem decrescente</string>
+    <string name="settings_triple_beep">Bip triplo ao esgotar o tempo</string>
     <string name="settings_play_switch_sound">Som ao trocar de jogador</string>
     <string name="settings_haptics">Retorno tátil</string>
     <string name="settings_haptic_countdown">Contagem decrescente tátil</string>
@@ -279,11 +279,11 @@
     <string name="settings_custom_sounds">Sons personalizados</string>
     <string name="settings_sound_previews">Pré-visualização dos sons</string>
     <string name="settings_gong_mode_sound">Gong (modo gong)</string>
-    <string name="settings_beep_countdown_sound">Apito (contagem decrescente)</string>
-    <string name="settings_final_beep_sound">Apito final (tempo esgotado)</string>
+    <string name="settings_beep_countdown_sound">Bip (contagem decrescente)</string>
+    <string name="settings_final_beep_sound">Bip final (tempo esgotado)</string>
     <string name="settings_switch_sound">Troca (lance jogado)</string>
     <string name="settings_gong">Gong</string>
-    <string name="settings_beep">Apito</string>
+    <string name="settings_beep">Bip</string>
     <string name="settings_final">Final</string>
     <string name="settings_switch">Troca</string>
 
@@ -345,26 +345,26 @@
     <string name="omni_cfg_enable_session_timer">Ativar o relógio de sessão</string>
     <string name="omni_cfg_enable_game_timer">Ativar o relógio de partida</string>
     <string name="omni_cfg_enable_round_timer">Ativar o relógio de ronda</string>
-    <string name="omni_cfg_enable_turn_timer">Ativar o relógio de vez</string>
+    <string name="omni_cfg_enable_turn_timer">Ativar o relógio de turno</string>
     <string name="omni_cfg_enable_phase_timer">Ativar o relógio de fase</string>
     <string name="omni_cfg_session_timer">Sessão</string>
     <string name="omni_cfg_game_timer">Relógio de partida</string>
     <string name="omni_cfg_round_timer">Relógio de ronda</string>
-    <string name="omni_cfg_turn_timer">Relógio de vez</string>
+    <string name="omni_cfg_turn_timer">Relógio de turno</string>
     <string name="omni_cfg_phase_timer">Relógio de fase</string>
-    <string name="omni_cfg_cutoff_session">Cortar a direito ao fim do tempo de sessão</string>
-    <string name="omni_cfg_cutoff_game">Cortar a direito ao fim do tempo de partida</string>
-    <string name="omni_cfg_cutoff_round">Cortar a direito ao fim do tempo de ronda</string>
-    <string name="omni_cfg_cutoff_turn">Cortar a direito ao fim do tempo de vez</string>
-    <string name="omni_cfg_cutoff_phase">Cortar a direito ao fim do tempo de fase</string>
-    <string name="omni_cfg_turn_disabled">Relógio de vez desativado.</string>
+    <string name="omni_cfg_cutoff_session">Interromper ao esgotar o tempo de sessão</string>
+    <string name="omni_cfg_cutoff_game">Interromper ao esgotar o tempo de partida</string>
+    <string name="omni_cfg_cutoff_round">Interromper ao esgotar o tempo de ronda</string>
+    <string name="omni_cfg_cutoff_turn">Interromper ao esgotar o tempo de turno</string>
+    <string name="omni_cfg_cutoff_phase">Interromper ao esgotar o tempo de fase</string>
+    <string name="omni_cfg_turn_disabled">Relógio de turno desativado.</string>
     <string name="omni_cfg_phase_disabled">Relógio de fase desativado.</string>
 
     <string name="omni_cfg_game">Partida</string>
     <string name="omni_cfg_round">Ronda</string>
     <string name="omni_cfg_rounds">Rondas</string>
-    <string name="omni_cfg_turn">Vez</string>
-    <string name="omni_cfg_turn_n">Vez %d</string>
+    <string name="omni_cfg_turn">Turno</string>
+    <string name="omni_cfg_turn_n">Turno %d</string>
     <string name="omni_cfg_step">Passo %1$d/%2$d</string>
     <string name="omni_cfg_count">Quantidade: %d</string>
     <string name="omni_cfg_player_short">J%d</string>
@@ -376,43 +376,43 @@
     <string name="omni_cfg_turn_short">V%d</string>
     <string name="omni_cfg_delete_game">Eliminar a partida %d</string>
     <string name="omni_cfg_delete_round">Eliminar a ronda %d</string>
-    <string name="omni_cfg_delete_turn">Eliminar a vez %d</string>
+    <string name="omni_cfg_delete_turn">Eliminar o turno %d</string>
     <string name="omni_cfg_delete_phase">Eliminar a fase %d</string>
     <string name="omni_cfg_phase_budget">Total: %1$d s / limite: %2$d s</string>
     <string name="omni_cfg_summary_rounds_varied">• Rondas por partida: %s</string>
     <string name="omni_cfg_summary_order">• Ordem: %s</string>
-    <string name="omni_cfg_phases_exceed">Partida «%1$s», ronda «%2$s», %3$s: as fases excedem o tempo de vez!</string>
-    <string name="omni_cfg_turns">Vezes</string>
+    <string name="omni_cfg_phases_exceed">Partida «%1$s», ronda «%2$s», %3$s: as fases excedem o tempo de turno!</string>
+    <string name="omni_cfg_turns">Turnos</string>
     <string name="omni_cfg_phases">Fases</string>
     <string name="omni_cfg_game_name">Nome da partida</string>
     <string name="omni_cfg_round_name">Nome da ronda</string>
     <string name="omni_cfg_phase_name">Nome da fase</string>
     <string name="omni_cfg_add_game">Adicionar uma partida</string>
     <string name="omni_cfg_add_round">Adicionar uma ronda</string>
-    <string name="omni_cfg_add_turn">Adicionar uma vez</string>
+    <string name="omni_cfg_add_turn">Adicionar um turno</string>
     <string name="omni_cfg_add_phase">Adicionar uma fase</string>
     <string name="omni_cfg_duration">Duração</string>
     <string name="omni_cfg_total_duration">Duração total</string>
-    <string name="omni_cfg_loop_turns">Repetir as vezes</string>
+    <string name="omni_cfg_loop_turns">Repetir os turnos</string>
     <string name="omni_cfg_end_round">Fim de ronda</string>
 
     <string name="omni_cfg_players_order">Jogadores e ordem</string>
-    <string name="omni_cfg_turn_order">Ordem das vezes</string>
+    <string name="omni_cfg_turn_order">Ordem dos turnos</string>
     <string name="omni_cfg_pattern_linear">Padrão (3 jogadores): 123, 123, 123</string>
     <string name="omni_cfg_pattern_snake">Padrão (3 jogadores): 123, 321, 123</string>
     <string name="omni_cfg_pattern_rotate">Padrão (3 jogadores): 123, 231, 312</string>
     <string name="omni_cfg_pattern_random_turn">Padrão (3 jogadores): 132, 312, 231 — um jogador pode ser saltado ou sorteado duas vezes</string>
     <string name="omni_cfg_pattern_random_round">Padrão (3 jogadores): 231, 312, 123 — cada um joga uma vez por ronda</string>
     <string name="omni_cfg_shuffle_per_round">Baralhar em cada ronda</string>
-    <string name="omni_cfg_draw_per_turn">Sorteio em cada vez</string>
+    <string name="omni_cfg_draw_per_turn">Sorteio em cada turno</string>
     <string name="omni_cfg_balance_draw">Equilibrar o sorteio</string>
-    <string name="omni_cfg_balance_explain">Quem está atrasado nas vezes tem mais probabilidade de sair, para que as diferenças se fechem em vez de se acumularem.</string>
+    <string name="omni_cfg_balance_explain">Quem está atrasado nos turnos tem mais probabilidade de sair, para que as diferenças se fechem em vez de se acumularem.</string>
     <string name="omni_cfg_no_repeat">Nunca o mesmo jogador duas vezes seguidas</string>
 
     <string name="omni_cfg_transitions">Transições e pausas</string>
     <string name="omni_cfg_enable_pauses">Ativar as pausas (margens)</string>
     <string name="omni_cfg_pauses_durations">Duração das pausas</string>
-    <string name="omni_cfg_turn_pause">Pausa de vez</string>
+    <string name="omni_cfg_turn_pause">Pausa de turno</string>
     <string name="omni_cfg_round_pause">Pausa de ronda</string>
     <string name="omni_cfg_game_pause">Pausa de partida</string>
     <string name="omni_cfg_pause_deducts_round">A pausa desconta da ronda</string>
@@ -429,8 +429,8 @@
     <string name="omni_cfg_bank_clear">Esvaziar o banco no fim de:</string>
 
     <string name="omni_cfg_audio">Alertas sonoros</string>
-    <string name="omni_cfg_turn_beep">Apito de vez</string>
-    <string name="omni_cfg_final_beep">Apito final</string>
+    <string name="omni_cfg_turn_beep">Bip de turno</string>
+    <string name="omni_cfg_final_beep">Bip final</string>
     <string name="omni_cfg_round_gong">Gong de ronda</string>
 
     <string name="dur_10s">10 s</string>
@@ -458,7 +458,7 @@
     <string name="settings_more_name_square">Nomear a casa</string>
     <string name="settings_more_board">Ligação ao tabuleiro</string>
     <string name="settings_more_link_board">Ligar um tabuleiro (ainda não testado)</string>
-    <string name="settings_more_auto_switch">Trocar de vez automaticamente</string>
+    <string name="settings_more_auto_switch">Trocar de turno automaticamente</string>
     <string name="settings_more_game">Partida</string>
     <string name="settings_more_game_data">Dados de jogo</string>
     <string name="settings_more_logs">Registos e histórico de partidas</string>
@@ -504,7 +504,7 @@
     <string name="omni_round_finished">RONDA TERMINADA</string>
     <string name="omni_game_finished">PARTIDA TERMINADA</string>
     <string name="omni_session_complete">SESSÃO CONCLUÍDA</string>
-    <string name="omni_turn_finished">VEZ TERMINADA</string>
+    <string name="omni_turn_finished">TURNO TERMINADO</string>
     <string name="omni_prepare_round">Preparem-se para a ronda %d</string>
     <string name="omni_prepare_game">Preparem-se para a partida %d</string>
     <string name="omni_thanks">Obrigado por jogar!</string>
@@ -580,14 +580,14 @@
     <string name="preset_desc_fisch_3_2s">Fischer 3:00 +2s</string>
     <string name="preset_desc_fisch_15_10s">Fischer 15:00 +10s</string>
     <string name="preset_desc_90_40_30_30s">90 min/40 + 30 min (Fischer 30 s)</string>
-    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 min (Fischer 30 s)</string>
+    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 min (Fischer 30 s a partir do lance 61)</string>
     <string name="preset_desc_us_5_2s">Sudden Death 5:00, atraso 2 s</string>
     <string name="preset_desc_us_25_5s">Sudden Death 25:00, atraso 5 s</string>
     <string name="preset_desc_us_80_40_30_30s">80 min/40 + 30 min (atraso 30 s)</string>
     <string name="preset_desc_bronst_90_5s">Bronstein 90:00, atraso 5 s</string>
-    <string name="preset_desc_jap_byo_20">Byoyomi japonês: 20 min + 1×30 s</string>
-    <string name="preset_desc_jap_byo_60">Byoyomi japonês: 60 min + 3×20 s</string>
-    <string name="preset_desc_can_byo_60">Byoyomi canadiano: 60 min + 5 min/20 lances</string>
+    <string name="preset_desc_jap_byo_20">Byoyomi Japanese: 20 min + 1×30 s</string>
+    <string name="preset_desc_jap_byo_60">Byoyomi Japanese: 60 min + 3×20 s</string>
+    <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 min + 5 min/20 lances</string>
     <string name="preset_desc_armag_5_4">Brancas 5:00, pretas 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 cada</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/lance</string>
@@ -601,7 +601,7 @@
     <string name="settings_horiz_left">Esquerda</string>
     <string name="settings_horiz_right">Direita</string>
     <string name="omni_in_reserve">+%1$s em reserva</string>
-    <string name="omni_cfg_unbalanced_explain">Todos os jogadores têm a mesma probabilidade a cada vez: um deles pode mesmo ficar com a maior parte de uma ronda.</string>
+    <string name="omni_cfg_unbalanced_explain">Todos os jogadores têm a mesma probabilidade a cada turno: um deles pode mesmo ficar com a maior parte de uma ronda.</string>
     <string name="tools_player_short">J%d</string>
-    <string name="back_press_again_to_exit">Prime Voltar outra vez para sair</string>
+    <string name="back_press_again_to_exit">Prima Voltar outra vez para sair</string>
 </resources>

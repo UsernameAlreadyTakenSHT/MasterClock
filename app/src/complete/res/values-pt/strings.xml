@@ -65,7 +65,7 @@
     <string name="guide_counts_up_desc">Mostra o número total de lances jogados desde o início.</string>
     <string name="guide_fast_move_desc">Premeia os lances rápidos. Accelerate: quanto mais pensa, mais depressa corre o seu relógio. Shrink: cada lance tem menos tempo, até um mínimo. Transfer: o tempo que gasta passa para o adversário.</string>
     <string name="guide_fide_desc">Ritmo de torneio por períodos: por exemplo, 90 min para 40 lances, depois 30 min para o resto, com 30 s por lance.</string>
-    <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou à vez).</string>
+    <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou por turnos).</string>
     <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as percentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
     <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total mantém-se constante.</string>
     <string name="guide_move_global_desc">O tempo de lance e o tempo global correm ao mesmo tempo. Ambos têm de ficar acima de zero.</string>
@@ -74,13 +74,13 @@
     <string name="guide_move_save_cap_desc">O tempo de lance não usado passa para o lance seguinte, até um teto no relógio.</string>
     <string name="guide_move_shared_desc">Um único relógio para todos os jogadores. Muda automaticamente às 0:00.</string>
     <string name="guide_move_standard_desc">Volta a uma duração fixa em cada lance.</string>
-    <string name="guide_omni_desc">Estação profissional de 6 níveis para estruturas de jogo complexas (partidas &gt; rondas &gt; vezes &gt; fases).</string>
+    <string name="guide_omni_desc">Estação profissional de 6 níveis para estruturas de jogo complexas (partidas &gt; rondas &gt; turnos &gt; fases).</string>
     <string name="guide_phases_desc">Sequência de relógios diferentes (por exemplo, preparação 5 min -&gt; partida 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">O tempo base e os incrementos são sorteados dentro de um intervalo definido.</string>
     <string name="guide_section_advanced">Motores avançados e experimentais</string>
     <string name="guide_section_bonus">Motores com bónus</string>
     <string name="guide_section_specialty">Motores especiais</string>
-    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou cai.</string>
+    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeira.</string>
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmara</string>
@@ -162,7 +162,7 @@
     <string name="tools_new_draw_note">Nova nota desenhada</string>
     <string name="tools_new_image_note">Nova nota de imagem</string>
     <string name="tools_new_note">Nova nota</string>
-    <string name="tools_notebook_full">O caderno está cheio. Apaga uma nota para adicionar outra.</string>
+    <string name="tools_notebook_full">O caderno está cheio. Apague uma nota para adicionar outra.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Nova nota de vídeo</string>
     <string name="tools_no_games">Ainda não há partidas registadas.</string>
     <string name="tools_no_notes">Ainda não há notas. Toque em + para criar uma.</string>
