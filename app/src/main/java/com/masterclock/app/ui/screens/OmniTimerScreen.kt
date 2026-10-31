@@ -90,7 +90,8 @@ fun OmniTimerScreen(
             OmniControls(
                 state = state,
                 onPauseResume = { if (state.isRunning) viewModel.pauseOmni() else viewModel.startOmni() },
-                onStop = { viewModel.stopOmni() },
+                // Stop ends the session as Reset does, and sat beside Pause with no question asked.
+                onStop = { if (state.hasStarted) showResetDialog = true else viewModel.stopOmni() },
                 onReset = { showResetDialog = true }
             )
         }

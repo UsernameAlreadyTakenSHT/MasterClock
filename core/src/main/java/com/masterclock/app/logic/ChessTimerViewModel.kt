@@ -1611,9 +1611,11 @@ internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings 
                         )
                     },
                 )
-            },
+            // A game needs a round, and the session a game: the wizard opens on the first of each, and
+            // an empty list from a backup crashed it on every opening after the restore.
+            }.ifEmpty { listOf(OmniRoundSettings()) },
         )
-    },
+    }.ifEmpty { listOf(OmniGameSettings()) },
 )
 
 /**

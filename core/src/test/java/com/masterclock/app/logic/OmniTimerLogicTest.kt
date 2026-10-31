@@ -495,4 +495,22 @@ class OmniTimerLogicTest {
         assertEquals(3, next.turnCounterInRound)
         assertEquals("TURN", next.transitionLabel)
     }
+
+    @Test
+    fun `a backup with no games or rounds gets one of each`() {
+        val empty = sanitizeImportedOmniSettings(OmniSettings(games = emptyList()))
+        assertEquals(1, empty.games.size)
+        val noRounds = sanitizeImportedOmniSettings(OmniSettings(games = listOf(OmniGameSettings(rounds = emptyList()))))
+        assertEquals(1, noRounds.games.single().rounds.size)
+    }
+
+    @Test
+    fun `a LOOP round with no round clock moves on instead of looping`() {
+        val round = OmniRoundSettings(roundEndBehavior = RoundEndBehavior.LOOP)
+        val settings = OmniSettings(numberOfPlayers = 2, useRoundClock = false, usePhaseClock = false,
+            games = listOf(OmniGameSettings(rounds = listOf(round, OmniRoundSettings()))))
+        var state = OmniState(isRunning = true, hasStarted = true)
+        repeat(2) { state = computeOmniAdvance(state, settings) }
+        assertTrue(state.currentRoundIndex == 1 || state.isInTransition)
+    }
 }

@@ -291,7 +291,11 @@ internal fun computeOmniAdvance(
         var loopedRound = false
         val turnDone = nextTurnIdx >= turnsList.size || forceLevel == "ROUND" || forceLevel == "GAME"
         if (turnDone) {
-            if (currentRound.roundEndBehavior == RoundEndBehavior.LOOP && forceLevel != "GAME" && forceLevel != "ROUND") {
+            // A LOOP round ends when its round clock does, so it loops only with one running: with
+            // the round clock off, or a round of 0:00, Next went round the same players for ever.
+            val roundCanEnd = settings.useRoundClock &&
+                getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = state.currentRoundIndex) > 0
+            if (currentRound.roundEndBehavior == RoundEndBehavior.LOOP && roundCanEnd && forceLevel != "GAME" && forceLevel != "ROUND") {
                 nextTurnIdx = 0
                 loopedRound = true
             } else {
@@ -415,7 +419,10 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     fun updateOmniSettings(newSettings: OmniSettings) {
         settingsUpdatedBeforeLoad = true
         _omniSettings.value = newSettings
-        if (!_omniState.value.isRunning) {
+        // Only a session not yet started takes the new settings from the beginning. Leaving the
+        // Omni screen pauses it, so any edit in the wizard -- a colour, a beep -- or a restore threw
+        // away a paused session's games, rounds and banks. Reset is there to start over.
+        if (!_omniState.value.hasStarted) {
             _omniState.value = createInitialOmniState(newSettings)
         }
         viewModelScope.launch {
@@ -521,9 +528,11 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                 val newTransition = (state.transitionTimeRemainingMs - delta).coerceAtLeast(0)
                 newState = newState.copy(
                     transitionTimeRemainingMs = newTransition,
-                    currentGlobalTimeMs = if (settings.pauseDeductsFromGlobal) (state.currentGlobalTimeMs - delta).coerceAtLeast(0) else state.currentGlobalTimeMs,
-                    currentGameTimeMs = if (settings.pauseDeductsFromGame) (state.currentGameTimeMs - delta).coerceAtLeast(0) else state.currentGameTimeMs,
-                    currentRoundTimeMs = if (settings.pauseDeductsFromRound) (state.currentRoundTimeMs - delta).coerceAtLeast(0) else state.currentRoundTimeMs
+                    // Only from clocks in use. A clock switched off still drained during the pauses:
+                    // hidden, it ran out after enough of them, and ended its round or game unannounced.
+                    currentGlobalTimeMs = if (settings.pauseDeductsFromGlobal && settings.useGlobalClock) (state.currentGlobalTimeMs - delta).coerceAtLeast(0) else state.currentGlobalTimeMs,
+                    currentGameTimeMs = if (settings.pauseDeductsFromGame && settings.useGameClock) (state.currentGameTimeMs - delta).coerceAtLeast(0) else state.currentGameTimeMs,
+                    currentRoundTimeMs = if (settings.pauseDeductsFromRound && settings.useRoundClock) (state.currentRoundTimeMs - delta).coerceAtLeast(0) else state.currentRoundTimeMs
                 )
                 // A clock drained to zero by pauseDeductsFrom* during the pause still owes its
                 // end-of-level sound and cutoff; without these checks the crossing happened
@@ -542,7 +551,11 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                     else -> null
                 }
                 if (pausedForce != null) {
-                    newState = computeOmniAdvance(newState, settings, pausedForce)
+                    // The pause already shows the next turn, which nobody has played. Banked as if it
+                    // had been, its whole fresh turn went into the incoming player's bank -- a free
+                    // turn's worth. What they drew from their bank goes back; nothing more.
+                    val fresh = getOmniDuration(settings, "TURN", gameIdx = newState.currentGameIndex, roundIdx = newState.currentRoundIndex, playerIdx = newState.turnCounterInRound)
+                    newState = computeOmniAdvance(newState.copy(currentTurnTimeMs = (newState.currentTurnTimeMs - fresh).coerceAtLeast(0)), settings, pausedForce)
                 } else if (newTransition <= 0 && settings.transitionType == TransitionType.AUTOMATIC) { newState = newState.copy(isInTransition = false) }
                 return@update newState
             }
@@ -574,12 +587,13 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                 settings.gameForcesCutoff && oldGame > 0 && newState.currentGameTimeMs <= 0 -> "GAME"
                 (settings.roundForcesCutoff || loopRoundEnds) && oldRound > 0 && newState.currentRoundTimeMs <= 0 -> "ROUND"
                 settings.turnForcesCutoff && oldTurn > 0 && newState.currentTurnTimeMs <= 0 -> "TURN"
-                // Either the global phase cutoff or the current phase's own wizard "Auto Advance"
-                // toggle moves to the next phase when this one's clock runs out; without the
-                // latter, the per-phase toggle was never read by the engine at all.
+                // The phase cutoff switch alone. The phase's own "auto advance" was read beside
+                // it, and that one is true by default with nothing in the wizard to change it: every
+                // phase with a duration advanced on its own, the switch did nothing, and a turn
+                // ended by itself when its last phase did, its remaining time banked.
                 // Only for a turn that has phases: the phase clock of one without is the turn
                 // itself, and cutting it off would end every turn whatever turnForcesCutoff says.
-                (settings.phaseForcesCutoff || omniPhaseAutoAdvances(settings, state)) &&
+                settings.phaseForcesCutoff &&
                     omniCurrentTurnPhases(settings, state).isNotEmpty() &&
                     oldPhase > 0 && newState.currentPhaseTimeMs <= 0 -> "PHASE"
                 else -> null
