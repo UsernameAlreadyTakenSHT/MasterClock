@@ -157,14 +157,9 @@ class ZipBackupManagerTest {
     fun `counts skipped entries against the total size limit`() {
         val twentyMegabytes = ByteArray(20 * 1024 * 1024)
 
+        // Each under the per-entry limit, together past the 256 MB the archive may hold.
         assertThrows(ZipBackupTooLargeException::class.java) {
-            ZipBackupManager.extractBackup(
-                zip(
-                    "one.bin" to twentyMegabytes,
-                    "two.bin" to twentyMegabytes,
-                    "three.bin" to twentyMegabytes,
-                )
-            )
+            ZipBackupManager.extractBackup(zip(*Array(13) { "part$it.bin" to twentyMegabytes }))
         }
     }
 
@@ -317,5 +312,50 @@ class ZipBackupManagerTest {
         File(source, "datastore/settings.preferences_pb").writeBytes(text("secrets"))
         val notes = listOf(NotebookNote(audioPath = File(source, "datastore/settings.preferences_pb").path))
         assertTrue(ZipBackupManager.mediaFilesToBackUp(source, notes).isEmpty())
+    }
+
+    @Test
+    fun `a history larger than one entry is written in parts and comes back whole`() {
+        val logs = List(60) { i -> GameLog(id = "g$i", settings = ChessClockSettings(), startTime = i.toLong(), events = List(20) { GameEvent(eventType = "MOVE", playerIndex = 1) }) }
+        val archive = temp.newFile()
+        archive.outputStream().use { out ->
+            ZipBackupManager.writeFullBackup(out, ChessClockSettings(), logs, ScoreboardSession(), emptyList(), OmniSettings(), emptyList(), logsChunkBytes = 4_096)
+        }
+        val names = java.util.zip.ZipFile(archive).use { zip -> zip.entries().toList().map { it.name } }
+        assertTrue(names.count { it.startsWith("logs") } > 1)
+        assertEquals(logs.map { it.id }, ZipBackupManager.extractBackup(archive).logs?.map { it.id })
+    }
+
+    @Test
+    fun `one game this version cannot read costs only itself`() {
+        val archive = temp.newFile()
+        java.util.zip.ZipOutputStream(archive.outputStream()).use { zip ->
+            zip.putNextEntry(java.util.zip.ZipEntry("settings.json")); zip.write("{}".toByteArray()); zip.closeEntry()
+            zip.putNextEntry(java.util.zip.ZipEntry("logs.json"))
+            zip.write("[{\"id\":\"a\",\"settings\":{}},{\"id\":\"b\",\"settings\":{},\"startTime\":\"not a number\"},{\"id\":\"c\",\"settings\":{}}]".toByteArray())
+            zip.closeEntry()
+        }
+        assertEquals(listOf("a", "c"), ZipBackupManager.extractBackup(archive).logs?.map { it.id })
+    }
+
+    @Test
+    fun `a value from a newer version is read as the default, not a failed restore`() {
+        val archive = temp.newFile()
+        java.util.zip.ZipOutputStream(archive.outputStream()).use { zip ->
+            zip.putNextEntry(java.util.zip.ZipEntry("settings.json"))
+            zip.write("{\"numberOfPlayers\":3,\"main\":{\"mode\":\"A_MODE_FROM_THE_FUTURE\"}}".toByteArray())
+            zip.closeEntry()
+        }
+        val settings = ZipBackupManager.extractBackup(archive).settings
+        assertEquals(3, settings.numberOfPlayers)
+        assertEquals(PlayerSettings().mode, settings.main.mode)
+    }
+
+    @Test
+    fun `an entry too large to restore fails the export instead of writing it`() {
+        val big = ChessClockSettings(notebookNotes = listOf(NotebookNote(content = "x".repeat(21 * 1024 * 1024))))
+        assertThrows(ZipBackupTooLargeException::class.java) {
+            ZipBackupManager.writeFullBackup(java.io.ByteArrayOutputStream(), big, emptyList(), ScoreboardSession(), emptyList(), OmniSettings(), emptyList())
+        }
     }
 }

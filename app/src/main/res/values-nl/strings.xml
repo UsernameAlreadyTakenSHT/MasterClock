@@ -125,6 +125,8 @@
     <string name="toast_import_failed">Import mislukt: bestand kon niet worden gelezen.</string>
     <string name="toast_export_ok">Export gelukt!</string>
     <string name="toast_export_failed">Export mislukt: bestand kon niet worden geschreven.</string>
+    <string name="toast_backup_too_large">Back-up niet opgeslagen: die zou te groot zijn om te herstellen.</string>
+    <string name="toast_export_too_large">Te veel partijen voor een instellingenbestand: gebruik de volledige back-up.</string>
     <string name="toast_no_voice">Er is geen spraakstem beschikbaar. Installeer er een in de instellingen van het apparaat om de meldingen te horen.</string>
     <string name="toast_sound_not_kept">De app kan geen toegang tot dit bestand houden, dus na een herstart zou het niet meer spelen. Kies een geluid uit de opslag van het apparaat.</string>
     <string name="qr_confirm_title">Gescande instellingen toepassen?</string>

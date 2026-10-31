@@ -2,7 +2,6 @@ package com.masterclock.app.logic
 
 import android.util.Log
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -16,7 +15,8 @@ import java.util.zip.ZipInputStream
 class ZipBackupTooLargeException(message: String) : IOException(message)
 
 object ZipBackupManager {
-    private val json = Json { ignoreUnknownKeys = true }
+    // The import decoder, written with as well: one configuration both ways.
+    private val json = importJson
 
     private const val SETTINGS_ENTRY = "settings.json"
     private const val LOGS_ENTRY = "logs.json"
@@ -43,6 +43,16 @@ object ZipBackupManager {
      */
     private val KNOWN_ENTRIES = setOf(SETTINGS_ENTRY, LOGS_ENTRY, SCOREBOARD_ENTRY, PRESETS_ENTRY, OMNI_ENTRY)
 
+    /**
+     * The game history past its first part: logs-1.json, logs-2.json and on. It was one entry, and
+     * one entry is held to [MAX_ENTRY_SIZE_BYTES]: about a thousand games filled it, and the backup
+     * was written -- "Backup successful" -- and then refused whole by its own import. Parts of at
+     * most [LOGS_CHUNK_BYTES] each keep any history inside the per-entry limit. An older version
+     * reads logs.json alone, and restores the first part.
+     */
+    private val LOGS_PART = Regex("""logs-[0-9]{1,4}\.json""")
+    const val LOGS_CHUNK_BYTES = 8L * 1024 * 1024
+
     // Defends against zip bombs: a small compressed file can decompress to gigabytes. entry.size
     // (the declared uncompressed size in the zip header) is attacker-controlled and not trustworthy,
     // so these limits are enforced by counting actual bytes read during decompression.
@@ -52,7 +62,9 @@ object ZipBackupManager {
     // settings.json -- so a tighter limit would start refusing long-running users their own
     // backups, which is a worse failure than the one being defended against here.
     private const val MAX_ENTRY_SIZE_BYTES = 20L * 1024 * 1024 // 20 MB per entry
-    private const val MAX_TOTAL_SIZE_BYTES = 50L * 1024 * 1024 // 50 MB across the whole archive
+    // Across the whole archive. 50 MB, before the history was split into parts, which then had to
+    // fit in it too: ten thousand games -- the most an import takes -- run to a couple of hundred.
+    private const val MAX_TOTAL_SIZE_BYTES = 256L * 1024 * 1024
 
     // Media has budgets of its own, kept apart from the ones above so that a notebook's videos
     // cannot make room for a bomb hidden in the JSON. Media is never held in memory -- it is
@@ -61,7 +73,8 @@ object ZipBackupManager {
     const val MAX_MEDIA_ENTRY_BYTES = 1024L * 1024 * 1024 // 1 GB per file
     const val MAX_MEDIA_TOTAL_BYTES = 4L * 1024 * 1024 * 1024 // 4 GB across the archive
 
-    // Five JSON entries and up to three media files for each of the notebook's 500 notes.
+    // Five JSON entries, the history's further parts, and up to three media files for each of the
+    // notebook's 500 notes.
     internal const val MAX_ENTRIES = 1600
 
     /**
@@ -79,24 +92,66 @@ object ZipBackupManager {
         presets: List<SavedPreset>,
         omniSettings: OmniSettings,
         mediaFiles: List<File>,
+        logsChunkBytes: Long = LOGS_CHUNK_BYTES,
     ) {
         // Checked before a byte is written, so a notebook too large to restore fails the export
         // outright instead of producing an archive the import would refuse.
         if (mediaFiles.any { it.length() > MAX_MEDIA_ENTRY_BYTES } || mediaFiles.sumOf { it.length() } > MAX_MEDIA_TOTAL_BYTES) {
             throw ZipBackupTooLargeException("The notebook's media exceeds what a backup can restore")
         }
-        ZipOutputStream(output).use { zos ->
-            addToZip(zos, SETTINGS_ENTRY, json.encodeToString(settings))
-            addToZip(zos, LOGS_ENTRY, json.encodeToString(logs))
-            addToZip(zos, SCOREBOARD_ENTRY, json.encodeToString(scoreboard))
-            addToZip(zos, PRESETS_ENTRY, json.encodeToString(presets))
-            addToZip(zos, OMNI_ENTRY, json.encodeToString(omniSettings))
-            mediaFiles.forEach { file ->
-                zos.putNextEntry(ZipEntry(MEDIA_PREFIX + file.name))
-                file.inputStream().use { it.copyTo(zos) }
-                zos.closeEntry()
+        try {
+            ZipOutputStream(output).use { zos ->
+                // Each JSON entry is held to the limits the import applies, as the media is above:
+                // only the media used to be, so settings.json grown past 20 MB with drawings, or a
+                // long history, was written as a backup that could never be restored.
+                var total = 0L
+                fun put(name: String, bytes: ByteArray) {
+                    if (bytes.size > MAX_ENTRY_SIZE_BYTES) throw ZipBackupTooLargeException("$name would be too large to restore")
+                    total += bytes.size
+                    if (total > MAX_TOTAL_SIZE_BYTES) throw ZipBackupTooLargeException("The backup would be too large to restore")
+                    addToZip(zos, name, bytes)
+                }
+                put(SETTINGS_ENTRY, json.encodeToString(settings).toByteArray())
+                logParts(logs, logsChunkBytes).forEachIndexed { i, part -> put(if (i == 0) LOGS_ENTRY else "logs-$i.json", part) }
+                put(SCOREBOARD_ENTRY, json.encodeToString(scoreboard).toByteArray())
+                put(PRESETS_ENTRY, json.encodeToString(presets).toByteArray())
+                put(OMNI_ENTRY, json.encodeToString(omniSettings).toByteArray())
+                mediaFiles.forEach { file ->
+                    zos.putNextEntry(ZipEntry(MEDIA_PREFIX + file.name))
+                    file.inputStream().use { it.copyTo(zos) }
+                    zos.closeEntry()
+                }
             }
+        } catch (e: OutOfMemoryError) {
+            // The history was encoded into one String; an Error went past every catch (Exception)
+            // that reports a failed export, and closed the app.
+            throw ZipBackupTooLargeException("The backup did not fit in memory: ${e.message}")
         }
+    }
+
+    /**
+     * The history as JSON arrays of at most [maxBytes] each, one game at a time -- never the whole
+     * history in one String. There is always a first part, empty for no games, which is logs.json.
+     */
+    internal fun logParts(logs: List<GameLog>, maxBytes: Long): Sequence<ByteArray> = sequence {
+        val part = ByteArrayOutputStream()
+        var count = 0
+        part.write('['.code)
+        for (log in logs) {
+            val bytes = json.encodeToString(GameLog.serializer(), log).toByteArray()
+            if (count > 0 && part.size() + bytes.size + 2 > maxBytes) {
+                part.write(']'.code)
+                yield(part.toByteArray())
+                part.reset()
+                part.write('['.code)
+                count = 0
+            }
+            if (count > 0) part.write(','.code)
+            part.write(bytes)
+            count++
+        }
+        part.write(']'.code)
+        yield(part.toByteArray())
     }
 
     /**
@@ -159,7 +214,7 @@ object ZipBackupManager {
                     val name = entry.name
                     // collected.add() is what makes this first-one-wins: a second settings.json is
                     // skipped rather than left free to overwrite the one already parsed.
-                    val keep = !entry.isDirectory && name in KNOWN_ENTRIES && collected.add(name)
+                    val keep = !entry.isDirectory && (name in KNOWN_ENTRIES || LOGS_PART.matches(name)) && collected.add(name)
                     val buffer = if (keep) ByteArrayOutputStream() else null
 
                     // A skipped entry is still measured. Not reading one means not holding it in
@@ -182,21 +237,24 @@ object ZipBackupManager {
 
                     if (buffer != null) {
                         val content = buffer.toString(Charsets.UTF_8.name())
-                        when (name) {
+                        when {
                             // settings.json is the point of the backup, so a malformed one fails the
-                            // whole import rather than degrading; the other two are extras and are
-                            // allowed to drop out on their own.
-                            SETTINGS_ENTRY -> settings = json.decodeFromString(content)
-                            LOGS_ENTRY -> try { logs = json.decodeFromString(content) } catch (e: Exception) {
-                                Log.w("ZipBackupManager", "Failed to parse logs.json from backup, skipping", e)
+                            // whole import rather than degrading; the others are extras and are
+                            // allowed to drop out on their own -- the games and presets one at a
+                            // time, since one this version cannot read took every other with it.
+                            name == SETTINGS_ENTRY -> settings = json.decodeFromString(content)
+                            name == LOGS_ENTRY || LOGS_PART.matches(name) -> try {
+                                logs = logs.orEmpty() + decodeEach(GameLog.serializer(), json.parseToJsonElement(content)).orEmpty()
+                            } catch (e: Exception) {
+                                Log.w("ZipBackupManager", "Failed to parse $name from backup, skipping", e)
                             }
-                            SCOREBOARD_ENTRY -> try { scoreboard = json.decodeFromString(content) } catch (e: Exception) {
+                            name == SCOREBOARD_ENTRY -> try { scoreboard = json.decodeFromString(content) } catch (e: Exception) {
                                 Log.w("ZipBackupManager", "Failed to parse scoreboard.json from backup, skipping", e)
                             }
-                            PRESETS_ENTRY -> try { presets = json.decodeFromString(content) } catch (e: Exception) {
+                            name == PRESETS_ENTRY -> try { presets = decodeEach(SavedPreset.serializer(), json.parseToJsonElement(content)) } catch (e: Exception) {
                                 Log.w("ZipBackupManager", "Failed to parse presets.json from backup, skipping", e)
                             }
-                            OMNI_ENTRY -> try { omniSettings = json.decodeFromString(content) } catch (e: Exception) {
+                            name == OMNI_ENTRY -> try { omniSettings = json.decodeFromString(content) } catch (e: Exception) {
                                 Log.w("ZipBackupManager", "Failed to parse omni.json from backup, skipping", e)
                             }
                         }
@@ -326,10 +384,9 @@ object ZipBackupManager {
         return total
     }
 
-    private fun addToZip(zos: ZipOutputStream, fileName: String, content: String) {
-        val entry = ZipEntry(fileName)
-        zos.putNextEntry(entry)
-        zos.write(content.toByteArray())
+    private fun addToZip(zos: ZipOutputStream, fileName: String, content: ByteArray) {
+        zos.putNextEntry(ZipEntry(fileName))
+        zos.write(content)
         zos.closeEntry()
     }
 }

@@ -110,6 +110,8 @@ class MainActivity : ComponentActivity() {
             val importFailedText = stringResource(R.string.toast_import_failed)
             val exportOkText = stringResource(R.string.toast_export_ok)
             val exportFailedText = stringResource(R.string.toast_export_failed)
+            val backupTooLargeText = stringResource(R.string.toast_backup_too_large)
+            val exportTooLargeText = stringResource(R.string.toast_export_too_large)
             var shouldIncludeLogs by remember { mutableStateOf(false) }
             // Held between the scan and the user's decision. A QR code is the one import that needs
             // no file and no picker -- framing it is the whole of the interaction -- so it is the
@@ -197,18 +199,27 @@ class MainActivity : ComponentActivity() {
                     scope.launch(Dispatchers.IO) {
                         val written = runCatching {
                             val bytes = json.encodeToString(pkg).toByteArray()
+                            // The import reads at most MAX_IMPORT_TEXT_BYTES, and this wrote whatever
+                            // the history came to: some five hundred games made a file that "Export
+                            // successful" had produced and the import then refused.
+                            if (bytes.size > MAX_IMPORT_TEXT_BYTES) throw ImportTooLargeException("Settings file would be too large to import")
                             context.contentResolver.openOutputStream(it)?.use { stream ->
                                 stream.write(bytes)
                             } ?: error("No output stream for $it")
                         }
                         written.exceptionOrNull()?.let { e ->
                             Log.w("MainActivity", "Failed to export settings file", e)
+                            deletePartialExport(context, it)
                         }
                         withContext(Dispatchers.Main) {
                             Toast.makeText(
                                 context,
-                                if (written.isSuccess) exportOkText else exportFailedText,
-                                Toast.LENGTH_SHORT,
+                                when {
+                                    written.isSuccess -> exportOkText
+                                    written.exceptionOrNull() is ImportTooLargeException -> exportTooLargeText
+                                    else -> exportFailedText
+                                },
+                                Toast.LENGTH_LONG,
                             ).show()
                         }
                     }
@@ -246,8 +257,9 @@ class MainActivity : ComponentActivity() {
                             // The message used to be shown to the user; it is a Java exception
                             // string, always in English and rarely about anything they can act on.
                             Log.w("MainActivity", "Failed to export backup archive", e)
+                            deletePartialExport(context, it)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, exportFailedText, Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, if (e is ZipBackupTooLargeException) backupTooLargeText else exportFailedText, Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -632,6 +644,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * Removes what a failed export left at the destination the user picked: the document exists from
+     * the moment the picker returns, and a backup refused part-way sat there half-written, looking
+     * like a backup.
+     */
+    private fun deletePartialExport(context: Context, uri: android.net.Uri) {
+        runCatching { android.provider.DocumentsContract.deleteDocument(context.contentResolver, uri) }
     }
 
     private fun shareData(context: Context, jsonData: String) {

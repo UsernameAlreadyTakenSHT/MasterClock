@@ -1,8 +1,11 @@
 package com.masterclock.app.logic
 
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.elementNames
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -49,7 +52,39 @@ fun readImportText(input: InputStream, maxBytes: Long = MAX_IMPORT_TEXT_BYTES): 
 /** A file was valid JSON but held nothing this app recognises, so it is not a MasterClock export. */
 class NotASettingsFileException(message: String) : IOException(message)
 
-private val importJson = Json { ignoreUnknownKeys = true }
+/**
+ * The decoder every import reads with: a settings file, a QR code, a backup.
+ *
+ * coerceInputValues, as the store already reads with: a file from a newer version can carry an
+ * enum value this one does not know -- a new mode, a new kind of note -- and without it that one
+ * value failed the whole file. A field that has a default takes it instead.
+ */
+internal val importJson = Json { ignoreUnknownKeys = true; coerceInputValues = true }
+
+/**
+ * Each element of a JSON array that decodes, the others left out; null when there is no array.
+ *
+ * A list decoded whole is lost whole: one game or preset this version cannot read took every other
+ * one with it -- in a backup, under "Import successful".
+ */
+internal fun <T> decodeEach(serializer: KSerializer<T>, element: JsonElement?): List<T>? =
+    (element as? JsonArray)?.mapNotNull { item -> runCatching { importJson.decodeFromJsonElement(serializer, item) }.getOrNull() }
+
+/** One optional part of a package, or null when it is missing or cannot be read. */
+private fun <T> decodeOptional(serializer: KSerializer<T>, element: JsonElement?): T? =
+    element?.let { runCatching { importJson.decodeFromJsonElement(serializer, it) }.getOrNull() }
+
+/**
+ * A share package, its parts read one by one: the settings must decode, and the rest -- the games,
+ * the scoreboard, the presets, Omni -- each drop out on their own, element by element for the lists.
+ */
+private fun decodeSharePackageObject(root: JsonObject): SharePackage = SharePackage(
+    settings = importJson.decodeFromJsonElement(ChessClockSettings.serializer(), root.getValue("settings")),
+    logs = decodeEach(GameLog.serializer(), root["logs"]),
+    scoreboard = decodeOptional(ScoreboardSession.serializer(), root["scoreboard"]),
+    customPresets = decodeEach(SavedPreset.serializer(), root["customPresets"]),
+    omniSettings = decodeOptional(OmniSettings.serializer(), root["omniSettings"]),
+)
 
 /**
  * The property names [ChessClockSettings] actually declares, read off the serializer so the set
@@ -85,7 +120,7 @@ fun decodeSharePackage(content: String): SharePackage {
     // read below.
     val wrapped = root["settings"] as? JsonObject
     if (wrapped != null && (wrapped.isEmpty() || wrapped.keys.any { it in settingsFieldNames })) {
-        runCatching { importJson.decodeFromJsonElement(SharePackage.serializer(), root) }
+        runCatching { decodeSharePackageObject(root) }
             .onSuccess { return it }
     }
 

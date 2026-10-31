@@ -139,4 +139,6 @@
     <string name="import_confirm_message">Este arquivo substitui suas configurações atuais. As partidas, predefinições, notas e resultados do placar dele são adicionados aos seus: nada seu é apagado.</string>
     <string name="back_press_again_to_exit">Toque em Voltar de novo para sair</string>
     <string name="a11y_announce_running">Relógio rodando</string>
+    <string name="toast_backup_too_large">Backup não salvo: seria grande demais para restaurar.</string>
+    <string name="toast_export_too_large">Partidas demais para um arquivo de configurações: use o backup completo.</string>
 </resources>

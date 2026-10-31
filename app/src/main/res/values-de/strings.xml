@@ -126,6 +126,8 @@
     <string name="toast_import_failed">Import fehlgeschlagen: Datei nicht lesbar.</string>
     <string name="toast_export_ok">Export erfolgreich!</string>
     <string name="toast_export_failed">Export fehlgeschlagen: Datei nicht beschreibbar.</string>
+    <string name="toast_backup_too_large">Sicherung nicht gespeichert: Sie wäre zu groß zum Wiederherstellen.</string>
+    <string name="toast_export_too_large">Zu viele Partien für eine Einstellungsdatei: Nutze stattdessen die vollständige Sicherung.</string>
     <string name="toast_no_voice">Keine Sprachausgabe verfügbar. Installiere eine in den Geräteeinstellungen, um Ansagen zu hören.</string>
     <string name="toast_sound_not_kept">Die App kann den Zugriff auf diese Datei nicht behalten, nach einem Neustart würde sie nicht mehr abgespielt. Wähle einen Ton aus dem Gerätespeicher.</string>
     <string name="qr_confirm_title">Gescannte Einstellungen übernehmen?</string>

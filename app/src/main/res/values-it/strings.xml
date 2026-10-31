@@ -125,6 +125,8 @@
     <string name="toast_import_failed">Importazione non riuscita: impossibile leggere il file.</string>
     <string name="toast_export_ok">Esportazione riuscita!</string>
     <string name="toast_export_failed">Esportazione non riuscita: impossibile scrivere il file.</string>
+    <string name="toast_backup_too_large">Backup non salvato: sarebbe troppo grande per essere ripristinato.</string>
+    <string name="toast_export_too_large">Troppe partite per un file di impostazioni: usa invece il backup completo.</string>
     <string name="toast_no_voice">Nessuna voce di sintesi disponibile. Installane una nelle impostazioni del dispositivo per sentire gli annunci.</string>
     <string name="toast_sound_not_kept">L\'app non può mantenere l\'accesso a quel file, quindi smetterebbe di suonare dopo un riavvio. Scegli un suono dalla memoria del dispositivo.</string>
     <string name="qr_confirm_title">Applicare le impostazioni scansionate?</string>

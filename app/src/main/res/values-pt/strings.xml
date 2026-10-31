@@ -130,6 +130,8 @@
     <string name="toast_import_failed">Falha na importação: não foi possível ler o ficheiro.</string>
     <string name="toast_export_ok">Exportação concluída!</string>
     <string name="toast_export_failed">Falha na exportação: não foi possível escrever o ficheiro.</string>
+    <string name="toast_backup_too_large">Cópia de segurança não guardada: seria demasiado grande para restaurar.</string>
+    <string name="toast_export_too_large">Demasiados jogos para um ficheiro de definições: use antes a cópia de segurança completa.</string>
     <string name="toast_no_voice">Não há nenhuma voz de síntese disponível. Instala uma nas definições do dispositivo para ouvir os anúncios.</string>
     <string name="toast_sound_not_kept">A app não consegue manter o acesso a esse ficheiro, por isso deixaria de tocar depois de reiniciar. Escolhe um som do armazenamento do dispositivo.</string>
     <string name="qr_confirm_title">Aplicar as definições lidas?</string>
