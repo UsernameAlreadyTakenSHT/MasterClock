@@ -1088,22 +1088,22 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 confirmLabel = stringResource(R.string.tools_shred),
                 onDismiss = { deletingNoteId = null },
                 onConfirm = {
-                                    scope.launch(Dispatchers.IO) {
-                                        val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
-                                        note.audioPath?.let { shredFile(File(it), sandboxRoots) }
-                                        note.imagePath?.let { shredFile(File(it), sandboxRoots) }
-                                        note.videoPath?.let { shredFile(File(it), sandboxRoots) }
-                                        if (note.id.isNotBlank()) {
-                                            val sweepDirs = listOf(context.filesDir, File(context.filesDir, "shares"))
-                                            sweepDirs.forEach { dir ->
-                                                dir.listFiles()?.filter { it.name.contains(note.id) }?.forEach { shredFile(it, sandboxRoots) }
-                                            }
-                                        }
-                                        withContext(Dispatchers.Main) {
-                                            viewModel.updateSettings(settings.copy(notebookNotes = settings.notebookNotes.filter { it.id != note.id }))
-                                            Toast.makeText(context, noteDeletedText, Toast.LENGTH_SHORT).show() 
-                                        } 
-                                    } 
+                    // The note goes first, then its media, on a thread of its own. The media went
+                    // first, in the screen's scope, and the note only once that was done: shredding a
+                    // video took long enough to leave the note on the list with no sign of progress,
+                    // and leaving the notebook meanwhile cancelled the scope, so the note stayed --
+                    // pointing at a file that was gone.
+                    viewModel.removeNote(note.id)
+                    Toast.makeText(context, noteDeletedText, Toast.LENGTH_SHORT).show()
+                    val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
+                    val sweepDirs = listOf(context.filesDir, File(context.filesDir, "shares"))
+                    kotlin.concurrent.thread(name = "shred-note") {
+                        listOfNotNull(note.audioPath, note.imagePath, note.videoPath).forEach { shredFile(File(it), sandboxRoots) }
+                        // Its own files only, by their exact names; see isNoteMediaFile.
+                        sweepDirs.forEach { dir ->
+                            dir.listFiles()?.filter { isNoteMediaFile(it.name, note.id) }?.forEach { shredFile(it, sandboxRoots) }
+                        }
+                    }
                 },
             )
         }
@@ -1122,18 +1122,21 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                         }; TextButton(onClick = { showTypeSelection = false }, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.common_cancel)) } } } } }
     } else {
         when (selectedNote.type) {
-            NotebookNoteType.DRAWING -> DrawingNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
-            NotebookNoteType.VOICE -> VoiceNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
-            NotebookNoteType.IMAGE -> ImageNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
-            NotebookNoteType.VIDEO -> VideoNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
-            NotebookNoteType.BOARD -> BoardNoteEditor(note = selectedNote, onUpdate = { updated -> val newList = settings.notebookNotes.map { if (it.id == updated.id) updated else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }, onBack = { selectedNoteId = null })
+            NotebookNoteType.DRAWING -> DrawingNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
+            NotebookNoteType.VOICE -> VoiceNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
+            NotebookNoteType.IMAGE -> ImageNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
+            NotebookNoteType.VIDEO -> VideoNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
+            NotebookNoteType.BOARD -> BoardNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
             else -> {
                 var title by remember(selectedNoteId) { mutableStateOf(selectedNote.title) }; var rawText by remember(selectedNoteId) { mutableStateOf(selectedNote.content) }; var contentValue by remember(selectedNoteId) { mutableStateOf(TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(selectedNote.content), selection = TextRange(selectedNote.content.length))) }; var showColorPicker by remember { mutableStateOf(false) }
                 // What Undo steps back through; see TextEditHistory. Only changes to the text are
                 // recorded, never a cursor that merely moved.
                 var history by remember(selectedNoteId) { mutableStateOf(TextEditHistory()) }
                 fun recordBeforeEdit(typing: Boolean) { history = history.beforeEdit(TextSnapshot(rawText, contentValue.selection.start, contentValue.selection.end), android.os.SystemClock.uptimeMillis(), typing) }
-                PersistDebounced(title to rawText) { (newTitle, newText) -> val newList = settings.notebookNotes.map { if (it.id == selectedNoteId) it.copy(title = newTitle, content = newText) else it }; viewModel.updateSettings(settings.copy(notebookNotes = newList)) }
+                // The note's own id, fixed here: selectedNoteId is cleared before the save on the way
+                // out runs, so matching on it lost the last edit on Back. See updateNote.
+                val editedNoteId = selectedNote.id
+                PersistDebounced(title to rawText) { (newTitle, newText) -> viewModel.updateNote(editedNoteId) { it.copy(title = newTitle, content = newText) } }
                 fun applyFormat(prefix: String, suffix: String = prefix) { recordBeforeEdit(typing = false); val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.min, selection.max); val newText = text.replaceRange(selection.min, selection.max, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.min + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
                 ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = { selectedNoteId = null }, actions = {
                     IconButton(onClick = {
@@ -1572,6 +1575,14 @@ private fun PieceChoice(
     // Where this button sits on screen, so a drag leaving it can be drawn from the piece itself
     // rather than jumping to the finger.
     var centre by remember { mutableStateOf(Offset.Zero) }
+    // The drag outlives the composition it started in, and finishing it reads the board's square size.
+    // Keyed on the piece alone, a switch between the 10x10 and 8x8 draughts boards -- the same
+    // pieces -- kept the old size: a piece dropped on the 8x8 board's right-hand files fell off it,
+    // and on the 10x10 one it landed on the wrong file.
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    val currentOnDragCancel by rememberUpdatedState(onDragCancel)
     IconButton(
         onClick = onClick,
         modifier = Modifier
@@ -1582,10 +1593,10 @@ private fun PieceChoice(
             .onGloballyPositioned { centre = it.boundsInRoot().center }
             .pointerInput(piece) {
                 detectDragGestures(
-                    onDragStart = { offset -> onDragStart(centre + offset - Offset(size.width / 2f, size.height / 2f)) },
-                    onDrag = { change, amount -> change.consume(); onDrag(amount) },
-                    onDragEnd = onDragEnd,
-                    onDragCancel = onDragCancel,
+                    onDragStart = { offset -> currentOnDragStart(centre + offset - Offset(size.width / 2f, size.height / 2f)) },
+                    onDrag = { change, amount -> change.consume(); currentOnDrag(amount) },
+                    onDragEnd = { currentOnDragEnd() },
+                    onDragCancel = { currentOnDragCancel() },
                 )
             },
     ) {
@@ -2076,8 +2087,10 @@ private fun shredFile(file: File, sandboxRoots: List<File>) {
     try {
         val length = canonical.length()
         if (length > 0) {
-            RandomAccessFile(canonical, "rws").use { raf ->
-                val buffer = ByteArray(4096)
+            // One sync at the end, not one per write: "rws" synced every 4 KB, so a minute of video
+            // took tens of thousands of synchronous writes.
+            RandomAccessFile(canonical, "rw").use { raf ->
+                val buffer = ByteArray(64 * 1024)
                 var written = 0L
                 while (written < length) {
                     Random.nextBytes(buffer)
@@ -2085,6 +2098,7 @@ private fun shredFile(file: File, sandboxRoots: List<File>) {
                     raf.write(buffer, 0, toWrite)
                     written += toWrite
                 }
+                raf.fd.sync()
             }
         }
         canonical.delete()

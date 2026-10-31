@@ -47,3 +47,14 @@ fun commitPendingMedia(pending: File, target: File, shred: (File) -> Unit): Bool
     if (hadOld) shred(aside)
     return true
 }
+
+/**
+ * Whether [name] is one of the files the note with [noteId] owns: its audio, image or video, or a
+ * take of one still pending or set aside.
+ *
+ * Deleting a note swept every file whose name *contained* its id, and the ids of stored notes are
+ * not checked: a note carrying a short id from an import made before ids were regenerated -- "a" --
+ * shredded every recording and photo whose name held that letter.
+ */
+fun isNoteMediaFile(name: String, noteId: String): Boolean =
+    noteId.isNotBlank() && listOf("audio_", "image_", "video_").any { name.startsWith("$it$noteId.") }

@@ -3625,6 +3625,26 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         return ExportSnapshot(settings, loadHistory(settings.logHistoryLimit), _scoreboard.value, _customPresets.value)
     }
 
+    /**
+     * Changes one note, on the settings as they are now.
+     *
+     * The notebook's editors rebuilt the whole list from the settings the screen last collected, and
+     * picked the note by an id read when the save ran. Leaving a text note clears that id first, so
+     * the save on the way out matched nothing and wrote the settings back unchanged: what was typed
+     * in the last moment before Back was lost.
+     */
+    fun updateNote(id: String, transform: (NotebookNote) -> NotebookNote) {
+        val current = _settings.value
+        if (current.notebookNotes.none { it.id == id }) return
+        updateSettings(current.copy(notebookNotes = current.notebookNotes.map { if (it.id == id) transform(it) else it }))
+    }
+
+    /** Removes one note, on the settings as they are now; see [updateNote]. Its media is the caller's. */
+    fun removeNote(id: String) {
+        val current = _settings.value
+        updateSettings(current.copy(notebookNotes = current.notebookNotes.filter { it.id != id }))
+    }
+
     fun toggleArbitreMode() { if (_uiState.value.isPaused) _uiState.update { it.copy(isArbitreMode = !it.isArbitreMode) } }
     
     fun previewSwitchSound() = soundManager.playSwitch()

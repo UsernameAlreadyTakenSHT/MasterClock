@@ -76,4 +76,22 @@ class NotebookMediaTest {
         assertTrue(pending.name.contains("0f3c-11"))
         assertFalse(Regex("""video_[A-Za-z0-9-]{1,64}\.mp4""").matches(pending.name))
     }
+
+    @Test
+    fun `a note owns its own media and the takes of it, and nothing else`() {
+        val id = "9f8e7d6c-1234"
+        assertTrue(isNoteMediaFile("audio_$id.mp4", id))
+        assertTrue(isNoteMediaFile("image_$id.jpg.pending", id))
+        assertTrue(isNoteMediaFile("video_$id.mp4.replaced", id))
+        assertFalse(isNoteMediaFile("audio_${id}0.mp4", id))
+        assertFalse(isNoteMediaFile("settings_$id.json", id))
+    }
+
+    @Test
+    fun `a short id owns only the files named after it`() {
+        assertTrue(isNoteMediaFile("audio_a.mp4", "a"))
+        assertFalse(isNoteMediaFile("audio_9a8b.mp4", "a"))
+        assertFalse(isNoteMediaFile("game_database", "a"))
+        assertFalse(isNoteMediaFile("audio_.mp4", ""))
+    }
 }
