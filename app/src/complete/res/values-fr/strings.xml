@@ -51,7 +51,7 @@
     <string name="guide_bonus_fischer_desc">Ajoute un temps fixe (incrément) APRÈS chaque coup.</string>
     <string name="guide_bonus_us_delay_desc">Un délai avant décompte. La pendule attend la durée du délai avant de commencer à tourner.</string>
     <string name="guide_byoyomi_canadian_desc">Les joueurs doivent jouer un nombre déterminé de coups dans une seule période plus longue.</string>
-    <string name="guide_byoyomi_japanese_desc">Après le temps principal, les joueurs disposent d\'une série de périodes courtes, remises à zéro à chaque coup.</string>
+    <string name="guide_byoyomi_japanese_desc">Après le temps principal, les joueurs disposent d\'une série de périodes courtes, qui repartent pleines à chaque coup.</string>
     <string name="guide_byoyomi_progressive_desc">Le nombre de coups exigés augmente à chaque période terminée.</string>
     <string name="guide_chrono_countdown_desc">Chrono maître décomptant pour toute la partie.</string>
     <string name="guide_chrono_countup_desc">Mode chronomètre mesurant le temps total écoulé.</string>
@@ -61,7 +61,7 @@
     <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate : plus vous réfléchissez, plus votre pendule va vite. Shrink : chaque coup a moins de temps, jusqu\'à un plancher. Transfer : le temps que vous passez va à l\'adversaire.</string>
     <string name="guide_fide_desc">Cadence de tournoi par périodes : par exemple 90 min pour 40 coups, puis 30 min pour la fin, avec 30 s ajoutées par coup.</string>
     <string name="guide_gong_desc">Coups imposés à intervalles fixes (simultanés ou à tour de rôle).</string>
-    <string name="guide_hidden_desc">Un temps tiré au hasard et caché. Avec les pourcentages, il s\'affiche un instant en passant 50, 25, 10, 5, 2 et 1 %.</string>
+    <string name="guide_hidden_desc">Un temps tiré au hasard et caché. Avec les pourcentages activés, il s\'affiche un instant en passant 50, 25, 10, 5, 2 et 1 %.</string>
     <string name="guide_hourglass_desc">Le temps perdu par un joueur est ajouté à l\'adversaire. Le temps total reste constant.</string>
     <string name="guide_move_global_desc">Le temps de coup et le temps global s\'écoulent en même temps. Les deux doivent rester au-dessus de zéro.</string>
     <string name="guide_move_global_shared_desc">Tous les joueurs partagent une réserve globale tout en ayant un chrono de coup personnel.</string>
@@ -178,7 +178,7 @@
     <string name="tools_roll_dice">Lancer les dés</string>
     <string name="tools_score">Score : %d</string>
     <string name="tools_select_piece">Choisir une pièce</string>
-    <string name="tools_board_eraser_hint">Aucune pièce choisie — touchez une case pour la vider</string>
+    <string name="tools_board_eraser_hint">Aucune pièce choisie — appuyez sur une case pour la vider</string>
     <string name="tools_board_variant_draughts_10">Dames 10×10</string>
     <string name="tools_board_variant_draughts_8">Dames 8×8</string>
     <string name="tools_board_deselect">Désélectionner la pièce</string>
@@ -217,6 +217,6 @@
         <item quantity="many">Pailles : %d</item>
         <item quantity="other">Pailles : %d</item>
     </plurals>
-    <string name="qr_open_settings">Ouvrir les réglages de l\'appli</string>
+    <string name="qr_open_settings">Ouvrir les réglages de l\'app</string>
     <string name="toast_no_browser">Aucun navigateur installé</string>
 </resources>
