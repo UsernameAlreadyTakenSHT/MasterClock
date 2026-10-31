@@ -91,7 +91,7 @@
     <string name="settings_period_n">Periode %d</string>
     <string name="settings_moves_unlock">Zetten om de volgende vrij te spelen (0 = laatste)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Totaal aantal zetten tot periode %d</string>
-    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Meer dan %d: er wordt geteld vanaf het begin van de partij</string>
+    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Geteld als %1$d zetten extra: %2$d in totaal</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Naam van fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Rood: %d</string>

@@ -259,10 +259,12 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                         if (index < periods.size - 1 || periods.size < 5) {
                             val isLast = index == periods.size - 1
                             // The count is a total from the start of the game -- 60 for "60'/20" after
-                            // a 40-move first period -- so each must pass the one before it, or the next
-                            // period starts the move after this one does.
-                            val movesBefore = if (index == 0) 0 else periods[index - 1].movesToNext
-                            val tooFew = !isLast && period.movesToNext in 1..movesBefore
+                            // a 40-move first period -- and one that does not pass the total before it
+                            // is read as moves within its own period: 40, 20 is 40, 60 (fideMoveTotals).
+                            // It said so as an error, "more than 40", which the clock no longer holds
+                            // to; it says now what the clock will count.
+                            val movesBefore = fideMoveTotals(periods).take(index).lastOrNull { it > 0 } ?: 0
+                            val readAsMore = !isLast && period.movesToNext in 1..movesBefore
                             OutlinedTextField(
                                 value = if (period.movesToNext == 0) "" else period.movesToNext.toString(),
                                 onValueChange = {
@@ -273,7 +275,7 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                                     val newList = periods.toMutableList().apply { this[index] = period.copy(movesToNext = moves) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
-                                isError = tooFew,
+
                                 label = {
                                     Text(if (isLast) stringResource(R.string.settings_moves_unlock) else stringResource(R.string.settings_moves_until_period, index + 2))
                                 },
@@ -282,7 +284,7 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                                 shape = RoundedCornerShape(12.dp),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 supportingText = when {
-                                    tooFew -> { { Text(stringResource(R.string.settings_moves_must_exceed, movesBefore)) } }
+                                    readAsMore -> { { Text(stringResource(R.string.settings_moves_read_as_more, period.movesToNext, movesBefore + period.movesToNext)) } }
                                     isLast && period.movesToNext == 0 -> { { Text(stringResource(R.string.settings_final_period)) } }
                                     else -> null
                                 },
@@ -301,9 +303,11 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                         // counter on is a flag, and the new period could never be reached. It gets
                         // the FIDE pattern -- 40 moves, then 20 more each -- unless it has one; the
                         // new period is the last and has none.
+                        // From the totals the clock counts: off the raw counts, 40, 20 got 40 for the
+                        // period after, which reads as move 100 rather than 80.
                         val last = periods.last()
-                        val movesBefore = if (periods.size < 2) 0 else periods[periods.size - 2].movesToNext
-                        val ended = if (last.movesToNext > movesBefore) last else last.copy(movesToNext = movesBefore + if (movesBefore == 0) 40 else 20)
+                        val movesBefore = fideMoveTotals(periods).dropLast(1).lastOrNull { it > 0 } ?: 0
+                        val ended = if (last.movesToNext > 0) last else last.copy(movesToNext = movesBefore + if (movesBefore == 0) 40 else 20)
                         val newList = periods.dropLast(1) + ended + FidePeriod(movesToNext = 0)
                         onUpdate(p.copy(fidePeriods = newList))
                     },

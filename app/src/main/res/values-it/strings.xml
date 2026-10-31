@@ -91,7 +91,7 @@
     <string name="settings_period_n">Periodo %d</string>
     <string name="settings_moves_unlock">Mosse per sbloccare il successivo (0 = finale)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Mosse totali fino al periodo %d</string>
-    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Più di %d: il conteggio parte dall\'inizio della partita</string>
+    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Contate come %1$d mosse in più: %2$d in totale</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nome della fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Rosso: %d</string>

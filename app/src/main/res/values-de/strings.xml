@@ -92,7 +92,7 @@
     <string name="settings_period_n">Periode %d</string>
     <string name="settings_moves_unlock">Züge bis zur nächsten (0 = letzte)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Züge insgesamt bis Periode %d</string>
-    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Mehr als %d: gezählt wird ab Partiebeginn</string>
+    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Gilt als %1$d weitere Züge: insgesamt %2$d</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Name der Phase %d</string>
     <string name="settings_phase_n">Phase %d</string>
     <string name="settings_color_red">Rot: %d</string>

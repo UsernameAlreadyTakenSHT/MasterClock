@@ -97,7 +97,7 @@
     <string name="settings_period_n">Période %d</string>
     <string name="settings_moves_unlock">Coups pour débloquer la suivante (0 = finale)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Coups au total avant la période %d</string>
-    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Plus de %d : le compte part du début de la partie</string>
+    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Compté comme %1$d coups de plus : %2$d au total</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nom de la phase %d</string>
     <string name="settings_phase_n">Phase %d</string>
     <string name="settings_color_red">Rouge : %d</string>

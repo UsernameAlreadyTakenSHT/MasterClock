@@ -2203,9 +2203,11 @@ internal fun PlayerState.credited(amountMs: Long, flagBehavior: FlagBehavior): P
  */
 internal fun PlayerState.arbiterCredited(amountMs: Long, flagBehavior: FlagBehavior): PlayerState {
     val c = credited(amountMs, flagBehavior)
+    val revived = if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false) else c
     // Back in play, the flag is gone with it: hasFlagged left behind read PERIOD FLAG under a FIDE
-    // clock that had flagged for real.
-    return if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false, hasFlagged = false) else c
+    // clock that had flagged for real. Compared with the state before: under NEGATIVE and REVERSE
+    // credited() already brings the player back, and the test on its result alone never fired.
+    return if (isOutOfTime && !revived.isOutOfTime) revived.copy(hasFlagged = false) else revived
 }
 
 /**
@@ -2267,7 +2269,10 @@ internal fun adjustFideMoveCount(p: PlayerState, delta: Int, s: PlayerSettings, 
         if (total <= 0 || next.moveCount < total || idx >= s.fidePeriods.size - 1) break
         val entered = s.fidePeriods[idx + 1]
         val added = entered.timeMs + bonus(entered) - bonus(s.fidePeriods.getOrNull(idx))
-        next = next.withSignedTime(next.signedTimeMs(fb) + added, fb)
+        // As the arbiter's time is given: a player out under FREEZE or FLAG -- the press missed before
+        // the flag, the very case this is for -- gets the period's time and is back in play. Through
+        // withSignedTime, which leaves an out player be, the period advanced with none of its time.
+        next = next.arbiterCredited(added, fb)
             .copy(currentPeriodIndex = idx + 1, delayRemainingMs = delay(entered))
     }
     // Lowered below where the current period began, when a move count began it: the period is
@@ -2280,7 +2285,7 @@ internal fun adjustFideMoveCount(p: PlayerState, delta: Int, s: PlayerSettings, 
         val left = s.fidePeriods[idx]
         val previous = s.fidePeriods[idx - 1]
         val removed = left.timeMs + bonus(left) - bonus(previous)
-        next = next.withSignedTime(next.signedTimeMs(fb) - removed, fb)
+        next = next.arbiterCredited(-removed, fb)
             .copy(currentPeriodIndex = idx - 1, delayRemainingMs = delay(previous))
     }
     return next
@@ -2414,6 +2419,9 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             // Death (no delay) from US Delay -- both are non-Fischer, only the latter reads incrementMs.
             val nextDelay = if (!activePeriod.isFischer && activePeriod.hasDelay) activePeriod.incrementMs else 0L
             tempP.copy(currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay).withSignedTime(nextTime, settings.flagBehavior)
+                // An overrun the period's time paid off ends the flag that caused it: under NEGATIVE
+                // and REVERSE, a flag before move 40 read PERIOD FLAG for the rest of the game.
+                .let { if (p.isOutOfTime && !it.isOutOfTime) it.copy(hasFlagged = false) else it }
         }
         TimerMode.FAST_MOVE -> {
             // TRANSFER is handled above (needs to update the opponent too); only SHRINK/ACCELERATE reach here.
@@ -3890,7 +3898,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val before = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         val after = adjustFideMoveCount(before, delta, s, settings)
         _uiState.update { state ->
-            state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = after })
+            val adjusted = state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = after })
+            // As after the arbiter's time: nobody out any more, no flag stands first.
+            if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
         }
         // A period the arbiter starts or undoes is in the log and announced, as one a press reaches.
         if (after.currentPeriodIndex != before.currentPeriodIndex) {

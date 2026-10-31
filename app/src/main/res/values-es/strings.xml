@@ -92,7 +92,7 @@
     <string name="settings_period_n">Periodo %d</string>
     <string name="settings_moves_unlock">Jugadas para desbloquear el siguiente (0 = final)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Jugadas totales hasta el periodo %d</string>
-    <string name="settings_moves_must_exceed" tools:ignore="PluralsCandidate">Más de %d: se cuenta desde el inicio de la partida</string>
+    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Se cuenta como %1$d jugadas más: %2$d en total</string>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nombre de la fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Rojo: %d</string>
