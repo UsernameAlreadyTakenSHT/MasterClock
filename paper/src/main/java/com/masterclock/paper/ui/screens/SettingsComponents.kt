@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -310,13 +310,12 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
 
                 // The changelog runs well past the 320dp cap, and inside a dialog there is even
                 // less to hint at it than on a full page. Same scrollbar as the settings page.
-                val entriesScroll = rememberScrollState()
-
-                // The three tabs share one scroll state, so switching tabs used to land you at
-                // whatever offset the previous one was left at -- halfway down Licenses because
-                // you had scrolled Changes. Every tab starts at its own beginning instead.
-                // scrollTo, not animateScrollTo: E Ink does not animate.
-                LaunchedEffect(selectedTab) { entriesScroll.scrollTo(0) }
+                // A scroll state per tab visit, so every tab starts at its own beginning: one shared
+                // state landed you halfway down Licenses because you had scrolled Changes. It was
+                // reset by a LaunchedEffect, which runs after the frame it is in, so the new tab was
+                // drawn once at the old offset and then again at the top -- two refreshes on E Ink.
+                // A fresh state is at the top from its first frame.
+                val entriesScroll = remember(selectedTab) { ScrollState(0) }
 
                 // weight, not a bare height cap. Without it the entries take their 320dp off the
                 // top and Close, measured last with nothing left, comes out zero-high: on a real

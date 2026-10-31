@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -85,7 +84,7 @@ fun outlinedButtonBorderMMD(enabled: Boolean = true): BorderStroke {
 object ScrollbarMMDDefaults {
     val TrackWidth = 12.dp
     val TrackBorderWidth = 2.dp
-    val TrackCorners = RoundedCornerShape(6.dp)
+    val TrackCornerRadius = 6.dp
     val ChevronWidth = 18.dp
     val ChevronHeight = 10.dp
     val ChevronStrokeWidth = 2.dp
@@ -106,15 +105,20 @@ object ScrollbarMMDDefaults {
  * E Ink has none of the cues that normally say "there is more below". MMD turns off native
  * scrolling on its lists and pages instead, so there is no fling, no overscroll stretch, and no
  * scrollbar that fades in while a finger is down. Upstream answers that with a scrollbar that
- * carries its own chevrons and is simply always there -- but only while the content actually
- * overflows: `if (isScrollable && isScrollbarVisible)`, otherwise the width goes back to the
- * content. Both rules are kept here.
+ * carries its own chevrons and is simply always there while the content overflows.
+ *
+ * Its width is always kept, overflow or not; only the drawing waits for one. Upstream hands the
+ * width back to the content when nothing overflows, and this did too, deciding in composition:
+ * but the scroll range is known only once the content has been measured, so the first frame went
+ * out with no bar and full-width text, and the next added the bar and wrapped the text 48dp
+ * narrower -- a second full refresh of the panel, visibly reflowing, every time the changelog or
+ * the settings opened. Read where it is drawn, the range is that frame's own.
  *
  * Chevrons are drawn rather than tinted: upstream swaps a filled glyph for a dotted one at the
  * ends of the list, because greying one out would dither on E Ink. Dashing the stroke is the same
  * idea and keeps every pixel pure black.
  *
- * One deliberate deviation: the content keeps ordinary drag scrolling. MMD sets
+ * One more deliberate deviation: the content keeps ordinary drag scrolling. MMD sets
  * `userScrollEnabled = false` and snaps by a fixed item count, which has no meaning for a Column
  * whose children are not a list.
  */
@@ -123,21 +127,8 @@ fun ScrollbarMMD(
     scrollState: ScrollState,
     modifier: Modifier = Modifier
 ) {
-    val range = scrollState.maxValue
-    // maxValue reads as Int.MAX_VALUE until the first measurement lands.
-    if (range <= 0 || range == Int.MAX_VALUE) return
-
     val scope = rememberCoroutineScope()
     val color = MaterialTheme.colorScheme.onBackground
-    val viewport = scrollState.viewportSize
-    // scrollState.value moves with every scrolled pixel, and reading it straight into composition
-    // would recompose the whole scrollbar that often -- lint flags it as @FrequentlyChangingValue.
-    // These two only flip at the ends, so derive them and let the thumb's position be read in the
-    // draw scope below, where it repaints without recomposing.
-    val atTop by remember(scrollState) { derivedStateOf { scrollState.value <= 0 } }
-    val atBottom by remember(scrollState) {
-        derivedStateOf { scrollState.value >= scrollState.maxValue }
-    }
 
     Column(
         modifier = modifier
@@ -146,10 +137,10 @@ fun ScrollbarMMD(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ChevronMMD(
+            scrollState = scrollState,
             pointingUp = true,
-            dashed = atTop,
             color = color,
-            onTap = { scope.launch { scrollState.scrollTo(scrollState.value - viewport) } },
+            onTap = { scope.launch { scrollState.scrollTo(scrollState.value - scrollState.viewportSize) } },
             onLongPress = { scope.launch { scrollState.scrollTo(0) } }
         )
 
@@ -157,14 +148,10 @@ fun ScrollbarMMD(
             modifier = Modifier
                 .width(ScrollbarMMDDefaults.TrackWidth)
                 .weight(1f)
-                .border(
-                    width = ScrollbarMMDDefaults.TrackBorderWidth,
-                    color = color,
-                    shape = ScrollbarMMDDefaults.TrackCorners
-                )
-                .pointerInput(range, viewport) {
+                .pointerInput(scrollState) {
                     detectTapGestures { offset ->
-                        val thumb = thumbHeight(size.height.toFloat(), viewport, range, this)
+                        val range = scrollState.scrollRange() ?: return@detectTapGestures
+                        val thumb = thumbHeight(size.height.toFloat(), scrollState.viewportSize, range, this)
                         val travel = (size.height - thumb).coerceAtLeast(1f)
                         // Centre the thumb on the tap, as upstream does.
                         val fraction = ((offset.y - thumb / 2f) / travel).coerceIn(0f, 1f)
@@ -172,11 +159,21 @@ fun ScrollbarMMD(
                     }
                 }
         ) {
-            val thumb = thumbHeight(size.height, viewport, range, this)
+            val range = scrollState.scrollRange() ?: return@Canvas
+            val inset = ScrollbarMMDDefaults.TrackBorderWidth.toPx()
+            // The track's outline, drawn here rather than as a border modifier so that it waits for
+            // the range with the rest.
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(inset / 2f, inset / 2f),
+                size = Size((size.width - inset).coerceAtLeast(0f), (size.height - inset).coerceAtLeast(0f)),
+                cornerRadius = CornerRadius(ScrollbarMMDDefaults.TrackCornerRadius.toPx()),
+                style = Stroke(width = inset)
+            )
+
+            val thumb = thumbHeight(size.height, scrollState.viewportSize, range, this)
             val travel = (size.height - thumb).coerceAtLeast(0f)
             val top = travel * (scrollState.value.toFloat() / range.toFloat())
-            val inset = ScrollbarMMDDefaults.TrackBorderWidth.toPx()
-
             drawRoundRect(
                 color = color,
                 topLeft = Offset(inset, top + inset),
@@ -189,14 +186,21 @@ fun ScrollbarMMD(
         }
 
         ChevronMMD(
+            scrollState = scrollState,
             pointingUp = false,
-            dashed = atBottom,
             color = color,
-            onTap = { scope.launch { scrollState.scrollTo(scrollState.value + viewport) } },
-            onLongPress = { scope.launch { scrollState.scrollTo(range) } }
+            onTap = { scope.launch { scrollState.scrollTo(scrollState.value + scrollState.viewportSize) } },
+            onLongPress = { scope.launch { scrollState.scrollTo(scrollState.maxValue) } }
         )
     }
 }
+
+/**
+ * The scroll range, or null while there is none to show: the content fits, or it has not been
+ * measured yet, when maxValue reads Int.MAX_VALUE. Read in draw and in gestures, never in
+ * composition; see [ScrollbarMMD].
+ */
+private fun ScrollState.scrollRange(): Int? = maxValue.takeIf { it in 1 until Int.MAX_VALUE }
 
 /** The thumb's height, never below [ScrollbarMMDDefaults.MinThumbHeight] so it stays grabbable. */
 private fun thumbHeight(trackHeight: Float, viewport: Int, range: Int, density: Density): Float {
@@ -208,15 +212,13 @@ private fun thumbHeight(trackHeight: Float, viewport: Int, range: Int, density: 
 
 @Composable
 private fun ChevronMMD(
+    scrollState: ScrollState,
     pointingUp: Boolean,
-    dashed: Boolean,
     color: Color,
     onTap: () -> Unit,
     onLongPress: () -> Unit
 ) {
-    // The gesture outlives the composition it was set up in, and the lambdas read the scroll range
-    // of that one: once the page grew -- Timer switched to Fischer adds a field -- a long press on the
-    // down chevron scrolled to the old bottom and stopped a field short.
+    // The gesture outlives the composition it was set up in; the lambdas it calls are the latest.
     val currentOnTap by rememberUpdatedState(onTap)
     val currentOnLongPress by rememberUpdatedState(onLongPress)
     Canvas(
@@ -224,13 +226,17 @@ private fun ChevronMMD(
             .padding(vertical = ScrollbarMMDDefaults.ChevronOuterPadding)
             .size(ScrollbarMMDDefaults.ChevronTapSize)
             // detectTapGestures rather than clickable: no ripple to leave behind on E Ink.
-            .pointerInput(dashed) {
+            .pointerInput(scrollState) {
                 detectTapGestures(
-                    onTap = { currentOnTap() },
-                    onLongPress = { currentOnLongPress() }
+                    onTap = { if (scrollState.scrollRange() != null) currentOnTap() },
+                    onLongPress = { if (scrollState.scrollRange() != null) currentOnLongPress() }
                 )
             }
     ) {
+        val range = scrollState.scrollRange() ?: return@Canvas
+        // Dashed at the end it points to. Read here, where the position changing repaints the
+        // chevron without recomposing anything.
+        val dashed = if (pointingUp) scrollState.value <= 0 else scrollState.value >= range
         val stroke = ScrollbarMMDDefaults.ChevronStrokeWidth.toPx()
         val width = ScrollbarMMDDefaults.ChevronWidth.toPx()
         val height = ScrollbarMMDDefaults.ChevronHeight.toPx()
