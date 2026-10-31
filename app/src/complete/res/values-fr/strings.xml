@@ -91,6 +91,12 @@
     <string name="toast_audio_failed">Échec de la lecture audio</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Autorisation caméra requise</string>
     <string name="toast_fen_copied">FEN copiée</string>
+    <string name="a11y_piece_king">Roi</string>
+    <string name="a11y_piece_queen">Dame</string>
+    <string name="a11y_piece_rook">Tour</string>
+    <string name="a11y_piece_bishop">Fou</string>
+    <string name="a11y_piece_knight">Cavalier</string>
+    <string name="a11y_board_back_ranks">Blancs, de a à h : %1$s. Noirs : %2$s.</string>
     <string name="toast_mic_permission">L\'autorisation du microphone est nécessaire.</string>
     <string name="toast_note_deleted">Note supprimée</string>
     <string name="toast_permission_granted">Autorisation accordée. Appuyez à nouveau sur Enregistrer.</string>

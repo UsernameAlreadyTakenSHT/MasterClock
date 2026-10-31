@@ -141,4 +141,5 @@
     <string name="a11y_announce_running">Relógio rodando</string>
     <string name="toast_backup_too_large">Backup não salvo: seria grande demais para restaurar.</string>
     <string name="toast_export_too_large">Partidas demais para um arquivo de configurações: use o backup completo.</string>
+    <string name="settings_random_shared_draw">Os dois jogadores recebem o sorteio do jogador 1: defina os intervalos na aba do jogador 1.</string>
 </resources>

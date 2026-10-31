@@ -36,4 +36,18 @@ class RandomDrawTest {
 
         assertEquals(setOf(60_000L, 70_000L, 80_000L), seen)
     }
+
+    @Test
+    fun `a range starting at zero never draws a clock of zero`() {
+        val s = PlayerSettings(mode = TimerMode.RANDOM, randomMinTimeMs = 0, randomMaxTimeMs = 600_000, roundedTime = true)
+        val r = kotlin.random.Random(0)
+        repeat(2000) { assertTrue(drawRandomTimeControl(s, r).first > 0) }
+        assertEquals(1000L, drawRandomTimeControl(PlayerSettings(mode = TimerMode.RANDOM, randomMinTimeMs = 0, randomMaxTimeMs = 0), r).first)
+    }
+
+    @Test
+    fun `a zero increment stays possible`() {
+        val s = PlayerSettings(mode = TimerMode.RANDOM, randomMinIncMs = 0, randomMaxIncMs = 0)
+        assertEquals(0L, drawRandomTimeControl(s).second)
+    }
 }

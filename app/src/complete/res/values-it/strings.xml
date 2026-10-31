@@ -93,6 +93,12 @@
     <string name="toast_audio_failed">Riproduzione audio non riuscita</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Serve il permesso della fotocamera</string>
     <string name="toast_fen_copied">FEN copiata</string>
+    <string name="a11y_piece_king">Re</string>
+    <string name="a11y_piece_queen">Donna</string>
+    <string name="a11y_piece_rook">Torre</string>
+    <string name="a11y_piece_bishop">Alfiere</string>
+    <string name="a11y_piece_knight">Cavallo</string>
+    <string name="a11y_board_back_ranks">Bianco, da a a h: %1$s. Nero: %2$s.</string>
     <string name="toast_mic_permission">Serve il permesso del microfono.</string>
     <string name="toast_note_deleted">Nota eliminata</string>
     <string name="toast_permission_granted">Permesso concesso. Tocca di nuovo Registra.</string>

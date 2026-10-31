@@ -457,11 +457,18 @@ fun ToolCard(
 }
 
 @Composable
-fun RandomModePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
+fun RandomModePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit, drawnByPlayerOne: Boolean = false) {
     SettingsSection(if (p.mode == TimerMode.RANDOM) stringResource(R.string.settings_random_config) else stringResource(R.string.settings_hidden_config)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            BehaviorSwitch(stringResource(R.string.settings_rounded_time), p.roundedTime, topRounded = true, bottomRounded = true) {
-                onUpdate(p.copy(roundedTime = it))
+            // One draw for both players, from player 1's settings (drawRandomTimeControl). Player 2's
+            // ranges and rounding were offered here, kept, and never read; only the percentages are
+            // theirs.
+            if (drawnByPlayerOne) {
+                Text(stringResource(R.string.settings_random_shared_draw), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                BehaviorSwitch(stringResource(R.string.settings_rounded_time), p.roundedTime, topRounded = true, bottomRounded = true) {
+                    onUpdate(p.copy(roundedTime = it))
+                }
             }
 
             if (p.mode == TimerMode.HIDDEN) {
@@ -469,6 +476,8 @@ fun RandomModePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                     onUpdate(p.copy(showHiddenPercentages = it))
                 }
             }
+
+            if (drawnByPlayerOne) return@Column
 
             // Each bound drags the other along rather than letting the range invert. An inverted
             // range played the 10:00 fallback for the session, and at the next launch the stored-
@@ -999,7 +1008,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
 }
 
 @Composable
-fun TimeParameterPanel(p: PlayerSettings, settings: ChessClockSettings, onUpdate: (PlayerSettings) -> Unit, onUpdateSettings: (ChessClockSettings) -> Unit) {
+fun TimeParameterPanel(p: PlayerSettings, settings: ChessClockSettings, onUpdate: (PlayerSettings) -> Unit, onUpdateSettings: (ChessClockSettings) -> Unit, isSecondPlayerTab: Boolean = false) {
     val mode = p.mode
     val mainModeIdx = when {
         mode == TimerMode.SUDDEN_DEATH -> 0
@@ -1069,7 +1078,7 @@ fun TimeParameterPanel(p: PlayerSettings, settings: ChessClockSettings, onUpdate
             if (showGong) { GongPanel(p, onUpdate) }
             if (showFidePeriods) { FidePeriodsPanel(p, onUpdate) }
             if (showPhases) { PhasesPanel(p = p, settings = settings, onUpdateP = onUpdate, onUpdateSettings = onUpdateSettings) }
-            if (showRandom) { RandomModePanel(p, onUpdate) }
+            if (showRandom) { RandomModePanel(p, onUpdate, drawnByPlayerOne = isSecondPlayerTab) }
             if (showFastMove) { FastMovePanel(p, onUpdate) }
         }
     }

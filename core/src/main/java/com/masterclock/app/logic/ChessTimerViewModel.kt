@@ -248,6 +248,29 @@ internal fun drawInRange(
     return minMs
 }
 
+/**
+ * The time and increment of a Random or Hidden game, drawn from [s] -- player 1's settings: one
+ * draw for every player.
+ *
+ * The base time is never below a second. A range starting at 0 could draw 0:00 -- one chance in
+ * sixty-one for 0 to 10 minutes, rounded -- and that player flagged on the first tick. An increment
+ * of zero is a choice, and stays possible.
+ */
+internal fun drawRandomTimeControl(s: PlayerSettings, random: kotlin.random.Random = kotlin.random.Random): Pair<Long, Long> {
+    val base = try {
+        val min = s.randomMinTimeMs.coerceAtLeast(MIN_RANDOM_BASE_MS)
+        val max = s.randomMaxTimeMs.coerceAtLeast(min)
+        if (s.roundedTime) drawInRange(min, max, 10_000L, 1000L, random) else drawInRange(min, max, 1000L, 1000L, random)
+    } catch (_: Exception) { 600_000L }
+    val inc = try {
+        if (s.roundedTime) drawInRange(s.randomMinIncMs, s.randomMaxIncMs, 1000L, 100L, random)
+        else drawInRange(s.randomMinIncMs, s.randomMaxIncMs, 100L, 100L, random)
+    } catch (_: Exception) { 0L }
+    return base to inc
+}
+
+private const val MIN_RANDOM_BASE_MS = 1000L
+
 fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
     if (state.phasesFinished || tableClockRanOut(state)) return ClockAnnouncement.Finished
     // A flag falls on the clock that is running, so it is the player on the move who is out when it
@@ -2645,14 +2668,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 sharedRandomBase = reused.first
                 sharedRandomInc = reused.second
             } else {
-                sharedRandomBase = try {
-                    if (s1.roundedTime) drawInRange(s1.randomMinTimeMs, s1.randomMaxTimeMs, 10_000L, 1000L)
-                    else drawInRange(s1.randomMinTimeMs, s1.randomMaxTimeMs, 1000L, 1000L)
-                } catch (_: Exception) { 600_000L }
-                sharedRandomInc = try {
-                    if (s1.roundedTime) drawInRange(s1.randomMinIncMs, s1.randomMaxIncMs, 1000L, 100L)
-                    else drawInRange(s1.randomMinIncMs, s1.randomMaxIncMs, 100L, 100L)
-                } catch (_: Exception) { 0L }
+                val (base, inc) = drawRandomTimeControl(s1)
+                sharedRandomBase = base
+                sharedRandomInc = inc
                 lastRandomRoll = sharedRandomBase to sharedRandomInc
             }
         } else {

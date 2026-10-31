@@ -81,6 +81,7 @@
     <string name="settings_min_increment">Minimaal increment</string>
     <string name="settings_max_increment">Maximaal increment</string>
     <string name="settings_rounded_time">Afgeronde tijd (minuten/seconden)</string>
+    <string name="settings_random_shared_draw">Beide spelers krijgen de trekking van speler 1: stel de bereiken in op het tabblad van speler 1.</string>
     <string name="settings_random_config">Configuratie van de Random-modus</string>
     <string name="settings_hidden_config">Configuratie van de Hidden-modus</string>
     <string name="settings_show_percentage">Percentagewaarschuwingen tonen</string>

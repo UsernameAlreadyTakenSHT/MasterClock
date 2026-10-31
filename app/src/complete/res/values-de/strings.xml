@@ -93,6 +93,12 @@
     <string name="toast_audio_failed">Audio konnte nicht abgespielt werden</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Kameraberechtigung erforderlich</string>
     <string name="toast_fen_copied">FEN kopiert</string>
+    <string name="a11y_piece_king">König</string>
+    <string name="a11y_piece_queen">Dame</string>
+    <string name="a11y_piece_rook">Turm</string>
+    <string name="a11y_piece_bishop">Läufer</string>
+    <string name="a11y_piece_knight">Springer</string>
+    <string name="a11y_board_back_ranks">Weiß, von a bis h: %1$s. Schwarz: %2$s.</string>
     <string name="toast_mic_permission">Die Mikrofonberechtigung wird benötigt.</string>
     <string name="toast_note_deleted">Notiz gelöscht</string>
     <string name="toast_permission_granted">Berechtigung erteilt. Erneut auf Aufnehmen tippen.</string>

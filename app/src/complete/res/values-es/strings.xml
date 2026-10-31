@@ -93,6 +93,12 @@
     <string name="toast_audio_failed">No se ha podido reproducir el audio</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Se necesita permiso de cámara</string>
     <string name="toast_fen_copied">FEN copiada</string>
+    <string name="a11y_piece_king">Rey</string>
+    <string name="a11y_piece_queen">Dama</string>
+    <string name="a11y_piece_rook">Torre</string>
+    <string name="a11y_piece_bishop">Alfil</string>
+    <string name="a11y_piece_knight">Caballo</string>
+    <string name="a11y_board_back_ranks">Blancas, de a a h: %1$s. Negras: %2$s.</string>
     <string name="toast_mic_permission">Se necesita permiso de micrófono.</string>
     <string name="toast_note_deleted">Nota eliminada</string>
     <string name="toast_permission_granted">Permiso concedido. Pulsa Grabar otra vez.</string>

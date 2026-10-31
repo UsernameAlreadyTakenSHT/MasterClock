@@ -82,6 +82,7 @@
     <string name="settings_min_increment">Incremento mínimo</string>
     <string name="settings_max_increment">Incremento máximo</string>
     <string name="settings_rounded_time">Tiempo redondeado (minutos/segundos)</string>
+    <string name="settings_random_shared_draw">Ambos jugadores reciben el sorteo del jugador 1: ajusta los rangos en la pestaña del jugador 1.</string>
     <string name="settings_random_config">Configuración del modo Random</string>
     <string name="settings_hidden_config">Configuración del modo Hidden</string>
     <string name="settings_show_percentage">Mostrar alertas de porcentaje</string>

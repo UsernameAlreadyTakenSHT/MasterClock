@@ -87,6 +87,7 @@
     <string name="settings_min_increment">Incrément minimal</string>
     <string name="settings_max_increment">Incrément maximal</string>
     <string name="settings_rounded_time">Temps arrondi (minutes/secondes)</string>
+    <string name="settings_random_shared_draw">Les deux joueurs reçoivent le tirage du joueur 1 : réglez les plages dans l\'onglet du joueur 1.</string>
     <string name="settings_random_config">Configuration du mode Random</string>
     <string name="settings_hidden_config">Configuration du mode Hidden</string>
     <string name="settings_show_percentage">Afficher les alertes de pourcentage</string>

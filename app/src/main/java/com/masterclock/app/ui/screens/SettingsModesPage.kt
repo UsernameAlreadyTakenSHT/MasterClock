@@ -66,7 +66,8 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
             p = targetP,
             settings = currentSettings,
             onUpdate = { p: PlayerSettings -> updateTarget(p) },
-            onUpdateSettings = onSettingsChanged
+            onUpdateSettings = onSettingsChanged,
+            isSecondPlayerTab = currentSettings.differentSettingsPerPlayer && selectedPlayerTab == 1,
         )
 
         if (!FlavorConfig.hasFullSettingsTabs()) {

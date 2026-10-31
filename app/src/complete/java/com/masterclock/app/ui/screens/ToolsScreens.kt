@@ -57,7 +57,10 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -273,9 +276,26 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
     }
 }
 
+/**
+ * Says a tool's result once it has landed. The coin, the die and the card show it only at the end of
+ * their animation, and nothing announced it: a TalkBack user who tapped heard nothing until they went
+ * looking. The node stays in place, empty while the animation runs -- the coin's face turns over many
+ * times a toss -- so that the result arriving is a change the live region speaks.
+ */
+@Composable
+private fun ResultAnnouncer(text: String) {
+    Box(Modifier.size(1.dp).semantics {
+        liveRegion = LiveRegionMode.Polite
+        contentDescription = text
+    })
+}
+
 @Composable
 fun CoinTossScreen(onBack: () -> Unit) {
     var isSpinning by remember { mutableStateOf(false) }
+    var landedHeads by remember { mutableStateOf<Boolean?>(null) }
+    val headsText = stringResource(R.string.tools_heads)
+    val tailsText = stringResource(R.string.tools_tails)
     val rotation = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
@@ -288,6 +308,7 @@ fun CoinTossScreen(onBack: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
+            ResultAnnouncer(if (isSpinning) "" else landedHeads?.let { if (it) headsText else tailsText }.orEmpty())
             Box(
                 modifier = Modifier
                     .size(240.dp)
@@ -315,6 +336,7 @@ fun CoinTossScreen(onBack: () -> Unit) {
                                     easing = CubicBezierEasing(0.15f, 0f, 0.2f, 1f)
                                 )
                             )
+                            landedHeads = targetHeads
                             isSpinning = false
                         }
                     },
@@ -354,6 +376,7 @@ fun CoinTossScreen(onBack: () -> Unit) {
 @Composable
 fun DiceRollScreen(onBack: () -> Unit) {
     var result by remember { mutableIntStateOf(1) }
+    var rolled by remember { mutableStateOf(false) }
     var isRolling by remember { mutableStateOf(false) }
     val rotX = remember { Animatable(0f) }
     val rotY = remember { Animatable(0f) }
@@ -369,6 +392,7 @@ fun DiceRollScreen(onBack: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
+            ResultAnnouncer(if (isRolling || !rolled) "" else result.toString())
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -408,6 +432,7 @@ fun DiceRollScreen(onBack: () -> Unit) {
                             }
                             delay(2000)
                             result = newResult
+                            rolled = true
                             isRolling = false
                         }
                     },
@@ -588,6 +613,7 @@ fun RandomCardScreen(onBack: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
+            ResultAnnouncer(if (isAnimating) "" else currentCard?.let { (value, suit) -> "$value $suit" }.orEmpty())
             Box(
                 modifier = Modifier
                     .size(width = 200.dp, height = 280.dp)
@@ -599,7 +625,8 @@ fun RandomCardScreen(onBack: () -> Unit) {
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
-                        enabled = !isAnimating
+                        enabled = !isAnimating,
+                        onClickLabel = stringResource(R.string.tools_draw_again),
                     ) {
                         isAnimating = true
                         scope.launch {
@@ -823,33 +850,26 @@ fun NameSquareScreen(onBack: () -> Unit) {
     }
 }
 
-@Serializable
-enum class ChessVariant(
-    val label: String, 
-    val isSymmetric: Boolean, 
-    val kingBetweenRooks: Boolean, 
-    val oppositeBishops: Boolean
-) {
-    CHESS960("Chess960", true, true, true),
-    SHUFFLE("Shuffle", true, false, false),
-    TRANSCENDENTAL("Transcendental", false, false, true),
-    CHESS2880("Chess2880", true, false, true),
-    DOUBLE_CHESS960("Double 960", false, true, true)
-}
-
 @Composable
 fun Chess960Screen(onBack: () -> Unit) {
     val fenCopiedText = stringResource(R.string.toast_fen_copied)
-    var variant by remember { mutableStateOf(ChessVariant.CHESS960) }
+    // Saveable, all three: a theme or language change, split screen, a fold or the process being
+    // killed recreates the screen, and a plain remember then drew a new position -- in the middle of
+    // setting up a board, with the old FEN gone -- and went back to Chess960.
+    var variant by rememberSaveable { mutableStateOf(ChessVariant.CHESS960) }
     // One draw for both sides, as refresh() makes for a symmetric variant. Each side was drawn on its
-    // own, so the first position shown -- labelled Chess960 -- was not one, nor was its FEN.
-    val firstDraw = remember { generateChessPosition(ChessVariant.CHESS960) }
-    var whitePos by remember { mutableStateOf(firstDraw) }
-    var blackPos by remember { mutableStateOf(firstDraw) }
+    // own, so the first position shown -- labelled Chess960 -- was not one, nor was its FEN. A back
+    // rank is kept as its eight letters, which a Bundle holds as they are.
+    val firstDraw = remember { generateChessPosition(ChessVariant.CHESS960).joinToString("") }
+    var whiteRank by rememberSaveable { mutableStateOf(firstDraw) }
+    var blackRank by rememberSaveable { mutableStateOf(firstDraw) }
+    val whitePos = whiteRank.map { it.toString() }
+    val blackPos = blackRank.map { it.toString() }
 
     fun refresh() {
-        whitePos = generateChessPosition(variant)
-        blackPos = if (variant.isSymmetric) whitePos else generateChessPosition(variant)
+        val white = generateChessPosition(variant).joinToString("")
+        whiteRank = white
+        blackRank = if (variant.isSymmetric) white else generateChessPosition(variant).joinToString("")
     }
 
     val context = LocalContext.current
@@ -1824,7 +1844,19 @@ fun FullChessBoardDisplay(whitePos: List<String>, blackPos: List<String>) {
             .build()
     }
     val square = boardSquareSize(40.dp, 8, chrome = 66.dp)
+    // One description for the board, the two back ranks by name. Each piece was its own node,
+    // described by its letter: TalkBack read thirty-two letters, "K" and "k" alike, and no squares.
+    val pieceNames = mapOf(
+        "K" to stringResource(R.string.a11y_piece_king),
+        "Q" to stringResource(R.string.a11y_piece_queen),
+        "R" to stringResource(R.string.a11y_piece_rook),
+        "B" to stringResource(R.string.a11y_piece_bishop),
+        "N" to stringResource(R.string.a11y_piece_knight),
+    )
+    fun spoken(rank: List<String>) = rank.joinToString(", ") { pieceNames[it.uppercase(Locale.US)] ?: it }
+    val boardDescription = stringResource(R.string.a11y_board_back_ranks, spoken(whitePos), spoken(blackPos))
     Surface(
+        modifier = Modifier.clearAndSetSemantics { contentDescription = boardDescription },
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -1849,7 +1881,7 @@ fun FullChessBoardDisplay(whitePos: List<String>, blackPos: List<String>) {
                             if (rawPiece.isNotEmpty()) {
                                 AsyncImage(
                                     model = getPieceSvgPath(rawPiece),
-                                    contentDescription = rawPiece,
+                                    contentDescription = null,
                                     modifier = Modifier.size(square * 4 / 5),
                                     imageLoader = imageLoader
                                 )
@@ -1885,17 +1917,6 @@ fun VariantCard(label: String, selected: Boolean, modifier: Modifier = Modifier,
     ) {
         Box(contentAlignment = Alignment.Center) { Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold) }
     }
-}
-
-/**
- * The starting FEN. [castling] is for a variant whose king starts between its rooks; the others --
- * Shuffle, Transcendental, 2880 -- have no castling, and "KQkq" claimed it, so an engine given the
- * position would play it. With two rooks a side, KQkq reads as Chess960's castling (X-FEN).
- */
-fun generateFen(white: List<String>, black: List<String>, castling: Boolean = true): String {
-    val b = black.joinToString("").lowercase(Locale.US)
-    val w = white.joinToString("")
-    return "$b/pppppppp/8/8/8/8/PPPPPPPP/$w w ${if (castling) "KQkq" else "-"} - 0 1"
 }
 
 /** Compact think-time for one move: "8.4s" below a minute, "2m05s" above it. */
@@ -1961,46 +1982,6 @@ fun generateMoveExport(log: GameLog): String = when (log.settings.gameType) {
     GameType.CHESS -> generatePgn(log)
     GameType.DRAUGHTS -> generatePdn(log)
     GameType.SHOGI -> generateMoveListText(log)
-}
-
-fun generateChessPosition(v: ChessVariant): List<String> {
-    if (v.oppositeBishops) {
-        val darkSquares = listOf(0, 2, 4, 6)
-        val lightSquares = listOf(1, 3, 5, 7)
-        val b1 = darkSquares.random()
-        val b2 = lightSquares.random()
-        val pos = MutableList(8) { "" }
-        pos[b1] = "B"
-        pos[b2] = "B"
-        
-        val remainingSquares = (0..7).filter { pos[it] == "" }.toMutableList()
-        val otherPieces = mutableListOf("N", "N", "Q", "R", "R", "K").apply { shuffle() }
-        
-        if (v.kingBetweenRooks) {
-            val rrkIndices = remainingSquares.shuffled().take(3).sorted()
-            val finalOtherPieces = otherPieces.filter { it != "R" && it != "K" }.toMutableList().apply { shuffle() }
-            
-            var otherIdx = 0
-            val bIndices = listOf(b1, b2)
-            for (i in 0..7) {
-                if (bIndices.contains(i)) continue
-                if (i == rrkIndices[0] || i == rrkIndices[2]) {
-                    pos[i] = "R"
-                } else if (i == rrkIndices[1]) {
-                    pos[i] = "K"
-                } else {
-                    pos[i] = finalOtherPieces[otherIdx++]
-                }
-            }
-        } else {
-            remainingSquares.forEachIndexed { index, square ->
-                pos[square] = otherPieces[index]
-            }
-        }
-        return pos
-    } else {
-        return mutableListOf("R", "N", "B", "Q", "K", "B", "N", "R").apply { shuffle() }
-    }
 }
 
 /**

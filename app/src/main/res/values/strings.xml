@@ -79,6 +79,7 @@
     <string name="settings_min_increment">Minimum Increment</string>
     <string name="settings_max_increment">Maximum Increment</string>
     <string name="settings_rounded_time">Rounded Time (minutes/seconds)</string>
+    <string name="settings_random_shared_draw">Both players get Player 1\'s draw: set the ranges on Player 1\'s tab.</string>
     <string name="settings_random_config">Random Mode Configuration</string>
     <string name="settings_hidden_config">Hidden Mode Configuration</string>
     <string name="settings_show_percentage">Show Percentage Alerts</string>

@@ -119,6 +119,12 @@
     <string name="toast_audio_failed">Failed to play audio</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Camera permission required</string>
     <string name="toast_fen_copied">FEN copied</string>
+    <string name="a11y_piece_king">King</string>
+    <string name="a11y_piece_queen">Queen</string>
+    <string name="a11y_piece_rook">Rook</string>
+    <string name="a11y_piece_bishop">Bishop</string>
+    <string name="a11y_piece_knight">Knight</string>
+    <string name="a11y_board_back_ranks">White, from a to h: %1$s. Black: %2$s.</string>
     <string name="toast_mic_permission">Microphone permission is required.</string>
     <string name="toast_note_deleted">Note deleted</string>
     <string name="toast_permission_granted">Permission granted. Tap Record again.</string>

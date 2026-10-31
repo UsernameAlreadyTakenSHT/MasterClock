@@ -82,6 +82,7 @@
     <string name="settings_min_increment">Mindestinkrement</string>
     <string name="settings_max_increment">Höchstinkrement</string>
     <string name="settings_rounded_time">Gerundete Zeit (Minuten/Sekunden)</string>
+    <string name="settings_random_shared_draw">Beide Spieler erhalten die Ziehung von Spieler 1: Stelle die Bereiche im Tab von Spieler 1 ein.</string>
     <string name="settings_random_config">Konfiguration des Random-Modus</string>
     <string name="settings_hidden_config">Konfiguration des Hidden-Modus</string>
     <string name="settings_show_percentage">Prozentwarnungen anzeigen</string>
