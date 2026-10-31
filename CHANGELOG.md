@@ -1,3 +1,21 @@
+## v0.8.36 — 2026-10-31
+
+The E-Ink build, reviewed on its own: on a small E Ink screen, with a larger font, with TalkBack and
+in reversed colours. The other builds have no changes in this release.
+
+### Fixed
+- **The clock's digits overflowed with a larger system font.** At 90sp a reading was about 270dp against the Kompakt's 288: from a font size just above the default the seconds broke onto a second line or were cut, and a time past 99 minutes did not fit. The digits now take the room the screen has, on one line, whatever the font size.
+- **A turn switched when the finger lifted**, and a quick press that slid on the panel did not count. It switches on touch, as the phone app does, unless "trigger on press" is off.
+- **Every change of screen faded over 700ms**, which E Ink draws as a grey, ghosting change. Screens change at once.
+- **Reversed colours started white**: the window, then the screen, flashed white at every launch before turning black. They start black now, and so does the splash screen on Android 13 and later. The navigation bar's buttons follow the reversed colours too.
+- The labels of the buttons under the clock broke over two lines in Dutch and French.
+- The game area ran under the navigation bar, where a hard press could land on Home.
+- A second tap on Settings opened it twice, and the first Back seemed to do nothing.
+- Each switch was two stops for TalkBack, the label and an unnamed switch; it is one, with its state. The time fields name their time and unit, and take digits only.
+- The keyboard could cover the time fields. The mode cards and the scrollbar's arrows are larger to tap, and a long press on an arrow reaches the real end of the page.
+- Dialogs no longer grey the screen behind them, and the reset confirmation and version dialog survive a change of font size or language.
+- A credit link says when there is no browser to open it.
+
 ## v0.8.35 — 2026-10-30
 
 A large release: a full review of the app, every mode and option, settings and screens, found close

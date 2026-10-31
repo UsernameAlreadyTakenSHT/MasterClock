@@ -1,0 +1,3 @@
+The clock's digits fit the screen whatever the font size, and a turn switches on touch.
+Screens change at once, with no grey fade. Reversed colours start black, with no white flash.
+Easier with TalkBack, the keyboard and a finger.

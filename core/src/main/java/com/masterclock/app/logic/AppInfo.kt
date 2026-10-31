@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-10-30"
+    const val BUILD_DATE = "2026-10-31"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,15 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.36",
+            date = "2026-10-31",
+            notes = listOf(
+                "E-Ink: the clock's digits fit the screen whatever the font size, and a turn switches on touch.",
+                "E-Ink: screens change at once, with no grey fade, and reversed colours start black with no white flash.",
+                "E-Ink: easier with TalkBack, the keyboard and a finger. The other builds have no changes.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.35",
             date = "2026-10-30",
