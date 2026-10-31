@@ -87,7 +87,8 @@ fun TimerScreen(
     val activeMode = activeSettings?.mode
     // The time the countdown beeps count down -- the shared clock in CHRONO and PHASES, the clock that
     // runs out first in Global; see countdownTimeMs.
-    val secondsLeft = activePlayerState?.let { p -> activeMode?.let { countdownTimeMs(state, p, it) / 1000 } } ?: -1L
+    // Nothing during the pause between phases, which no beep counts down: it buzzed 3-2-1.
+    val secondsLeft = activePlayerState?.takeUnless { it.isInInterPhasePause }?.let { p -> activeMode?.let { countdownTimeMs(state, p, it) / 1000 } } ?: -1L
     
     val isGlobalMode = remember(settings.main.mode) {
         settings.main.mode == TimerMode.PHASES
@@ -379,6 +380,9 @@ private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLa
     val message = when {
         phaseLabel != null && announcement is ClockAnnouncement.ToMove -> phaseLabel
         tableClock && announcement is ClockAnnouncement.ToMove -> running
+        // A phase that flags on its end stops the game for the table; "Player 1 is out of time"
+        // named a player nobody is.
+        phaseLabel != null && announcement is ClockAnnouncement.OutOfTime -> clockAnnouncementText(ClockAnnouncement.Finished)
         periodLabel != null && announcement is ClockAnnouncement.ToMove -> "${clockAnnouncementText(announcement)}, $periodLabel"
         else -> clockAnnouncementText(announcement)
     }
@@ -427,7 +431,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     // see countdownTimeMs. It followed the move clock alone, so a reserve at 0:08 under a 0:25 move
     // clock beeped without flashing.
     val lowTimeMs = countdownTimeMs(state, playerState, pSettings.mode)
-    val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && lowTimeMs in 1..10000 && settings.flashOnLowTime
+    // Not during the pause between phases, which no beep counts down either: it flashed its last ten
+    // seconds as if a phase were running out.
+    val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && !playerState.isInInterPhasePause && pSettings.mode != TimerMode.CHRONO_COUNTUP && lowTimeMs in 1..10000 && settings.flashOnLowTime
     val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
     val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
 
@@ -516,7 +522,10 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     }
     // Nobody's turn once the game is over, though the last player to move is still the active one --
     // nor on a clock running for the whole table, where it was "Player 1, your turn" all game.
-    val a11yLabel = if (isActive && !runsForAll && !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) {
+    val a11yLabel = if (pSettings.mode == TimerMode.PHASES) {
+        // One clock for the table: the phase and its time. It read "Player 1, ..., your turn" all game.
+        spokenTime
+    } else if (isActive && !runsForAll && !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 
@@ -595,7 +604,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                 }
                 else {
                     val timeToDisplay = shownTimeMs
-                    TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono || pSettings.mode == TimerMode.PHASES) 100.sp else 64.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace), settings = settings, isNegative = playerState.isNegative)
+                    TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (pSettings.mode == TimerMode.PHASES) 100.sp else if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono) 100.sp else 64.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace), settings = settings, isNegative = playerState.isNegative)
                 }
                 if (state.phasesFinished || tableClockRanOut(state)) {
                     Text(stringResource(R.string.timer_finished), style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = labelColor, fontWeight = FontWeight.ExtraBold)
@@ -611,7 +620,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                         if (playerState.isInByoyomi) Text(stringResource(R.string.timer_byoyomi), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f))
                         // Not in PHASES, whose taps count no moves: it read "P1 MOVES: 0" all game.
                         else if (settings.alwaysShowMoveCount && !isMoveCounts && !(isChrono && settings.isOneForAll) && pSettings.mode != TimerMode.PHASES) { Text(stringResource(R.string.tools_player_short, playerIndex) + " " + stringResource(R.string.timer_moves, playerState.moveCount), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
-                        else if (settings.numberOfPlayers > 2) { Text(stringResource(R.string.common_player_n, playerIndex), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
+                        else if (settings.numberOfPlayers > 2 && pSettings.mode != TimerMode.PHASES) { Text(stringResource(R.string.common_player_n, playerIndex), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = labelColor.copy(alpha = 0.8f)) }
                     }
                 }
             }

@@ -96,4 +96,16 @@ class PhasesEndTest {
 
         assertTrue(end.toProxy().toState().phasesFinished)
     }
+
+    @Test
+    fun `with no phases at all the flag is the table's first`() {
+        val state = ChessClockState(players = listOf(PlayerState(0)), activePlayer = 1)
+        assertEquals(1, nextPhaseState(state, 1, emptyList(), loop = false).firstToFlag)
+    }
+
+    @Test
+    fun `a PHASES game started is kept in the history`() {
+        val log = GameLog(settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.PHASES)), events = listOf(GameEvent(eventType = "RESUME")))
+        assertTrue(log.isWorthKeeping())
+    }
 }

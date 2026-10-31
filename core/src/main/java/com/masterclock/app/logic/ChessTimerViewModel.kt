@@ -206,7 +206,7 @@ internal fun nextPhaseState(state: ChessClockState, playerIndex: Int, phases: Li
     if (phases.isEmpty()) {
         val newList = state.players.toMutableList()
             .apply { this[playerIndex - 1] = p.copy(isOutOfTime = true, timeRemainingMs = 0) }
-        return state.copy(players = newList, globalTimeMs = 0)
+        return state.copy(players = newList, globalTimeMs = 0, firstToFlag = playerIndex)
     }
     var nextIdx = p.currentPhaseIndex + 1
     if (nextIdx >= phases.size) {
@@ -1013,7 +1013,8 @@ data class GameLog(
  */
 internal fun GameLog.isWorthKeeping(): Boolean {
     val s1 = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
-    val tableClock = s1.mode == TimerMode.CHRONO_COUNTDOWN || s1.mode == TimerMode.CHRONO_COUNTUP
+    // PHASES too: a single long phase reset before it ended logged no PHASE, and was dropped.
+    val tableClock = s1.mode == TimerMode.CHRONO_COUNTDOWN || s1.mode == TimerMode.CHRONO_COUNTUP || s1.mode == TimerMode.PHASES
     return events.any { it.eventType == "MOVE" || it.eventType == "FLAG" || it.eventType == "PHASE" || (tableClock && it.eventType == "RESUME") }
 }
 
@@ -1257,9 +1258,11 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
         // Every scalar above was clamped and both lists were left alone. Their length drives how
         // much the settings screen composes at once, and phases additionally drives the clock:
         // see performPhaseAdvance, which loops back to phases[0] and needs there to be one.
+        // An empty list gets one phase, as the FIDE periods below get one period: kept empty, the face
+        // read 0:00, the first tick flagged the game, and the panel offered no phase to edit.
         phases = settings.phases.take(MAX_IMPORTED_PERIODS).map { phase ->
             phase.copy(timeMs = phase.timeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS), name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS))
-        },
+        }.ifEmpty { listOf(GamePhase()) },
         // Bounded above too: a period near Long.MAX_VALUE overflowed as its bonus was added, into a
         // negative clock that flagged on the next tick. An empty list fell back to a default period
         // here and there while the face counted "PERIOD: 1/0"; it gets one stated outright.
@@ -3237,9 +3240,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         lastBeepSecond = -1
         when {
             after.isOutOfTime -> if (!before.isOutOfTime) {
-                handleAudio(before, after, settings, 1)
-                if (!afterState.phasesFinished) handleVoice(before, after, settings, 1)
-                else if (settings.voiceAnnouncementsEnabled) voiceManager.speak(CoreR.string.voice_finished, settings.voiceVolume)
+                if (afterState.phasesFinished) {
+                    // The last phase run out is the end of the game, not a flag: it went through
+                    // handleAudio and was logged FLAG "Time Up", so the export read "P1: FLAG Time
+                    // Up" for a game nobody lost.
+                    if (settings.tripleBeepTimeUp) soundManager.playTripleBeep()
+                    addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Finished"))
+                    if (settings.voiceAnnouncementsEnabled) voiceManager.speak(CoreR.string.voice_finished, settings.voiceVolume)
+                } else {
+                    handleAudio(before, after, settings, 1)
+                    handleVoice(before, after, settings, 1)
+                }
             }
             after.isPhaseAwaitingTap -> if (!before.isPhaseAwaitingTap) {
                 soundManager.playShortBeep()
@@ -3271,7 +3282,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val vol = settings.voiceVolume
         // 1. Time's Up -- or, the table's CHRONO countdown running out, the end of the game.
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
-            if (getPlayerSettings(playerIdx).mode == TimerMode.CHRONO_COUNTDOWN) voiceManager.speak(CoreR.string.voice_finished, vol)
+            // PHASES too, a phase that flags on its end: one clock for the table, and "time is up for
+            // player 1" named a player nobody is.
+            val mode = getPlayerSettings(playerIdx).mode
+            if (mode == TimerMode.CHRONO_COUNTDOWN || mode == TimerMode.PHASES) voiceManager.speak(CoreR.string.voice_finished, vol)
             else voiceManager.speak(CoreR.string.voice_time_up, vol, playerIdx)
             return
         }
@@ -3866,7 +3880,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val currentPhase = s.phases.getOrNull(p.currentPhaseIndex) ?: GamePhase()
         if (currentPhase.flagOnEnd && !skipped) {
             val newList = state.players.toMutableList().apply { this[0] = p.copy(isOutOfTime = true, timeRemainingMs = 0, isPhaseAwaitingTap = false) }
-            return state.copy(players = newList, globalTimeMs = 0, isPaused = true)
+            // firstToFlag as any flag sets it: without it, FLAG drew the flagged clock in the
+            // inactive colour, the game being paused, where the other behaviours drew the loss one.
+            return state.copy(players = newList, globalTimeMs = 0, isPaused = true, firstToFlag = 1)
         }
         // A pause is a wait for the next phase. After the last one of a non-looping game there is
         // none, and a tap on the finished game used to start a fresh PAUSE countdown before the
