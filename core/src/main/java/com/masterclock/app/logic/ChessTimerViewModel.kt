@@ -848,8 +848,12 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
             val moves = period.movesToNext - movesBefore
             "${period.timeMs / 60_000}'" + if (i < last && moves > 0) "/$moves" else ""
         }
-        val first = s.fidePeriods.first()
-        val bonus = if (first.isFischer && first.incrementMs > 0) " + ${first.incrementMs / 1000}s" else ""
+        // The bonus of whichever period has one -- it was read off the first alone, so a bonus that
+        // starts with a later period, "30 seconds from move 61", was left out -- and a delay, which
+        // was never shown: the built-in US 80'/40 + 30' + 30s read "80'/40 + 30'".
+        val bonus = s.fidePeriods.firstOrNull { it.isFischer && it.incrementMs > 0 }?.let { " + ${it.incrementMs / 1000}s" }
+            ?: s.fidePeriods.firstOrNull { !it.isFischer && it.hasDelay && it.incrementMs > 0 }?.let { " d${it.incrementMs / 1000}s" }
+            ?: ""
         return parts.joinToString(" + ") + bonus
     }
 
@@ -914,7 +918,18 @@ fun buildShortcutTargets(
         targets += ShortcutTarget("preset:${preset.id}", preset.name, preset.settings)
     }
     targets += BUILTIN_SHORTCUT_PRESETS
-    return targets.filter { it.label.isNotBlank() }.distinctBy { it.id }.take(max)
+    // One slot per time control for the recent games and the built-ins, the first kept: two games
+    // of 5+0 in a row took two of the four slots with "5 min", and a last game of 3+2 sat beside the
+    // built-in 3 + 2. Compared by what the label says and by mode, since the label alone reads
+    // Fischer, Bronstein and US delay alike. The player's own presets are all kept, each under the
+    // name they gave it, but still count as taken for what comes after them.
+    val seen = HashSet<Pair<String, TimerMode?>>()
+    return targets.filter { it.label.isNotBlank() }.distinctBy { it.id }
+        .filter { t ->
+            val first = seen.add(shortcutLabelFor(t.settings) to t.settings.main.mode.takeUnless { t.settings.differentSettingsPerPlayer })
+            first || t.id.startsWith("preset:")
+        }
+        .take(max)
 }
 
 @Serializable
@@ -2616,7 +2631,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // A built-in keeps the player's flag behaviour and first-move bonus, as on the presets
         // screen; and a shortcut always starts a game, even one matching the clock's.
         val builtIn = !id.startsWith("preset:") && !id.startsWith("game:")
-        updateSettings(applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn, keepFirstMoveBonus = builtIn, keepTable = builtIn), newGame = true)
+        // A shortcut that starts the app finds no game running here, only the autosave of one
+        // interrupted -- the process killed, the app closed mid-game -- and it cleared that, with
+        // no way back. It is kept, so Resume still offers that game. A game running in this process
+        // ends with the shortcut, as with a preset.
+        updateSettings(
+            applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn, keepFirstMoveBonus = builtIn, keepTable = builtIn),
+            newGame = true,
+            keepSavedClock = _uiState.value.activePlayer == null,
+        )
     }
 
     /** A shortcut can outlive the preset or game it points at, hence the nullable result. */
@@ -3477,6 +3500,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
          * game went on and its log was never finished.
          */
         newGame: Boolean = false,
+        /** Leaves the autosave alone when this starts a new game; see applyShortcutNow. */
+        keepSavedClock: Boolean = false,
     ) {
         val oldSettings = _settings.value
         // Shadow the parameter so every use below this line sees the sanitized value; the named
@@ -3545,7 +3570,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             finishCurrentLog()
             // Its autosave ends with it, as Reset clears it. Left behind, the arbitre's Resume
             // brought back the ended game, and new moves were logged after its RESET.
-            clearSavedClock()
+            if (!keepSavedClock) clearSavedClock()
             if (initialStates != null) {
                 // A "Last Games" preset carries its own already-rolled RANDOM/HIDDEN time in
                 // initialStates -- without updating the cache reset() reuses, Reset would silently

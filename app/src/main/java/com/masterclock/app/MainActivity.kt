@@ -124,6 +124,8 @@ class MainActivity : ComponentActivity() {
             // closed, so a mis-tap on a stale export replaced the settings and scoreboard with no
             // way back; only the QR code asked first.
             var pendingFileImport by remember { mutableStateOf<PendingFileImport?>(null) }
+            // A preset picked during a game, waiting for the same confirmation Reset asks for.
+            var pendingPreset by remember { mutableStateOf<(() -> Unit)?>(null) }
 
             val scope = rememberCoroutineScope()
 
@@ -512,17 +514,24 @@ class MainActivity : ComponentActivity() {
                                 // and first-move bonus; see applyPresetTimeControl. Every preset
                                 // starts a game, even one matching the clock's.
                                 onPresetSelected = { set, states, builtIn ->
-                                    timerViewModel.updateSettings(
-                                        applyPresetTimeControl(
-                                            timerViewModel.settings.value, set,
-                                            keepFlagBehavior = builtIn != null && !builtIn.setsFlagBehavior,
-                                            keepFirstMoveBonus = builtIn != null,
-                                            keepTable = builtIn != null,
-                                        ),
-                                        states,
-                                        newGame = true,
-                                    )
-                                    navigator.goBack()
+                                    val apply: () -> Unit = {
+                                        timerViewModel.updateSettings(
+                                            applyPresetTimeControl(
+                                                timerViewModel.settings.value, set,
+                                                keepFlagBehavior = builtIn != null && !builtIn.setsFlagBehavior,
+                                                keepFirstMoveBonus = builtIn != null,
+                                                keepTable = builtIn != null,
+                                            ),
+                                            states,
+                                            newGame = true,
+                                        )
+                                        navigator.goBack()
+                                    }
+                                    // A preset ends the game on the clock, as Reset does, and asks
+                                    // first when Reset would: one brush of a tile in the grid ended
+                                    // a paused game and its autosave, with no way back.
+                                    if (timerViewModel.settings.value.confirmReset && timerViewModel.uiState.value.activePlayer != null) pendingPreset = apply
+                                    else apply()
                                 },
                                 onSavePreset = { timerViewModel.saveCurrentAsPreset(it) },
                                 onRenamePreset = { id, name -> timerViewModel.renamePreset(id, name) },
@@ -583,6 +592,20 @@ class MainActivity : ComponentActivity() {
                                 TextButton(onClick = { pendingScan = null }) {
                                     Text(stringResource(R.string.common_cancel))
                                 }
+                            },
+                        )
+                    }
+
+                    pendingPreset?.let { apply ->
+                        AlertDialog(
+                            onDismissRequest = { pendingPreset = null },
+                            title = { Text(stringResource(R.string.timer_reset_title)) },
+                            text = { Text(stringResource(R.string.timer_reset_message)) },
+                            confirmButton = {
+                                TextButton(onClick = { pendingPreset = null; apply() }) { Text(stringResource(R.string.qr_confirm_apply)) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { pendingPreset = null }) { Text(stringResource(R.string.common_cancel)) }
                             },
                         )
                     }

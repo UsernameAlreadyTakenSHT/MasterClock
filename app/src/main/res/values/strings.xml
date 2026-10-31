@@ -619,7 +619,7 @@
     <string name="preset_desc_fisch_3_2s">Fischer 3:00 +2s</string>
     <string name="preset_desc_fisch_15_10s">Fischer 15:00 +10s</string>
     <string name="preset_desc_90_40_30_30s">90min/40 + 30min (Fischer 30s)</string>
-    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15min (Fischer 30s)</string>
+    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15min (Fischer 30s from move 61)</string>
     <string name="preset_desc_us_5_2s">Sudden Death 5:00, delay 2s</string>
     <string name="preset_desc_us_25_5s">Sudden Death 25:00, delay 5s</string>
     <string name="preset_desc_us_80_40_30_30s">80min/40 + 30min (Delay 30s)</string>

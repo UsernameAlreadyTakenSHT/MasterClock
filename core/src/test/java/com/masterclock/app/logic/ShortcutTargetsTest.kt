@@ -33,7 +33,7 @@ class ShortcutTargetsTest {
     @Test
     fun `recent games come first, then presets, then the built-in padding`() {
         val targets = buildShortcutTargets(
-            history = listOf(log(startTime = 100), log(startTime = 200)),
+            history = listOf(log(startTime = 100), log(startTime = 200, timeMs = 180_000)),
             presets = listOf(preset("Club night", createdAt = 50)),
         )
 
@@ -47,7 +47,7 @@ class ShortcutTargetsTest {
     @Test
     fun `at most two recent games are offered, newest first`() {
         val targets = buildShortcutTargets(
-            history = listOf(log(startTime = 1), log(startTime = 3), log(startTime = 2)),
+            history = listOf(log(startTime = 1, timeMs = 60_000), log(startTime = 3, timeMs = 180_000), log(startTime = 2)),
             presets = emptyList(),
         )
 
@@ -168,5 +168,35 @@ class ShortcutTargetsTest {
         )
 
         assertEquals(listOf("builtin:fischer_3_2", "builtin:fischer_15_10"), targets.map { it.id })
+    }
+
+    @Test
+    fun `one slot per time control, the newest kept`() {
+        val fiveMin = ChessClockSettings(main = PlayerSettings(mode = TimerMode.SUDDEN_DEATH, initialTimeMs = 300_000))
+        val history = listOf(GameLog(startTime = 2, settings = fiveMin), GameLog(startTime = 1, settings = fiveMin))
+        val targets = buildShortcutTargets(history, emptyList())
+        assertEquals(1, targets.count { timeControlLabel(it.settings) == "5 min" })
+        assertEquals("game:2", targets.first().id)
+    }
+
+    @Test
+    fun `the same numbers in another mode are another time control`() {
+        fun game(t: Long, mode: TimerMode) = GameLog(startTime = t, settings = ChessClockSettings(main = PlayerSettings(mode = mode, initialTimeMs = 300_000, incrementMs = 2_000)))
+        val targets = buildShortcutTargets(listOf(game(2, TimerMode.FISCHER), game(1, TimerMode.BRONSTEIN)), emptyList())
+        assertEquals(listOf("game:2", "game:1"), targets.take(2).map { it.id })
+    }
+
+    @Test
+    fun `a FIDE bonus from a later period, and a delay, are in the label`() {
+        fun label(vararg p: FidePeriod) = timeControlLabel(ChessClockSettings(main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = p.toList())))
+        assertEquals("120'/40 + 60'/20 + 15' + 30s", label(
+            FidePeriod(timeMs = 7_200_000, incrementMs = 0, movesToNext = 40, isFischer = true),
+            FidePeriod(timeMs = 3_600_000, incrementMs = 0, movesToNext = 60, isFischer = true),
+            FidePeriod(timeMs = 900_000, incrementMs = 30_000, movesToNext = 0, isFischer = true),
+        ))
+        assertEquals("80'/40 + 30' d30s", label(
+            FidePeriod(timeMs = 4_800_000, incrementMs = 30_000, movesToNext = 40, isFischer = false, hasDelay = true),
+            FidePeriod(timeMs = 1_800_000, incrementMs = 30_000, movesToNext = 0, isFischer = false, hasDelay = true),
+        ))
     }
 }
