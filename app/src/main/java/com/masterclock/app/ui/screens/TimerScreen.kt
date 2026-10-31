@@ -93,8 +93,11 @@ fun TimerScreen(
         settings.main.mode == TimerMode.PHASES
     }
     
-    // Shared (Auto) has no one player on the clock to give the bigger side to; see runsForAll.
-    val growsActiveSide = settings.activePlayerSideBigger && !isGlobalMode && settings.main.mode != TimerMode.MOVE_TIMER_SHARED
+    // Shared (Auto) has no one player on the clock to give the bigger side to; see runsForAll. Nor
+    // has a CHRONO run for the table, whose Play makes player 1 nominally active: their half grew,
+    // and the control bar moved, for a clock that is everyone's.
+    val tableChrono = settings.main.mode.name.startsWith("CHRONO") && settings.isOneForAll
+    val growsActiveSide = settings.activePlayerSideBigger && !isGlobalMode && settings.main.mode != TimerMode.MOVE_TIMER_SHARED && !tableChrono
     val p1Weight by animateFloatAsState(
         targetValue = if (growsActiveSide && (state.activePlayer == 1)) 1.5f else 1f,
         label = "p1Weight",
@@ -134,6 +137,7 @@ fun TimerScreen(
             state,
             if (isGlobalMode) phaseLabel(settings.main, state.players[0]) else null,
             if (activeMode == TimerMode.FIDE_PERIODS && activeSettings != null && activePlayerState != null) fidePeriodLabel(activeSettings, activePlayerState) else null,
+            tableClock = tableChrono,
         )
 
         // PlayerButton gives the press its haptic. The layouts for two players and for PHASES gave it
@@ -361,15 +365,18 @@ private fun fidePeriodLabel(s: PlayerSettings, p: PlayerState): String =
  * Nothing here reacts to the countdown, only to transitions -- see clockAnnouncement.
  */
 @Composable
-private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLabel: String?) {
+private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLabel: String?, tableClock: Boolean = false) {
+    val running = stringResource(R.string.a11y_announce_running)
     val announcement = clockAnnouncement(state) ?: return
     // PHASES has no turn to announce, only the phase: "Player 1 to move" was all a screen reader
     // heard for the whole game, and a new phase or a pause between phases went unannounced. The
     // label changing is what makes the live region speak.
     // A FIDE period changing was announced by voice alone, if the voice was on; the period beside
     // the turn makes the live region speak it.
+    // A CHRONO run for the table has no turn either: "Player 1 to move" on Play and on every resume.
     val message = when {
         phaseLabel != null && announcement is ClockAnnouncement.ToMove -> phaseLabel
+        tableClock && announcement is ClockAnnouncement.ToMove -> running
         periodLabel != null && announcement is ClockAnnouncement.ToMove -> "${clockAnnouncementText(announcement)}, $periodLabel"
         else -> clockAnnouncementText(announcement)
     }
@@ -414,7 +421,11 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val shownTimeMs = displayedTimeMs(state, playerState, pSettings.mode)
     // What is running out, which in Overtime past the move clock is the reserve; see alertTimeMs.
     val alertMs = alertTimeMs(state, playerState, pSettings.mode)
-    val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && alertMs in 1..10000 && settings.flashOnLowTime
+    // The flash warns as the beeps do, of the clock that runs out first in Global and Global Shared;
+    // see countdownTimeMs. It followed the move clock alone, so a reserve at 0:08 under a 0:25 move
+    // clock beeped without flashing.
+    val lowTimeMs = countdownTimeMs(state, playerState, pSettings.mode)
+    val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && pSettings.mode != TimerMode.CHRONO_COUNTUP && lowTimeMs in 1..10000 && settings.flashOnLowTime
     val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
     val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
 

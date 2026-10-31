@@ -143,6 +143,7 @@
     <string name="a11y_announce_out_of_time">Speler %d heeft geen tijd meer</string>
     <string name="a11y_announce_finished">De partij is afgelopen</string>
     <string name="a11y_announce_paused">Gepauzeerd</string>
+    <string name="a11y_announce_running">Klok loopt</string>
     <string name="a11y_announce_to_move">Speler %d is aan zet</string>
     <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
     <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>

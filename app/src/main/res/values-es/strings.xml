@@ -144,6 +144,7 @@
     <string name="a11y_announce_out_of_time">El jugador %d se ha quedado sin tiempo</string>
     <string name="a11y_announce_finished">La partida ha terminado</string>
     <string name="a11y_announce_paused">En pausa</string>
+    <string name="a11y_announce_running">Reloj en marcha</string>
     <string name="a11y_announce_to_move">Le toca al jugador %d</string>
     <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
     <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
