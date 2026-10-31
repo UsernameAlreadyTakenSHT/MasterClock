@@ -161,6 +161,37 @@ class ChessTimerLogicTest {
         assertEquals(99_000, next.timeRemainingMs)
     }
 
+    @Test
+    fun `FAST_MOVE ACCELERATE keeps one clock for the game and restarts the acceleration each move`() {
+        val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.ACCELERATE, initialTimeMs = 100_000, fastMoveGracePeriodMs = 5000, fastMoveAccelRate = 1f)
+        val settings = ChessClockSettings(main = s)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 80_000, initialTotalTimeMs = 100_000), PlayerState(100_000)), activePlayer = 1)
+        val after = computePostMoveState(state, 1, timeSpentOnMove = 20_000, settings, s).players[0]
+        assertEquals(80_000, after.timeRemainingMs) // not refilled to the initial time
+        assertEquals(79_000, tickPlayer(after, 1000, s, settings).timeRemainingMs) // inside the new move's grace period
+        val late = after.copy(timeRemainingMs = 74_000)
+        assertEquals(72_000, tickPlayer(late, 1000, s, settings).timeRemainingMs) // 6s into the move: twice the speed
+    }
+
+    @Test
+    fun `FAST_MOVE ACCELERATE keeps an overrun past the move`() {
+        val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.ACCELERATE)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE)
+        val over = PlayerState(timeRemainingMs = 3000, isOutOfTime = true, isNegative = true, initialTotalTimeMs = 20_000)
+        val after = computePostMoveState(ChessClockState(players = listOf(over, PlayerState(0)), activePlayer = 1), 1, 0, settings, s).players[0]
+        assertEquals(3000, after.timeRemainingMs)
+        assertTrue(after.isOutOfTime && after.isNegative)
+    }
+
+    @Test
+    fun `the arbiter's time moves the Accelerate mark with it`() {
+        val before = PlayerState(timeRemainingMs = 50_000, initialTotalTimeMs = 58_000)
+        val given = before.copy(timeRemainingMs = 110_000).withAccelerateMarkFrom(before)
+        assertEquals(118_000, given.initialTotalTimeMs) // still 8s spent on the move
+        val back = PlayerState(timeRemainingMs = 60_000).withAccelerateMarkFrom(before.copy(isOutOfTime = true))
+        assertEquals(60_000, back.initialTotalTimeMs)
+    }
+
     // --- computePostMoveState: what happens to the mover (and possibly the opponent) after a move ---
 
     @Test

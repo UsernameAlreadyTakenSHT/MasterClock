@@ -1761,6 +1761,8 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
         TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN -> p
         TimerMode.FAST_MOVE -> {
             val effectiveDelta = if (s.fastMoveMode == FastMoveType.ACCELERATE && !p.isOutOfTime) {
+                // The clock runs for the whole game, and initialTotalTimeMs is where it stood when
+                // this move began: the acceleration starts again with every move.
                 val timeSpent = p.initialTotalTimeMs - p.timeRemainingMs
                 val accel = when {
                     timeSpent >= s.fastMoveFastPeriodMs -> s.fastMoveFullAccelRate
@@ -2078,6 +2080,18 @@ internal fun PlayerState.arbiterCredited(amountMs: Long, flagBehavior: FlagBehav
     return if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false) else c
 }
 
+/**
+ * Fast Move's Accelerate measures the time spent on a move from where the clock stood when the
+ * move began, [PlayerState.initialTotalTimeMs]. Time the arbiter gives or takes moves that mark
+ * with it: a minute given would otherwise have read as a minute less spent, and held the
+ * acceleration back by as much. A player the credit brings back into play starts from a new mark.
+ */
+internal fun PlayerState.withAccelerateMarkFrom(before: PlayerState): PlayerState = when {
+    isOutOfTime -> this
+    before.isOutOfTime -> copy(initialTotalTimeMs = timeRemainingMs)
+    else -> copy(initialTotalTimeMs = before.initialTotalTimeMs + (timeRemainingMs - before.timeRemainingMs))
+}
+
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
     val p = state.players[playerIndex - 1]
     val tempP = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) {
@@ -2204,13 +2218,17 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         }
         TimerMode.FAST_MOVE -> {
             // TRANSFER is handled above (needs to update the opponent too); only SHRINK/ACCELERATE reach here.
-            // Each move starts a fresh allowance, so an overrun of the last one ends with it.
-            val fresh = if (p.isOverrun(settings.flagBehavior)) tempP.copy(isNegative = false, isOutOfTime = false) else tempP
             if (s.fastMoveMode == FastMoveType.SHRINK) {
+                // Each move starts a fresh allowance, so an overrun of the last one ends with it.
+                val fresh = if (p.isOverrun(settings.flagBehavior)) tempP.copy(isNegative = false, isOutOfTime = false) else tempP
                 val nextTurnStartTime = (p.initialTotalTimeMs - s.fastMoveShrinkDecrementMs).coerceAtLeast(s.fastMoveShrinkFloorMs)
                 fresh.copy(timeRemainingMs = nextTurnStartTime, initialTotalTimeMs = nextTurnStartTime)
             } else {
-                fresh.copy(timeRemainingMs = s.initialTimeMs, initialTotalTimeMs = s.initialTimeMs)
+                // ACCELERATE is one clock for the whole game, as Sudden Death is: nothing is
+                // refilled, and an overrun stands. It refilled to the initial time on every move,
+                // which made it a move timer. What starts again is the acceleration, measured from
+                // here: the clock as the player's next move will find it.
+                tempP.copy(initialTotalTimeMs = p.timeRemainingMs)
             }
         }
         else -> tempP
@@ -3566,7 +3584,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     },
                 )
                 else -> state.copy(players = state.players.mapIndexed { idx, p ->
-                    if (wholeTable || idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior)
+                    if (wholeTable || idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
+                        val ps = getPlayerSettings(idx + 1)
+                        if (ps.mode == TimerMode.FAST_MOVE && ps.fastMoveMode == FastMoveType.ACCELERATE) it.withAccelerateMarkFrom(p) else it
+                    }
                     else p
                 })
             }
