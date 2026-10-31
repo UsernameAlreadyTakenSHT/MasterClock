@@ -27,8 +27,8 @@
     <string name="preset_manage_action">Renomear ou excluir</string>
 
     <!-- Spellings: -ônico rather than -ónico -->
-    <string name="settings_bonus_type">Tipo de bônus</string>
-    <string name="settings_chrono_type">Tipo de cronômetro</string>
+    <string name="settings_bonus_type">Tipo de Bonus</string>
+    <string name="settings_chrono_type">Tipo de Chronos</string>
     <string name="settings_increment_bonus">Incremento / bônus</string>
     <string name="settings_fischer_fide">Fischer FIDE (bônus a partir do lance 0)</string>
     <string name="settings_show_percentage">Mostrar os alertas de porcentagem</string>
@@ -88,8 +88,8 @@
     <string name="omni_cfg_enable_turn_timer">Ativar o relógio de turno</string>
     <string name="omni_cfg_round_timer">Relógio de rodada</string>
     <string name="omni_cfg_turn_timer">Relógio de turno</string>
-    <string name="omni_cfg_cutoff_round">Cortar a direito ao fim do tempo de rodada</string>
-    <string name="omni_cfg_cutoff_turn">Cortar a direito ao fim do tempo de turno</string>
+    <string name="omni_cfg_cutoff_round">Interromper ao esgotar o tempo de rodada</string>
+    <string name="omni_cfg_cutoff_turn">Interromper ao esgotar o tempo de turno</string>
     <string name="omni_cfg_turn_disabled">Relógio de turno desativado.</string>
     <string name="omni_cfg_round">Rodada</string>
     <string name="omni_cfg_rounds">Rodadas</string>
@@ -102,7 +102,7 @@
     <string name="omni_cfg_delete_game">Excluir a partida %d</string>
     <string name="omni_cfg_delete_phase">Excluir a fase %d</string>
     <string name="omni_cfg_summary_rounds_varied">• Rodadas por partida: %s</string>
-    <string name="omni_cfg_phases_exceed">Partida «%1$s», rodada «%2$s», %3$s: as fases excedem o tempo de turno!</string>
+    <string name="omni_cfg_phases_exceed">Partida “%1$s”, rodada “%2$s”, %3$s: as fases excedem o tempo de turno!</string>
     <string name="omni_cfg_turns">Turnos</string>
     <string name="omni_cfg_round_name">Nome da rodada</string>
     <string name="omni_cfg_add_round">Adicionar uma rodada</string>
@@ -117,7 +117,7 @@
     <string name="omni_cfg_turn_pause">Pausa de turno</string>
     <string name="omni_cfg_round_pause">Pausa de rodada</string>
     <string name="omni_cfg_pause_deducts_round">A pausa desconta da rodada</string>
-    <string name="omni_cfg_turn_beep">Apito de turno</string>
+    <string name="omni_cfg_turn_beep">Bipe de turno</string>
     <string name="omni_cfg_round_gong">Gong de rodada</string>
     <string name="omni_progress_round">Rodada %1$d/%2$d</string>
     <string name="omni_running">EM ANDAMENTO</string>
@@ -133,13 +133,50 @@
 
     <!-- Timer screen -->
     <string name="timer_switch_turn">Trocar o turno</string>
-    <string name="preset_desc_can_byo_60">Byoyomi canadense: 60 min + 5 min/20 lances</string>
+    <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 min + 5 min/20 lances</string>
     <string name="preset_shortcut_deleted">Esta predefinição foi excluída</string>
     <string name="omni_cfg_unbalanced_explain">Todos os jogadores têm a mesma probabilidade a cada turno: um deles pode realmente ficar com a maior parte de uma rodada.</string>
     <string name="import_confirm_message">Este arquivo substitui suas configurações atuais. As partidas, predefinições, notas e resultados do placar dele são adicionados aos seus: nada seu é apagado.</string>
-    <string name="back_press_again_to_exit">Toque em Voltar de novo para sair</string>
+    <string name="back_press_again_to_exit">Pressione Voltar de novo para sair</string>
     <string name="a11y_announce_running">Relógio rodando</string>
     <string name="toast_backup_too_large">Backup não salvo: seria grande demais para restaurar.</string>
     <string name="toast_export_too_large">Partidas demais para um arquivo de configurações: use o backup completo.</string>
     <string name="settings_random_shared_draw">Os dois jogadores recebem o sorteio do jogador 1: defina os intervalos na aba do jogador 1.</string>
+    <string name="timer_save_clock">Salvar</string>
+    <string name="toast_import_failed">Falha na importação: não foi possível ler o arquivo.</string>
+    <string name="toast_export_failed">Falha na exportação: não foi possível gravar o arquivo.</string>
+    <string name="import_confirm_title">Importar este arquivo?</string>
+    <string name="toast_no_voice">Não há nenhuma voz de síntese disponível. Instale uma nas configurações do dispositivo para ouvir os anúncios.</string>
+    <string name="toast_sound_not_kept">O app não consegue manter o acesso a esse arquivo, então ele pararia de tocar depois de reiniciar. Escolha um som do armazenamento do dispositivo.</string>
+    <string name="qr_confirm_title">Aplicar as configurações escaneadas?</string>
+    <string name="qr_confirm_message">Este código substitui suas configurações atuais e pode adicionar partidas e um placar. Só aceite um código de alguém em quem você confia.</string>
+    <string name="settings_clear_logs_message">Todo o histórico registrado será excluído definitivamente.</string>
+    <string name="share_export_intro">Escolha como quer compartilhar ou salvar seus dados.</string>
+    <string name="share_export_full">Exportar tudo (backup completo)</string>
+    <string name="share_import_full">Importar um backup completo</string>
+    <string name="toast_backup_ok">Backup concluído!</string>
+    <string name="settings_phase_placeholder">Preparação, rodada X…</string>
+    <string name="omni_reset_message">Todo o progresso de rodadas e partidas será perdido.</string>
+    <string name="settings_more_auto_switch">Trocar o turno automaticamente</string>
+    <string name="settings_more_scoreboard">Placar</string>
+    <string name="timer_arbitre_control">Controle do árbitro</string>
+    <string name="stats_empty">Ainda não há partidas terminadas.\n\nUma partida é registrada quando você a zera: jogue uma partida e toque em Zerar para ver aqui suas estatísticas.</string>
+    <string name="omni_cfg_ready">Pronto para jogar</string>
+    <string name="omni_next">Próximo</string>
+    <string name="omni_next_player">Próximo: jogador %d</string>
+    <string name="omni_cfg_next_step">Próximo passo</string>
+    <string name="settings_moves_unlock">Lances para desbloquear o próximo (0 = final)</string>
+    <string name="preset_delete_title">Excluir “%s”?</string>
+    <string name="settings_countdown_beep">Bipe da contagem regressiva</string>
+    <string name="settings_haptic_countdown">Contagem regressiva tátil</string>
+    <string name="settings_beep_countdown_sound">Bipe (contagem regressiva)</string>
+    <string name="settings_triple_beep">Bipe triplo ao esgotar o tempo</string>
+    <string name="settings_final_beep_sound">Bipe final (tempo esgotado)</string>
+    <string name="settings_beep">Bipe</string>
+    <string name="omni_cfg_final_beep">Bipe final</string>
+    <string name="omni_cfg_launch_countdown">Contagem regressiva de início</string>
+    <string name="settings_cumulative_explain">Cada lance recebe o tempo por lance mais o tempo que o adversário gastou no último lance dele. Ligado, o que sobrou dos lances anteriores também é mantido; desligado, é perdido.</string>
+    <string name="omni_cfg_cutoff_session">Interromper ao esgotar o tempo de sessão</string>
+    <string name="omni_cfg_cutoff_game">Interromper ao esgotar o tempo de partida</string>
+    <string name="omni_cfg_cutoff_phase">Interromper ao esgotar o tempo de fase</string>
 </resources>

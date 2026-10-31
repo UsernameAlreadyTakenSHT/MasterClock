@@ -58,4 +58,20 @@
         <item quantity="other">Canudos: %d</item>
     </plurals>
     <string name="qr_open_settings">Abrir configurações do app</string>
+    <string name="qr_share_title">Compartilhar por código QR</string>
+    <string name="tools_notebook_full">O caderno está cheio. Exclua uma nota para adicionar outra.</string>
+    <string name="tools_reset_scoreboard">Zerar o placar</string>
+    <string name="rules_intro">Documentos de referência, consultáveis offline.</string>
+    <string name="board_connected">Pronto para receber lances</string>
+    <string name="guide_omni_desc">Estação profissional de 6 níveis para estruturas de jogo complexas (partidas &gt; rodadas &gt; turnos &gt; fases).</string>
+    <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou por turnos).</string>
+    <string name="guide_section_bonus">Motores com bônus</string>
+    <string name="guide_chrono_countup_desc">Modo cronômetro que mede o tempo total decorrido.</string>
+    <string name="guide_chrono_countdown_desc">Relógio principal em contagem regressiva durante toda a partida.</string>
+    <string name="guide_move_global_shared_desc">Todos os jogadores compartilham uma reserva global e têm ainda um relógio de lance próprio.</string>
+    <string name="guide_chrono_one_for_all_desc">Relógio global que não muda de jogador quando os botões são pressionados.</string>
+    <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total se mantém constante.</string>
+    <string name="guide_fast_move_desc">Premia os lances rápidos. Accelerate: quanto mais você pensa, mais rápido corre seu relógio. Shrink: cada lance tem menos tempo, até um mínimo. Transfer: o tempo que você gasta passa para o adversário.</string>
+    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeira.</string>
+    <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as porcentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
 </resources>
