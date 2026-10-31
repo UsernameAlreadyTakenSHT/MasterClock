@@ -53,7 +53,7 @@
     <string name="guide_bonus_fischer_desc">Aggiunge un tempo fisso (incremento) DOPO ogni mossa.</string>
     <string name="guide_bonus_us_delay_desc">Un ritardo prima del conteggio. L\'orologio attende la durata del ritardo prima di iniziare a scorrere.</string>
     <string name="guide_byoyomi_canadian_desc">I giocatori devono completare un numero preciso di mosse in un unico periodo più lungo.</string>
-    <string name="guide_byoyomi_japanese_desc">Dopo il tempo principale i giocatori dispongono di una serie di periodi brevi, azzerati a ogni mossa.</string>
+    <string name="guide_byoyomi_japanese_desc">Dopo il tempo principale i giocatori dispongono di una serie di periodi brevi, che ripartono da capo a ogni mossa.</string>
     <string name="guide_byoyomi_progressive_desc">Il numero di mosse richieste cresce a ogni periodo completato.</string>
     <string name="guide_chrono_countdown_desc">Orologio principale che conta alla rovescia per tutta la partita.</string>
     <string name="guide_chrono_countup_desc">Modalità cronometro che misura il tempo totale trascorso.</string>
@@ -68,7 +68,7 @@
     <string name="guide_move_global_desc">Tempo per mossa e tempo globale scorrono insieme. Entrambi devono restare sopra lo zero.</string>
     <string name="guide_move_global_shared_desc">Tutti i giocatori condividono una riserva globale e hanno inoltre un timer di mossa personale.</string>
     <string name="guide_move_overtime_desc">Superare il tempo di mossa attinge a una riserva globale secondaria.</string>
-    <string name="guide_move_save_cap_desc">Il tempo di mossa non usato passa alla mossa successiva, fino a un tetto massimo sul cronometro.</string>
+    <string name="guide_move_save_cap_desc">Il tempo di mossa non usato passa alla mossa successiva, fino a un tetto massimo sull\'orologio.</string>
     <string name="guide_move_shared_desc">Un solo orologio per tutti i giocatori. Cambia automaticamente a 0:00.</string>
     <string name="guide_move_standard_desc">Torna a una durata fissa a ogni mossa.</string>
     <string name="guide_omni_desc">Stazione professionale a 6 livelli per strutture di gioco complesse (partite &gt; manche &gt; turni &gt; fasi).</string>
@@ -77,7 +77,7 @@
     <string name="guide_section_advanced">Motori avanzati e sperimentali</string>
     <string name="guide_section_bonus">Motori con bonus</string>
     <string name="guide_section_specialty">Motori speciali</string>
-    <string name="guide_sudden_death_standard_desc">Conteggio puro. Il primo giocatore che arriva a 0:00 perde o cade.</string>
+    <string name="guide_sudden_death_standard_desc">Conteggio puro. Il primo giocatore che arriva a 0:00 perde o gli cade la bandierina.</string>
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Allinea il codice nell\'inquadratura</string>
@@ -98,7 +98,7 @@
     <string name="a11y_piece_rook">Torre</string>
     <string name="a11y_piece_bishop">Alfiere</string>
     <string name="a11y_piece_knight">Cavallo</string>
-    <string name="a11y_board_back_ranks">Bianco, da a a h: %1$s. Nero: %2$s.</string>
+    <string name="a11y_board_back_ranks">Bianco, dalla a alla h: %1$s. Nero: %2$s.</string>
     <string name="toast_mic_permission">Serve il permesso del microfono.</string>
     <string name="toast_note_deleted">Nota eliminata</string>
     <string name="toast_permission_granted">Permesso concesso. Tocca di nuovo Registra.</string>
