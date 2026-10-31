@@ -109,7 +109,7 @@
     <string name="settings_allow_skip">Consenti di saltare a mano (tocca per anticipare)</string>
     <string name="settings_phase_placeholder">Preparazione, manche X…</string>
     <string name="settings_cumulative_transfer">Trasferimento cumulativo</string>
-    <string name="settings_cumulative_explain">Se disattivato, all\'avversario passa solo il tempo speso nell\'ultima mossa.</string>
+    <string name="settings_cumulative_explain">Ogni mossa riceve il tempo per mossa più il tempo che l\'avversario ha usato nella sua ultima mossa. Se attivo, ciò che restava dalle mosse precedenti si conserva; se disattivato, si perde.</string>
     <string name="settings_one_for_all">One for All (senza tocchi)</string>
 
     <string name="settings_select_custom_color">Scegli un colore personalizzato</string>

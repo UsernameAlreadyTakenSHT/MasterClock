@@ -2111,18 +2111,22 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         // players under FLAG it could go to a player already eliminated, and the one about to move
         // got nothing.
         val recipient = nextPlayerInTurn(playerIndex, state.players, settings.numberOfPlayers, fb) - 1
-        // Cumulative: the time spent is added to the opponent's, and the mover keeps what is left of
-        // their own -- time moves across the table and nothing is lost. The mover's clock used to be
-        // refilled to the move time all the same, so nothing ever accumulated: "cumulative" meant the
-        // base time plus the last move. Not cumulative: the opponent gets exactly the time just
-        // spent, and the mover starts again from the move time.
+        // The next move gets the move time plus the time just spent. Cumulative keeps what the
+        // player had left from their earlier moves on top of that, and the mover keeps what is left
+        // of their own; not cumulative, what was left is lost. Both gave the time spent alone,
+        // without the move time: not cumulative, a move answered in a second left the reply one
+        // second to be played in.
+        //
+        // The clock a player starts with is their first move's time, not a reserve: until they have
+        // moved, it is replaced, or cumulative would have given the second player two move times.
+        val gift = s.moveTimeMs + timeSpentOnMove
         val movedP = if (s.fastMoveTransferCumulative) tempP
             else tempP.copy(timeRemainingMs = s.moveTimeMs).let { if (p.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
         val newList = state.players.toMutableList().apply { this[playerIndex - 1] = movedP }
         if (recipient != playerIndex - 1) {
             val opponent = state.players[recipient]
-            newList[recipient] = if (s.fastMoveTransferCumulative) opponent.credited(timeSpentOnMove, fb)
-                else opponent.copy(timeRemainingMs = timeSpentOnMove).let { if (opponent.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
+            newList[recipient] = if (s.fastMoveTransferCumulative && opponent.moveCount > 0) opponent.credited(gift, fb)
+                else opponent.copy(timeRemainingMs = gift).let { if (opponent.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
         }
         return state.copy(players = newList)
     }

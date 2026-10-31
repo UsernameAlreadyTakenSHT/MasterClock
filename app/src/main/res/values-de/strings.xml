@@ -110,7 +110,7 @@
     <string name="settings_allow_skip">Manuelles Überspringen erlauben (tippen, um vorzurücken)</string>
     <string name="settings_phase_placeholder">Vorbereitung, Runde X…</string>
     <string name="settings_cumulative_transfer">Kumulative Übertragung</string>
-    <string name="settings_cumulative_explain">Ist dies aus, wird nur die Zeit des allerletzten Zuges an den Gegner abgegeben.</string>
+    <string name="settings_cumulative_explain">Jeder Zug erhält die Zeit pro Zug plus die Zeit, die der Gegner für seinen letzten Zug gebraucht hat. Ist dies an, bleibt der Rest aus früheren Zügen erhalten; ist es aus, verfällt er.</string>
     <string name="settings_one_for_all">One for All (ohne Tippen)</string>
 
     <string name="settings_select_custom_color">Eigene Farbe wählen</string>

@@ -112,7 +112,7 @@
     <string name="settings_allow_skip">Allow manual skip (tap to advance early)</string>
     <string name="settings_phase_placeholder">Preparation, Round X…</string>
     <string name="settings_cumulative_transfer">Cumulative Transfer</string>
-    <string name="settings_cumulative_explain">If off, only the time spent on the very last move is given to the opponent.</string>
+    <string name="settings_cumulative_explain">Each move gets the move time plus the time the opponent spent on their last move. On, what was left from earlier moves is kept as well; off, it is lost.</string>
     <string name="settings_one_for_all">One for All (no clicks)</string>
 
     <string name="settings_select_custom_color">Select Custom Color</string>

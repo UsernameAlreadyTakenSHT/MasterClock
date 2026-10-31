@@ -115,7 +115,7 @@
     <string name="settings_allow_skip">Autoriser le passage manuel (appuyer pour avancer)</string>
     <string name="settings_phase_placeholder">Préparation, manche X…</string>
     <string name="settings_cumulative_transfer">Transfert cumulatif</string>
-    <string name="settings_cumulative_explain">Si désactivé, seul le temps passé sur le tout dernier coup est donné à l\'adversaire.</string>
+    <string name="settings_cumulative_explain">Chaque coup reçoit le temps par coup plus le temps passé par l\'adversaire sur son dernier coup. Activé, ce qui restait des coups précédents est conservé ; désactivé, il est perdu.</string>
     <string name="settings_one_for_all">One for All (sans appui)</string>
 
     <string name="settings_select_custom_color">Choisir une couleur personnalisée</string>

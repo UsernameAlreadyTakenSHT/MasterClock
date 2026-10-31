@@ -114,7 +114,7 @@
     <string name="settings_allow_skip">Permitir avançar manualmente (tocar para adiantar)</string>
     <string name="settings_phase_placeholder">Preparação, ronda X…</string>
     <string name="settings_cumulative_transfer">Transferência cumulativa</string>
-    <string name="settings_cumulative_explain">Se estiver desligado, só o tempo gasto no último lance passa para o adversário.</string>
+    <string name="settings_cumulative_explain">Cada lance recebe o tempo por lance mais o tempo que o adversário gastou no seu último lance. Ligado, o que sobrava dos lances anteriores mantém-se; desligado, perde-se.</string>
     <string name="settings_one_for_all">One for All (sem toques)</string>
 
     <string name="settings_select_custom_color">Escolher uma cor personalizada</string>

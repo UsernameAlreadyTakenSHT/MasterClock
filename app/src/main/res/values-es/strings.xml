@@ -110,7 +110,7 @@
     <string name="settings_allow_skip">Permitir avanzar manualmente (pulsar para adelantar)</string>
     <string name="settings_phase_placeholder">Preparación, ronda X…</string>
     <string name="settings_cumulative_transfer">Transferencia acumulativa</string>
-    <string name="settings_cumulative_explain">Si está desactivado, solo se cede al rival el tiempo empleado en la última jugada.</string>
+    <string name="settings_cumulative_explain">Cada jugada recibe el tiempo por jugada más el tiempo que el rival empleó en su última jugada. Activado, se conserva lo que quedaba de las jugadas anteriores; desactivado, se pierde.</string>
     <string name="settings_one_for_all">One for All (sin pulsar)</string>
 
     <string name="settings_select_custom_color">Elegir un color personalizado</string>

@@ -109,7 +109,7 @@
     <string name="settings_allow_skip">Handmatig overslaan toestaan (tik om door te gaan)</string>
     <string name="settings_phase_placeholder">Voorbereiding, ronde X…</string>
     <string name="settings_cumulative_transfer">Cumulatieve overdracht</string>
-    <string name="settings_cumulative_explain">Staat dit uit, dan gaat alleen de tijd van de allerlaatste zet naar de tegenstander.</string>
+    <string name="settings_cumulative_explain">Elke zet krijgt de tijd per zet plus de tijd die de tegenstander aan zijn laatste zet besteedde. Staat dit aan, dan blijft wat over was van eerdere zetten behouden; staat het uit, dan vervalt het.</string>
     <string name="settings_one_for_all">One for All (zonder tikken)</string>
 
     <string name="settings_select_custom_color">Eigen kleur kiezen</string>

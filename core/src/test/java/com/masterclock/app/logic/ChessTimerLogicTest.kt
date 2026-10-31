@@ -290,20 +290,20 @@ class ChessTimerLogicTest {
         // into the returned state, so the opponent silently never received the transferred time.
         val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = true, moveTimeMs = 30_000)
         val settings = ChessClockSettings(main = s, numberOfPlayers = 2)
-        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 5000), PlayerState(timeRemainingMs = 8000)), activePlayer = 1)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 5000), PlayerState(timeRemainingMs = 8000, moveCount = 3)), activePlayer = 1)
         val next = computePostMoveState(state, playerIndex = 1, timeSpentOnMove = 3000, settings = settings, s = s)
         assertEquals(5000, next.players[0].timeRemainingMs) // cumulative: the mover keeps what is left
-        assertEquals(11_000, next.players[1].timeRemainingMs) // opponent gains the 3s spent on the move
+        assertEquals(41_000, next.players[1].timeRemainingMs) // 8s kept + 30s move time + the 3s spent
     }
 
     @Test
     fun `FAST_MOVE TRANSFER gives the time to the next player still in the game`() {
         val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = true, moveTimeMs = 30_000)
         val settings = ChessClockSettings(main = s, numberOfPlayers = 3, flagBehavior = FlagBehavior.FLAG)
-        val players = listOf(PlayerState(5000), PlayerState(0, isOutOfTime = true), PlayerState(8000))
+        val players = listOf(PlayerState(5000), PlayerState(0, isOutOfTime = true), PlayerState(8000, moveCount = 2))
         val next = computePostMoveState(ChessClockState(players = players, activePlayer = 1), 1, 3000, settings, s)
         assertEquals(0, next.players[1].timeRemainingMs)
-        assertEquals(11_000, next.players[2].timeRemainingMs)
+        assertEquals(41_000, next.players[2].timeRemainingMs)
     }
 
     @Test
@@ -319,12 +319,21 @@ class ChessTimerLogicTest {
     }
 
     @Test
-    fun `FAST_MOVE TRANSFER non-cumulative replaces the opponent's time with exactly the time spent`() {
+    fun `FAST_MOVE TRANSFER non-cumulative gives the move time plus the time spent, and drops what was left`() {
         val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = false, moveTimeMs = 30_000)
         val settings = ChessClockSettings(main = s, numberOfPlayers = 2)
-        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 5000), PlayerState(timeRemainingMs = 999)), activePlayer = 1)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 5000), PlayerState(timeRemainingMs = 999, moveCount = 3)), activePlayer = 1)
         val next = computePostMoveState(state, 1, timeSpentOnMove = 4000, settings, s)
-        assertEquals(4000, next.players[1].timeRemainingMs)
+        assertEquals(34_000, next.players[1].timeRemainingMs)
+    }
+
+    @Test
+    fun `FAST_MOVE TRANSFER cumulative does not count the starting clock as a reserve`() {
+        val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = true, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, numberOfPlayers = 2)
+        val state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 26_000), PlayerState(timeRemainingMs = 30_000)), activePlayer = 1)
+        val next = computePostMoveState(state, 1, timeSpentOnMove = 4000, settings, s)
+        assertEquals(34_000, next.players[1].timeRemainingMs) // the first move: move time + the 4s, not 64s
     }
 
     @Test
