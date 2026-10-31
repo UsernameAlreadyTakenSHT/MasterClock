@@ -1232,9 +1232,17 @@ private val NOTE_IMAGE_NAME = Regex("""image_[A-Za-z0-9-]{1,64}\.jpg""")
 private val NOTE_VIDEO_NAME = Regex("""video_[A-Za-z0-9-]{1,64}\.mp4""")
 
 /**
- * Accept an imported note media path only if it names a file the notebook itself could have
- * written: `filesDir/audio_<id>.mp4`, `filesDir/shares/image_<id>.jpg` or
- * `filesDir/shares/video_<id>.mp4`.
+ * The note media path a stored or imported path stands for on this device, or null if it names
+ * nothing the notebook itself could have written: `filesDir/audio_<id>.mp4`,
+ * `filesDir/shares/image_<id>.jpg` or `filesDir/shares/video_<id>.mp4`.
+ *
+ * Only the file name is read, and the path is rebuilt from it in this device's own sandbox. The
+ * whole path used to be kept when it already sat there, and dropped otherwise -- but a sandbox's
+ * absolute path is not the same everywhere: another user or a work profile, a debug build against a
+ * release one, the app moved to adopted storage. A backup restored across any of those lost every
+ * link and every media file without a word, and on adopted storage the launch-time pass dropped the
+ * device's own links. A name is the same everywhere, and a rebuilt path cannot point anywhere a
+ * note's own could not.
  *
  * Containment in the sandbox used to be the whole test, and that is not the same question. The
  * app's own DataStore lives at `filesDir/datastore/settings.preferences_pb`, which is inside
@@ -1256,17 +1264,15 @@ private val NOTE_VIDEO_NAME = Regex("""video_[A-Za-z0-9-]{1,64}\.mp4""")
 internal fun sanitizeImportedMediaPath(filesDirRaw: java.io.File, path: String?): String? {
     if (path.isNullOrBlank()) return null
     return try {
-        val canonical = java.io.File(path).canonicalFile
+        // The name alone, after the last separator of either kind: a path written on Windows-like
+        // tooling, or "..", has no say in where the file is. The patterns admit no separator.
+        val name = path.substringAfterLast('/').substringAfterLast('\\')
         val filesDir = filesDirRaw.canonicalFile
-        val sharesDir = java.io.File(filesDir, "shares").canonicalFile
-        val parent = canonical.parentFile ?: return null
-        val name = canonical.name
-        val allowed = when {
-            parent == filesDir -> NOTE_AUDIO_NAME.matches(name)
-            parent == sharesDir -> NOTE_IMAGE_NAME.matches(name) || NOTE_VIDEO_NAME.matches(name)
-            else -> false
+        when {
+            NOTE_AUDIO_NAME.matches(name) -> java.io.File(filesDir, name).path
+            NOTE_IMAGE_NAME.matches(name) || NOTE_VIDEO_NAME.matches(name) -> java.io.File(java.io.File(filesDir, "shares"), name).path
+            else -> null
         }
-        if (allowed) canonical.path else null
     } catch (_: Exception) {
         null
     }

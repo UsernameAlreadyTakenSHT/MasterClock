@@ -603,7 +603,7 @@ class MainActivity : ComponentActivity() {
                                             pending.archive?.let { open ->
                                                 ZipBackupManager.restoreMedia(
                                                     open = open,
-                                                    destinations = ZipBackupManager.mediaDestinations(context.filesDir, pkg.settings.notebookNotes),
+                                                    destinations = ZipBackupManager.restoreDestinations(context.filesDir, timerViewModel.settings.value.notebookNotes, pkg.settings.notebookNotes),
                                                     stagingDir = File(context.filesDir, "restore_staging"),
                                                 )
                                             }

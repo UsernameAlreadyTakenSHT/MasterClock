@@ -240,13 +240,12 @@ class ZipBackupManagerTest {
         val archive = backUp(source, notes)
 
         val target = sandbox()
-        // On the other device the notes arrive naming its own sandbox, as they would after
-        // sanitizeImportedSettings; here the two sandboxes stand in for the two devices.
-        val arrived = mediaNotes(target)
+        // The notes arrive naming the source's sandbox, as they do from another device; the two
+        // sandboxes stand in for the two devices, and nothing rewrites the paths beforehand.
         val pkg = ZipBackupManager.extractBackup(archive)
         val restored = ZipBackupManager.restoreMedia(
             open = { archive.inputStream() },
-            destinations = ZipBackupManager.mediaDestinations(target, arrived),
+            destinations = ZipBackupManager.mediaDestinations(target, pkg.settings.notebookNotes),
             stagingDir = File(target, "restore_staging"),
         )
 
@@ -357,5 +356,14 @@ class ZipBackupManagerTest {
         assertThrows(ZipBackupTooLargeException::class.java) {
             ZipBackupManager.writeFullBackup(java.io.ByteArrayOutputStream(), big, emptyList(), ScoreboardSession(), emptyList(), OmniSettings(), emptyList())
         }
+    }
+
+    @Test
+    fun `media is restored only for the notes the notebook keeps`() {
+        val target = sandbox()
+        val local = List(MAX_NOTEBOOK_NOTES - 1) { NotebookNote(content = "mine $it") }
+        val imported = mediaNotes(sandbox())
+        // Room for one: the voice note. The photo and the video are cut, and so is their media.
+        assertEquals(setOf("audio_a1.mp4"), ZipBackupManager.restoreDestinations(target, local, imported).keys)
     }
 }

@@ -184,6 +184,16 @@ object ZipBackupManager {
             .map { File(it) }
             .associateBy { it.name }
 
+    /**
+     * Where a restore writes its media: only for the imported notes the notebook will keep.
+     *
+     * The merge on import stops the notebook at its ceiling and leaves out notes already there, and
+     * the media was restored for every note in the backup all the same: past the ceiling, those
+     * files stayed on disk with nothing pointing at them.
+     */
+    fun restoreDestinations(filesDir: File, local: List<NotebookNote>, imported: List<NotebookNote>): Map<String, File> =
+        mediaDestinations(filesDir, mergeImportedNotes(local, imported).drop(local.size))
+
     fun extractBackup(zipFile: File): SharePackage = extractBackup { zipFile.inputStream() }
 
     /**
