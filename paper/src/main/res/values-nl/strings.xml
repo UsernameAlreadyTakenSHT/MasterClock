@@ -48,7 +48,7 @@
     <string name="settings_reverse_colors">Kleuren omkeren</string>
 
     <!-- Credits dialog -->
-    <string name="credits_tab_credits">Met dank aan</string>
+    <string name="credits_tab_credits">Credits</string>
     <string name="credits_tab_changes">Nieuw</string>
     <string name="credits_tab_licenses">Licenties</string>
     <string name="credits_rules_documents">Reglementen</string>

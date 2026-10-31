@@ -77,7 +77,7 @@
     <string name="guide_section_advanced">Geavanceerde en experimentele modi</string>
     <string name="guide_section_bonus">Modi met bonus</string>
     <string name="guide_section_specialty">Speciale modi</string>
-    <string name="guide_sudden_death_standard_desc">Puur aftellen. De eerste speler die 0:00 bereikt verliest of valt.</string>
+    <string name="guide_sudden_death_standard_desc">Puur aftellen. De eerste speler die 0:00 bereikt verliest of zijn vlag valt.</string>
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Lijn de code uit in het camerabeeld</string>
