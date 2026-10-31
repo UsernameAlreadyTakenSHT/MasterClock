@@ -1799,12 +1799,32 @@ internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior
 }
 
 /**
- * Whether the game on the clock is over: a PHASES game that ran through its phases, or a flag
- * that [flagsEndGame] says stops play. The player who was to move stays active once it is, so
- * TalkBack went on telling them "your turn" -- "Player 1, out of time, your turn".
+ * Whether the game on the clock is over: a PHASES game that ran through its phases, the table's
+ * clock run out, or a flag that [flagsEndGame] says stops play. The player who was to move stays
+ * active once it is, so TalkBack went on telling them "your turn" -- "Player 1, out of time, your turn".
+ *
+ * The table's clock ([tableClockRanOut]) ends the game whatever the flag behaviour, as PHASES does:
+ * there is nobody else to play on and no player's overrun to count. Under NEGATIVE and REVERSE the
+ * face said FINISHED while the ticker ran on, the overrun grew, Pause was offered and the game was
+ * autosaved every fifteen seconds.
  */
 fun isGameOver(state: ChessClockState, flagBehavior: FlagBehavior, numberOfPlayers: Int): Boolean =
-    state.phasesFinished || flagsEndGame(state.players, flagBehavior, numberOfPlayers.coerceAtLeast(1))
+    state.phasesFinished || tableClockRanOut(state) || flagsEndGame(state.players, flagBehavior, numberOfPlayers.coerceAtLeast(1))
+
+/**
+ * Whether the turn passes on from the player on the move, eliminated under FLAG with three or four
+ * players while the game goes on. Not in a mode with only the table's clock, which nobody is
+ * eliminated from on their own. Global Shared is one of those for its reserve, but each player has
+ * a move clock of their own that does eliminate them: it was left out with the others, and the
+ * table waited -- reserve stopped -- for the eliminated player to press.
+ */
+internal fun turnPassesFromEliminated(state: ChessClockState, settings: ChessClockSettings, mode: TimerMode): Boolean {
+    val active = state.activePlayer ?: return false
+    if (settings.flagBehavior != FlagBehavior.FLAG || settings.numberOfPlayers < 3) return false
+    if (mode.isWholeTable && mode != TimerMode.MOVE_TIMER_GLOBAL_SHARED) return false
+    if (state.players.getOrNull(active - 1)?.isOutOfTime != true) return false
+    return !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)
+}
 
 /**
  * Who moves after [current]: the next player round the table, skipping those FLAG has eliminated.
@@ -2962,9 +2982,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val state = _uiState.value
         val s = _settings.value
         val active = state.activePlayer ?: return
-        if (timerJob == null || state.isPaused || s.flagBehavior != FlagBehavior.FLAG || s.numberOfPlayers < 3) return
-        if (getPlayerSettings(active).mode.isWholeTable || state.players.getOrNull(active - 1)?.isOutOfTime != true) return
-        if (isGameOver(state, s.flagBehavior, s.numberOfPlayers)) return
+        if (timerJob == null || state.isPaused || !turnPassesFromEliminated(state, s, getPlayerSettings(active).mode)) return
         val next = nextPlayerInTurn(active, state.players, s.numberOfPlayers, s.flagBehavior)
         if (next == active) return
         moveStartTime = now
