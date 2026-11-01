@@ -52,7 +52,9 @@ object ApkShare {
         val appInfo = context.applicationInfo
         val folder = File(context.cacheDir, DIR).apply { mkdirs() }
         val parts = listOf(File(appInfo.publicSourceDir)) + (appInfo.splitPublicSourceDirs ?: emptyArray()).map(::File)
-        val stem = "MasterClock-${BuildConfig.FLAVOR}-${BuildConfig.VERSION_NAME}"
+        // The version name carries the flavour already, "0.8.36-complete": with FLAVOR before it the
+        // file was MasterClock-complete-0.8.36-complete.apk.
+        val stem = "MasterClock-${BuildConfig.VERSION_NAME}"
         fun partName(i: Int, part: File) = when {
             parts.size == 1 -> "$stem.apk"
             i == 0 -> "$stem-base.apk"
