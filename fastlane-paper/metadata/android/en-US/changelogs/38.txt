@@ -1,0 +1,2 @@
+The scrollbar appears with the page, with no second refresh of the screen.
+Translations corrected.

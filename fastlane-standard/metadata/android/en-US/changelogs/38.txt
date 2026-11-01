@@ -1,0 +1,3 @@
+Fast Move: Accelerate is one clock for the whole game; Transfer gives the move time plus the time the opponent spent.
+FIDE periods: the arbiter can correct a move count, and a count typed per period is understood.
+A preset asks before ending a game. Fixes across Phases, Omni and the shared modes. Every language checked.

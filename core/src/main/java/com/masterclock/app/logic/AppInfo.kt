@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-10-31"
+    const val BUILD_DATE = "2026-11-01"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,17 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.37",
+            date = "2026-11-01",
+            notes = listOf(
+                "Fast Move: Accelerate is one clock for the whole game, and Transfer gives the move time plus the time the opponent just spent.",
+                "FIDE periods: the arbiter can correct a player's move count, and a count typed per period is understood.",
+                "Backups hold any history, and restore it in full on a new phone. To restore a large one on another phone, update the app there first.",
+                "Picking a preset during a game asks first. Phases, Omni, the shared modes and the notebook had many fixes.",
+                "Sharing the app offers an APK or a ZIP. Every language was checked and corrected.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.36",
             date = "2026-10-31",

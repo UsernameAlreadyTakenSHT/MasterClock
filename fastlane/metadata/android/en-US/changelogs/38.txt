@@ -1,0 +1,4 @@
+Fast Move: Accelerate is one clock for the whole game; Transfer gives the move time plus the time the opponent spent.
+FIDE periods: the arbiter can correct a move count, and a count typed per period is understood.
+Backups hold any history. To restore a large one on another phone, update the app there first.
+A preset asks before ending a game. Fixes across Phases, Omni, the shared modes and the notebook. Sharing the app offers a ZIP. Every language checked.

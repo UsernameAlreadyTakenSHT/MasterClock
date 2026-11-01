@@ -29,14 +29,14 @@ RepoType: git
 Repo: https://github.com/UsernameAlreadyTakenSHT/MasterClock.git
 
 Builds:
-  - versionName: 0.8.36-mini
-    versionCode: 37
-    commit: v0.8.36
+  - versionName: 0.8.37-mini
+    versionCode: 38
+    commit: v0.8.37
     subdir: app
     gradle:
       - mini
 
 AutoUpdateMode: None
 UpdateCheckMode: Tags
-CurrentVersion: 0.8.36-mini
-CurrentVersionCode: 37
+CurrentVersion: 0.8.37-mini
+CurrentVersionCode: 38
