@@ -315,7 +315,8 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                 // reset by a LaunchedEffect, which runs after the frame it is in, so the new tab was
                 // drawn once at the old offset and then again at the top -- two refreshes on E Ink.
                 // A fresh state is at the top from its first frame.
-                val entriesScroll = remember(selectedTab) { ScrollState(0) }
+                // Saveable, as rememberScrollState was: a recreation kept the place in the tab.
+                val entriesScroll = rememberSaveable(selectedTab, saver = ScrollState.Saver) { ScrollState(0) }
 
                 // weight, not a bare height cap. Without it the entries take their 320dp off the
                 // top and Close, measured last with nothing left, comes out zero-high: on a real

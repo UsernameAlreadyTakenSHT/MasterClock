@@ -214,7 +214,7 @@ class MainActivity : ComponentActivity() {
                         }
                         written.exceptionOrNull()?.let { e ->
                             Log.w("MainActivity", "Failed to export settings file", e)
-                            if (opened) deletePartialExport(context, it)
+                            if (opened) deletePartialExport(context, it) else deleteIfEmpty(context, it)
                         }
                         withContext(Dispatchers.Main) {
                             Toast.makeText(
@@ -266,7 +266,7 @@ class MainActivity : ComponentActivity() {
                             // The message used to be shown to the user; it is a Java exception
                             // string, always in English and rarely about anything they can act on.
                             Log.w("MainActivity", "Failed to export backup archive", e)
-                            if (opened) deletePartialExport(context, it)
+                            if (opened) deletePartialExport(context, it) else deleteIfEmpty(context, it)
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, if (e is ZipBackupTooLargeException) backupTooLargeText else exportFailedText, Toast.LENGTH_LONG).show()
                             }
@@ -684,7 +684,21 @@ class MainActivity : ComponentActivity() {
      * like a backup.
      */
     private fun deletePartialExport(context: Context, uri: android.net.Uri) {
-        runCatching { android.provider.DocumentsContract.deleteDocument(context.contentResolver, uri) }
+        val deleted = runCatching { android.provider.DocumentsContract.deleteDocument(context.contentResolver, uri) }.getOrDefault(false)
+        // A provider that cannot delete keeps the file, and closing the archive on the failure wrote
+        // it whole: a backup missing its later entries, which then restored as "Import successful".
+        // Emptied, it is refused as what it is.
+        if (!deleted) runCatching { context.contentResolver.openOutputStream(uri, "wt")?.close() }
+    }
+
+    /**
+     * Removes the document the picker created for an export that failed before writing, if it is
+     * still empty: left, it sat in the folder as a 0-byte file. One with content is an earlier export
+     * the user chose to overwrite, and is kept.
+     */
+    private fun deleteIfEmpty(context: Context, uri: android.net.Uri) {
+        val size = runCatching { context.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize } }.getOrNull()
+        if (size == 0L) runCatching { android.provider.DocumentsContract.deleteDocument(context.contentResolver, uri) }
     }
 
     private fun shareData(context: Context, jsonData: String) {

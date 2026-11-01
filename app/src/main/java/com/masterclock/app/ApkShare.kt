@@ -48,6 +48,9 @@ object ApkShare {
      * A store that installs split APKs (Accrescent does) leaves the app in several files, and the
      * base one alone does not install: every part is sent, in one ZIP or as a set.
      */
+    // One copy at a time: the copy outlives the page that started it, and a share started again
+    // meanwhile wrote into the same staging file as the first.
+    @Synchronized
     fun prepare(context: Context, asZip: Boolean): Intent {
         val appInfo = context.applicationInfo
         val folder = File(context.cacheDir, DIR).apply { mkdirs() }

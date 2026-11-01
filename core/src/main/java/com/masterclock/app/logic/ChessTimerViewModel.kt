@@ -1434,6 +1434,9 @@ private const val MAX_IMPORTED_EVENT_TYPE_CHARS = 64
 /** More than anyone has played, and far below what makes the history screen or the database suffer. */
 private const val MAX_IMPORTED_LOGS = 10_000
 
+/** How many imported games are prepared and stored at a time; see updateSettings. */
+private const val IMPORT_BATCH = 200
+
 /**
  * The shortest a Gong phase runs. The editor takes 0, and a phase of nothing ended on every tick:
  * the clock flipped between reflection and move ten times a second, logging a move, striking the
@@ -1557,7 +1560,10 @@ internal fun sanitizeImportedPresets(context: android.content.Context, presets: 
         preset.copy(
             // Kept, so a restore onto the same device doubles nothing -- unless it is no id this
             // app could have made: it was unbounded, and it becomes a launcher shortcut's id.
-            id = if (preset.id.isNotBlank() && preset.id.length <= MAX_IMPORTED_ID_CHARS) preset.id else java.util.UUID.randomUUID().toString(),
+            // Derived from the preset rather than drawn: this runs at every launch, and a random id
+            // changed each time, so a pinned shortcut to such a preset broke at every restart.
+            id = if (preset.id.isNotBlank() && preset.id.length <= MAX_IMPORTED_ID_CHARS) preset.id
+                else java.util.UUID.nameUUIDFromBytes("${preset.name}|${preset.createdAt}".toByteArray()).toString(),
             name = preset.name.trim().take(MAX_PRESET_NAME_CHARS),
             settings = sanitizeImportedSettings(context, preset.settings, grants).copy(notebookNotes = emptyList()),
         )
@@ -3721,28 +3727,38 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 //
                 // Sanitised and encoded off the main thread, where all of it ran: for ten thousand
                 // games, that and a system call per custom sound per game were an ANR.
-                val prepared = withContext(Dispatchers.Default) {
-                    val grants = persistedReadGrants(app)
-                    logs.take(MAX_IMPORTED_LOGS).mapNotNull { log ->
-                        // One that cannot be prepared is skipped, not the rest with it.
-                        runCatching {
-                            val sanitizedLog = sanitizeImportedLog(log)
-                                .copy(settings = sanitizeImportedSettings(app, log.settings, grants).copy(notebookNotes = emptyList()), imported = true)
-                            sanitizedLog.id to converters.fromGameLog(sanitizedLog)
-                        }.onFailure { Log.w("ChessTimerViewModel", "Skipped an imported game log", it) }.getOrNull()
+                val grants = withContext(Dispatchers.Default) { persistedReadGrants(app) }
+                // In batches: every game prepared at once held the whole history twice over --
+                // decoded, then encoded for Room -- and a large restore ran out of memory, either
+                // closing the app or, caught below as an ordinary failure, dropping games one by one
+                // under "Import successful".
+                logs.take(MAX_IMPORTED_LOGS).chunked(IMPORT_BATCH).forEach { batch ->
+                    val prepared = withContext(Dispatchers.Default) {
+                        batch.mapNotNull { log ->
+                            // One that cannot be prepared is skipped, not the rest with it. An
+                            // Exception only: running out of memory is no reason to go on.
+                            try {
+                                val sanitizedLog = sanitizeImportedLog(log)
+                                    .copy(settings = sanitizeImportedSettings(app, log.settings, grants).copy(notebookNotes = emptyList()), imported = true)
+                                sanitizedLog.id to converters.fromGameLog(sanitizedLog)
+                            } catch (e: Exception) {
+                                Log.w("ChessTimerViewModel", "Skipped an imported game log", e)
+                                null
+                            }
+                        }
                     }
-                }
-                prepared.forEach { (id, entity) ->
-                    // One that will not go in is skipped, not the rest of the import with it: an
-                    // insert throwing here ended the coroutine half-way, under a toast that had
-                    // already said the import succeeded.
-                    try {
-                        // A game already here is the player's, and stays theirs: REPLACE turned it
-                        // into an imported one, first in line for the trim.
-                        if (gameDao.getLog(id) != null) return@forEach
-                        gameDao.insertLog(entity)
-                    } catch (e: Exception) {
-                        Log.w("ChessTimerViewModel", "Skipped an imported game log", e)
+                    prepared.forEach { (id, entity) ->
+                        // One that will not go in is skipped, not the rest of the import with it: an
+                        // insert throwing here ended the coroutine half-way, under a toast that had
+                        // already said the import succeeded.
+                        try {
+                            // A game already here is the player's, and stays theirs: REPLACE turned it
+                            // into an imported one, first in line for the trim.
+                            if (gameDao.getLog(id) != null) return@forEach
+                            gameDao.insertLog(entity)
+                        } catch (e: Exception) {
+                            Log.w("ChessTimerViewModel", "Skipped an imported game log", e)
+                        }
                     }
                 }
                 trimLimitFor(_settings.value.logHistoryLimit)?.let { gameDao.trimLogs(it) }
