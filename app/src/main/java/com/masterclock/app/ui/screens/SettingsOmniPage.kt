@@ -952,7 +952,8 @@ fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) ->
             // even when games have different round counts.
             val roundCounts = settings.games.map { it.rounds.size }
             Text(if (roundCounts.distinct().size <= 1) pluralStringResource(R.plurals.omni_cfg_summary_rounds_uniform, roundCounts.firstOrNull() ?: 0, roundCounts.firstOrNull() ?: 0) else stringResource(R.string.omni_cfg_summary_rounds_varied, roundCounts.joinToString(", ")))
-            Text(stringResource(R.string.omni_cfg_summary_order, settings.playerOrderType.toString()))
+            // The order's own name, as on its button above; it read the raw "LINEAR".
+            Text(stringResource(R.string.omni_cfg_summary_order, settings.playerOrderType.label()))
         }
     }
 

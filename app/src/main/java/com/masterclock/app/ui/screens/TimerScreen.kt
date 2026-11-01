@@ -779,9 +779,13 @@ fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: 
         }
         if (moveCount != null) {
             Spacer(Modifier.height(8.dp))
+            // Named: under the minutes and the seconds, a bare number between - and + said nothing
+            // of what it counted.
+            Text(stringResource(R.string.stats_moves), style = MaterialTheme.typography.labelMedium)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalIconButton(onClick = { onAdjustMoves(-1) }, enabled = moveCount > 0, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_move, label)) }
-                Text(moveCount.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                // A fixed width, so the buttons do not shift as the count gains a digit.
+                Text(moveCount.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(36.dp))
                 FilledTonalIconButton(onClick = { onAdjustMoves(1) }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_move, label)) }
             }
         }
