@@ -276,7 +276,6 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                                     val newList = periods.toMutableList().apply { this[index] = period.copy(movesToNext = moves) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
-
                                 label = {
                                     Text(if (isLast) stringResource(R.string.settings_moves_unlock) else stringResource(R.string.settings_moves_until_period, index + 2))
                                 },

@@ -607,7 +607,7 @@ class MainActivity : ComponentActivity() {
                     pendingPreset?.let { apply ->
                         AlertDialog(
                             onDismissRequest = { pendingPreset = null },
-                            title = { Text(stringResource(R.string.timer_reset_title)) },
+                            title = { Text(stringResource(R.string.preset_end_game_title)) },
                             text = { Text(stringResource(R.string.timer_reset_message)) },
                             confirmButton = {
                                 TextButton(onClick = { pendingPreset = null; apply() }) { Text(stringResource(R.string.qr_confirm_apply)) }

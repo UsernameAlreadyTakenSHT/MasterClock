@@ -483,6 +483,8 @@
     <string name="omni_reset_title">Sessie resetten?</string>
     <string name="omni_reset_message">Alle voortgang over rondes en partijen gaat verloren.</string>
     <string name="omni_reset_confirm">RESETTEN</string>
+    <string name="omni_stop_title">Sessie stoppen?</string>
+    <string name="omni_stop_confirm">STOPPEN</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANNULEREN</string>
     <string name="omni_progress_session">Sessie</string>
     <string name="omni_header">Omni: %s</string>
@@ -542,6 +544,7 @@
 
     <!-- Timer Screen -->
     <string name="timer_reset_title">Partij resetten?</string>
+    <string name="preset_end_game_title">Lopende partij beëindigen?</string>
     <string name="timer_reset_message">De huidige stand gaat verloren.</string>
     <string name="timer_reroll">Nieuwe willekeurige tijd</string>
     <string name="timer_reroll_title">Een nieuwe tijd loten?</string>

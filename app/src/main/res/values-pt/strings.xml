@@ -493,6 +493,8 @@
     <string name="omni_reset_title">Zerar a sessão?</string>
     <string name="omni_reset_message">Todo o progresso de rondas e partidas será perdido.</string>
     <string name="omni_reset_confirm">ZERAR</string>
+    <string name="omni_stop_title">Parar a sessão?</string>
+    <string name="omni_stop_confirm">PARAR</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">CANCELAR</string>
     <string name="omni_progress_session">Sessão</string>
     <string name="omni_header">Omni: %s</string>
@@ -556,6 +558,7 @@
 
     <!-- Timer Screen -->
     <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="preset_end_game_title">Terminar a partida em curso?</string>
     <string name="timer_reset_message">O estado atual será perdido.</string>
     <string name="timer_reroll">Novo tempo aleatório</string>
     <string name="timer_reroll_title">Sortear um novo tempo?</string>

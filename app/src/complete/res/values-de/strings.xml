@@ -93,6 +93,15 @@
     <string name="toast_audio_failed">Audio konnte nicht abgespielt werden</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Kameraberechtigung erforderlich</string>
     <string name="toast_fen_copied">FEN kopiert</string>
+    <string name="card_suit_spades">Pik</string>
+    <string name="card_suit_clubs">Kreuz</string>
+    <string name="card_suit_hearts">Herz</string>
+    <string name="card_suit_diamonds">Karo</string>
+    <string name="card_rank_ace">Ass</string>
+    <string name="card_rank_jack">Bube</string>
+    <string name="card_rank_queen">Dame</string>
+    <string name="card_rank_king">König</string>
+    <string name="card_name">%2$s %1$s</string>
     <string name="a11y_piece_king">König</string>
     <string name="a11y_piece_queen">Dame</string>
     <string name="a11y_piece_rook">Turm</string>

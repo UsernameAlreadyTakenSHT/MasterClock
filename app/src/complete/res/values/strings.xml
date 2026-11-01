@@ -119,6 +119,15 @@
     <string name="toast_audio_failed">Failed to play audio</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Camera permission required</string>
     <string name="toast_fen_copied">FEN copied</string>
+    <string name="card_suit_spades">Spades</string>
+    <string name="card_suit_clubs">Clubs</string>
+    <string name="card_suit_hearts">Hearts</string>
+    <string name="card_suit_diamonds">Diamonds</string>
+    <string name="card_rank_ace">Ace</string>
+    <string name="card_rank_jack">Jack</string>
+    <string name="card_rank_queen">Queen</string>
+    <string name="card_rank_king">King</string>
+    <string name="card_name">%1$s of %2$s</string>
     <string name="a11y_piece_king">King</string>
     <string name="a11y_piece_queen">Queen</string>
     <string name="a11y_piece_rook">Rook</string>

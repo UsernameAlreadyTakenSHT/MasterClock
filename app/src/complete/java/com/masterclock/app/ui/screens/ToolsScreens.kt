@@ -61,6 +61,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -279,15 +280,14 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
 /**
  * Says a tool's result once it has landed. The coin, the die and the card show it only at the end of
  * their animation, and nothing announced it: a TalkBack user who tapped heard nothing until they went
- * looking. The node stays in place, empty while the animation runs -- the coin's face turns over many
- * times a toss -- so that the result arriving is a change the live region speaks.
+ * looking. It is the state of the control that was tapped, which a live region speaks as it
+ * changes; empty while the animation runs, as the coin's face turns over many times a toss. It was
+ * a node of its own, which was one more stop, silent or repeating the result, for a finger
+ * exploring the screen.
  */
-@Composable
-private fun ResultAnnouncer(text: String) {
-    Box(Modifier.size(1.dp).semantics {
-        liveRegion = LiveRegionMode.Polite
-        contentDescription = text
-    })
+private fun Modifier.announcesResult(text: String): Modifier = semantics {
+    liveRegion = LiveRegionMode.Polite
+    if (text.isNotEmpty()) stateDescription = text
 }
 
 @Composable
@@ -308,7 +308,6 @@ fun CoinTossScreen(onBack: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
-            ResultAnnouncer(if (isSpinning) "" else landedHeads?.let { if (it) headsText else tailsText }.orEmpty())
             Box(
                 modifier = Modifier
                     .size(240.dp)
@@ -316,6 +315,7 @@ fun CoinTossScreen(onBack: () -> Unit) {
                         rotationY = rotation.value
                         cameraDistance = 12f * density
                     }
+                    .announcesResult(if (isSpinning) "" else landedHeads?.let { if (it) headsText else tailsText }.orEmpty())
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
@@ -392,7 +392,6 @@ fun DiceRollScreen(onBack: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
-            ResultAnnouncer(if (isRolling || !rolled) "" else result.toString())
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -402,6 +401,7 @@ fun DiceRollScreen(onBack: () -> Unit) {
                         rotationY = rotY.value
                         cameraDistance = 12f * density
                     }
+                    .announcesResult(if (isRolling || !rolled) "" else result.toString())
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
@@ -597,6 +597,11 @@ fun ShortStrawScreen(onBack: () -> Unit) {
 @Composable
 fun RandomCardScreen(onBack: () -> Unit) {
     val suits = listOf("♠", "♣", "♥", "♦")
+    // The card by name for TalkBack, which read "A ♠" as "a black spade suit", and Q, J, K as letters.
+    val suitNames = mapOf("♠" to stringResource(R.string.card_suit_spades), "♣" to stringResource(R.string.card_suit_clubs), "♥" to stringResource(R.string.card_suit_hearts), "♦" to stringResource(R.string.card_suit_diamonds))
+    val rankNames = mapOf("A" to stringResource(R.string.card_rank_ace), "J" to stringResource(R.string.card_rank_jack), "Q" to stringResource(R.string.card_rank_queen), "K" to stringResource(R.string.card_rank_king))
+    val cardPattern = stringResource(R.string.card_name)
+    fun cardName(value: String, suit: String) = String.format(Locale.ROOT, cardPattern, rankNames[value] ?: value, suitNames[suit] ?: suit)
     val values = listOf("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K")
     var currentCard by remember { mutableStateOf<Pair<String, String>?>(null) }
     var isAnimating by remember { mutableStateOf(false) }
@@ -613,7 +618,6 @@ fun RandomCardScreen(onBack: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
-            ResultAnnouncer(if (isAnimating) "" else currentCard?.let { (value, suit) -> "$value $suit" }.orEmpty())
             Box(
                 modifier = Modifier
                     .size(width = 200.dp, height = 280.dp)
@@ -622,6 +626,7 @@ fun RandomCardScreen(onBack: () -> Unit) {
                         translationX = offsetX.value
                         cameraDistance = 14f * density
                     }
+                    .announcesResult(if (isAnimating) "" else currentCard?.let { (value, suit) -> cardName(value, suit) }.orEmpty())
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,

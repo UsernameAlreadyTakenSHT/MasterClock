@@ -93,6 +93,15 @@
     <string name="toast_audio_failed">Audio kon niet worden afgespeeld</string>
     <string name="toast_camera_permission" tools:ignore="Typos">Toegang tot de camera is nodig</string>
     <string name="toast_fen_copied">FEN gekopieerd</string>
+    <string name="card_suit_spades">schoppen</string>
+    <string name="card_suit_clubs">klaveren</string>
+    <string name="card_suit_hearts">harten</string>
+    <string name="card_suit_diamonds">ruiten</string>
+    <string name="card_rank_ace">aas</string>
+    <string name="card_rank_jack">boer</string>
+    <string name="card_rank_queen">vrouw</string>
+    <string name="card_rank_king">heer</string>
+    <string name="card_name">%2$s %1$s</string>
     <string name="a11y_piece_king">Koning</string>
     <string name="a11y_piece_queen">Dame</string>
     <string name="a11y_piece_rook">Toren</string>

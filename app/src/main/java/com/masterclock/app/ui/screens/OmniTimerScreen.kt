@@ -29,6 +29,8 @@ fun OmniTimerScreen(
     val state by viewModel.omniState.collectAsState()
     val settings by viewModel.omniSettings.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    // The same question for Stop and Reset, each in its own words: Stop asked "Reset Session?".
+    var stopping by remember { mutableStateOf(false) }
     // Leaving the screen pauses the session. It ran on behind the rest of the app -- the clocks
     // counting down and the cues sounding from the timer or the settings -- with nothing on screen to
     // stop it. A recreation (rotation, theme) is not leaving.
@@ -36,17 +38,17 @@ fun OmniTimerScreen(
     DisposableEffect(Unit) {
         onDispose { if (activity?.isChangingConfigurations != true) viewModel.pauseOmni() }
     }
-    
+
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text(stringResource(R.string.omni_reset_title)) },
+            title = { Text(stringResource(if (stopping) R.string.omni_stop_title else R.string.omni_reset_title)) },
             text = { Text(stringResource(R.string.omni_reset_message)) },
             confirmButton = {
-                TextButton(onClick = { 
-                    viewModel.resetOmni()
-                    showResetDialog = false 
-                }) { Text(stringResource(R.string.omni_reset_confirm), color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = {
+                    if (stopping) viewModel.stopOmni() else viewModel.resetOmni()
+                    showResetDialog = false
+                }) { Text(stringResource(if (stopping) R.string.omni_stop_confirm else R.string.omni_reset_confirm), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.omni_cancel)) }
@@ -57,9 +59,9 @@ fun OmniTimerScreen(
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-            
+
             OmniHeader(state, settings, onBack)
-            
+
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     state.isLaunching -> {
@@ -79,20 +81,20 @@ fun OmniTimerScreen(
                     }
                     else -> {
                         ActiveTimerLayout(
-                            state = state, 
-                            settings = settings, 
+                            state = state,
+                            settings = settings,
                             onAdvance = { viewModel.advanceOmni() }
                         )
                     }
                 }
             }
-            
+
             OmniControls(
                 state = state,
                 onPauseResume = { if (state.isRunning) viewModel.pauseOmni() else viewModel.startOmni() },
                 // Stop ends the session as Reset does, and sat beside Pause with no question asked.
-                onStop = { if (state.hasStarted) showResetDialog = true else viewModel.stopOmni() },
-                onReset = { showResetDialog = true }
+                onStop = { if (state.hasStarted) { stopping = true; showResetDialog = true } else viewModel.stopOmni() },
+                onReset = { stopping = false; showResetDialog = true }
             )
         }
     }
@@ -111,7 +113,7 @@ fun OmniHeader(state: OmniState, settings: OmniSettings, onBack: () -> Unit) {
                 val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
                 Text(stringResource(R.string.omni_header, currentRound.name), fontWeight = FontWeight.Bold)
             }
-            
+
             if (settings.useGlobalClock) {
                 OmniProgressBar(label = stringResource(R.string.omni_progress_session), timeMs = state.currentGlobalTimeMs, totalMs = settings.globalDurationMs, color = Color(0xFF2196F3))
             }
@@ -190,7 +192,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
                     val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
                     val totalTurnsInRound = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns.size else numPlayers
                     val turnsPerPlayer = totalTurnsInRound / numPlayers
-                    
+
                     if (turnsPerPlayer > 1 || currentRound.roundEndBehavior == RoundEndBehavior.LOOP) {
                         Text(stringResource(R.string.omni_cfg_turn_n, turnNumber).uppercase(androidx.compose.ui.platform.LocalConfiguration.current.locales[0]), style = MaterialTheme.typography.labelSmall, color = pColor)
                     }
@@ -198,7 +200,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
                 }
             }
         }
-        
+
         if (settings.useTurnClock) {
             Text(formatTime(state.currentTurnTimeMs), fontSize = 84.sp, fontWeight = FontWeight.Black, letterSpacing = (-2).sp)
         }
@@ -227,7 +229,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
             // engine (OmniTimerViewModel.advanceOmni), not by currentPlayerIndex.
             val currentTurn = turnsList.getOrNull(state.turnCounterInRound)
             val phaseName = currentTurn?.phases?.getOrNull(state.currentPhaseIndex)?.name ?: stringResource(R.string.omni_phase_default)
-            
+
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = RoundedCornerShape(12.dp),
@@ -263,7 +265,7 @@ fun TransitionOverlay(state: OmniState, settings: OmniSettings, onReady: () -> U
         "SESSION" -> stringResource(R.string.omni_session_complete)
         else -> stringResource(R.string.omni_turn_finished)
     }
-    
+
     val numPlayers = settings.numberOfPlayers.coerceAtLeast(1)
     val nextPlayerNumber = (state.currentPlayerIndex % numPlayers) + 1
 
@@ -278,13 +280,13 @@ fun TransitionOverlay(state: OmniState, settings: OmniSettings, onReady: () -> U
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
             Text(message, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-            
+
             if (state.transitionLabel != "SESSION") {
                 Text(formatTime(state.transitionTimeRemainingMs), fontSize = 72.sp, fontWeight = FontWeight.Black)
-                
+
                 if (settings.transitionType == TransitionType.MANUAL_READY) {
                     Button(
-                        onClick = onReady, 
+                        onClick = onReady,
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.height(56.dp).fillMaxWidth(0.6f)
                     ) {
@@ -317,9 +319,9 @@ fun OmniControls(state: OmniState, onPauseResume: () -> Unit, onStop: () -> Unit
             IconButton(onClick = onReset) {
                 Icon(Icons.Default.Refresh, stringResource(R.string.omni_reset_session), tint = MaterialTheme.colorScheme.error)
             }
-            
+
             Spacer(Modifier.weight(1f))
-            
+
             Text(
                 text = if (state.isRunning) stringResource(R.string.omni_running) else stringResource(R.string.omni_paused),
                 style = MaterialTheme.typography.labelLarge,
