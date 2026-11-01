@@ -3912,11 +3912,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                                 (mode == TimerMode.MOVE_TIMER_OVERTIME || p.timeRemainingMs > 0)
                             // Under NEGATIVE and REVERSE an empty shared reserve puts every player
                             // in overrun. Reserve given back left them there: each player's next
-                            // turn counted up from zero beside a reserve with time in it. Those not
-                            // on the move get their move clock back; the one on the move gets theirs
-                            // with their next press, as after any overrun with reserve left.
+                            // turn counted up from zero beside a reserve with time in it. Every player
+                            // gets their move clock back, the one on the move included: left in
+                            // overrun until their next press, they read negative while the reserve
+                            // given back drained beside it.
                             val revived = mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && p.isOverrun(flagBehavior) &&
-                                p.secondaryTimeMs <= 0 && reserve > 0 && idx + 1 != state.activePlayer
+                                p.secondaryTimeMs <= 0 && reserve > 0
                             if (revived) p.copy(secondaryTimeMs = reserve, timeRemainingMs = getPlayerSettings(idx + 1).moveTimeMs, isOutOfTime = false, isNegative = false)
                             else p.copy(secondaryTimeMs = reserve, isOutOfTime = p.isOutOfTime && !back)
                         } else p
