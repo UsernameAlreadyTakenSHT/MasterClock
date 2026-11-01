@@ -95,18 +95,6 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
     }
 }
 
-/**
- * The current phase's per-phase "Auto Advance" wizard toggle. Resolved with the same
- * game/round/turn/phase lookup as getOmniDuration's PHASE branch (turns indexed by the raw
- * turnCounterInRound); defaults to true, matching OmniPhaseSettings, when no phase is configured.
- */
-internal fun omniPhaseAutoAdvances(settings: OmniSettings, state: OmniState): Boolean {
-    // No phases, nothing to advance to: the turn clock governs the turn. See getOmniDuration.
-    val phases = omniCurrentTurnPhases(settings, state)
-    if (phases.isEmpty()) return false
-    return phases.getOrNull(state.currentPhaseIndex)?.autoAdvance ?: true
-}
-
 internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int {
     val numPlayers = settings.numberOfPlayers.coerceAtLeast(1)
     return when (settings.playerOrderType) {
@@ -275,8 +263,8 @@ internal fun computeOmniAdvance(
     val currentGame = settings.games.getOrNull(currentGameIdx) ?: settings.games.firstOrNull() ?: OmniGameSettings()
     val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
     // FIXED rounds always have exactly numberOfPlayers turns; customTurns left over from a
-    // previous SEQUENCE configuration must not inflate the count (getOmniDuration, the UI and
-    // omniPhaseAutoAdvances all already assume numberOfPlayers for FIXED).
+    // previous SEQUENCE configuration must not inflate the count (getOmniDuration and the UI
+    // already assume numberOfPlayers for FIXED).
     val turnsList = omniTurnsOf(currentRound, settings.numberOfPlayers)
     val currentTurn = turnsList.getOrNull(nextTurnIdx) ?: OmniTurnSettings(durationMs = currentRound.turnDurationMs)
 

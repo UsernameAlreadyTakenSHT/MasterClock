@@ -457,23 +457,6 @@ class OmniTimerLogicTest {
     }
 
     @Test
-    fun `omniPhaseAutoAdvances reads the configured phase's toggle`() {
-        val manualPhase = OmniPhaseSettings(durationMs = 20_000, autoAdvance = false)
-        val autoPhase = OmniPhaseSettings(durationMs = 20_000, autoAdvance = true)
-        val turn = OmniTurnSettings(phases = listOf(manualPhase, autoPhase))
-        val round = OmniRoundSettings(customTurns = listOf(turn), turnLogic = RoundTurnLogic.SEQUENCE)
-        val settings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(round))), numberOfPlayers = 1)
-
-        assertFalse(omniPhaseAutoAdvances(settings, OmniState(currentPhaseIndex = 0, turnCounterInRound = 0)))
-        assertTrue(omniPhaseAutoAdvances(settings, OmniState(currentPhaseIndex = 1, turnCounterInRound = 0)))
-
-        // A turn with no configured phases has nothing to advance to. This used to say true, which
-        // with the phase clock on cut every such turn off after a default 60-second phase.
-        val fixedSettings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(OmniRoundSettings()))), numberOfPlayers = 2)
-        assertFalse(omniPhaseAutoAdvances(fixedSettings, OmniState(currentPhaseIndex = 0, turnCounterInRound = 0)))
-    }
-
-    @Test
     fun `a turn with no phases has a phase clock as long as the turn`() {
         val round = OmniRoundSettings(turnDurationMs = 600_000)
         val settings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(round))), numberOfPlayers = 2)

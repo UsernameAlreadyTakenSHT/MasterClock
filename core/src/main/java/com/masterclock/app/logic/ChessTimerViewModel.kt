@@ -1550,10 +1550,10 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
  * configuration gets: applying a preset copies its time control onto the clock, so a crafted one
  * is exactly as dangerous as a crafted settings file. Presets never carry a notebook.
  */
-internal fun sanitizeImportedPresets(context: android.content.Context, presets: List<SavedPreset>): List<SavedPreset> {
+internal fun sanitizeImportedPresets(context: android.content.Context, presets: List<SavedPreset>, cap: Int = MAX_IMPORTED_PRESETS): List<SavedPreset> {
     val grants = persistedReadGrants(context)
     // A blank name showed as an empty tile, and as Delete ""?; such a preset is not worth keeping.
-    return presets.filter { it.name.isNotBlank() }.take(MAX_IMPORTED_PRESETS).map { preset ->
+    return presets.filter { it.name.isNotBlank() }.take(cap).map { preset ->
         preset.copy(
             // Kept, so a restore onto the same device doubles nothing -- unless it is no id this
             // app could have made: it was unbounded, and it becomes a launcher shortcut's id.
@@ -2694,7 +2694,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             _hasSavedClock.value = gameDao.getSavedClock() != null
             // Sanitised like the settings and the scoreboard above: a restore is what usually wrote
             // them, and a preset is applied to the clock as it stands.
-            _customPresets.value = sanitizeImportedPresets(getApplication(), settingsRepo.customPresetsFlow.first())
+            // Not held to an import's count: saving has no cap, so past 500 presets the newest was
+            // dropped at each launch, and the next edit wrote the shortened list back for good.
+            _customPresets.value = sanitizeImportedPresets(getApplication(), settingsRepo.customPresetsFlow.first(), cap = Int.MAX_VALUE)
             _isReady.value = true
 
             _gameHistory.value = loadHistory(savedSettings.logHistoryLimit)
@@ -3597,9 +3599,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         presetsToImport: List<SavedPreset>? = null,
         isImport: Boolean = false,
         /**
-         * A full backup the user restores, rather than a configuration someone shared: its history
-         * is the user's own. It keeps the longer of the two history limits, and its games are not
-         * marked imported, which ranks them first to go when the history is trimmed.
+         * A full backup, rather than a configuration someone shared. It keeps the longer of the two
+         * history limits, so a fresh install's 100 does not trim the history it brings. Its games
+         * stay marked imported, first to go when the history is trimmed: a backup someone else sent
+         * is opened the same way, and taken as the user's own its newer games pushed the user's
+         * own older ones out.
          */
         isRestore: Boolean = false,
         /**
@@ -3723,7 +3727,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                         // One that cannot be prepared is skipped, not the rest with it.
                         runCatching {
                             val sanitizedLog = sanitizeImportedLog(log)
-                                .copy(settings = sanitizeImportedSettings(app, log.settings, grants).copy(notebookNotes = emptyList()), imported = !isRestore)
+                                .copy(settings = sanitizeImportedSettings(app, log.settings, grants).copy(notebookNotes = emptyList()), imported = true)
                             sanitizedLog.id to converters.fromGameLog(sanitizedLog)
                         }.onFailure { Log.w("ChessTimerViewModel", "Skipped an imported game log", it) }.getOrNull()
                     }

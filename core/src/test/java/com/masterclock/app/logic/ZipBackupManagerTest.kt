@@ -366,4 +366,13 @@ class ZipBackupManagerTest {
         // Room for one: the voice note. The photo and the video are cut, and so is their media.
         assertEquals(setOf("audio_a1.mp4"), ZipBackupManager.restoreDestinations(target, local, imported).keys)
     }
+
+    @Test
+    fun `a note already here, from another sandbox, gets none of the backup's media`() {
+        val target = sandbox()
+        val imported = mediaNotes(sandbox())
+        // The same notes as the device holds them: another id, paths rebuilt at every launch.
+        val local = imported.map { it.copy(id = "local-" + it.id, audioPath = sanitizeImportedMediaPath(target, it.audioPath), imagePath = sanitizeImportedMediaPath(target, it.imagePath), videoPath = sanitizeImportedMediaPath(target, it.videoPath)) }
+        assertTrue(ZipBackupManager.restoreDestinations(target, local, imported).isEmpty())
+    }
 }

@@ -185,6 +185,10 @@ class MainActivity : ComponentActivity() {
                     // Assembled off the main thread from the ViewModel, once its stored state is in;
                     // see exportSnapshot. It read the composition's copies, which are defaults until then.
                     scope.launch(Dispatchers.IO) {
+                        // Whether this export opened the document for writing. A failure before then
+                        // wrote nothing, and the document may be an earlier export the user chose to
+                        // overwrite: removing it on every failure lost that one too.
+                        var opened = false
                         val written = runCatching {
                             val snapshot = timerViewModel.exportSnapshot()
                             val pkg = if (includeLogs) {
@@ -203,13 +207,14 @@ class MainActivity : ComponentActivity() {
                             // the history came to: some five hundred games made a file that "Export
                             // successful" had produced and the import then refused.
                             if (bytes.size > MAX_IMPORT_TEXT_BYTES) throw ImportTooLargeException("Settings file would be too large to import")
+                            opened = true
                             context.contentResolver.openOutputStream(it)?.use { stream ->
                                 stream.write(bytes)
                             } ?: error("No output stream for $it")
                         }
                         written.exceptionOrNull()?.let { e ->
                             Log.w("MainActivity", "Failed to export settings file", e)
-                            deletePartialExport(context, it)
+                            if (opened) deletePartialExport(context, it)
                         }
                         withContext(Dispatchers.Main) {
                             Toast.makeText(
@@ -229,6 +234,8 @@ class MainActivity : ComponentActivity() {
             val mediaExportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
                 uri?.let {
                     scope.launch(Dispatchers.IO) {
+                        // See the settings export: only a document this export opened is removed.
+                        var opened = false
                         try {
                             // See exportSnapshot: the composition's copies are defaults until the load ends.
                             val snapshot = timerViewModel.exportSnapshot()
@@ -240,6 +247,7 @@ class MainActivity : ComponentActivity() {
                             // Written straight to the destination. It used to be built in the cache
                             // and copied, and a provider returning no stream was reported as a
                             // successful backup.
+                            opened = true
                             context.contentResolver.openOutputStream(it)?.use { output ->
                                 ZipBackupManager.writeFullBackup(
                                     output = output,
@@ -258,7 +266,7 @@ class MainActivity : ComponentActivity() {
                             // The message used to be shown to the user; it is a Java exception
                             // string, always in English and rarely about anything they can act on.
                             Log.w("MainActivity", "Failed to export backup archive", e)
-                            deletePartialExport(context, it)
+                            if (opened) deletePartialExport(context, it)
                             withContext(Dispatchers.Main) {
                                 Toast.makeText(context, if (e is ZipBackupTooLargeException) backupTooLargeText else exportFailedText, Toast.LENGTH_LONG).show()
                             }
