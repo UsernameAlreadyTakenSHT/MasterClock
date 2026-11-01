@@ -1,3 +1,44 @@
+## v0.8.37 — 2026-11-01
+
+Two of the timing modes work differently, every mode had another review, the backup can hold any
+history, and every language had its strings checked.
+
+**Backups.** A full backup now keeps the game history in several parts, so that one of any size can be
+restored. A version before this one reads only the first part, and refuses a backup larger than
+50 MB: to restore a large backup on another phone, update the app there first. Backups made with an
+earlier version restore as before.
+
+### Changed
+- **Fast Move › Accelerate is one clock for the whole game.** It was refilled to the starting time after every move. The acceleration starts again with each move: the grace period, then the faster rate, then the full one.
+- **Fast Move › Transfer gives each move its move time plus the time the opponent just spent.** With "cumulative" on, what was left from earlier moves is kept as well; off, it is lost. It gave the time spent alone.
+- **FIDE periods: the arbiter can correct a player's move count**, from the arbiter's panel. Reaching a period's count starts it, with its time; going back below it undoes it.
+- **FIDE periods: a count typed per period is understood.** 40 then 20 is read as 40, then 20 more, the period editor says so, and adding a period suggests the next count from the total.
+- **Sharing the app** offers an APK or a ZIP: some phones refuse an APK over Bluetooth.
+- The mode guide is corrected on Hidden, FIDE periods and Fast Move.
+
+### Fixed
+- **Picking a preset ended a game in progress without asking**, and lost its autosave. It asks first, as Reset does.
+- **A backup could be written that its own restore refused**, with "Backup successful": about a thousand games were enough. Backups are checked as they are written, and one that would not restore is not kept.
+- **Restoring a backup on a new phone cut its history to 100 games.** The longer of the two history limits is kept.
+- **A backup made just after the app was restarted could hold default settings and no games.**
+- **A file from a newer version failed to import whole**, and one unreadable game in a backup took every other with it.
+- **Photos, recordings and videos in a backup were lost** when restored under another user, a work profile or another build. They are found by name now.
+- **A text note lost what was typed just before Back.** Deleting a note no longer leaves it listed, pointing at a deleted file, and two notes no longer share one media file.
+- **Global Shared with three or four players got stuck** on a player eliminated by their move clock.
+- **A table's Chrono countdown under Negative or Reverse said Finished but kept running.**
+- **FIDE periods:** a built-in preset could follow the "forced move counter" switch against its own name; switching that, or the Fischer first-move bonus, ended any game in progress; a flag that was paid off still read PERIOD FLAG; and the 120'/40 + 60'/20 + 15' + 30s preset gave the 30 seconds from the first move rather than move 61.
+- **Phases** named "Player 1" in TalkBack and the voice, logged a normal finish as a loss on time, and was not kept in the history when stopped before its first phase ended.
+- **Omni:** the phase cutoff switch did nothing, a looping round could never end, a cutoff during a pause gave the next player a free turn, and any change in the setup threw away a paused session.
+- **Random and Hidden** could draw a clock of 0:00; player 2's range was offered though the draw is player 1's.
+- The low-time flash followed the wrong clock in Global modes, and the bigger-side option grew player 1's half in a Chrono run for the table.
+- The variant generator keeps its position when the screen turns or the theme changes.
+- TalkBack reads the variant board by piece, announces the coin, the die and the card, and no longer says "Player 1 to move" on a clock that is everyone's.
+- Launcher shortcuts no longer spend their places on the same time control twice.
+- E-Ink: the scrollbar no longer appears a moment after the page, which redrew the screen.
+
+### Translations
+- Every language was checked: mistranslations corrected, one form of address per language, mode names left as on their cards, labels shortened where they were cut, and Brazilian Portuguese completed.
+
 ## v0.8.36 — 2026-10-31
 
 The E-Ink build, reviewed on its own: on a small E Ink screen, with a larger font, with TalkBack and
