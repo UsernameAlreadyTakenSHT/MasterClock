@@ -375,4 +375,15 @@ class ZipBackupManagerTest {
         val local = imported.map { it.copy(id = "local-" + it.id, audioPath = sanitizeImportedMediaPath(target, it.audioPath), imagePath = sanitizeImportedMediaPath(target, it.imagePath), videoPath = sanitizeImportedMediaPath(target, it.videoPath)) }
         assertTrue(ZipBackupManager.restoreDestinations(target, local, imported).isEmpty())
     }
+
+    @Test
+    fun `an imported note gets no media file a note here already has`() {
+        val shared = "/data/user/0/app/files/audio_x1.mp4"
+        val local = listOf(NotebookNote(content = "mine, edited", audioPath = shared))
+        val imported = listOf(NotebookNote(content = "mine", audioPath = shared))
+        val merged = mergeImportedNotes(local, imported)
+        assertEquals(2, merged.size)
+        assertEquals(shared, merged[0].audioPath)
+        assertNull(merged[1].audioPath)
+    }
 }

@@ -192,17 +192,12 @@ object ZipBackupManager {
      * files stayed on disk with nothing pointing at them.
      */
     fun restoreDestinations(filesDir: File, local: List<NotebookNote>, imported: List<NotebookNote>): Map<String, File> {
-        // Merged as the import merges them, with their media paths rebuilt for this device -- the
-        // device's own notes hold theirs that way. Merged on the backup's raw paths, a note from
-        // another sandbox never matched the copy already here: its file was restored over the
-        // local one, and near the ceiling it took the room of a note the import then kept.
-        val here = imported.map { note ->
-            note.copy(
-                audioPath = sanitizeImportedMediaPath(filesDir, note.audioPath),
-                imagePath = sanitizeImportedMediaPath(filesDir, note.imagePath),
-                videoPath = sanitizeImportedMediaPath(filesDir, note.videoPath),
-            )
-        }
+        // Merged as the import merges them, each note as the import keeps it (sanitizeNote): its
+        // media paths rebuilt for this device -- the device's own notes hold theirs that way -- and
+        // bounded as the import bounds it. Merged on the backup's raw notes, a note from another
+        // sandbox never matched the copy already here, so its file was restored over the local one,
+        // and one the import cut short could be counted as new.
+        val here = imported.take(MAX_IMPORTED_NOTES).map { sanitizeNote(filesDir, it, freshId = false) }
         return mediaDestinations(filesDir, mergeImportedNotes(local, here).drop(local.size))
     }
 

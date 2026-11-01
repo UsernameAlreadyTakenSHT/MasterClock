@@ -1143,9 +1143,19 @@ private fun sanitizeSettings(
     freshNoteIds: Boolean,
     grants: Set<String> = persistedReadGrants(context),
 ): ChessClockSettings {
-    val sanitizedNotes = settings.notebookNotes.take(MAX_IMPORTED_NOTES).map { note ->
+    val sanitizedNotes = settings.notebookNotes.take(MAX_IMPORTED_NOTES).map { sanitizeNote(context.filesDir, it, freshNoteIds) }
+    val sanitizedNumberOfPlayers = settings.numberOfPlayers.coerceIn(1, 4)
+    return sanitizeSettingsRest(context, settings, sanitizedNotes, sanitizedNumberOfPlayers, grants)
+}
+
+/**
+ * One note as the notebook keeps it: bounded, its board fitted to its variant, its media paths
+ * rebuilt for this device. A function of its own so that the media a restore writes is chosen from
+ * the notes exactly as the import will keep them; see [ZipBackupManager.restoreDestinations].
+ */
+internal fun sanitizeNote(filesDir: java.io.File, note: NotebookNote, freshId: Boolean): NotebookNote =
         note.copy(
-            id = if (freshNoteIds) java.util.UUID.randomUUID().toString() else note.id,
+            id = if (freshId) java.util.UUID.randomUUID().toString() else note.id,
             title = note.title.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
             content = note.content.take(MAX_IMPORTED_NOTE_CONTENT_CHARS),
             drawingPaths = note.drawingPaths.take(MAX_IMPORTED_DRAWING_PATHS).map { stroke ->
@@ -1159,12 +1169,18 @@ private fun sanitizeSettings(
                 if (squares.size == note.boardVariant.squareCount) squares
                 else squares + List(note.boardVariant.squareCount - squares.size) { "" }
             },
-            audioPath = sanitizeImportedMediaPath(context.filesDir, note.audioPath),
-            imagePath = sanitizeImportedMediaPath(context.filesDir, note.imagePath),
-            videoPath = sanitizeImportedMediaPath(context.filesDir, note.videoPath),
+            audioPath = sanitizeImportedMediaPath(filesDir, note.audioPath),
+            imagePath = sanitizeImportedMediaPath(filesDir, note.imagePath),
+            videoPath = sanitizeImportedMediaPath(filesDir, note.videoPath),
         )
-    }
-    val sanitizedNumberOfPlayers = settings.numberOfPlayers.coerceIn(1, 4)
+
+private fun sanitizeSettingsRest(
+    context: android.content.Context,
+    settings: ChessClockSettings,
+    sanitizedNotes: List<NotebookNote>,
+    sanitizedNumberOfPlayers: Int,
+    grants: Set<String>,
+): ChessClockSettings {
     return settings.copy(
         notebookNotes = sanitizedNotes,
         customBeepUri = sanitizeImportedContentUri(grants, settings.customBeepUri),
@@ -1224,7 +1240,14 @@ private fun sanitizeSettings(
 internal fun mergeImportedNotes(local: List<NotebookNote>, imported: List<NotebookNote>): List<NotebookNote> {
     val present = local.mapTo(HashSet()) { it.copy(id = "") }
     val room = (MAX_NOTEBOOK_NOTES - local.size).coerceAtLeast(0)
-    return local + imported.filter { present.add(it.copy(id = "")) }.take(room)
+    // A media file belongs to one note. An imported note naming one a note here already has -- the
+    // same backup restored again after that note was edited -- kept both pointing at it, and
+    // deleting either, or retaking its media, shredded the other's. The note comes in without it.
+    val owned = local.flatMapTo(HashSet()) { listOfNotNull(it.audioPath, it.imagePath, it.videoPath) }
+    fun claim(path: String?) = path?.takeIf { owned.add(it) }
+    return local + imported.filter { present.add(it.copy(id = "")) }.take(room).map { note ->
+        note.copy(audioPath = claim(note.audioPath), imagePath = claim(note.imagePath), videoPath = claim(note.videoPath))
+    }
 }
 
 /**
@@ -1403,7 +1426,7 @@ const val MAX_IMPORTED_EVENTS_PER_LOG = 2_000
  * the ceiling rather than filling the notebook past it.
  */
 const val MAX_NOTEBOOK_NOTES = 500
-private const val MAX_IMPORTED_NOTES = MAX_NOTEBOOK_NOTES
+internal const val MAX_IMPORTED_NOTES = MAX_NOTEBOOK_NOTES
 private const val MAX_IMPORTED_PRESETS = 500
 /**
  * The longest note or phase title, and the longest note text, the app keeps. Public so the screens
