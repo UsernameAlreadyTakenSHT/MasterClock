@@ -2324,7 +2324,10 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         //
         // The clock a player starts with is their first move's time, not a reserve: until they have
         // moved, it is replaced, or cumulative would have given the second player two move times.
-        val gift = s.moveTimeMs + timeSpentOnMove
+        // The recipient's move time, not the mover's: with settings per player a handicap of 10s
+        // against 30s was handed across the table and reversed from the second move.
+        val recipientSettings = if (settings.differentSettingsPerPlayer) when (recipient) { 0 -> settings.p1Custom; 1 -> settings.p2Custom; 2 -> settings.p3Custom; else -> settings.p4Custom } else settings.main
+        val gift = recipientSettings.moveTimeMs + timeSpentOnMove
         val movedP = if (s.fastMoveTransferCumulative) tempP
             else tempP.copy(timeRemainingMs = s.moveTimeMs).let { if (p.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
         val newList = state.players.toMutableList().apply { this[playerIndex - 1] = movedP }
@@ -2738,8 +2741,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val builtIn = !id.startsWith("preset:") && !id.startsWith("game:")
         // A shortcut that starts the app finds no game running here, only the autosave of one
         // interrupted -- the process killed, the app closed mid-game -- and it cleared that, with
-        // no way back. It is kept, so Resume still offers that game. A game running in this process
-        // ends with the shortcut, as with a preset.
+        // no way back. It is kept, so Resume offers that game until the new one is first autosaved
+        // over it, fifteen seconds into play. A game running in this process ends with the
+        // shortcut, as with a preset.
         updateSettings(
             applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn, keepFirstMoveBonus = builtIn, keepTable = builtIn),
             newGame = true,
@@ -2935,7 +2939,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         val playerCount = settings.value.numberOfPlayers.coerceAtLeast(1)
-        if (flagsEndGame(currentState.players, settings.value.flagBehavior, playerCount)) return
+        // Over, by isGameOver's whole reading: a table CHRONO run out under NEGATIVE or REVERSE is
+        // over though no flag ends it, and a press there logged a move and restarted the ticker.
+        if (isGameOver(currentState, settings.value.flagBehavior, playerCount)) return
 
         if (currentState.activePlayer == playerIndex) {
             val p = currentState.players.getOrNull(playerIndex - 1) ?: return

@@ -91,7 +91,10 @@
     <string name="settings_period_n">Periode %d</string>
     <string name="settings_moves_unlock">Zetten om de volgende vrij te spelen (0 = laatste)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Totaal aantal zetten tot periode %d</string>
-    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Geteld als %1$d zetten extra: %2$d in totaal</string>
+    <plurals name="settings_moves_read_as_more">
+        <item quantity="one">Geteld als %1$d zet extra: %2$d in totaal</item>
+        <item quantity="other">Geteld als %1$d zetten extra: %2$d in totaal</item>
+    </plurals>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Naam van fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Rood: %d</string>
@@ -459,7 +462,7 @@
     <string name="settings_more_data_sharing">Gegevens en delen</string>
     <string name="settings_more_export">Exporteren / delen</string>
     <string name="settings_more_import">Importeren / scannen</string>
-    <string name="settings_more_share_apk">Applicatie delen (APK)</string>
+    <string name="settings_more_share_apk">Applicatie delen</string>
     <string name="settings_more_share_apk_via">APK delen via</string>
     <string name="settings_more_share_apk_format_title">App delen als</string>
     <string name="settings_more_share_apk_format_text">Een APK installeer je direct. Sommige telefoons weigeren APK-bestanden via Bluetooth: stuur dan een ZIP, waaruit de ontvanger de APK haalt om te installeren.</string>

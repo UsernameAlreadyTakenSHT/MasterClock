@@ -92,7 +92,10 @@
     <string name="settings_period_n">Periode %d</string>
     <string name="settings_moves_unlock">Züge bis zur nächsten (0 = letzte)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Züge insgesamt bis Periode %d</string>
-    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Gilt als %1$d weitere Züge: insgesamt %2$d</string>
+    <plurals name="settings_moves_read_as_more">
+        <item quantity="one">Gilt als %1$d weiterer Zug: insgesamt %2$d</item>
+        <item quantity="other">Gilt als %1$d weitere Züge: insgesamt %2$d</item>
+    </plurals>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Name der Phase %d</string>
     <string name="settings_phase_n">Phase %d</string>
     <string name="settings_color_red">Rot: %d</string>
@@ -135,7 +138,7 @@
     <string name="qr_confirm_message">Dieser Code ersetzt deine aktuellen Einstellungen und kann Partien und eine Punktetafel hinzufügen. Nimm nur Codes von jemandem an, dem du vertraust.</string>
     <string name="qr_confirm_apply">Übernehmen</string>
     <string name="import_confirm_title">Diese Datei importieren?</string>
-    <string name="import_confirm_message">Diese Datei ersetzt deine aktuellen Einstellungen. Ihre Partien, Voreinstellungen, Notizen und Ergebnisse der Punktetafel kommen zu deinen hinzu: Von deinen wird nichts gelöscht.</string>
+    <string name="import_confirm_message">Diese Datei ersetzt deine aktuellen Einstellungen. Die Partien, Voreinstellungen, Notizen und Ergebnisse der Punktetafel daraus kommen zu deinen hinzu: Von deinen wird nichts gelöscht.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Spieler %1$d, %2$s</string>
@@ -460,7 +463,7 @@
     <string name="settings_more_data_sharing">Daten und Teilen</string>
     <string name="settings_more_export">Exportieren / teilen</string>
     <string name="settings_more_import">Importieren / scannen</string>
-    <string name="settings_more_share_apk">Anwendung teilen (APK)</string>
+    <string name="settings_more_share_apk">Anwendung teilen</string>
     <string name="settings_more_share_apk_via">APK teilen über</string>
     <string name="settings_more_share_apk_format_title">App teilen als</string>
     <string name="settings_more_share_apk_format_text">Eine APK lässt sich direkt installieren. Manche Handys lehnen APK-Dateien per Bluetooth ab: Sende dann eine ZIP; der Empfänger entpackt daraus die APK zum Installieren.</string>

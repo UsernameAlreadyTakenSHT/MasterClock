@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.LinkAnnotation
@@ -284,7 +285,7 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                                 shape = RoundedCornerShape(12.dp),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 supportingText = when {
-                                    readAsMore -> { { Text(stringResource(R.string.settings_moves_read_as_more, period.movesToNext, movesBefore + period.movesToNext)) } }
+                                    readAsMore -> { { Text(pluralStringResource(R.plurals.settings_moves_read_as_more, period.movesToNext, period.movesToNext, movesBefore + period.movesToNext)) } }
                                     isLast && period.movesToNext == 0 -> { { Text(stringResource(R.string.settings_final_period)) } }
                                     else -> null
                                 },

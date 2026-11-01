@@ -365,6 +365,9 @@ fun MoreSettingsPage(
                                 TextButton(onClick = { shareApp(asZip = false) }) { Text("APK") }
                             }
                         },
+                        dismissButton = {
+                            TextButton(onClick = { showApkFormat = false }) { Text(stringResource(R.string.common_cancel)) }
+                        },
                     )
                 }
             }

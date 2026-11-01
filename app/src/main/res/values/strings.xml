@@ -48,7 +48,7 @@
     <string name="settings_bonus_type">Bonus Type</string>
     <string name="settings_move_timer_type">Move Timer Type</string>
     <string name="settings_byoyomi_type">Byoyomi Type</string>
-    <string name="settings_chrono_type">Chrono Type</string>
+    <string name="settings_chrono_type">Chronos Type</string>
     <string name="settings_move_counts_type">Move Counts Type</string>
     <string name="settings_fast_move_type">Fast Move Type</string>
     <string name="settings_time_parameters">Time Parameters</string>
@@ -90,7 +90,10 @@
     <string name="settings_moves_unlock">Moves to unlock next (0 = Final)</string>
     <!-- The number is a period index, not a count, so plurals would be wrong here. -->
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Total moves before period %d</string>
-    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Read as %1$d more moves: %2$d in all</string>
+    <plurals name="settings_moves_read_as_more">
+        <item quantity="one">Read as %1$d more move: %2$d in all</item>
+        <item quantity="other">Read as %1$d more moves: %2$d in all</item>
+    </plurals>
     <!-- Also an index, not a count: "Phase 2 Name". -->
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Phase %d Name</string>
     <string name="settings_phase_n">Phase %d</string>
@@ -498,7 +501,7 @@
     <string name="settings_more_data_sharing">Data &amp; Sharing</string>
     <string name="settings_more_export">Export / Share</string>
     <string name="settings_more_import">Import / Scan</string>
-    <string name="settings_more_share_apk">Share Application (APK)</string>
+    <string name="settings_more_share_apk">Share Application</string>
     <string name="settings_more_share_apk_via">Share APK via</string>
     <string name="settings_more_share_apk_format_title">Share the app as</string>
     <string name="settings_more_share_apk_format_text">An APK installs directly. Some phones refuse APK files over Bluetooth: send a ZIP then, and the recipient extracts the APK from it to install.</string>

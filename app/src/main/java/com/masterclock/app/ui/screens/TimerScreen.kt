@@ -430,7 +430,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     // The face counts down the moves to the next FIDE period under the move counter, while there is one.
     val fideShowsMovesLeft = pSettings.mode == TimerMode.FIDE_PERIODS && settings.forcedMoveCounter &&
         playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1 &&
-        (fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex) ?: 0) > 0
+        (fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex) ?: 0) > 0 &&
+        // While a US delay runs, DELAY takes the place of the moves left.
+        playerState.delayRemainingMs <= 0
     // The flash warns as the beeps do, of the clock that runs out first in Global and Global Shared;
     // see countdownTimeMs. It followed the move clock alone, so a reserve at 0:08 under a 0:25 move
     // clock beeped without flashing.
@@ -483,7 +485,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     val labelColor = Color(settings.secondaryTextColor)
     val alertTextColor = Color(settings.alertTextColor)
 
-    val enabled = !state.isArbitreMode && (settings.flagBehavior != FlagBehavior.FREEZE || !playerState.isOutOfTime) && pSettings.mode != TimerMode.MOVE_TIMER_SHARED && !(isChrono && settings.isOneForAll)
+    val enabled = !state.isArbitreMode && (settings.flagBehavior != FlagBehavior.FREEZE || !playerState.isOutOfTime) && pSettings.mode != TimerMode.MOVE_TIMER_SHARED && !(isChrono && settings.isOneForAll) &&
+        !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)
 
     // Hoisted: the semantics lambda is not composable scope.
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
@@ -785,7 +788,8 @@ fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalIconButton(onClick = { onAdjustMoves(-1) }, enabled = moveCount > 0, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_move, label)) }
                 // A fixed width, so the buttons do not shift as the count gains a digit.
-                Text(moveCount.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(36.dp))
+                val spokenCount = stringResource(R.string.timer_moves, moveCount)
+                Text(moveCount.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(36.dp).clearAndSetSemantics { contentDescription = spokenCount })
                 FilledTonalIconButton(onClick = { onAdjustMoves(1) }, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_move, label)) }
             }
         }

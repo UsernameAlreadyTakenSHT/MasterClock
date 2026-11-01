@@ -75,7 +75,7 @@
     <string name="settings_more_data_sharing">Dados e compartilhamento</string>
     <string name="settings_more_export">Exportar / compartilhar</string>
     <string name="settings_more_import">Importar / escanear</string>
-    <string name="settings_more_share_apk">Compartilhar o aplicativo (APK)</string>
+    <string name="settings_more_share_apk">Compartilhar o aplicativo</string>
     <string name="settings_more_share_apk_via">Compartilhar o APK via</string>
     <string name="settings_more_share_apk_format_title">Compartilhar o app como</string>
     <string name="settings_more_share_apk_format_text">Um APK se instala diretamente. Alguns celulares recusam arquivos APK por Bluetooth: envie então um ZIP, do qual o destinatário extrai o APK para instalá-lo.</string>

@@ -494,6 +494,8 @@ class OmniTimerLogicTest {
             games = listOf(OmniGameSettings(rounds = listOf(round, OmniRoundSettings()))))
         var state = OmniState(isRunning = true, hasStarted = true)
         repeat(2) { state = computeOmniAdvance(state, settings) }
-        assertTrue(state.currentRoundIndex == 1 || state.isInTransition)
+        // Every turn's end is a transition, the old looping one included: the round is what tells.
+        assertEquals(1, state.currentRoundIndex)
+        assertEquals("ROUND", state.transitionLabel)
     }
 }

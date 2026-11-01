@@ -92,7 +92,11 @@
     <string name="settings_period_n">Periodo %d</string>
     <string name="settings_moves_unlock">Jugadas para desbloquear el siguiente (0 = final)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Jugadas totales hasta el periodo %d</string>
-    <string name="settings_moves_read_as_more" tools:ignore="PluralsCandidate">Se cuenta como %1$d jugadas más: %2$d en total</string>
+    <plurals name="settings_moves_read_as_more">
+        <item quantity="one">Se cuenta como %1$d jugada más: %2$d en total</item>
+        <item quantity="many">Se cuenta como %1$d jugadas más: %2$d en total</item>
+        <item quantity="other">Se cuenta como %1$d jugadas más: %2$d en total</item>
+    </plurals>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nombre de la fase %d</string>
     <string name="settings_phase_n">Fase %d</string>
     <string name="settings_color_red">Rojo: %d</string>
@@ -471,7 +475,7 @@
     <string name="settings_more_data_sharing">Datos y uso compartido</string>
     <string name="settings_more_export">Exportar / compartir</string>
     <string name="settings_more_import">Importar / escanear</string>
-    <string name="settings_more_share_apk">Compartir la aplicación (APK)</string>
+    <string name="settings_more_share_apk">Compartir la aplicación</string>
     <string name="settings_more_share_apk_via">Compartir el APK con</string>
     <string name="settings_more_share_apk_format_title">Compartir la app como</string>
     <string name="settings_more_share_apk_format_text">Un APK se instala directamente. Algunos teléfonos rechazan los archivos APK por Bluetooth: envía entonces un ZIP, del que el destinatario extrae el APK para instalarlo.</string>
