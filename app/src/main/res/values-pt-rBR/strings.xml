@@ -175,7 +175,7 @@
     <string name="settings_beep">Bipe</string>
     <string name="omni_cfg_final_beep">Bipe final</string>
     <string name="omni_cfg_launch_countdown">Contagem regressiva de início</string>
-    <string name="settings_cumulative_explain">Cada lance recebe o tempo por lance mais o tempo que o adversário gastou no último lance dele. Ligado, o que sobrou dos lances anteriores também é mantido; desligado, é perdido.</string>
+    <string name="settings_cumulative_explain">Cada lance recebe o tempo por lance mais o tempo que o adversário gastou no último lance dele. Ligado, o que sobrou dos lances anteriores também é mantido; desligado, é perdido. Para um tempo total fixo, em que o que um jogador gasta o outro ganha, veja Hourglass.</string>
     <string name="omni_cfg_cutoff_session">Interromper ao esgotar o tempo de sessão</string>
     <string name="omni_cfg_cutoff_game">Interromper ao esgotar o tempo de partida</string>
     <string name="omni_cfg_cutoff_phase">Interromper ao esgotar o tempo de fase</string>
