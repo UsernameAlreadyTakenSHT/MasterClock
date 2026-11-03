@@ -2320,6 +2320,160 @@ internal fun adjustFideMoveCount(p: PlayerState, delta: Int, s: PlayerSettings, 
     return next
 }
 
+/**
+ * A player's own settings: player [playerIndex]'s when each player has their own, the table's
+ * otherwise.
+ */
+internal fun ChessClockSettings.playerSettings(playerIndex: Int): PlayerSettings =
+    if (!differentSettingsPerPlayer) main else when (playerIndex) {
+        1 -> p1Custom
+        2 -> p2Custom
+        3 -> p3Custom
+        4 -> p4Custom
+        else -> main
+    }
+
+/** Whether the arbiter's ±1m/±1s means anything in [mode]: a move count is not a time. */
+internal fun isTimeAdjustableMode(mode: TimerMode): Boolean = !mode.name.startsWith("MOVE_COUNTS")
+
+/**
+ * The arbiter's ±time on [playerIndex], applied to [state].
+ *
+ * Pure, so the game simulation in the tests can reach it: it lived inside the ViewModel, and the
+ * corrections where most of the clock's remaining defects sat were the one thing no test could
+ * call. The ViewModel checks that the arbiter panel is open and hands the result to the screen.
+ */
+internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountMs: Long, settings: ChessClockSettings): ChessClockState {
+    val flagBehavior = settings.flagBehavior
+    // Shared (Auto) keeps one move clock, copied into every player and ticked from player 1's,
+    // so an adjustment to anyone else's was overwritten by the next tick. It is the table's.
+    val mode = settings.playerSettings(playerIndex).mode
+    // A move count is not a time; there is nothing here to give or take (the buttons are off).
+    if (!isTimeAdjustableMode(mode)) return state
+    val wholeTable = mode == TimerMode.MOVE_TIMER_SHARED
+    val adjusted = when (mode) {
+        // CHRONO's clock is the table's, globalTimeMs; adjusting a player's own field, which
+        // the face never shows, changed nothing.
+        TimerMode.CHRONO_COUNTDOWN, TimerMode.CHRONO_COUNTUP -> {
+            val p1 = state.players[0]
+            val clock = PlayerState(state.globalTimeMs, isOutOfTime = p1.isOutOfTime, isNegative = p1.isNegative).arbiterCredited(amountMs, flagBehavior)
+            state.copy(globalTimeMs = clock.timeRemainingMs, players = state.players.map { it.copy(isOutOfTime = clock.isOutOfTime, isNegative = clock.isNegative) })
+        }
+        // PHASES shows the phase's clock, globalTimeMs, or during a timed pause what is left
+        // of it; time went to the player's own field, which the face never shows and the next
+        // phase overwrites. A phase over, waiting for its tap, or a game finished, is left be.
+        TimerMode.PHASES -> {
+            val p1 = state.players[0]
+            when {
+                p1.isOutOfTime || p1.isPhaseAwaitingTap || state.phasesFinished -> state
+                p1.isInInterPhasePause -> if (settings.pauseUntilTap) state
+                    else state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = (p1.pauseTimeRemainingMs + amountMs).coerceAtLeast(0)) })
+                else -> state.copy(globalTimeMs = (state.globalTimeMs + amountMs).coerceAtLeast(0))
+            }
+        }
+        // Time given in these modes is the total, or the reserve. It landed on the move
+        // clock, which the next press refills to the move time: the adjustment was gone.
+        // Global Shared's reserve is everyone's.
+        // Reserve given to a player it ran out on puts them back in play, as arbiterCredited
+        // does for a plain clock -- under Global only while their move clock has time too,
+        // since that one running out is a flag of its own.
+        TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> state.copy(
+            players = state.players.mapIndexed { idx, p ->
+                if (mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || idx + 1 == playerIndex) {
+                    val reserve = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)
+                    val back = p.isOutOfTime && !p.isOverrun(flagBehavior) && reserve > 0 &&
+                        (mode == TimerMode.MOVE_TIMER_OVERTIME || p.timeRemainingMs > 0)
+                    // Under NEGATIVE and REVERSE an empty shared reserve puts every player
+                    // in overrun. Reserve given back left them there: each player's next
+                    // turn counted up from zero beside a reserve with time in it. Every player
+                    // gets their move clock back, the one on the move included: left in
+                    // overrun until their next press, they read negative while the reserve
+                    // given back drained beside it.
+                    val revived = mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && p.isOverrun(flagBehavior) &&
+                        p.secondaryTimeMs <= 0 && reserve > 0
+                    if (revived) p.copy(secondaryTimeMs = reserve, timeRemainingMs = settings.playerSettings(idx + 1).moveTimeMs, isOutOfTime = false, isNegative = false)
+                    else p.copy(secondaryTimeMs = reserve, isOutOfTime = p.isOutOfTime && !back)
+                } else p
+            },
+        )
+        else -> state.copy(players = state.players.mapIndexed { idx, p ->
+            if (wholeTable || idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
+                val ps = settings.playerSettings(idx + 1)
+                if (ps.mode == TimerMode.FAST_MOVE && ps.fastMoveMode == FastMoveType.ACCELERATE) it.withAccelerateMarkFrom(p) else it
+            }
+            else p
+        })
+    }
+    // Nobody out any more: no flag stands, so none is first.
+    return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
+}
+
+/** The arbiter's ±1 move on [playerIndex], applied to [state]; see [adjustFideMoveCount]. */
+internal fun arbiterAdjustMoveCount(state: ChessClockState, playerIndex: Int, delta: Int, settings: ChessClockSettings): ChessClockState {
+    val before = state.players.getOrNull(playerIndex - 1) ?: return state
+    val after = adjustFideMoveCount(before, delta, settings.playerSettings(playerIndex), settings)
+    val adjusted = state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = after })
+    // As after the arbiter's time: nobody out any more, no flag stands first.
+    return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
+}
+
+/**
+ * The clocks a game starts with. [randomRoll] is RANDOM and HIDDEN's drawn base time and increment,
+ * which the ViewModel draws, or keeps for a reset, before calling this; every other mode ignores it.
+ * Pure, for the same reason as [arbiterAdjustTime].
+ */
+internal fun initialClockState(settings: ChessClockSettings, randomRoll: Pair<Long, Long>): ChessClockState {
+    val s1 = settings.playerSettings(1)
+    fun initP(pSettings: PlayerSettings): PlayerState {
+        if (pSettings.mode == TimerMode.RANDOM || pSettings.mode == TimerMode.HIDDEN) {
+            return PlayerState(
+                timeRemainingMs = randomRoll.first, 
+                secondaryTimeMs = randomRoll.second,
+                initialTotalTimeMs = randomRoll.first
+            )
+        }
+
+        val bonus = if (pSettings.mode == TimerMode.FISCHER && settings.fischerFideFirstMove) pSettings.incrementMs else 0
+        return when (pSettings.mode) {
+            TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_SHARED -> PlayerState(timeRemainingMs = pSettings.moveTimeMs)
+            TimerMode.MOVE_TIMER_SAVE_CAP -> PlayerState(timeRemainingMs = pSettings.moveTimeMs, secondaryTimeMs = 0)
+            TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> PlayerState(timeRemainingMs = pSettings.moveTimeMs, secondaryTimeMs = pSettings.initialTimeMs)
+            TimerMode.BYOYOMI_JAPANESE -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, byoyomiPeriodsRemaining = pSettings.byoyomiPeriods)
+            TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> pSettings.byoyomiPeriods.coerceAtLeast(1).let { quota -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, movesRemainingInPeriod = quota, currentByoyomiMovesGoal = quota) }
+            TimerMode.MOVE_COUNTS_UP -> PlayerState(timeRemainingMs = 0, moveCount = 0)
+            TimerMode.MOVE_COUNTS_DOWN -> PlayerState(timeRemainingMs = 0, moveCount = pSettings.maxMoves)
+            TimerMode.FIDE_PERIODS -> {
+                val first = pSettings.fidePeriods.firstOrNull() ?: FidePeriod()
+                PlayerState(
+                    // The bonus for move 1; see computePostMoveState.
+                    timeRemainingMs = first.timeMs + if (first.isFischer) first.incrementMs else 0L,
+                    currentPeriodIndex = 0,
+                    // Same rule computePostMoveState applies to every later move. Without it the
+                    // first move of each player had no delay at all -- delayRemainingMs took
+                    // PlayerState's default of 0, and startClock arms a delay only for
+                    // US_DELAY -- so a delay period granted its delay from move 2 onwards. On
+                    // the built-in "US 80'/40 + 30' + 30s" that is 30 seconds each, taken from
+                    // the main clock on the one move where a player is least likely to notice.
+                    delayRemainingMs = if (!first.isFischer && first.hasDelay) first.incrementMs else 0L,
+                )
+            }
+            TimerMode.PHASES -> {
+                val first = pSettings.phases.firstOrNull() ?: GamePhase()
+                PlayerState(timeRemainingMs = first.timeMs, currentPhaseIndex = 0)
+            }
+            TimerMode.GONG -> PlayerState(timeRemainingMs = pSettings.gongReflectionMs.coerceAtLeast(MIN_GONG_PHASE_MS), isGongReflectionPhase = true)
+            TimerMode.FAST_MOVE -> PlayerState(
+                timeRemainingMs = if (pSettings.fastMoveMode == FastMoveType.TRANSFER) pSettings.moveTimeMs else pSettings.initialTimeMs,
+                initialTotalTimeMs = pSettings.initialTimeMs
+            )
+            else -> PlayerState(timeRemainingMs = pSettings.initialTimeMs + bonus)
+        }
+    }
+
+    val players = (1..settings.numberOfPlayers.coerceIn(1, 4)).map { initP(settings.playerSettings(it)) }
+    return ChessClockState(players = players, globalTimeMs = initialGlobalTimeMs(s1))
+}
+
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
     val p = state.players[playerIndex - 1]
     val tempP = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) {
@@ -2834,66 +2988,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             lastRandomRoll = null
         }
 
-        fun initP(pSettings: PlayerSettings): PlayerState {
-            if (pSettings.mode == TimerMode.RANDOM || pSettings.mode == TimerMode.HIDDEN) {
-                return PlayerState(
-                    timeRemainingMs = sharedRandomBase, 
-                    secondaryTimeMs = sharedRandomInc,
-                    initialTotalTimeMs = sharedRandomBase
-                )
-            }
-
-            val bonus = if (pSettings.mode == TimerMode.FISCHER && settings.fischerFideFirstMove) pSettings.incrementMs else 0
-            return when (pSettings.mode) {
-                TimerMode.MOVE_TIMER_STANDARD, TimerMode.MOVE_TIMER_SHARED -> PlayerState(timeRemainingMs = pSettings.moveTimeMs)
-                TimerMode.MOVE_TIMER_SAVE_CAP -> PlayerState(timeRemainingMs = pSettings.moveTimeMs, secondaryTimeMs = 0)
-                TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> PlayerState(timeRemainingMs = pSettings.moveTimeMs, secondaryTimeMs = pSettings.initialTimeMs)
-                TimerMode.BYOYOMI_JAPANESE -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, byoyomiPeriodsRemaining = pSettings.byoyomiPeriods)
-                TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> pSettings.byoyomiPeriods.coerceAtLeast(1).let { quota -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, movesRemainingInPeriod = quota, currentByoyomiMovesGoal = quota) }
-                TimerMode.MOVE_COUNTS_UP -> PlayerState(timeRemainingMs = 0, moveCount = 0)
-                TimerMode.MOVE_COUNTS_DOWN -> PlayerState(timeRemainingMs = 0, moveCount = pSettings.maxMoves)
-                TimerMode.FIDE_PERIODS -> {
-                    val first = pSettings.fidePeriods.firstOrNull() ?: FidePeriod()
-                    PlayerState(
-                        // The bonus for move 1; see computePostMoveState.
-                        timeRemainingMs = first.timeMs + if (first.isFischer) first.incrementMs else 0L,
-                        currentPeriodIndex = 0,
-                        // Same rule computePostMoveState applies to every later move. Without it the
-                        // first move of each player had no delay at all -- delayRemainingMs took
-                        // PlayerState's default of 0, and startClock arms a delay only for
-                        // US_DELAY -- so a delay period granted its delay from move 2 onwards. On
-                        // the built-in "US 80'/40 + 30' + 30s" that is 30 seconds each, taken from
-                        // the main clock on the one move where a player is least likely to notice.
-                        delayRemainingMs = if (!first.isFischer && first.hasDelay) first.incrementMs else 0L,
-                    )
-                }
-                TimerMode.PHASES -> {
-                    val first = pSettings.phases.firstOrNull() ?: GamePhase()
-                    PlayerState(timeRemainingMs = first.timeMs, currentPhaseIndex = 0)
-                }
-                TimerMode.GONG -> PlayerState(timeRemainingMs = pSettings.gongReflectionMs.coerceAtLeast(MIN_GONG_PHASE_MS), isGongReflectionPhase = true)
-                TimerMode.FAST_MOVE -> PlayerState(
-                    timeRemainingMs = if (pSettings.fastMoveMode == FastMoveType.TRANSFER) pSettings.moveTimeMs else pSettings.initialTimeMs,
-                    initialTotalTimeMs = pSettings.initialTimeMs
-                )
-                else -> PlayerState(timeRemainingMs = pSettings.initialTimeMs + bonus)
-            }
-        }
-        
-        val playerList = mutableListOf<PlayerState>()
-        val count = settings.numberOfPlayers.coerceIn(1, 4)
-        for (i in 1..count) {
-            val pSettings = when(i) {
-                1 -> if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
-                2 -> if (settings.differentSettingsPerPlayer) settings.p2Custom else settings.main
-                3 -> if (settings.differentSettingsPerPlayer) settings.p3Custom else settings.main
-                4 -> if (settings.differentSettingsPerPlayer) settings.p4Custom else settings.main
-                else -> settings.main
-            }
-            playerList.add(initP(pSettings))
-        }
-
-        return ChessClockState(players = playerList, globalTimeMs = initialGlobalTimeMs(s1))
+        return initialClockState(settings, sharedRandomBase to sharedRandomInc)
     }
 
     /**
@@ -3870,70 +3965,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun adjustTime(playerIndex: Int, amountMs: Long) {
         if (!_uiState.value.isArbitreMode) return
-        val flagBehavior = _settings.value.flagBehavior
-        // Shared (Auto) keeps one move clock, copied into every player and ticked from player 1's,
-        // so an adjustment to anyone else's was overwritten by the next tick. It is the table's.
-        val mode = getPlayerSettings(playerIndex).mode
-        // A move count is not a time; there is nothing here to give or take (the buttons are off).
-        if (!isTimeAdjustable(playerIndex)) return
-        val wholeTable = mode == TimerMode.MOVE_TIMER_SHARED
-        _uiState.update { state ->
-            val adjusted = when (mode) {
-                // CHRONO's clock is the table's, globalTimeMs; adjusting a player's own field, which
-                // the face never shows, changed nothing.
-                TimerMode.CHRONO_COUNTDOWN, TimerMode.CHRONO_COUNTUP -> {
-                    val p1 = state.players[0]
-                    val clock = PlayerState(state.globalTimeMs, isOutOfTime = p1.isOutOfTime, isNegative = p1.isNegative).arbiterCredited(amountMs, flagBehavior)
-                    state.copy(globalTimeMs = clock.timeRemainingMs, players = state.players.map { it.copy(isOutOfTime = clock.isOutOfTime, isNegative = clock.isNegative) })
-                }
-                // PHASES shows the phase's clock, globalTimeMs, or during a timed pause what is left
-                // of it; time went to the player's own field, which the face never shows and the next
-                // phase overwrites. A phase over, waiting for its tap, or a game finished, is left be.
-                TimerMode.PHASES -> {
-                    val p1 = state.players[0]
-                    when {
-                        p1.isOutOfTime || p1.isPhaseAwaitingTap || state.phasesFinished -> state
-                        p1.isInInterPhasePause -> if (_settings.value.pauseUntilTap) state
-                            else state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = (p1.pauseTimeRemainingMs + amountMs).coerceAtLeast(0)) })
-                        else -> state.copy(globalTimeMs = (state.globalTimeMs + amountMs).coerceAtLeast(0))
-                    }
-                }
-                // Time given in these modes is the total, or the reserve. It landed on the move
-                // clock, which the next press refills to the move time: the adjustment was gone.
-                // Global Shared's reserve is everyone's.
-                // Reserve given to a player it ran out on puts them back in play, as arbiterCredited
-                // does for a plain clock -- under Global only while their move clock has time too,
-                // since that one running out is a flag of its own.
-                TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> state.copy(
-                    players = state.players.mapIndexed { idx, p ->
-                        if (mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || idx + 1 == playerIndex) {
-                            val reserve = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)
-                            val back = p.isOutOfTime && !p.isOverrun(flagBehavior) && reserve > 0 &&
-                                (mode == TimerMode.MOVE_TIMER_OVERTIME || p.timeRemainingMs > 0)
-                            // Under NEGATIVE and REVERSE an empty shared reserve puts every player
-                            // in overrun. Reserve given back left them there: each player's next
-                            // turn counted up from zero beside a reserve with time in it. Every player
-                            // gets their move clock back, the one on the move included: left in
-                            // overrun until their next press, they read negative while the reserve
-                            // given back drained beside it.
-                            val revived = mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && p.isOverrun(flagBehavior) &&
-                                p.secondaryTimeMs <= 0 && reserve > 0
-                            if (revived) p.copy(secondaryTimeMs = reserve, timeRemainingMs = getPlayerSettings(idx + 1).moveTimeMs, isOutOfTime = false, isNegative = false)
-                            else p.copy(secondaryTimeMs = reserve, isOutOfTime = p.isOutOfTime && !back)
-                        } else p
-                    },
-                )
-                else -> state.copy(players = state.players.mapIndexed { idx, p ->
-                    if (wholeTable || idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
-                        val ps = getPlayerSettings(idx + 1)
-                        if (ps.mode == TimerMode.FAST_MOVE && ps.fastMoveMode == FastMoveType.ACCELERATE) it.withAccelerateMarkFrom(p) else it
-                    }
-                    else p
-                })
-            }
-            // Nobody out any more: no flag stands, so none is first.
-            if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
-        }
+        val settings = _settings.value
+        _uiState.update { state -> arbiterAdjustTime(state, playerIndex, amountMs, settings) }
     }
 
     /** Whether the arbiter's ±1 move means anything for this player: FIDE periods ended by moves. */
@@ -3943,15 +3976,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     /** The arbiter's correction to a player's move count; see [adjustFideMoveCount]. */
     fun adjustMoveCount(playerIndex: Int, delta: Int) {
         if (!_uiState.value.isArbitreMode || !isMoveCountAdjustable(playerIndex)) return
-        val s = getPlayerSettings(playerIndex)
         val settings = _settings.value
         val before = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
-        val after = adjustFideMoveCount(before, delta, s, settings)
-        _uiState.update { state ->
-            val adjusted = state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = after })
-            // As after the arbiter's time: nobody out any more, no flag stands first.
-            if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
-        }
+        _uiState.update { state -> arbiterAdjustMoveCount(state, playerIndex, delta, settings) }
+        val after = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         // A period the arbiter starts or undoes is in the log and announced, as one a press reaches.
         if (after.currentPeriodIndex != before.currentPeriodIndex) {
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIndex, moveCount = after.moveCount, detail = "Arbiter: period ${after.currentPeriodIndex + 1} at move ${after.moveCount}"))
@@ -3960,7 +3988,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /** Whether the arbiter's ±1m/±1s means anything for this player: a move count is not a time. */
-    fun isTimeAdjustable(playerIndex: Int): Boolean = !getPlayerSettings(playerIndex).mode.name.startsWith("MOVE_COUNTS")
+    fun isTimeAdjustable(playerIndex: Int): Boolean = isTimeAdjustableMode(getPlayerSettings(playerIndex).mode)
 
     /**
      * Ends the current phase: the game flags if the phase says so, otherwise the pause between
@@ -4154,17 +4182,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    private fun getPlayerSettings(playerIndex: Int): PlayerSettings {
-        return if (settings.value.differentSettingsPerPlayer) {
-            when(playerIndex) {
-                1 -> settings.value.p1Custom
-                2 -> settings.value.p2Custom
-                3 -> settings.value.p3Custom
-                4 -> settings.value.p4Custom
-                else -> settings.value.main
-            }
-        } else settings.value.main
-    }
+    private fun getPlayerSettings(playerIndex: Int): PlayerSettings = settings.value.playerSettings(playerIndex)
 
     fun updateScoreboardNames(p1: String, p2: String) {
         setScoreboard(_scoreboard.value.copy(player1Name = p1, player2Name = p2))
