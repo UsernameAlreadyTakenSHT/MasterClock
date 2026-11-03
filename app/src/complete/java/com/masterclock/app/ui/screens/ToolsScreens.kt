@@ -1127,11 +1127,11 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                         }; TextButton(onClick = { showTypeSelection = false }, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.common_cancel)) } } } } }
     } else {
         when (selectedNote.type) {
-            NotebookNoteType.DRAWING -> DrawingNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
-            NotebookNoteType.VOICE -> VoiceNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
-            NotebookNoteType.IMAGE -> ImageNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
-            NotebookNoteType.VIDEO -> VideoNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
-            NotebookNoteType.BOARD -> BoardNoteEditor(note = selectedNote, onUpdate = { updated -> viewModel.updateNote(updated.id) { updated } }, onBack = { selectedNoteId = null })
+            NotebookNoteType.DRAWING -> DrawingNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
+            NotebookNoteType.VOICE -> VoiceNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
+            NotebookNoteType.IMAGE -> ImageNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
+            NotebookNoteType.VIDEO -> VideoNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
+            NotebookNoteType.BOARD -> BoardNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
             else -> {
                 var title by remember(selectedNoteId) { mutableStateOf(selectedNote.title) }; var rawText by remember(selectedNoteId) { mutableStateOf(selectedNote.content) }; var contentValue by remember(selectedNoteId) { mutableStateOf(TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(selectedNote.content), selection = TextRange(selectedNote.content.length))) }; var showColorPicker by remember { mutableStateOf(false) }
                 // What Undo steps back through; see TextEditHistory. Only changes to the text are
@@ -1168,6 +1168,14 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
     }
 }
 
+/**
+ * How a note editor saves: a change applied to the note as it is stored at that moment, never a
+ * copy of the note the editor was composed with. A copy wrote back whatever it had captured, so
+ * on leaving a voice note the title's flush -- disposed after the recording's own save -- put the
+ * note back as it was before the take, and the recording was lost while its file stayed on disk.
+ */
+typealias NoteChange = ((NotebookNote) -> NotebookNote) -> Unit
+
 /** Long enough to cover typing, short enough that nobody could leave a note in less. */
 private const val NOTE_PERSIST_DEBOUNCE_MS = 400L
 
@@ -1184,24 +1192,22 @@ private const val NOTE_PERSIST_DEBOUNCE_MS = 400L
  * MainActivity's system back handler calls navigator.goBack() directly and never runs
  * ToolScaffold's onBack lambda, so leaving is only ever observed here.
  *
- * Nothing is written for a value that has come back to what it was first composed with, which is
- * also what keeps merely opening a note from writing.
+ * What is owed is decided against the last value written, not the one the note opened with; see
+ * NoteSaveTracker for the two ways the old comparison lost an edit.
  */
 @Composable
 private fun <T> PersistDebounced(value: T, onPersist: (T) -> Unit) {
     val persist by rememberUpdatedState(onPersist)
-    val initial = remember { value }
-    var pending by remember { mutableStateOf<T?>(null) }
+    val tracker = remember { NoteSaveTracker(value) }
 
     LaunchedEffect(value) {
-        if (value == initial) return@LaunchedEffect
-        pending = value
+        if (!tracker.changed(value)) return@LaunchedEffect
         delay(NOTE_PERSIST_DEBOUNCE_MS)
+        tracker.written(value)
         persist(value)
-        pending = null
     }
     DisposableEffect(Unit) {
-        onDispose { pending?.let { persist(it) } }
+        onDispose { tracker.flush { persist(it) } }
     }
 }
 
@@ -1233,7 +1239,7 @@ fun parseMarkdownToAnnotatedString(text: String): AnnotatedString {
 }
 
 @Composable
-fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     // Hoisted: these are used from permission and player callbacks, not composable scope.
     val permissionGrantedText = stringResource(R.string.toast_permission_granted)
     val micPermissionText = stringResource(R.string.toast_mic_permission)
@@ -1247,7 +1253,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // onBack lambda, so a title edit followed by a system back used to be silently lost.
     // Debounced like every other note: this wrote the whole settings on each character of the title,
     // and once on merely opening the note. See PersistDebounced.
-    PersistDebounced(title) { onUpdate(note.copy(title = it)) }
+    PersistDebounced(title) { newTitle -> onUpdate { it.copy(title = newTitle) } }
     val scope = rememberCoroutineScope()
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else Toast.makeText(context, micPermissionText, Toast.LENGTH_SHORT).show() }
     fun startRecording() {
@@ -1305,7 +1311,8 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
         active.release()
         if (!commitTake(context, pending, file)) return
         shredReplacedMedia(context, note.audioPath, file)
-        onUpdate(note.copy(title = title, audioPath = file.absolutePath, audioDurationMs = recordingTime * 1000L))
+        val durationMs = recordingTime * 1000L
+        onUpdate { it.copy(title = title, audioPath = file.absolutePath, audioDurationMs = durationMs) }
     }
     fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true
         // Each loop follows its own player and stops as soon as that is no longer the one playing.
@@ -1346,13 +1353,13 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
             if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
             else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else String.format(locale, "%02d:%02d", (note.audioDurationMs / 1000) / 60, (note.audioDurationMs / 1000) % 60), style = MaterialTheme.typography.headlineMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) { if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) }) }; if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play)) } }
-            if (note.audioPath != null && !isRecording && !isPlaying) DeleteMediaButton(stringResource(R.string.tools_delete_recording)) { shredNoteMedia(context, note.audioPath); onUpdate(note.copy(title = title, audioPath = null, audioDurationMs = 0)) }; Spacer(Modifier.weight(1f))
+            if (note.audioPath != null && !isRecording && !isPlaying) DeleteMediaButton(stringResource(R.string.tools_delete_recording)) { shredNoteMedia(context, note.audioPath); onUpdate { it.copy(title = title, audioPath = null, audioDurationMs = 0) } }; Spacer(Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     val cameraPermissionText = stringResource(R.string.toast_camera_permission)
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }
     // The camera writes into the pending file, never the note's own; see pendingMediaFile.
@@ -1360,11 +1367,11 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     // Debounced like every other note: this wrote the whole settings on each character of the title,
     // and once on merely opening the note. See PersistDebounced.
-    PersistDebounced(title) { onUpdate(note.copy(title = it)) }
+    PersistDebounced(title) { newTitle -> onUpdate { it.copy(title = newTitle) } }
     // Bumped on every new photo; see the image below.
     var captureCount by remember { mutableIntStateOf(0) }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && commitTake(context, pendingFile, photoFile)) { captureCount++; shredReplacedMedia(context, note.imagePath, photoFile); onUpdate(note.copy(title = title, imagePath = photoFile.absolutePath)) }
+        if (success && commitTake(context, pendingFile, photoFile)) { captureCount++; shredReplacedMedia(context, note.imagePath, photoFile); onUpdate { it.copy(title = title, imagePath = photoFile.absolutePath) } }
         else pendingFile.delete()
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
@@ -1388,13 +1395,13 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_photo), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
             Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(photoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.imagePath == null) stringResource(R.string.tools_take_photo) else stringResource(R.string.tools_retake_photo)) }
-            if (note.imagePath != null) DeleteMediaButton(stringResource(R.string.tools_delete_photo)) { shredNoteMedia(context, note.imagePath); onUpdate(note.copy(title = title, imagePath = null)) }
+            if (note.imagePath != null) DeleteMediaButton(stringResource(R.string.tools_delete_photo)) { shredNoteMedia(context, note.imagePath); onUpdate { it.copy(title = title, imagePath = null) } }
         }
     }
 }
 
 @Composable
-fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+fun VideoNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     val cameraPermissionText = stringResource(R.string.toast_camera_permission)
     val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }
     // The camera writes into the pending file, never the note's own; see pendingMediaFile.
@@ -1402,13 +1409,13 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     // Saves the title continuously; see the matching comment in VoiceNoteEditor.
     // Debounced like every other note: this wrote the whole settings on each character of the title,
     // and once on merely opening the note. See PersistDebounced.
-    PersistDebounced(title) { onUpdate(note.copy(title = it)) }
+    PersistDebounced(title) { newTitle -> onUpdate { it.copy(title = newTitle) } }
     // A retake ends up at video_<id>.mp4 again, so the path is identical before and after and nothing
     // in the note tells the two apart. This counter is what does: it changes on every capture, and
     // the player reloads when it does.
     var captureCount by remember { mutableIntStateOf(0) }
     val videoLauncher = rememberLauncherForActivityResult(CaptureVideoUpToAMinute()) { success ->
-        if (success && commitTake(context, pendingFile, videoFile)) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate(note.copy(title = title, videoPath = videoFile.absolutePath)) }
+        if (success && commitTake(context, pendingFile, videoFile)) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate { it.copy(title = title, videoPath = videoFile.absolutePath) } }
         else pendingFile.delete()
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
@@ -1435,16 +1442,16 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_video), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
             Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) videoLauncher.launch(videoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.videoPath == null) Icons.Default.Videocam else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.videoPath == null) stringResource(R.string.tools_record_video) else stringResource(R.string.tools_retake_video)) }
-            if (note.videoPath != null) DeleteMediaButton(stringResource(R.string.tools_delete_video)) { shredNoteMedia(context, note.videoPath); onUpdate(note.copy(title = title, videoPath = null)) }
+            if (note.videoPath != null) DeleteMediaButton(stringResource(R.string.tools_delete_video)) { shredNoteMedia(context, note.videoPath); onUpdate { it.copy(title = title, videoPath = null) } }
         }
     }
 }
 
 @Composable
-fun DrawingNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     // Strokes and the states Undo steps back through, Clear included; see DrawingEdit.
     var title by remember { mutableStateOf(note.title) }; var edit by remember { mutableStateOf(DrawingEdit(note.drawingPaths)) }; val currentPaths = edit.paths; var currentColor by remember { mutableLongStateOf(0xFF000000L) }; var currentWidth by remember { mutableFloatStateOf(8f) }; var isEraser by remember { mutableStateOf(false) }; var activePoints by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
-    PersistDebounced(title to currentPaths) { (newTitle, paths) -> onUpdate(note.copy(title = newTitle, drawingPaths = paths)) }
+    PersistDebounced(title to currentPaths) { (newTitle, paths) -> onUpdate { it.copy(title = newTitle, drawingPaths = paths) } }
     ToolScaffold(title = stringResource(R.string.tools_draw_note), onBack = onBack, actions = { IconButton(onClick = { edit = edit.undo() }, enabled = edit.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }; IconButton(onClick = { edit = edit.clear() }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
@@ -1610,7 +1617,7 @@ private fun PieceChoice(
 }
 
 @Composable
-fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack: () -> Unit) {
+fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     var title by remember { mutableStateOf(note.title) }
     var variant by remember { mutableStateOf(note.boardVariant) }
     var board by remember { mutableStateOf(note.boardPosition) }
@@ -1685,7 +1692,7 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: (NotebookNote) -> Unit, onBack
     }
 
     PersistDebounced(Triple(title, board, variant)) { (newTitle, newBoard, newVariant) ->
-        onUpdate(note.copy(title = newTitle, boardPosition = newBoard, boardVariant = newVariant))
+        onUpdate { it.copy(title = newTitle, boardPosition = newBoard, boardVariant = newVariant) }
     }
     ToolScaffold(
         title = stringResource(R.string.tools_edit_board),
