@@ -1,5 +1,6 @@
 package com.masterclock.app.logic
 
+import com.masterclock.app.data.Converters
 import com.masterclock.app.data.decodeStoredSettings
 import com.masterclock.app.data.storedJson
 import org.junit.Assert.*
@@ -30,10 +31,21 @@ class StoredSettingsTest {
     }
 
     @Test
-    fun `settings that cannot be read keep the notebook`() {
+    fun `a setting that cannot be read costs only itself`() {
         val read = decodeStoredSettings(stored.replace("\"numberOfPlayers\":3", "\"numberOfPlayers\":{}"))
         assertEquals(ChessClockSettings().numberOfPlayers, read.numberOfPlayers)
+        assertEquals(FlagBehavior.NEGATIVE, read.flagBehavior)
         assertEquals(notes, read.notebookNotes)
+    }
+
+    @Test
+    fun `a game whose settings cannot be fully read keeps its moves`() {
+        val game = GameLog(id = "g", startTime = 1, settings = ChessClockSettings(flagBehavior = FlagBehavior.NEGATIVE, numberOfPlayers = 3), events = listOf(GameEvent(timestamp = 2, eventType = "MOVE")))
+        val converters = Converters()
+        val entity = converters.fromGameLog(game)
+        val broken = entity.copy(settingsJson = entity.settingsJson.replace("\"numberOfPlayers\":3", "\"numberOfPlayers\":{}").replace("\"NEGATIVE\"", "\"SOMETHING_NEWER\""))
+        val read = converters.toGameLog(broken)
+        assertEquals(game.events, read.events)
     }
 
     @Test

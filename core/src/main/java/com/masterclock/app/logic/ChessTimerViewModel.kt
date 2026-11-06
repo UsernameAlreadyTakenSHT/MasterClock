@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.masterclock.app.data.storedJson
 import com.masterclock.core.R as CoreR
 import com.masterclock.app.data.Converters
 import com.masterclock.app.data.GameDatabase
@@ -14,7 +15,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.milliseconds
 
 @Serializable
@@ -2922,7 +2922,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * One instance, because a Json builds and caches a serializer lookup and the saved clock was
      * constructing a fresh one every fifteen seconds to throw it away again.
      */
-    private val json = Json { ignoreUnknownKeys = true }
+    // storedJson, as the settings are read: a saved clock from a newer build, or one using an enum
+    // since retired, could not be resumed for the sake of one value.
+    private val json = storedJson
 
     private val _settings = MutableStateFlow(ChessClockSettings())
     val settings: StateFlow<ChessClockSettings> = _settings.asStateFlow()

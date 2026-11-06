@@ -1,9 +1,12 @@
 package com.masterclock.app.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.masterclock.app.logic.ChessClockSettings
@@ -14,11 +17,24 @@ import com.masterclock.app.logic.ScoreboardSession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.encodeToString
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+/**
+ * Replaced when it cannot be read as a file at all. Without a handler the exception reached the first
+ * read, in the init of the ViewModel: a crash at every launch, which only clearing the app's storage
+ * ended and which took the same data with it. An ordinary read failure, a full disk say, still throws,
+ * since treating that as empty would write the defaults over a store that is intact.
+ */
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "settings",
+    corruptionHandler = ReplaceFileCorruptionHandler { e ->
+        Log.e("SettingsRepository", "Stored settings are corrupt and were reset", e)
+        emptyPreferences()
+    },
+)
 
 /**
  * How everything stored here is read. [Json.coerceInputValues] makes a value this build does not
@@ -28,20 +44,26 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 internal val storedJson = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
 /**
- * The stored settings, or the defaults if they cannot be read -- with the notebook, which they also
- * hold. Defaults alone dropped every note, and the next save wrote that over the stored copy: a
- * setting this build could not read cost the player their notebook. What is lost now is preferences.
- * Each note is read on its own, so one that cannot be costs only itself.
+ * The stored settings, as much of them as can be read. Taking the defaults whole dropped every note
+ * and every preference, and the next save wrote that over the stored copy: one setting this build
+ * could not read cost the player their notebook. So each field is tried on its own, and each note,
+ * and one that cannot be read costs only itself.
  */
 internal fun decodeStoredSettings(text: String): ChessClockSettings = try {
     storedJson.decodeFromString<ChessClockSettings>(text)
 } catch (_: Exception) {
+    val fields = runCatching { storedJson.parseToJsonElement(text).jsonObject }.getOrNull().orEmpty()
     val notes = runCatching {
-        storedJson.parseToJsonElement(text).jsonObject["notebookNotes"]?.jsonArray?.mapNotNull { element ->
+        fields["notebookNotes"]?.jsonArray?.mapNotNull { element ->
             runCatching { storedJson.decodeFromJsonElement(NotebookNote.serializer(), element) }.getOrNull()
         }
     }.getOrNull().orEmpty()
-    ChessClockSettings(notebookNotes = notes)
+    val readable = fields.filter { (name, value) ->
+        name != "notebookNotes" && runCatching {
+            storedJson.decodeFromJsonElement(ChessClockSettings.serializer(), JsonObject(mapOf(name to value)))
+        }.isSuccess
+    }
+    storedJson.decodeFromJsonElement(ChessClockSettings.serializer(), JsonObject(readable)).copy(notebookNotes = notes)
 }
 
 class SettingsRepository(private val context: Context) {

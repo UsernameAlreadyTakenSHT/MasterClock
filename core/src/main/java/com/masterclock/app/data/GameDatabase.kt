@@ -3,7 +3,6 @@ package com.masterclock.app.data
 import android.content.Context
 import androidx.room.*
 import com.masterclock.app.logic.ChessClockSettings
-import kotlinx.serialization.json.Json
 
 @Dao
 interface GameLogDao {
@@ -106,12 +105,16 @@ internal fun fitEventsToRow(
 }
 
 class Converters {
-    private val json = Json { ignoreUnknownKeys = true }
+    // storedJson, as the settings are read: a value this build does not know, after a downgrade or
+    // with an enum retired, emptied the whole game below rather than taking its field's default.
+    private val json = storedJson
 
     fun toGameLog(entity: GameLogEntity): com.masterclock.app.logic.GameLog {
         return try {
             // Read without the notebook, for games recorded before they stopped carrying it.
-            val settings = json.decodeFromString<ChessClockSettings>(entity.settingsJson).copy(notebookNotes = emptyList())
+            // And by decodeStoredSettings: the moves are the game, and settings it cannot fully read
+            // are no reason to lose them.
+            val settings = decodeStoredSettings(entity.settingsJson).copy(notebookNotes = emptyList())
             val events = json.decodeFromString<List<com.masterclock.app.logic.GameEvent>>(entity.eventsJson)
             val initialStates: List<com.masterclock.app.logic.PlayerStateProxy> = if (entity.initialStatesJson.isNullOrBlank()) emptyList() else json.decodeFromString(entity.initialStatesJson)
             
@@ -158,7 +161,7 @@ class Converters {
 internal val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
     override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE game_logs ADD COLUMN imported INTEGER NOT NULL DEFAULT 0")
-        val json = Json { ignoreUnknownKeys = true }
+        val json = storedJson
         val ids = mutableListOf<String>()
         db.query("SELECT id FROM game_logs").use { c -> while (c.moveToNext()) ids += c.getString(0) }
         for (id in ids) {
