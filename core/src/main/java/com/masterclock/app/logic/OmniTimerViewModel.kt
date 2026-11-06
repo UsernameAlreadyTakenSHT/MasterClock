@@ -511,6 +511,8 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     /** [SystemClock.elapsedRealtime]; see the note on the same field in [ChessTimerViewModel]. */
     private var lastTickTime: Long = 0
 
+    private val writerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     init {
         viewModelScope.launch {
             val savedOmni = settingsRepo.omniSettingsFlow.first()
@@ -563,7 +565,8 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
         if (!_omniState.value.hasStarted) {
             _omniState.value = createInitialOmniState(newSettings)
         }
-        viewModelScope.launch {
+        // Not viewModelScope, which is cancelled as the screen closes and can take the write with it.
+        writerScope.launch {
             settingsRepo.saveOmniSettings(newSettings)
         }
     }

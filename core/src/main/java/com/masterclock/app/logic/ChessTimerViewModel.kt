@@ -3025,6 +3025,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var savedClockGeneration = 0
     private val historyWrites = Channel<HistoryWrite>(Channel.UNLIMITED)
 
+    /**
+     * Runs everything meant to reach storage, and outlives this ViewModel for as long as that takes.
+     *
+     * viewModelScope is cancelled as the screen closes, which is when the last writes are queued: the
+     * end of a game, the autosave taken on leaving and a settings change made on the way out were
+     * dropped with whatever else was waiting. [onCleared] closes the queue, so this drains it and
+     * lets go of the ViewModel. Main, as viewModelScope is: the queue's order is the point of it, and
+     * the writes publish to the flows.
+     */
+    private val writerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var autosaveEncoding: Job? = null
+
     private val _hasSavedClock = MutableStateFlow(false)
     val hasSavedClock: StateFlow<Boolean> = _hasSavedClock.asStateFlow()
 
@@ -3091,11 +3103,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * in when it arrives.
      */
     private val _isReady = MutableStateFlow(false)
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
     /** True once [gameHistory] holds the stored games, which it does some time after [isReady]. */
     private val _isHistoryLoaded = MutableStateFlow(false)
     val isHistoryLoaded: StateFlow<Boolean> = _isHistoryLoaded.asStateFlow()
-    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
     /** Set once the init block below has finished, history included; see [applyShortcut]. */
     private var isLoaded = false
@@ -3124,7 +3136,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
 
-        viewModelScope.launch {
+        writerScope.launch {
             for (write in historyWrites) {
                 try {
                     applyHistoryWrite(write)
@@ -3220,7 +3232,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun persistCustomPresets(presets: List<SavedPreset>) {
         _customPresets.value = presets
-        viewModelScope.launch { settingsRepo.saveCustomPresets(presets) }
+        writerScope.launch { settingsRepo.saveCustomPresets(presets) }
     }
 
     /**
@@ -3733,6 +3745,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // and both it and the serial one own a coroutine scope.
         if (usbBoardManagerDelegate.isInitialized()) usbBoardManager.release()
         if (bluetoothSerialBoardManagerDelegate.isInitialized()) bluetoothSerialBoardManager.release()
+        // After the autosave in progress, which still has to queue its write.
+        val encoding = autosaveEncoding
+        writerScope.launch {
+            encoding?.join()
+            historyWrites.close()
+        }
     }
 
     /**
@@ -4061,7 +4079,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         logsToImport?.let { logs ->
-            viewModelScope.launch {
+            writerScope.launch {
                 // logsToImport only ever originates from a QR/JSON/ZIP import (see call sites), so each
                 // log's embedded settings are just as untrusted as the top-level `newSettings` above and
                 // must go through the same sanitization before being persisted. Without this, a crafted
@@ -4116,7 +4134,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
 
-        viewModelScope.launch { settingsRepo.saveSettings(newSettings) }
+        writerScope.launch { settingsRepo.saveSettings(newSettings) }
     }
     /**
      * What an export writes, read once the stored state is in.
@@ -4241,7 +4259,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val savedAt = System.currentTimeMillis()
 
         val generation = savedClockGeneration
-        viewModelScope.launch {
+        autosaveEncoding = writerScope.launch {
             val entity = withContext(Dispatchers.Default) {
                 com.masterclock.app.data.SavedClockEntity(
                     timestamp = savedAt,
@@ -4398,6 +4416,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     private fun setScoreboard(session: ScoreboardSession) {
         _scoreboard.value = session
-        viewModelScope.launch { settingsRepo.saveScoreboard(session) }
+        writerScope.launch { settingsRepo.saveScoreboard(session) }
     }
 }
