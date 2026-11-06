@@ -16,12 +16,14 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import android.util.Log
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.location.LocationManagerCompat
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -349,14 +351,24 @@ class BluetoothBoardManager(private val context: Context) {
         if (servicesRequested || activeGatt !== gatt) return
         servicesRequested = true
         if (runCatching { gatt.discoverServices() }.getOrDefault(false) != true) {
-            _connectionState.value = ConnectionState.Error("Could not read the board's services")
+            failConnected("Could not read the board's services")
         }
+    }
+
+    /**
+     * Reports a failure on a link that is up, and lets the link go. These set the error alone: the
+     * phone stayed connected to a board that accepts one client, with a GATT client held, and the
+     * screen offers Disconnect only when connected, so nothing could end it short of another connect.
+     */
+    private fun failConnected(message: String) {
+        disconnect()
+        _connectionState.value = ConnectionState.Error(message)
     }
 
     private fun servicesDiscovered(gatt: BluetoothGatt, status: Int) {
         if (!hasConnectPermission()) return
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            _connectionState.value = ConnectionState.Error("Could not read the board's services")
+            failConnected("Could not read the board's services")
             return
         }
 
@@ -378,7 +390,7 @@ class BluetoothBoardManager(private val context: Context) {
             .filter { it.properties and NOTIFY_OR_INDICATE != 0 }
 
         if (characteristics.isEmpty()) {
-            _connectionState.value = ConnectionState.Error("This device reports nothing this app can listen to")
+            failConnected("This device reports nothing this app can listen to")
             return
         }
 
@@ -542,6 +554,15 @@ class BluetoothBoardManager(private val context: Context) {
             _connectionState.value = ConnectionState.Error("Bluetooth scan permission required")
             return
         }
+        // Up to Android 11 a BLE scan needs location turned on as well as the permission. With it
+        // off the scan starts, finds nothing and says nothing: "none found" beside a board in range.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && !isLocationOn()) {
+            // The screen scans each time it opens, which can be with a board already connected.
+            if (activeGatt == null) {
+                _connectionState.value = ConnectionState.Error("Turn on location: this Android version needs it to find Bluetooth boards")
+            }
+            return
+        }
         _scannedDevices.value = emptyList()
         // The permission can go away between the check above and this call, and the scanner answers
         // that with a SecurityException rather than a return value. Setting Scanning only once the
@@ -560,6 +581,10 @@ class BluetoothBoardManager(private val context: Context) {
         mainHandler.removeCallbacks(scanTimeout)
         mainHandler.postDelayed(scanTimeout, SCAN_TIMEOUT_MS)
     }
+
+    private fun isLocationOn(): Boolean =
+        (context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager)
+            ?.let { LocationManagerCompat.isLocationEnabled(it) } ?: true
 
     fun stopScan() {
         mainHandler.removeCallbacks(scanTimeout)

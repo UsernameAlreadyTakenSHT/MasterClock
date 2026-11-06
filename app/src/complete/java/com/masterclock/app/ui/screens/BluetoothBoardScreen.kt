@@ -55,8 +55,16 @@ fun BluetoothBoardScreen(
     val settings by viewModel.settings.collectAsState()
     val gameType = settings.gameType
 
-    // Only one board is connected at a time, so whichever transport is not idle is the one this
-    // screen is talking about.
+    // Only one board is connected at a time, which nothing used to see to: each transport let go of
+    // its own alone, so a DGT on USB could be connected over Bluetooth as well, and one move then
+    // switched the clock twice.
+    val dropAll = {
+        manager.disconnect()
+        usbManager.disconnect()
+        serialManager.disconnect()
+    }
+
+    // Whichever transport is not idle is the one this screen is talking about.
     val connectionState = when {
         usbState !is ConnectionState.Idle -> usbState
         serialState !is ConnectionState.Idle -> serialState
@@ -165,15 +173,11 @@ fun BluetoothBoardScreen(
                             Text(stringResource(R.string.board_connected), style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                    if (connectionState is ConnectionState.Connected) {
+                    // While connecting too: the boards are out of reach until an attempt ends, which
+                    // is half a minute for one that does not answer.
+                    if (connectionState is ConnectionState.Connected || connectionState is ConnectionState.Connecting) {
                         Spacer(Modifier.weight(1f))
-                        TextButton(onClick = {
-                            when {
-                                usbState !is ConnectionState.Idle -> usbManager.disconnect()
-                                serialState !is ConnectionState.Idle -> serialManager.disconnect()
-                                else -> manager.disconnect()
-                            }
-                        }) {
+                        TextButton(onClick = { dropAll() }) {
                             Text(stringResource(R.string.board_disconnect))
                         }
                     }
@@ -213,7 +217,8 @@ fun BluetoothBoardScreen(
                 Spacer(Modifier.height(8.dp))
                 usbDevices.forEach { candidate ->
                     Surface(
-                        onClick = { usbManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
+                        onClick = { dropAll(); usbManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
+                        enabled = connectionState !is ConnectionState.Connecting,
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -244,7 +249,8 @@ fun BluetoothBoardScreen(
                 Column(Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
                 pairedDevices.forEach { candidate ->
                     Surface(
-                        onClick = { serialManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
+                        onClick = { dropAll(); serialManager.connect(candidate.id, gameType) { viewModel.recordBoardMove(it) } },
+                        enabled = connectionState !is ConnectionState.Connecting,
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -283,7 +289,8 @@ fun BluetoothBoardScreen(
                 LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(scannedDevices) { device ->
                         Surface(
-                            onClick = { manager.connect(device.device, gameType) { viewModel.recordBoardMove(it) } },
+                            onClick = { dropAll(); manager.connect(device.device, gameType) { viewModel.recordBoardMove(it) } },
+                            enabled = connectionState !is ConnectionState.Connecting,
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ) {

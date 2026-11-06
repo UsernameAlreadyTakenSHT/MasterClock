@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,10 +95,17 @@ class UsbBoardManager(private val context: Context) {
     private var assembler: StreamAssembler? = null
     private var connection: UsbDeviceConnection? = null
 
-    /** The device [connection] is open on, to tell its unplugging from another's. */
+    /** The device being opened or open, to tell its unplugging from another's. */
     private var connectedDevice: UsbDevice? = null
     private var claimedInterface: UsbInterface? = null
     private var readJob: Job? = null
+
+    /** A read loop on its way out, whose connection closes behind it; see [disconnect]. */
+    private var closingJob: Job? = null
+
+    /** Counts attempts to open, so one a disconnect has overtaken lets its connection go. */
+    @Volatile
+    private var openAttempt = 0
 
     /**
      * Counts connections, so a departing read loop can tell it is no longer the current one.
@@ -122,9 +130,13 @@ class UsbBoardManager(private val context: Context) {
         override fun onReceive(receivedContext: Context?, intent: Intent?) {
             if (intent?.action != ACTION_USB_PERMISSION) return
             val device = intent.getUsbDevice() ?: return
+            // The dialog outlives whatever happened behind it: answered after a disconnect, it
+            // opened a board nobody was asking for any more.
+            if (device.deviceName != connectedDevice?.deviceName) return
             if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                 openDevice(device)
             } else {
+                connectedDevice = null
                 _connectionState.value = ConnectionState.Error("USB permission refused")
             }
         }
@@ -190,6 +202,8 @@ class UsbBoardManager(private val context: Context) {
         moveTracker = BoardMoveTracker()
         _needsCalibration.value = protocol.needsPieceCalibration
         _connectionState.value = ConnectionState.Connecting
+        // Known from here on, so that unplugging it during the attempt is noticed.
+        connectedDevice = device
 
         if (usbManager.hasPermission(device)) {
             openDevice(device)
@@ -202,22 +216,42 @@ class UsbBoardManager(private val context: Context) {
         }
     }
 
+    /**
+     * Opens [device] off the main thread: its control transfers and first write can each block for
+     * [CONTROL_TRANSFER_TIMEOUT_MS], and a board that ignored them froze the screen for six seconds,
+     * from a broadcast receiver as often as not.
+     */
     private fun openDevice(device: UsbDevice) {
+        val attempt = ++openAttempt
+        val previous = closingJob
+        scope.launch {
+            // The interface is not free until the previous session has let go of it.
+            previous?.join()
+            if (attempt == openAttempt) openAndStart(device, attempt)
+        }
+    }
+
+    private suspend fun openAndStart(device: UsbDevice, attempt: Int) {
+        suspend fun failed(message: String) = withContext(Dispatchers.Main) {
+            if (attempt == openAttempt) {
+                connectedDevice = null
+                _connectionState.value = ConnectionState.Error(message)
+            }
+        }
         val serialInterface = device.findCdcDataInterface()
         if (serialInterface == null) {
-            _connectionState.value =
-                ConnectionState.Error("This board does not use standard USB serial, so it needs a driver this app does not have")
+            failed("This board does not use standard USB serial, so it needs a driver this app does not have")
             return
         }
 
         val opened = usbManager.openDevice(device)
         if (opened == null) {
-            _connectionState.value = ConnectionState.Error("Could not open the board")
+            failed("Could not open the board")
             return
         }
         if (!opened.claimInterface(serialInterface, true)) {
             opened.close()
-            _connectionState.value = ConnectionState.Error("Another app is already using this board")
+            failed("Another app is already using this board")
             return
         }
 
@@ -225,26 +259,34 @@ class UsbBoardManager(private val context: Context) {
         if (endpointIn == null) {
             opened.releaseInterface(serialInterface)
             opened.close()
-            _connectionState.value = ConnectionState.Error("This board sends nothing this app can read")
+            failed("This board sends nothing this app can read")
             return
         }
 
-        connection = opened
-        connectedDevice = device
-        claimedInterface = serialInterface
         // Only a serial line has a baud rate to set; asking a HID interface for one achieves
         // nothing and can upset devices that answer control requests strictly.
         if (serialInterface.interfaceClass == UsbConstants.USB_CLASS_CDC_DATA) {
             opened.configureCdcLine(device.cdcControlInterfaceId() ?: serialInterface.id, protocol.usbBaudRate)
         }
-        _connectionState.value = ConnectionState.Connected(device.productName ?: device.deviceName)
         // Several makes report nothing until asked; Chessnut is one of them.
         protocol.initCommandFor(gameType)?.let { command ->
             serialInterface.findEndpoint(UsbConstants.USB_DIR_OUT)?.let { endpointOut ->
                 opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS)
             }
         }
-        startReading(opened, endpointIn)
+
+        // NonCancellable: the connection is open, and has to reach someone who will close it.
+        withContext(NonCancellable + Dispatchers.Main) {
+            if (attempt != openAttempt) {
+                opened.releaseInterface(serialInterface)
+                opened.close()
+                return@withContext
+            }
+            connection = opened
+            claimedInterface = serialInterface
+            _connectionState.value = ConnectionState.Connected(device.productName ?: device.deviceName)
+            startReading(opened, endpointIn)
+        }
     }
 
     private fun startReading(connection: UsbDeviceConnection, endpoint: UsbEndpoint) {
@@ -291,10 +333,21 @@ class UsbBoardManager(private val context: Context) {
     }
 
     fun disconnect() {
-        readJob?.cancel()
+        openAttempt++
+        readSession++
+        val job = readJob
         readJob = null
-        claimedInterface?.let { connection?.releaseInterface(it) }
-        connection?.close()
+        job?.cancel()
+        val closing = connection
+        val claimed = claimedInterface
+        val letGo = { claimed?.let { closing?.releaseInterface(it) }; closing?.close(); Unit }
+        // Not while a read is in progress: closing a connection under a running bulkTransfer pulls
+        // its native handle away, and the read is back within its timeout anyway. invokeOnCompletion
+        // rather than a coroutine, since release() cancels the scope right after this.
+        if (job != null) {
+            closingJob = job
+            job.invokeOnCompletion { letGo() }
+        } else letGo()
         connection = null
         connectedDevice = null
         claimedInterface = null

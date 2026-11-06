@@ -80,6 +80,15 @@ class BluetoothSerialBoardManager(private val context: Context) {
     // identity check above needs this to be seeing the same value both sides.
     @Volatile
     private var socket: BluetoothSocket? = null
+
+    /**
+     * The socket still connecting, which is the only way to stop it: connect() blocks for seconds and
+     * cancelling a coroutine cannot interrupt it, but closing the socket makes it throw. Without this
+     * a second tap, or leaving the screen, could not reach an attempt in progress. It went on to open
+     * a link nobody held, which kept the board busy for the life of the process.
+     */
+    @Volatile
+    private var opening: BluetoothSocket? = null
     private var readJob: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -136,7 +145,7 @@ class BluetoothSerialBoardManager(private val context: Context) {
             // Discovery is expensive and slows every connection attempt down while it runs; Android
             // asks for it to be stopped before opening a socket.
             adapter?.cancelDiscovery()
-            device.createRfcommSocketToServiceRecord(SPP_UUID).also { it.connect() }
+            device.createRfcommSocketToServiceRecord(SPP_UUID)
         } catch (e: IOException) {
             withContext(Dispatchers.Main) {
                 _connectionState.value = ConnectionState.Error("Could not open the board: ${e.message ?: "no answer"}")
@@ -149,10 +158,40 @@ class BluetoothSerialBoardManager(private val context: Context) {
             return
         }
 
+        // Closed on the way out whichever way that is. Each failed attempt left its socket open, and
+        // an attempt cancelled just as it connected held the board with nothing to let it go.
+        try {
+            opening = opened
+            try {
+                opened.connect()
+            } catch (e: IOException) {
+                withContext(Dispatchers.Main) {
+                    _connectionState.value = ConnectionState.Error("Could not open the board: ${e.message ?: "no answer"}")
+                }
+                return
+            } catch (e: SecurityException) {
+                withContext(Dispatchers.Main) {
+                    _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+                }
+                return
+            } finally {
+                if (opening === opened) opening = null
+            }
+            if (!currentCoroutineContext().isActive) return
+            readUntilDone(device, opened, onMoveReceived)
+        } finally {
+            runCatching { opened.close() }
+            if (socket === opened) socket = null
+        }
+    }
+
+    private suspend fun readUntilDone(device: BluetoothDevice, opened: BluetoothSocket, onMoveReceived: (String) -> Unit) {
         socket = opened
         withContext(Dispatchers.Main) {
             _connectionState.value = ConnectionState.Connected(device.name ?: device.address)
         }
+
+
 
         // Several makes report nothing until asked; DGT wants a dump before update mode.
         protocol.initCommandFor(gameType)?.let { command ->
@@ -192,12 +231,12 @@ class BluetoothSerialBoardManager(private val context: Context) {
             }
         }
 
-        // Tear down this socket, and only this socket. Calling disconnect() here would cancel
+        // End this session, and only this one; openAndRead closes the socket. Calling disconnect()
+        // here would cancel
         // whatever `readJob` currently holds and close whatever `socket` currently holds -- which,
         // if the user has reconnected while this loop was winding down, is the new connection. The
         // identity check is what tells "I am the current session" from "I am its predecessor".
         withContext(Dispatchers.Main) {
-            runCatching { opened.close() }
             if (socket === opened) {
                 socket = null
                 assembler?.reset()
@@ -214,6 +253,8 @@ class BluetoothSerialBoardManager(private val context: Context) {
     fun disconnect() {
         readJob?.cancel()
         readJob = null
+        runCatching { opening?.close() }
+        opening = null
         runCatching { socket?.close() }
         socket = null
         assembler?.reset()
