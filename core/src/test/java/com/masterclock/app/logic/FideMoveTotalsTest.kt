@@ -2,11 +2,50 @@ package com.masterclock.app.logic
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Covers [fideMoveTotals] and [adjustFideMoveCount]. */
 class FideMoveTotalsTest {
+
+    private fun fide(vararg counts: Int) = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = counts.map { FidePeriod(movesToNext = it) })
+
+    @Test
+    fun `moves left count down to the period's total`() {
+        val s = fide(40, 20, 0)
+        val settings = ChessClockSettings(main = s)
+        assertEquals(15, fideMovesLeft(PlayerState(0, moveCount = 25), s, settings))
+        assertEquals(0, fideMovesLeft(PlayerState(0, moveCount = 45), s, settings))
+        assertEquals(10, fideMovesLeft(PlayerState(0, moveCount = 50, currentPeriodIndex = 1), s, settings))
+    }
+
+    @Test
+    fun `no moves left in the last period, one ending on its time, or without the counter`() {
+        val s = fide(40, 0, 20)
+        val settings = ChessClockSettings(main = s)
+        assertNull(fideMovesLeft(PlayerState(0, currentPeriodIndex = 2), s, settings))
+        assertNull(fideMovesLeft(PlayerState(0, currentPeriodIndex = 1), s, settings))
+        assertNull(fideMovesLeft(PlayerState(0), s, settings.copy(forcedMoveCounter = false)))
+        assertNull(fideMovesLeft(PlayerState(0), PlayerSettings(), settings))
+    }
+
+    @Test
+    fun `a period added gives the one before it a count, and has none itself`() {
+        assertEquals(listOf(40, 0), withPeriodAdded(listOf(FidePeriod(movesToNext = 0))).map { it.movesToNext })
+        assertEquals(listOf(40, 60, 0), withPeriodAdded(listOf(FidePeriod(movesToNext = 40), FidePeriod(movesToNext = 0))).map { it.movesToNext })
+    }
+
+    @Test
+    fun `a period added counts from the totals the clock uses`() {
+        val after = withPeriodAdded(listOf(FidePeriod(movesToNext = 40), FidePeriod(movesToNext = 20), FidePeriod(movesToNext = 0)))
+        assertEquals(listOf(40, 60, 80, 0), fideMoveTotals(after))
+    }
+
+    @Test
+    fun `a last period that already has a count keeps it`() {
+        assertEquals(listOf(30, 0), withPeriodAdded(listOf(FidePeriod(movesToNext = 30))).map { it.movesToNext })
+    }
 
     private fun periods(vararg counts: Int) = counts.map { FidePeriod(timeMs = 600_000, movesToNext = it) }
 

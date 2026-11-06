@@ -2292,6 +2292,36 @@ fun fideMoveTotals(periods: List<FidePeriod>): List<Int> {
 }
 
 /**
+ * The moves left before the next FIDE period, or null when no count is running: the move counter
+ * off, the last period, or a period that ends on its time.
+ *
+ * The screen worked this out three times over, for the face, for TalkBack and for what the face
+ * leaves out beside it.
+ */
+fun fideMovesLeft(p: PlayerState, s: PlayerSettings, settings: ChessClockSettings): Int? {
+    if (s.mode != TimerMode.FIDE_PERIODS || !settings.forcedMoveCounter) return null
+    if (p.currentPeriodIndex >= s.fidePeriods.size - 1) return null
+    val total = fideMoveTotals(s.fidePeriods).getOrNull(p.currentPeriodIndex) ?: 0
+    return if (total > 0) (total - p.moveCount).coerceAtLeast(0) else null
+}
+
+/**
+ * [periods] with one more at the end.
+ *
+ * The period that was last becomes a middle one and needs a move count to end on: left at none it
+ * ended only when its time ran out, which with the move counter on is a flag, and the new period
+ * could never be reached. It gets the FIDE pattern -- 40 moves, then 20 more each -- unless it has
+ * one; the new period is the last and has none. Worked out from the totals the clock counts: off the
+ * raw counts, 40, 20 got 40 for the period after, which reads as move 100 rather than 80.
+ */
+fun withPeriodAdded(periods: List<FidePeriod>): List<FidePeriod> {
+    val last = periods.lastOrNull() ?: return listOf(FidePeriod(movesToNext = 0))
+    val movesBefore = fideMoveTotals(periods).dropLast(1).lastOrNull { it > 0 } ?: 0
+    val ended = if (last.movesToNext > 0) last else last.copy(movesToNext = movesBefore + if (movesBefore == 0) 40 else 20)
+    return periods.dropLast(1) + ended + FidePeriod(movesToNext = 0)
+}
+
+/**
  * The arbiter's correction to a FIDE move count: an illegal move taken back, or a press too many.
  * The count was the one thing about the clock that could not be put right, and a period then began
  * a move early or late for the rest of the game. DGT clocks let the arbiter set it.

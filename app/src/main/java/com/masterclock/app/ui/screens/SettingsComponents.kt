@@ -297,20 +297,7 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
 
             if (periods.size < 5) {
                 Button(
-                    onClick = {
-                        // The period that was last becomes a middle one and needs a move count to end
-                        // on: left at none it ended only when its time ran out, which with the move
-                        // counter on is a flag, and the new period could never be reached. It gets
-                        // the FIDE pattern -- 40 moves, then 20 more each -- unless it has one; the
-                        // new period is the last and has none.
-                        // From the totals the clock counts: off the raw counts, 40, 20 got 40 for the
-                        // period after, which reads as move 100 rather than 80.
-                        val last = periods.last()
-                        val movesBefore = fideMoveTotals(periods).dropLast(1).lastOrNull { it > 0 } ?: 0
-                        val ended = if (last.movesToNext > 0) last else last.copy(movesToNext = movesBefore + if (movesBefore == 0) 40 else 20)
-                        val newList = periods.dropLast(1) + ended + FidePeriod(movesToNext = 0)
-                        onUpdate(p.copy(fidePeriods = newList))
-                    },
+                    onClick = { onUpdate(p.copy(fidePeriods = withPeriodAdded(periods))) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Add, null)

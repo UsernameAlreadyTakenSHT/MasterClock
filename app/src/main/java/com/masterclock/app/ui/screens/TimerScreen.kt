@@ -428,11 +428,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     // What is running out, which in Overtime past the move clock is the reserve; see alertTimeMs.
     val alertMs = alertTimeMs(state, playerState, pSettings.mode)
     // The face counts down the moves to the next FIDE period under the move counter, while there is one.
-    val fideShowsMovesLeft = pSettings.mode == TimerMode.FIDE_PERIODS && settings.forcedMoveCounter &&
-        playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1 &&
-        (fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex) ?: 0) > 0 &&
-        // While a US delay runs, DELAY takes the place of the moves left.
-        playerState.delayRemainingMs <= 0
+    val fideMovesToGo = fideMovesLeft(playerState, pSettings, settings)
+    // While a US delay runs, DELAY takes the place of the moves left.
+    val fideShowsMovesLeft = fideMovesToGo != null && playerState.delayRemainingMs <= 0
     // The flash warns as the beeps do, of the clock that runs out first in Global and Global Shared;
     // see countdownTimeMs. It followed the move clock alone, so a reserve at 0:08 under a 0:25 move
     // clock beeped without flashing.
@@ -514,9 +512,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         pSettings.mode == TimerMode.FIDE_PERIODS -> listOfNotNull(
             fidePeriodLabel(pSettings, playerState),
             // The moves left to the next period, which the face shows under the move counter.
-            fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex)
-                ?.takeIf { settings.forcedMoveCounter && it > 0 && playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1 }
-                ?.let { stringResource(R.string.timer_moves, (it - playerState.moveCount).coerceAtLeast(0)) },
+            fideMovesToGo?.let { stringResource(R.string.timer_moves, it) },
             stringResource(R.string.timer_period_flag).takeIf { playerState.hasFlagged },
             spokenDurationText(shownTimeMs),
         ).joinToString(", ")
@@ -590,9 +586,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                             // next period, whatever its move count says -- the default period keeps 40
                             // -- and counting down to it read "MOVES: 0", then -1, -2 for the rest of
                             // the game.
-                            val hasNext = playerState.currentPeriodIndex < pSettings.fidePeriods.size - 1
-                            val total = fideMoveTotals(pSettings.fidePeriods).getOrNull(playerState.currentPeriodIndex) ?: 0
-                            val info = if (settings.forcedMoveCounter && hasNext && currentP != null && total > 0) stringResource(R.string.timer_moves, (total - playerState.moveCount).coerceAtLeast(0)) else stringResource(R.string.timer_period, playerState.currentPeriodIndex + 1, pSettings.fidePeriods.size)
+                            val info = if (currentP != null && fideMovesToGo != null) stringResource(R.string.timer_moves, fideMovesToGo) else stringResource(R.string.timer_period, playerState.currentPeriodIndex + 1, pSettings.fidePeriods.size)
                             Text(info, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
