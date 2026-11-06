@@ -4170,6 +4170,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    /** Whether the game runs one clock for the table, which the arbiter's time goes to whoever it is given to. */
+    fun isTableClock(): Boolean = getPlayerSettings(1).mode.let { it == TimerMode.PHASES || it == TimerMode.MOVE_TIMER_SHARED || it.name.startsWith("CHRONO") }
+
     /** Whether the arbiter's ±1m/±1s means anything for this player: a move count is not a time. */
     fun isTimeAdjustable(playerIndex: Int): Boolean = isTimeAdjustableMode(getPlayerSettings(playerIndex).mode)
 

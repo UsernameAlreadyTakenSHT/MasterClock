@@ -661,4 +661,5 @@
     <string name="omni_cfg_unbalanced_explain">Every player is equally likely every turn — one of them really can take most of a round.</string>
     <string name="tools_player_short">P%d</string>
     <string name="back_press_again_to_exit">Press Back again to exit</string>
+    <string name="arbiter_clock">Clock</string>
 </resources>

@@ -1,5 +1,8 @@
 package com.masterclock.app.ui.screens
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.layout
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -133,7 +136,9 @@ fun TimerScreen(
         else activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    // Out of a screen reader's reach under a question, as it is out of a finger's.
+    val askingFirst = showResetDialog || showRerollDialog
+    Box(modifier = Modifier.fillMaxSize().then(if (askingFirst) Modifier.clearAndSetSemantics {} else Modifier)) {
         ClockAnnouncer(
             state,
             if (isGlobalMode) phaseLabel(settings.main, state.players[0]) else null,
@@ -246,8 +251,10 @@ fun TimerScreen(
                     showArbitre = showArbitre,
                     onPauseResume = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
                     onReset = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
-                    onPresets = onPresetsClick,
-                    onSettings = onSettingsClick,
+                    // The bar sits between the two halves, where a thumb lands on the way to a press:
+                    // a game went on running behind a settings page, with no way to press it.
+                    onPresets = { if (!state.isPaused) viewModel.pause(); onPresetsClick() },
+                    onSettings = { if (!state.isPaused) viewModel.pause(); onSettingsClick() },
                     onToggleArbitre = { viewModel.toggleArbitreMode() }
                 )
 
@@ -285,6 +292,7 @@ fun TimerScreen(
         AnimatedVisibility(visible = state.isArbitreMode, enter = fadeIn(tween()), exit = fadeOut(tween())) { 
             ArbitreOverlay(
                 numberOfPlayers = settings.numberOfPlayers,
+                tableClock = viewModel.isTableClock(),
                 hasSavedClock = viewModel.hasSavedClock.collectAsState().value,
                 contentRotation = iconRotation,
                 onAdjust = { idx, amt -> viewModel.adjustTime(idx, amt) },
@@ -299,46 +307,70 @@ fun TimerScreen(
     }
     
     if (showResetDialog) {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)), contentAlignment = Alignment.Center) {
-            Surface(
-                modifier = Modifier.padding(32.dp).graphicsLayer { rotationZ = iconRotation },
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp
-            ) {
-                Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(stringResource(R.string.timer_reset_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.timer_reset_message), style = MaterialTheme.typography.bodyMedium)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.common_cancel)) }
-                        TextButton(onClick = { viewModel.reset(); showResetDialog = false }) {
-                            Text(stringResource(R.string.common_reset), color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+        TimerConfirmDialog(
+            title = stringResource(R.string.timer_reset_title),
+            message = stringResource(R.string.timer_reset_message),
+            confirm = stringResource(R.string.common_reset),
+            rotation = iconRotation,
+            onDismiss = { showResetDialog = false },
+            onConfirm = { viewModel.reset(); showResetDialog = false },
+        )
+    }
+
+    if (showRerollDialog) {
+        TimerConfirmDialog(
+            title = stringResource(R.string.timer_reroll_title),
+            message = stringResource(R.string.timer_reroll_message),
+            confirm = stringResource(R.string.timer_reroll),
+            rotation = iconRotation,
+            onDismiss = { showRerollDialog = false },
+            onConfirm = { viewModel.rerollRandomTime(); showRerollDialog = false },
+        )
+    }
+}
+
+/**
+ * A question over the clock, turned with it, which is why it is not an AlertDialog.
+ *
+ * The dimmed area only looked modal: nothing on it took a touch, so a tap beside the dialog reached
+ * the clock underneath, and the player on the move switched the turn with "Reset game?" on screen.
+ * Back went past it too, towards leaving the app.
+ */
+@Composable
+private fun TimerConfirmDialog(title: String, message: String, confirm: String, rotation: Float, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    androidx.activity.compose.BackHandler(onBack = onDismiss)
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)).pointerInput(Unit) {}, contentAlignment = Alignment.Center) {
+        Surface(
+            modifier = Modifier.padding(32.dp).graphicsLayer { rotationZ = rotation },
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(message, style = MaterialTheme.typography.bodyMedium)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                    TextButton(onClick = onConfirm) { Text(confirm, color = MaterialTheme.colorScheme.error) }
                 }
             }
         }
     }
+}
 
-    if (showRerollDialog) {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)), contentAlignment = Alignment.Center) {
-            Surface(
-                modifier = Modifier.padding(32.dp).graphicsLayer { rotationZ = iconRotation },
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp
-            ) {
-                Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(stringResource(R.string.timer_reroll_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.timer_reroll_message), style = MaterialTheme.typography.bodyMedium)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { showRerollDialog = false }) { Text(stringResource(R.string.common_cancel)) }
-                        TextButton(onClick = { viewModel.rerollRandomTime(); showRerollDialog = false }) {
-                            Text(stringResource(R.string.timer_reroll), color = MaterialTheme.colorScheme.error)
-                        }
-                    }
-                }
-            }
+/**
+ * Lays a panel out for the way it will be turned: a quarter turn swaps its width and height, and
+ * [graphicsLayer] alone turns only the drawing. The panel was measured for a tall phone and drawn
+ * across it, so anything longer than the screen is wide fell off both edges with no way to reach it.
+ */
+private fun Modifier.laidOutForQuarterTurn(rotation: Float): Modifier = layout { measurable, constraints ->
+    if (kotlin.math.abs(rotation) < 45f) {
+        val placeable = measurable.measure(constraints)
+        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+    } else {
+        val placeable = measurable.measure(Constraints(constraints.minHeight, constraints.maxHeight, constraints.minWidth, constraints.maxWidth))
+        layout(placeable.height, placeable.width) {
+            placeable.place((placeable.height - placeable.width) / 2, (placeable.width - placeable.height) / 2)
         }
     }
 }
@@ -370,7 +402,9 @@ private fun fidePeriodLabel(s: PlayerSettings, p: PlayerState): String =
 @Composable
 private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLabel: String?, tableClock: Boolean = false) {
     val running = stringResource(R.string.a11y_announce_running)
-    val announcement = clockAnnouncement(state) ?: return
+    // The node is there from the start, empty. A live region speaks when its text changes, and one
+    // that only appeared with its first announcement may have said nothing for it.
+    val announcement = clockAnnouncement(state)
     // PHASES has no turn to announce, only the phase: "Player 1 to move" was all a screen reader
     // heard for the whole game, and a new phase or a pause between phases went unannounced. The
     // label changing is what makes the live region speak.
@@ -378,6 +412,7 @@ private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLa
     // the turn makes the live region speak it.
     // A CHRONO run for the table has no turn either: "Player 1 to move" on Play and on every resume.
     val message = when {
+        announcement == null -> ""
         phaseLabel != null && announcement is ClockAnnouncement.ToMove -> phaseLabel
         tableClock && announcement is ClockAnnouncement.ToMove -> running
         // A phase that flags on its end stops the game for the table; "Player 1 is out of time"
@@ -598,10 +633,12 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                         }
                     }
                 }
-                if (isMoveCounts) { Text(text = playerState.moveCount.toString(), style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 80.sp else 140.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)) }
+                // Fitted as TimerDisplay fits the clock: at a large font these two wrapped onto a
+                // second line, and "??:??" with it.
+                if (isMoveCounts) { ScaleToFitWidth { Text(text = playerState.moveCount.toString(), softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 80.sp else 140.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)) } }
                 else if (pSettings.mode == TimerMode.HIDDEN && !playerState.isOutOfTime) {
                     val text = if (playerState.revealTimeUntilMs > 0) "${playerState.lastRevealPercentage}%" else "??:??"
-                    Text(text = text, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 50.sp else 84.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace))
+                    ScaleToFitWidth { Text(text = text, softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 50.sp else 84.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)) }
                 }
                 else {
                     val timeToDisplay = shownTimeMs
@@ -687,18 +724,24 @@ fun ControlBarItem(onClick: () -> Unit, rotation: Float, colors: IconButtonColor
 }
 
 @Composable
-fun ArbitreOverlay(numberOfPlayers: Int, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, canAdjust: (Int) -> Boolean, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit, moveCountOf: (Int) -> Int? = { null }, onAdjustMoves: (Int, Int) -> Unit = { _, _ -> }) {
+fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, canAdjust: (Int) -> Boolean, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit, moveCountOf: (Int) -> Int? = { null }, onAdjustMoves: (Int, Int) -> Unit = { _, _ -> }) {
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)).clickable(enabled = false) {}, contentAlignment = Alignment.Center) {
         Surface(
             shape = RoundedCornerShape(24.dp), 
             color = MaterialTheme.colorScheme.surface, 
-            modifier = Modifier.padding(32.dp).graphicsLayer { rotationZ = contentRotation },
+            modifier = Modifier.padding(16.dp).laidOutForQuarterTurn(contentRotation).graphicsLayer { rotationZ = contentRotation },
             tonalElevation = 6.dp
         ) {
-            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            // Scrolled: four players with FIDE's move rows are taller than a phone is wide or, on a
+            // small one, than it is high, and it was Back to Game that fell off.
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(stringResource(R.string.timer_arbitre_control), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // One clock for the table, one control: "Player 2 +1m" changed the phase's clock, as
+                // every other player's buttons did.
+                if (tableClock) {
+                    ArbitrePlayerControl(stringResource(R.string.arbiter_clock), enabled = canAdjust(1)) { onAdjust(1, it) }
+                } else Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         ArbitrePlayerControl(stringResource(R.string.common_player_n, 1), modifier = Modifier.weight(1f), enabled = canAdjust(1), moveCount = moveCountOf(1), onAdjustMoves = { onAdjustMoves(1, it) }) { onAdjust(1, it) }
                         ArbitrePlayerControl(stringResource(R.string.common_player_n, 2), modifier = Modifier.weight(1f), enabled = canAdjust(2), moveCount = moveCountOf(2), onAdjustMoves = { onAdjustMoves(2, it) }) { onAdjust(2, it) }
@@ -779,7 +822,9 @@ fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: 
             // Named: under the minutes and the seconds, a bare number between - and + said nothing
             // of what it counted.
             Text(stringResource(R.string.stats_moves), style = MaterialTheme.typography.labelMedium)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Close together: side by side at 360dp each player has 140dp, and with wider gaps this
+            // row was squashed under the two above it.
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 FilledTonalIconButton(onClick = { onAdjustMoves(-1) }, enabled = moveCount > 0, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_move, label)) }
                 // A fixed width, so the buttons do not shift as the count gains a digit.
                 val spokenCount = stringResource(R.string.timer_moves, moveCount)
