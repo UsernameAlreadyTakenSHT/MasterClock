@@ -662,4 +662,15 @@
     <string name="tools_player_short">P%d</string>
     <string name="back_press_again_to_exit">Press Back again to exit</string>
     <string name="arbiter_clock">Clock</string>
+    <string name="label_per_move">/ move</string>
+    <string name="label_moves">moves</string>
+    <string name="game_shortcut_gone">This game is no longer in the history</string>
+    <string name="color_green">Green</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_red">Red</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_black">Black</string>
+    <string name="color_grey">Grey</string>
+    <string name="color_white">White</string>
 </resources>

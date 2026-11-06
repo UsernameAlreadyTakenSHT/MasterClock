@@ -610,4 +610,15 @@
     <string name="tools_player_short">S%d</string>
     <string name="back_press_again_to_exit">Druk nog een keer op Terug om af te sluiten</string>
     <string name="arbiter_clock">Klok</string>
+    <string name="label_per_move">/ zet</string>
+    <string name="label_moves">zetten</string>
+    <string name="game_shortcut_gone">Deze partij staat niet meer in de geschiedenis</string>
+    <string name="color_green">Groen</string>
+    <string name="color_blue">Blauw</string>
+    <string name="color_red">Rood</string>
+    <string name="color_yellow">Geel</string>
+    <string name="color_orange">Oranje</string>
+    <string name="color_black">Zwart</string>
+    <string name="color_grey">Grijs</string>
+    <string name="color_white">Wit</string>
 </resources>

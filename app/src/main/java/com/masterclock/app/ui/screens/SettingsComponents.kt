@@ -1,5 +1,8 @@
 package com.masterclock.app.ui.screens
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -65,9 +68,11 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, co
         animationSpec = tween()
     )
     
+    // Selected, not only coloured: TalkBack read every card the same, current mode or not.
     Surface(
-        onClick = onClick, 
-        modifier = modifier.height(if (compact) 40.dp else 48.dp).fillMaxWidth(), 
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier.height(if (compact) 40.dp else 48.dp).fillMaxWidth(),
         color = bgColor, 
         contentColor = contentColor, 
         shape = RoundedCornerShape(12.dp)
@@ -108,11 +113,16 @@ fun BehaviorSwitch(
                 .fillMaxWidth()
                 .clip(shape)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                .clickable(
+                // The whole row is the switch. Clickable beside a Switch of its own, it was two stops
+                // for TalkBack: the label with no state, then "on" with no label.
+                .toggleable(
+                    value = checked,
                     enabled = enabled,
+                    role = androidx.compose.ui.semantics.Role.Switch,
                     indication = androidx.compose.foundation.LocalIndication.current,
-                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                ) { onCheckedChange(!checked) }
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    onValueChange = onCheckedChange,
+                )
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -124,9 +134,9 @@ fun BehaviorSwitch(
                 color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
             )
             Switch(
-                checked = checked, 
-                onCheckedChange = onCheckedChange, 
-                enabled = enabled, 
+                checked = checked,
+                onCheckedChange = null,
+                enabled = enabled,
                 modifier = Modifier.scale(0.85f),
                 colors = SwitchDefaults.colors()
             )
@@ -633,6 +643,11 @@ private fun ExportOptionItem(
 @Composable
 fun ColorRow(selectedColor: Long, compact: Boolean = false, onColorSelected: (Long) -> Unit) {
     val colors = remember { listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF) }
+    // In the order of [colors]. Eight swatches on eight rows read "Button" to TalkBack, sixty-four times.
+    val colorNames = listOf(
+        stringResource(R.string.color_green), stringResource(R.string.color_blue), stringResource(R.string.color_red), stringResource(R.string.color_yellow),
+        stringResource(R.string.color_orange), stringResource(R.string.color_black), stringResource(R.string.color_grey), stringResource(R.string.color_white),
+    )
     var showPicker by remember { mutableStateOf(false) }
     // compact keeps the row narrow enough to share its line with a leading label (Omni's
     // per-player color list) instead of overflowing the last swatch off-screen.
@@ -653,11 +668,13 @@ fun ColorRow(selectedColor: Long, compact: Boolean = false, onColorSelected: (Lo
             }
         }
         VerticalDivider(modifier = Modifier.height(24.dp))
-        colors.forEach { colorVal ->
+        colors.forEachIndexed { index, colorVal ->
             val isSelected = selectedColor == colorVal
+            val colorName = colorNames[index]
             Surface(
+                selected = isSelected,
                 onClick = { if (!isSelected) onColorSelected(colorVal) },
-                modifier = Modifier.size(swatchSize),
+                modifier = Modifier.size(swatchSize).semantics { contentDescription = colorName },
                 shape = CircleShape,
                 color = Color(colorVal),
                 border = BorderStroke(width = if (isSelected) 2.dp else 1.dp, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
@@ -727,27 +744,27 @@ fun SimulatedScreen(settings: ChessClockSettings, onSettingsChanged: (ChessClock
         Column(Modifier.fillMaxSize().padding(8.dp)) {
             if (count == 3) {
                 if (settings.multiPlayerLayout == MultiPlayerLayout.BALANCED) {
-                    SimSlot(Modifier.weight(1f), "P${mapping[0]}") { cycleSlot(0) }
+                    SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[0])) { cycleSlot(0) }
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        SimSlot(Modifier.weight(1f), "P${mapping[1]}") { cycleSlot(1) }
-                        SimSlot(Modifier.weight(1f), "P${mapping[2]}") { cycleSlot(2) }
+                        SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[1])) { cycleSlot(1) }
+                        SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[2])) { cycleSlot(2) }
                     }
                 } else {
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        SimSlot(Modifier.weight(1f), "P${mapping[0]}") { cycleSlot(0) }
-                        SimSlot(Modifier.weight(1f), "P${mapping[1]}") { cycleSlot(1) }
+                        SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[0])) { cycleSlot(0) }
+                        SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[1])) { cycleSlot(1) }
                     }
-                    SimSlot(Modifier.weight(1f), "P${mapping[2]}") { cycleSlot(2) }
+                    SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[2])) { cycleSlot(2) }
                 }
             } else { // 4 Players
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SimSlot(Modifier.weight(1f), "P${mapping[0]}") { cycleSlot(0) }
-                    SimSlot(Modifier.weight(1f), "P${mapping[1]}") { cycleSlot(1) }
+                    SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[0])) { cycleSlot(0) }
+                    SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[1])) { cycleSlot(1) }
                 }
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    SimSlot(Modifier.weight(1f), "P${mapping[2]}") { cycleSlot(2) }
-                    SimSlot(Modifier.weight(1f), "P${mapping[3]}") { cycleSlot(3) }
+                    SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[2])) { cycleSlot(2) }
+                    SimSlot(Modifier.weight(1f), stringResource(R.string.tools_player_short, mapping[3])) { cycleSlot(3) }
                 }
             }
         }

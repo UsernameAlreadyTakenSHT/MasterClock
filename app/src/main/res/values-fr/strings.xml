@@ -636,4 +636,15 @@
     <string name="tools_player_short">J%d</string>
     <string name="back_press_again_to_exit">Appuyez à nouveau sur Retour pour quitter</string>
     <string name="arbiter_clock">Horloge</string>
+    <string name="label_per_move">/ coup</string>
+    <string name="label_moves">coups</string>
+    <string name="game_shortcut_gone">Cette partie n\'est plus dans l\'historique</string>
+    <string name="color_green">Vert</string>
+    <string name="color_blue">Bleu</string>
+    <string name="color_red">Rouge</string>
+    <string name="color_yellow">Jaune</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_black">Noir</string>
+    <string name="color_grey">Gris</string>
+    <string name="color_white">Blanc</string>
 </resources>

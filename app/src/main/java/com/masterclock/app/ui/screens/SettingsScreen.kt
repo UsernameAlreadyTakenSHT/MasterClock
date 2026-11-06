@@ -83,13 +83,17 @@ fun SettingsScreen(
     var showResetSettingsDialog by remember { mutableStateOf(false) }
     var showClearLogsDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    // Omni is opened from the Modes page and replaces it, having no tab of its own: Back left
+    // Settings altogether, and with no tab lit there was no telling how to get back to Modes.
+    val backToModes = category == SettingsCategory.OMNI
+    androidx.activity.compose.BackHandler(enabled = backToModes) { onCategoryChanged(SettingsCategory.MODES) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(category.labelRes), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+                    IconButton(onClick = { if (backToModes) onCategoryChanged(SettingsCategory.MODES) else onBackClick() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
             )
         },
