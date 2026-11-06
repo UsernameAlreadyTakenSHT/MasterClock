@@ -65,11 +65,32 @@ fun omniTurnsOf(round: OmniRoundSettings, numberOfPlayers: Int): List<OmniTurnSe
     if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns
     else List(numberOfPlayers.coerceAtLeast(0)) { OmniTurnSettings(durationMs = round.turnDurationMs, phases = round.fixedTurnPhases) }
 
+/**
+ * The game [state] is in. An index can be past the list when a paused session's structure has been
+ * edited; it reads as the last one. The engine and the screens each looked this up themselves, ten
+ * times over, some falling back to the first entry and some to the last.
+ */
+fun omniCurrentGame(settings: OmniSettings, state: OmniState): OmniGameSettings =
+    settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
+
+/** The round [state] is in; see [omniCurrentGame]. */
+fun omniCurrentRound(settings: OmniSettings, state: OmniState): OmniRoundSettings {
+    val game = omniCurrentGame(settings, state)
+    return game.rounds.getOrNull(state.currentRoundIndex) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
+}
+
 /** The phases of the turn [state] is in; empty when that turn has none. */
-internal fun omniCurrentTurnPhases(settings: OmniSettings, state: OmniState): List<OmniPhaseSettings> {
-    val game = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
-    val round = game.rounds.getOrNull(state.currentRoundIndex) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
-    return omniTurnsOf(round, settings.numberOfPlayers).getOrNull(state.turnCounterInRound)?.phases ?: emptyList()
+internal fun omniCurrentTurnPhases(settings: OmniSettings, state: OmniState): List<OmniPhaseSettings> =
+    omniTurnsOf(omniCurrentRound(settings, state), settings.numberOfPlayers).getOrNull(state.turnCounterInRound)?.phases ?: emptyList()
+
+/**
+ * Which turn of the round this is, for each player. A LOOP round starts its turn count over at every
+ * pass, so the count alone read "TURN 1" for as long as the round lasted.
+ */
+fun omniTurnNumber(settings: OmniSettings, state: OmniState): Int {
+    val players = settings.numberOfPlayers.coerceAtLeast(1)
+    val turnsPerPlayer = (omniTurnsOf(omniCurrentRound(settings, state), players).size / players).coerceAtLeast(1)
+    return state.roundPasses * turnsPerPlayer + state.turnCounterInRound / players + 1
 }
 
 internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int = 0, roundIdx: Int = 0, playerIdx: Int = 0, phaseIdx: Int = 0): Long {
@@ -260,8 +281,8 @@ internal fun computeOmniAdvance(
     var nextTurnIdx = state.turnCounterInRound
 
     val currentGameIdx = state.currentGameIndex
-    val currentGame = settings.games.getOrNull(currentGameIdx) ?: settings.games.firstOrNull() ?: OmniGameSettings()
-    val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
+    val currentGame = omniCurrentGame(settings, state)
+    val currentRound = omniCurrentRound(settings, state)
     // FIXED rounds always have exactly numberOfPlayers turns; customTurns left over from a
     // previous SEQUENCE configuration must not inflate the count (getOmniDuration and the UI
     // already assume numberOfPlayers for FIXED).
@@ -302,7 +323,7 @@ internal fun computeOmniAdvance(
                     return state.copy(
                         currentGameIndex = nextFinalGameIdx, currentRoundIndex = 0, currentPlayerIndex = nextGamePlayerIdx,
                         currentPhaseIndex = 0, turnCounterInRound = 0, roundPlayerOrder = nextGameOrder,
-                        isInTransition = true, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME",
+                        isInTransition = settings.interGamePauseMs > 0, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME", roundPasses = 0,
                         currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = nextFinalGameIdx, roundIdx = 0),
                         currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
                         currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0, phaseIdx = 0),
@@ -310,14 +331,21 @@ internal fun computeOmniAdvance(
                         playerTimeBanks = drawnBanks
                     )
                 }
-                val roundBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "ROUND")
+                // A player's own bank is drawn on their next turn, and in a round where nobody plays
+                // twice that is always in the next one: emptied here, a deposit was shown in reserve
+                // through the other players' turns and then gone, and banking did nothing in the
+                // default scope. The shared reserve can be drawn by whoever is next, and ends with the
+                // round as the scope says.
+                val nobodyPlaysTwice = settings.timeBankMode == TimeBankMode.ACCUMULATIVE &&
+                    currentRound.roundEndBehavior == RoundEndBehavior.ADVANCE && turnsList.size <= settings.numberOfPlayers
+                val roundBanks = if (nobodyPlaysTwice) updatedBanks else handleTimeBankScope(updatedBanks, settings.timeBankScope, "ROUND")
                 val nextRoundOrder = omniRoundOrderFor(settings, currentGameIdx, nextRoundIdx, state.currentPlayerIndex, random)
                 val nextPlayerIdx = omniPlayerForTurn(nextRoundOrder, nextTurnIdx, nextRoundIdx, settings)
                 val (drawnBanks, bankedMs) = drawOmniBank(roundBanks, settings, nextPlayerIdx)
                 return state.copy(
                     currentRoundIndex = nextRoundIdx, currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx,
                     turnCounterInRound = nextTurnIdx, roundPlayerOrder = nextRoundOrder,
-                    isInTransition = true, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND",
+                    isInTransition = settings.interRoundPauseMs > 0, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND", roundPasses = 0,
                     currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
                     currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
                     currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = 0),
@@ -332,8 +360,12 @@ internal fun computeOmniAdvance(
         val nextPlayerIdx = omniPlayerForTurn(turnOrder, nextTurnIdx, nextRoundIdx, settings)
         val (drawnBanks, bankedMs) = drawOmniBank(turnBanks, settings, nextPlayerIdx)
         return state.copy(
-            currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx, turnCounterInRound = nextTurnIdx, roundPlayerOrder = turnOrder, isInTransition = true,
-            transitionTimeRemainingMs = settings.interTurnPauseMs, transitionLabel = "TURN",
+            currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx, turnCounterInRound = nextTurnIdx, roundPlayerOrder = turnOrder,
+            // Only where there is a pause. With none, the screen flashed TURN FINISHED for a tick at
+            // every turn; and a choice of Ready left from when pauses were on, whose switch goes with
+            // them, stopped the game on "I AM READY" after every turn with nothing to wait for.
+            isInTransition = settings.interTurnPauseMs > 0, transitionTimeRemainingMs = settings.interTurnPauseMs, transitionLabel = "TURN",
+            roundPasses = if (loopedRound) state.roundPasses + 1 else state.roundPasses,
             currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
             // Without this, the new turn inherited the old turn's spent phase clock (usually 0):
             // the phase display froze at 00:00 for the rest of the session and the <10s
@@ -398,8 +430,7 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
         if (oldG > 0 && newState.currentGlobalTimeMs <= 0 && settings.soundGameEnd) sounds += OmniSound.GAME_END
         if (oldGa > 0 && newState.currentGameTimeMs <= 0 && settings.soundGameEnd) sounds += OmniSound.GAME_END
         if (oldR > 0 && newState.currentRoundTimeMs <= 0 && settings.soundRoundEnd) sounds += OmniSound.ROUND_END
-        val pausedGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
-        val pausedRound = pausedGame.rounds.getOrNull(state.currentRoundIndex) ?: pausedGame.rounds.lastOrNull() ?: OmniRoundSettings()
+        val pausedRound = omniCurrentRound(settings, state)
         val pausedForce = when {
             settings.globalForcesCutoff && oldG > 0 && newState.currentGlobalTimeMs <= 0 -> "SESSION"
             settings.gameForcesCutoff && oldGa > 0 && newState.currentGameTimeMs <= 0 -> "GAME"
@@ -427,7 +458,9 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
     if (oldGame > 0 && newState.currentGameTimeMs <= 0 && settings.soundGameEnd) sounds += OmniSound.GAME_END
     if (oldRound > 0 && newState.currentRoundTimeMs <= 0 && settings.soundRoundEnd) sounds += OmniSound.ROUND_END
     if (oldTurn > 0 && newState.currentTurnTimeMs <= 0 && settings.soundTurnEnd) sounds += OmniSound.TURN_END
-    if (oldPhase > 0 && newState.currentPhaseTimeMs <= 0 && settings.soundTurnEnd) sounds += OmniSound.TURN_END
+    // The same sound, so one is enough when both end together, as a turn with no phases always does.
+    val turnEnded = oldTurn > 0 && newState.currentTurnTimeMs <= 0
+    if (oldPhase > 0 && newState.currentPhaseTimeMs <= 0 && settings.soundTurnEnd && !turnEnded) sounds += OmniSound.TURN_END
 
     // Whichever level with *ForcesCutoff enabled crossed to zero this tick forces an advance,
     // outermost first (a session/game/round cutoff already implies whatever is nested inside
@@ -435,8 +468,7 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
     // A LOOP round has no natural turn-exhaustion end (computeOmniAdvance keeps cycling its
     // turns), so its round clock expiring IS its end — without this, a LOOP round could
     // literally never finish unless roundForcesCutoff happened to be enabled.
-    val tickGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.lastOrNull() ?: OmniGameSettings()
-    val tickRound = tickGame.rounds.getOrNull(state.currentRoundIndex) ?: tickGame.rounds.lastOrNull() ?: OmniRoundSettings()
+    val tickRound = omniCurrentRound(settings, state)
     val loopRoundEnds = tickRound.roundEndBehavior == RoundEndBehavior.LOOP
     val forceLevel = when {
         settings.globalForcesCutoff && oldGlobal > 0 && newState.currentGlobalTimeMs <= 0 -> "SESSION"
@@ -448,9 +480,11 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
         // phase with a duration advanced on its own, the switch did nothing, and a turn
         // ended by itself when its last phase did, its remaining time banked.
         // Only for a turn that has phases: the phase clock of one without is the turn
-        // itself, and cutting it off would end every turn whatever turnForcesCutoff says.
+        // itself, and cutting it off would end every turn whatever turnForcesCutoff says. Nor for
+        // its last phase, which has no phase after it to cut to: advancing from it ends the turn,
+        // and that is turnForcesCutoff's to say.
         settings.phaseForcesCutoff &&
-            omniCurrentTurnPhases(settings, state).isNotEmpty() &&
+            state.currentPhaseIndex < omniCurrentTurnPhases(settings, state).size - 1 &&
             oldPhase > 0 && newState.currentPhaseTimeMs <= 0 -> "PHASE"
         else -> null
     }

@@ -34,7 +34,7 @@ class OmniTimerLogicTest {
         val turn = OmniTurnSettings(durationMs = 60_000, phases = listOf(phase1, phase2))
         val round = OmniRoundSettings(customTurns = listOf(turn, turn), turnLogic = RoundTurnLogic.SEQUENCE)
         val game = OmniGameSettings(rounds = listOf(round))
-        val settings = OmniSettings(usePhaseClock = true, games = listOf(game), numberOfPlayers = 2)
+        val settings = OmniSettings(usePhaseClock = true, games = listOf(game), numberOfPlayers = 2, interTurnPauseMs = 1_000)
         val state = OmniState(currentPhaseIndex = 0, turnCounterInRound = 0)
 
         val next = computeOmniAdvance(state, settings, forceLevel = "TURN")
@@ -49,7 +49,7 @@ class OmniTimerLogicTest {
         val round1 = OmniRoundSettings(name = "Round 1", turnDurationMs = 60_000)
         val round2 = OmniRoundSettings(name = "Round 2", turnDurationMs = 90_000)
         val game = OmniGameSettings(rounds = listOf(round1, round2))
-        val settings = OmniSettings(games = listOf(game), numberOfPlayers = 2)
+        val settings = OmniSettings(games = listOf(game), numberOfPlayers = 2, interRoundPauseMs = 1_000)
         val state = OmniState(currentRoundIndex = 0, turnCounterInRound = 0, currentPlayerIndex = 0)
 
         val next = computeOmniAdvance(state, settings, forceLevel = "ROUND")
@@ -121,7 +121,7 @@ class OmniTimerLogicTest {
         val round = OmniRoundSettings()
         val game1 = OmniGameSettings(name = "Game 1", rounds = listOf(round, round))
         val game2 = OmniGameSettings(name = "Game 2", rounds = listOf(round))
-        val settings = OmniSettings(games = listOf(game1, game2), numberOfPlayers = 2)
+        val settings = OmniSettings(games = listOf(game1, game2), numberOfPlayers = 2, interGamePauseMs = 1_000)
         val state = OmniState(currentGameIndex = 0, currentRoundIndex = 0, turnCounterInRound = 0)
 
         val next = computeOmniAdvance(state, settings, forceLevel = "GAME")

@@ -109,9 +109,7 @@ fun OmniHeader(state: OmniState, settings: OmniSettings, onBack: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
-                val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
-                val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
-                Text(stringResource(R.string.omni_header, currentRound.name), fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.omni_header, omniCurrentRound(settings, state).name), fontWeight = FontWeight.Bold)
             }
 
             if (settings.useGlobalClock) {
@@ -121,12 +119,13 @@ fun OmniHeader(state: OmniState, settings: OmniSettings, onBack: () -> Unit) {
                 // Each game has its own duration (editable per game in the wizard); using the
                 // global gameDurationMs default here made the fraction wrong whenever they differ.
                 val gameTotal = settings.games.getOrNull(state.currentGameIndex)?.durationMs ?: settings.gameDurationMs
-                OmniProgressBar(label = stringResource(R.string.omni_progress_game, state.currentGameIndex + 1, settings.games.size), timeMs = state.currentGameTimeMs, totalMs = gameTotal, color = Color(0xFF4CAF50))
+                // Held to the list: a paused session's games can be edited, and it read "Game 2/1".
+                OmniProgressBar(label = stringResource(R.string.omni_progress_game, (state.currentGameIndex + 1).coerceAtMost(settings.games.size), settings.games.size), timeMs = state.currentGameTimeMs, totalMs = gameTotal, color = Color(0xFF4CAF50))
             }
             if (settings.useRoundClock) {
-                val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
+                val currentGame = omniCurrentGame(settings, state)
                 val roundTotal = currentGame.rounds.getOrNull(state.currentRoundIndex)?.durationMs ?: 0L
-                OmniProgressBar(label = stringResource(R.string.omni_progress_round, state.currentRoundIndex + 1, currentGame.rounds.size), timeMs = state.currentRoundTimeMs, totalMs = roundTotal, color = Color(0xFFFF9800))
+                OmniProgressBar(label = stringResource(R.string.omni_progress_round, (state.currentRoundIndex + 1).coerceAtMost(currentGame.rounds.size), currentGame.rounds.size), timeMs = state.currentRoundTimeMs, totalMs = roundTotal, color = Color(0xFFFF9800))
             }
         }
     }
@@ -168,9 +167,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
     val pIdx = state.currentPlayerIndex % numPlayers
     val pColor = Color(omniPlayerColor(settings, pIdx))
 
-    // turnCounterInRound is the raw, ever-incrementing turn count within the round; currentPlayerIndex
-    // is always already in [0, numPlayers) so dividing it here was always 0 ("TURN 1" forever).
-    val turnNumber = (state.turnCounterInRound / numPlayers) + 1
+    val turnNumber = omniTurnNumber(settings, state)
     val playerNumber = pIdx + 1
 
     Column(
@@ -188,8 +185,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
                 Icon(Icons.Default.Person, null, tint = pColor, modifier = Modifier.size(24.dp))
                 Spacer(Modifier.width(8.dp))
                 Column {
-                    val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
-                    val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
+                    val currentRound = omniCurrentRound(settings, state)
                     val totalTurnsInRound = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns.size else numPlayers
                     val turnsPerPlayer = totalTurnsInRound / numPlayers
 
@@ -209,7 +205,8 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
             // The current player's own bank is always drawn into their turn clock as the turn
             // starts, so showing just their entry was permanently 0. Show the total still held
             // in reserve (other players' banks / the shared pool) instead.
-            val bankedMs = state.playerTimeBanks.values.sum()
+            // Only banks that belong to someone: a player removed from a paused session keeps none.
+            val bankedMs = state.playerTimeBanks.filterKeys { it == OMNI_GLOBAL_TIME_BANK_KEY || it < numPlayers }.values.sum()
             if (bankedMs > 0) {
                 Text(
                     stringResource(R.string.omni_in_reserve, formatTime(bankedMs)),
@@ -222,9 +219,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
         }
 
         if (settings.usePhaseClock) {
-            val currentGame = settings.games.getOrNull(state.currentGameIndex) ?: settings.games.firstOrNull() ?: OmniGameSettings()
-            val currentRound = currentGame.rounds.getOrNull(state.currentRoundIndex) ?: currentGame.rounds.firstOrNull() ?: OmniRoundSettings()
-            val turnsList = omniTurnsOf(currentRound, numPlayers)
+            val turnsList = omniTurnsOf(omniCurrentRound(settings, state), numPlayers)
             // turnsList (SEQUENCE mode) is indexed by the raw turn count within the round, same as the
             // engine (OmniTimerViewModel.advanceOmni), not by currentPlayerIndex.
             val currentTurn = turnsList.getOrNull(state.turnCounterInRound)
@@ -310,7 +305,11 @@ fun OmniControls(state: OmniState, onPauseResume: () -> Unit, onStop: () -> Unit
             IconButton(onClick = onPauseResume) {
                 Icon(
                     if (state.isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    if (state.isRunning) stringResource(R.string.omni_pause) else stringResource(R.string.timer_resume)
+                    when {
+                        state.isRunning -> stringResource(R.string.omni_pause)
+                        state.hasStarted -> stringResource(R.string.timer_resume)
+                        else -> stringResource(R.string.timer_start)
+                    }
                 )
             }
             IconButton(onClick = onStop) {

@@ -194,6 +194,8 @@ data class OmniState(
     // from the turn/round indices). Keeping the draw in state rather than rolling inside
     // computeOmniAdvance keeps that function reproducible for a given state.
     val roundPlayerOrder: List<Int> = emptyList(),
+    // How many times a LOOP round has gone back to its first turn; see omniTurnNumber.
+    val roundPasses: Int = 0,
 
     // Buffer States
     val isInTransition: Boolean = false,
