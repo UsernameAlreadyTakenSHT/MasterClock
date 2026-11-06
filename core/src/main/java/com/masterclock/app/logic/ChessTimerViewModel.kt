@@ -1805,7 +1805,8 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
                 return p.copy(timeRemainingMs = t, isOutOfTime = out, isNegative = neg)
             }
             val newTime = p.timeRemainingMs - delta
-            if (newTime >= 0) return p.copy(timeRemainingMs = newTime)
+            // Exactly zero with no reserve behind it is the end, not a tick more on the clock.
+            if (newTime > 0 || (newTime == 0L && p.secondaryTimeMs > 0)) return p.copy(timeRemainingMs = newTime)
             val newSec = p.secondaryTimeMs + newTime
             if (newSec > 0) return p.copy(timeRemainingMs = 0, secondaryTimeMs = newSec)
             val overrun = -newSec
@@ -1904,7 +1905,12 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
                     timeSpent >= s.fastMoveGracePeriodMs -> s.fastMoveAccelRate
                     else -> 0f
                 }
-                (delta * (1f + accel)).toLong()
+                val accelerated = (delta * (1f + accel)).toLong()
+                // The acceleration is on the time left, not on an overrun. The tick that empties
+                // the clock counted the rest of itself accelerated too, so a 10s tick at double
+                // speed with 7s left read 13s over rather than the 6.5s that had passed since zero.
+                if (accelerated > p.timeRemainingMs && accel > 0f) p.timeRemainingMs + (delta - (p.timeRemainingMs / (1f + accel)).toLong()).coerceAtLeast(0)
+                else accelerated
             } else delta
             // Through FlagBehavior like every other clock. It was clamped at 0:00 whatever the setting:
             // under NEGATIVE and REVERSE no overrun was counted, so the move had no limit at all, and
@@ -3092,8 +3098,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // minutes over counted, in the statistics, as one with two minutes to spare.
             addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.signedTimeMs(settings.value.flagBehavior).coerceAtLeast(0), moveCount = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) (p.moveCount - 1).coerceAtLeast(0) else p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
             val flaggedByMove = applyPostMoveLogic(playerIndex, timeSpentOnMove)
-            // Under FREEZE a flag stops the game, exactly as tick() stops it for one on the clock.
-            if (flaggedByMove && settings.value.flagBehavior == FlagBehavior.FREEZE) {
+            // A flag that ends the game stops it, exactly as tick() stops one on the clock: under
+            // FREEZE any flag, under FLAG the one that leaves a single player. Only FREEZE did, so
+            // the last move of a Move Count Down game under FLAG started the next player's clock,
+            // played the switch sound and ticked once before the game was found to be over.
+            if (flaggedByMove && isGameOver(_uiState.value, settings.value.flagBehavior, playerCount)) {
                 timerJob?.cancel()
                 timerJob = null
                 _uiState.update { it.copy(isPaused = true) }
