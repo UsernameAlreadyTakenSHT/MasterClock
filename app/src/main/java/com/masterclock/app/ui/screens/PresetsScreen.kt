@@ -54,6 +54,8 @@ fun timeControlWords() = TimeControlWords(stringResource(R.string.label_per_move
 @Composable
 fun PresetsScreen(
     history: List<GameLog>,
+    /** Whether [history] has been read yet; an empty one means nothing until it has. */
+    historyLoaded: Boolean,
     customPresets: List<SavedPreset>,
     /** The settings, the starting states for a game from Last Games, and whether it is a built-in, with whether that one sets the flag behaviour. */
     onPresetSelected: (ChessClockSettings, List<PlayerStateProxy>?, ClockPreset?) -> Unit,
@@ -195,8 +197,12 @@ fun PresetsScreen(
 
                 val lastTen = remember(history) { history.take(10) }
                 if (lastTen.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.preset_empty_history), style = MaterialTheme.typography.bodyLarge)
+                    // The app opens before the history is in, on purpose, and "no games yet" showed
+                    // for that moment to someone with hundreds of them.
+                    if (historyLoaded) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.preset_empty_history), style = MaterialTheme.typography.bodyLarge)
+                        }
                     }
                 } else {
                     LazyVerticalGrid(

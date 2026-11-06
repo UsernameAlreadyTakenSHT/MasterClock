@@ -195,18 +195,7 @@ class MainActivity : ComponentActivity() {
                         // overwrite: removing it on every failure lost that one too.
                         var opened = false
                         val written = runCatching {
-                            val snapshot = timerViewModel.exportSnapshot()
-                            val pkg = if (includeLogs) {
-                                SharePackage(
-                                    settings = snapshot.settings.copy(
-                                        notebookNotes = snapshot.settings.notebookNotes.filter { note -> note.type == NotebookNoteType.TEXT }
-                                    ),
-                                    logs = snapshot.logs,
-                                    scoreboard = snapshot.scoreboard,
-                                )
-                            } else {
-                                SharePackage(settings = snapshot.settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null)
-                            }
+                            val pkg = sharePackageOf(timerViewModel.exportSnapshot(), includeLogs)
                             val bytes = json.encodeToString(pkg).toByteArray()
                             // The import reads at most MAX_IMPORT_TEXT_BYTES, and this wrote whatever
                             // the history came to: some five hundred games made a file that "Export
@@ -420,23 +409,32 @@ class MainActivity : ComponentActivity() {
                                         val shareJson = json.encodeToString(pkg)
                                         navigator.navigate(Route.QRShare(shareJson))
                                     } else {
-                                        val pkg = if (includeLogs) {
-                                            SharePackage(
-                                                settings = settings.copy(
-                                                    notebookNotes = settings.notebookNotes.filter { it.type == NotebookNoteType.TEXT }
-                                                ),
-                                                logs = gameHistory,
-                                                scoreboard = timerViewModel.scoreboard.value
-                                            )
-                                        } else {
-                                            SharePackage(
-                                                settings = settings.copy(notebookNotes = emptyList()),
-                                                logs = null,
-                                                scoreboard = null
-                                            )
+                                        // As the file export does it, off the main thread and with its
+                                        // limit. Encoding a long history froze the screen, and the file
+                                        // handed over could be one no import would read. From the
+                                        // ViewModel as well: the composition's copies are empty until
+                                        // the stored state is in, so a share could go out without games.
+                                        scope.launch(Dispatchers.IO) {
+                                            val shared = runCatching {
+                                                val pkg = sharePackageOf(timerViewModel.exportSnapshot(), includeLogs)
+                                                val bytes = json.encodeToString(pkg).toByteArray()
+                                                if (bytes.size > MAX_IMPORT_TEXT_BYTES) throw ImportTooLargeException("Settings file would be too large to import")
+                                                val chooser = shareChooser(context, bytes)
+                                                withContext(Dispatchers.Main) { context.startActivity(chooser) }
+                                            }
+                                            // A failed share, the cache unwritable or no app able to take
+                                            // the file, must not look like a tap that did nothing.
+                                            shared.exceptionOrNull()?.let { e ->
+                                                Log.e("MainActivity", "Failed to share settings", e)
+                                                withContext(Dispatchers.Main) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        if (e is ImportTooLargeException) exportTooLargeText else exportFailedText,
+                                                        Toast.LENGTH_LONG,
+                                                    ).show()
+                                                }
+                                            }
                                         }
-                                        val shareJson = json.encodeToString(pkg)
-                                        shareData(context, shareJson)
                                     }
                                 },
                                 onToolClick = { routeToNavigate -> navigator.navigate(routeToNavigate) },
@@ -518,6 +516,7 @@ class MainActivity : ComponentActivity() {
                             val shortcutDeleted = stringResource(R.string.preset_shortcut_deleted)
                             PresetsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
+                                historyLoaded = historyLoaded,
                                 customPresets = timerViewModel.customPresets.collectAsState().value,
                                 // Only the time control is taken from a preset. The built-in ones
                                 // are each a fresh ChessClockSettings() with a field or two
@@ -706,37 +705,45 @@ class MainActivity : ComponentActivity() {
         if (size == 0L) runCatching { android.provider.DocumentsContract.deleteDocument(context.contentResolver, uri) }
     }
 
-    private fun shareData(context: Context, jsonData: String) {
-        try {
-            val cacheDir = File(context.cacheDir, "shares")
-            if (!cacheDir.exists()) cacheDir.mkdirs()
-            // Every share used to write the same path, and a read grant lives as long as the task
-            // that received it. So a target still holding the URI from an earlier share -- settings
-            // only, say -- could read whatever the next one put there, which may include the game
-            // history and text notes it was never given.
-            //
-            // A directory per share gives each its own URI and keeps the filename meaningful to
-            // whoever receives it. The previous ones go at the same time: they are a cleartext copy
-            // of the user's configuration sitting in the cache with nothing to remove them.
-            cacheDir.listFiles()?.filter { it.isDirectory && it.name.startsWith("config-") }
-                ?.forEach { it.deleteRecursively() }
-            val shareDir = File(cacheDir, "config-${java.util.UUID.randomUUID()}").apply { mkdirs() }
-            val shareFile = File(shareDir, "master_clock_config.json")
-            FileOutputStream(shareFile).use { it.write(jsonData.toByteArray()) }
-
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", shareFile)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/json"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_settings)))
-        } catch (e: Exception) {
-            // Logged and nothing else, so a failed share -- the cache unwritable, no app able to
-            // take the file -- looked exactly like a tap that did nothing.
-            Log.e("MainActivity", "Failed to share settings", e)
-            Toast.makeText(context, context.getString(R.string.toast_export_failed), Toast.LENGTH_SHORT).show()
+    /** What an export or a share holds. Photos and voice notes only travel in the media backup. */
+    private fun sharePackageOf(snapshot: ExportSnapshot, includeLogs: Boolean): SharePackage =
+        if (includeLogs) {
+            SharePackage(
+                settings = snapshot.settings.copy(
+                    notebookNotes = snapshot.settings.notebookNotes.filter { note -> note.type == NotebookNoteType.TEXT }
+                ),
+                logs = snapshot.logs,
+                scoreboard = snapshot.scoreboard,
+            )
+        } else {
+            SharePackage(settings = snapshot.settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null)
         }
+
+    /** Writes [bytes] where a share can read them and returns the chooser. Writes a file, so not on the main thread. */
+    private fun shareChooser(context: Context, bytes: ByteArray): Intent {
+        val cacheDir = File(context.cacheDir, "shares")
+        if (!cacheDir.exists()) cacheDir.mkdirs()
+        // Every share used to write the same path, and a read grant lives as long as the task
+        // that received it. So a target still holding the URI from an earlier share -- settings
+        // only, say -- could read whatever the next one put there, which may include the game
+        // history and text notes it was never given.
+        //
+        // A directory per share gives each its own URI and keeps the filename meaningful to
+        // whoever receives it. The previous ones go at the same time: they are a cleartext copy
+        // of the user's configuration sitting in the cache with nothing to remove them.
+        cacheDir.listFiles()?.filter { it.isDirectory && it.name.startsWith("config-") }
+            ?.forEach { it.deleteRecursively() }
+        val shareDir = File(cacheDir, "config-${java.util.UUID.randomUUID()}").apply { mkdirs() }
+        val shareFile = File(shareDir, "master_clock_config.json")
+        FileOutputStream(shareFile).use { it.write(bytes) }
+
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", shareFile)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/json"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        return Intent.createChooser(intent, context.getString(R.string.share_settings))
     }
 }
 
