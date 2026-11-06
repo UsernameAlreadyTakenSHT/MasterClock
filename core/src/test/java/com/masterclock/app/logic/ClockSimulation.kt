@@ -149,28 +149,33 @@ internal fun randomSimSettings(r: Random): ChessClockSettings {
     }
     val s = PlayerSettings(
         mode = TimerMode.entries.random(r),
-        initialTimeMs = sec(5, 60),
-        moveTimeMs = sec(2, 15),
+        // From zero, and with settings that contradict each other: the editor takes them all.
+        initialTimeMs = sec(0, 60),
+        moveTimeMs = sec(0, 15),
         incrementMs = sec(0, 5),
         timeCapMs = sec(5, 40),
         byoyomiPeriods = r.nextInt(0, 4),
         byoyomiTimeMs = sec(2, 10),
         byoyomiProgression = r.nextInt(0, 3),
-        maxMoves = r.nextInt(1, 8),
+        maxMoves = r.nextInt(0, 8),
         fidePeriods = periods,
         phases = List(r.nextInt(1, 5)) { GamePhase(timeMs = sec(0, 15), autoAdvance = r.nextBoolean(), flagOnEnd = r.nextInt(4) == 0) },
         gongSimultaneous = r.nextBoolean(),
-        gongReflectionMs = sec(2, 6),
-        gongMoveMs = sec(1, 3),
+        gongReflectionMs = sec(0, 6),
+        gongMoveMs = sec(0, 3),
         fastMoveMode = FastMoveType.entries.random(r),
-        fastMoveGracePeriodMs = sec(0, 5),
-        fastMoveFastPeriodMs = sec(3, 15),
+        fastMoveGracePeriodMs = sec(0, 20),
+        fastMoveFastPeriodMs = sec(0, 15),
         fastMoveAccelRate = listOf(0.15f, 0.5f, 1f).random(r),
         fastMoveFullAccelRate = listOf(1f, 2f).random(r),
         fastMoveShrinkDecrementMs = sec(0, 5),
-        fastMoveShrinkFloorMs = sec(1, 5),
+        fastMoveShrinkFloorMs = sec(1, 90),
         fastMoveTransferCumulative = r.nextBoolean(),
-    )
+    ).let {
+        // Not from zero with a reserve. One that starts empty has no moment of running out, so its
+        // overrun does not begin at zero: known, and to be settled apart from these rules.
+        if (it.mode in RESERVE_MODES) it.copy(initialTimeMs = sec(5, 60), moveTimeMs = sec(2, 15)) else it
+    }
     return ChessClockSettings(
         main = s,
         flagBehavior = FlagBehavior.entries.random(r),
@@ -185,6 +190,7 @@ internal fun randomSimSettings(r: Random): ChessClockSettings {
     )
 }
 
+private val RESERVE_MODES = setOf(TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED, TimerMode.MOVE_TIMER_OVERTIME)
 private val TICKS = longArrayOf(10, 100, 100, 100, 100, 1_000, 3_000, 10_000)
 private val ARBITER_AMOUNTS = longArrayOf(1_000, -1_000, 10_000, -10_000, 60_000, -60_000)
 

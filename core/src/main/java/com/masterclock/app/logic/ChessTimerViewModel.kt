@@ -951,7 +951,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings, words: TimeControlWor
     when (s.mode) {
         TimerMode.GONG -> return "Gong ${duration(s.gongReflectionMs)} / ${duration(s.gongMoveMs)}"
         TimerMode.PHASES -> return "Phases (${s.phases.size}), ${duration(s.phases.sumOf { it.timeMs })}"
-        TimerMode.MOVE_COUNTS_DOWN -> return "${s.maxMoves} ${words.moves}"
+        TimerMode.MOVE_COUNTS_DOWN -> return "${s.maxMoves.coerceAtLeast(1)} ${words.moves}"
         TimerMode.MOVE_COUNTS_UP, TimerMode.CHRONO_COUNTUP -> return s.mode.displayName()
         TimerMode.FAST_MOVE -> if (s.fastMoveMode == FastMoveType.TRANSFER && s.moveTimeMs > 0) return "${duration(s.moveTimeMs)} ${words.perMove}"
         else -> {}
@@ -1166,6 +1166,13 @@ data class PlayerState(
      * leaving Reset as the only way out of the game.
      */
     val isPhaseAwaitingTap: Boolean = false,
+    /**
+     * The fraction of a millisecond Accelerate has yet to take. A clock counts whole milliseconds and
+     * each tick's share was cut off, so a rate of 15% lost 7% of itself at the slow tick, 11.5 becoming
+     * 11 lost a third at the fast one, and the finer the clock the less it accelerated. Not saved:
+     * under a millisecond is not worth an autosave field.
+     */
+    val accelCarryMs: Double = 0.0,
 )
 
 data class ChessClockState(
@@ -1976,16 +1983,21 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
         }
         TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN -> p
         TimerMode.FAST_MOVE -> {
+            var carry = p.accelCarryMs
             val effectiveDelta = if (s.fastMoveMode == FastMoveType.ACCELERATE && !p.isOutOfTime) {
                 // The clock runs for the whole game, and initialTotalTimeMs is where it stood when
                 // this move began: the acceleration starts again with every move.
                 val timeSpent = p.initialTotalTimeMs - p.timeRemainingMs
                 val accel = when {
-                    timeSpent >= s.fastMoveFastPeriodMs -> s.fastMoveFullAccelRate
+                    // Not before the grace period, whatever is set: a full speed that began below it
+                    // left the grace period no grace at all.
+                    timeSpent >= maxOf(s.fastMoveFastPeriodMs, s.fastMoveGracePeriodMs) -> s.fastMoveFullAccelRate
                     timeSpent >= s.fastMoveGracePeriodMs -> s.fastMoveAccelRate
                     else -> 0f
                 }
-                val accelerated = (delta * (1f + accel)).toLong()
+                val exact = delta * (1.0 + accel) + carry
+                val accelerated = exact.toLong()
+                carry = exact - accelerated
                 // The acceleration is on the time left, not on an overrun. The tick that empties
                 // the clock counted the rest of itself accelerated too, so a 10s tick at double
                 // speed with 7s left read 13s over rather than the 6.5s that had passed since zero.
@@ -1996,7 +2008,7 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             // under NEGATIVE and REVERSE no overrun was counted, so the move had no limit at all, and
             // the next tick, finding time "left" at zero, cleared the flag.
             val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(p.timeRemainingMs, p.isOutOfTime, p.isNegative, effectiveDelta, settings.flagBehavior)
-            p.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg)
+            p.copy(timeRemainingMs = newTime, isOutOfTime = isOut, isNegative = isNeg, accelCarryMs = carry)
         }
         else -> {
             val (newTime, isOut, isNeg) = applyFlagBehaviorDelta(p.timeRemainingMs, p.isOutOfTime, p.isNegative, delta, settings.flagBehavior)
@@ -2643,7 +2655,9 @@ internal fun initialClockState(settings: ChessClockSettings, randomRoll: Pair<Lo
             TimerMode.BYOYOMI_JAPANESE -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, byoyomiPeriodsRemaining = pSettings.byoyomiPeriods)
             TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> pSettings.byoyomiPeriods.coerceAtLeast(1).let { quota -> PlayerState(timeRemainingMs = pSettings.initialTimeMs, movesRemainingInPeriod = quota, currentByoyomiMovesGoal = quota) }
             TimerMode.MOVE_COUNTS_UP -> PlayerState(timeRemainingMs = 0, moveCount = 0)
-            TimerMode.MOVE_COUNTS_DOWN -> PlayerState(timeRemainingMs = 0, moveCount = pSettings.maxMoves)
+            // At least one, as a byoyomi quota is. At 0 there was nothing to count down from, and the face
+            // read 0 until the first press flagged the player.
+            TimerMode.MOVE_COUNTS_DOWN -> PlayerState(timeRemainingMs = 0, moveCount = pSettings.maxMoves.coerceAtLeast(1))
             TimerMode.FIDE_PERIODS -> {
                 val first = pSettings.fidePeriods.firstOrNull() ?: FidePeriod()
                 PlayerState(
@@ -2950,7 +2964,8 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             if (s.fastMoveMode == FastMoveType.SHRINK) {
                 // Each move starts a fresh allowance, so an overrun of the last one ends with it.
                 val fresh = if (p.isOverrun(settings.flagBehavior)) tempP.copy(isNegative = false, isOutOfTime = false) else tempP
-                val nextTurnStartTime = (p.initialTotalTimeMs - s.fastMoveShrinkDecrementMs).coerceAtLeast(s.fastMoveShrinkFloorMs)
+                // A clock that only shrinks: a floor set above it made the first move raise it.
+                val nextTurnStartTime = (p.initialTotalTimeMs - s.fastMoveShrinkDecrementMs).coerceAtLeast(minOf(s.fastMoveShrinkFloorMs, p.initialTotalTimeMs))
                 fresh.copy(timeRemainingMs = nextTurnStartTime, initialTotalTimeMs = nextTurnStartTime)
             } else {
                 // ACCELERATE is one clock for the whole game, as Sudden Death is: nothing is

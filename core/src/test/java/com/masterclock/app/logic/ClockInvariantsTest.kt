@@ -122,7 +122,11 @@ class ClockInvariantsTest {
                     TimerMode.MOVE_TIMER_OVERTIME -> p.timeRemainingMs == 0L && p.secondaryTimeMs == 0L
                     else -> false
                 }
-                if (runOut && !p.isOutOfTime) return "a clock that has run out is out" to who
+                // Once it has run: a clock set to nothing shows 0:00, and flags on the tick that starts
+                // it. Until its player's turn comes it has not run out of anything.
+                val notYetRun = initialClockState(settings, ClockSim.RANDOM_ROLL).players[i].timeRemainingMs == 0L &&
+                    !(action is SimAction.Tick && before.activePlayer == i + 1)
+                if (runOut && !p.isOutOfTime && wasRunning && !notYetRun) return "a clock that has run out is out" to who
 
                 // Under NEGATIVE a player who is out shows the overrun: out with time still on the
                 // clock reads FLAGGED while counting down, and the next press refills it.
@@ -255,8 +259,9 @@ class ClockInvariantsTest {
             // something is cut off at zero: a clock under FREEZE and FLAG, a reserve in any mode.
             if (mode in CREDITED || mode in RESERVE) {
                 val back = arbiterAdjustTime(arbiterAdjustTime(before, action.player, amount, settings), action.player, -amount, settings)
+                // Nor from a clock set to nothing: taken back to zero, it flags, as any other clock does.
                 val canUndo = if (mode in RESERVE) !b.isOutOfTime && b.secondaryTimeMs + amount > 0
-                    else overflowing || (amount > 0 && !b.isOutOfTime)
+                    else (overflowing || (amount > 0 && !b.isOutOfTime)) && (b.timeRemainingMs > 0 || b.isOutOfTime)
                 if (canUndo && !sameClock(before, back, fb)) return "the arbiter can undo what it did" to "P${action.player} ±${amount}ms: $b -> ${back.players[i]}"
             }
             return null
@@ -270,7 +275,9 @@ class ClockInvariantsTest {
             val overflowing = fb == FlagBehavior.NEGATIVE || fb == FlagBehavior.REVERSE
             // A move the arbiter adds and takes back leaves the clock as it was; under NEGATIVE and
             // REVERSE, one taken and added back does too, since nothing is cut off at zero.
-            if (action.delta > 0 || overflowing) {
+            // Not for a player out with nothing to overrun: a count that reaches a period brings them
+            // back, the press missed before the flag, and taking it off again does not flag them.
+            if ((action.delta > 0 || overflowing) && (overflowing || !b.isOutOfTime)) {
                 if (b.moveCount + action.delta < 0 || b.moveCount + action.delta > MAX_FIDE_MOVES) return null
                 // A period reached on its time with its count already passed is due, and the next
                 // count, by press or by the arbiter, starts it: there is nothing to go back to.
