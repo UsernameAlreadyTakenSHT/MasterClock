@@ -97,15 +97,34 @@ class ArbiterCorrectionsTest {
     }
 
     @Test
-    fun `time given undoes a move clock flag, on the move clock`() {
+    fun `time given undoes a move clock flag, with a whole move`() {
         for (mode in listOf(TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED)) {
             val s = settings(mode, FlagBehavior.FLAG)
             val flagged = PlayerState(timeRemainingMs = 0, secondaryTimeMs = minute, isOutOfTime = true)
             val other = PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = minute)
-            val after = arbiterAdjustTime(table(flagged, other), 1, 10_000, s)
-            assertEquals(PlayerState(timeRemainingMs = 10_000, secondaryTimeMs = minute), after.players[0])
+            val after = arbiterAdjustTime(table(flagged, other), 1, 1_000, s)
+            assertEquals(PlayerState(timeRemainingMs = 30_000, secondaryTimeMs = minute), after.players[0])
             assertEquals(other, after.players[1])
         }
+    }
+
+    @Test
+    fun `more than a move given to a flagged move clock is all there`() {
+        val s = settings(TimerMode.MOVE_TIMER_GLOBAL, FlagBehavior.FREEZE)
+        val flagged = PlayerState(timeRemainingMs = 0, secondaryTimeMs = minute, isOutOfTime = true)
+        val after = arbiterAdjustTime(table(flagged, PlayerState(30_000, secondaryTimeMs = minute)), 1, minute, s)
+        assertEquals(PlayerState(timeRemainingMs = minute, secondaryTimeMs = minute), after.players[0])
+    }
+
+    @Test
+    fun `a move overrun paid off comes back with a whole move, one not covered stays out`() {
+        val s = settings(TimerMode.MOVE_TIMER_GLOBAL, FlagBehavior.NEGATIVE)
+        val over = PlayerState(timeRemainingMs = 5_000, secondaryTimeMs = minute, isOutOfTime = true, isNegative = true)
+        val other = PlayerState(30_000, secondaryTimeMs = minute)
+        assertEquals(30_000, arbiterAdjustTime(table(over, other), 1, 6_000, s).players[0].timeRemainingMs)
+        val still = arbiterAdjustTime(table(over, other), 1, 1_000, s).players[0]
+        assertEquals(4_000, still.timeRemainingMs)
+        assertTrue(still.isOutOfTime)
     }
 
     @Test

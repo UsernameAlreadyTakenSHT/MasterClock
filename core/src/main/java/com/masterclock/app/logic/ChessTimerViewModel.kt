@@ -2415,7 +2415,7 @@ internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountM
  * - A move clock run out with reserve still left is a flag of its own in Global and Global
  *   Shared, and no time given could undo it -- every tap fed a reserve the player could not
  *   reach, and only Reset ended the game. Time given to such a player now goes on the move clock,
- *   paying any overrun first, as for a plain clock.
+ *   paying any overrun first, as for a plain clock, and a player it brings back has a whole move.
  * - A reserve given back to a player in overrun because it was empty left them there in Global
  *   and Overtime: the overrun went on growing beside a reserve with time in it -- in Global the
  *   reserve drained under it -- until the next press. Global Shared already brought everyone back;
@@ -2433,7 +2433,13 @@ private fun arbiterAdjustReserve(state: ChessClockState, playerIndex: Int, amoun
     val target = state.players.getOrNull(playerIndex - 1) ?: return state
     val moveClockFlag = mode != TimerMode.MOVE_TIMER_OVERTIME && target.isOutOfTime && target.secondaryTimeMs > 0
     if (moveClockFlag) {
-        return state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = target.arbiterCredited(amountMs, fb) })
+        val credited = target.arbiterCredited(amountMs, fb)
+        // Back in play with a whole move, or the time given if that is more: +1s handed back a clock
+        // of 0:01 that fell again at once, and every tap after it went to the reserve, the player no
+        // longer being out.
+        val moveTime = settings.playerSettings(playerIndex).moveTimeMs
+        val back = if (credited.isOutOfTime) credited else credited.copy(timeRemainingMs = maxOf(credited.timeRemainingMs, moveTime))
+        return state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = back })
     }
     return state.copy(
         players = state.players.mapIndexed { idx, p ->
