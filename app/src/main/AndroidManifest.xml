@@ -32,6 +32,15 @@
          and this is a clock before it is a board reader. -->
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
+    <!-- Since Android 11 an app sees only the packages it declares. The voice announcements find
+         their speech engine through this: a system engine shows up without it, an engine the user
+         installed does not, and every announcement was then dropped with nothing to say why. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
