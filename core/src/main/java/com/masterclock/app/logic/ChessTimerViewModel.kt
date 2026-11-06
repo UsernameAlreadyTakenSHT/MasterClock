@@ -196,7 +196,7 @@ internal fun ChessClockState.carryPhaseOvershoot(ms: Long): ChessClockState {
 /**
  * Moves [playerIndex] on to the next of [phases], or ends the game after the last one unless
  * [loop]. Running out of phases is a finish, not a flag: it sets [ChessClockState.phasesFinished].
- * A phase that flags on its own end never gets here -- startPhaseTransition stops the game first.
+ * A phase that flags on its own end never gets here: [startPhaseTransition] stops the game first.
  */
 internal fun nextPhaseState(state: ChessClockState, playerIndex: Int, phases: List<GamePhase>, loop: Boolean): ChessClockState {
     val p = state.players[playerIndex - 1]
@@ -2056,8 +2056,7 @@ internal class CoupledTick(
  * the arithmetic, so nothing could reach them from a test: the tests ran a hand-written copy of
  * them instead, which is how the hourglass losing time and the shared modes' flag handling went
  * unnoticed. The arithmetic is here now, pure, and the effects come back as data for tick() to
- * perform. PHASES stays in the ViewModel, since its transitions go through methods that read the
- * settings flows.
+ * perform, as [tickClock] does for the other modes.
  */
 internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClockSettings, s: PlayerSettings, active: Int): CoupledTick? {
     when (s.mode) {
@@ -2538,6 +2537,141 @@ internal fun initialClockState(settings: ChessClockSettings, randomRoll: Pair<Lo
 
     val players = (1..settings.numberOfPlayers.coerceIn(1, 4)).map { initP(settings.playerSettings(it)) }
     return ChessClockState(players = players, globalTimeMs = initialGlobalTimeMs(s1))
+}
+
+/**
+ * Ends the current phase: the game flags if the phase says so, otherwise the pause between
+ * phases starts, or the next phase, or the game finishes after the last one.
+ *
+ * [skipped] is a tap that cuts the phase short (allowPhaseSkip). The flag on a phase's end is
+ * for its time running out: a skip used to flag the game on the spot, so a phase that flags on
+ * its end could not be skipped at all -- the tap ended the game instead.
+ *
+ * The flag ends the game whatever the flag behaviour. PHASES runs one clock for the table, with
+ * no overrun to count and no other player to play on, but under NEGATIVE and REVERSE the game
+ * was not over as far as anything else knew: the ticker ran on, the clock was autosaved every
+ * fifteen seconds, and TalkBack still said "your turn". It stops here as FREEZE stops a game.
+ */
+internal fun startPhaseTransition(state: ChessClockState, settings: ChessClockSettings, skipped: Boolean = false): ChessClockState {
+    val s = settings.playerSettings(1)
+    val p = state.players[0]
+    val currentPhase = s.phases.getOrNull(p.currentPhaseIndex) ?: GamePhase()
+    if (currentPhase.flagOnEnd && !skipped) {
+        val newList = state.players.toMutableList().apply { this[0] = p.copy(isOutOfTime = true, timeRemainingMs = 0, isPhaseAwaitingTap = false) }
+        // firstToFlag as any flag sets it: without it, FLAG drew the flagged clock in the
+        // inactive colour, the game being paused, where the other behaviours drew the loss one.
+        return state.copy(players = newList, globalTimeMs = 0, isPaused = true, firstToFlag = 1)
+    }
+    // A pause is a wait for the next phase. After the last one of a non-looping game there is
+    // none, and a tap on the finished game used to start a fresh PAUSE countdown before the
+    // clock fell back to finished.
+    val isLastPhase = p.currentPhaseIndex >= s.phases.size - 1 && !settings.loopPhases
+    if ((settings.pauseBetweenPhasesMs > 0 || settings.pauseUntilTap) && !isLastPhase) {
+        // A phase that waited for its tap was still flagged here, so the whole pause read as out of time.
+        // A pause until a tap has no countdown; tick() holds it, and the face shows 0:00.
+        val pauseMs = if (settings.pauseUntilTap) 0L else settings.pauseBetweenPhasesMs
+        val pausedPlayer = p.copy(isInInterPhasePause = true, pauseTimeRemainingMs = pauseMs, isPhaseAwaitingTap = false)
+        val newList = state.players.toMutableList().apply { this[0] = pausedPlayer }
+        return state.copy(players = newList)
+    }
+    return advancePhase(state, settings)
+}
+
+/** On to the next phase; see [nextPhaseState]. PHASES has one clock for the table, player 1's. */
+private fun advancePhase(state: ChessClockState, settings: ChessClockSettings): ChessClockState =
+    nextPhaseState(state, 1, settings.playerSettings(1).phases, settings.loopPhases)
+
+/**
+ * What a tap does to a running PHASES game, or null if it does nothing. [tapped] is player 1 as the
+ * player saw them when they tapped: the tick that settles the clock before a press can end the very
+ * pause or phase the tap was meant for, and acting on it as well skipped the phase just begun.
+ */
+internal fun phaseTap(state: ChessClockState, tapped: PlayerState, settings: ChessClockSettings): ChessClockState? {
+    val p1 = state.players[0]
+    if (tapped.currentPhaseIndex != p1.currentPhaseIndex || tapped.isInInterPhasePause != p1.isInInterPhasePause || tapped.isPhaseAwaitingTap != p1.isPhaseAwaitingTap) return null
+    return when {
+        // A tap during the pause between phases skips it. It went to startPhaseTransition, which
+        // starts the pause -- so a tap with five seconds of it left put it back to its full
+        // length, and the pause could never be skipped at all. Waiting for a tap at a phase's end is
+        // the same pause, held until the tap: through startPhaseTransition it started the timed
+        // pause as well, and the game waited twice over before the next phase.
+        p1.isInInterPhasePause || p1.isPhaseAwaitingTap -> advancePhase(state, settings)
+        settings.allowPhaseSkip -> startPhaseTransition(state, settings, skipped = true)
+        else -> null
+    }
+}
+
+/**
+ * What [tickClock] decided: the next state, and the effects the ViewModel is to carry out for it.
+ * [cue] is the states the beeps and the voice compare, [coupled] what a coupled mode added to it,
+ * and [phaseChangedFrom] player 1 as they stood when this tick took PHASES to another stage.
+ */
+internal class ClockTick(
+    val state: ChessClockState,
+    val cue: TickCue? = null,
+    val coupled: CoupledTick? = null,
+    val phaseChangedFrom: PlayerState? = null,
+)
+
+/**
+ * One tick of the running clock, in every mode. [ChessTimerViewModel.tick] calls this and performs
+ * what comes back, and the game simulation in the tests calls the same function: it used to hold a
+ * copy of this dispatch, which is how the Hourglass bug went unnoticed in the tests before it.
+ */
+internal fun tickClock(state: ChessClockState, delta: Long, settings: ChessClockSettings): ClockTick {
+    val active = state.activePlayer ?: 1
+    val s = settings.playerSettings(active)
+    if (s.mode == TimerMode.PHASES) return tickPhases(state, delta, settings, s)
+    tickCoupled(state, delta, settings, s, active)?.let { result ->
+        // The CHRONO countdown is the table's clock; no one flags first on it. See tableClockRanOut.
+        return ClockTick(if (s.mode == TimerMode.CHRONO_COUNTDOWN) result.state else result.state.withFirstFlag(state, active), result.cue, result)
+    }
+    val pActive = state.players[active - 1]
+    val newStateP = tickPlayer(pActive, delta, s, settings)
+    val cue = when (s.mode) {
+        TimerMode.MOVE_TIMER_GLOBAL -> TickCue(pActive.withBindingClock(), newStateP.withBindingClock(), active)
+        TimerMode.MOVE_TIMER_OVERTIME -> TickCue(pActive.withOvertimeClock(), newStateP.withOvertimeClock(), active)
+        else -> TickCue(pActive, newStateP, active)
+    }
+    return ClockTick(
+        state.copy(
+            players = state.players.toMutableList().apply { this[active - 1] = newStateP },
+            isPaused = settings.flagBehavior == FlagBehavior.FREEZE && newStateP.isOutOfTime,
+            firstToFlag = if (newStateP.isOutOfTime && state.firstToFlag == null) active else state.firstToFlag,
+        ),
+        cue,
+    )
+}
+
+private fun tickPhases(state: ChessClockState, delta: Long, settings: ChessClockSettings, s: PlayerSettings): ClockTick {
+    val p1 = state.players[0]
+    if (p1.isInInterPhasePause) {
+        // Waiting for the tap that ends it (startOrSwitch); nothing runs.
+        if (settings.pauseUntilTap) return ClockTick(state)
+        val newPause = p1.pauseTimeRemainingMs - delta
+        if (newPause <= 0) return ClockTick(advancePhase(state, settings).carryPhaseOvershoot(-newPause), phaseChangedFrom = p1)
+        return ClockTick(state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = newPause) }))
+    }
+    // Waiting for the tap that moves on to the next phase, or over: nothing runs.
+    if (p1.isPhaseAwaitingTap || p1.isOutOfTime) return ClockTick(state)
+
+    val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
+    val newGlobal = state.globalTimeMs - delta
+    if (newGlobal <= 0) {
+        // The last phase of a game that does not loop has no next phase to wait for, so it ends the
+        // game as auto-advance would -- finished, or flagged if the phase says so. It used to wait,
+        // flagged, for a tap that could only finish it, and the finish then went unannounced. A
+        // phase that flags on its end flags as its time runs out, not on the tap after.
+        val isLastPhase = p1.currentPhaseIndex >= s.phases.size - 1 && !settings.loopPhases
+        if (currentPhase.autoAdvance || isLastPhase || currentPhase.flagOnEnd) {
+            return ClockTick(startPhaseTransition(state, settings).carryPhaseOvershoot(-newGlobal), phaseChangedFrom = p1)
+        }
+        val waiting = state.copy(globalTimeMs = 0, players = state.players.toMutableList().apply { this[0] = p1.copy(isPhaseAwaitingTap = true) })
+        return ClockTick(waiting, phaseChangedFrom = p1)
+    }
+    // The cues read a player's clock, and the phase's is the table's: handed p1 as it stands they
+    // would go silent, with every test still green.
+    return ClockTick(state.copy(globalTimeMs = newGlobal), TickCue(p1.copy(timeRemainingMs = state.globalTimeMs), p1.copy(timeRemainingMs = newGlobal), 1))
 }
 
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
@@ -3119,19 +3253,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             if (currentState.isPaused) { resume(); return }
             // The tick settleRunningClock ran just now ended the pause or the phase this tap was
             // meant for. Acting on it as well skipped the phase that had only just begun.
-            val tapped = beforeSettle.players[0]
-            if (tapped.currentPhaseIndex != p1.currentPhaseIndex || tapped.isInInterPhasePause != p1.isInInterPhasePause || tapped.isPhaseAwaitingTap != p1.isPhaseAwaitingTap) return
-            when {
-                // A tap during the pause between phases skips it. It went to startPhaseTransition,
-                // which starts the pause -- so a tap with five seconds of it left put it back to
-                // its full length, and the pause could never be skipped at all.
-                p1.isInInterPhasePause -> _uiState.update { st -> performPhaseAdvance(st, 1).also { onPhaseTransition(st.players[0], it) } }
-                // Waiting for a tap at a phase's end is the pause between phases, held until the tap.
-                // The tap went through startPhaseTransition, which then started the timed pause as
-                // well: the game waited twice over before the next phase.
-                p1.isPhaseAwaitingTap -> _uiState.update { st -> performPhaseAdvance(st, 1).also { onPhaseTransition(st.players[0], it) } }
-                settings.value.allowPhaseSkip -> _uiState.update { st -> startPhaseTransition(st, skipped = true).also { onPhaseTransition(st.players[0], it) } }
-            }
+            _uiState.update { st -> phaseTap(st, beforeSettle.players[0], settings.value)?.also { onPhaseTransition(st.players[0], it) } ?: st }
             return
         }
 
@@ -3139,14 +3261,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Over, by isGameOver's whole reading: a table CHRONO run out under NEGATIVE or REVERSE is
         // over though no flag ends it, and a press there logged a move and restarted the ticker.
         if (isGameOver(currentState, settings.value.flagBehavior, playerCount)) return
-
-        if (currentState.activePlayer == playerIndex) {
-            val p = currentState.players.getOrNull(playerIndex - 1) ?: return
-            if (p.isInInterPhasePause) {
-                advancePhase(playerIndex)
-                return
-            }
-        }
 
         if (s.mode == TimerMode.MOVE_TIMER_SHARED) return
         if (s.mode.name.startsWith("CHRONO") && settings.value.isOneForAll) return
@@ -3292,83 +3406,29 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         _uiState.update { state ->
-            val settings = _settings.value
             if (state.isPaused) return@update state
-            val active = state.activePlayer ?: 1
-            val s = getPlayerSettings(active)
-            
-            if (s.mode == TimerMode.PHASES) {
-                val p1 = state.players[0]
-                if (p1.isInInterPhasePause) {
-                    // Waiting for the tap that ends it (startOrSwitch); nothing runs.
-                    if (settings.pauseUntilTap) return@update state
-                    val newPause = p1.pauseTimeRemainingMs - delta
-                    if (newPause <= 0) return@update performPhaseAdvance(state, 1).carryPhaseOvershoot(-newPause).also { onPhaseTransition(p1, it) }
-                    return@update state.copy(players = state.players.toMutableList().apply { this[0] = p1.copy(pauseTimeRemainingMs = newPause) })
-                }
-                // Waiting for the tap that moves on to the next phase, or over: nothing runs.
-                if (p1.isPhaseAwaitingTap || p1.isOutOfTime) return@update state
-
-                val currentPhase = s.phases.getOrNull(p1.currentPhaseIndex) ?: GamePhase()
-                val newGlobal = state.globalTimeMs - delta
-                if (newGlobal <= 0) {
-                    // The last phase of a game that does not loop has no next phase to wait for, so
-                    // it ends the game as auto-advance would -- finished, or flagged if the phase
-                    // says so. It used to wait, flagged, for a tap that could only finish it, and the
-                    // finish then went unannounced. A phase that flags on its end flags as its time
-                    // runs out, not on the tap after.
-                    val isLastPhase = p1.currentPhaseIndex >= s.phases.size - 1 && !settings.loopPhases
-                    if (currentPhase.autoAdvance || isLastPhase || currentPhase.flagOnEnd) {
-                        return@update startPhaseTransition(state).carryPhaseOvershoot(-newGlobal).also { onPhaseTransition(p1, it) }
-                    }
-                    val waiting = state.copy(globalTimeMs = 0, players = state.players.toMutableList().apply { this[0] = p1.copy(isPhaseAwaitingTap = true) })
-                    return@update waiting.also { onPhaseTransition(p1, it) }
-                }
-                handleAudio(p1.copy(timeRemainingMs = state.globalTimeMs), p1.copy(timeRemainingMs = newGlobal), settings, 1)
-                handleVoice(p1.copy(timeRemainingMs = state.globalTimeMs), p1.copy(timeRemainingMs = newGlobal), settings, 1)
-                return@update state.copy(globalTimeMs = newGlobal)
+            val settings = _settings.value
+            val result = tickClock(state, delta, settings)
+            result.cue?.let { cue ->
+                handleAudio(cue.before, cue.after, settings, cue.playerIndex)
+                handleVoice(cue.before, cue.after, settings, cue.playerIndex)
             }
-
-
-            tickCoupled(state, delta, settings, s, active)?.let { result ->
-                result.cue?.let { cue ->
-                    handleAudio(cue.before, cue.after, settings, cue.playerIndex)
-                    handleVoice(cue.before, cue.after, settings, cue.playerIndex)
-                }
-                if (result.playGong) soundManager.playGong()
-                for ((mover, spent) in result.gongMoves) {
-                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = spent))
+            result.phaseChangedFrom?.let { onPhaseTransition(it, result.state) }
+            result.coupled?.let { coupled ->
+                if (coupled.playGong) soundManager.playGong()
+                for ((mover, spent) in coupled.gongMoves) {
+                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = spent))
                     moveStartTime = now
                 }
-                result.handedOverBy?.let { mover ->
+                coupled.handedOverBy?.let { mover ->
                     // A plain beep where a press would have made the switch sound, and nothing
                     // spoken: the turn passing is the ordinary course of this mode.
                     if (settings.playSwitchSound) soundManager.playShortBeep()
-                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = result.state.players[mover - 1].moveCount, timeSpentMs = s.moveTimeMs))
+                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = settings.playerSettings(mover).moveTimeMs))
                     moveStartTime = now
                 }
-                // The CHRONO countdown is the table's clock; no one flags first on it. See tableClockRanOut.
-                return@update if (s.mode == TimerMode.CHRONO_COUNTDOWN) result.state else result.state.withFirstFlag(state, active)
             }
-
-            val pActive = state.players[active - 1]
-            val newStateP = tickPlayer(pActive, delta, s, settings)
-            val (cueBefore, cueAfter) = when (s.mode) {
-                TimerMode.MOVE_TIMER_GLOBAL -> pActive.withBindingClock() to newStateP.withBindingClock()
-                TimerMode.MOVE_TIMER_OVERTIME -> pActive.withOvertimeClock() to newStateP.withOvertimeClock()
-                else -> pActive to newStateP
-            }
-            handleAudio(cueBefore, cueAfter, settings, active)
-            handleVoice(cueBefore, cueAfter, settings, active)
-            
-            val newFirstFlag = if (newStateP.isOutOfTime && state.firstToFlag == null) active else state.firstToFlag
-            val newPlayers = state.players.toMutableList().apply { this[active - 1] = newStateP }
-            
-            state.copy(
-                players = newPlayers,
-                isPaused = settings.flagBehavior == FlagBehavior.FREEZE && newStateP.isOutOfTime,
-                firstToFlag = newFirstFlag
-            )
+            result.state
         }
         stopIfGameOver(now)
         passTurnFromEliminated(now)
@@ -4072,49 +4132,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     /** Whether the arbiter's ±1m/±1s means anything for this player: a move count is not a time. */
     fun isTimeAdjustable(playerIndex: Int): Boolean = isTimeAdjustableMode(getPlayerSettings(playerIndex).mode)
-
-    /**
-     * Ends the current phase: the game flags if the phase says so, otherwise the pause between
-     * phases starts, or the next phase, or the game finishes after the last one.
-     *
-     * [skipped] is a tap that cuts the phase short (allowPhaseSkip). The flag on a phase's end is
-     * for its time running out: a skip used to flag the game on the spot, so a phase that flags on
-     * its end could not be skipped at all -- the tap ended the game instead.
-     *
-     * The flag ends the game whatever the flag behaviour. PHASES runs one clock for the table, with
-     * no overrun to count and no other player to play on, but under NEGATIVE and REVERSE the game
-     * was not over as far as anything else knew: the ticker ran on, the clock was autosaved every
-     * fifteen seconds, and TalkBack still said "your turn". It stops here as FREEZE stops a game.
-     */
-    private fun startPhaseTransition(state: ChessClockState, skipped: Boolean = false): ChessClockState {
-        val s = getPlayerSettings(1)
-        val p = state.players[0]
-        val currentPhase = s.phases.getOrNull(p.currentPhaseIndex) ?: GamePhase()
-        if (currentPhase.flagOnEnd && !skipped) {
-            val newList = state.players.toMutableList().apply { this[0] = p.copy(isOutOfTime = true, timeRemainingMs = 0, isPhaseAwaitingTap = false) }
-            // firstToFlag as any flag sets it: without it, FLAG drew the flagged clock in the
-            // inactive colour, the game being paused, where the other behaviours drew the loss one.
-            return state.copy(players = newList, globalTimeMs = 0, isPaused = true, firstToFlag = 1)
-        }
-        // A pause is a wait for the next phase. After the last one of a non-looping game there is
-        // none, and a tap on the finished game used to start a fresh PAUSE countdown before the
-        // clock fell back to finished.
-        val isLastPhase = p.currentPhaseIndex >= s.phases.size - 1 && !settings.value.loopPhases
-        if ((settings.value.pauseBetweenPhasesMs > 0 || settings.value.pauseUntilTap) && !isLastPhase) {
-            // A phase that waited for its tap was still flagged here, so the whole pause read as out of time.
-            // A pause until a tap has no countdown; tick() holds it, and the face shows 0:00.
-            val pauseMs = if (settings.value.pauseUntilTap) 0L else settings.value.pauseBetweenPhasesMs
-            val pausedPlayer = p.copy(isInInterPhasePause = true, pauseTimeRemainingMs = pauseMs, isPhaseAwaitingTap = false)
-            val newList = state.players.toMutableList().apply { this[0] = pausedPlayer }
-            return state.copy(players = newList)
-        }
-        return performPhaseAdvance(state, 1)
-    }
-
-    private fun performPhaseAdvance(state: ChessClockState, playerIndex: Int): ChessClockState =
-        nextPhaseState(state, playerIndex, getPlayerSettings(playerIndex).phases, settings.value.loopPhases)
-
-    fun advancePhase(playerIndex: Int) { _uiState.update { performPhaseAdvance(it, playerIndex) } }
 
     /**
      * Called from [tick], which runs on the main thread, so nothing here may encode on the caller.

@@ -5,14 +5,12 @@ import kotlin.random.Random
 /**
  * A game played on the clock's pure functions, in the order the ViewModel calls them.
  *
- * tick() follows [ChessTimerViewModel]'s tick, stopIfGameOver and passTurnFromEliminated;
- * press() its startOrSwitch, and resume() its resume. Only the orchestration is written again here
- * -- which function runs, in which order, on which player -- and every piece of clock arithmetic
- * is the app's own: [tickCoupled], [tickPlayer], [computePostMoveState], [arbiterAdjustTime],
- * [arbiterAdjustMoveCount] and [initialClockState]. Sounds, the log and the autosave are left out;
- * nothing in them changes a clock.
+ * tick() is the app's own [tickClock], followed by what [ChessTimerViewModel]'s stopIfGameOver and
+ * passTurnFromEliminated do; press() follows its startOrSwitch, and resume() its resume. Only that
+ * orchestration is written again here, and every piece of clock arithmetic is the app's:
+ * [computePostMoveState], [phaseTap], [arbiterAdjustTime], [arbiterAdjustMoveCount] and
+ * [initialClockState]. Sounds, the log and the autosave are left out; nothing in them changes a clock.
  *
- * PHASES is left out: its transitions go through ViewModel methods that read the settings flows.
  * Time here is a number: [moveElapsedMs] is what the ViewModel measures with elapsedRealtime
  * between a move's start and its press, less the time spent paused.
  */
@@ -24,28 +22,18 @@ internal class ClockSim(val settings: ChessClockSettings) {
 
     private val fb get() = settings.flagBehavior
     private val players get() = settings.numberOfPlayers.coerceAtLeast(1)
+    /** A PHASES game finished or flagged by its phase, which [isGameOver] does not know under NEGATIVE and REVERSE. */
+    private val phasesOver get() = settings.playerSettings(1).mode == TimerMode.PHASES && state.players[0].isOutOfTime
     val running get() = state.activePlayer != null && !state.isPaused
 
     fun tick(delta: Long) {
         if (!running) return
         moveElapsedMs += delta
-        val before = state
-        val active = before.activePlayer ?: 1
-        val s = settings.playerSettings(active)
-        val coupled = tickCoupled(before, delta, settings, s, active)
-        state = if (coupled != null) {
-            if (coupled.handedOverBy != null || coupled.gongMoves.isNotEmpty()) moveElapsedMs = 0
-            if (s.mode == TimerMode.CHRONO_COUNTDOWN) coupled.state else coupled.state.withFirstFlag(before, active)
-        } else {
-            val newP = tickPlayer(before.players[active - 1], delta, s, settings)
-            before.copy(
-                players = before.players.toMutableList().apply { this[active - 1] = newP },
-                isPaused = fb == FlagBehavior.FREEZE && newP.isOutOfTime,
-                firstToFlag = if (newP.isOutOfTime && before.firstToFlag == null) active else before.firstToFlag,
-            )
-        }
+        val result = tickClock(state, delta, settings)
+        state = result.state
+        result.coupled?.let { if (it.handedOverBy != null || it.gongMoves.isNotEmpty()) moveElapsedMs = 0 }
         // stopIfGameOver
-        if (state.activePlayer != null && isGameOver(state, fb, players)) state = state.copy(isPaused = true)
+        if (state.activePlayer != null && (phasesOver || isGameOver(state, fb, players))) state = state.copy(isPaused = true)
         // passTurnFromEliminated
         val now = state.activePlayer ?: return
         if (state.isPaused || !turnPassesFromEliminated(state, settings, settings.playerSettings(now).mode)) return
@@ -58,6 +46,12 @@ internal class ClockSim(val settings: ChessClockSettings) {
     fun press(playerIndex: Int) {
         val s = settings.playerSettings(playerIndex)
         if (s.mode == TimerMode.GONG && state.activePlayer != null) { if (state.isPaused) resume(); return }
+        if (s.mode == TimerMode.PHASES) {
+            if (state.players[0].isOutOfTime) return
+            if (state.isPaused) { resume(); return }
+            phaseTap(state, state.players[0], settings)?.let { state = it }
+            return
+        }
         if (isGameOver(state, fb, players)) return
         if (s.mode == TimerMode.MOVE_TIMER_SHARED) return
         if (s.mode.name.startsWith("CHRONO") && settings.isOneForAll) return
@@ -86,6 +80,7 @@ internal class ClockSim(val settings: ChessClockSettings) {
     }
 
     fun resume() {
+        if (phasesOver) return
         if (state.activePlayer != null && isGameOver(state, fb, players)) return
         val p1 = settings.playerSettings(1)
         if (p1.mode == TimerMode.MOVE_TIMER_SHARED && p1.moveTimeMs <= 0) return
@@ -95,7 +90,7 @@ internal class ClockSim(val settings: ChessClockSettings) {
         val mode = settings.playerSettings(active).mode
         if (flagsEndGame(state.players, fb, players)) return
         val wholeTable = mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && settings.isOneForAll)
-        startClock(active, armDelay = fresh && !wholeTable)
+        startClock(active, armDelay = fresh && !wholeTable && mode != TimerMode.PHASES)
     }
 
     /** The arbiter's ±time; the panel opens only on a paused clock. */
@@ -146,9 +141,6 @@ internal sealed class SimAction {
     }
 }
 
-/** Every mode the simulation can play: PHASES' transitions live in the ViewModel. */
-internal val SIMULATED_MODES = TimerMode.entries.filter { it != TimerMode.PHASES }
-
 /** A time control small enough that flags, periods and reserves all come within a few dozen actions. */
 internal fun randomSimSettings(r: Random): ChessClockSettings {
     fun sec(from: Int, to: Int) = r.nextInt(from, to + 1) * 1000L
@@ -156,7 +148,7 @@ internal fun randomSimSettings(r: Random): ChessClockSettings {
         FidePeriod(timeMs = sec(5, 30), incrementMs = sec(0, 5), movesToNext = r.nextInt(0, 6), isFischer = r.nextBoolean(), hasDelay = r.nextBoolean())
     }
     val s = PlayerSettings(
-        mode = SIMULATED_MODES.random(r),
+        mode = TimerMode.entries.random(r),
         initialTimeMs = sec(5, 60),
         moveTimeMs = sec(2, 15),
         incrementMs = sec(0, 5),
@@ -166,6 +158,7 @@ internal fun randomSimSettings(r: Random): ChessClockSettings {
         byoyomiProgression = r.nextInt(0, 3),
         maxMoves = r.nextInt(1, 8),
         fidePeriods = periods,
+        phases = List(r.nextInt(1, 5)) { GamePhase(timeMs = sec(0, 15), autoAdvance = r.nextBoolean(), flagOnEnd = r.nextInt(4) == 0) },
         gongSimultaneous = r.nextBoolean(),
         gongReflectionMs = sec(2, 6),
         gongMoveMs = sec(1, 3),
@@ -185,6 +178,10 @@ internal fun randomSimSettings(r: Random): ChessClockSettings {
         forcedMoveCounter = r.nextBoolean(),
         isOneForAll = r.nextBoolean(),
         fischerFideFirstMove = r.nextBoolean(),
+        loopPhases = r.nextBoolean(),
+        allowPhaseSkip = r.nextBoolean(),
+        pauseBetweenPhasesMs = if (r.nextBoolean()) sec(1, 5) else 0,
+        pauseUntilTap = r.nextInt(4) == 0,
     )
 }
 

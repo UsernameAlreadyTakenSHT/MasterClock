@@ -132,13 +132,16 @@ class ClockInvariantsTest {
             }
 
             if (fb == FlagBehavior.FREEZE || fb == FlagBehavior.FLAG) {
-                if (mode != TimerMode.CHRONO_COUNTDOWN && after.players.any { it.isOutOfTime } && after.firstToFlag == null) {
+                if (mode != TimerMode.CHRONO_COUNTDOWN && !after.phasesFinished && after.players.any { it.isOutOfTime } && after.firstToFlag == null) {
                     return "a flag that stands has a first flagger" to "$after"
                 }
             }
             after.firstToFlag?.let { if (it !in 1..n) return "firstToFlag is a player" to "$after" }
-            if (after.activePlayer != null && !after.isPaused && isGameOver(after, fb, n)) return "a game that is over is not running" to "$after"
+            // A tap that skips the last phase finishes a game the next tick then stops, a tenth of a second on.
+            val tappedToTheEnd = mode == TimerMode.PHASES && action !is SimAction.Tick
+            if (!tappedToTheEnd && after.activePlayer != null && !after.isPaused && isGameOver(after, fb, n)) return "a game that is over is not running" to "$after"
 
+            if (mode == TimerMode.PHASES) checkPhases(settings, before, after, action)?.let { return it }
             when (action) {
                 is SimAction.Tick -> if (wasRunning) checkTick(settings, before, after, action.ms)?.let { return it }
                 is SimAction.Press -> checkPress(settings, before, after, action.player, elapsed)?.let { return it }
@@ -146,6 +149,27 @@ class ClockInvariantsTest {
                 is SimAction.ArbiterMoves -> checkArbiterMoves(settings, before.copy(isPaused = true), after, action)?.let { return it }
                 else -> {}
             }
+            return null
+        }
+
+        private fun checkPhases(settings: ChessClockSettings, before: ChessClockState, after: ChessClockState, action: SimAction): Pair<String, String>? {
+            val phases = settings.main.phases
+            val b = before.players[0]
+            val a = after.players[0]
+            if (a.currentPhaseIndex !in phases.indices) return "a phase index stays in its list" to "$a"
+            if (after.globalTimeMs < 0) return "the phase clock is never negative" to "$after"
+            // A game that is over stays over: only the arbiter can bring back a flagged phase, and it does not.
+            if (b.isOutOfTime && action !is SimAction.ArbiterTime && (!a.isOutOfTime || after.globalTimeMs != before.globalTimeMs)) return "a PHASES game that is over stays over" to "$action: $b -> $a"
+            // A pause is a wait for the next phase, and the last has none.
+            val last = a.currentPhaseIndex == phases.size - 1 && !settings.loopPhases
+            if (a.isInInterPhasePause && last) return "no pause after the last phase" to "$a"
+            if (a.isInInterPhasePause && a.isPhaseAwaitingTap) return "a phase waits for one thing at a time" to "$a"
+            if (a.isOutOfTime && (a.isInInterPhasePause || a.isPhaseAwaitingTap)) return "a game that is over waits for nothing" to "$a"
+            // Finished and flagged are told apart, and a skip is neither.
+            if (after.phasesFinished && a.currentPhaseIndex != before.players[0].currentPhaseIndex && !settings.loopPhases && b.currentPhaseIndex != phases.size - 1) return "only the last phase finishes the game" to "$b -> $a"
+            if (action is SimAction.Press && !before.isPaused && !b.isOutOfTime && a.isOutOfTime && !after.phasesFinished) return "a tap never flags" to "$b -> $a"
+            // A tap on a stage that waits for one always moves on.
+            if (action is SimAction.Press && !before.isPaused && !b.isOutOfTime && (b.isPhaseAwaitingTap || b.isInInterPhasePause) && a == b) return "a tap moves a waiting game on" to "$b"
             return null
         }
 
