@@ -2978,7 +2978,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /**
-     * Bumped whenever the saved clock is cleared, so that an autosave taken before the clear is
+     * Bumped whenever the saved clock is cleared or resumed, so that an autosave taken before it is
      * dropped instead of written after it. The autosave encodes off the main thread, and a Reset
      * landing in that window used to clear the clock first and then have the stale snapshot
      * written over the clear -- "Resume" came back for the game just reset. Read and written on
@@ -3726,11 +3726,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // reads as the start of a pause span.
         if (_uiState.value.isPaused && timerJob == null) return
         settleRunningClock()
+        // The settling tick can end the game, which stops the ticker and clears the saved clock.
+        val stillInPlay = timerJob != null
         timerJob?.cancel()
         timerJob = null
         if (pausedAt == null) pausedAt = SystemClock.elapsedRealtime()
         _uiState.update { it.copy(isPaused = true) }
         addEvent(GameEvent(eventType = "PAUSE"))
+        // The autosave ran from tick() alone, so a game paused and then killed -- which is what
+        // leaving the app does, with pause-on-background on -- went back to the last save, up to
+        // fifteen seconds earlier, and resuming cut the moves played since out of the history. A
+        // paused clock has nothing left to lose by being written down now.
+        if (stillInPlay && FlavorConfig.hasArbitre()) {
+            lastAutoSaveTime = SystemClock.elapsedRealtime()
+            saveClockForLater()
+        }
     }
     fun resume() {
         val starting = _uiState.value
@@ -4180,11 +4190,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Up to the pause, if paused: the Save button is pressed on a paused clock.
         val moveElapsed = if (uiState.value.activePlayer != null) ((pausedAt ?: SystemClock.elapsedRealtime()) - moveStartTime).coerceAtLeast(0) else 0L
         val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed)
+        // Now, with the clock: resuming keeps the moves logged up to this time. Taken when the
+        // encode finished, a move played meanwhile stayed in the log and was played again.
+        val savedAt = System.currentTimeMillis()
 
         val generation = savedClockGeneration
         viewModelScope.launch {
             val entity = withContext(Dispatchers.Default) {
                 com.masterclock.app.data.SavedClockEntity(
+                    timestamp = savedAt,
                     settingsJson = json.encodeToString(ChessClockSettings.serializer(), settingsSnapshot),
                     stateJson = json.encodeToString(ChessClockStateProxy.serializer(), stateSnapshot),
                 )
@@ -4273,7 +4287,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     lastRandomRoll = first.initialTotalTimeMs to first.secondaryTimeMs
                 }
 
-                clearSavedClock()
+                // The save stays until the next one replaces it. It was cleared here, with the clock
+                // installed paused and no tick to write another: killed before Resume was pressed, or
+                // within fifteen seconds of it, the game had nothing left to come back to. What may
+                // still be encoding is older than this and is dropped; see savedClockGeneration.
+                savedClockGeneration++
             } catch (e: Exception) {
                 Log.w("ChessTimerViewModel", "Failed to resume saved clock, discarding it", e)
                 clearSavedClock()
