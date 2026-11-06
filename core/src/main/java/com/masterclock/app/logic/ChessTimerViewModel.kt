@@ -2222,10 +2222,21 @@ private fun PlayerState.withSignedTime(t: Long, flagBehavior: FlagBehavior): Pla
  * hourglass and the arbiter's adjustment added to the bare field: a player at -0:02 handed a second
  * went to -0:03, so every second the opponent spent pushed them further under. Credit now pays the
  * overrun off, and past zero the player has time again and is no longer out, as [withSignedTime]
- * already allows. Anyone else keeps a clock that does not go below zero.
+ * already allows.
+ *
+ * Taken past zero, the clock has run out, as it would have by running down: an overrun of what was
+ * taken beyond the time left under NEGATIVE and REVERSE, a flag at 0:00 under FREEZE and FLAG. It
+ * stopped at 0:00 and nothing marked it, so an arbiter's −1m to a player with 0:20 left cost them
+ * twenty seconds instead of a minute, and a FIDE period the arbiter undid lost the player's whole
+ * overrun -- 15:30 left less a 30-minute period read 0:00, not −14:30 -- while a waiting player sat
+ * at an unflagged 0:00 until their turn came round.
  */
 internal fun PlayerState.credited(amountMs: Long, flagBehavior: FlagBehavior): PlayerState {
-    if (!isOverrun(flagBehavior)) return copy(timeRemainingMs = (timeRemainingMs + amountMs).coerceAtLeast(0))
+    if (!isOverrun(flagBehavior)) {
+        val t = timeRemainingMs + amountMs
+        if (t <= 0 && amountMs < 0 && !isOutOfTime) return copy(timeRemainingMs = 0).finalFlag(-t, flagBehavior)
+        return copy(timeRemainingMs = t.coerceAtLeast(0))
+    }
     val t = amountMs - timeRemainingMs
     return if (t > 0) copy(timeRemainingMs = t, isNegative = false, isOutOfTime = false) else copy(timeRemainingMs = -t)
 }
@@ -2377,41 +2388,82 @@ internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountM
                 else -> state.copy(globalTimeMs = (state.globalTimeMs + amountMs).coerceAtLeast(0))
             }
         }
-        // Time given in these modes is the total, or the reserve. It landed on the move
-        // clock, which the next press refills to the move time: the adjustment was gone.
-        // Global Shared's reserve is everyone's.
-        // Reserve given to a player it ran out on puts them back in play, as arbiterCredited
-        // does for a plain clock -- under Global only while their move clock has time too,
-        // since that one running out is a flag of its own.
-        TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL_SHARED -> state.copy(
-            players = state.players.mapIndexed { idx, p ->
-                if (mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || idx + 1 == playerIndex) {
-                    val reserve = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)
-                    val back = p.isOutOfTime && !p.isOverrun(flagBehavior) && reserve > 0 &&
-                        (mode == TimerMode.MOVE_TIMER_OVERTIME || p.timeRemainingMs > 0)
-                    // Under NEGATIVE and REVERSE an empty shared reserve puts every player
-                    // in overrun. Reserve given back left them there: each player's next
-                    // turn counted up from zero beside a reserve with time in it. Every player
-                    // gets their move clock back, the one on the move included: left in
-                    // overrun until their next press, they read negative while the reserve
-                    // given back drained beside it.
-                    val revived = mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED && p.isOverrun(flagBehavior) &&
-                        p.secondaryTimeMs <= 0 && reserve > 0
-                    if (revived) p.copy(secondaryTimeMs = reserve, timeRemainingMs = settings.playerSettings(idx + 1).moveTimeMs, isOutOfTime = false, isNegative = false)
-                    else p.copy(secondaryTimeMs = reserve, isOutOfTime = p.isOutOfTime && !back)
-                } else p
-            },
-        )
+        TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_GLOBAL_SHARED ->
+            arbiterAdjustReserve(state, playerIndex, amountMs, mode, settings)
+        // Shared (Auto)'s clock running out is the end of a turn, not a flag, so a penalty past
+        // zero leaves it at zero for the tick to hand over.
         else -> state.copy(players = state.players.mapIndexed { idx, p ->
-            if (wholeTable || idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
+            if (wholeTable) p.copy(timeRemainingMs = (p.timeRemainingMs + amountMs).coerceAtLeast(0))
+            else if (idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
                 val ps = settings.playerSettings(idx + 1)
                 if (ps.mode == TimerMode.FAST_MOVE && ps.fastMoveMode == FastMoveType.ACCELERATE) it.withAccelerateMarkFrom(p) else it
             }
             else p
         })
     }
-    // Nobody out any more: no flag stands, so none is first.
-    return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
+    // Nobody out any more: no flag stands, so none is first. A flag the arbiter's penalty caused
+    // is first like any other; the player it was given to is preferred if several fall at once.
+    return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted.withFirstFlag(state, playerIndex)
+}
+
+/**
+ * The arbiter's time in the modes with a move clock and a reserve: Global's total, Overtime's
+ * reserve, and Global Shared's reserve, which is everyone's.
+ *
+ * Time given went to the reserve whatever had run out. Three things followed from that:
+ * - A move clock run out with reserve still left is a flag of its own in Global and Global
+ *   Shared, and no time given could undo it -- every tap fed a reserve the player could not
+ *   reach, and only Reset ended the game. Time given to such a player now goes on the move clock,
+ *   paying any overrun first, as for a plain clock.
+ * - A reserve given back to a player in overrun because it was empty left them there in Global
+ *   and Overtime: the overrun went on growing beside a reserve with time in it -- in Global the
+ *   reserve drained under it -- until the next press. Global Shared already brought everyone back;
+ *   all three do now, with a fresh move clock in Global and Global Shared, as the press would give.
+ * - A reserve taken to exactly zero marked nothing: under FREEZE and FLAG the player went on until
+ *   the next tick, and under NEGATIVE and REVERSE the tick that found it empty saw no reserve
+ *   running out, so NEGATIVE handed out full move times for the rest of the game and REVERSE
+ *   counted the move time still left as overrun. A reserve emptied by the arbiter now ends as one
+ *   emptied by the clock: out, and in overrun from zero under NEGATIVE and REVERSE. In Overtime
+ *   only once the move clock is spent too, since until then the player is still on it.
+ */
+private fun arbiterAdjustReserve(state: ChessClockState, playerIndex: Int, amountMs: Long, mode: TimerMode, settings: ChessClockSettings): ChessClockState {
+    val fb = settings.flagBehavior
+    val overflowing = fb == FlagBehavior.NEGATIVE || fb == FlagBehavior.REVERSE
+    val target = state.players.getOrNull(playerIndex - 1) ?: return state
+    val moveClockFlag = mode != TimerMode.MOVE_TIMER_OVERTIME && target.isOutOfTime && target.secondaryTimeMs > 0
+    if (moveClockFlag) {
+        return state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = target.arbiterCredited(amountMs, fb) })
+    }
+    return state.copy(
+        players = state.players.mapIndexed { idx, p ->
+            if (mode != TimerMode.MOVE_TIMER_GLOBAL_SHARED && idx + 1 != playerIndex) return@mapIndexed p
+            val reserve = (p.secondaryTimeMs + amountMs).coerceAtLeast(0)
+            val moveTime = settings.playerSettings(idx + 1).moveTimeMs
+            val moveClockSpent = mode == TimerMode.MOVE_TIMER_OVERTIME && p.timeRemainingMs <= 0
+            when {
+                p.secondaryTimeMs > 0 && reserve <= 0 && !p.isOutOfTime -> when {
+                    mode == TimerMode.MOVE_TIMER_OVERTIME && !moveClockSpent -> p.copy(secondaryTimeMs = 0)
+                    overflowing -> p.copy(secondaryTimeMs = 0, timeRemainingMs = 0, isOutOfTime = true, isNegative = fb == FlagBehavior.NEGATIVE)
+                    else -> p.copy(secondaryTimeMs = 0, isOutOfTime = true)
+                }
+                p.isOverrun(fb) && p.secondaryTimeMs <= 0 && reserve > 0 -> p.copy(
+                    secondaryTimeMs = reserve,
+                    timeRemainingMs = if (mode == TimerMode.MOVE_TIMER_OVERTIME) 0 else moveTime,
+                    isOutOfTime = false,
+                    isNegative = false,
+                )
+                // Out on the reserve, under FREEZE and FLAG. A move clock that had run out as well
+                // comes back with it, as the press would refill it; one waiting for the reserve in
+                // Overtime is spent by design and stays at zero.
+                p.isOutOfTime && !p.isOverrun(fb) && p.secondaryTimeMs <= 0 && reserve > 0 -> p.copy(
+                    secondaryTimeMs = reserve,
+                    timeRemainingMs = if (mode != TimerMode.MOVE_TIMER_OVERTIME && p.timeRemainingMs <= 0) moveTime else p.timeRemainingMs,
+                    isOutOfTime = false,
+                )
+                else -> p.copy(secondaryTimeMs = reserve)
+            }
+        },
+    )
 }
 
 /** The arbiter's ±1 move on [playerIndex], applied to [state]; see [adjustFideMoveCount]. */
@@ -2419,8 +2471,9 @@ internal fun arbiterAdjustMoveCount(state: ChessClockState, playerIndex: Int, de
     val before = state.players.getOrNull(playerIndex - 1) ?: return state
     val after = adjustFideMoveCount(before, delta, settings.playerSettings(playerIndex), settings)
     val adjusted = state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = after })
-    // As after the arbiter's time: nobody out any more, no flag stands first.
-    return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted
+    // As after the arbiter's time: nobody out any more, no flag stands first, and a period undone
+    // past zero is a flag like one on the clock.
+    return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted.withFirstFlag(state, playerIndex)
 }
 
 /**

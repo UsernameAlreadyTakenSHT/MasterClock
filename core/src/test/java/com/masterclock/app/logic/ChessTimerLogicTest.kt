@@ -644,8 +644,10 @@ class ChessTimerLogicTest {
         assertEquals(1_000, out.credited(1_000, FlagBehavior.NEGATIVE).timeRemainingMs)
         assertEquals(3_000, out.credited(-1_000, FlagBehavior.NEGATIVE).timeRemainingMs)
         assertFalse(out.credited(5_000, FlagBehavior.NEGATIVE).isOutOfTime)
-        // Time left still stops at zero.
-        assertEquals(0, PlayerState(2_000).credited(-5_000, FlagBehavior.NEGATIVE).timeRemainingMs)
+        // Taken past the time left, the rest is an overrun; it stopped at zero, unmarked.
+        val past = PlayerState(2_000).credited(-5_000, FlagBehavior.NEGATIVE)
+        assertEquals(3_000, past.timeRemainingMs)
+        assertTrue(past.isOutOfTime && past.isNegative)
     }
 
     @Test
