@@ -126,7 +126,7 @@ fun SettingsOmniPage(
                             4 -> StepTurns(settings) { onSettingsChanged(it) }
                             5 -> StepPhases(settings) { onSettingsChanged(it) }
                             6 -> StepAdvancedRules(settings) { onSettingsChanged(it) }
-                            7 -> StepFinalReview(settings, { onSettingsChanged(it) }, onPlay)
+                            7 -> StepFinalReview(settings, { onSettingsChanged(it) }, { if (validatePhases()) onPlay() })
                         }
                         Spacer(Modifier.height(100.dp))
                     }
@@ -947,7 +947,8 @@ fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) ->
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.omni_cfg_summary), fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
-            Text(pluralStringResource(R.plurals.omni_cfg_summary_games, settings.games.size, settings.numberOfPlayers, settings.games.size))
+            // Two counts, so two plurals: one chosen by the games alone read "1 Players".
+            Text(pluralStringResource(R.plurals.omni_cfg_summary_players, settings.numberOfPlayers, settings.numberOfPlayers) + " | " + pluralStringResource(R.plurals.omni_cfg_summary_games, settings.games.size, settings.games.size))
             // Was always games.firstOrNull()?.rounds?.size, presented as if every game were the same
             // even when games have different round counts.
             val roundCounts = settings.games.map { it.rounds.size }

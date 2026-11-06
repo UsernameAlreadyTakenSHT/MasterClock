@@ -611,6 +611,18 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /** Whether Launch has a choice to offer: a session under way, not one that has finished. */
+    fun hasSessionToResume(): Boolean {
+        val state = _omniState.value
+        return state.hasStarted && !(state.isInTransition && state.transitionLabel == "SESSION")
+    }
+
+    /** Launch with the settings as they stand now. A paused session keeps its own structure otherwise. */
+    fun launchNewSession() {
+        resetOmni()
+        startOmni()
+    }
+
     fun pauseOmni() {
         _omniState.update { it.copy(isRunning = false) }
     }

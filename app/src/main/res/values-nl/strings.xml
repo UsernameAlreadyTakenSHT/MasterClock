@@ -485,6 +485,10 @@
     <string name="omni_reset_confirm">RESETTEN</string>
     <string name="omni_stop_title">Sessie stoppen?</string>
     <string name="omni_stop_confirm">STOPPEN</string>
+    <string name="omni_launch_title">Sessie bezig</string>
+    <string name="omni_launch_message">Er staat een sessie op pauze. Wil je die hervatten zoals die is, of een nieuwe beginnen met deze instellingen?</string>
+    <string name="omni_launch_resume">HERVATTEN</string>
+    <string name="omni_launch_new">NIEUWE SESSIE</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANNULEREN</string>
     <string name="omni_progress_session">Sessie</string>
     <string name="omni_header">Omni: %s</string>
@@ -522,9 +526,14 @@
     <string name="stats_recent_game">Meest recente partij</string>
     <string name="stats_modes_played">Gespeelde modi</string>
 
+    <plurals name="omni_cfg_summary_players">
+        <item quantity="one">• %d Speler</item>
+        <item quantity="other">• %d Spelers</item>
+    </plurals>
+
     <plurals name="omni_cfg_summary_games">
-        <item quantity="one">• %1$d spelers | %2$d partij</item>
-        <item quantity="other">• %1$d spelers | %2$d partijen</item>
+        <item quantity="one">%d partij</item>
+        <item quantity="other">%d partijen</item>
     </plurals>
 
     <plurals name="omni_cfg_summary_rounds_uniform">

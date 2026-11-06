@@ -157,6 +157,8 @@
     <string name="toast_backup_ok">Backup concluído!</string>
     <string name="settings_phase_placeholder">Preparação, rodada X…</string>
     <string name="omni_reset_message">Todo o progresso de rodadas e partidas será perdido.</string>
+    <string name="omni_launch_title">Sessão em andamento</string>
+    <string name="omni_launch_message">Há uma sessão pausada. Retomar como está ou começar uma nova com estas configurações?</string>
     <string name="settings_more_auto_switch">Trocar o turno automaticamente</string>
     <string name="settings_more_scoreboard">Placar</string>
     <string name="timer_arbitre_control">Controle do árbitro</string>

@@ -495,6 +495,10 @@
     <string name="omni_reset_confirm">ZERAR</string>
     <string name="omni_stop_title">Parar a sessão?</string>
     <string name="omni_stop_confirm">PARAR</string>
+    <string name="omni_launch_title">Sessão em curso</string>
+    <string name="omni_launch_message">Há uma sessão em pausa. Retomar tal como está, ou começar uma nova com estas definições?</string>
+    <string name="omni_launch_resume">RETOMAR</string>
+    <string name="omni_launch_new">NOVA SESSÃO</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">CANCELAR</string>
     <string name="omni_progress_session">Sessão</string>
     <string name="omni_header">Omni: %s</string>
@@ -532,10 +536,16 @@
     <string name="stats_recent_game">Partida mais recente</string>
     <string name="stats_modes_played">Modos jogados</string>
 
+    <plurals name="omni_cfg_summary_players">
+        <item quantity="one">• %d Jogador</item>
+        <item quantity="many">• %d Jogadores</item>
+        <item quantity="other">• %d Jogadores</item>
+    </plurals>
+
     <plurals name="omni_cfg_summary_games">
-        <item quantity="one">• %1$d jogadores | %2$d partida</item>
-        <item quantity="many">• %1$d jogadores | %2$d de partidas</item>
-        <item quantity="other">• %1$d jogadores | %2$d partidas</item>
+        <item quantity="one">%d partida</item>
+        <item quantity="many">%d de partidas</item>
+        <item quantity="other">%d partidas</item>
     </plurals>
 
     <plurals name="omni_cfg_summary_rounds_uniform">

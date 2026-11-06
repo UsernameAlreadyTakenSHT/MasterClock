@@ -506,6 +506,10 @@
     <string name="omni_reset_confirm">RÉINITIALISER</string>
     <string name="omni_stop_title">Arrêter la session ?</string>
     <string name="omni_stop_confirm">ARRÊTER</string>
+    <string name="omni_launch_title">Session en cours</string>
+    <string name="omni_launch_message">Une session est en pause. La reprendre telle quelle, ou en commencer une nouvelle avec ces réglages ?</string>
+    <string name="omni_launch_resume">REPRENDRE</string>
+    <string name="omni_launch_new">NOUVELLE SESSION</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANNULER</string>
     <string name="omni_progress_session">Session</string>
     <string name="omni_header">Omni : %s</string>
@@ -543,10 +547,16 @@
     <string name="stats_recent_game">Partie la plus récente</string>
     <string name="stats_modes_played">Modes joués</string>
 
+    <plurals name="omni_cfg_summary_players">
+        <item quantity="one">• %d Joueur</item>
+        <item quantity="many">• %d Joueurs</item>
+        <item quantity="other">• %d Joueurs</item>
+    </plurals>
+
     <plurals name="omni_cfg_summary_games">
-        <item quantity="one">• %1$d joueurs | %2$d partie</item>
-        <item quantity="many">• %1$d joueurs | %2$d de parties</item>
-        <item quantity="other">• %1$d joueurs | %2$d parties</item>
+        <item quantity="one">%d partie</item>
+        <item quantity="many">%d de parties</item>
+        <item quantity="other">%d parties</item>
     </plurals>
 
     <plurals name="omni_cfg_summary_rounds_uniform">

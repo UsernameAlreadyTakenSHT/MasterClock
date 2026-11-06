@@ -134,13 +134,42 @@ fun SettingsScreen(
                 }
                 SettingsCategory.OMNI -> {
                     val omniViewModel: OmniTimerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                    // A paused session keeps its own structure when settings change, so Launch resumed
+                    // it and the setup just edited was silently not played: 2 players chosen, the old
+                    // 4-player session carried on. Asked rather than assumed, since leaving the
+                    // screen is all it takes to pause one.
+                    var askResumeOrNew by remember { mutableStateOf(false) }
                     SettingsOmniPage(
                         viewModel = omniViewModel,
-                        onPlay = { 
-                            omniViewModel.startOmni()
-                            onToolClick(Route.OmniTimer) 
+                        onPlay = {
+                            if (omniViewModel.hasSessionToResume()) askResumeOrNew = true
+                            else {
+                                omniViewModel.startOmni()
+                                onToolClick(Route.OmniTimer)
+                            }
                         }
                     )
+                    if (askResumeOrNew) {
+                        AlertDialog(
+                            onDismissRequest = { askResumeOrNew = false },
+                            title = { Text(stringResource(R.string.omni_launch_title)) },
+                            text = { Text(stringResource(R.string.omni_launch_message)) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    askResumeOrNew = false
+                                    omniViewModel.launchNewSession()
+                                    onToolClick(Route.OmniTimer)
+                                }) { Text(stringResource(R.string.omni_launch_new)) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = {
+                                    askResumeOrNew = false
+                                    omniViewModel.startOmni()
+                                    onToolClick(Route.OmniTimer)
+                                }) { Text(stringResource(R.string.omni_launch_resume)) }
+                            },
+                        )
+                    }
                 }
                 SettingsCategory.MORE -> MoreSettingsPage(
                     currentSettings = currentSettings,

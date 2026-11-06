@@ -486,6 +486,10 @@
     <string name="omni_reset_confirm">ZURÜCKSETZEN</string>
     <string name="omni_stop_title">Sitzung beenden?</string>
     <string name="omni_stop_confirm">BEENDEN</string>
+    <string name="omni_launch_title">Sitzung läuft</string>
+    <string name="omni_launch_message">Eine Sitzung ist pausiert. Möchtest du sie unverändert fortsetzen oder mit diesen Einstellungen eine neue beginnen?</string>
+    <string name="omni_launch_resume">FORTSETZEN</string>
+    <string name="omni_launch_new">NEUE SITZUNG</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ABBRECHEN</string>
     <string name="omni_progress_session">Sitzung</string>
     <string name="omni_header">Omni: %s</string>
@@ -523,9 +527,14 @@
     <string name="stats_recent_game">Letzte Partie</string>
     <string name="stats_modes_played">Gespielte Modi</string>
 
+    <plurals name="omni_cfg_summary_players">
+        <item quantity="one">• %d Spieler</item>
+        <item quantity="other">• %d Spieler</item>
+    </plurals>
+
     <plurals name="omni_cfg_summary_games">
-        <item quantity="one">• %1$d Spieler | %2$d Partie</item>
-        <item quantity="other">• %1$d Spieler | %2$d Partien</item>
+        <item quantity="one">%d Partie</item>
+        <item quantity="other">%d Partien</item>
     </plurals>
 
     <plurals name="omni_cfg_summary_rounds_uniform">

@@ -527,6 +527,10 @@
     <string name="omni_reset_confirm">RESET</string>
     <string name="omni_stop_title">Stop Session?</string>
     <string name="omni_stop_confirm">STOP</string>
+    <string name="omni_launch_title">Session in progress</string>
+    <string name="omni_launch_message">A session is paused. Resume it as it stands, or start a new one with these settings?</string>
+    <string name="omni_launch_resume">RESUME</string>
+    <string name="omni_launch_new">NEW SESSION</string>
     <!--
       Lint wants "Cancel" here. Kept shouting because this screen shouts throughout (GET READY,
       I AM READY, RUNNING) and a single sentence-case button would look like a mistake.
@@ -573,9 +577,14 @@
       or Polish need three or four. Translators add or drop <item> elements to match their own
       language.
     -->
+    <plurals name="omni_cfg_summary_players">
+        <item quantity="one">• %d Player</item>
+        <item quantity="other">• %d Players</item>
+    </plurals>
+
     <plurals name="omni_cfg_summary_games">
-        <item quantity="one">• %1$d Players | %2$d Game</item>
-        <item quantity="other">• %1$d Players | %2$d Games</item>
+        <item quantity="one">%d Game</item>
+        <item quantity="other">%d Games</item>
     </plurals>
 
     <plurals name="omni_cfg_summary_rounds_uniform">
