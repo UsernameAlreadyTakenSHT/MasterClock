@@ -3103,7 +3103,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             addEvent(GameEvent(eventType = "START", detail = "Game started by P$playerIndex"))
         }
 
-        if (s.mode == TimerMode.GONG) {
+        // The clock runs itself once it is going, so a press only resumes it. The first press is the
+        // one that matters, and it starts the game as in every other mode: the player across the
+        // table moves first. It went to resume(), which always started player 1.
+        if (s.mode == TimerMode.GONG && currentState.activePlayer != null) {
             if (currentState.isPaused) resume()
             return
         }

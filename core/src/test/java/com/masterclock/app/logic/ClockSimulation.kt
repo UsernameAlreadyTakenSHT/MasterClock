@@ -57,7 +57,7 @@ internal class ClockSim(val settings: ChessClockSettings) {
 
     fun press(playerIndex: Int) {
         val s = settings.playerSettings(playerIndex)
-        if (s.mode == TimerMode.GONG) { if (state.isPaused) resume(); return }
+        if (s.mode == TimerMode.GONG && state.activePlayer != null) { if (state.isPaused) resume(); return }
         if (isGameOver(state, fb, players)) return
         if (s.mode == TimerMode.MOVE_TIMER_SHARED) return
         if (s.mode.name.startsWith("CHRONO") && settings.isOneForAll) return
