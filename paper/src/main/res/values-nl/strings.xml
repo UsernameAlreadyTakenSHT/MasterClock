@@ -31,12 +31,6 @@
     <!-- Settings -->
     <string name="settings_tab_modes">Modi</string>
     <!-- Short like the French "Jeu", German "Spiel", Italian "Gioco" and Portuguese "Jogo". -->
-    <string name="settings_tab_behavior">Spel</string>
-    <string name="settings_tab_display">Scherm</string>
-    <string name="settings_tab_audio">Audio</string>
-    <string name="settings_tab_more">Meer</string>
-    <string name="settings_tab_omni">Omni</string>
-    <string name="settings_not_optimized">Deze instellingenpagina is nog niet geoptimaliseerd voor e-ink.</string>
     <string name="settings_initial_time">Starttijd</string>
     <string name="settings_increment">Increment</string>
     <string name="settings_move_time">Tijd per zet</string>

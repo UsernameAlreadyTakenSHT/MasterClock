@@ -33,12 +33,6 @@
     <!-- Settings -->
     <string name="settings_tab_modes">Modes</string>
     <!-- Same shortening as the app module: "Comportement" wraps in the tab bar. -->
-    <string name="settings_tab_behavior">Jeu</string>
-    <string name="settings_tab_display">Affichage</string>
-    <string name="settings_tab_audio">Audio</string>
-    <string name="settings_tab_more">Plus</string>
-    <string name="settings_tab_omni">Omni</string>
-    <string name="settings_not_optimized">Cette page de réglages n\'est pas encore optimisée pour l\'encre électronique.</string>
     <string name="settings_initial_time">Temps initial</string>
     <string name="settings_increment">Incrément</string>
     <string name="settings_move_time">Temps par coup</string>

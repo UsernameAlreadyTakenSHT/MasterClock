@@ -31,16 +31,10 @@
     <!-- Settings -->
     <string name="settings_tab_modes">Modos</string>
     <!-- Short like the French "Jeu", Spanish "Juego", German "Spiel" and Italian "Gioco". -->
-    <string name="settings_tab_behavior">Jogo</string>
-    <string name="settings_tab_display">Ecrã</string>
-    <string name="settings_tab_audio">Áudio</string>
-    <string name="settings_tab_more">Mais</string>
-    <string name="settings_tab_omni">Omni</string>
     <!--
       "eletrónica" is the European spelling after the 1990 orthographic agreement, which dropped the
       silent c. Lint's dictionary predates it and offers "electrónica" or the Brazilian "eletrônica".
     -->
-    <string name="settings_not_optimized" tools:ignore="Typos">Esta página de definições ainda não está otimizada para tinta eletrónica.</string>
     <string name="settings_initial_time">Tempo inicial</string>
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tempo por lance</string>

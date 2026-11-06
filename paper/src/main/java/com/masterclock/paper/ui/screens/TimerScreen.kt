@@ -43,7 +43,6 @@ import java.util.Locale
 fun TimerScreen(
     viewModel: ChessTimerViewModel,
     onSettingsClick: () -> Unit,
-    onPresetsClick: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState()

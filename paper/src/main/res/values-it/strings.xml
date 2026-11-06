@@ -30,12 +30,6 @@
     <!-- Settings -->
     <string name="settings_tab_modes">Modi</string>
     <!-- Short like the French "Jeu", Spanish "Juego" and German "Spiel". -->
-    <string name="settings_tab_behavior">Gioco</string>
-    <string name="settings_tab_display">Schermo</string>
-    <string name="settings_tab_audio">Audio</string>
-    <string name="settings_tab_more">Altro</string>
-    <string name="settings_tab_omni">Omni</string>
-    <string name="settings_not_optimized">Questa pagina delle impostazioni non è ancora ottimizzata per l\'inchiostro elettronico.</string>
     <string name="settings_initial_time">Tempo iniziale</string>
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tempo per mossa</string>

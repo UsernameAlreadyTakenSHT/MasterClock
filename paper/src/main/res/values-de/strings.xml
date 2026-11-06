@@ -32,12 +32,6 @@
     <!-- Settings -->
     <string name="settings_tab_modes">Modi</string>
     <!-- Short like the French "Jeu" and Spanish "Juego": "Verhalten" crowds the tab row. -->
-    <string name="settings_tab_behavior">Spiel</string>
-    <string name="settings_tab_display">Anzeige</string>
-    <string name="settings_tab_audio">Audio</string>
-    <string name="settings_tab_more">Mehr</string>
-    <string name="settings_tab_omni">Omni</string>
-    <string name="settings_not_optimized">Diese Einstellungsseite ist noch nicht für E-Ink optimiert.</string>
     <string name="settings_initial_time">Startzeit</string>
     <string name="settings_increment">Inkrement</string>
     <string name="settings_move_time">Zeit pro Zug</string>

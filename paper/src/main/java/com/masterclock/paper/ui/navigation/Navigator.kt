@@ -3,12 +3,7 @@ package com.masterclock.paper.ui.navigation
 import androidx.navigation3.runtime.NavKey
 
 class Navigator(val state: NavigationState) {
-    /**
-     * @param replace When true, swaps the current top entry for [route] instead of pushing on top of
-     * it. Used for switching tabs within the same screen (e.g. Settings categories) so Back always
-     * exits that screen directly instead of stepping back through every previously-visited tab.
-     */
-    fun navigate(route: NavKey, replace: Boolean = false) {
+    fun navigate(route: NavKey) {
         if (route in state.backStacks.keys) {
             state.topLevelRoute = route
         } else {
@@ -16,8 +11,7 @@ class Navigator(val state: NavigationState) {
             // Already showing it: a second tap before the screen had changed -- easy on E Ink, which
             // gives no feedback until it redraws -- pushed the same screen twice, and the first Back
             // then seemed to do nothing.
-            if (!replace && stack.lastOrNull() == route) return
-            if (replace) stack.removeLastOrNull()
+            if (stack.lastOrNull() == route) return
             stack.add(route)
         }
     }

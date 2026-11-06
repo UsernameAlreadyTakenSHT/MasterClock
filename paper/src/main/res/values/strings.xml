@@ -26,12 +26,6 @@
       they are fixed clock vocabulary rather than something to translate.
     -->
     <string name="settings_tab_modes">Modes</string>
-    <string name="settings_tab_behavior">Behavior</string>
-    <string name="settings_tab_display">Display</string>
-    <string name="settings_tab_audio">Audio</string>
-    <string name="settings_tab_more">More</string>
-    <string name="settings_tab_omni">Omni</string>
-    <string name="settings_not_optimized">This setting page is not yet optimized for E-Ink.</string>
     <string name="settings_initial_time">Initial time</string>
     <string name="settings_increment">Increment</string>
     <string name="settings_move_time">Move time</string>

@@ -149,27 +149,19 @@ class MainActivity : ComponentActivity() {
                             TimerScreen(
                                 viewModel = timerViewModel,
                                 onSettingsClick = {
-                                    navigator.navigate(Route.Settings("MODES")) 
+                                    navigator.navigate(Route.Settings)
                                 },
-                                onPresetsClick = { 
-                                    // navigator.navigate(Route.Presets) 
-                                }
                             )
                         }
-                        entry<Route.Settings> { route ->
+                        entry<Route.Settings> { _ ->
                             SettingsScreen(
                                 currentSettings = settings,
-                                category = SettingsCategory.fromRoute(route.category),
                                 onSettingsChanged = { timerViewModel.updateSettings(it) },
-                                onBackClick = { 
-                                    navigator.goBack() 
+                                onBackClick = {
+                                    navigator.goBack()
                                 },
-                                onCategoryChanged = { newCat ->
-                                    navigator.navigate(Route.Settings(newCat.name), replace = true)
-                                }
                             )
                         }
-                        // Missing screens in :paper module are commented out for now to allow building
                     }
 
                     // Nothing to tap until the stored state is in; see ChessTimerViewModel.isReady.
