@@ -217,7 +217,7 @@ fun EInkPlayerArea(
     val switchTurnLabel = stringResource(R.string.timer_switch_turn)
     val spokenTime = if (isOutOfTime) {
         stringResource(R.string.a11y_out_of_time)
-    } else spokenDurationText(playerState.timeRemainingMs)
+    } else spokenDurationText(if (isActive) steppedForSpeech(playerState.timeRemainingMs) else playerState.timeRemainingMs)
     // Nobody's turn once the game is over, though the last player to move is still the active one.
     val a11yLabel = if (isActive && !gameOver) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)

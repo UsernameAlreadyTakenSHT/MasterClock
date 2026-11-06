@@ -13,6 +13,23 @@ import org.junit.Assert.*
 class SpokenDurationTest {
 
     @Test
+    fun `a running clock is said to the minute, then to ten seconds`() {
+        assertEquals(3_900_000L, steppedForSpeech(3_903_000))
+        assertEquals(540_000L, steppedForSpeech(599_999))
+        assertEquals(60_000L, steppedForSpeech(60_000))
+        assertEquals(50_000L, steppedForSpeech(59_999))
+        assertEquals(10_000L, steppedForSpeech(10_000))
+    }
+
+    @Test
+    fun `a running clock is not said to be out while it has time left`() {
+        assertEquals(10_000L, steppedForSpeech(9_999))
+        assertEquals(10_000L, steppedForSpeech(1))
+        assertTrue(spokenDuration(steppedForSpeech(0)).isExpired)
+        assertTrue(spokenDuration(steppedForSpeech(-5_000)).isExpired)
+    }
+
+    @Test
     fun `minutes and seconds are split out`() {
         val d = spokenDuration(303_000)
 

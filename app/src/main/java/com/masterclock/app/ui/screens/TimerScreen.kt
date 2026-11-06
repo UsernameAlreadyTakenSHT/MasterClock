@@ -559,27 +559,29 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         TimerMode.MOVE_TIMER_SAVE_CAP -> stringResource(R.string.timer_cap) to pSettings.timeCapMs.coerceAtLeast(pSettings.moveTimeMs)
         else -> null
     }
+    // A stopped clock is said exactly; one still moving by steps. See steppedForSpeech.
+    val spokenMs = { ms: Long -> if (isActive || runsForAll) steppedForSpeech(ms) else ms }
     val spokenTime = when {
         state.phasesFinished || tableClockRanOut(state) -> stringResource(R.string.a11y_finished)
         playerState.isOutOfTime -> stringResource(R.string.a11y_out_of_time)
         // TalkBack read the exact remaining time while the screen showed ??:??.
         isHidden -> stringResource(R.string.a11y_time_hidden)
         // The phase, or the pause, is on the face beside the time; TalkBack read the time alone.
-        pSettings.mode == TimerMode.PHASES -> "${phaseLabel(pSettings, playerState)}, ${spokenDurationText(shownTimeMs)}"
+        pSettings.mode == TimerMode.PHASES -> "${phaseLabel(pSettings, playerState)}, ${spokenDurationText(spokenMs(shownTimeMs))}"
         // The period, and a period that ran out, are on the face too.
         pSettings.mode == TimerMode.FIDE_PERIODS -> listOfNotNull(
             fidePeriodLabel(pSettings, playerState),
             // The moves left to the next period, which the face shows under the move counter.
             fideMovesToGo?.let { stringResource(R.string.timer_moves, it) },
             stringResource(R.string.timer_period_flag).takeIf { playerState.hasFlagged },
-            spokenDurationText(shownTimeMs),
+            spokenDurationText(spokenMs(shownTimeMs)),
         ).joinToString(", ")
         // A move count on the face, not a time: TalkBack read "0 seconds".
         isMoveCounts -> stringResource(R.string.timer_moves, playerState.moveCount)
         // The second clock is on the face too, and with a few seconds of total left it is the one
         // that matters; TalkBack read the move clock alone.
-        secondaryClock != null -> "${spokenDurationText(alertMs)}, ${secondaryClock.first} ${spokenDurationText(secondaryClock.second)}"
-        else -> spokenDurationText(alertMs)
+        secondaryClock != null -> "${spokenDurationText(spokenMs(alertMs))}, ${secondaryClock.first} ${spokenDurationText(spokenMs(secondaryClock.second))}"
+        else -> spokenDurationText(spokenMs(alertMs))
     }
     // Nobody's turn once the game is over, though the last player to move is still the active one --
     // nor on a clock running for the whole table, where it was "Player 1, your turn" all game.

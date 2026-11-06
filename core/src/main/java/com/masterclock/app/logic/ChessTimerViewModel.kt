@@ -370,6 +370,21 @@ fun spokenDuration(ms: Long): SpokenDuration {
 }
 
 /**
+ * A running clock as a screen reader should hear it: to the minute, then to ten seconds in the last
+ * minute. Rounded down, so it never promises time that is not there, except under ten seconds, where
+ * that would say the clock had run out.
+ *
+ * TalkBack reads the node it is on again whenever the description changes. Exact seconds kept it
+ * talking for a whole turn, a new reading every three or four seconds, for a player whose finger was
+ * simply left on their clock, which is where the double tap that ends a move leaves it.
+ */
+fun steppedForSpeech(ms: Long): Long = when {
+    ms <= 0L -> ms
+    ms >= 60_000L -> ms - ms % 60_000L
+    else -> (ms - ms % 10_000L).coerceAtLeast(10_000L)
+}
+
+/**
  * The name to show players for a mode, as its card in the settings has it. Mode names are not
  * translated. They were made from the constant, and a tile read "Move timer save cap" for the mode
  * the settings call Save & Cap.
