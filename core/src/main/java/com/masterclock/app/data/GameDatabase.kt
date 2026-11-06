@@ -10,6 +10,13 @@ interface GameLogDao {
     @Query("SELECT * FROM game_logs ORDER BY startTime DESC LIMIT :limit")
     suspend fun getRecentLogs(limit: Int): List<GameLogEntity>
 
+    /** [getRecentLogs] without the rows too large to read; see [MAX_READABLE_ROW_BYTES]. */
+    @Query(
+        "SELECT * FROM game_logs WHERE length(CAST(settingsJson AS BLOB)) + length(CAST(eventsJson AS BLOB)) + " +
+            "length(CAST(COALESCE(initialStatesJson, '') AS BLOB)) <= :maxBytes ORDER BY startTime DESC LIMIT :limit"
+    )
+    suspend fun getRecentLogsUpTo(limit: Int, maxBytes: Int): List<GameLogEntity>
+
     @Query("SELECT * FROM game_logs WHERE id = :id")
     suspend fun getLog(id: String): GameLogEntity?
 
@@ -66,6 +73,38 @@ data class GameLogEntity(
     @ColumnInfo(defaultValue = "0") val imported: Boolean = false,
 )
 
+/**
+ * The most a game's events may take in the database, in bytes. Room reads a row through a
+ * CursorWindow of about 2 MB and fails on one that does not fit. No game comes near it: 2,000 moves
+ * of ordinary text are under 400 KB.
+ */
+internal const val MAX_STORED_EVENTS_BYTES = 1_000_000
+
+/** Below the CursorWindow's 2 MB, with room for what it stores beside a row. */
+internal const val MAX_READABLE_ROW_BYTES = 1_500_000
+
+/**
+ * As many of [events] as fit in [maxBytes] once [encode]d, from the start of the game.
+ *
+ * The caps on an imported event count characters, and it is bytes that have to fit. JSON writes a
+ * control character as six bytes and UTF-8 others as three, so 2,000 events at their caps came to
+ * more than 4 MB: Room then failed to read the history -- straight after the import, and at every
+ * launch from then on, until the app's data was cleared.
+ */
+internal fun fitEventsToRow(
+    events: List<com.masterclock.app.logic.GameEvent>,
+    maxBytes: Int = MAX_STORED_EVENTS_BYTES,
+    encode: (List<com.masterclock.app.logic.GameEvent>) -> String,
+): List<com.masterclock.app.logic.GameEvent> {
+    var kept = events
+    while (kept.isNotEmpty()) {
+        val size = encode(kept).toByteArray().size
+        if (size <= maxBytes) break
+        kept = kept.take((kept.size.toLong() * maxBytes / size).toInt().coerceIn(0, kept.size - 1))
+    }
+    return kept
+}
+
 class Converters {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -93,6 +132,10 @@ class Converters {
             )
         }
     }
+
+    /** [fromGameLog] for a game from outside the app, held to what the database can read back. */
+    fun fromImportedGameLog(log: com.masterclock.app.logic.GameLog): GameLogEntity =
+        fromGameLog(log.copy(events = fitEventsToRow(log.events) { json.encodeToString(it) }))
 
     fun fromGameLog(log: com.masterclock.app.logic.GameLog): GameLogEntity {
         return GameLogEntity(

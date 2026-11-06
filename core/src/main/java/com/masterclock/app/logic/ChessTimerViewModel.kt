@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.masterclock.core.R as CoreR
 import com.masterclock.app.data.Converters
 import com.masterclock.app.data.GameDatabase
+import com.masterclock.app.data.MAX_READABLE_ROW_BYTES
 import com.masterclock.app.data.SettingsRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -1448,7 +1449,7 @@ private const val MAX_IMPORTED_DRAWING_POINTS = 10_000
  */
 private const val MAX_IMPORTED_PERIODS = 64
 
-/** Room reads a row through a CursorWindow of about 2 MB, and every event of a game shares one column. */
+/** Long enough for any detail this app writes. The row as a whole is bounded in bytes; see fitEventsToRow. */
 private const val MAX_IMPORTED_EVENT_DETAIL_CHARS = 256
 
 /** Long enough for any event name this app writes; short enough not to be a payload. */
@@ -1497,12 +1498,13 @@ private const val MAX_MOVE_NOTATION_CHARS = 32
  * sandbox -- [GameEvent] holds no path or URI -- so the exposure is denial of service and nonsense
  * arithmetic rather than data theft, which is why the limits below are generous rather than strict.
  */
-// The id is deliberately left alone, unlike NotebookNote's and ScoreboardGame's. A review argued
-// for regenerating it, because insertLog is OnConflictStrategy.REPLACE and an imported log carrying
-// the id of a recorded game overwrites it. That is true, and the cure is worse: keeping the id is
-// what makes restoring a backup idempotent, so a user who restores the same archive twice gets
-// their history back rather than two of everything. What it buys an attacker is the replacement of
-// one local game record, with no path out of the sandbox.
+// The id is deliberately left alone, unlike NotebookNote's and ScoreboardGame's. Keeping it is what
+// makes restoring a backup idempotent, so a user who restores the same archive twice gets their
+// history back rather than two of everything. An imported log carrying the id of a recorded game
+// overwrites nothing: updateSettings skips an id already here, which stays the player's.
+//
+// Takes a log whose settings are already sanitised: the indices into its phases and periods are held
+// to those lists, so read from the raw settings they could fit a list the sanitiser then replaced.
 internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
     // Kept, as above -- unless it is no id this app could have made. Nothing bounded it, and it is
     // the row's primary key, stored and compared on every write of that game.
@@ -1514,9 +1516,8 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
     startTime = log.startTime.coerceIn(0L, System.currentTimeMillis()),
     events = log.events.take(MAX_IMPORTED_EVENTS_PER_LOG).map { event ->
         event.copy(
-            // Neither of these was bounded. Every event of a game shares one JSON column, and Room
-            // reads a row through a CursorWindow of about 2 MB: exceed it and getRecentLogs throws
-            // where nothing catches it, on every launch, until the app's data is cleared.
+            // Neither of these was bounded. Characters are not bytes, though: the row itself is
+            // held to what Room can read by fitEventsToRow, on the way into the database.
             eventType = event.eventType.take(MAX_IMPORTED_EVENT_TYPE_CHARS),
             detail = event.detail?.take(MAX_IMPORTED_EVENT_DETAIL_CHARS),
             // moveDurations() drops a MOVE with a null playerIndex while the log screen used to
@@ -1537,7 +1538,7 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
     initialPlayerStates = log.initialPlayerStates.take(4)
         .takeIf { it.size == log.settings.numberOfPlayers.coerceIn(1, 4) }.orEmpty()
         .mapIndexed { idx, state ->
-            val own = if (log.settings.differentSettingsPerPlayer) when (idx) { 0 -> log.settings.p1Custom; 1 -> log.settings.p2Custom; 2 -> log.settings.p3Custom; else -> log.settings.p4Custom } else log.settings.main
+            val own = log.settings.playerSettings(idx + 1)
             state.copy(
                 timeRemainingMs = state.timeRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
                 secondaryTimeMs = state.secondaryTimeMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
@@ -2327,7 +2328,7 @@ internal fun adjustFideMoveCount(p: PlayerState, delta: Int, s: PlayerSettings, 
     while (delta < 0) {
         val idx = next.currentPeriodIndex
         val start = totals.getOrNull(idx - 1) ?: 0
-        if (idx <= 0 || start <= 0 || next.moveCount >= start) break
+        if (idx <= 0 || idx >= s.fidePeriods.size || start <= 0 || next.moveCount >= start) break
         val left = s.fidePeriods[idx]
         val previous = s.fidePeriods[idx - 1]
         val removed = left.timeMs + bonus(left) - bonus(previous)
@@ -2854,7 +2855,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // all, so testing for -1 alone left -2 free to load the entire table. sanitizeImportedSettings
         // now refuses such a value on the way in as well, and this is the backstop.
         val effective = if (limit <= 0) MAX_UNLIMITED_HISTORY else limit.coerceAtMost(MAX_UNLIMITED_HISTORY)
-        val entities = gameDao.getRecentLogs(effective)
+        // One row too large for Room to read fails the whole list, at every launch and straight after
+        // the import that stored it. Such a row is left out and left alone: fitEventsToRow keeps new
+        // ones from being written, and the games around it are what the player came for.
+        val entities = try {
+            gameDao.getRecentLogs(effective)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("ChessTimerViewModel", "History has a row too large to read", e)
+            gameDao.getRecentLogsUpTo(effective, MAX_READABLE_ROW_BYTES)
+        }
         return withContext(Dispatchers.Default) { entities.map { converters.toGameLog(it) } }
     }
 
@@ -3924,9 +3935,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                             // One that cannot be prepared is skipped, not the rest with it. An
                             // Exception only: running out of memory is no reason to go on.
                             try {
-                                val sanitizedLog = sanitizeImportedLog(log)
-                                    .copy(settings = sanitizeImportedSettings(app, log.settings, grants).copy(notebookNotes = emptyList()), imported = true)
-                                sanitizedLog.id to converters.fromGameLog(sanitizedLog)
+                                val sanitizedLog = sanitizeImportedLog(
+                                    log.copy(settings = sanitizeImportedSettings(app, log.settings, grants).copy(notebookNotes = emptyList()), imported = true)
+                                )
+                                sanitizedLog.id to converters.fromImportedGameLog(sanitizedLog)
                             } catch (e: Exception) {
                                 Log.w("ChessTimerViewModel", "Skipped an imported game log", e)
                                 null

@@ -108,6 +108,28 @@ class ImportSanitizationTest {
     }
 
     @Test
+    fun `indices are held to the list the game will play, not one the sanitiser dropped`() {
+        // Per-player settings are off with three players, so everyone plays main's single phase; the
+        // index used to be held to player 1's ten, and the face read "Phase 10" of one.
+        val settings = ChessClockSettings(
+            numberOfPlayers = 3,
+            differentSettingsPerPlayer = false,
+            main = PlayerSettings(mode = TimerMode.PHASES, phases = listOf(GamePhase())),
+            p1Custom = PlayerSettings(mode = TimerMode.PHASES, phases = List(10) { GamePhase() }),
+        )
+        val states = List(3) { PlayerStateProxy(600_000, currentPhaseIndex = 9) }
+        assertEquals(0, sanitizeImportedLog(log(emptyList(), states).copy(settings = settings)).initialPlayerStates[0].currentPhaseIndex)
+    }
+
+    @Test
+    fun `a move taken back with a period index past the list does not close the app`() {
+        val periods = listOf(FidePeriod(movesToNext = 40), FidePeriod(movesToNext = 0))
+        val s = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = periods)
+        val p = PlayerState(timeRemainingMs = 60_000, moveCount = 41, currentPeriodIndex = 2)
+        assertEquals(40, adjustFideMoveCount(p, -1, s, ChessClockSettings(main = s)).moveCount)
+    }
+
+    @Test
     fun `an imported scoreboard adds its games to the local one`() {
         val local = ScoreboardSession(player1Name = "Me", games = listOf(ScoreboardGame(result = "1-0", timestamp = 10)))
         val imported = ScoreboardSession(player1Name = "Friend", games = listOf(ScoreboardGame(result = "1-0", timestamp = 10), ScoreboardGame(result = "0-1", timestamp = 20)))
