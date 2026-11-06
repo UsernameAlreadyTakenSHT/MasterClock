@@ -282,7 +282,11 @@ fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
     val active = state.activePlayer
         ?: return state.players.indexOfFirst { it.isOutOfTime }.takeIf { it >= 0 }?.let { ClockAnnouncement.OutOfTime(it + 1) }
     val player = state.players.getOrNull(active - 1) ?: return null
-    if (player.isOutOfTime) return ClockAnnouncement.OutOfTime(active)
+    // A player out of time and playing on, as NEGATIVE and REVERSE let them, has an overrun on the
+    // clock, and can be paused like anyone. "Out of time" outranked it, as it must when the pause is
+    // the end of the game, so their pause and their resume both said the same and neither was heard.
+    val playingOn = player.isNegative || player.timeRemainingMs > 0
+    if (player.isOutOfTime && !(state.isPaused && playingOn)) return ClockAnnouncement.OutOfTime(active)
     if (state.isPaused) return ClockAnnouncement.Paused
 
     return ClockAnnouncement.ToMove(

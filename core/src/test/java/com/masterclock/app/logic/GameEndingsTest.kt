@@ -11,6 +11,23 @@ class GameEndingsTest {
     private fun out(time: Long = 0) = PlayerState(timeRemainingMs = time, isOutOfTime = true)
 
     @Test
+    fun `a player out of time and playing on can be heard pausing`() {
+        val negative = PlayerState(5_000, isOutOfTime = true, isNegative = true)
+        val reverse = PlayerState(5_000, isOutOfTime = true)
+        for (p in listOf(negative, reverse)) {
+            val paused = ChessClockState(listOf(p, PlayerState(60_000)), activePlayer = 1, isPaused = true)
+            assertEquals(ClockAnnouncement.Paused, clockAnnouncement(paused))
+            assertEquals(ClockAnnouncement.OutOfTime(1), clockAnnouncement(paused.copy(isPaused = false)))
+        }
+    }
+
+    @Test
+    fun `a pause that ends the game still says who is out`() {
+        val over = ChessClockState(listOf(out(), PlayerState(60_000)), activePlayer = 1, isPaused = true, firstToFlag = 1)
+        assertEquals(ClockAnnouncement.OutOfTime(1), clockAnnouncement(over))
+    }
+
+    @Test
     fun `a Japanese byoyomi player brought back plays a period that counts`() {
         val s = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, byoyomiPeriods = 3, byoyomiTimeMs = 30_000)
         val state = ChessClockState(listOf(out().copy(isInByoyomi = true, byoyomiPeriodsRemaining = 0), PlayerState(60_000)), activePlayer = 1, isPaused = true)

@@ -47,11 +47,14 @@ class ClockAnnouncementSimulationTest {
             before.activePlayer == null && running && saying == null -> "a game started with nothing to say"
             // The turn passing.
             running && wasRunning && before.activePlayer != after.activePlayer && said == saying -> "a turn passed in silence"
-            // Coming back from a pause. Not for a player already out of time and playing on, under
-            // NEGATIVE: that outranks Paused, because it has to outlast the pause ending a game, so
-            // their clock says the same thing stopped or running.
+            // Coming back from a pause. Not for a player eliminated during it, who has nothing to
+            // resume: the next tick passes the turn on, and that is what is heard.
             running && !wasRunning && before.activePlayer != null && said == saying &&
                 saying !is ClockAnnouncement.OutOfTime -> "a resume passed in silence"
+            // A player playing on is heard pausing.
+            !running && wasRunning && before.activePlayer != null && after.activePlayer != null && said == saying &&
+                after.players[after.activePlayer!! - 1].let { it.isNegative || it.timeRemainingMs > 0 } &&
+                saying is ClockAnnouncement.OutOfTime -> "a pause passed in silence"
             saying is ClockAnnouncement.ToMove && saying.playerIndex != after.activePlayer -> "the wrong player was named"
             saying is ClockAnnouncement.ToMove && after.isPaused -> "a stopped clock was announced as running"
             else -> null
