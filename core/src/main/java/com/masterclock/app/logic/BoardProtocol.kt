@@ -103,8 +103,11 @@ interface BoardProtocol {
 
 /** What one payload from a board turned out to be. */
 sealed interface BoardReport {
-    /** The whole board, as most makes send on every change. */
-    data class Position(val position: BoardPosition) : BoardReport
+    /**
+     * The whole board, as most makes send on every change. [mayBeTurned] is for a board that can
+     * stand either way round and does not say which; see [BoardMoveTracker].
+     */
+    data class Position(val position: BoardPosition, val mayBeTurned: Boolean = false) : BoardReport
 
     /**
      * One square changed, without restating the rest.
@@ -156,13 +159,16 @@ class BoardMoveTracker {
     /** Only used by makes that identify pieces by tag; see [BoardReport.TaggedSquares]. */
     private val calibration = PieceTagCalibration()
 
+    /** Whether this board stands turned half way round; see [BoardReport.Position.mayBeTurned]. */
+    private var turned = false
+
     /** Whether a tag-reading board still needs the pieces set up before it can be understood. */
     val needsCalibration: Boolean get() = !calibration.isCalibrated
 
     fun onReport(report: BoardReport): List<String> = when (report) {
         is BoardReport.Moves -> report.moves
         is BoardReport.Raw, is BoardReport.Ignored -> emptyList()
-        is BoardReport.Position -> applyPosition(report.position)
+        is BoardReport.Position -> applyPosition(upright(report))
         is BoardReport.TaggedSquares ->
             calibration.identify(report.tags)?.let { applyPosition(it) } ?: emptyList()
         is BoardReport.SquareChanged -> {
@@ -177,6 +183,28 @@ class BoardMoveTracker {
                 applyPosition(BoardPosition(String(squares)))
             }
         }
+    }
+
+    /**
+     * The position as the players see it. A board that may be turned shows which way round it stands
+     * when the pieces are set up, the one position that cannot be read both ways. Until then it is
+     * taken as it comes. What was settled before was read the other way round, or was only a board
+     * being set up, so it goes: a baseline nothing can be compared with holds every move back.
+     */
+    private fun upright(report: BoardReport.Position): BoardPosition {
+        val seen = report.position
+        if (!report.mayBeTurned) return seen
+        val turnedNow = when (BoardPosition.STARTING) {
+            seen.turned() -> true
+            seen -> false
+            else -> turned
+        }
+        if (turnedNow != turned) {
+            turned = turnedNow
+            settled = null
+            current = null
+        }
+        return if (turned) seen.turned() else seen
     }
 
     /**
@@ -211,6 +239,7 @@ class BoardMoveTracker {
     fun reset() {
         settled = null
         current = null
+        turned = false
         // A different set of pieces may be on the next board, so the learned tags go too.
         calibration.reset()
     }

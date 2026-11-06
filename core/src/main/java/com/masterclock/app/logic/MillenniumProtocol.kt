@@ -62,18 +62,17 @@ object MillenniumProtocol : BoardProtocol {
             if (piece != EMPTY_SQUARE && piece !in PIECES) return BoardReport.Ignored
             squares[boardIndexOf(index)] = if (piece == EMPTY_SQUARE) BoardPosition.EMPTY else piece
         }
-        return BoardReport.Position(BoardPosition(String(squares)))
+        return BoardReport.Position(BoardPosition(String(squares)), mayBeTurned = true)
     }
 
     /**
      * ChessLink counts from h1 and works along each rank towards a, rank by rank upwards;
      * [BoardPosition] counts from a8 downwards. So both axes are reversed, not one.
      *
-     * A known limitation, and the reason this is worth spelling out: a ChessLink can be set up with
-     * its cable on either side, and the board sends the same bytes either way. python-mchess spots
-     * the difference by noticing that the starting position has come out mirrored and flips from
-     * then on. Doing the same needs state across frames and a board to test it against, so a
-     * cable-left board will currently read mirrored.
+     * That is with the cable on the right, as python-mchess reads it by default. A ChessLink can be
+     * set up with it on the left, turned half way round, and sends the same bytes: the reply then
+     * starts at a8, which is the order its protocol document gives. So every position says it may
+     * be turned, and [BoardMoveTracker] finds out from the starting position, as python-mchess does.
      */
     private fun boardIndexOf(replyIndex: Int): Int {
         val rankFromBottom = replyIndex / 8

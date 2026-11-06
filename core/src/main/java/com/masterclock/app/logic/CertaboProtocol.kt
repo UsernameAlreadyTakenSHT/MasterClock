@@ -50,28 +50,14 @@ object CertaboProtocol : BoardProtocol {
             // All zeroes is how the board says "nothing here", not a chip whose id happens to be 0.
             tags += if (chunk.all { it.toInt() == 0 }) null else chunk.joinToString("-")
         }
-        return BoardReport.TaggedSquares(reorderToBoard(tags))
+        // In this app's order as they come: a frame starts at a8 and reads along each rank, rank by
+        // rank down to h1, as certabodriver names its squares and cer2nut lays them out. It was read
+        // from a1, and calibration cannot show that up: a starting position read upside down is
+        // self-consistent, and only the moves came out wrong, e2e4 as e7e5. Still from those two
+        // drivers rather than from a board, or from Certabo's own software.
+        return BoardReport.TaggedSquares(tags)
     }
 
-    /**
-     * Certabo starts at a1 and works along each rank towards h, rank by rank upwards; this app
-     * starts at a8 and works down. So the ranks are reversed and the files are not.
-     *
-     * Unverified: the ordering is the convention the community implementations follow, but it is
-     * not stated in anything Certabo publishes, and there is no board here to check it against.
-     * Calibration would hide a mistake rather than reveal one -- learning the mapping from a
-     * wrongly-ordered starting position is perfectly self-consistent, and only the squares in the
-     * resulting moves would be wrong.
-     */
-    private fun reorderToBoard(tagsFromA1: List<String?>): List<String?> {
-        val reordered = arrayOfNulls<String>(BoardPosition.SQUARE_COUNT)
-        for (index in tagsFromA1.indices) {
-            val rankFromBottom = index / 8
-            val file = index % 8
-            reordered[(7 - rankFromBottom) * 8 + file] = tagsFromA1[index]
-        }
-        return reordered.toList()
-    }
 
     private const val BYTES_PER_SQUARE = 5
     private const val NEWLINE: Byte = 0x0A

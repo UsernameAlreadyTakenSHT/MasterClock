@@ -42,7 +42,7 @@ class MillenniumProtocolTest {
     @Test
     fun `the starting position survives a round trip`() {
         val report = MillenniumProtocol.decode(boardReply(BoardPosition.STARTING))
-        assertEquals(BoardReport.Position(BoardPosition.STARTING), report)
+        assertEquals(BoardReport.Position(BoardPosition.STARTING, mayBeTurned = true), report)
     }
 
     @Test
@@ -58,6 +58,43 @@ class MillenniumProtocolTest {
         assertEquals(BoardPosition.EMPTY, report.position[indexOf("h8")])
         assertEquals(BoardPosition.EMPTY, report.position[indexOf("a1")])
         assertEquals(BoardPosition.EMPTY, report.position[indexOf("h1")])
+    }
+
+    /** A reply from a board turned half way round, the cable on its left. */
+    private fun turnedReply(position: BoardPosition) = boardReply(position.turned())
+
+    @Test
+    fun `a board with its cable on the left is read the right way round`() {
+        val tracker = BoardMoveTracker()
+        tracker.onReport(MillenniumProtocol.decode(turnedReply(BoardPosition.STARTING)))
+
+        val squares = BoardPosition.STARTING.squares.toCharArray()
+        squares[indexOf("e4")] = squares[indexOf("e2")]
+        squares[indexOf("e2")] = BoardPosition.EMPTY
+        assertEquals(listOf("e2e4"), tracker.onReport(MillenniumProtocol.decode(turnedReply(BoardPosition(String(squares))))))
+    }
+
+    @Test
+    fun `a board with its cable on the right stays as it comes`() {
+        val tracker = BoardMoveTracker()
+        tracker.onReport(MillenniumProtocol.decode(boardReply(BoardPosition.STARTING)))
+
+        val squares = BoardPosition.STARTING.squares.toCharArray()
+        squares[indexOf("e4")] = squares[indexOf("e2")]
+        squares[indexOf("e2")] = BoardPosition.EMPTY
+        assertEquals(listOf("e2e4"), tracker.onReport(MillenniumProtocol.decode(boardReply(BoardPosition(String(squares))))))
+    }
+
+    @Test
+    fun `pieces set up after connecting do not hold the first move back`() {
+        val tracker = BoardMoveTracker()
+        tracker.onReport(MillenniumProtocol.decode(turnedReply(BoardPosition.EMPTY_BOARD)))
+        tracker.onReport(MillenniumProtocol.decode(turnedReply(BoardPosition.STARTING)))
+
+        val squares = BoardPosition.STARTING.squares.toCharArray()
+        squares[indexOf("d4")] = squares[indexOf("d2")]
+        squares[indexOf("d2")] = BoardPosition.EMPTY
+        assertEquals(listOf("d2d4"), tracker.onReport(MillenniumProtocol.decode(turnedReply(BoardPosition(String(squares))))))
     }
 
     @Test
@@ -139,7 +176,7 @@ class MillenniumProtocolTest {
 
         val done = assembler.offer(reply.copyOfRange(60, reply.size))
         assertEquals(1, done.size)
-        assertEquals(BoardReport.Position(BoardPosition.STARTING), MillenniumProtocol.decode(done.single()))
+        assertEquals(BoardReport.Position(BoardPosition.STARTING, mayBeTurned = true), MillenniumProtocol.decode(done.single()))
     }
 }
 

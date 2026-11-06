@@ -19,6 +19,9 @@ value class BoardPosition(val squares: String) {
 
     operator fun get(index: Int): Char = squares[index]
 
+    /** The board turned half way round: a8 is where h1 was. */
+    fun turned(): BoardPosition = BoardPosition(squares.reversed())
+
     companion object {
         const val SQUARE_COUNT = 64
         const val EMPTY = '.'
