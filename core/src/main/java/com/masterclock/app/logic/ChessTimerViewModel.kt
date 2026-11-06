@@ -795,6 +795,11 @@ fun applyPresetTimeControl(
     )
 }
 
+/** Whether any player's clock runs [mode]: player 1's for everyone, or each one's own. */
+internal fun ChessClockSettings.usesMode(mode: TimerMode): Boolean =
+    if (differentSettingsPerPlayer) listOf(p1Custom, p2Custom, p3Custom, p4Custom).take(numberOfPlayers.coerceIn(1, 4)).any { it.mode == mode }
+    else main.mode == mode
+
 /**
  * The settings a resumed clock runs under: the game's own time control and rules from [saved], and
  * everything else -- the notebook above all -- as it is now in [current].
@@ -804,11 +809,6 @@ fun applyPresetTimeControl(
  * back to what they were. Unlike a preset, the per-player settings come back exactly as saved: this
  * is the same game, not a new one built from a time control.
  */
-/** Whether any player's clock runs [mode]: player 1's for everyone, or each one's own. */
-internal fun ChessClockSettings.usesMode(mode: TimerMode): Boolean =
-    if (differentSettingsPerPlayer) listOf(p1Custom, p2Custom, p3Custom, p4Custom).take(numberOfPlayers.coerceIn(1, 4)).any { it.mode == mode }
-    else main.mode == mode
-
 fun restoreSavedTimeControl(current: ChessClockSettings, saved: ChessClockSettings): ChessClockSettings =
     applyPresetTimeControl(current, saved).copy(
         p1Custom = saved.p1Custom,
@@ -3181,8 +3181,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     /**
      * Applies the time control behind a launcher shortcut.
      *
-     * The init block above loads settings, history and presets asynchronously and nothing exposes a
-     * readiness flag, so a shortcut arriving at startup would be applied against defaults and then
+     * The init block above loads settings, history and presets asynchronously, so a shortcut
+     * arriving at startup would be applied against defaults and then
      * silently overwritten when DataStore resolves. Holding the id until the load finishes makes
      * that ordering explicit rather than leaving it to composition timing.
      */
