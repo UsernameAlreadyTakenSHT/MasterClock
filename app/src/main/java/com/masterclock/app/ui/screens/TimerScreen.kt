@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -627,13 +628,23 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         color = if (isLowTime) backgroundColor.copy(alpha = flashAlpha) else backgroundColor, contentColor = contentColor
     ) {
         val isGlobal = pSettings.mode == TimerMode.PHASES
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = if (isGlobal) Alignment.TopCenter else Alignment.Center) {
+        // Phases keeps its clock clear of the control bar near the foot of a phone. On a large
+            // screen there is room for both, and the top left half of it empty.
+            val largeScreen = LocalConfiguration.current.smallestScreenWidthDp >= LARGE_SCREEN_DP
+            val highUp = isGlobal && !largeScreen
+            BoxWithConstraints(modifier = Modifier.fillMaxSize(), contentAlignment = if (highUp) Alignment.TopCenter else Alignment.Center) {
+                val crowded = settings.numberOfPlayers > 2 && !isGlobal
+                val digitScale = largeScreenDigitScale(
+                    LocalConfiguration.current.smallestScreenWidthDp, maxWidth.value, maxHeight.value,
+                    referenceWidthDp = if (crowded) 200f else 400f,
+                    referenceHeightDp = if (isGlobal) 400f else if (crowded) 160f else 200f,
+                )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally, 
                 modifier = Modifier
                     .then(if (settings.numberOfPlayers > 2 && !isGlobal) Modifier.fittedForTurn(contentRotation) else Modifier)
                     .graphicsLayer { rotationZ = contentRotation }
-                    .padding(top = if (isGlobal) 100.dp else 0.dp)
+                    .padding(top = if (highUp) 100.dp else 0.dp)
             ) {
                 Box(modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center) {
                     when {
@@ -672,14 +683,14 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                 }
                 // Fitted as TimerDisplay fits the clock: at a large font these two wrapped onto a
                 // second line, and "??:??" with it.
-                if (isMoveCounts) { ScaleToFitWidth { Text(text = playerState.moveCount.toString(), softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 80.sp else 140.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)) } }
+                if (isMoveCounts) { ScaleToFitWidth { Text(text = playerState.moveCount.toString(), softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (settings.numberOfPlayers > 2) 80.sp else 140.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)) } }
                 else if (pSettings.mode == TimerMode.HIDDEN && !playerState.isOutOfTime) {
                     val text = if (playerState.revealTimeUntilMs > 0) "${playerState.lastRevealPercentage}%" else "??:??"
-                    ScaleToFitWidth { Text(text = text, softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (settings.numberOfPlayers > 2) 50.sp else 84.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)) }
+                    ScaleToFitWidth { Text(text = text, softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (settings.numberOfPlayers > 2) 50.sp else 84.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)) }
                 }
                 else {
                     val timeToDisplay = shownTimeMs
-                    TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = if (pSettings.mode == TimerMode.PHASES) 100.sp else if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono) 100.sp else 64.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace), settings = settings, isNegative = playerState.isNegative)
+                    TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (pSettings.mode == TimerMode.PHASES) 100.sp else if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono) 100.sp else 64.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace), settings = settings, isNegative = playerState.isNegative)
                 }
                 if (state.phasesFinished || tableClockRanOut(state)) {
                     Text(stringResource(R.string.timer_finished), style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = labelColor, fontWeight = FontWeight.ExtraBold)

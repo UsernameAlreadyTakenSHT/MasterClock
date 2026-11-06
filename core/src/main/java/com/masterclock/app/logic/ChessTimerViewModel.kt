@@ -441,6 +441,21 @@ fun steppedForSpeech(ms: Long): Long = when {
     else -> (ms - ms % 10_000L).coerceAtLeast(10_000L)
 }
 
+/** Where Android counts a screen as large, and stops honouring a lock to portrait. */
+const val LARGE_SCREEN_DP = 600
+
+/**
+ * How much larger a clock's digits are drawn in a face of this size. Exactly 1 on a phone, whose
+ * sizes were chosen by hand. On a tablet those sizes stood in the middle of a face four times too
+ * big. It goes by the face's tighter side, so a landscape tablet, wide and short, is not cut off:
+ * [referenceWidthDp] and [referenceHeightDp] are the space the unscaled digits are at home in.
+ */
+fun largeScreenDigitScale(smallestScreenDp: Int, faceWidthDp: Float, faceHeightDp: Float, referenceWidthDp: Float, referenceHeightDp: Float): Float =
+    if (smallestScreenDp < LARGE_SCREEN_DP) 1f
+    else minOf(faceWidthDp / referenceWidthDp, faceHeightDp / referenceHeightDp).coerceIn(1f, MAX_DIGIT_SCALE)
+
+private const val MAX_DIGIT_SCALE = 3f
+
 /**
  * The name to show players for a mode, as its card in the settings has it. Mode names are not
  * translated. They were made from the constant, and a tile read "Move timer save cap" for the mode
