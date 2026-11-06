@@ -512,7 +512,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         targetValue = when {
             // Over, but lost by nobody: not the loss colour. See ChessClockState.phasesFinished.
             state.phasesFinished || tableClockRanOut(state) -> inactiveColor
-            playerState.isOutOfTime -> if (settings.flagBehavior == FlagBehavior.FLAG) (if (state.firstToFlag == playerIndex) lossColor else if (isActive) activeColor else inactiveColor) else lossColor
+            // Under FLAG the loss colour is for who lost, which with three or four players is everyone
+                // eliminated: only the first had it, and the others looked like clocks still in play.
+                playerState.isOutOfTime -> if (settings.flagBehavior == FlagBehavior.FLAG) (if (state.firstToFlag == playerIndex || (settings.numberOfPlayers > 2 && !pSettings.mode.isWholeTable)) lossColor else if (isActive) activeColor else inactiveColor) else lossColor
             playerState.hasFlagged -> if (isActive) activeColor else inactiveColor
             // Turn-based Gong: only the player whose turn it is shows reflect/move color, everyone
             // else is grey (inactive), same convention as every other mode. Simultaneous Gong has no

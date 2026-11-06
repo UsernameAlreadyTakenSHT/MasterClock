@@ -1920,7 +1920,10 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
                 val next = p.copy(timeRemainingMs = s.fidePeriods[periodIdx + 1].timeMs, currentPeriodIndex = periodIdx + 1, hasFlagged = true)
                 tickPlayer(next, -newTime, s, settings)
             } else {
-                p.copy(hasFlagged = true).finalFlag(-newTime, settings.flagBehavior)
+                // Not marked hasFlagged: that is for a period the player went on from. Set here too,
+                // nothing could tell it from a flag in an earlier period, and clearing this one when
+                // the player came back cleared that as well, a record an arbiter may need.
+                p.finalFlag(-newTime, settings.flagBehavior)
             }
         }
         TimerMode.HIDDEN -> {
@@ -2046,12 +2049,17 @@ internal fun nextPlayerInTurn(current: Int, players: List<PlayerState>, playerCo
  * HOURGLASS, CHRONO_COUNTDOWN and the shared move timers the player who flagged got the FLAGGED
  * label and never the colour. The active player is preferred when several go out at once -- one
  * shared CHRONO clock running out puts everyone out together.
+ *
+ * A first flag stands only while that player is out. Brought back by the arbiter with others still
+ * out, they went on being named: one of the players truly out took no blame, and the one back in
+ * play kept the loss colour.
  */
 internal fun ChessClockState.withFirstFlag(before: ChessClockState, active: Int): ChessClockState {
-    if (firstToFlag != null) return this
-    val newlyOut = players.indices.filter { players[it].isOutOfTime && before.players.getOrNull(it)?.isOutOfTime != true }.map { it + 1 }
-    if (newlyOut.isEmpty()) return this
-    return copy(firstToFlag = if (active in newlyOut) active else newlyOut.first())
+    if (firstToFlag != null && players.getOrNull(firstToFlag - 1)?.isOutOfTime == true) return this
+    val out = players.indices.filter { players[it].isOutOfTime }
+    val candidates = (if (firstToFlag != null) out else out.filter { before.players.getOrNull(it)?.isOutOfTime != true }).map { it + 1 }
+    if (candidates.isEmpty()) return this
+    return copy(firstToFlag = if (active in candidates) active else candidates.first())
 }
 
 /**
@@ -2207,7 +2215,9 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
                     if (isReflection) {
                         newTime = (ps.gongMoveMs.coerceAtLeast(MIN_GONG_PHASE_MS) + newTime).coerceAtLeast(0)
                         isReflection = false
-                        if (idx == active) gong = true
+                        // Anyone's, when all play at once: with their own times, a player's phases
+                        // end when player 1's do not, and only player 1's were heard.
+                        if (isSim || idx == active) gong = true
                     } else {
                         newTime = (ps.gongReflectionMs.coerceAtLeast(MIN_GONG_PHASE_MS) + newTime).coerceAtLeast(0)
                         isReflection = true
@@ -2300,11 +2310,19 @@ internal fun PlayerState.credited(amountMs: Long, flagBehavior: FlagBehavior): P
  */
 internal fun PlayerState.arbiterCredited(amountMs: Long, flagBehavior: FlagBehavior): PlayerState {
     val c = credited(amountMs, flagBehavior)
-    val revived = if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false) else c
-    // Back in play, the flag is gone with it: hasFlagged left behind read PERIOD FLAG under a FIDE
-    // clock that had flagged for real. Compared with the state before: under NEGATIVE and REVERSE
-    // credited() already brings the player back, and the test on its result alone never fired.
-    return if (isOutOfTime && !revived.isOutOfTime) revived.copy(hasFlagged = false) else revived
+    return if (c.isOutOfTime && !c.isOverrun(flagBehavior) && c.timeRemainingMs > 0) c.copy(isOutOfTime = false) else c
+}
+
+/**
+ * A Japanese byoyomi player the arbiter brought back. They flagged with no period left, and the
+ * period they are back in has to count: they played on at "0 periods" on the face and to a screen
+ * reader. A game with no byoyomi at all has none to go back to, though the flag marked it as in one,
+ * and the next move handed the player a byoyomi period the game does not have, at every move after.
+ */
+private fun PlayerState.backInByoyomi(s: PlayerSettings): PlayerState = when {
+    s.byoyomiPeriods <= 0 -> copy(isInByoyomi = false)
+    byoyomiPeriodsRemaining <= 0 -> copy(byoyomiPeriodsRemaining = 1)
+    else -> this
 }
 
 /**
@@ -2477,7 +2495,11 @@ internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountM
             if (wholeTable) p.copy(timeRemainingMs = (p.timeRemainingMs + amountMs).coerceAtLeast(0))
             else if (idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
                 val ps = settings.playerSettings(idx + 1)
-                if (ps.mode == TimerMode.FAST_MOVE && ps.fastMoveMode == FastMoveType.ACCELERATE) it.withAccelerateMarkFrom(p) else it
+                when {
+                    ps.mode == TimerMode.FAST_MOVE && ps.fastMoveMode == FastMoveType.ACCELERATE -> it.withAccelerateMarkFrom(p)
+                    ps.mode == TimerMode.BYOYOMI_JAPANESE && p.isOutOfTime && !it.isOutOfTime -> it.backInByoyomi(ps)
+                    else -> it
+                }
             }
             else p
         })
@@ -2886,9 +2908,6 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             // Death (no delay) from US Delay -- both are non-Fischer, only the latter reads incrementMs.
             val nextDelay = if (!activePeriod.isFischer && activePeriod.hasDelay) activePeriod.incrementMs else 0L
             tempP.copy(currentPeriodIndex = periodIdx, hasFlagged = flagged, delayRemainingMs = nextDelay).withSignedTime(nextTime, settings.flagBehavior)
-                // An overrun the period's time paid off ends the flag that caused it: under NEGATIVE
-                // and REVERSE, a flag before move 40 read PERIOD FLAG for the rest of the game.
-                .let { if (p.isOutOfTime && !it.isOutOfTime) it.copy(hasFlagged = false) else it }
         }
         TimerMode.FAST_MOVE -> {
             // TRANSFER is handled above (needs to update the opponent too); only SHRINK/ACCELERATE reach here.
@@ -2908,7 +2927,12 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         else -> tempP
     }
     val newList = state.players.toMutableList().apply { this[playerIndex - 1] = newP }
-    return state.copy(players = newList)
+    // A move count has no overrun to play on into, which is all NEGATIVE and REVERSE keep a flag from
+    // ending the game for. So it never ended: the counter stayed at 0, "out of time", and the clocks
+    // went on being passed. Over for the table, as [isGameOver] takes it for a run of phases.
+    val outOfMoves = s.mode == TimerMode.MOVE_COUNTS_DOWN && newP.isOutOfTime &&
+        (settings.flagBehavior == FlagBehavior.NEGATIVE || settings.flagBehavior == FlagBehavior.REVERSE)
+    return state.copy(players = newList, phasesFinished = state.phasesFinished || outOfMoves)
 }
 
 /** Tick rate while the smallest digit on screen is hundredths of a second. */

@@ -117,7 +117,7 @@ class FideMoveTotalsTest {
 
     @Test
     fun `a flagged player the arbiter brings back is no longer marked as flagged`() {
-        val out = PlayerState(timeRemainingMs = 0, isOutOfTime = true, hasFlagged = true)
+        val out = PlayerState(timeRemainingMs = 0, isOutOfTime = true)
         val back = out.arbiterCredited(60_000, FlagBehavior.FLAG)
         assertFalse(back.isOutOfTime || back.hasFlagged)
     }
@@ -144,7 +144,7 @@ class FideMoveTotalsTest {
     fun `the arbiter's move brings a player flagged under FREEZE back with the period's time`() {
         val s = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = periods(40, 0))
         val settings = ChessClockSettings(main = s, forcedMoveCounter = true, flagBehavior = FlagBehavior.FREEZE)
-        val out = PlayerState(timeRemainingMs = 0, moveCount = 39, isOutOfTime = true, hasFlagged = true)
+        val out = PlayerState(timeRemainingMs = 0, moveCount = 39, isOutOfTime = true)
         val next = adjustFideMoveCount(out, 1, s, settings)
         assertEquals(1, next.currentPeriodIndex)
         assertEquals(600_000, next.timeRemainingMs)
@@ -154,7 +154,7 @@ class FideMoveTotalsTest {
     @Test
     fun `a flag under NEGATIVE or REVERSE ends when the arbiter's time pays it off`() {
         listOf(FlagBehavior.NEGATIVE, FlagBehavior.REVERSE).forEach { fb ->
-            val over = PlayerState(timeRemainingMs = 10_000, isOutOfTime = true, isNegative = fb == FlagBehavior.NEGATIVE, hasFlagged = true)
+            val over = PlayerState(timeRemainingMs = 10_000, isOutOfTime = true, isNegative = fb == FlagBehavior.NEGATIVE)
             val back = over.arbiterCredited(60_000, fb)
             assertFalse(fb.name, back.isOutOfTime || back.hasFlagged)
         }
@@ -164,7 +164,7 @@ class FideMoveTotalsTest {
     fun `a flag before move 40 ends when move 40 pays the overrun off`() {
         val s = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = periods(40, 0))
         val settings = ChessClockSettings(main = s, forcedMoveCounter = true, flagBehavior = FlagBehavior.NEGATIVE)
-        val over = PlayerState(timeRemainingMs = 20_000, moveCount = 39, isOutOfTime = true, isNegative = true, hasFlagged = true)
+        val over = PlayerState(timeRemainingMs = 20_000, moveCount = 39, isOutOfTime = true, isNegative = true)
         val after = computePostMoveState(ChessClockState(players = listOf(over, PlayerState(0)), activePlayer = 1), 1, 0, settings, s).players[0]
         assertFalse(after.isOutOfTime || after.hasFlagged)
     }
