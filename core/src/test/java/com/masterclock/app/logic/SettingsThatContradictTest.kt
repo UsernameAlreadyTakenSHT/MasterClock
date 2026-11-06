@@ -52,6 +52,24 @@ class SettingsThatContradictTest {
         assertEquals(15_000, computePostMoveState(state, 1, 5_000, settings, s).players[0].timeRemainingMs)
     }
 
+    private fun overtimeCue(p: PlayerState, delta: Long): TickCue {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_OVERTIME, moveTimeMs = 30_000)
+        val state = ChessClockState(listOf(p, PlayerState(30_000)), activePlayer = 1)
+        return tickClock(state, delta, ChessClockSettings(main = s)).cue!!
+    }
+
+    @Test
+    fun `Overtime's voice counts the reserve behind the move`() {
+        val cue = overtimeCue(PlayerState(11_000, secondaryTimeMs = 60_000), 2_000)
+        assertEquals(71_000L to 69_000L, cue.timeLeft)
+    }
+
+    @Test
+    fun `Overtime's voice counts down the reserve once the move is spent`() {
+        val cue = overtimeCue(PlayerState(0, secondaryTimeMs = 11_000), 2_000)
+        assertEquals(11_000L to 9_000L, cue.timeLeft)
+    }
+
     @Test
     fun `a count of no moves starts from one`() {
         val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.MOVE_COUNTS_DOWN, maxMoves = 0))

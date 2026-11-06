@@ -350,6 +350,9 @@ internal fun loggedMoveTimeMs(state: ChessClockState, player: PlayerState, mode:
     else -> countdownTimeMs(state, player, mode).coerceAtLeast(0)
 }
 
+/** All an Overtime player has left: what remains of the move, and the reserve behind it. */
+internal fun PlayerState.overtimeTimeLeftMs(): Long = timeRemainingMs.coerceAtLeast(0) + secondaryTimeMs
+
 /** An Overtime player with the reserve in place of a spent move clock; see [alertTimeMs]. */
 internal fun PlayerState.withOvertimeClock(): PlayerState =
     if (!isOutOfTime && timeRemainingMs <= 0) copy(timeRemainingMs = secondaryTimeMs) else this
@@ -2130,8 +2133,12 @@ private fun hourglassGains(players: List<PlayerState>, active: Int, before: Play
     return recipients.associateWith { idx -> share + if (leastFirst.indexOf(idx) < remainder) 1 else 0 }
 }
 
-/** A player's state before and after a tick, for the audio and voice cues to compare. */
-internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int)
+/**
+ * A player's state before and after a tick, for the audio and voice cues to compare. [timeLeft] is
+ * the time really left, before and after, where that is more than the clock counting down: what the
+ * voice's "10 seconds" goes by.
+ */
+internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int, val timeLeft: Pair<Long, Long>? = null)
 
 /**
  * What [tickCoupled] decided: the next state, and the side effects the ViewModel is to carry out
@@ -2785,7 +2792,9 @@ internal fun tickClock(state: ChessClockState, delta: Long, settings: ChessClock
     val newStateP = tickPlayer(pActive, delta, s, settings)
     val cue = when (s.mode) {
         TimerMode.MOVE_TIMER_GLOBAL -> TickCue(pActive.withBindingClock(), newStateP.withBindingClock(), active)
-        TimerMode.MOVE_TIMER_OVERTIME -> TickCue(pActive.withOvertimeClock(), newStateP.withOvertimeClock(), active)
+        // The beeps follow the move clock, which is about to pass to the reserve. The voice says what
+        // is left, and "10 seconds" with minutes of reserve behind it was a scare over nothing.
+        TimerMode.MOVE_TIMER_OVERTIME -> TickCue(pActive.withOvertimeClock(), newStateP.withOvertimeClock(), active, pActive.overtimeTimeLeftMs() to newStateP.overtimeTimeLeftMs())
         else -> TickCue(pActive, newStateP, active)
     }
     return ClockTick(
@@ -3590,7 +3599,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             val result = tickClock(state, delta, settings)
             result.cue?.let { cue ->
                 handleAudio(cue.before, cue.after, settings, cue.playerIndex)
-                handleVoice(cue.before, cue.after, settings, cue.playerIndex)
+                handleVoice(cue.before, cue.after, settings, cue.playerIndex, cue.timeLeft)
             }
             result.phaseChangedFrom?.let { onPhaseTransition(it, result.state) }
             result.coupled?.let { coupled ->
@@ -3772,7 +3781,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         else voiceManager.speak(CoreR.string.voice_phase, settings.voiceVolume, index + 1)
     }
 
-    private fun handleVoice(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int) {
+    private fun handleVoice(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int, timeLeft: Pair<Long, Long>? = null) {
         if (!settings.voiceAnnouncementsEnabled) return
 
         val vol = settings.voiceVolume
@@ -3798,11 +3807,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Not either side of a flag: an overrun is stored as a positive time, and an increment taking
         // 1:01.5 over down to 0:59.5 over read as coming down through a minute -- "one minute left"
         // to a player a minute past their time.
-        val time = newState.timeRemainingMs
+        val previous = timeLeft?.first ?: oldState.timeRemainingMs
+        val time = timeLeft?.second ?: newState.timeRemainingMs
         val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN || oldState.isOutOfTime || newState.isOutOfTime) emptyList()
             else listOf(60000L to CoreR.string.voice_one_minute_left, 30000L to CoreR.string.voice_thirty_seconds_left, 10000L to CoreR.string.voice_ten_seconds_left)
         for ((t, words) in thresholds) {
-            if (oldState.timeRemainingMs > t && time <= t) voiceManager.speak(words, vol)
+            if (previous > t && time <= t) voiceManager.speak(words, vol)
         }
 
         // 3. FIDE Periods
