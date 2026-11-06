@@ -41,8 +41,21 @@ inside a `minSdk 24` module and reached a release: the check that exists for pre
 pointed somewhere else. There is no separate `:core:lint*` task in the bar because these two now
 cover it; do not remove the `lint` blocks without adding one.
 
-Unit tests live in `core/src/test`. The repository has **no** instrumentation tests, so `core` is
-where behaviour gets pinned: put logic there and test it there rather than in a composable.
+Unit tests live in `core/src/test`, and `core` is where behaviour gets pinned: put logic there and
+test it there rather than in a composable.
+
+`app/src/androidTest` holds the few things `core` cannot see: that a press reaches the clock, that a
+dialog stands before Reset, and what TalkBack is handed. They need a device or an emulator, so they
+are not in the bar above and neither CI runs them. Run them when the clock screen changes, and note
+that they reset the app's settings on that device:
+
+```sh
+./gradlew :app:connectedCompleteDebugAndroidTest
+```
+
+To watch TalkBack itself on an emulator, keep `uiautomator` away from it: a UiAutomation session
+suspends other accessibility services, without a word. `adb shell input` skips touch exploration
+altogether; `adb emu event send` gives a real finger.
 
 ### When a dependency bump fails verification
 
