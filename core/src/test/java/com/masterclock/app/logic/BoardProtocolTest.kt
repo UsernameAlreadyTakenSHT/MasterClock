@@ -39,19 +39,25 @@ class BoardProtocolTest {
         // frame arrived on a GATT notification or a serial endpoint.
         val frame = byteArrayOf(0x0A, 0x1B.toByte(), 0x2C)
         assertEquals(RawCaptureProtocol.decode(frame), RawCaptureProtocol.decode(frame.copyOf()))
-        assertEquals(BoardReport.Moves(listOf("0a 1b 2c")), RawCaptureProtocol.decode(frame))
+        assertEquals(BoardReport.Raw("0a 1b 2c"), RawCaptureProtocol.decode(frame))
     }
 
     @Test
     fun `raw capture reports a payload as hex`() {
-        assertEquals(BoardReport.Moves(listOf("01 a0 ff")), RawCaptureProtocol.decode(byteArrayOf(0x01, 0xA0.toByte(), 0xFF.toByte())))
+        assertEquals(BoardReport.Raw("01 a0 ff"), RawCaptureProtocol.decode(byteArrayOf(0x01, 0xA0.toByte(), 0xFF.toByte())))
     }
 
     @Test
     fun `high bytes are not sign-extended`() {
         // Kotlin's Byte is signed, so a naive formatter turns 0x80 into "ffffff80" and the trace
         // becomes unreadable exactly where a board's status bytes live.
-        assertEquals(BoardReport.Moves(listOf("80 ff 7f 00")), RawCaptureProtocol.decode(byteArrayOf(0x80.toByte(), 0xFF.toByte(), 0x7F, 0x00)))
+        assertEquals(BoardReport.Raw("80 ff 7f 00"), RawCaptureProtocol.decode(byteArrayOf(0x80.toByte(), 0xFF.toByte(), 0x7F, 0x00)))
+    }
+
+    @Test
+    fun `what an unknown board sends never reaches the clock as a move`() {
+        val report = RawCaptureProtocol.decode(byteArrayOf(0x01, 0x24, 0x58))
+        assertEquals(emptyList<String>(), BoardMoveTracker().onReport(report))
     }
 
     @Test

@@ -177,7 +177,9 @@ class BluetoothSerialBoardManager(private val context: Context) {
 
             val chunk = buffer.copyOf(read)
             val payloads = assembler?.offer(chunk) ?: listOf(chunk)
-            val moves = payloads.flatMap { moveTracker.onReport(protocol.decode(it)) }
+            val reports = payloads.map { protocol.decode(it) }
+            reports.filterIsInstance<BoardReport.Raw>().lastOrNull()?.let { _lastMove.value = it.hex }
+            val moves = reports.flatMap { moveTracker.onReport(it) }
             // The hint disappears the moment the board has been shown its pieces, which is the only
             // feedback the player gets that the setup worked.
             _needsCalibration.value = protocol.needsPieceCalibration && moveTracker.needsCalibration

@@ -406,7 +406,9 @@ class BluetoothBoardManager(private val context: Context) {
             // Answer before acting on it: a board waiting for an acknowledgement sends nothing more
             // until it arrives, so a slow reply costs the next move, not just this one.
             protocol.replyTo(message)?.let { reply -> writesOf(reply).forEach { enqueue(it) } }
-            moveTracker.onReport(protocol.decode(message)).forEach { move ->
+            val report = protocol.decode(message)
+            if (report is BoardReport.Raw) _lastMove.value = report.hex
+            moveTracker.onReport(report).forEach { move ->
                 _lastMove.value = move
                 _onMoveReceivedCallback?.invoke(move)
             }

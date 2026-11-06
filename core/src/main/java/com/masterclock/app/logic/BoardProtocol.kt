@@ -125,8 +125,16 @@ sealed interface BoardReport {
      */
     data class TaggedSquares(val tags: List<String?>) : BoardReport
 
-    /** Moves named directly, which only the raw-capture fallback and a few makes produce. */
+    /** Moves named directly, which a few makes produce. */
     data class Moves(val moves: List<String>) : BoardReport
+
+    /**
+     * What an unknown board sent, as hex: something to read on the screen, never a move. It was
+     * reported as one, and since this is the fallback for any device the app does not recognise,
+     * every keep-alive and battery level from a pair of headphones switched the clock, or went into
+     * the game's record as the move "01 24 58".
+     */
+    data class Raw(val hex: String) : BoardReport
 
     /** A payload that says nothing about the board: a keep-alive, a battery level, a malformed frame. */
     data object Ignored : BoardReport
@@ -153,7 +161,7 @@ class BoardMoveTracker {
 
     fun onReport(report: BoardReport): List<String> = when (report) {
         is BoardReport.Moves -> report.moves
-        is BoardReport.Ignored -> emptyList()
+        is BoardReport.Raw, is BoardReport.Ignored -> emptyList()
         is BoardReport.Position -> applyPosition(report.position)
         is BoardReport.TaggedSquares ->
             calibration.identify(report.tags)?.let { applyPosition(it) } ?: emptyList()
@@ -209,7 +217,7 @@ class BoardMoveTracker {
 }
 
 /**
- * The fallback used until a make is implemented: subscribe to everything that notifies, and report
+ * The fallback used until a make is implemented: subscribe to everything that notifies, and show
  * each payload as hex.
  *
  * This is deliberately not a pretend board. It is the tool for adding the first real one -- connect
@@ -223,7 +231,7 @@ object RawCaptureProtocol : BoardProtocol {
     override val ble = BleAddressing(serviceUuid = null, notifyCharacteristicUuid = null)
 
     override fun decode(payload: ByteArray): BoardReport =
-        if (payload.isEmpty()) BoardReport.Ignored else BoardReport.Moves(listOf(payload.toHexString()))
+        if (payload.isEmpty()) BoardReport.Ignored else BoardReport.Raw(payload.toHexString())
 }
 
 /** Lowercase hex, space-separated, as a BLE trace would show it. */
@@ -232,7 +240,7 @@ fun ByteArray.toHexString(): String = joinToString(" ") { "%02x".format(it) }
 object BoardProtocols {
     /**
      * Every make the app can talk to, most specific first; [RawCaptureProtocol] must stay last
-     * because it matches nothing and is only ever chosen explicitly.
+     * because it matches nothing of its own: it is what the lookups below fall back to.
      */
     val known: List<BoardProtocol> = listOf(
         OpenBoardProtocol, ChessnutProtocol, DgtProtocol, MillenniumProtocol, CertaboProtocol,

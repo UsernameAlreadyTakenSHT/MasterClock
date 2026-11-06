@@ -268,7 +268,9 @@ class UsbBoardManager(private val context: Context) {
                 // A serial read is a slice of a byte stream, not a message. Where the make says how
                 // its messages are delimited, put them back together first.
                 val payloads = assembler?.offer(chunk) ?: listOf(chunk)
-                val moves = payloads.flatMap { tracker.onReport(protocol.decode(it)) }
+                val reports = payloads.map { protocol.decode(it) }
+                reports.filterIsInstance<BoardReport.Raw>().lastOrNull()?.let { _lastMove.value = it.hex }
+                val moves = reports.flatMap { tracker.onReport(it) }
                 // The hint disappears the moment the board has been shown its pieces, which is the
                 // only feedback the player gets that the setup worked.
                 _needsCalibration.value = protocol.needsPieceCalibration && tracker.needsCalibration
