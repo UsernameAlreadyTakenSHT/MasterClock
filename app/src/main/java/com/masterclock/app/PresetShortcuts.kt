@@ -7,6 +7,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.masterclock.app.logic.FlavorConfig
 import com.masterclock.app.logic.ShortcutTarget
+import com.masterclock.app.logic.takeWholeChars
 
 /**
  * Publishes the launcher's long-press shortcuts.
@@ -34,8 +35,8 @@ object PresetShortcuts {
             .takeIf { it > 0 } ?: DESIRED_COUNT
         val shortcuts = targets.take(minOf(DESIRED_COUNT, allowed)).map { target ->
             ShortcutInfoCompat.Builder(context, target.id)
-                .setShortLabel(target.label.take(18))
-                .setLongLabel(target.label.take(40))
+                .setShortLabel(target.label.takeWholeChars(18))
+                .setLongLabel(target.label.takeWholeChars(40))
                 .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
                 .setIntent(
                     Intent(context, MainActivity::class.java).apply {
@@ -55,6 +56,21 @@ object PresetShortcuts {
      */
     fun disable(context: Context, id: String, message: String) {
         runCatching { ShortcutManagerCompat.disableShortcuts(context, listOf(id), message) }
+    }
+
+    /**
+     * Disables the pinned shortcuts of games no longer in the history, [liveIds] being those still
+     * there. Trimmed or cleared, a game's shortcut stayed enabled, and tapping it opened the app and
+     * did nothing. Only for a history that has been loaded: from the empty list it starts as, this
+     * would disable all of them.
+     */
+    fun disableGoneGames(context: Context, liveIds: Set<String>, message: String) {
+        runCatching {
+            val gone = ShortcutManagerCompat.getShortcuts(context, ShortcutManagerCompat.FLAG_MATCH_PINNED)
+                .filter { it.id.startsWith("game:") && it.id !in liveIds && it.isEnabled }
+                .map { it.id }
+            if (gone.isNotEmpty()) ShortcutManagerCompat.disableShortcuts(context, gone, message)
+        }
     }
 
     /**

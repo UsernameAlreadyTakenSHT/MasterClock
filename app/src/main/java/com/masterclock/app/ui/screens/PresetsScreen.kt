@@ -46,6 +46,10 @@ data class ClockPreset(
     val setsFlagBehavior: Boolean = false,
 )
 
+/** The words of a time control's label in this language; see [TimeControlWords]. */
+@Composable
+fun timeControlWords() = TimeControlWords(stringResource(R.string.label_per_move), stringResource(R.string.label_moves))
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PresetsScreen(
@@ -216,7 +220,8 @@ fun PresetsScreen(
                             // The time control, not player 1's starting clock: that read "90m0s"
                             // for 1:30, counted a first-move bonus into the time -- 5+3 as "5m3s" --
                             // and never showed an increment, so 5+0 and 5+3 looked the same.
-                            val timeInfo = remember(log.settings) { timeControlLabel(log.settings) }
+                            val words = timeControlWords()
+                            val timeInfo = remember(log.settings, words) { timeControlLabel(log.settings, words) }
 
                             // Room for a time control that wraps -- a FIDE one runs long -- before
                             // the date, which three lines cut off with no sign anything was missing.

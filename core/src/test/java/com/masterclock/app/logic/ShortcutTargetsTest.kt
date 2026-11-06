@@ -199,4 +199,26 @@ class ShortcutTargetsTest {
             FidePeriod(timeMs = 1_800_000, incrementMs = 30_000, movesToNext = 0, isFischer = false, hasDelay = true),
         ))
     }
+
+    @Test
+    fun `a label speaks the language it is given`() {
+        val words = TimeControlWords(perMove = "/ coup", moves = "coups")
+        assertEquals("30s / coup", timeControlLabel(ChessClockSettings(main = PlayerSettings(mode = TimerMode.MOVE_TIMER_STANDARD, moveTimeMs = 30_000)), words))
+        assertEquals("40 coups", timeControlLabel(ChessClockSettings(main = PlayerSettings(mode = TimerMode.MOVE_COUNTS_DOWN, maxMoves = 40)), words))
+        assertEquals("30s / coup, 10 min", timeControlLabel(ChessClockSettings(main = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL, moveTimeMs = 30_000, initialTimeMs = 600_000)), words))
+    }
+
+    @Test
+    fun `a mode is named as on its card`() {
+        assertEquals("Save & Cap", TimerMode.MOVE_TIMER_SAVE_CAP.displayName())
+        assertEquals("Sudden Death", TimerMode.SUDDEN_DEATH.displayName())
+    }
+
+    @Test
+    fun `a shortened label does not end on half an emoji`() {
+        val name = "a".repeat(17) + "\uD83D\uDE00"
+        assertEquals("a".repeat(17), name.takeWholeChars(18))
+        assertEquals(name, name.takeWholeChars(19))
+        assertEquals("short", "short".takeWholeChars(18))
+    }
 }

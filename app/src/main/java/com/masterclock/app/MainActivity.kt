@@ -151,9 +151,13 @@ class MainActivity : ComponentActivity() {
             // customPresets, and finishing a game moves gameHistory. Not before the stored state is
             // in: the first composition published from the empty lists -- the two built-ins alone --
             // and a process killed in that window left the launcher with nothing else.
-            LaunchedEffect(customPresets, gameHistory, isReady) {
-                if (!isReady) return@LaunchedEffect
-                PresetShortcuts.publish(context, buildShortcutTargets(gameHistory, customPresets))
+            val historyLoaded by timerViewModel.isHistoryLoaded.collectAsState()
+            val shortcutWords = timeControlWords()
+            val gameGone = stringResource(R.string.game_shortcut_gone)
+            LaunchedEffect(customPresets, gameHistory, historyLoaded, shortcutWords) {
+                if (!historyLoaded) return@LaunchedEffect
+                PresetShortcuts.publish(context, buildShortcutTargets(gameHistory, customPresets, words = shortcutWords))
+                PresetShortcuts.disableGoneGames(context, gameHistory.map { "game:${it.startTime}" }.toSet(), gameGone)
             }
 
             // Force Screen Awake, Brightness & Fullscreen logic
@@ -527,7 +531,7 @@ class MainActivity : ComponentActivity() {
                                         timerViewModel.updateSettings(
                                             applyPresetTimeControl(
                                                 timerViewModel.settings.value, set,
-                                                keepFlagBehavior = builtIn != null && !builtIn.setsFlagBehavior,
+                                                keepFlagBehavior = builtIn != null && builtInKeepsFlagBehavior(builtIn.setsFlagBehavior),
                                                 keepFirstMoveBonus = builtIn != null,
                                                 keepTable = builtIn != null,
                                             ),

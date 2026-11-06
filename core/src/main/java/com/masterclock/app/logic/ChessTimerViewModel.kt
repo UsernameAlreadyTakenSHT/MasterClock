@@ -370,18 +370,35 @@ fun spokenDuration(ms: Long): SpokenDuration {
 }
 
 /**
- * The name to show players for a mode.
- *
- * Deriving it from the constant mangles initialisms ("Us delay", "Fide periods"), so those are
- * spelled out rather than computed; everything else falls through to the generic prettifier.
+ * The name to show players for a mode, as its card in the settings has it. Mode names are not
+ * translated. They were made from the constant, and a tile read "Move timer save cap" for the mode
+ * the settings call Save & Cap.
  */
 fun TimerMode.displayName(): String = when (this) {
-    TimerMode.US_DELAY -> "US delay"
-    TimerMode.FIDE_PERIODS -> "FIDE periods"
+    TimerMode.SUDDEN_DEATH -> "Sudden Death"
+    TimerMode.FISCHER -> "Fischer"
+    TimerMode.BRONSTEIN -> "Bronstein"
+    TimerMode.US_DELAY -> "US Delay"
+    TimerMode.MOVE_TIMER_STANDARD -> "Move Timer"
+    TimerMode.MOVE_TIMER_SAVE_CAP -> "Save & Cap"
+    TimerMode.MOVE_TIMER_OVERTIME -> "Overtime"
+    TimerMode.MOVE_TIMER_GLOBAL -> "Global"
+    TimerMode.MOVE_TIMER_SHARED -> "Shared (Auto)"
+    TimerMode.MOVE_TIMER_GLOBAL_SHARED -> "Global Shared"
+    TimerMode.HOURGLASS -> "Hourglass"
     TimerMode.BYOYOMI_JAPANESE -> "Byoyomi (Japanese)"
     TimerMode.BYOYOMI_CANADIAN -> "Byoyomi (Canadian)"
-    TimerMode.BYOYOMI_PROGRESSIVE -> "Byoyomi (progressive)"
-    else -> name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+    TimerMode.BYOYOMI_PROGRESSIVE -> "Byoyomi (Progressive)"
+    TimerMode.CHRONO_COUNTDOWN -> "Chrono Countdown"
+    TimerMode.CHRONO_COUNTUP -> "Chrono Countup"
+    TimerMode.MOVE_COUNTS_UP -> "Move Counts Up"
+    TimerMode.MOVE_COUNTS_DOWN -> "Move Counts Down"
+    TimerMode.FIDE_PERIODS -> "FIDE Periods"
+    TimerMode.PHASES -> "Phases"
+    TimerMode.RANDOM -> "Random"
+    TimerMode.HIDDEN -> "Hidden"
+    TimerMode.GONG -> "Gong"
+    TimerMode.FAST_MOVE -> "Fast Move"
 }
 
 @Serializable
@@ -730,6 +747,13 @@ data class SavedPreset(
  * tap on a built-in turned a draughts player back to chess -- the export became PGN -- and a table
  * of four back to two. A built-in that sets each player's time (Armageddon) needs two players.
  */
+/**
+ * Whether a built-in leaves the player's flag behaviour alone: unless it is about it, and only in a
+ * build where the player can set it. Lite has no Behavior tab, so "Scrabble 25'" put it on REVERSE
+ * with nothing to take it off again; there the other built-ins bring their own, which is the default.
+ */
+fun builtInKeepsFlagBehavior(setsFlagBehavior: Boolean = false): Boolean = !setsFlagBehavior && FlavorConfig.hasFullSettingsTabs()
+
 fun applyPresetTimeControl(
     current: ChessClockSettings,
     preset: ChessClockSettings,
@@ -826,11 +850,18 @@ val BUILTIN_SHORTCUT_PRESETS: List<ShortcutTarget> = listOf(
     ),
 )
 
+/**
+ * The words in a time control's label, which the screens translate. Everything else in one is a
+ * mode's name, which stays as on its card, or a time. They were English in every language, on the
+ * Last Games tiles and on the launcher's shortcuts.
+ */
+data class TimeControlWords(val perMove: String = "/ move", val moves: String = "moves")
+
 /** A time control in short, as a shortcut and a Last Games tile name it; see shortcutLabelFor. */
-fun timeControlLabel(settings: ChessClockSettings): String = shortcutLabelFor(settings)
+fun timeControlLabel(settings: ChessClockSettings, words: TimeControlWords = TimeControlWords()): String = shortcutLabelFor(settings, words)
 
 /** Short "5 min" / "3 min + 2s" label for a shortcut, falling back to the mode name. */
-private fun shortcutLabelFor(settings: ChessClockSettings): String {
+private fun shortcutLabelFor(settings: ChessClockSettings, words: TimeControlWords): String {
     val s = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
 
     // A drawn mode gets a fresh roll on every launch, so naming its configured base time would
@@ -848,7 +879,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
     // sudden death would.
     // With no move time they are named, not labelled "10 min" from the field they do not read.
     if (s.mode == TimerMode.MOVE_TIMER_STANDARD || s.mode == TimerMode.MOVE_TIMER_SHARED || s.mode == TimerMode.MOVE_TIMER_SAVE_CAP) {
-        return if (s.moveTimeMs > 0) "${s.moveTimeMs / 1000}s / move" else s.mode.displayName()
+        return if (s.moveTimeMs > 0) "${s.moveTimeMs / 1000}s ${words.perMove}" else s.mode.displayName()
     }
 
     // FIDE periods ignore initialTimeMs and incrementMs, and were labelled from them: a 90'/40 +
@@ -888,9 +919,9 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
     when (s.mode) {
         TimerMode.GONG -> return "Gong ${duration(s.gongReflectionMs)} / ${duration(s.gongMoveMs)}"
         TimerMode.PHASES -> return "Phases (${s.phases.size}), ${duration(s.phases.sumOf { it.timeMs })}"
-        TimerMode.MOVE_COUNTS_DOWN -> return "${s.maxMoves} moves"
+        TimerMode.MOVE_COUNTS_DOWN -> return "${s.maxMoves} ${words.moves}"
         TimerMode.MOVE_COUNTS_UP, TimerMode.CHRONO_COUNTUP -> return s.mode.displayName()
-        TimerMode.FAST_MOVE -> if (s.fastMoveMode == FastMoveType.TRANSFER && s.moveTimeMs > 0) return "${duration(s.moveTimeMs)} / move"
+        TimerMode.FAST_MOVE -> if (s.fastMoveMode == FastMoveType.TRANSFER && s.moveTimeMs > 0) return "${duration(s.moveTimeMs)} ${words.perMove}"
         else -> {}
     }
 
@@ -898,7 +929,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
         return s.mode.displayName()
     }
     val base = duration(s.initialTimeMs)
-    if ((s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || s.mode == TimerMode.MOVE_TIMER_GLOBAL || s.mode == TimerMode.MOVE_TIMER_OVERTIME) && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s / move, $base"
+    if ((s.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED || s.mode == TimerMode.MOVE_TIMER_GLOBAL || s.mode == TimerMode.MOVE_TIMER_OVERTIME) && s.moveTimeMs > 0) return "${s.moveTimeMs / 1000}s ${words.perMove}, $base"
     // Byoyomi's own time was left out, so a 10-minute game with five 30-second periods read
     // "10 min" -- and, with the increment field's default, "10 min + 10s".
     val byoyomi = s.byoyomiTimeMs.let { if (it % 60_000 == 0L && it > 0) "${it / 60_000}min" else "${it / 1000}s" }
@@ -913,6 +944,10 @@ private fun shortcutLabelFor(settings: ChessClockSettings): String {
     return if (increment > 0) "$base + ${increment}s" else base
 }
 
+/** The first [n] characters at most, never half of an emoji: take(18) could end on half of a pair. */
+fun String.takeWholeChars(n: Int): String =
+    if (length > n && n > 0 && this[n - 1].isHighSurrogate()) take(n - 1) else take(n)
+
 /**
  * Picks the at most [max] time controls worth a launcher shortcut.
  *
@@ -925,10 +960,11 @@ fun buildShortcutTargets(
     history: List<GameLog>,
     presets: List<SavedPreset>,
     max: Int = 4,
+    words: TimeControlWords = TimeControlWords(),
 ): List<ShortcutTarget> {
     val targets = mutableListOf<ShortcutTarget>()
     history.sortedByDescending { it.startTime }.take(2).forEach { log ->
-        targets += ShortcutTarget("game:${log.startTime}", shortcutLabelFor(log.settings), log.settings)
+        targets += ShortcutTarget("game:${log.startTime}", shortcutLabelFor(log.settings, words), log.settings)
     }
     presets.sortedByDescending { it.createdAt }.forEach { preset ->
         targets += ShortcutTarget("preset:${preset.id}", preset.name, preset.settings)
@@ -942,7 +978,7 @@ fun buildShortcutTargets(
     val seen = HashSet<Pair<String, TimerMode?>>()
     return targets.filter { it.label.isNotBlank() }.distinctBy { it.id }
         .filter { t ->
-            val first = seen.add(shortcutLabelFor(t.settings) to t.settings.main.mode.takeUnless { t.settings.differentSettingsPerPlayer })
+            val first = seen.add(shortcutLabelFor(t.settings, words) to t.settings.main.mode.takeUnless { t.settings.differentSettingsPerPlayer })
             first || t.id.startsWith("preset:")
         }
         .take(max)
@@ -3053,6 +3089,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * in when it arrives.
      */
     private val _isReady = MutableStateFlow(false)
+
+    /** True once [gameHistory] holds the stored games, which it does some time after [isReady]. */
+    private val _isHistoryLoaded = MutableStateFlow(false)
+    val isHistoryLoaded: StateFlow<Boolean> = _isHistoryLoaded.asStateFlow()
     val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
     /** Set once the init block below has finished, history included; see [applyShortcut]. */
@@ -3126,6 +3166,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             _isReady.value = true
 
             _gameHistory.value = loadHistory(savedSettings.logHistoryLimit)
+            _isHistoryLoaded.value = true
 
             isLoaded = true
             pendingShortcutId?.let { id ->
@@ -3162,7 +3203,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // over it, fifteen seconds into play. A game running in this process ends with the
         // shortcut, as with a preset.
         updateSettings(
-            applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn, keepFirstMoveBonus = builtIn, keepTable = builtIn),
+            applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn && builtInKeepsFlagBehavior(), keepFirstMoveBonus = builtIn, keepTable = builtIn),
             newGame = true,
             keepSavedClock = _uiState.value.activePlayer == null,
         )
