@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.widget.MediaController
 import android.widget.Toast
+import androidx.core.net.toUri
 import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -1255,7 +1256,10 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     // and once on merely opening the note. See PersistDebounced.
     PersistDebounced(title) { newTitle -> onUpdate { it.copy(title = newTitle) } }
     val scope = rememberCoroutineScope()
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else Toast.makeText(context, micPermissionText, Toast.LENGTH_SHORT).show() }
+    var recordingStartedAt by remember { mutableLongStateOf(0L) }
+    var permissionRefused by remember { mutableStateOf(false) }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else permissionRefused = true }
+    if (permissionRefused) PermissionRefusedDialog(micPermissionText) { permissionRefused = false }
     fun startRecording() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -1279,6 +1283,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                 start()
             }
             recorder = newRecorder
+            recordingStartedAt = SystemClock.elapsedRealtime()
             isRecording = true
         } catch (_: Exception) {
             // A recorder that failed to prepare or start still holds the microphone until it is
@@ -1311,7 +1316,9 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
         active.release()
         if (!commitTake(context, pending, file)) return
         shredReplacedMedia(context, note.audioPath, file)
-        val durationMs = recordingTime * 1000L
+        // Measured, where this took the counter of whole seconds: every take came out up to a second
+        // short, and one under a second as 00:00.
+        val durationMs = SystemClock.elapsedRealtime() - recordingStartedAt
         onUpdate { it.copy(title = title, audioPath = file.absolutePath, audioDurationMs = durationMs) }
     }
     fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true
@@ -1344,18 +1351,46 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     // recorder is not the same as stopping one: release() without stop() never writes the MP4's
     // index, so the file left behind will not play, and onUpdate was never reached either. Walking
     // away therefore cost the whole take and left the unplayable orphan in filesDir.
-    DisposableEffect(Unit) { onDispose { stopRecording(); player?.release() } }
+    //
+    // Through rememberUpdatedState: an effect keyed on Unit keeps the first composition's lambda, and
+    // that stopRecording held the note as it was on opening. A retake left this way compared itself to
+    // the original, so the recording it replaced was not shredded.
+    val stopLatest by rememberUpdatedState({ stopRecording() })
+    DisposableEffect(Unit) { onDispose { stopLatest(); player?.release() } }
 
     ToolScaffold(title = stringResource(R.string.tools_audio_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
             OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true); Spacer(Modifier.weight(1f))
             Box(modifier = Modifier.size(160.dp).clip(CircleShape).background(if (isRecording) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(imageVector = if (isRecording) Icons.Default.Mic else Icons.Default.MicNone, contentDescription = null, modifier = Modifier.size(64.dp).scale(if (isRecording) 1.2f else 1f), tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
             if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
-            else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else String.format(locale, "%02d:%02d", (note.audioDurationMs / 1000) / 60, (note.audioDurationMs / 1000) % 60), style = MaterialTheme.typography.headlineMedium)
+            else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else ((note.audioDurationMs + 500) / 1000).let { seconds -> String.format(locale, "%02d:%02d", seconds / 60, seconds % 60) }, style = MaterialTheme.typography.headlineMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) { if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) }) }; if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play)) } }
             if (note.audioPath != null && !isRecording && !isPlaying) DeleteMediaButton(stringResource(R.string.tools_delete_recording)) { shredNoteMedia(context, note.audioPath); onUpdate { it.copy(title = title, audioPath = null, audioDurationMs = 0) } }; Spacer(Modifier.weight(1f))
         }
     }
+}
+
+/**
+ * Says a permission was refused, with the way to change that. Once it has been refused twice Android
+ * stops asking and answers no at once, so a toast alone left the button doing nothing, for good, with
+ * no hint of where the setting is.
+ */
+@Composable
+private fun PermissionRefusedDialog(message: String, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = {
+                onDismiss()
+                runCatching {
+                    context.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
+                }
+            }) { Text(stringResource(R.string.permission_open_settings)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) } },
+    )
 }
 
 @Composable
@@ -1374,7 +1409,9 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
         if (success && commitTake(context, pendingFile, photoFile)) { captureCount++; shredReplacedMedia(context, note.imagePath, photoFile); onUpdate { it.copy(title = title, imagePath = photoFile.absolutePath) } }
         else pendingFile.delete()
     }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
+    var permissionRefused by remember { mutableStateOf(false) }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else permissionRefused = true }
+    if (permissionRefused) PermissionRefusedDialog(cameraPermissionText) { permissionRefused = false }
 
     ToolScaffold(title = stringResource(R.string.tools_image_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1418,7 +1455,9 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
         if (success && commitTake(context, pendingFile, videoFile)) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate { it.copy(title = title, videoPath = videoFile.absolutePath) } }
         else pendingFile.delete()
     }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else Toast.makeText(context, cameraPermissionText, Toast.LENGTH_SHORT).show() }
+    var permissionRefused by remember { mutableStateOf(false) }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else permissionRefused = true }
+    if (permissionRefused) PermissionRefusedDialog(cameraPermissionText) { permissionRefused = false }
 
     ToolScaffold(title = stringResource(R.string.tools_video_note), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1433,12 +1472,16 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                 // It no longer starts by itself: opening a note played it, sound and all, which is
                 // the last thing wanted at a board. Once loaded it shows its first frame and the
                 // controls, and plays when asked.
-                if (videoPath != null) AndroidView(
+                //
+                // Sized by the view and centred by the Box. A VideoView keeps the film's proportions
+                // and sits at its parent's origin, so filling the card left it in the top left corner.
+                if (videoPath != null) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                AndroidView(
                     factory = { ctx -> VideoView(ctx).apply { val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller); setOnPreparedListener { seekTo(1); controller.show() } } },
                     update = { view -> if (view.tag != captureCount) { view.tag = captureCount; view.setVideoPath(videoPath) } },
                     onRelease = { view -> view.stopPlayback() },
-                    modifier = Modifier.fillMaxSize(),
                 )
+                }
                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_video), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
             }
             Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) videoLauncher.launch(videoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.videoPath == null) Icons.Default.Videocam else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.videoPath == null) stringResource(R.string.tools_record_video) else stringResource(R.string.tools_retake_video)) }

@@ -74,4 +74,5 @@
     <string name="guide_fast_move_desc">Premia os lances rápidos. Accelerate: quanto mais você pensa, mais rápido corre seu relógio. Shrink: cada lance tem menos tempo, até um mínimo. Transfer: o tempo que você gasta passa para o adversário.</string>
     <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeira.</string>
     <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as porcentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
+    <string name="permission_open_settings">Abrir configurações</string>
 </resources>

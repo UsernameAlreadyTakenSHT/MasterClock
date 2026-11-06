@@ -233,4 +233,5 @@
     </plurals>
     <string name="qr_open_settings">Abrir definições da app</string>
     <string name="toast_no_browser">Nenhum navegador instalado</string>
+    <string name="permission_open_settings">Abrir definições</string>
 </resources>

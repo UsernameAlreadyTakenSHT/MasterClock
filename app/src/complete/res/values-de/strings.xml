@@ -228,4 +228,5 @@
     </plurals>
     <string name="qr_open_settings">App-Einstellungen öffnen</string>
     <string name="toast_no_browser">Kein Browser installiert</string>
+    <string name="permission_open_settings">Einstellungen öffnen</string>
 </resources>

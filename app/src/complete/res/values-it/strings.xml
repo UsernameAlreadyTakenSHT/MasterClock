@@ -230,4 +230,5 @@
     </plurals>
     <string name="qr_open_settings">Apri le impostazioni dell\'app</string>
     <string name="toast_no_browser">Nessun browser installato</string>
+    <string name="permission_open_settings">Apri impostazioni</string>
 </resources>
