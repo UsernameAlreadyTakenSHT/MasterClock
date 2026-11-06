@@ -61,7 +61,7 @@
     <string name="guide_counts_down_desc">Parte da un limite e scende fino a zero mosse rimaste.</string>
     <string name="guide_counts_up_desc">Mostra il numero totale di mosse giocate dall\'inizio.</string>
     <string name="guide_fast_move_desc">Premia le mosse rapide. Accelerate: più pensi, più veloce corre il tuo orologio. Shrink: ogni mossa ha meno tempo, fino a un minimo. Transfer: il tempo che usi passa all\'avversario.</string>
-    <string name="guide_fide_desc">Cadenza da torneo a periodi: per esempio 90 min per 40 mosse, poi 30 min per il resto, con 30 s per mossa.</string>
+    <string name="guide_fide_desc">Cadenza da torneo a periodi: per esempio 90 min per 40 mosse, poi 30 min per il resto, con 30 s aggiunti per mossa.</string>
     <string name="guide_gong_desc">Mosse imposte a intervalli fissi (simultanee o a turno).</string>
     <string name="guide_hidden_desc">Un tempo estratto a caso e nascosto. Con le percentuali attive, compare per un attimo al 50, 25, 10, 5, 2 e 1 %.</string>
     <string name="guide_hourglass_desc">Il tempo perso da un giocatore viene aggiunto all\'avversario. Il tempo totale resta costante.</string>

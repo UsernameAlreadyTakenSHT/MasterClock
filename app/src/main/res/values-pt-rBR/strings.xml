@@ -27,7 +27,7 @@
     <string name="preset_manage_action">Renomear ou excluir</string>
 
     <!-- Spellings: -ônico rather than -ónico -->
-    <string name="settings_bonus_type">Tipo de Bonus</string>
+    <string name="settings_bonus_type">Tipo de bônus</string>
     <string name="settings_chrono_type">Tipo de Chronos</string>
     <string name="settings_increment_bonus">Incremento / bônus</string>
     <string name="settings_fischer_fide">Fischer FIDE (bônus a partir do lance 0)</string>
@@ -187,4 +187,9 @@
     <string name="preset_end_game_title">Encerrar a partida em andamento?</string>
     <string name="game_shortcut_gone">Esta partida não está mais no histórico</string>
     <string name="color_grey">Cinza</string>
+    <string name="common_reset">Zerar</string>
+    <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="omni_reset_title">Zerar a sessão?</string>
+    <string name="omni_reset_confirm">ZERAR</string>
+    <string name="omni_reset_session">Zerar a sessão</string>
 </resources>

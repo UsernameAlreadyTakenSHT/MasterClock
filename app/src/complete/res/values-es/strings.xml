@@ -61,7 +61,7 @@
     <string name="guide_counts_down_desc">Parte de un límite y descuenta hasta cero jugadas restantes.</string>
     <string name="guide_counts_up_desc">Muestra el número total de jugadas realizadas desde el inicio.</string>
     <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Shrink: cada jugada tiene menos tiempo, hasta un mínimo. Transfer: el tiempo que gastas pasa a tu rival.</string>
-    <string name="guide_fide_desc">Ritmo de torneo por periodos: por ejemplo, 90 min para 40 jugadas, luego 30 min para el resto, con 30 s por jugada.</string>
+    <string name="guide_fide_desc">Ritmo de torneo por periodos: por ejemplo, 90 min para 40 jugadas, luego 30 min para el resto, con 30 s añadidos por jugada.</string>
     <string name="guide_gong_desc">Jugadas forzadas a intervalos fijos (simultáneas o por turnos).</string>
     <string name="guide_hidden_desc">Un tiempo sorteado al azar y oculto. Con los porcentajes activados, se muestra un momento al pasar por el 50, 25, 10, 5, 2 y 1 %.</string>
     <string name="guide_hourglass_desc">El tiempo que pierde un jugador se suma al del rival. El tiempo total se mantiene constante.</string>

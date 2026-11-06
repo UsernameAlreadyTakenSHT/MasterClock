@@ -18,7 +18,7 @@
 
     <!-- Common -->
     <string name="common_cancel">Cancelar</string>
-    <string name="common_reset">Zerar</string>
+    <string name="common_reset">Repor</string>
     <string name="common_player_n">Jogador %d</string>
     <string name="common_back_to_game">Voltar à partida</string>
     <string name="common_back">Voltar</string>
@@ -52,7 +52,7 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Escolher o modo de jogo</string>
-    <string name="settings_bonus_type">Tipo de Bonus</string>
+    <string name="settings_bonus_type">Tipo de bónus</string>
     <string name="settings_move_timer_type">Tipo de Move Timer</string>
     <string name="settings_byoyomi_type">Tipo de byoyomi</string>
     <string name="settings_chrono_type">Tipo de Chronos</string>
@@ -490,9 +490,9 @@
     <string name="age_one_year">1 ano</string>
 
     <!-- Omni station -->
-    <string name="omni_reset_title">Zerar a sessão?</string>
+    <string name="omni_reset_title">Repor a sessão?</string>
     <string name="omni_reset_message">Todo o progresso de rondas e partidas será perdido.</string>
-    <string name="omni_reset_confirm">ZERAR</string>
+    <string name="omni_reset_confirm">REPOR</string>
     <string name="omni_stop_title">Parar a sessão?</string>
     <string name="omni_stop_confirm">PARAR</string>
     <string name="omni_launch_title">Sessão em curso</string>
@@ -509,7 +509,7 @@
     <string name="omni_next">Seguinte</string>
     <string name="omni_pause">Pausa</string>
     <string name="omni_stop_session">Parar a sessão</string>
-    <string name="omni_reset_session">Zerar a sessão</string>
+    <string name="omni_reset_session">Repor a sessão</string>
     <string name="omni_running">A DECORRER</string>
     <string name="omni_paused">EM PAUSA</string>
     <string name="omni_round_finished">RONDA TERMINADA</string>
@@ -525,7 +525,7 @@
 
     <!-- Statistics -->
     <string name="stats_title">Estatísticas</string>
-    <string name="stats_empty">Ainda não há partidas terminadas.\n\nUma partida é registada quando a zera: jogue uma partida e toque em Zerar para ver aqui as suas estatísticas.</string>
+    <string name="stats_empty">Ainda não há partidas terminadas.\n\nUma partida é registada quando a repõe: jogue uma partida e toque em Repor para ver aqui as suas estatísticas.</string>
     <string name="stats_games_played">Partidas jogadas</string>
     <string name="stats_moves">Lances</string>
     <string name="stats_average_move">Lance médio</string>
@@ -567,7 +567,7 @@
     </plurals>
 
     <!-- Timer Screen -->
-    <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="timer_reset_title">Repor a partida?</string>
     <string name="preset_end_game_title">Terminar a partida em curso?</string>
     <string name="timer_reset_message">O estado atual será perdido.</string>
     <string name="timer_reroll">Novo tempo aleatório</string>

@@ -48,7 +48,7 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Elegir el modo de juego</string>
-    <string name="settings_bonus_type">Tipo de Bonus</string>
+    <string name="settings_bonus_type">Tipo de bonificación</string>
     <string name="settings_move_timer_type">Tipo de Move Timer</string>
     <string name="settings_byoyomi_type">Tipo de byoyomi</string>
     <string name="settings_chrono_type">Tipo de Chronos</string>
@@ -299,7 +299,7 @@
     <string name="settings_tournament_rules">Reglas de torneo</string>
     <string name="settings_fischer_fide">Fischer FIDE (bonificación desde la jugada 0)</string>
     <string name="settings_forced_move_counter">Contador de jugadas obligatorio</string>
-    <string name="settings_tournament_rules_explain">El primero solo afecta a Fischer: el bonus llega antes de la jugada 1. El segundo solo a FIDE Periods: activado, un periodo termina al alcanzar su número de jugadas; desactivado, cuando se agota su tiempo.</string>
+    <string name="settings_tournament_rules_explain">El primero solo afecta a Fischer: la bonificación llega antes de la jugada 1. El segundo solo a FIDE Periods: activado, un periodo termina al alcanzar su número de jugadas; desactivado, cuando se agota su tiempo.</string>
     <string name="settings_interaction">Interacción</string>
     <string name="settings_confirm_reset">Confirmar el reinicio</string>
     <string name="settings_trigger_on_press">Activar al pulsar (si no, al soltar)</string>

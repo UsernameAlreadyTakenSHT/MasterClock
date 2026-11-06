@@ -13,8 +13,8 @@
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="common_cancel">Cancelar</string>
-    <string name="common_reset">Zerar</string>
-    <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="common_reset">Repor</string>
+    <string name="timer_reset_title">Repor a partida?</string>
     <string name="timer_reset_message">O estado atual será perdido.</string>
     <string name="common_back">Voltar</string>
     <string name="common_close">Fechar</string>
@@ -25,7 +25,7 @@
     <string name="timer_pause">Pausa</string>
     <string name="timer_resume">Retomar</string>
     <string name="timer_start">Iniciar</string>
-    <!-- "Configurações" at 13 characters does not fit beside Zerar and Retomar. -->
+    <!-- "Configurações" at 13 characters does not fit beside Repor and Retomar. -->
     <string name="timer_settings">Opções</string>
 
     <!-- Settings -->

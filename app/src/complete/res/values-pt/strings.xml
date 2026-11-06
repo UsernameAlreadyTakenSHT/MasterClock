@@ -64,7 +64,7 @@
     <string name="guide_counts_down_desc">Parte de um limite e desce até zero lances restantes.</string>
     <string name="guide_counts_up_desc">Mostra o número total de lances jogados desde o início.</string>
     <string name="guide_fast_move_desc">Premeia os lances rápidos. Accelerate: quanto mais pensa, mais depressa corre o seu relógio. Shrink: cada lance tem menos tempo, até um mínimo. Transfer: o tempo que gasta passa para o adversário.</string>
-    <string name="guide_fide_desc">Ritmo de torneio por períodos: por exemplo, 90 min para 40 lances, depois 30 min para o resto, com 30 s por lance.</string>
+    <string name="guide_fide_desc">Ritmo de torneio por períodos: por exemplo, 90 min para 40 lances, depois 30 min para o resto, com 30 s adicionados por lance.</string>
     <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou por turnos).</string>
     <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as percentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
     <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total mantém-se constante.</string>
@@ -186,7 +186,7 @@
     <string name="tools_random_card">Carta ao acaso</string>
     <string name="tools_record">Gravar</string>
     <string name="tools_record_video" tools:ignore="Typos">Gravar um vídeo</string>
-    <string name="tools_reset_scoreboard">Zerar o marcador</string>
+    <string name="tools_reset_scoreboard">Repor o marcador</string>
     <string name="tools_retake_photo">Repetir a fotografia</string>
     <string name="tools_retake_video" tools:ignore="Typos">Repetir o vídeo</string>
     <string name="tools_roll_dice">Lançar os dados</string>
