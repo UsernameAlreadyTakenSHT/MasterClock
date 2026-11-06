@@ -13,6 +13,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +30,7 @@ import androidx.core.net.toUri
 import com.masterclock.core.R as CoreR
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
@@ -39,8 +44,13 @@ fun RulesScreen(onBack: () -> Unit) {
     val noBrowserText = stringResource(R.string.toast_no_browser)
     // The copy runs off the main thread: the largest rulebook is over four megabytes, and copying it
     // there froze the screen on the first tap.
+    //
+    // One at a time: a second tap during the copy wrote the same temporary file, and whichever finished
+    // last found it already moved and reported that the document could not be opened.
+    var opening by remember { mutableStateOf<Job?>(null) }
     fun open(rawResId: Int, fileName: String) {
-        scope.launch { openBundledPdf(context, rawResId, fileName) }
+        if (opening?.isActive == true) return
+        opening = scope.launch { openBundledPdf(context, rawResId, fileName) }
     }
     ToolScaffold(
         title = stringResource(R.string.rules_title),
