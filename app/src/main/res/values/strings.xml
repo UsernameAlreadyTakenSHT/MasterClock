@@ -673,4 +673,8 @@
     <string name="color_black">Black</string>
     <string name="color_grey">Grey</string>
     <string name="color_white">White</string>
+    <string name="timer_berserk" translatable="false">Berserk</string>
+    <string name="timer_berserk_point" translatable="false">Berserk +1</string>
+    <string name="settings_allow_berserk">Allow Berserk</string>
+    <string name="settings_berserk_desc">Before their first move, a player can give up half their time and their increment. A win is then worth one extra point, from 7 moves on.</string>
 </resources>

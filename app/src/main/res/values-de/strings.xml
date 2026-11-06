@@ -622,4 +622,6 @@
     <string name="color_black">Schwarz</string>
     <string name="color_grey">Grau</string>
     <string name="color_white">Weiß</string>
+    <string name="settings_allow_berserk">Berserk erlauben</string>
+    <string name="settings_berserk_desc">Vor dem ersten Zug kann ein Spieler die Hälfte seiner Zeit und sein Inkrement aufgeben. Ein Sieg zählt dann einen Punkt mehr, ab 7 Zügen.</string>
 </resources>

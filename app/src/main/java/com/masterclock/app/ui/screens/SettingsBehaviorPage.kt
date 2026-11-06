@@ -70,9 +70,19 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                 ) { onSettingsChanged(currentSettings.copy(triggerOnPress = it)) }
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_pause_background),
-                    checked = currentSettings.pauseOnBackground,
-                    bottomRounded = true
+                    checked = currentSettings.pauseOnBackground
                 ) { onSettingsChanged(currentSettings.copy(pauseOnBackground = it)) }
+                BehaviorSwitch(
+                    label = stringResource(R.string.settings_allow_berserk),
+                    checked = currentSettings.allowBerserk,
+                    bottomRounded = true
+                ) { onSettingsChanged(currentSettings.copy(allowBerserk = it)) }
+                Text(
+                    stringResource(R.string.settings_berserk_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+                )
             }
         }
 

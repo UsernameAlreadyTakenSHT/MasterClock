@@ -41,6 +41,7 @@ data class PlayerStateProxy(
     // See PlayerState.isPhaseAwaitingTap. False in snapshots older than the field, which stored a
     // phase waiting for its tap as out of time.
     val isPhaseAwaitingTap: Boolean = false,
+    val hasBerserked: Boolean = false,
 )
 
 @Serializable
@@ -70,7 +71,7 @@ fun PlayerState.toProxy() = PlayerStateProxy(
     byoyomiPeriodsRemaining, movesRemainingInPeriod, currentByoyomiMovesGoal, moveCount,
     currentPeriodIndex, hasFlagged, currentPhaseIndex, isInInterPhasePause,
     pauseTimeRemainingMs, revealTimeUntilMs, lastRevealPercentage, initialTotalTimeMs, isGongReflectionPhase,
-    isPhaseAwaitingTap,
+    isPhaseAwaitingTap, hasBerserked,
 )
 
 fun PlayerStateProxy.toState() = PlayerState(
@@ -78,7 +79,7 @@ fun PlayerStateProxy.toState() = PlayerState(
     byoyomiPeriodsRemaining, movesRemainingInPeriod, currentByoyomiMovesGoal, moveCount,
     currentPeriodIndex, hasFlagged, currentPhaseIndex, isInInterPhasePause,
     pauseTimeRemainingMs, revealTimeUntilMs, lastRevealPercentage, initialTotalTimeMs, isGongReflectionPhase,
-    isPhaseAwaitingTap,
+    isPhaseAwaitingTap, hasBerserked,
 )
 
 fun ChessClockState.toProxy() = ChessClockStateProxy(
@@ -348,6 +349,43 @@ internal fun loggedMoveTimeMs(state: ChessClockState, player: PlayerState, mode:
     mode == TimerMode.MOVE_COUNTS_UP || mode == TimerMode.MOVE_COUNTS_DOWN -> null
     player.isOverrun(flagBehavior) -> 0L
     else -> countdownTimeMs(state, player, mode).coerceAtLeast(0)
+}
+
+/** The clocks Berserk has a meaning on: each player's own, and a start time to give half of. */
+private val BERSERK_MODES = setOf(TimerMode.SUDDEN_DEATH, TimerMode.FISCHER)
+
+/** Moves a Berserk player must have played for a win to bring the extra point. */
+const val BERSERK_POINT_MOVES = 7
+
+/**
+ * What going Berserk costs a player: half their time, which 1+2 is exempt from, as on Lichess. It
+ * gives up its increment and nothing else.
+ */
+private fun berserkPenaltyMs(s: PlayerSettings): Long =
+    if (s.mode == TimerMode.FISCHER && s.initialTimeMs == 60_000L && s.incrementMs == 2_000L) 0L else s.initialTimeMs / 2
+
+/** Whether [playerIndex] can still go Berserk: before their first move, and never at 0+1 or 0+2. */
+fun canBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSettings): Boolean {
+    if (!settings.allowBerserk) return false
+    val s = settings.playerSettings(playerIndex)
+    val p = state.players.getOrNull(playerIndex - 1) ?: return false
+    if (s.mode !in BERSERK_MODES || s.initialTimeMs <= 0) return false
+    if (p.hasBerserked || p.moveCount > 0 || p.isOutOfTime) return false
+    return !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers) && p.timeRemainingMs > berserkPenaltyMs(s)
+}
+
+/**
+ * [playerIndex] goes Berserk. The first move's bonus goes with the increment it is an advance on.
+ * Taken off what is on the clock, not set: on their own turn it has been running.
+ */
+internal fun goBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSettings): ChessClockState {
+    if (!canBerserk(state, playerIndex, settings)) return state
+    val s = settings.playerSettings(playerIndex)
+    val firstMoveBonus = if (s.mode == TimerMode.FISCHER && settings.fischerFideFirstMove) s.incrementMs else 0L
+    return state.copy(players = state.players.mapIndexed { i, p ->
+        if (i + 1 != playerIndex) p
+        else p.copy(timeRemainingMs = (p.timeRemainingMs - berserkPenaltyMs(s) - firstMoveBonus).coerceAtLeast(1), hasBerserked = true)
+    })
 }
 
 /** All an Overtime player has left: what remains of the move, and the reserve behind it. */
@@ -689,6 +727,8 @@ data class ChessClockSettings(
     val flagBehavior: FlagBehavior = FlagBehavior.FREEZE,
     val confirmReset: Boolean = true,
     val fischerFideFirstMove: Boolean = false,
+    /** Lets a player go Berserk before their first move; see [goBerserk]. */
+    val allowBerserk: Boolean = false,
     val forcedMoveCounter: Boolean = true,
     val triggerOnPress: Boolean = true,
     val pauseOnBackground: Boolean = true,
@@ -1173,6 +1213,8 @@ data class PlayerState(
      * leaving Reset as the only way out of the game.
      */
     val isPhaseAwaitingTap: Boolean = false,
+    /** Gave up half their time and their increment before their first move; see [goBerserk]. */
+    val hasBerserked: Boolean = false,
     /**
      * The fraction of a millisecond Accelerate has yet to take. A clock counts whole milliseconds and
      * each tick's share was cut off, so a rate of 15% lost 7% of itself at the slow tick, 11.5 becoming
@@ -2881,7 +2923,7 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     }
 
     val newP = when (s.mode) {
-        TimerMode.FISCHER -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + s.incrementMs, settings.flagBehavior)
+        TimerMode.FISCHER -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + if (p.hasBerserked) 0 else s.incrementMs, settings.flagBehavior)
         // The reveal ends with the move. It only ran down on the player's own turn, so what the
         // opponent's turn showed was the percentage, the very thing the mode hides.
         TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + p.secondaryTimeMs, settings.flagBehavior).copy(revealTimeUntilMs = 0)
@@ -4501,6 +4543,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun getPlayerSettings(playerIndex: Int): PlayerSettings = settings.value.playerSettings(playerIndex)
+
+    /** See [goBerserk]. In the log, since the clock cannot tell who won and the extra point is the players' to count. */
+    fun berserk(playerIndex: Int) {
+        val before = _uiState.value
+        if (!canBerserk(before, playerIndex, settings.value)) return
+        _uiState.update { goBerserk(it, playerIndex, settings.value) }
+        addEvent(GameEvent(eventType = "BERSERK", playerIndex = playerIndex))
+    }
 
     fun updateScoreboardNames(p1: String, p2: String) {
         setScoreboard(_scoreboard.value.copy(player1Name = p1, player2Name = p2))

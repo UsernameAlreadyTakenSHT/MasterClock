@@ -639,4 +639,6 @@
     <string name="color_black">Negro</string>
     <string name="color_grey">Gris</string>
     <string name="color_white">Blanco</string>
+    <string name="settings_allow_berserk">Permitir Berserk</string>
+    <string name="settings_berserk_desc">Antes de su primera jugada, un jugador puede renunciar a la mitad de su tiempo y a su incremento. Una victoria vale entonces un punto más, a partir de 7 jugadas.</string>
 </resources>

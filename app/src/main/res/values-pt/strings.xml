@@ -636,4 +636,6 @@
     <string name="color_black">Preto</string>
     <string name="color_grey">Cinzento</string>
     <string name="color_white">Branco</string>
+    <string name="settings_allow_berserk">Permitir Berserk</string>
+    <string name="settings_berserk_desc">Antes do primeiro lance, um jogador pode abdicar de metade do tempo e do incremento. Uma vitória vale então mais um ponto, a partir de 7 lances.</string>
 </resources>

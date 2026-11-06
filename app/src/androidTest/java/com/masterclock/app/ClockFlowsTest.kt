@@ -170,6 +170,21 @@ class ClockFlowsTest {
     }
 
     @Test
+    fun berserkHalvesOneClockAndPassesNoTurn() {
+        rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(allowBerserk = true)) }
+        val button = hasText(say(R.string.timer_berserk)) and hasClickAction()
+        await(button)
+
+        // A press on the face passes the turn on its way down, which a button inside it would too.
+        rule.onAllNodes(button)[0].performClick()
+
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.players.any { it.hasBerserked } }
+        val players = viewModel.uiState.value.players
+        assertNull(viewModel.uiState.value.activePlayer)
+        assertEquals(listOf(300_000L, 600_000L), players.map { it.timeRemainingMs }.sorted())
+    }
+
+    @Test
     fun aClockOffersTalkBackTheSwitchByName() {
         val action = player(1).fetchSemanticsNode().config[SemanticsActions.OnClick]
         assertEquals(say(R.string.timer_switch_turn), action.label)

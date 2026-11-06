@@ -647,4 +647,6 @@
     <string name="color_black">Noir</string>
     <string name="color_grey">Gris</string>
     <string name="color_white">Blanc</string>
+    <string name="settings_allow_berserk">Autoriser Berserk</string>
+    <string name="settings_berserk_desc">Avant son premier coup, un joueur peut renoncer à la moitié de son temps et à son incrément. Une victoire vaut alors un point de plus, à partir de 7 coups.</string>
 </resources>

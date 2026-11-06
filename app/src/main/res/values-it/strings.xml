@@ -631,4 +631,6 @@
     <string name="color_black">Nero</string>
     <string name="color_grey">Grigio</string>
     <string name="color_white">Bianco</string>
+    <string name="settings_allow_berserk">Consenti Berserk</string>
+    <string name="settings_berserk_desc">Prima della sua prima mossa, un giocatore può rinunciare a metà del suo tempo e al suo incremento. Una vittoria vale allora un punto in più, da 7 mosse in su.</string>
 </resources>

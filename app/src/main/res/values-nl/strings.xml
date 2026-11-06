@@ -621,4 +621,6 @@
     <string name="color_black">Zwart</string>
     <string name="color_grey">Grijs</string>
     <string name="color_white">Wit</string>
+    <string name="settings_allow_berserk">Berserk toestaan</string>
+    <string name="settings_berserk_desc">Voor zijn eerste zet kan een speler de helft van zijn tijd en zijn increment opgeven. Een winst is dan een punt extra waard, vanaf 7 zetten.</string>
 </resources>
