@@ -334,6 +334,18 @@ fun countdownTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode
     if (mode == TimerMode.MOVE_TIMER_GLOBAL || mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED) player.withBindingClock().timeRemainingMs
     else alertTimeMs(state, player, mode)
 
+/**
+ * The time a MOVE event records: the clock that was running out, as the warnings take it. It read
+ * the player's own field, which in a table's Chrono never moves, in Global is the move clock with
+ * the total left out, and in Overtime reads 0:00 with a reserve still to play. A move count has no
+ * clock, and logged 0:00 as if a player had none left. An overrun is no time left.
+ */
+internal fun loggedMoveTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode, flagBehavior: FlagBehavior): Long? = when {
+    mode == TimerMode.MOVE_COUNTS_UP || mode == TimerMode.MOVE_COUNTS_DOWN -> null
+    player.isOverrun(flagBehavior) -> 0L
+    else -> countdownTimeMs(state, player, mode).coerceAtLeast(0)
+}
+
 /** An Overtime player with the reserve in place of a spent move clock; see [alertTimeMs]. */
 internal fun PlayerState.withOvertimeClock(): PlayerState =
     if (!isOutOfTime && timeRemainingMs <= 0) copy(timeRemainingMs = secondaryTimeMs) else this
@@ -545,7 +557,8 @@ data class PlayerSettings(
     val byoyomiTimeMs: Long = 30_000,
     val byoyomiProgression: Int = 5,
     val maxMoves: Int = 20,
-    val fidePeriods: List<FidePeriod> = listOf(FidePeriod()),
+    // No move count: it is the last period, which has none to reach, and the editor read 40.
+    val fidePeriods: List<FidePeriod> = listOf(FidePeriod(movesToNext = 0)),
     val phases: List<GamePhase> = listOf(GamePhase()),
     val randomMinTimeMs: Long = 60_000,
     val randomMaxTimeMs: Long = 600_000,
@@ -883,9 +896,11 @@ private fun shortcutLabelFor(settings: ChessClockSettings, words: TimeControlWor
     // promise a number the player will not actually see.
     if (s.mode == TimerMode.RANDOM || s.mode == TimerMode.HIDDEN) {
         val name = if (s.mode == TimerMode.RANDOM) "Random" else "Hidden"
-        val low = s.randomMinTimeMs / 60_000
-        val high = s.randomMaxTimeMs / 60_000
-        return if (high > 0) "$name $low-$high min" else name
+        val low = s.randomMinTimeMs
+        val high = s.randomMaxTimeMs
+        // In seconds unless both are whole minutes: 30 to 90 seconds read "0-1 min".
+        val range = if (low % 60_000 == 0L && high % 60_000 == 0L) "${low / 60_000}-${high / 60_000} min" else "${low / 1000}-${high / 1000}s"
+        return if (high > 0) "$name $range" else name
     }
 
     // These move timers ignore initialTimeMs entirely; Save & Cap was labelled from its default,
@@ -908,7 +923,9 @@ private fun shortcutLabelFor(settings: ChessClockSettings, words: TimeControlWor
             // 40, 0, 20 read "/60" for a third period of twenty moves.
             val movesBefore = totals.take(i).lastOrNull { it > 0 } ?: 0
             val moves = totals[i] - movesBefore
-            "${period.timeMs / 60_000}'" + if (i < last && moves > 0) "/$moves" else ""
+            // A period of 1:30 read 1'.
+            val seconds = (period.timeMs % 60_000) / 1000
+            "${period.timeMs / 60_000}'" + (if (seconds > 0) seconds.toString().padStart(2, '0') else "") + if (i < last && moves > 0) "/$moves" else ""
         }
         // The bonus of whichever period has one -- it was read off the first alone, so a bonus that
         // starts with a later period, "30 seconds from move 61", was left out -- and a delay, which
@@ -953,6 +970,14 @@ private fun shortcutLabelFor(settings: ChessClockSettings, words: TimeControlWor
         TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE -> return "$base + ${s.byoyomiPeriods.coerceAtLeast(1)}/$byoyomi"
         else -> {}
     }
+    // Clocks that do not run down as a sudden death does, which is what the time alone reads as.
+    val named = when {
+        s.mode == TimerMode.HOURGLASS || s.mode == TimerMode.CHRONO_COUNTDOWN -> s.mode.displayName()
+        s.mode == TimerMode.FAST_MOVE && s.fastMoveMode == FastMoveType.ACCELERATE -> "Accelerate"
+        s.mode == TimerMode.FAST_MOVE && s.fastMoveMode == FastMoveType.SHRINK -> "Shrink"
+        else -> null
+    }
+    if (named != null) return "$named $base"
     // Only the modes that have one. incrementMs keeps its default of ten seconds in every other
     // mode, so a plain 10-minute sudden death read "10 min + 10s".
     val increment = if (s.mode == TimerMode.FISCHER || s.mode == TimerMode.BRONSTEIN || s.mode == TimerMode.US_DELAY) s.incrementMs / 1000 else 0
@@ -2387,7 +2412,16 @@ fun withPeriodAdded(periods: List<FidePeriod>): List<FidePeriod> {
     val last = periods.lastOrNull() ?: return listOf(FidePeriod(movesToNext = 0))
     val movesBefore = fideMoveTotals(periods).dropLast(1).lastOrNull { it > 0 } ?: 0
     val ended = if (last.movesToNext > 0) last else last.copy(movesToNext = movesBefore + if (movesBefore == 0) 40 else 20)
-    return periods.dropLast(1) + ended + FidePeriod(movesToNext = 0)
+    // Keeping the control's kind of bonus. The new one was always Fischer, so a delay game added a
+    // period that gave 30 seconds a move.
+    val added = FidePeriod(movesToNext = 0, isFischer = last.isFischer, hasDelay = last.hasDelay, incrementMs = last.incrementMs)
+    return periods.dropLast(1) + ended + added
+}
+
+/** [periods] without one. Whichever is last now has no count to reach, and kept showing its old one. */
+fun withPeriodRemoved(periods: List<FidePeriod>, index: Int): List<FidePeriod> {
+    val left = periods.filterIndexed { i, _ -> i != index }
+    return left.dropLast(1) + listOfNotNull(left.lastOrNull()?.copy(movesToNext = 0))
 }
 
 /**
@@ -2821,7 +2855,9 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
 
     val newP = when (s.mode) {
         TimerMode.FISCHER -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + s.incrementMs, settings.flagBehavior)
-        TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + p.secondaryTimeMs, settings.flagBehavior)
+        // The reveal ends with the move. It only ran down on the player's own turn, so what the
+        // opponent's turn showed was the percentage, the very thing the mode hides.
+        TimerMode.RANDOM, TimerMode.HIDDEN -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + p.secondaryTimeMs, settings.flagBehavior).copy(revealTimeUntilMs = 0)
         TimerMode.BRONSTEIN -> tempP.withSignedTime(p.signedTimeMs(settings.flagBehavior) + timeSpentOnMove.coerceAtMost(s.incrementMs), settings.flagBehavior)
         // Every move starts a fresh allowance, and an overrun of the last one is over with it. The
         // reset restored the time and left isOutOfTime/isNegative set, so under NEGATIVE every
@@ -3407,7 +3443,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             pendingBoardNotation = null
             // An overrun is stored as a positive time, and was logged as time left: a player two
             // minutes over counted, in the statistics, as one with two minutes to spare.
-            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = p.signedTimeMs(settings.value.flagBehavior).coerceAtLeast(0), moveCount = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) (p.moveCount - 1).coerceAtLeast(0) else p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
+            addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = loggedMoveTimeMs(currentState, p, s.mode, settings.value.flagBehavior), moveCount = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) (p.moveCount - 1).coerceAtLeast(0) else p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
             val flaggedByMove = applyPostMoveLogic(playerIndex, timeSpentOnMove)
             // A flag that ends the game stops it, exactly as tick() stops one on the clock: under
             // FREEZE any flag, under FLAG the one that leaves a single player. Only FREEZE did, so
@@ -3602,7 +3638,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private fun handleAudio(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int) {
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
             if (settings.tripleBeepTimeUp) soundManager.playTripleBeep()
-            addEvent(GameEvent(eventType = "FLAG", playerIndex = playerIdx, detail = "Time Up"))
+            // Nobody's, when it is the table's clock that ran out; it went down as "P1 FLAG".
+            val flagged = playerIdx.takeUnless { settings.playerSettings(it).mode == TimerMode.CHRONO_COUNTDOWN }
+            addEvent(GameEvent(eventType = "FLAG", playerIndex = flagged, detail = "Time Up"))
             return
         }
         // Under NEGATIVE and REVERSE the clock runs on past the flag, counting the overrun, and its

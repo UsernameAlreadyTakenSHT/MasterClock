@@ -488,7 +488,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     // The face counts down the moves to the next FIDE period under the move counter, while there is one.
     val fideMovesToGo = fideMovesLeft(playerState, pSettings, settings)
     // While a US delay runs, DELAY takes the place of the moves left.
-    val fideShowsMovesLeft = fideMovesToGo != null && playerState.delayRemainingMs <= 0
+    // The delay takes that line only on the player's own turn. A waiting player's is already armed
+    // for the next move, and it left this off with the moves shown: two counts on one face.
+    val fideShowsMovesLeft = fideMovesToGo != null && !(state.activePlayer == playerIndex && playerState.delayRemainingMs > 0)
     // The flash warns as the beeps do, of the clock that runs out first in Global and Global Shared;
     // see countdownTimeMs. It followed the move clock alone, so a reserve at 0:08 under a 0:25 move
     // clock beeped without flashing.

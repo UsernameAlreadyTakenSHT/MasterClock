@@ -213,8 +213,7 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                             if (periods.size > 1) {
                                 IconButton(
                                     onClick = {
-                                        val newList = periods.toMutableList().apply { removeAt(index) }
-                                        onUpdate(p.copy(fidePeriods = newList))
+                                        onUpdate(p.copy(fidePeriods = withPeriodRemoved(periods, index)))
                                     }
                                 ) { Icon(Icons.Default.Delete, stringResource(R.string.common_remove)) }
                             }
