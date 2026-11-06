@@ -231,6 +231,29 @@ class ZipBackupManagerTest {
     }
 
     @Test
+    fun `each restore has a staging folder of its own`() {
+        val files = sandbox()
+        assertNotEquals(ZipBackupManager.newStagingDir(files), ZipBackupManager.newStagingDir(files))
+    }
+
+    @Test
+    fun `staging left by a killed restore goes once it is old, and one in use stays`() {
+        val files = sandbox()
+        val now = 10L * 60 * 60 * 1000
+        val killed = ZipBackupManager.newStagingDir(files).apply { mkdirs(); File(this, "0.part").writeBytes(text("partial")); setLastModified(now - 2 * 60 * 60 * 1000) }
+        val oldName = File(files, "restore_staging").apply { mkdirs(); setLastModified(now - 2 * 60 * 60 * 1000) }
+        val running = ZipBackupManager.newStagingDir(files).apply { mkdirs(); setLastModified(now - 60_000) }
+        val unrelated = File(files, "shares").apply { mkdirs(); setLastModified(0) }
+
+        ZipBackupManager.clearStaleStaging(files, now)
+
+        assertFalse(killed.exists())
+        assertFalse(oldName.exists())
+        assertTrue(running.exists())
+        assertTrue(unrelated.exists())
+    }
+
+    @Test
     fun `a backup restored onto another device brings its media, presets and Omni setup back`() {
         val source = sandbox()
         val notes = mediaNotes(source)

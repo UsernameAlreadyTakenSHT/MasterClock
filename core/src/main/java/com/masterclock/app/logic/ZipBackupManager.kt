@@ -15,6 +15,9 @@ import java.util.zip.ZipInputStream
 class ZipBackupTooLargeException(message: String) : IOException(message)
 
 object ZipBackupManager {
+    private const val STAGING_PREFIX = "restore_staging"
+    private const val STALE_STAGING_MS = 60 * 60 * 1000L
+
     // The import decoder, written with as well: one configuration both ways.
     private val json = importJson
 
@@ -312,6 +315,24 @@ object ZipBackupManager {
             customPresets = presets,
             omniSettings = omniSettings,
         )
+    }
+
+    /**
+     * A staging folder for one restore. It was one fixed folder: a second restore confirmed while the
+     * first still ran deleted the folder under it, and the first went on to report success with its
+     * media missing.
+     */
+    fun newStagingDir(filesDir: File): File = File(filesDir, "$STAGING_PREFIX-${java.util.UUID.randomUUID()}")
+
+    /**
+     * Deletes what a restore killed part-way left behind, up to 4 GB of it that only a later restore
+     * ever removed. By age, since the activity is recreated while a restore goes on: a folder in use
+     * has a file added to it far more often than this.
+     */
+    fun clearStaleStaging(filesDir: File, now: Long = System.currentTimeMillis()) {
+        filesDir.listFiles { file -> file.isDirectory && file.name.startsWith(STAGING_PREFIX) }
+            ?.filter { now - it.lastModified() > STALE_STAGING_MS }
+            ?.forEach { it.deleteRecursively() }
     }
 
     /**

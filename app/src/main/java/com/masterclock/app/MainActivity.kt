@@ -143,6 +143,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 withContext(Dispatchers.IO) {
                     runCatching { ApkShare.clearStale(context.cacheDir) }
+                    runCatching { ZipBackupManager.clearStaleStaging(context.filesDir) }
                 }
             }
 
@@ -635,7 +636,7 @@ class MainActivity : ComponentActivity() {
                                                 ZipBackupManager.restoreMedia(
                                                     open = open,
                                                     destinations = ZipBackupManager.restoreDestinations(context.filesDir, timerViewModel.settings.value.notebookNotes, pkg.settings.notebookNotes),
-                                                    stagingDir = File(context.filesDir, "restore_staging"),
+                                                    stagingDir = ZipBackupManager.newStagingDir(context.filesDir),
                                                 )
                                             }
                                             withContext(Dispatchers.Main) {
