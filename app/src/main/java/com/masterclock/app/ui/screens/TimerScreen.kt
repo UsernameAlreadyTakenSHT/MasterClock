@@ -359,6 +359,29 @@ private fun TimerConfirmDialog(title: String, message: String, confirm: String, 
 }
 
 /**
+ * Fits a face in a player's box as it will be drawn, turned or not, shrinking it whole if it has to.
+ *
+ * A box is small with three or four players, and turned a quarter its height is what the face has
+ * for its width and its width for its height. At a large font the label, the clock and the line
+ * under them came to more than that, and the first and last were cut. Their proportions are kept, and
+ * at the default font nothing shrinks.
+ */
+private fun Modifier.fittedForTurn(rotation: Float): Modifier = layout { measurable, constraints ->
+    val turned = kotlin.math.abs(rotation) in 45f..135f
+    val across = if (turned) constraints.maxHeight else constraints.maxWidth
+    val along = if (turned) constraints.maxWidth else constraints.maxHeight
+    val placeable = measurable.measure(Constraints(maxWidth = across))
+    val scale = minOf(1f, along.toFloat() / placeable.height.coerceAtLeast(1))
+    val width = ((if (turned) placeable.height else placeable.width) * scale).toInt()
+    val height = ((if (turned) placeable.width else placeable.height) * scale).toInt()
+    layout(width, height) {
+        val x = (width - placeable.width) / 2
+        val y = (height - placeable.height) / 2
+        if (scale == 1f) placeable.place(x, y) else placeable.placeWithLayer(x, y) { scaleX = scale; scaleY = scale }
+    }
+}
+
+/**
  * Lays a panel out for the way it will be turned: a quarter turn swaps its width and height, and
  * [graphicsLayer] alone turns only the drawing. The panel was measured for a tall phone and drawn
  * across it, so anything longer than the screen is wide fell off both edges with no way to reach it.
@@ -596,7 +619,10 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = if (isGlobal) Alignment.TopCenter else Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally, 
-                modifier = Modifier.graphicsLayer { rotationZ = contentRotation }.padding(top = if (isGlobal) 100.dp else 0.dp)
+                modifier = Modifier
+                    .then(if (settings.numberOfPlayers > 2 && !isGlobal) Modifier.fittedForTurn(contentRotation) else Modifier)
+                    .graphicsLayer { rotationZ = contentRotation }
+                    .padding(top = if (isGlobal) 100.dp else 0.dp)
             ) {
                 Box(modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center) {
                     when {
