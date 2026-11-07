@@ -44,14 +44,19 @@ cover it; do not remove the `lint` blocks without adding one.
 Unit tests live in `core/src/test`, and `core` is where behaviour gets pinned: put logic there and
 test it there rather than in a composable.
 
-`app/src/androidTest` holds the few things `core` cannot see: that a press reaches the clock, that a
-dialog stands before Reset, and what TalkBack is handed. They need a device or an emulator, so they
-are not in the bar above and neither CI runs them. Run them when the clock screen changes, and note
-that they reset the app's settings on that device:
+`app/src/androidTest` and `paper/src/androidTest` hold what `core` cannot see: that a press reaches
+the clock, that a dialog stands before Reset, that a setting reaches the disk, that a game left comes
+back, and what TalkBack is handed. They need a device or an emulator, so they are not in the bar
+above and neither CI runs them. Run them when a screen they cover changes, and note that they reset
+the app's settings on that device:
 
 ```sh
-./gradlew :app:connectedCompleteDebugAndroidTest
+./gradlew :app:connectedCompleteDebugAndroidTest :paper:connectedDebugAndroidTest
 ```
+
+The same tests run on `Standard`, `Lite` and `Mini`, and skip themselves where a flavor has no such
+screen, so a skip there is not a failure. The system file picker is another app and out of their
+reach: `ExportImportFlowTest` covers everything on either side of it.
 
 To watch TalkBack itself on an emulator, keep `uiautomator` away from it: a UiAutomation session
 suspends other accessibility services, without a word. `adb shell input` skips touch exploration
