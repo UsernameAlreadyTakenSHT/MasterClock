@@ -55,7 +55,10 @@ class PieceTagCalibration {
 
         val squares = CharArray(BoardPosition.SQUARE_COUNT)
         tags.forEachIndexed { square, tag ->
-            squares[square] = if (tag == null) BoardPosition.EMPTY else pieceByTag[tag] ?: return null
+            // A chip it has not learned is a piece on the board all the same: the spare queen of a
+            // promotion, whose chip was never on the board. Refusing the whole frame stopped every
+            // move for as long as she stood there.
+            squares[square] = if (tag == null) BoardPosition.EMPTY else pieceByTag[tag] ?: BoardPosition.UNKNOWN_PIECE
         }
         return BoardPosition(String(squares))
     }

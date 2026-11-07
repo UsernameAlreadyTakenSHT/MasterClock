@@ -1171,6 +1171,9 @@ sealed interface BoardMoveOutcome {
     /** Keep [notation] until the player presses the clock, and stamp that MOVE with it. */
     data class HoldForNextPress(val notation: String, val playerIndex: Int) : BoardMoveOutcome
 
+    /** A clock that takes no presses: the move is noted and nothing more. */
+    data class NoteOnly(val notation: String, val playerIndex: Int) : BoardMoveOutcome
+
     /** No clock is running, so there is no move to attach this to. Record it and move on. */
     data class NoGameRunning(val notation: String) : BoardMoveOutcome
 }
@@ -1180,12 +1183,25 @@ fun boardMoveOutcome(
     activePlayer: Int?,
     isPaused: Boolean,
     autoSwitchOnBoardMove: Boolean,
+    takesPresses: Boolean = true,
 ): BoardMoveOutcome = when {
     activePlayer == null -> BoardMoveOutcome.NoGameRunning(notation)
+    !takesPresses -> BoardMoveOutcome.NoteOnly(notation, activePlayer)
     // A paused clock must not be resumed by the board: pausing is deliberate, and a piece knocked
     // over while the players are away would otherwise restart the game behind their backs.
     autoSwitchOnBoardMove && !isPaused -> BoardMoveOutcome.SwitchNow(notation, activePlayer)
     else -> BoardMoveOutcome.HoldForNextPress(notation, activePlayer)
+}
+
+/**
+ * Whether a press on this clock passes a turn. In Gong, Shared (Auto), a Chrono for the table and
+ * PHASES it does not, and a move on a board lost its notation there, or in PHASES counted as a tap:
+ * a piece put down ended a pause or skipped a phase.
+ */
+internal fun ChessClockSettings.takesMovePresses(playerIndex: Int): Boolean {
+    val mode = playerSettings(playerIndex).mode
+    return mode != TimerMode.GONG && mode != TimerMode.MOVE_TIMER_SHARED && mode != TimerMode.PHASES &&
+        !(mode.name.startsWith("CHRONO") && isOneForAll)
 }
 
 @Serializable
@@ -4272,6 +4288,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         logsToImport?.let { logs ->
             writerScope.launch {
                 // logsToImport only ever originates from a QR/JSON/ZIP import (see call sites), so each
+            // A notation held for a press belongs to this game, and went into the next one's PGN.
+            pendingBoardNotation = null
                 // log's embedded settings are just as untrusted as the top-level `newSettings` above and
                 // must go through the same sanitization before being persisted. Without this, a crafted
                 // GameLog.settings.notebookNotes/custom*Uri survives unsanitized in Room and later becomes
@@ -4498,6 +4516,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                         // toGameLog degrades an unreadable row to an empty log rather than throwing.
                         ?.takeIf { it.events.isNotEmpty() }
                 }?.let { log ->
+        pendingBoardNotation = null
                     // Back to the moment of the save, as the clock is: the moves played after it
                     // stayed in the log, and played again from the restored clock were logged
                     // twice -- four moves in the PGN and the statistics for two played.
@@ -4589,12 +4608,20 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     /**
      * The game's starting clocks as its time control set them. A player can go Berserk before the
+            takesPresses = currentState.activePlayer?.let { settings.value.takesMovePresses(it) } != false,
      * first press, and the log, opened by that press, took the halved clock for the start: the game
      * replayed from Last Games came back with that player Berserk, and nobody had chosen that.
      */
     private fun gameStartStates(): List<PlayerStateProxy> = _uiState.value.players.mapIndexed { i, p ->
         p.beforeBerserk(getPlayerSettings(i + 1), settings.value).toProxy()
     }
+            is BoardMoveOutcome.NoteOnly -> addEvent(GameEvent(
+                eventType = "BOARD_MOVE",
+                playerIndex = outcome.playerIndex,
+                moveNotation = outcome.notation,
+                detail = "Move from board: ${outcome.notation}",
+            ))
+
 
     /**
      * What a log opening has to catch up on. A Berserk before the first press had no log to go into.

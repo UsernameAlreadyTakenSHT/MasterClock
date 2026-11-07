@@ -119,14 +119,14 @@ class CertaboProtocolTest {
     }
 
     @Test
-    fun `an unknown chip is refused rather than guessed`() {
+    fun `an unknown chip is a piece nobody can name`() {
         val calibration = PieceTagCalibration()
         calibration.identify((CertaboProtocol.decode(frame(startingTags())) as BoardReport.TaggedSquares).tags)
 
         // A piece from another set appears on an empty square.
         val tags = arrayOfNulls<String>(BoardPosition.SQUARE_COUNT)
         tags[indexOf("e4")] = "9-9-9-9-9"
-        assertNull(calibration.identify(tags.toList()))
+        assertEquals(BoardPosition.UNKNOWN_PIECE, calibration.identify(tags.toList())?.get(indexOf("e4")))
     }
 
     @Test
