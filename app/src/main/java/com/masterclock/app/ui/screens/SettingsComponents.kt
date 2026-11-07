@@ -181,7 +181,9 @@ fun HMSInput(label: String, timeMs: Long, onTimeChange: (Long) -> Unit) {
 fun TimeField(value: String, suffix: String, modifier: Modifier = Modifier, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = if (value == "0") "" else value,
-        onValueChange = { if (it.length <= 2) onValueChange(it) },
+        // Digits only. The number keyboard also offers "-" and ".", which read as no number at all
+        // and took the whole unit to zero.
+        onValueChange = { typed -> typed.filter(Char::isDigit).take(2).let { if (it.length == typed.length) onValueChange(it) } },
         modifier = modifier,
         minLines = 1,
         placeholder = { Text("00") },
@@ -1082,17 +1084,17 @@ fun TimeParameterPanel(p: PlayerSettings, settings: ChessClockSettings, onUpdate
             if (showTimeCap) { HMSInput(stringResource(R.string.settings_time_cap), p.timeCapMs) { onUpdate(p.copy(timeCapMs = it)) } }
             if (showProgression) { NumericInput(stringResource(R.string.settings_progression), p.byoyomiProgression) { onUpdate(p.copy(byoyomiProgression = it)) } }
             if (showMaxMoves) { NumericInput(stringResource(R.string.settings_max_moves), p.maxMoves) { onUpdate(p.copy(maxMoves = it)) } }
-            if (showGong) { GongPanel(p, onUpdate) }
+            if (showGong) { GongPanel(p, onUpdate, followsPlayerOne = isSecondPlayerTab) }
             if (showFidePeriods) { FidePeriodsPanel(p, onUpdate) }
             if (showPhases) { PhasesPanel(p = p, settings = settings, onUpdateP = onUpdate, onUpdateSettings = onUpdateSettings) }
             if (showRandom) { RandomModePanel(p, onUpdate, drawnByPlayerOne = isSecondPlayerTab) }
-            if (showFastMove) { FastMovePanel(p, onUpdate) }
+            if (showFastMove) { FastMovePanel(p, onUpdate, followsPlayerOne = isSecondPlayerTab) }
         }
     }
 }
 
 @Composable
-fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
+fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit, followsPlayerOne: Boolean = false) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (p.fastMoveMode == FastMoveType.ACCELERATE) {
             HMSInput(stringResource(R.string.settings_grace_period), p.fastMoveGracePeriodMs) { onUpdate(p.copy(fastMoveGracePeriodMs = it)) }
@@ -1123,7 +1125,9 @@ fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
         } else if (p.fastMoveMode == FastMoveType.SHRINK) {
             HMSInput(stringResource(R.string.settings_decrement_per_move), p.fastMoveShrinkDecrementMs) { onUpdate(p.copy(fastMoveShrinkDecrementMs = it)) }
             HMSInput(stringResource(R.string.settings_min_time_floor), p.fastMoveShrinkFloorMs) { onUpdate(p.copy(fastMoveShrinkFloorMs = it)) }
-        } else if (p.fastMoveMode == FastMoveType.TRANSFER) {
+        } else if (p.fastMoveMode == FastMoveType.TRANSFER && !followsPlayerOne) {
+            // One choice for the game, Player 1's. On Player 2's tab a tap wrote a value nothing reads
+            // and the switch sprang back; RandomModePanel and GongPanel hide theirs for the same reason.
             BehaviorSwitch(
                 label = stringResource(R.string.settings_cumulative_transfer),
                 checked = p.fastMoveTransferCumulative,
@@ -1162,9 +1166,9 @@ fun NumericInput(label: String, value: Int, onValueChange: (Int) -> Unit) {
 }
 
 @Composable
-fun GongPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
+fun GongPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit, followsPlayerOne: Boolean = false) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        BehaviorSwitch(stringResource(R.string.settings_simultaneous), p.gongSimultaneous, topRounded = true, bottomRounded = true) { onUpdate(p.copy(gongSimultaneous = it)) }
+        if (!followsPlayerOne) BehaviorSwitch(stringResource(R.string.settings_simultaneous), p.gongSimultaneous, topRounded = true, bottomRounded = true) { onUpdate(p.copy(gongSimultaneous = it)) }
         HMSInput(stringResource(R.string.settings_reflection_time), p.gongReflectionMs) { onUpdate(p.copy(gongReflectionMs = it)) }
         HMSInput(stringResource(R.string.settings_time_to_move), p.gongMoveMs) { onUpdate(p.copy(gongMoveMs = it)) }
     }
