@@ -20,6 +20,10 @@ internal class ClockSim(val settings: ChessClockSettings) {
     var moveElapsedMs = 0L
         private set
 
+    /** What the last tick handed over, for the rules about what a clock says. */
+    var lastTick: ClockTick? = null
+        private set
+
     private val fb get() = settings.flagBehavior
     private val players get() = settings.numberOfPlayers.coerceAtLeast(1)
     /** A PHASES game finished or flagged by its phase, which [isGameOver] does not know under NEGATIVE and REVERSE. */
@@ -27,9 +31,11 @@ internal class ClockSim(val settings: ChessClockSettings) {
     val running get() = state.activePlayer != null && !state.isPaused
 
     fun tick(delta: Long) {
+        lastTick = null
         if (!running) return
         moveElapsedMs += delta
         val result = tickClock(state, delta, settings)
+        lastTick = result
         state = result.state
         result.coupled?.let { if (it.handedOverBy != null || it.gongMoves.isNotEmpty()) moveElapsedMs = 0 }
         // stopIfGameOver
