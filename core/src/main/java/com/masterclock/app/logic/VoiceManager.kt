@@ -9,6 +9,8 @@ import android.util.Log
 import androidx.annotation.StringRes
 import java.util.*
 
+/** The languages of core's spoken strings. */
+private val TRANSLATED_LANGUAGES = setOf("en", "de", "es", "fr", "it", "nl", "pt")
 private const val TAG = "VoiceManager"
 
 /**
@@ -43,7 +45,10 @@ class VoiceManager(private val context: Context) : TextToSpeech.OnInitListener {
         // Google's -- the one GrapheneOS ships, or one from F-Droid -- need not offer either of the
         // first two, and the app then had no voice at all with a working engine on the phone.
         val engineOwn = runCatching { listOfNotNull(engine.defaultVoice?.locale) + engine.availableLanguages.orEmpty() }.getOrDefault(emptyList())
-        for (locale in listOf(device, Locale.US) + engineOwn) {
+        // The device's only if the app says its sentences in it: a phone in Polish had a Polish voice
+        // reading the English strings.
+        val spoken = if (device.language in TRANSLATED_LANGUAGES) listOf(device) else emptyList()
+        for (locale in spoken + Locale.US + engineOwn) {
             // LANG_AVAILABLE and better are non-negative; MISSING_DATA and NOT_SUPPORTED are not.
             if (engine.setLanguage(locale) >= TextToSpeech.LANG_AVAILABLE) {
                 speechResources = resourcesFor(locale)

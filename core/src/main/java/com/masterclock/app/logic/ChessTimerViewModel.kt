@@ -3899,7 +3899,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         else voiceManager.speak(CoreR.string.voice_phase, settings.voiceVolume, index + 1)
     }
 
-    private fun handleVoice(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int, timeLeft: Pair<Long, Long>? = null) {
+    private fun handleVoice(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int, timeLeft: Pair<Long, Long>? = null, afterPress: Boolean = false) {
         if (!settings.voiceAnnouncementsEnabled) return
 
         val vol = settings.voiceVolume
@@ -3927,7 +3927,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // to a player a minute past their time.
         val previous = timeLeft?.first ?: oldState.timeRemainingMs
         val time = timeLeft?.second ?: newState.timeRemainingMs
-        val thresholds = if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN || oldState.isOutOfTime || newState.isOutOfTime) emptyList()
+        val thresholds = if (afterPress || getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN || oldState.isOutOfTime || newState.isOutOfTime) emptyList()
             else listOf(60000L to CoreR.string.voice_one_minute_left, 30000L to CoreR.string.voice_thirty_seconds_left, 10000L to CoreR.string.voice_ten_seconds_left)
         for ((t, words) in thresholds) {
             if (previous > t && time <= t) voiceManager.speak(words, vol)
@@ -3994,8 +3994,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (before.isOutOfTime || !after.isOutOfTime) {
             // What the move itself changed is announced too. A FIDE period reached by move count --
             // forcedMoveCounter, the default -- advances here and not in tick(), so "Period 2"
-            // was never said for it. Thresholds cannot fire: a move only ever adds time.
-            handleVoice(before, after, _settings.value, playerIndex)
+            // was never said for it. Not the time left: a move can lower a clock, in Shrink and in a
+            // Transfer that resets it, and "thirty seconds" was said to a player who had just moved.
+            handleVoice(before, after, _settings.value, playerIndex, afterPress = true)
             return false
         }
         handleAudio(before, after, _settings.value, playerIndex)
