@@ -24,6 +24,7 @@ import java.util.Locale
 @Composable
 fun OmniTimerScreen(
     viewModel: OmniTimerViewModel,
+    pauseOnBackground: Boolean,
     onBack: () -> Unit
 ) {
     val state by viewModel.omniState.collectAsState()
@@ -37,6 +38,17 @@ fun OmniTimerScreen(
     val activity = androidx.activity.compose.LocalActivity.current
     DisposableEffect(Unit) {
         onDispose { if (activity?.isChangingConfigurations != true) viewModel.pauseOmni() }
+    }
+    // As the clock does. Going to the background disposes nothing, so a session went on counting
+    // and sounding with the phone locked, whatever "Pause when in background" said.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val pauseWhenLeft by androidx.compose.runtime.rememberUpdatedState(pauseOnBackground)
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_PAUSE && pauseWhenLeft) viewModel.pauseOmni()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     if (showResetDialog) {

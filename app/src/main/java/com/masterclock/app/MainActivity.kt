@@ -574,6 +574,7 @@ class MainActivity : ComponentActivity() {
                             val omniViewModel: OmniTimerViewModel = viewModel()
                             OmniTimerScreen(
                                 viewModel = omniViewModel,
+                                pauseOnBackground = settings.pauseOnBackground,
                                 onBack = { navigator.goBack() }
                             )
                         }
