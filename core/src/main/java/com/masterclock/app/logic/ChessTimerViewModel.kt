@@ -1997,7 +1997,8 @@ private fun PlayerState.finalFlag(overrunMs: Long, flagBehavior: FlagBehavior): 
 
 internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
     if (p.delayRemainingMs > 0) {
-        if (delta <= p.delayRemainingMs) return p.copy(delayRemainingMs = p.delayRemainingMs - delta)
+        // A delay ending on a clock with nothing behind it is the flag, not a tick more at 0:00.
+        if (delta < p.delayRemainingMs || (delta == p.delayRemainingMs && p.timeRemainingMs > 0)) return p.copy(delayRemainingMs = p.delayRemainingMs - delta)
         return tickPlayer(p.copy(delayRemainingMs = 0), delta - p.delayRemainingMs, s, settings)
     }
     // An overrun past the last stage goes on growing; see finalFlag.
@@ -2646,8 +2647,13 @@ internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountM
         // the face never shows, changed nothing.
         TimerMode.CHRONO_COUNTDOWN, TimerMode.CHRONO_COUNTUP -> {
             val p1 = state.players[0]
-            val clock = PlayerState(state.globalTimeMs, isOutOfTime = p1.isOutOfTime, isNegative = p1.isNegative).arbiterCredited(amountMs, flagBehavior)
-            state.copy(globalTimeMs = clock.timeRemainingMs, players = state.players.map { it.copy(isOutOfTime = clock.isOutOfTime, isNegative = clock.isNegative) })
+            // A stopwatch has nothing to run out of: a penalty past zero read FLAGGED, ended the game
+            // under FREEZE, and under NEGATIVE counted further below zero for good.
+            if (mode == TimerMode.CHRONO_COUNTUP) state.copy(globalTimeMs = (state.globalTimeMs + amountMs).coerceAtLeast(0))
+            else {
+                val clock = PlayerState(state.globalTimeMs, isOutOfTime = p1.isOutOfTime, isNegative = p1.isNegative).arbiterCredited(amountMs, flagBehavior)
+                state.copy(globalTimeMs = clock.timeRemainingMs, players = state.players.map { it.copy(isOutOfTime = clock.isOutOfTime, isNegative = clock.isNegative) })
+            }
         }
         // PHASES shows the phase's clock, globalTimeMs, or during a timed pause what is left
         // of it; time went to the player's own field, which the face never shows and the next
@@ -2666,7 +2672,9 @@ internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountM
         // Shared (Auto)'s clock running out is the end of a turn, not a flag, so a penalty past
         // zero leaves it at zero for the tick to hand over.
         else -> state.copy(players = state.players.mapIndexed { idx, p ->
-            if (wholeTable) p.copy(timeRemainingMs = (p.timeRemainingMs + amountMs).coerceAtLeast(0))
+            // Gong has phases, not flags: a penalty past zero ends the phase on the next tick.
+            if (wholeTable || (mode == TimerMode.GONG && idx + 1 == playerIndex)) p.copy(timeRemainingMs = (p.timeRemainingMs + amountMs).coerceAtLeast(0))
+            else if (idx + 1 == playerIndex && p.penaltyRunsOn(amountMs, settings.playerSettings(idx + 1))) p.penaltyRunningOn(amountMs, settings.playerSettings(idx + 1), settings)
             else if (idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
                 val ps = settings.playerSettings(idx + 1)
                 when {
@@ -2680,8 +2688,26 @@ internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountM
     }
     // Nobody out any more: no flag stands, so none is first. A flag the arbiter's penalty caused
     // is first like any other; the player it was given to is preferred if several fall at once.
+    // The table's clock running out is nobody's flag, as when it runs out on its own. Named, it read
+    // "Player 1, out of time", and under NEGATIVE and REVERSE the game was not over at all.
+    if (mode == TimerMode.CHRONO_COUNTDOWN) return adjusted.copy(firstToFlag = null)
     return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted.withFirstFlag(state, playerIndex)
 }
+
+/**
+ * Whether a penalty takes this clock past zero into what comes after it. Time taken is time run down:
+ * main time gone is byoyomi, and a FIDE period gone on its time is the next one. It flagged the player
+ * on the spot, with five byoyomi periods untouched.
+ */
+private fun PlayerState.penaltyRunsOn(amountMs: Long, s: PlayerSettings): Boolean =
+    !isOutOfTime && amountMs < 0 && timeRemainingMs + amountMs <= 0 && when (s.mode) {
+        TimerMode.BYOYOMI_JAPANESE, TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE, TimerMode.FIDE_PERIODS -> true
+        else -> false
+    }
+
+/** The clock's own arithmetic for what follows zero, with the delay out of it: a delay is for thinking, and shields no one from a penalty. */
+private fun PlayerState.penaltyRunningOn(amountMs: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState =
+    tickPlayer(copy(delayRemainingMs = 0), -amountMs, s, settings).copy(delayRemainingMs = delayRemainingMs)
 
 /**
  * The arbiter's time in the modes with a move clock and a reserve: Global's total, Overtime's
@@ -4035,7 +4061,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Nor has any other game that is over. Play on one logged a RESUME, and the check further
         // down then refused to start it; a finished game now shows Play, so it is pressed.
         val st = _settings.value
-        if (starting.activePlayer != null && isGameOver(starting, st.flagBehavior, st.numberOfPlayers)) return
+        // One that has not started can be over too: a penalty can run the table's clock out first.
+        if (isGameOver(starting, st.flagBehavior, st.numberOfPlayers)) return
         // Shared (Auto) with no move time has nothing to run (tickCoupled): Play lit every box,
         // showed Pause over 0:00, and ticked and autosaved for ever with nothing happening.
         if (getPlayerSettings(1).mode == TimerMode.MOVE_TIMER_SHARED && getPlayerSettings(1).moveTimeMs <= 0) return
@@ -4261,6 +4288,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             timerJob?.cancel()
             timerJob = null
             pausedAt = null
+            // A notation held for a press belongs to this game, and went into the next one's PGN.
+            pendingBoardNotation = null
             // The clock below is a new game, so the one being played ends here, the same way Reset
             // ends it. Saved with the settings it was played under: _settings has moved on, but
             // the log carries its own copy from the first press.
@@ -4289,8 +4318,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         logsToImport?.let { logs ->
             writerScope.launch {
                 // logsToImport only ever originates from a QR/JSON/ZIP import (see call sites), so each
-            // A notation held for a press belongs to this game, and went into the next one's PGN.
-            pendingBoardNotation = null
                 // log's embedded settings are just as untrusted as the top-level `newSettings` above and
                 // must go through the same sanitization before being persisted. Without this, a crafted
                 // GameLog.settings.notebookNotes/custom*Uri survives unsanitized in Room and later becomes
@@ -4489,6 +4516,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun resumeSavedClock() {
+        pendingBoardNotation = null
         viewModelScope.launch {
             val saved = gameDao.getSavedClock() ?: return@launch
             try {
@@ -4517,7 +4545,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                         // toGameLog degrades an unreadable row to an empty log rather than throwing.
                         ?.takeIf { it.events.isNotEmpty() }
                 }?.let { log ->
-        pendingBoardNotation = null
                     // Back to the moment of the save, as the clock is: the moves played after it
                     // stayed in the log, and played again from the restored clock were logged
                     // twice -- four moves in the PGN and the statistics for two played.
@@ -4581,11 +4608,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             activePlayer = currentState.activePlayer,
             isPaused = currentState.isPaused,
             autoSwitchOnBoardMove = settings.value.autoSwitchOnBoardMove,
+            takesPresses = currentState.activePlayer?.let { settings.value.takesMovePresses(it) } != false,
         )
         when (outcome) {
             // The MOVE event this raises carries the notation, so a separate BOARD_MOVE alongside it
             // would be the same move logged twice.
             is BoardMoveOutcome.SwitchNow -> startOrSwitch(outcome.playerIndex, boardNotation = outcome.notation)
+
+            is BoardMoveOutcome.NoteOnly -> addEvent(GameEvent(
+                eventType = "BOARD_MOVE",
+                playerIndex = outcome.playerIndex,
+                moveNotation = outcome.notation,
+                detail = "Move from board: ${outcome.notation}",
+            ))
 
             is BoardMoveOutcome.HoldForNextPress -> {
                 pendingBoardNotation = outcome.notation
@@ -4609,20 +4644,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     /**
      * The game's starting clocks as its time control set them. A player can go Berserk before the
-            takesPresses = currentState.activePlayer?.let { settings.value.takesMovePresses(it) } != false,
      * first press, and the log, opened by that press, took the halved clock for the start: the game
      * replayed from Last Games came back with that player Berserk, and nobody had chosen that.
      */
     private fun gameStartStates(): List<PlayerStateProxy> = _uiState.value.players.mapIndexed { i, p ->
         p.beforeBerserk(getPlayerSettings(i + 1), settings.value).toProxy()
     }
-            is BoardMoveOutcome.NoteOnly -> addEvent(GameEvent(
-                eventType = "BOARD_MOVE",
-                playerIndex = outcome.playerIndex,
-                moveNotation = outcome.notation,
-                detail = "Move from board: ${outcome.notation}",
-            ))
-
 
     /**
      * What a log opening has to catch up on. A Berserk before the first press had no log to go into.

@@ -87,7 +87,7 @@ internal class ClockSim(val settings: ChessClockSettings) {
 
     fun resume() {
         if (phasesOver) return
-        if (state.activePlayer != null && isGameOver(state, fb, players)) return
+        if (isGameOver(state, fb, players)) return
         val p1 = settings.playerSettings(1)
         if (p1.mode == TimerMode.MOVE_TIMER_SHARED && p1.moveTimeMs <= 0) return
         val fresh = state.activePlayer == null

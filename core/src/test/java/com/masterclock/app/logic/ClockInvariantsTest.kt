@@ -96,6 +96,10 @@ class ClockInvariantsTest {
             TimerMode.FIDE_PERIODS, TimerMode.RANDOM, TimerMode.HIDDEN, TimerMode.FAST_MOVE,
         )
         private val RESERVE = setOf(TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_GLOBAL_SHARED, TimerMode.MOVE_TIMER_OVERTIME)
+        /** What a clock's zero leads to: byoyomi, or the next FIDE period. See ArbiterPastZeroTest. */
+        private val SOMETHING_AFTER_ZERO = setOf(
+            TimerMode.BYOYOMI_JAPANESE, TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE, TimerMode.FIDE_PERIODS,
+        )
         /** One clock that only ever runs down while its player is on the move. */
         private val PLAIN = setOf(
             TimerMode.SUDDEN_DEATH, TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY,
@@ -238,8 +242,11 @@ class ClockInvariantsTest {
             val a = after.players[i]
             val overflowing = fb == FlagBehavior.NEGATIVE || fb == FlagBehavior.REVERSE
             val what = "P${action.player} ${if (amount > 0) "+" else ""}${amount}ms: $b -> $a"
+            // A penalty through zero goes on to what comes after it, as the time running out would: no
+            // longer a sum on one clock, and a period spent is not given back by giving the time back.
+            val runsOn = amount < 0 && !b.isOutOfTime && b.timeRemainingMs + amount <= 0 && mode in SOMETHING_AFTER_ZERO
 
-            if (mode in CREDITED) {
+            if (mode in CREDITED && !runsOn) {
                 // The arbiter's time is exactly what is shown: a penalty past zero is an overrun
                 // under NEGATIVE and REVERSE, a flag under FREEZE and FLAG.
                 if (overflowing && signed(a, fb) != signed(b, fb) + amount) return "the arbiter's time is exact" to what
@@ -262,7 +269,7 @@ class ClockInvariantsTest {
                 // Nor from a clock set to nothing: taken back to zero, it flags, as any other clock does.
                 val canUndo = if (mode in RESERVE) !b.isOutOfTime && b.secondaryTimeMs + amount > 0
                     else (overflowing || (amount > 0 && !b.isOutOfTime)) && (b.timeRemainingMs > 0 || b.isOutOfTime)
-                if (canUndo && !sameClock(before, back, fb)) return "the arbiter can undo what it did" to "P${action.player} ±${amount}ms: $b -> ${back.players[i]}"
+                if (canUndo && !runsOn && !sameClock(before, back, fb)) return "the arbiter can undo what it did" to "P${action.player} ±${amount}ms: $b -> ${back.players[i]}"
             }
             return null
         }
