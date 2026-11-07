@@ -159,6 +159,17 @@ class BoardMoveTracker {
     /** Only used by makes that identify pieces by tag; see [BoardReport.TaggedSquares]. */
     private val calibration = PieceTagCalibration()
 
+    /**
+     * The rest of a move that reaches the board in two moves' worth of reports, once its first half
+     * has been read as a move. A castle is the king and then the rook, each a complete quiet move to
+     * the differ. The second was read as the opponent's: they were charged a move, the clock went back
+     * to the castling player, and every press after that landed on the wrong side.
+     */
+    private var secondHalf: String? = null
+
+    /** The square an en passant capture has yet to empty, for the same reason. */
+    private var captureToClear: Int? = null
+
     /** Whether this board stands turned half way round; see [BoardReport.Position.mayBeTurned]. */
     private var turned = false
 
@@ -231,15 +242,42 @@ class BoardMoveTracker {
             settled = position
             return emptyList()
         }
+        // The pieces set up again. Nothing else starts a new game on a board: a tracker kept the last
+        // game's final position, every report differed from it by more than one move, and no move was
+        // recognised again until the board was reconnected, with nothing on screen to say so. The
+        // same for a board connected empty, or half set up.
+        if (position == BoardPosition.STARTING && from != position) {
+            settled = position
+            secondHalf = null
+            captureToClear = null
+            return emptyList()
+        }
+        val ghost = captureToClear
+        if (ghost != null && position[ghost] == BoardPosition.EMPTY && onlyDiffersAt(from, position, ghost)) {
+            settled = position
+            captureToClear = null
+            return emptyList()
+        }
         val move = BoardDiffer.moveBetween(from, position) ?: return emptyList()
         settled = position
+        if (move == secondHalf) {
+            secondHalf = null
+            return emptyList()
+        }
+        secondHalf = BoardDiffer.secondHalfOf(move, from)
+        captureToClear = BoardDiffer.capturedEnPassantBy(move, from)
         return listOf(move)
     }
+
+    private fun onlyDiffersAt(a: BoardPosition, b: BoardPosition, square: Int): Boolean =
+        (0 until BoardPosition.SQUARE_COUNT).all { it == square || a[it] == b[it] }
 
     fun reset() {
         settled = null
         current = null
         turned = false
+        secondHalf = null
+        captureToClear = null
         // A different set of pieces may be on the next board, so the learned tags go too.
         calibration.reset()
     }

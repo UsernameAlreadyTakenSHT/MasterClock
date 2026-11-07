@@ -106,6 +106,46 @@ value class BoardPosition(val squares: String) {
  * what the exported PGN will show.
  */
 object BoardDiffer {
+    private fun squareOf(name: String): Int = ('8' - name[1]) * 8 + (name[0] - 'a')
+
+    /**
+     * The move that completes [move] when it was the first half of a castle, played on [before].
+     *
+     * King first, as the rules want it: only a castle moves a king two files. Rook first as well,
+     * which is how many players do it: a rook from its corner to the square beside the king, the
+     * king about to jump it. That reading is safe, since a king cannot then move two files in any
+     * legal game unless it is this castle. Only known pieces count: a board that feels a piece and
+     * cannot name it reports a two-file rook move in exactly the same way.
+     */
+    fun secondHalfOf(move: String, before: BoardPosition): String? {
+        if (move.length < 4 || move[1] != move[3]) return null
+        val rank = move[1]
+        val piece = before[squareOf(move.substring(0, 2))]
+        val from = move[0]
+        val to = move[2]
+        return when {
+            piece.equals('k', ignoreCase = true) && from == 'e' && to == 'g' -> "h${rank}f$rank"
+            piece.equals('k', ignoreCase = true) && from == 'e' && to == 'c' -> "a${rank}d$rank"
+            !piece.equals('r', ignoreCase = true) -> null
+            from == 'h' && to == 'f' && before[squareOf("e$rank")].equals('k', ignoreCase = true) -> "e${rank}g$rank"
+            from == 'a' && to == 'd' && before[squareOf("e$rank")].equals('k', ignoreCase = true) -> "e${rank}c$rank"
+            else -> null
+        }
+    }
+
+    /**
+     * The square of the pawn [move] captured en passant, when it read as a quiet move: the capturing
+     * pawn put down before the other was taken off. Left on the baseline, that pawn broke the next
+     * comparison, and with a capture next no move was recognised for the rest of the game.
+     */
+    fun capturedEnPassantBy(move: String, before: BoardPosition): Int? {
+        if (move.length < 4 || move[0] == move[2]) return null
+        val from = squareOf(move.substring(0, 2))
+        val to = squareOf(move.substring(2, 4))
+        val isPawn = before[from].equals('p', ignoreCase = true)
+        return if (isPawn && before[to] == BoardPosition.EMPTY) squareOf("${move[2]}${move[1]}") else null
+    }
+
 
     fun moveBetween(before: BoardPosition, after: BoardPosition): String? {
         val changed = (0 until BoardPosition.SQUARE_COUNT).filter { before[it] != after[it] }

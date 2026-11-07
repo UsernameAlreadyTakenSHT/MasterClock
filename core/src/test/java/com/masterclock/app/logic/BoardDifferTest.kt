@@ -111,8 +111,8 @@ class BoardDifferTest {
         val before = position("e1" to 'K', "h1" to 'R')
         val after = position("g1" to 'K', "h1" to 'R')
         // King moved, rook not yet: this one does read as a quiet king move, which is exactly what
-        // a real castle looks like halfway through. The board settles a moment later; the clock
-        // pressing a fraction early on a castle is the accepted cost of not needing a rules engine.
+        // a real castle looks like halfway through. The clock pressing a fraction early is the
+        // accepted cost of not needing a rules engine; BoardMoveTracker absorbs the rook that follows.
         assertEquals("e1g1", BoardDiffer.moveBetween(before, after))
     }
 
