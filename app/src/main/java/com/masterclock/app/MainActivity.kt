@@ -393,7 +393,13 @@ class MainActivity : ComponentActivity() {
                                 viewModel = timerViewModel,
                                 currentSettings = settings,
                                 category = SettingsCategory.fromRoute(route.category),
-                                onSettingsChanged = { timerViewModel.updateSettings(it) },
+                                // A game in play asks first, as a preset does.
+                                onSettingsChanged = { new ->
+                                    val current = timerViewModel.settings.value
+                                    if (current.confirmReset && timerViewModel.uiState.value.activePlayer != null && settingsEndTheGame(current, new)) {
+                                        pendingPreset = { timerViewModel.updateSettings(new) }
+                                    } else timerViewModel.updateSettings(new)
+                                },
                                 onClearLogs = { timerViewModel.clearAllLogs() },
                                 onResetSettings = { timerViewModel.resetAllSettings() },
                                 onExportSettings = { includeLogs -> 

@@ -110,6 +110,16 @@ class PaperClockFlowsTest {
     }
 
     @Test
+    fun settingsPausesAGameInPlay() {
+        rule.onNode(button(R.string.timer_start)).performClick()
+        await(button(R.string.timer_pause))
+
+        rule.onNode(button(R.string.timer_settings)).performClick()
+
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.isPaused }
+    }
+
+    @Test
     fun theSettingsPageOpensAndComesBack() {
         rule.onNode(button(R.string.timer_settings)).performClick()
         await(hasText(say(R.string.settings_tab_modes).uppercase()))

@@ -8,8 +8,10 @@ import androidx.compose.ui.test.performClick
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterclock.app.data.GameDatabase
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -76,6 +78,36 @@ class ResumeFlowTest {
         assertEquals(1, back[0].moveCount)
         assertEquals(left[0].timeRemainingMs, back[0].timeRemainingMs)
         assertTrue("${back[1].timeRemainingMs} against ${left[1].timeRemainingMs}", back[1].timeRemainingMs <= left[1].timeRemainingMs)
+        second.close()
+    }
+
+    @Test
+    fun aNewGameLeavesTheInterruptedOneOnOfferAtFirst() {
+        val first = ActivityScenario.launch(MainActivity::class.java)
+        assumeTrue(FlavorConfig.hasArbitre())
+        val before = viewModelOf(first)
+        rule.waitUntil(TIMEOUT_MS) { before.isReady.value }
+        first.onActivity {
+            before.resetAllSettings()
+            before.reset()
+        }
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(hasContentDescription(say(R.string.timer_start))).fetchSemanticsNodes().isNotEmpty() }
+        tap(R.string.timer_start)
+        rule.waitUntil(TIMEOUT_MS) { before.uiState.value.activePlayer == 1 }
+        tap(R.string.timer_pause)
+        rule.waitUntil(TIMEOUT_MS) { before.hasSavedClock.value }
+        first.close()
+
+        val second = ActivityScenario.launch(MainActivity::class.java)
+        val after = viewModelOf(second)
+        rule.waitUntil(TIMEOUT_MS) { after.isReady.value && after.hasSavedClock.value }
+        val saved = runBlocking { GameDatabase.getDatabase(app).gameLogDao().getSavedClock() }
+        second.onActivity { after.startOrSwitch(1) }
+        rule.waitUntil(TIMEOUT_MS) { after.uiState.value.activePlayer != null }
+        Thread.sleep(1_500)
+
+        val still = runBlocking { GameDatabase.getDatabase(app).gameLogDao().getSavedClock() }
+        assertEquals(saved?.timestamp, still?.timestamp)
         second.close()
     }
 

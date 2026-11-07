@@ -8,6 +8,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.activity.ComponentActivity
+import com.masterclock.paper.ui.components.MMDAlertDialog
+import com.masterclock.paper.R
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -142,7 +144,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            var pendingChange by remember { mutableStateOf<(() -> Unit)?>(null) }
             MasterClockTheme(eInkDarkMode = reversed) {
+                pendingChange?.let { apply ->
+                    MMDAlertDialog(
+                        onDismissRequest = { pendingChange = null },
+                        title = stringResource(R.string.timer_reset_title),
+                        text = stringResource(R.string.timer_reset_message),
+                        confirmButtonText = stringResource(R.string.common_reset),
+                        onConfirm = { pendingChange = null; apply() },
+                        dismissButtonText = stringResource(R.string.common_cancel),
+                        onDismiss = { pendingChange = null },
+                    )
+                }
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val entryProvider = entryProvider<NavKey> {
                         entry<Route.Timer> { _ ->
@@ -156,7 +170,13 @@ class MainActivity : ComponentActivity() {
                         entry<Route.Settings> { _ ->
                             SettingsScreen(
                                 currentSettings = settings,
-                                onSettingsChanged = { timerViewModel.updateSettings(it) },
+                                // A game in play asks first, as on the phone.
+                                onSettingsChanged = { new ->
+                                    val current = timerViewModel.settings.value
+                                    if (current.confirmReset && timerViewModel.uiState.value.activePlayer != null && settingsEndTheGame(current, new)) {
+                                        pendingChange = { timerViewModel.updateSettings(new) }
+                                    } else timerViewModel.updateSettings(new)
+                                },
                                 onBackClick = {
                                     navigator.goBack()
                                 },

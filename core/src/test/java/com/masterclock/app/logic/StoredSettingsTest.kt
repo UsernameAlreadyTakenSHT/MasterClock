@@ -16,6 +16,23 @@ class StoredSettingsTest {
     )
 
     @Test
+    fun `reset settings keeps the notebook and how much history there is`() {
+        val mine = ChessClockSettings(flagBehavior = FlagBehavior.NEGATIVE, notebookNotes = notes, logHistoryLimit = -1, logDurationLimit = LogDurationLimit.entries.first { it != LogDurationLimit.INFINITE })
+        val reset = settingsAfterReset(mine)
+        assertEquals(notes, reset.notebookNotes)
+        assertEquals(-1, reset.logHistoryLimit)
+        assertEquals(mine.logDurationLimit, reset.logDurationLimit)
+        assertEquals(ChessClockSettings().flagBehavior, reset.flagBehavior)
+    }
+
+    @Test
+    fun `a time control changed ends the game and a colour does not`() {
+        val base = ChessClockSettings()
+        assertEquals(true, settingsEndTheGame(base, base.copy(main = base.main.copy(initialTimeMs = 1))))
+        assertEquals(false, settingsEndTheGame(base, base.copy(confirmReset = false)))
+    }
+
+    @Test
     fun `settings read back as they were stored`() {
         val read = decodeStoredSettings(stored)
         assertEquals(FlagBehavior.NEGATIVE, read.flagBehavior)

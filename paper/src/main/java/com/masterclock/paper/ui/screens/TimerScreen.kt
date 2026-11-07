@@ -131,7 +131,9 @@ fun TimerScreen(
                 }
     
                 OutlinedButtonMMD(
-                    onClick = onSettingsClick,
+                    // Paused first, as on the phone: a game went on running behind a page with no way
+                    // to press it, and a flag could fall there unseen.
+                    onClick = { if (!state.isPaused) viewModel.pause(); onSettingsClick() },
                     modifier = Modifier.weight(1f),
                     border = outlinedButtonBorderMMD(),
                     contentPadding = controlPadding,

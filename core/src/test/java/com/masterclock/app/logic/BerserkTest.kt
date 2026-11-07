@@ -97,6 +97,14 @@ class BerserkTest {
     }
 
     @Test
+    fun `the clock it left is the one a replay starts from`() {
+        val s = settings(fischer(3, 2), firstMove = true)
+        val before = start(s)
+        val after = goBerserk(before, 1, s)
+        assertEquals(before.players[0], after.players[0].beforeBerserk(s.main, s))
+    }
+
+    @Test
     fun `a saved game remembers it`() {
         val s = settings(fischer(3, 2))
         assertTrue(goBerserk(start(s), 1, s).players[0].toProxy().toState().hasBerserked)

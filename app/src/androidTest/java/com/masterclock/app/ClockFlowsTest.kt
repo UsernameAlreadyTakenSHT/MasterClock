@@ -185,6 +185,21 @@ class ClockFlowsTest {
     }
 
     @Test
+    fun aBerserkBeforeTheFirstPressGoesInTheLog() {
+        rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(allowBerserk = true)) }
+        val button = hasText(say(R.string.timer_berserk)) and hasClickAction()
+        await(button)
+        rule.onAllNodes(button)[0].performClick()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.players.any { it.hasBerserked } }
+
+        control(R.string.timer_start).performClick()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null }
+        rule.runOnUiThread { viewModel.reset() }
+
+        rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.isNotEmpty() || !com.masterclock.app.logic.FlavorConfig.keepsGameHistory() }
+    }
+
+    @Test
     fun aClockOffersTalkBackTheSwitchByName() {
         val action = player(1).fetchSemanticsNode().config[SemanticsActions.OnClick]
         assertEquals(say(R.string.timer_switch_turn), action.label)

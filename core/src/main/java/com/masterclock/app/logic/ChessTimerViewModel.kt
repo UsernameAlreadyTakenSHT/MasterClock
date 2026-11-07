@@ -374,6 +374,14 @@ fun canBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSet
     return !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers) && p.timeRemainingMs > berserkPenaltyMs(s)
 }
 
+/** This player as they stood before going Berserk; see [goBerserk]. */
+internal fun PlayerState.beforeBerserk(s: PlayerSettings, settings: ChessClockSettings): PlayerState =
+    if (!hasBerserked) this
+    else copy(timeRemainingMs = timeRemainingMs + berserkPenaltyMs(s) + berserkBonusMs(s, settings), hasBerserked = false)
+
+private fun berserkBonusMs(s: PlayerSettings, settings: ChessClockSettings): Long =
+    if (s.mode == TimerMode.FISCHER && settings.fischerFideFirstMove) s.incrementMs else 0L
+
 /**
  * [playerIndex] goes Berserk. The first move's bonus goes with the increment it is an advance on.
  * Taken off what is on the clock, not set: on their own turn it has been running.
@@ -381,7 +389,7 @@ fun canBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSet
 internal fun goBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSettings): ChessClockState {
     if (!canBerserk(state, playerIndex, settings)) return state
     val s = settings.playerSettings(playerIndex)
-    val firstMoveBonus = if (s.mode == TimerMode.FISCHER && settings.fischerFideFirstMove) s.incrementMs else 0L
+    val firstMoveBonus = berserkBonusMs(s, settings)
     return state.copy(players = state.players.mapIndexed { i, p ->
         if (i + 1 != playerIndex) p
         else p.copy(timeRemainingMs = (p.timeRemainingMs - berserkPenaltyMs(s) - firstMoveBonus).coerceAtLeast(1), hasBerserked = true)
@@ -440,6 +448,42 @@ fun steppedForSpeech(ms: Long): Long = when {
     ms >= 60_000L -> ms - ms % 60_000L
     else -> (ms - ms % 10_000L).coerceAtLeast(10_000L)
 }
+
+/**
+ * The settings after Reset settings. The notebook is not a setting, and neither are the history
+ * limits, whatever they are stored with: back at 100, the next game finished deleted every game past
+ * the hundredth, for good, from a question that spoke only of settings.
+ */
+internal fun settingsAfterReset(current: ChessClockSettings) = ChessClockSettings(
+    notebookNotes = current.notebookNotes,
+    logHistoryLimit = current.logHistoryLimit,
+    logDurationLimit = current.logDurationLimit,
+)
+
+/**
+ * Whether going from [old] to [new] replaces the game on the clock. Public so that a screen can ask
+ * first: one brush of a mode card or one digit ended a paused game and its autosave, with no way
+ * back, as a preset's tile did until it asked.
+ */
+fun settingsEndTheGame(old: ChessClockSettings, new: ChessClockSettings): Boolean =
+    old.main != new.main ||
+        old.p1Custom != new.p1Custom ||
+        old.p2Custom != new.p2Custom ||
+        // p3Custom/p4Custom were missing here: changing only P4's settings (4-player,
+        // differentSettingsPerPlayer) silently failed to refresh the clock until some other
+        // tracked field also changed.
+        old.p3Custom != new.p3Custom ||
+        old.p4Custom != new.p4Custom ||
+        old.numberOfPlayers != new.numberOfPlayers ||
+        old.differentSettingsPerPlayer != new.differentSettingsPerPlayer ||
+        old.gameType != new.gameType ||
+        // It changes the clock a game starts from -- the first-move bonus -- and a fresh clock
+        // kept showing 3:02 for a 3+2 after it was turned off.
+        // Each of these two applies to one mode, and starts a new game only when it is that
+        // mode's: switched during a Fischer game the move counter ended it, and its autosave.
+        (old.fischerFideFirstMove != new.fischerFideFirstMove && new.usesMode(TimerMode.FISCHER)) ||
+        // It decides how a FIDE period ends; switched mid-game it changed the rule on the spot.
+        (old.forcedMoveCounter != new.forcedMoveCounter && new.usesMode(TimerMode.FIDE_PERIODS))
 
 /** Where Android counts a screen as large, and stops honouring a lock to portrait. */
 const val LARGE_SCREEN_DP = 600
@@ -3471,7 +3515,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // With no log, addEvent and finishCurrentLog have nothing to act on, so a build that keeps
         // no history records nothing at all.
         if (currentLog == null && FlavorConfig.keepsGameHistory()) {
-            val playersInitialStates = _uiState.value.players.map { it.toProxy() }
+            val playersInitialStates = gameStartStates()
             currentLog = GameLog(
                 // The time control, not the notebook: every game carried the whole notebook --
                 // drawings, boards, media paths -- into the history, out with every share "with
@@ -3480,6 +3524,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 initialPlayerStates = playersInitialStates
             )
             addEvent(GameEvent(eventType = "START", detail = "Game started by P$playerIndex"))
+            onGameLogOpened()
         }
 
         // The clock runs itself once it is going, so a press only resumes it. The first press is the
@@ -3987,7 +4032,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (freshStart) moveStartTime = SystemClock.elapsedRealtime()
         val active = starting.activePlayer ?: 1
         if (currentLog == null && FlavorConfig.keepsGameHistory()) {
-            val playersInitialStates = _uiState.value.players.map { it.toProxy() }
+            val playersInitialStates = gameStartStates()
             currentLog = GameLog(
                 // The time control, not the notebook: every game carried the whole notebook --
                 // drawings, boards, media paths -- into the history, out with every share "with
@@ -3996,6 +4041,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 initialPlayerStates = playersInitialStates
             )
             addEvent(GameEvent(eventType = "START", detail = "Game started by P$active"))
+            onGameLogOpened()
         }
         addEvent(GameEvent(eventType = "RESUME"))
         val s = _settings.value
@@ -4192,25 +4238,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             soundManager.setVolume(newSettings.soundsVolume)
         }
 
-        val coreChanged = oldSettings.main != newSettings.main ||
-                oldSettings.p1Custom != newSettings.p1Custom ||
-                oldSettings.p2Custom != newSettings.p2Custom ||
-                // p3Custom/p4Custom were missing here: changing only P4's settings (4-player,
-                // differentSettingsPerPlayer) silently failed to refresh the clock until some other
-                // tracked field also changed.
-                oldSettings.p3Custom != newSettings.p3Custom ||
-                oldSettings.p4Custom != newSettings.p4Custom ||
-                oldSettings.numberOfPlayers != newSettings.numberOfPlayers ||
-                oldSettings.differentSettingsPerPlayer != newSettings.differentSettingsPerPlayer ||
-                oldSettings.gameType != newSettings.gameType ||
-                // It changes the clock a game starts from -- the first-move bonus -- and a fresh clock
-                // kept showing 3:02 for a 3+2 after it was turned off.
-                // Each of these two applies to one mode, and starts a new game only when it is that
-                // mode's: switched during a Fischer game the move counter ended it, and its autosave.
-                (oldSettings.fischerFideFirstMove != newSettings.fischerFideFirstMove && newSettings.usesMode(TimerMode.FISCHER)) ||
-                // It decides how a FIDE period ends; switched mid-game it changed the rule on the spot.
-                (oldSettings.forcedMoveCounter != newSettings.forcedMoveCounter && newSettings.usesMode(TimerMode.FIDE_PERIODS)) ||
-                initialStates != null || newGame
+        val coreChanged = settingsEndTheGame(oldSettings, newSettings) || initialStates != null || newGame
 
         if (coreChanged) {
             timerJob?.cancel()
@@ -4367,7 +4395,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * left its photos, recordings and videos on disk with nothing pointing at them.
      */
     fun resetAllSettings() {
-        updateSettings(ChessClockSettings(notebookNotes = _settings.value.notebookNotes))
+        updateSettings(settingsAfterReset(_settings.value))
     }
 
     fun adjustTime(playerIndex: Int, amountMs: Long) {
@@ -4558,6 +4586,29 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun getPlayerSettings(playerIndex: Int): PlayerSettings = settings.value.playerSettings(playerIndex)
+
+    /**
+     * The game's starting clocks as its time control set them. A player can go Berserk before the
+     * first press, and the log, opened by that press, took the halved clock for the start: the game
+     * replayed from Last Games came back with that player Berserk, and nobody had chosen that.
+     */
+    private fun gameStartStates(): List<PlayerStateProxy> = _uiState.value.players.mapIndexed { i, p ->
+        p.beforeBerserk(getPlayerSettings(i + 1), settings.value).toProxy()
+    }
+
+    /**
+     * What a log opening has to catch up on. A Berserk before the first press had no log to go into.
+     *
+     * And the autosave's interval starts here. Left at 0 it had always elapsed, so in a new process
+     * the first tick of a new game overwrote the interrupted one still on offer, fifteen seconds
+     * earlier than [applyShortcutNow] promises.
+     */
+    private fun onGameLogOpened() {
+        _uiState.value.players.forEachIndexed { i, p ->
+            if (p.hasBerserked) addEvent(GameEvent(eventType = "BERSERK", playerIndex = i + 1))
+        }
+        lastAutoSaveTime = SystemClock.elapsedRealtime()
+    }
 
     /** See [goBerserk]. In the log, since the clock cannot tell who won and the extra point is the players' to count. */
     fun berserk(playerIndex: Int) {
