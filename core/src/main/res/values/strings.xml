@@ -13,4 +13,19 @@
     <string name="voice_reflect">Reflect</string>
     <string name="voice_phase">Phase %1$d</string>
     <string name="voice_test">Testing voice volume</string>
+    <string name="board_error_connect_permission">Bluetooth permission to connect is required</string>
+    <string name="board_error_scan_permission">Bluetooth permission to scan is required</string>
+    <string name="board_error_no_connection">Could not connect to the board</string>
+    <string name="board_error_no_services">Could not read the board\'s services</string>
+    <string name="board_error_nothing_to_hear">This device reports nothing this app can listen to</string>
+    <string name="board_error_no_bluetooth">Bluetooth is not supported on this device</string>
+    <string name="board_error_bluetooth_off">Bluetooth is off. Please turn it on.</string>
+    <string name="board_error_location_off">Turn on location: this Android version needs it to find Bluetooth boards</string>
+    <string name="board_error_not_paired">That board is no longer paired</string>
+    <string name="board_error_usb_refused">USB permission refused</string>
+    <string name="board_error_unplugged">That board is no longer plugged in</string>
+    <string name="board_error_needs_driver">This board does not use standard USB serial, so it needs a driver this app does not have</string>
+    <string name="board_error_cannot_open">Could not open the board</string>
+    <string name="board_error_in_use">Another app is already using this board</string>
+    <string name="board_error_nothing_to_read">This board sends nothing this app can read</string>
 </resources>

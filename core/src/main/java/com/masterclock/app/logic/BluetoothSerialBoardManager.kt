@@ -117,12 +117,12 @@ class BluetoothSerialBoardManager(private val context: Context) {
     fun connect(candidateId: String, gameType: GameType, onMoveReceived: (String) -> Unit) {
         this.gameType = gameType
         if (!hasConnectPermission()) {
-            _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+            _connectionState.value = ConnectionState.Error(BoardError.CONNECT_PERMISSION)
             return
         }
         val device = adapter?.bondedDevices.orEmpty().firstOrNull { it.address == candidateId }
         if (device == null) {
-            _connectionState.value = ConnectionState.Error("That board is no longer paired")
+            _connectionState.value = ConnectionState.Error(BoardError.NOT_PAIRED)
             return
         }
 
@@ -148,12 +148,12 @@ class BluetoothSerialBoardManager(private val context: Context) {
             device.createRfcommSocketToServiceRecord(SPP_UUID)
         } catch (e: IOException) {
             withContext(Dispatchers.Main) {
-                _connectionState.value = ConnectionState.Error("Could not open the board: ${e.message ?: "no answer"}")
+                _connectionState.value = ConnectionState.Error(BoardError.CANNOT_OPEN)
             }
             return
         } catch (e: SecurityException) {
             withContext(Dispatchers.Main) {
-                _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+                _connectionState.value = ConnectionState.Error(BoardError.CONNECT_PERMISSION)
             }
             return
         }
@@ -166,12 +166,12 @@ class BluetoothSerialBoardManager(private val context: Context) {
                 opened.connect()
             } catch (e: IOException) {
                 withContext(Dispatchers.Main) {
-                    _connectionState.value = ConnectionState.Error("Could not open the board: ${e.message ?: "no answer"}")
+                    _connectionState.value = ConnectionState.Error(BoardError.CANNOT_OPEN)
                 }
                 return
             } catch (e: SecurityException) {
                 withContext(Dispatchers.Main) {
-                    _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+                    _connectionState.value = ConnectionState.Error(BoardError.CONNECT_PERMISSION)
                 }
                 return
             } finally {

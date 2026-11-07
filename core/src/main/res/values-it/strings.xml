@@ -12,4 +12,19 @@
     <string name="voice_reflect">Riflessione</string>
     <string name="voice_phase">Fase %1$d</string>
     <string name="voice_test">Prova del volume della voce</string>
+    <string name="board_error_connect_permission">Serve l\'autorizzazione Bluetooth per connettersi</string>
+    <string name="board_error_scan_permission">Serve l\'autorizzazione Bluetooth per la ricerca</string>
+    <string name="board_error_no_connection">Impossibile connettersi alla scacchiera</string>
+    <string name="board_error_no_services">Impossibile leggere i servizi della scacchiera</string>
+    <string name="board_error_nothing_to_hear">Questo dispositivo non invia nulla che l\'app possa ascoltare</string>
+    <string name="board_error_no_bluetooth">Bluetooth non supportato su questo dispositivo</string>
+    <string name="board_error_bluetooth_off">Il Bluetooth è spento. Attivalo.</string>
+    <string name="board_error_location_off">Attiva la posizione: questa versione di Android ne ha bisogno per trovare le scacchiere Bluetooth</string>
+    <string name="board_error_not_paired">Questa scacchiera non è più associata</string>
+    <string name="board_error_usb_refused">Autorizzazione USB negata</string>
+    <string name="board_error_unplugged">Questa scacchiera non è più collegata</string>
+    <string name="board_error_needs_driver">Questa scacchiera non usa la seriale USB standard e richiede un driver che l\'app non ha</string>
+    <string name="board_error_cannot_open">Impossibile aprire la scacchiera</string>
+    <string name="board_error_in_use">Un\'altra app sta già usando questa scacchiera</string>
+    <string name="board_error_nothing_to_read">Questa scacchiera non invia nulla che l\'app possa leggere</string>
 </resources>

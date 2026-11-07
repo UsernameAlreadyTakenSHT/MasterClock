@@ -12,4 +12,19 @@
     <string name="voice_reflect">Bedenkzeit</string>
     <string name="voice_phase">Phase %1$d</string>
     <string name="voice_test">Test der Sprachlautstärke</string>
+    <string name="board_error_connect_permission">Bluetooth-Berechtigung zum Verbinden erforderlich</string>
+    <string name="board_error_scan_permission">Bluetooth-Berechtigung zum Suchen erforderlich</string>
+    <string name="board_error_no_connection">Verbindung zum Brett nicht möglich</string>
+    <string name="board_error_no_services">Die Dienste des Bretts konnten nicht gelesen werden</string>
+    <string name="board_error_nothing_to_hear">Dieses Gerät meldet nichts, was die App empfangen kann</string>
+    <string name="board_error_no_bluetooth">Bluetooth wird auf diesem Gerät nicht unterstützt</string>
+    <string name="board_error_bluetooth_off">Bluetooth ist aus. Bitte schalte es ein.</string>
+    <string name="board_error_location_off">Schalte den Standort ein: Diese Android-Version braucht ihn, um Bluetooth-Bretter zu finden</string>
+    <string name="board_error_not_paired">Dieses Brett ist nicht mehr gekoppelt</string>
+    <string name="board_error_usb_refused">USB-Berechtigung verweigert</string>
+    <string name="board_error_unplugged">Dieses Brett ist nicht mehr angeschlossen</string>
+    <string name="board_error_needs_driver">Dieses Brett nutzt kein Standard-USB-Seriell und braucht einen Treiber, den die App nicht hat</string>
+    <string name="board_error_cannot_open">Das Brett konnte nicht geöffnet werden</string>
+    <string name="board_error_in_use">Eine andere App nutzt dieses Brett bereits</string>
+    <string name="board_error_nothing_to_read">Dieses Brett sendet nichts, was die App lesen kann</string>
 </resources>

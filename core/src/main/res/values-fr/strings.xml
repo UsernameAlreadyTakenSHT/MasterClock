@@ -12,4 +12,19 @@
     <string name="voice_reflect">Réflexion</string>
     <string name="voice_phase">Phase %1$d</string>
     <string name="voice_test">Test du volume de la voix</string>
+    <string name="board_error_connect_permission">L\'autorisation Bluetooth de connexion est requise</string>
+    <string name="board_error_scan_permission">L\'autorisation Bluetooth de recherche est requise</string>
+    <string name="board_error_no_connection">Connexion à l\'échiquier impossible</string>
+    <string name="board_error_no_services">Lecture des services de l\'échiquier impossible</string>
+    <string name="board_error_nothing_to_hear">Cet appareil n\'envoie rien que l\'app sache écouter</string>
+    <string name="board_error_no_bluetooth">Bluetooth non pris en charge sur cet appareil</string>
+    <string name="board_error_bluetooth_off">Le Bluetooth est désactivé. Activez-le.</string>
+    <string name="board_error_location_off">Activez la localisation : cette version d\'Android en a besoin pour trouver les échiquiers Bluetooth</string>
+    <string name="board_error_not_paired">Cet échiquier n\'est plus appairé</string>
+    <string name="board_error_usb_refused">Autorisation USB refusée</string>
+    <string name="board_error_unplugged">Cet échiquier n\'est plus branché</string>
+    <string name="board_error_needs_driver">Cet échiquier n\'utilise pas le port série USB standard : il lui faut un pilote que l\'app n\'a pas</string>
+    <string name="board_error_cannot_open">Ouverture de l\'échiquier impossible</string>
+    <string name="board_error_in_use">Une autre app utilise déjà cet échiquier</string>
+    <string name="board_error_nothing_to_read">Cet échiquier n\'envoie rien que l\'app sache lire</string>
 </resources>

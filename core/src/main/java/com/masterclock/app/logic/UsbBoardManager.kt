@@ -137,7 +137,7 @@ class UsbBoardManager(private val context: Context) {
                 openDevice(device)
             } else {
                 connectedDevice = null
-                _connectionState.value = ConnectionState.Error("USB permission refused")
+                _connectionState.value = ConnectionState.Error(BoardError.USB_REFUSED)
             }
         }
     }
@@ -183,7 +183,7 @@ class UsbBoardManager(private val context: Context) {
         this.gameType = gameType
         val device = usbManager.deviceList.values.firstOrNull { it.deviceName == candidateId }
         if (device == null) {
-            _connectionState.value = ConnectionState.Error("That board is no longer plugged in")
+            _connectionState.value = ConnectionState.Error(BoardError.UNPLUGGED)
             return
         }
 
@@ -232,26 +232,26 @@ class UsbBoardManager(private val context: Context) {
     }
 
     private suspend fun openAndStart(device: UsbDevice, attempt: Int) {
-        suspend fun failed(message: String) = withContext(Dispatchers.Main) {
+        suspend fun failed(reason: BoardError) = withContext(Dispatchers.Main) {
             if (attempt == openAttempt) {
                 connectedDevice = null
-                _connectionState.value = ConnectionState.Error(message)
+                _connectionState.value = ConnectionState.Error(reason)
             }
         }
         val serialInterface = device.findCdcDataInterface()
         if (serialInterface == null) {
-            failed("This board does not use standard USB serial, so it needs a driver this app does not have")
+            failed(BoardError.NEEDS_DRIVER)
             return
         }
 
         val opened = usbManager.openDevice(device)
         if (opened == null) {
-            failed("Could not open the board")
+            failed(BoardError.CANNOT_OPEN)
             return
         }
         if (!opened.claimInterface(serialInterface, true)) {
             opened.close()
-            failed("Another app is already using this board")
+            failed(BoardError.IN_USE)
             return
         }
 
@@ -259,7 +259,7 @@ class UsbBoardManager(private val context: Context) {
         if (endpointIn == null) {
             opened.releaseInterface(serialInterface)
             opened.close()
-            failed("This board sends nothing this app can read")
+            failed(BoardError.NOTHING_TO_READ)
             return
         }
 

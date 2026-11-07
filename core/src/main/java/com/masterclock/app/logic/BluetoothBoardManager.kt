@@ -22,6 +22,8 @@ import android.util.Log
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
+import androidx.annotation.StringRes
+import com.masterclock.core.R as CoreR
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +36,26 @@ sealed class ConnectionState {
     object Scanning : ConnectionState()
     object Connecting : ConnectionState()
     data class Connected(val deviceName: String) : ConnectionState()
-    data class Error(val message: String) : ConnectionState()
+    data class Error(val reason: BoardError) : ConnectionState()
+}
+
+/** Why a board could not be reached, in words the screens can translate. They were English in every language. */
+enum class BoardError(@StringRes val text: Int) {
+    CONNECT_PERMISSION(CoreR.string.board_error_connect_permission),
+    SCAN_PERMISSION(CoreR.string.board_error_scan_permission),
+    NO_CONNECTION(CoreR.string.board_error_no_connection),
+    NO_SERVICES(CoreR.string.board_error_no_services),
+    NOTHING_TO_HEAR(CoreR.string.board_error_nothing_to_hear),
+    NO_BLUETOOTH(CoreR.string.board_error_no_bluetooth),
+    BLUETOOTH_OFF(CoreR.string.board_error_bluetooth_off),
+    LOCATION_OFF(CoreR.string.board_error_location_off),
+    NOT_PAIRED(CoreR.string.board_error_not_paired),
+    USB_REFUSED(CoreR.string.board_error_usb_refused),
+    UNPLUGGED(CoreR.string.board_error_unplugged),
+    NEEDS_DRIVER(CoreR.string.board_error_needs_driver),
+    CANNOT_OPEN(CoreR.string.board_error_cannot_open),
+    IN_USE(CoreR.string.board_error_in_use),
+    NOTHING_TO_READ(CoreR.string.board_error_nothing_to_read),
 }
 
 data class ScannedDevice(
@@ -304,7 +325,7 @@ class BluetoothBoardManager(private val context: Context) {
                 // that could ever close it.
                 if (activeGatt === gatt) activeGatt = null
                 closeGattQuietly(gatt)
-                _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+                _connectionState.value = ConnectionState.Error(BoardError.CONNECT_PERMISSION)
                 return
             }
             _connectionState.value = ConnectionState.Connected(runCatching { gatt.device.name }.getOrNull() ?: "Unknown Board")
@@ -336,7 +357,7 @@ class BluetoothBoardManager(private val context: Context) {
                 activeGatt = null
                 clearGattQueue()
             }
-            _connectionState.value = if (failedToConnect) ConnectionState.Error("Could not connect to the board") else ConnectionState.Idle
+            _connectionState.value = if (failedToConnect) ConnectionState.Error(BoardError.NO_CONNECTION) else ConnectionState.Idle
         }
     }
 
@@ -351,7 +372,7 @@ class BluetoothBoardManager(private val context: Context) {
         if (servicesRequested || activeGatt !== gatt) return
         servicesRequested = true
         if (runCatching { gatt.discoverServices() }.getOrDefault(false) != true) {
-            failConnected("Could not read the board's services")
+            failConnected(BoardError.NO_SERVICES)
         }
     }
 
@@ -360,15 +381,15 @@ class BluetoothBoardManager(private val context: Context) {
      * phone stayed connected to a board that accepts one client, with a GATT client held, and the
      * screen offers Disconnect only when connected, so nothing could end it short of another connect.
      */
-    private fun failConnected(message: String) {
+    private fun failConnected(reason: BoardError) {
         disconnect()
-        _connectionState.value = ConnectionState.Error(message)
+        _connectionState.value = ConnectionState.Error(reason)
     }
 
     private fun servicesDiscovered(gatt: BluetoothGatt, status: Int) {
         if (!hasConnectPermission()) return
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            failConnected("Could not read the board's services")
+            failConnected(BoardError.NO_SERVICES)
             return
         }
 
@@ -390,7 +411,7 @@ class BluetoothBoardManager(private val context: Context) {
             .filter { it.properties and NOTIFY_OR_INDICATE != 0 }
 
         if (characteristics.isEmpty()) {
-            failConnected("This device reports nothing this app can listen to")
+            failConnected(BoardError.NOTHING_TO_HEAR)
             return
         }
 
@@ -543,15 +564,15 @@ class BluetoothBoardManager(private val context: Context) {
 
     fun startScan() {
         if (adapter == null) {
-            _connectionState.value = ConnectionState.Error("Bluetooth not supported")
+            _connectionState.value = ConnectionState.Error(BoardError.NO_BLUETOOTH)
             return
         }
         if (!adapter.isEnabled) {
-            _connectionState.value = ConnectionState.Error("Bluetooth is disabled. Please enable it.")
+            _connectionState.value = ConnectionState.Error(BoardError.BLUETOOTH_OFF)
             return
         }
         if (!hasScanPermission()) {
-            _connectionState.value = ConnectionState.Error("Bluetooth scan permission required")
+            _connectionState.value = ConnectionState.Error(BoardError.SCAN_PERMISSION)
             return
         }
         // Up to Android 11 a BLE scan needs location turned on as well as the permission. With it
@@ -559,7 +580,7 @@ class BluetoothBoardManager(private val context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && !isLocationOn()) {
             // The screen scans each time it opens, which can be with a board already connected.
             if (activeGatt == null) {
-                _connectionState.value = ConnectionState.Error("Turn on location: this Android version needs it to find Bluetooth boards")
+                _connectionState.value = ConnectionState.Error(BoardError.LOCATION_OFF)
             }
             return
         }
@@ -571,7 +592,7 @@ class BluetoothBoardManager(private val context: Context) {
         val started = runCatching { scanner?.startScan(scanCallback) }
         if (started.isFailure) {
             Log.w("BluetoothBoardManager", "Could not start the BLE scan", started.exceptionOrNull())
-            _connectionState.value = ConnectionState.Error("Bluetooth scan permission required")
+            _connectionState.value = ConnectionState.Error(BoardError.SCAN_PERMISSION)
             return
         }
         _connectionState.value = ConnectionState.Scanning
@@ -599,7 +620,7 @@ class BluetoothBoardManager(private val context: Context) {
     fun connect(device: BluetoothDevice, gameType: GameType, onMoveReceived: (String) -> Unit) {
         this.gameType = gameType
         if (!hasConnectPermission()) {
-            _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+            _connectionState.value = ConnectionState.Error(BoardError.CONNECT_PERMISSION)
             return
         }
         // Tapping a second board without leaving the first used to overwrite activeGatt and lose
@@ -621,7 +642,7 @@ class BluetoothBoardManager(private val context: Context) {
         if (activeGatt == null) {
             Log.w("BluetoothBoardManager", "Could not open a GATT connection", opened.exceptionOrNull())
             _onMoveReceivedCallback = null
-            _connectionState.value = ConnectionState.Error("Bluetooth connect permission required")
+            _connectionState.value = ConnectionState.Error(BoardError.CONNECT_PERMISSION)
         }
     }
 

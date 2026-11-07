@@ -12,4 +12,19 @@
     <string name="voice_reflect">Bedenktijd</string>
     <string name="voice_phase">Fase %1$d</string>
     <string name="voice_test">Test van het stemvolume</string>
+    <string name="board_error_connect_permission">Bluetooth-toestemming om te verbinden is vereist</string>
+    <string name="board_error_scan_permission">Bluetooth-toestemming om te zoeken is vereist</string>
+    <string name="board_error_no_connection">Kan geen verbinding maken met het bord</string>
+    <string name="board_error_no_services">Kan de diensten van het bord niet lezen</string>
+    <string name="board_error_nothing_to_hear">Dit apparaat stuurt niets waar de app naar kan luisteren</string>
+    <string name="board_error_no_bluetooth">Bluetooth wordt niet ondersteund op dit apparaat</string>
+    <string name="board_error_bluetooth_off">Bluetooth staat uit. Zet het aan.</string>
+    <string name="board_error_location_off">Zet locatie aan: deze Android-versie heeft die nodig om Bluetooth-borden te vinden</string>
+    <string name="board_error_not_paired">Dit bord is niet meer gekoppeld</string>
+    <string name="board_error_usb_refused">USB-toestemming geweigerd</string>
+    <string name="board_error_unplugged">Dit bord is niet meer aangesloten</string>
+    <string name="board_error_needs_driver">Dit bord gebruikt geen standaard USB-serieel en heeft een stuurprogramma nodig dat de app niet heeft</string>
+    <string name="board_error_cannot_open">Kan het bord niet openen</string>
+    <string name="board_error_in_use">Een andere app gebruikt dit bord al</string>
+    <string name="board_error_nothing_to_read">Dit bord stuurt niets wat de app kan lezen</string>
 </resources>

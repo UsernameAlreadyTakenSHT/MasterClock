@@ -166,7 +166,7 @@ fun BluetoothBoardScreen(
                             ConnectionState.Scanning -> stringResource(R.string.board_scanning)
                             ConnectionState.Connecting -> stringResource(R.string.board_connecting)
                             is ConnectionState.Connected -> stringResource(R.string.board_connected_to, s.deviceName)
-                            is ConnectionState.Error -> stringResource(R.string.board_error, s.message)
+                            is ConnectionState.Error -> stringResource(R.string.board_error, stringResource(s.reason.text))
                         }
                         Text(statusText, fontWeight = FontWeight.Bold)
                         if (connectionState is ConnectionState.Connected) {

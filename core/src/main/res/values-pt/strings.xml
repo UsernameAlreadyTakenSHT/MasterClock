@@ -12,4 +12,19 @@
     <string name="voice_reflect">Reflexão</string>
     <string name="voice_phase">Fase %1$d</string>
     <string name="voice_test">Teste do volume da voz</string>
+    <string name="board_error_connect_permission">É necessária a permissão de Bluetooth para ligar</string>
+    <string name="board_error_scan_permission">É necessária a permissão de Bluetooth para procurar</string>
+    <string name="board_error_no_connection">Não foi possível ligar ao tabuleiro</string>
+    <string name="board_error_no_services">Não foi possível ler os serviços do tabuleiro</string>
+    <string name="board_error_nothing_to_hear">Este dispositivo não envia nada que a app possa ouvir</string>
+    <string name="board_error_no_bluetooth">O Bluetooth não é suportado neste dispositivo</string>
+    <string name="board_error_bluetooth_off">O Bluetooth está desligado. Ligue-o.</string>
+    <string name="board_error_location_off">Ligue a localização: esta versão do Android precisa dela para encontrar tabuleiros Bluetooth</string>
+    <string name="board_error_not_paired">Este tabuleiro já não está emparelhado</string>
+    <string name="board_error_usb_refused">Permissão USB recusada</string>
+    <string name="board_error_unplugged">Este tabuleiro já não está ligado</string>
+    <string name="board_error_needs_driver">Este tabuleiro não usa a porta série USB padrão e precisa de um controlador que a app não tem</string>
+    <string name="board_error_cannot_open">Não foi possível abrir o tabuleiro</string>
+    <string name="board_error_in_use">Outra app já está a usar este tabuleiro</string>
+    <string name="board_error_nothing_to_read">Este tabuleiro não envia nada que a app possa ler</string>
 </resources>

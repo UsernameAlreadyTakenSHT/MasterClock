@@ -12,4 +12,19 @@
     <string name="voice_reflect">Reflexión</string>
     <string name="voice_phase">Fase %1$d</string>
     <string name="voice_test">Prueba del volumen de voz</string>
+    <string name="board_error_connect_permission">Se necesita el permiso de Bluetooth para conectar</string>
+    <string name="board_error_scan_permission">Se necesita el permiso de Bluetooth para buscar</string>
+    <string name="board_error_no_connection">No se pudo conectar con el tablero</string>
+    <string name="board_error_no_services">No se pudieron leer los servicios del tablero</string>
+    <string name="board_error_nothing_to_hear">Este dispositivo no envía nada que la app pueda escuchar</string>
+    <string name="board_error_no_bluetooth">Este dispositivo no admite Bluetooth</string>
+    <string name="board_error_bluetooth_off">El Bluetooth está desactivado. Actívalo.</string>
+    <string name="board_error_location_off">Activa la ubicación: esta versión de Android la necesita para encontrar tableros Bluetooth</string>
+    <string name="board_error_not_paired">Este tablero ya no está vinculado</string>
+    <string name="board_error_usb_refused">Permiso USB denegado</string>
+    <string name="board_error_unplugged">Este tablero ya no está conectado</string>
+    <string name="board_error_needs_driver">Este tablero no usa el serie USB estándar y necesita un controlador que la app no tiene</string>
+    <string name="board_error_cannot_open">No se pudo abrir el tablero</string>
+    <string name="board_error_in_use">Otra app ya está usando este tablero</string>
+    <string name="board_error_nothing_to_read">Este tablero no envía nada que la app pueda leer</string>
 </resources>

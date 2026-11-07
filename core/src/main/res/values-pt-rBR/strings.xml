@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="voice_move">Jogue</string>
+    <string name="board_error_connect_permission">A permissão de Bluetooth para conectar é necessária</string>
+    <string name="board_error_scan_permission">A permissão de Bluetooth para buscar é necessária</string>
+    <string name="board_error_no_connection">Não foi possível conectar ao tabuleiro</string>
+    <string name="board_error_nothing_to_hear">Este dispositivo não envia nada que o app possa ouvir</string>
+    <string name="board_error_bluetooth_off">O Bluetooth está desligado. Ative-o.</string>
+    <string name="board_error_location_off">Ative a localização: esta versão do Android precisa dela para encontrar tabuleiros Bluetooth</string>
+    <string name="board_error_not_paired">Este tabuleiro não está mais pareado</string>
+    <string name="board_error_unplugged">Este tabuleiro não está mais conectado</string>
+    <string name="board_error_needs_driver">Este tabuleiro não usa a porta serial USB padrão e precisa de um driver que o app não tem</string>
+    <string name="board_error_in_use">Outro app já está usando este tabuleiro</string>
+    <string name="board_error_nothing_to_read">Este tabuleiro não envia nada que o app possa ler</string>
 </resources>
