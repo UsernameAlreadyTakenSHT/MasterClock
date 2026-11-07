@@ -634,15 +634,19 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             val highUp = isGlobal && !largeScreen
             BoxWithConstraints(modifier = Modifier.fillMaxSize(), contentAlignment = if (highUp) Alignment.TopCenter else Alignment.Center) {
                 val crowded = settings.numberOfPlayers > 2 && !isGlobal
+                // A face turned a quarter runs its digits along the other side.
+                val sideways = (contentRotation % 180f) != 0f
                 val digitScale = largeScreenDigitScale(
-                    LocalConfiguration.current.smallestScreenWidthDp, maxWidth.value, maxHeight.value,
+                    LocalConfiguration.current.smallestScreenWidthDp,
+                    if (sideways) maxHeight.value else maxWidth.value,
+                    if (sideways) maxWidth.value else maxHeight.value,
                     referenceWidthDp = if (crowded) 200f else 400f,
                     referenceHeightDp = if (isGlobal) 400f else if (crowded) 160f else 200f,
                 )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally, 
                 modifier = Modifier
-                    .then(if (settings.numberOfPlayers > 2 && !isGlobal) Modifier.fittedForTurn(contentRotation) else Modifier)
+                    .then(if (crowded || (largeScreen && sideways)) Modifier.fittedForTurn(contentRotation) else Modifier)
                     .graphicsLayer { rotationZ = contentRotation }
                     .padding(top = if (highUp) 100.dp else 0.dp)
             ) {
