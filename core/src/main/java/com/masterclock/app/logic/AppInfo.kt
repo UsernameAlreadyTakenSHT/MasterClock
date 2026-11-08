@@ -8,8 +8,8 @@ object AppInfo {
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
      * changes are mostly in core and reach all five, but Berserk is not in Mini, nor the board in
-     * Standard, and every build read every note. An empty list leaves the release out of that build's
-     * changelog, for one that changed nothing in it.
+     * Standard, and every build read every note. An empty list is a release that changed nothing in
+     * that build: it is still listed, so the version on the screen can be found, with [SHARED_ONLY].
      */
     data class ChangelogEntry(
         val version: String,
@@ -20,9 +20,12 @@ object AppInfo {
         fun notesFor(flavor: AppFlavor): List<String> = perFlavor[flavor] ?: notes
     }
 
-    /** The changelog as [flavor] has it: its own notes, and none of the releases that left it untouched. */
+    /** What a build's changelog says for a release with nothing of its own in it. */
+    const val SHARED_ONLY = "Shared update, with nothing specific to this build."
+
+    /** The changelog as [flavor] has it: its own notes, and [SHARED_ONLY] for a release that left it untouched. */
     fun changelogFor(flavor: AppFlavor = FlavorConfig.currentFlavor): List<ChangelogEntry> =
-        CHANGELOG.mapNotNull { entry -> entry.notesFor(flavor).takeIf { it.isNotEmpty() }?.let { entry.copy(notes = it, perFlavor = emptyMap()) } }
+        CHANGELOG.map { entry -> entry.copy(notes = entry.notesFor(flavor).ifEmpty { listOf(SHARED_ONLY) }, perFlavor = emptyMap()) }
 
     val CHANGELOG = listOf(
         ChangelogEntry(

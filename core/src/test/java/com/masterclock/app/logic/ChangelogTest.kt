@@ -46,8 +46,11 @@ class ChangelogTest {
         val mini = AppInfo.changelogFor(AppFlavor.MINI).first().notes
         assertFalse(mini.any { "Berserk" in it })
         assertTrue(AppInfo.changelogFor(AppFlavor.COMPLETE).first().notes.any { "Berserk" in it })
-        // 0.8.36 changed the E-Ink build alone.
-        assertTrue(AppInfo.changelogFor(AppFlavor.E_INK).any { it.version == "0.8.36" })
-        assertFalse(AppInfo.changelogFor(AppFlavor.COMPLETE).any { it.version == "0.8.36" })
+        // 0.8.36 changed the E-Ink build alone: listed everywhere, with its notes only there.
+        val eInk = AppInfo.changelogFor(AppFlavor.E_INK).single { it.version == "0.8.36" }
+        val complete = AppInfo.changelogFor(AppFlavor.COMPLETE).single { it.version == "0.8.36" }
+        assertTrue(eInk.notes.all { it.startsWith("E-Ink") })
+        assertEquals(listOf(AppInfo.SHARED_ONLY), complete.notes)
+        assertEquals(AppInfo.CHANGELOG.size, AppInfo.changelogFor(AppFlavor.MINI).size)
     }
 }
