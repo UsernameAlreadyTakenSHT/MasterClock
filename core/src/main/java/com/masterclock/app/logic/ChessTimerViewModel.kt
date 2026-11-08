@@ -3825,8 +3825,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // The screen marked it PERIOD FLAG and nothing else did: no sound, and no trace in the log
         // of a flag an arbiter may need to know fell. A plain beep, not the flag's triple one: the
         // player plays on in the next period.
+        //
+        // Under the time-up switch, as are the byoyomi and phase beeps below: they are time running
+        // out too, and sounded whatever the settings said -- the only sounds left in an app whose
+        // sounds are all off until asked for.
         if (newState.currentPeriodIndex > oldState.currentPeriodIndex) {
-            soundManager.playShortBeep()
+            if (settings.tripleBeepTimeUp) soundManager.playShortBeep()
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIdx, detail = "Period ${oldState.currentPeriodIndex + 1} ran out"))
             lastBeepSecond = -1
             return
@@ -3834,7 +3838,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // A Japanese byoyomi period run out, the clock starting the next: it changed in silence,
         // with no trace in the log, and the player learned of it only by the clock jumping back.
         if (newState.isInByoyomi && oldState.isInByoyomi && newState.byoyomiPeriodsRemaining < oldState.byoyomiPeriodsRemaining) {
-            soundManager.playShortBeep()
+            if (settings.tripleBeepTimeUp) soundManager.playShortBeep()
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIdx, detail = "Byoyomi period lost, ${newState.byoyomiPeriodsRemaining} left"))
             lastBeepSecond = -1
             return
@@ -3904,15 +3908,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
             after.isPhaseAwaitingTap -> if (!before.isPhaseAwaitingTap) {
-                soundManager.playShortBeep()
+                if (settings.tripleBeepTimeUp) soundManager.playShortBeep()
                 addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Phase ${after.currentPhaseIndex + 1} over"))
             }
             after.isInInterPhasePause -> if (!before.isInInterPhasePause) {
-                if (!before.isPhaseAwaitingTap) soundManager.playShortBeep()
+                if (!before.isPhaseAwaitingTap && settings.tripleBeepTimeUp) soundManager.playShortBeep()
                 addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Pause"))
             }
             else -> {
-                if (!before.isInInterPhasePause && !before.isPhaseAwaitingTap) soundManager.playShortBeep()
+                if (!before.isInInterPhasePause && !before.isPhaseAwaitingTap && settings.tripleBeepTimeUp) soundManager.playShortBeep()
                 addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Phase ${after.currentPhaseIndex + 1}"))
                 speakPhase(after.currentPhaseIndex, settings)
             }
