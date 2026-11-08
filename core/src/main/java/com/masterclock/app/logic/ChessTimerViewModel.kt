@@ -2258,6 +2258,60 @@ private fun hourglassGains(players: List<PlayerState>, active: Int, before: Play
  * the time really left, before and after, where that is more than the clock counting down: what the
  * voice's "10 seconds" goes by.
  */
+/** A sound the clock makes on its own, as against one a press makes. */
+internal enum class ClockSound { SHORT_BEEP, TRIPLE_BEEP }
+
+internal fun byoyomiPeriodLost(before: PlayerState, after: PlayerState): Boolean =
+    after.isInByoyomi && before.isInByoyomi && after.byoyomiPeriodsRemaining < before.byoyomiPeriodsRemaining
+
+/**
+ * What one player's clock changing from [before] to [after] sounds like, for a tick or a move.
+ *
+ * Every sound is off until asked for. The flag's triple beep and the beeps of a FIDE or byoyomi
+ * period run out sit under the time-up switch -- the single sound switch on Lite, Mini and E-Ink --
+ * and the countdown under its threshold. The period beeps used to sound whatever the settings said.
+ *
+ * [lastBeepSecond] is the second last counted down, so that each one beeps once.
+ */
+internal fun cueSound(before: PlayerState, after: PlayerState, settings: ChessClockSettings, mode: TimerMode, lastBeepSecond: Long): ClockSound? {
+    if (after.isOutOfTime && !before.isOutOfTime) return ClockSound.TRIPLE_BEEP.takeIf { settings.tripleBeepTimeUp }
+    // Under NEGATIVE and REVERSE the clock runs on past the flag, counting the overrun, and its
+    // first seconds used to beep as if they were the last ones left.
+    if (after.isOutOfTime) return null
+    // A plain beep, not the flag's triple one: the player plays on in the next period.
+    if (after.currentPeriodIndex > before.currentPeriodIndex || byoyomiPeriodLost(before, after)) {
+        return ClockSound.SHORT_BEEP.takeIf { settings.tripleBeepTimeUp }
+    }
+    // Hidden mode hides the clock, and a countdown beep in the last seconds says exactly what
+    // the screen withholds. The flag above is shown on screen anyway, so it still sounds.
+    if (mode == TimerMode.HIDDEN) return null
+    val seconds = after.timeRemainingMs / 1000
+    if (seconds == lastBeepSecond) return null
+    val threshold = when (settings.beepThreshold) {
+        BeepCountdownThreshold.OFF -> 0L
+        BeepCountdownThreshold.THREE_SEC -> 3L
+        BeepCountdownThreshold.TEN_SEC -> 10L
+    }
+    return ClockSound.SHORT_BEEP.takeIf { seconds in 1L..threshold }
+}
+
+/**
+ * What PHASES moving from [before] to the stage [afterState] holds sounds like. Each change beeps
+ * once, under the time-up switch: a phase over and waiting for its tap, the pause after it, the next
+ * phase -- the one after a pause or a tap having beeped already -- and the last one's end.
+ */
+internal fun phaseSound(before: PlayerState, afterState: ChessClockState, settings: ChessClockSettings): ClockSound? {
+    val after = afterState.players[0]
+    val sound = when {
+        // A phase run out that is not the last is a flag, and handleAudio sounds it.
+        after.isOutOfTime -> if (!before.isOutOfTime && afterState.phasesFinished) ClockSound.TRIPLE_BEEP else null
+        after.isPhaseAwaitingTap -> if (!before.isPhaseAwaitingTap) ClockSound.SHORT_BEEP else null
+        after.isInInterPhasePause -> if (!before.isInInterPhasePause && !before.isPhaseAwaitingTap) ClockSound.SHORT_BEEP else null
+        else -> if (!before.isInInterPhasePause && !before.isPhaseAwaitingTap) ClockSound.SHORT_BEEP else null
+    }
+    return sound?.takeIf { settings.tripleBeepTimeUp }
+}
+
 internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int, val timeLeft: Pair<Long, Long>? = null)
 
 /**
@@ -3810,57 +3864,42 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun handleAudio(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int) {
+        play(cueSound(oldState, newState, settings, getPlayerSettings(playerIdx).mode, lastBeepSecond))
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
-            if (settings.tripleBeepTimeUp) soundManager.playTripleBeep()
             // Nobody's, when it is the table's clock that ran out; it went down as "P1 FLAG".
             val flagged = playerIdx.takeUnless { settings.playerSettings(it).mode == TimerMode.CHRONO_COUNTDOWN }
             addEvent(GameEvent(eventType = "FLAG", playerIndex = flagged, detail = "Time Up"))
             return
         }
-        // Under NEGATIVE and REVERSE the clock runs on past the flag, counting the overrun, and its
-        // first seconds used to beep as if they were the last ones left.
+        // The overrun under NEGATIVE and REVERSE: nothing more to log, and nothing to count down.
         if (newState.isOutOfTime) return
 
         // A FIDE period that ran out on its time -- the move count ends one in a press, never here.
-        // The screen marked it PERIOD FLAG and nothing else did: no sound, and no trace in the log
-        // of a flag an arbiter may need to know fell. A plain beep, not the flag's triple one: the
-        // player plays on in the next period.
-        //
-        // Under the time-up switch, as are the byoyomi and phase beeps below: they are time running
-        // out too, and sounded whatever the settings said -- the only sounds left in an app whose
-        // sounds are all off until asked for.
+        // The screen marked it PERIOD FLAG and nothing else did: no trace in the log of a flag an
+        // arbiter may need to know fell. Its beep is cueSound's.
         if (newState.currentPeriodIndex > oldState.currentPeriodIndex) {
-            if (settings.tripleBeepTimeUp) soundManager.playShortBeep()
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIdx, detail = "Period ${oldState.currentPeriodIndex + 1} ran out"))
             lastBeepSecond = -1
             return
         }
         // A Japanese byoyomi period run out, the clock starting the next: it changed in silence,
         // with no trace in the log, and the player learned of it only by the clock jumping back.
-        if (newState.isInByoyomi && oldState.isInByoyomi && newState.byoyomiPeriodsRemaining < oldState.byoyomiPeriodsRemaining) {
-            if (settings.tripleBeepTimeUp) soundManager.playShortBeep()
+        if (byoyomiPeriodLost(oldState, newState)) {
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIdx, detail = "Byoyomi period lost, ${newState.byoyomiPeriodsRemaining} left"))
             lastBeepSecond = -1
             return
         }
 
-        // Hidden mode hides the clock, and a countdown beep in the last seconds says exactly what
-        // the screen withholds. The flag above is shown on screen anyway, so it still sounds.
+        // Hidden mode counts no second down; see cueSound.
         if (getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN) return
+        lastBeepSecond = newState.timeRemainingMs / 1000
+    }
 
-        val seconds = newState.timeRemainingMs / 1000
-        if (seconds != lastBeepSecond) {
-            // Audio Beep
-            val audioThreshold = when(settings.beepThreshold) {
-                BeepCountdownThreshold.OFF -> 0
-                BeepCountdownThreshold.THREE_SEC -> 3
-                BeepCountdownThreshold.TEN_SEC -> 10
-            }
-            if (seconds in 1L..audioThreshold.toLong()) {
-                soundManager.playShortBeep()
-            }
-
-            lastBeepSecond = seconds
+    private fun play(sound: ClockSound?) {
+        when (sound) {
+            ClockSound.SHORT_BEEP -> soundManager.playShortBeep()
+            ClockSound.TRIPLE_BEEP -> soundManager.playTripleBeep()
+            null -> {}
         }
     }
 
@@ -3893,13 +3932,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         val after = afterState.players[0]
         lastBeepSecond = -1
+        play(phaseSound(before, afterState, settings))
         when {
             after.isOutOfTime -> if (!before.isOutOfTime) {
                 if (afterState.phasesFinished) {
                     // The last phase run out is the end of the game, not a flag: it went through
                     // handleAudio and was logged FLAG "Time Up", so the export read "P1: FLAG Time
                     // Up" for a game nobody lost.
-                    if (settings.tripleBeepTimeUp) soundManager.playTripleBeep()
                     addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Finished"))
                     if (settings.voiceAnnouncementsEnabled) voiceManager.speak(CoreR.string.voice_finished, settings.voiceVolume)
                 } else {
@@ -3908,15 +3947,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
             after.isPhaseAwaitingTap -> if (!before.isPhaseAwaitingTap) {
-                if (settings.tripleBeepTimeUp) soundManager.playShortBeep()
                 addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Phase ${after.currentPhaseIndex + 1} over"))
             }
             after.isInInterPhasePause -> if (!before.isInInterPhasePause) {
-                if (!before.isPhaseAwaitingTap && settings.tripleBeepTimeUp) soundManager.playShortBeep()
                 addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Pause"))
             }
             else -> {
-                if (!before.isInInterPhasePause && !before.isPhaseAwaitingTap && settings.tripleBeepTimeUp) soundManager.playShortBeep()
                 addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Phase ${after.currentPhaseIndex + 1}"))
                 speakPhase(after.currentPhaseIndex, settings)
             }
