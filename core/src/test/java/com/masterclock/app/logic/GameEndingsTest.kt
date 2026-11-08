@@ -12,12 +12,23 @@ class GameEndingsTest {
 
     @Test
     fun `a player out of time and playing on can be heard pausing`() {
-        val negative = PlayerState(5_000, isOutOfTime = true, isNegative = true)
-        val reverse = PlayerState(5_000, isOutOfTime = true)
-        for (p in listOf(negative, reverse)) {
+        val negative = PlayerState(5_000, isOutOfTime = true, isNegative = true) to FlagBehavior.NEGATIVE
+        val reverse = PlayerState(5_000, isOutOfTime = true) to FlagBehavior.REVERSE
+        for ((p, fb) in listOf(negative, reverse)) {
             val paused = ChessClockState(listOf(p, PlayerState(60_000)), activePlayer = 1, isPaused = true)
-            assertEquals(ClockAnnouncement.Paused, clockAnnouncement(paused))
-            assertEquals(ClockAnnouncement.OutOfTime(1), clockAnnouncement(paused.copy(isPaused = false)))
+            assertEquals(ClockAnnouncement.Paused, clockAnnouncement(paused, fb))
+            assertEquals(ClockAnnouncement.OutOfTime(1), clockAnnouncement(paused.copy(isPaused = false), fb))
+        }
+    }
+
+    @Test
+    fun `a reserve run out with the move clock's time still showing is a flag, not a pause`() {
+        // Global under FREEZE: the reserve is gone, the move clock is not, and the game is over.
+        val out = PlayerState(4_000, isOutOfTime = true, secondaryTimeMs = 0)
+        for (fb in listOf(FlagBehavior.FREEZE, FlagBehavior.FLAG)) {
+            val paused = ChessClockState(listOf(out, PlayerState(60_000)), activePlayer = 1, isPaused = true, firstToFlag = 1)
+            assertEquals(fb.name, ClockAnnouncement.OutOfTime(1), clockAnnouncement(paused, fb))
+            assertTrue(fb.name, isUrgentAnnouncement(paused, fb))
         }
     }
 

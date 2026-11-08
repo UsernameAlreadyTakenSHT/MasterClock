@@ -61,7 +61,7 @@ fun TimerScreen(
     // child it appeared out of nowhere on the first press and pushed 17dp into the layout: both
     // player areas are weight(1f), so they absorbed it and the control row between them jumped.
     Box(modifier = Modifier.fillMaxSize()) {
-        ClockAnnouncer(state)
+        ClockAnnouncer(state, settings.flagBehavior)
 
         Column(
             modifier = Modifier
@@ -182,10 +182,13 @@ fun TimerScreen(
  * those collapse their subtree with clearAndSetSemantics; see the app module for the full note.
  */
 @Composable
-private fun ClockAnnouncer(state: ChessClockState) {
-    val announcement = clockAnnouncement(state) ?: return
-    val message = clockAnnouncementText(announcement)
-    val urgent = isUrgentAnnouncement(state)
+private fun ClockAnnouncer(state: ChessClockState, flagBehavior: FlagBehavior) {
+    // The node is there from the start, empty, as on the phone. A live region speaks when its text
+    // changes, and one that only appeared with its first announcement -- Start, and again after
+    // every Reset -- may have said nothing for it.
+    val announcement = clockAnnouncement(state, flagBehavior)
+    val message = announcement?.let { clockAnnouncementText(it) } ?: ""
+    val urgent = isUrgentAnnouncement(state, flagBehavior)
 
     Box(
         Modifier

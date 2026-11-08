@@ -143,6 +143,7 @@ fun TimerScreen(
     Box(modifier = Modifier.fillMaxSize().then(if (askingFirst) Modifier.clearAndSetSemantics {} else Modifier)) {
         ClockAnnouncer(
             state,
+            settings.flagBehavior,
             if (isGlobalMode) phaseLabel(settings.main, state.players[0]) else null,
             if (activeMode == TimerMode.FIDE_PERIODS && activeSettings != null && activePlayerState != null) fidePeriodLabel(activeSettings, activePlayerState) else null,
             tableClock = tableChrono,
@@ -425,11 +426,11 @@ private fun fidePeriodLabel(s: PlayerSettings, p: PlayerState): String =
  * Nothing here reacts to the countdown, only to transitions -- see clockAnnouncement.
  */
 @Composable
-private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLabel: String?, tableClock: Boolean = false) {
+private fun ClockAnnouncer(state: ChessClockState, flagBehavior: FlagBehavior, phaseLabel: String?, periodLabel: String?, tableClock: Boolean = false) {
     val running = stringResource(R.string.a11y_announce_running)
     // The node is there from the start, empty. A live region speaks when its text changes, and one
     // that only appeared with its first announcement may have said nothing for it.
-    val announcement = clockAnnouncement(state)
+    val announcement = clockAnnouncement(state, flagBehavior)
     // PHASES has no turn to announce, only the phase: "Player 1 to move" was all a screen reader
     // heard for the whole game, and a new phase or a pause between phases went unannounced. The
     // label changing is what makes the live region speak.
@@ -446,7 +447,7 @@ private fun ClockAnnouncer(state: ChessClockState, phaseLabel: String?, periodLa
         periodLabel != null && announcement is ClockAnnouncement.ToMove -> "${clockAnnouncementText(announcement)}, $periodLabel"
         else -> clockAnnouncementText(announcement)
     }
-    val urgent = isUrgentAnnouncement(state)
+    val urgent = isUrgentAnnouncement(state, flagBehavior)
 
     Box(
         Modifier

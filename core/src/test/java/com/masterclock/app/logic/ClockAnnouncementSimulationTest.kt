@@ -27,7 +27,7 @@ class ClockAnnouncementSimulationTest {
                 val before = sim.state
                 val wasRunning = sim.running
                 action.applyTo(sim)
-                val broken = check(before, sim.state, wasRunning, sim.running) ?: continue
+                val broken = check(before, sim.state, wasRunning, sim.running, settings.flagBehavior) ?: continue
                 failures.getOrPut(broken) {
                     "$broken\n  ${settings.main.mode} ${settings.flagBehavior} players=${settings.numberOfPlayers} " +
                         "oneForAll=${settings.isOneForAll}\n  last actions: ${played.takeLast(6)}"
@@ -39,9 +39,9 @@ class ClockAnnouncementSimulationTest {
     }
 
     /** The rule [after] breaks, or null. */
-    private fun check(before: ChessClockState, after: ChessClockState, wasRunning: Boolean, running: Boolean): String? {
-        val said = clockAnnouncement(before)
-        val saying = clockAnnouncement(after)
+    private fun check(before: ChessClockState, after: ChessClockState, wasRunning: Boolean, running: Boolean, fb: FlagBehavior): String? {
+        val said = clockAnnouncement(before, fb)
+        val saying = clockAnnouncement(after, fb)
         return when {
             // The first announcement of a game: there was nothing, and a clock is now running.
             before.activePlayer == null && running && saying == null -> "a game started with nothing to say"
@@ -53,7 +53,7 @@ class ClockAnnouncementSimulationTest {
                 saying !is ClockAnnouncement.OutOfTime -> "a resume passed in silence"
             // A player playing on is heard pausing.
             !running && wasRunning && before.activePlayer != null && after.activePlayer != null && said == saying &&
-                after.players[after.activePlayer!! - 1].let { it.isNegative || it.timeRemainingMs > 0 } &&
+                after.players[after.activePlayer!! - 1].let { it.isOutOfTime && (it.isNegative || fb == FlagBehavior.REVERSE) } &&
                 saying is ClockAnnouncement.OutOfTime -> "a pause passed in silence"
             saying is ClockAnnouncement.ToMove && saying.playerIndex != after.activePlayer -> "the wrong player was named"
             saying is ClockAnnouncement.ToMove && after.isPaused -> "a stopped clock was announced as running"

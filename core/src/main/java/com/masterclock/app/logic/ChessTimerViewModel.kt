@@ -273,7 +273,12 @@ internal fun drawRandomTimeControl(s: PlayerSettings, random: kotlin.random.Rand
 
 private const val MIN_RANDOM_BASE_MS = 1000L
 
-fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
+/**
+ * What the live region says for [state]. [flagBehavior] is the game's: it alone says whether a player
+ * out of time plays on, and the screens pass it. The default is the settings' own, for the tests where
+ * no flag is in question.
+ */
+fun clockAnnouncement(state: ChessClockState, flagBehavior: FlagBehavior = FlagBehavior.FREEZE): ClockAnnouncement? {
     if (state.phasesFinished || tableClockRanOut(state)) return ClockAnnouncement.Finished
     // A flag falls on the clock that is running, so it is the player on the move who is out when it
     // is news. Any flag anywhere used to win for the rest of the game: once one player had flagged,
@@ -286,7 +291,10 @@ fun clockAnnouncement(state: ChessClockState): ClockAnnouncement? {
     // A player out of time and playing on, as NEGATIVE and REVERSE let them, has an overrun on the
     // clock, and can be paused like anyone. "Out of time" outranked it, as it must when the pause is
     // the end of the game, so their pause and their resume both said the same and neither was heard.
-    val playingOn = player.isNegative || player.timeRemainingMs > 0
+    // Time on the face was taken for an overrun, and in Global and Global Shared it is not one: a
+    // reserve run out under FREEZE leaves the move clock's time showing, and that flag was announced
+    // as Paused.
+    val playingOn = player.isOverrun(flagBehavior)
     if (player.isOutOfTime && !(state.isPaused && playingOn)) return ClockAnnouncement.OutOfTime(active)
     if (state.isPaused) return ClockAnnouncement.Paused
 
@@ -406,8 +414,8 @@ internal fun PlayerState.withOvertimeClock(): PlayerState =
     if (!isOutOfTime && timeRemainingMs <= 0) copy(timeRemainingMs = secondaryTimeMs) else this
 
 /** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
-fun isUrgentAnnouncement(state: ChessClockState): Boolean =
-    clockAnnouncement(state) is ClockAnnouncement.OutOfTime
+fun isUrgentAnnouncement(state: ChessClockState, flagBehavior: FlagBehavior = FlagBehavior.FREEZE): Boolean =
+    clockAnnouncement(state, flagBehavior) is ClockAnnouncement.OutOfTime
 
 /**
  * A duration split into the parts a screen reader should say, for the same reason as
