@@ -42,9 +42,10 @@ class ResumeFlowTest {
 
     @Test
     fun aGameLeftComesBackWhereItStood() {
-        val first = ActivityScenario.launch(MainActivity::class.java)
-        // Only the arbiter's panel can take a saved game back up.
+        // Only the arbiter's panel can take a saved game back up. Asked before the launch, which the
+        // skip otherwise left open on Lite and Mini.
         assumeTrue(FlavorConfig.hasArbitre())
+        val first = ActivityScenario.launch(MainActivity::class.java)
         val before = viewModelOf(first)
         rule.waitUntil(TIMEOUT_MS) { before.isReady.value }
         first.onActivity {
@@ -77,7 +78,10 @@ class ResumeFlowTest {
         val back = after.uiState.value.players
         assertEquals(1, back[0].moveCount)
         assertEquals(left[0].timeRemainingMs, back[0].timeRemainingMs)
-        assertTrue("${back[1].timeRemainingMs} against ${left[1].timeRemainingMs}", back[1].timeRemainingMs <= left[1].timeRemainingMs)
+        // Player 2's clock was paused, and comes back as it was left, give or take the tick that
+        // settles it: anything more is time charged for the app being closed.
+        val drift = left[1].timeRemainingMs - back[1].timeRemainingMs
+        assertTrue("${back[1].timeRemainingMs} against ${left[1].timeRemainingMs}", drift in 0..RESUME_TOLERANCE_MS)
         second.close()
     }
 
@@ -112,6 +116,7 @@ class ResumeFlowTest {
     }
 
     private companion object {
+        const val RESUME_TOLERANCE_MS = 1_000L
         const val TIMEOUT_MS = 10_000L
     }
 }

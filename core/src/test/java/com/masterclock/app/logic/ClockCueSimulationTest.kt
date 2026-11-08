@@ -50,6 +50,9 @@ class ClockCueSimulationTest {
         return when {
             fell && cue == null -> "a flag fell with no cue"
             fell && cue?.after?.isOutOfTime != true -> "a flag fell and the cue says otherwise"
+            // handleAudio sounds and logs a flag only as it falls: a cue whose before was already out
+            // is silent too.
+            fell && cue?.before?.isOutOfTime == true -> "a flag fell and the cue says it had already"
             cue != null && cue.playerIndex != active && tick.coupled == null -> "a cue named the wrong player"
             else -> null
         }

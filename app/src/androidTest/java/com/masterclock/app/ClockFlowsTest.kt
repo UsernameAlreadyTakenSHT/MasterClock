@@ -162,14 +162,18 @@ class ClockFlowsTest {
 
         // Whole minutes while it runs: exact seconds kept TalkBack reading a focused clock aloud.
         await(playerOnTheMove(1))
+        // The words in the device's language: "minute" is not in "Minuten", and this failed in German.
+        fun unit(id: Int) = rule.activity.resources.getQuantityString(id, 2, 2).replace("2", "").trim()
+        val minutes = unit(R.plurals.a11y_minutes)
+        val seconds = unit(R.plurals.a11y_seconds)
         val running = playerDescription(1)
-        assertTrue(running, running.contains("minute"))
-        assertFalse(running, running.contains("second"))
+        assertTrue(running, running.contains(minutes))
+        assertFalse(running, running.contains(seconds))
 
         control(R.string.timer_pause).performClick()
         await(hasContentDescription(say(R.string.timer_resume)))
 
-        rule.waitUntil(TIMEOUT_MS) { playerDescription(1).contains("second") }
+        rule.waitUntil(TIMEOUT_MS) { playerDescription(1).contains(seconds) }
     }
 
     @Test

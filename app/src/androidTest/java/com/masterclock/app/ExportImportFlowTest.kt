@@ -38,8 +38,11 @@ class ExportImportFlowTest {
         rule.runOnUiThread {
             viewModel.resetAllSettings()
             viewModel.reset()
+            // Reset settings keeps the scoreboard, as it keeps the notebook, and the game this test
+            // leaves there made the next run from Android Studio, which does not uninstall, import two.
+            viewModel.resetScoreboard()
         }
-        rule.waitForIdle()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.scoreboard.value.games.isEmpty() }
     }
 
     @Test
