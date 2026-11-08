@@ -36,8 +36,8 @@ class ArbiterPastZeroTest {
         val s = PlayerSettings(
             mode = TimerMode.FIDE_PERIODS,
             fidePeriods = listOf(
-                FidePeriod(timeMs = 10_000, incrementMs = 5_000, movesToNext = 0, hasDelay = true),
-                FidePeriod(timeMs = 30_000, incrementMs = 5_000, movesToNext = 0, hasDelay = true),
+                FidePeriod(timeMs = 10_000, incrementMs = 5_000, movesToNext = 0, isFischer = false, hasDelay = true),
+                FidePeriod(timeMs = 30_000, incrementMs = 5_000, movesToNext = 0, isFischer = false, hasDelay = true),
             ),
         )
         val after = arbiterAdjustTime(game(PlayerState(10_000, delayRemainingMs = 5_000)), 1, -15_000, ChessClockSettings(main = s))
@@ -46,6 +46,38 @@ class ArbiterPastZeroTest {
         // delay, it would have stopped the penalty at ten and left the second period whole.
         assertEquals(25_000, after.players[0].timeRemainingMs)
         assertEquals(5_000, after.players[0].delayRemainingMs)
+    }
+
+    private fun fideWithDelay(vararg periods: FidePeriod) = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = periods.toList())
+
+    @Test
+    fun `a player the penalty flags keeps no delay`() {
+        val s = fideWithDelay(FidePeriod(timeMs = 10_000, incrementMs = 5_000, movesToNext = 0, hasDelay = true))
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE, forcedMoveCounter = false)
+        val after = arbiterAdjustTime(game(PlayerState(10_000, delayRemainingMs = 3_000)), 1, -15_000, settings)
+        assertTrue(after.players[0].isOutOfTime)
+        // Kept, the overrun stood still for those three seconds after Resume.
+        assertEquals(0, after.players[0].delayRemainingMs)
+    }
+
+    @Test
+    fun `a waiting player taken into the next period gets that period's delay`() {
+        val waiting = { p: PlayerState -> ChessClockState(listOf(PlayerState(60_000), p), activePlayer = 1, isPaused = true) }
+        val toFischer = fideWithDelay(
+            FidePeriod(timeMs = 10_000, incrementMs = 5_000, movesToNext = 0, hasDelay = true),
+            FidePeriod(timeMs = 30_000, incrementMs = 30_000, movesToNext = 0, isFischer = true),
+        )
+        val fischer = arbiterAdjustTime(waiting(PlayerState(10_000, delayRemainingMs = 5_000)), 2, -15_000, ChessClockSettings(main = toFischer, forcedMoveCounter = false))
+        assertEquals(1, fischer.players[1].currentPeriodIndex)
+        assertEquals("a Fischer period has no delay", 0, fischer.players[1].delayRemainingMs)
+
+        val toDelay = fideWithDelay(
+            FidePeriod(timeMs = 10_000, incrementMs = 0, movesToNext = 0, isFischer = false),
+            FidePeriod(timeMs = 30_000, incrementMs = 10_000, movesToNext = 0, isFischer = false, hasDelay = true),
+        )
+        val delayed = arbiterAdjustTime(waiting(PlayerState(10_000)), 2, -15_000, ChessClockSettings(main = toDelay, forcedMoveCounter = false))
+        assertEquals(1, delayed.players[1].currentPeriodIndex)
+        assertEquals(10_000, delayed.players[1].delayRemainingMs)
     }
 
     @Test

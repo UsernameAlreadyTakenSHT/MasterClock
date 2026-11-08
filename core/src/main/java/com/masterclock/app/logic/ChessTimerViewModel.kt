@@ -2744,7 +2744,7 @@ internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountM
         else -> state.copy(players = state.players.mapIndexed { idx, p ->
             // Gong has phases, not flags: a penalty past zero ends the phase on the next tick.
             if (wholeTable || (mode == TimerMode.GONG && idx + 1 == playerIndex)) p.copy(timeRemainingMs = (p.timeRemainingMs + amountMs).coerceAtLeast(0))
-            else if (idx + 1 == playerIndex && p.penaltyRunsOn(amountMs, settings.playerSettings(idx + 1))) p.penaltyRunningOn(amountMs, settings.playerSettings(idx + 1), settings)
+            else if (idx + 1 == playerIndex && p.penaltyRunsOn(amountMs, settings.playerSettings(idx + 1))) p.penaltyRunningOn(amountMs, settings.playerSettings(idx + 1), settings, onMove = state.activePlayer == playerIndex)
             else if (idx + 1 == playerIndex) p.arbiterCredited(amountMs, flagBehavior).let {
                 val ps = settings.playerSettings(idx + 1)
                 when {
@@ -2775,9 +2775,29 @@ private fun PlayerState.penaltyRunsOn(amountMs: Long, s: PlayerSettings): Boolea
         else -> false
     }
 
-/** The clock's own arithmetic for what follows zero, with the delay out of it: a delay is for thinking, and shields no one from a penalty. */
-private fun PlayerState.penaltyRunningOn(amountMs: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState =
-    tickPlayer(copy(delayRemainingMs = 0), -amountMs, s, settings).copy(delayRemainingMs = delayRemainingMs)
+/**
+ * The clock's own arithmetic for what follows zero, with the delay out of it: a delay is for thinking,
+ * and shields no one from a penalty.
+ *
+ * Nor does it outlive what the penalty did. It was put back whatever happened, so a player the penalty
+ * flagged kept a delay their overrun then waited out on every resume, and one taken into the next
+ * period kept the old period's. A delay is for the move to come, from the period it is played in, as
+ * computePostMoveState arms it: a player waiting for their turn gets the new period's, and one on the
+ * move keeps no more than was left of theirs.
+ */
+private fun PlayerState.penaltyRunningOn(amountMs: Long, s: PlayerSettings, settings: ChessClockSettings, onMove: Boolean): PlayerState {
+    val ran = tickPlayer(copy(delayRemainingMs = 0), -amountMs, s, settings)
+    val delay = when {
+        ran.isOutOfTime -> 0L
+        ran.currentPeriodIndex == currentPeriodIndex -> delayRemainingMs
+        else -> {
+            val period = s.fidePeriods.getOrNull(ran.currentPeriodIndex)
+            val periodDelay = if (period != null && !period.isFischer && period.hasDelay) period.incrementMs else 0L
+            if (onMove) minOf(delayRemainingMs, periodDelay) else periodDelay
+        }
+    }
+    return ran.copy(delayRemainingMs = delay)
+}
 
 /**
  * The arbiter's time in the modes with a move clock and a reserve: Global's total, Overtime's
@@ -4508,7 +4528,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun adjustTime(playerIndex: Int, amountMs: Long) {
         if (!_uiState.value.isArbitreMode) return
         val settings = _settings.value
+        val before = _uiState.value.players.getOrNull(playerIndex - 1)
         _uiState.update { state -> arbiterAdjustTime(state, playerIndex, amountMs, settings) }
+        val after = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
+        if (before == null) return
+        // A penalty goes where the time running out would, and is heard and logged as that is: a
+        // FIDE period gone, a byoyomi period lost, a flag. Only the state was stored -- a player
+        // dropped from five byoyomi periods to two left no PERIOD in the log, and one flagged no FLAG.
+        // One that takes the main time and periods with it at once is read from byoyomi's start, as
+        // the clock would have gone through it. A countdown it reaches is not counted down: nobody
+        // is on the clock while the arbiter is.
+        val from = if (after.isInByoyomi && !before.isInByoyomi) before.copy(isInByoyomi = true) else before
+        if (after.currentPeriodIndex > from.currentPeriodIndex || byoyomiPeriodLost(from, after) || (after.isOutOfTime && !from.isOutOfTime)) {
+            handleAudio(from, after, settings, playerIndex)
+            handleVoice(before, after, settings, playerIndex, afterPress = true)
+        }
     }
 
     /** Whether the arbiter's ±1 move means anything for this player: FIDE periods ended by moves. */
