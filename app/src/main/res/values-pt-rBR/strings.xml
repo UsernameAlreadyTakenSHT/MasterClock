@@ -189,6 +189,7 @@
     <string name="color_grey">Cinza</string>
     <string name="common_reset">Zerar</string>
     <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="timer_berserk_message">Metade do tempo e o incremento são perdidos nesta partida. Não é possível desfazer.</string>
     <string name="omni_reset_title">Zerar a sessão?</string>
     <string name="omni_reset_confirm">ZERAR</string>
     <string name="omni_reset_session">Zerar a sessão</string>

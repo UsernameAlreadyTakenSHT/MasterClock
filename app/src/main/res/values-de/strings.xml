@@ -556,6 +556,9 @@
     <string name="timer_reset_title">Partie zurücksetzen?</string>
     <string name="preset_end_game_title">Laufende Partie beenden?</string>
     <string name="timer_reset_message">Der aktuelle Stand geht verloren.</string>
+    <string name="timer_berserk_title">Berserk für Spieler %1$d?</string>
+    <string name="timer_berserk_message">Die Hälfte der Zeit und das Inkrement entfallen für diese Partie. Das lässt sich nicht rückgängig machen.</string>
+    <string name="a11y_berserk_player">Berserk, Spieler %1$d</string>
     <string name="timer_reroll">Neue Zufallszeit</string>
     <string name="timer_reroll_title">Neue Zeit auslosen?</string>
     <string name="timer_reroll_message">Die Partie startet mit einer neuen Zufallszeit neu.</string>

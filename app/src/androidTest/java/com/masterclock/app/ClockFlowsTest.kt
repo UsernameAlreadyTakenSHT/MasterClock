@@ -47,6 +47,10 @@ class ClockFlowsTest {
     private fun await(matcher: SemanticsMatcher, merged: Boolean = true) =
         rule.waitUntil(TIMEOUT_MS) { exists(matcher, merged) }
 
+    /** The question before a Berserk, to whichever player the first button belongs to. */
+    private fun awaitBerserkQuestion() =
+        rule.waitUntil(TIMEOUT_MS) { (1..2).any { exists(hasText(say(R.string.timer_berserk_title, it))) } }
+
     private fun described(text: String) = hasContentDescription(text, substring = true)
 
     /** The live region, which is what TalkBack speaks without being asked. */
@@ -186,11 +190,31 @@ class ClockFlowsTest {
 
         // A press on the face passes the turn on its way down, which a button inside it would too.
         rule.onAllNodes(button)[0].performClick()
+        // Nothing yet: it is asked first, and the clock is out of reach behind the question.
+        awaitBerserkQuestion()
+        assertTrue(viewModel.uiState.value.players.none { it.hasBerserked })
+        rule.onNode(button).performClick()
 
         rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.players.any { it.hasBerserked } }
         val players = viewModel.uiState.value.players
         assertNull(viewModel.uiState.value.activePlayer)
         assertEquals(listOf(300_000L, 600_000L), players.map { it.timeRemainingMs }.sorted())
+    }
+
+    @Test
+    fun berserkCancelledLeavesTheClockWhole() {
+        assumeTrue(FlavorConfig.hasFullSettingsTabs())
+        rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(allowBerserk = true)) }
+        val button = hasText(say(R.string.timer_berserk)) and hasClickAction()
+        await(button)
+        // Each player's button says whose it is.
+        await(hasContentDescription(say(R.string.a11y_berserk_player, 2)))
+        rule.onAllNodes(button)[0].performClick()
+        awaitBerserkQuestion()
+        rule.onNode(hasText(say(R.string.common_cancel)) and hasClickAction()).performClick()
+        rule.waitForIdle()
+        assertTrue(viewModel.uiState.value.players.none { it.hasBerserked })
+        assertEquals(listOf(600_000L, 600_000L), viewModel.uiState.value.players.map { it.timeRemainingMs })
     }
 
     @Test
@@ -206,6 +230,8 @@ class ClockFlowsTest {
         val button = hasText(say(R.string.timer_berserk)) and hasClickAction()
         await(button)
         rule.onAllNodes(button)[0].performClick()
+        awaitBerserkQuestion()
+        rule.onNode(button).performClick()
         rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.players.any { it.hasBerserked } }
 
         control(R.string.timer_start).performClick()

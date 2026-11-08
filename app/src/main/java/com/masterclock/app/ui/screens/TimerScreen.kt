@@ -65,6 +65,9 @@ fun TimerScreen(
     val settings by viewModel.settings.collectAsState()
     var showResetDialog by remember { mutableStateOf(value = false) }
     var showRerollDialog by remember { mutableStateOf(value = false) }
+    // Berserk halves a clock and cannot be taken back, and its button sits on the face its player
+    // presses to move: a press meant for the clock, a little off, cost half the game's time.
+    var berserkAsked by remember { mutableStateOf<Int?>(null) }
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val showPresets = remember { FlavorConfig.hasPresets() }
@@ -139,7 +142,7 @@ fun TimerScreen(
     }
 
     // Out of a screen reader's reach under a question, as it is out of a finger's.
-    val askingFirst = showResetDialog || showRerollDialog
+    val askingFirst = showResetDialog || showRerollDialog || berserkAsked != null
     Box(modifier = Modifier.fillMaxSize().then(if (askingFirst) Modifier.clearAndSetSemantics {} else Modifier)) {
         ClockAnnouncer(
             state,
@@ -153,7 +156,7 @@ fun TimerScreen(
         // again from out here, so those presses buzzed twice where three and four players' buzzed once.
         if (isGlobalMode) {
             Box(Modifier.fillMaxSize()) {
-                PlayerButton(Modifier.fillMaxSize(), state, 1, settings, contentRotation = iconRotation, onBerserk = { viewModel.berserk(1) }) { 
+                PlayerButton(Modifier.fillMaxSize(), state, 1, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = 1 }) { 
                     viewModel.startOrSwitch(1) 
                 }
             }
@@ -169,7 +172,7 @@ fun TimerScreen(
                             ClockOrientation.HORIZONTAL_RIGHT -> -90f
                             else -> 180f
                         }
-                        PlayerButton(Modifier.weight(p1Weight), state, 1, settings, contentRotation = p1Rotation, onBerserk = { viewModel.berserk(1) }) { 
+                        PlayerButton(Modifier.weight(p1Weight), state, 1, settings, contentRotation = p1Rotation, onBerserk = { berserkAsked = 1 }) { 
                             viewModel.startOrSwitch(1) 
                         }
 
@@ -178,7 +181,7 @@ fun TimerScreen(
                             ClockOrientation.HORIZONTAL_RIGHT -> -90f
                             else -> 0f
                         }
-                        PlayerButton(Modifier.weight(p2Weight), state, 2, settings, contentRotation = p2Rotation, onBerserk = { viewModel.berserk(2) }) { 
+                        PlayerButton(Modifier.weight(p2Weight), state, 2, settings, contentRotation = p2Rotation, onBerserk = { berserkAsked = 2 }) { 
                             viewModel.startOrSwitch(2) 
                         }
                     }
@@ -195,10 +198,10 @@ fun TimerScreen(
                                 ClockOrientation.HORIZONTAL_RIGHT -> -90f
                                 else -> 180f
                             }
-                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = p1Rot, onBerserk = { viewModel.berserk(p1) }) { viewModel.startOrSwitch(p1) }
+                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = p1Rot, onBerserk = { berserkAsked = p1 }) { viewModel.startOrSwitch(p1) }
                             Row(Modifier.weight(1f)) {
-                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = iconRotation, onBerserk = { viewModel.berserk(p2) }) { viewModel.startOrSwitch(p2) }
-                                PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { viewModel.berserk(p3) }) { viewModel.startOrSwitch(p3) }
+                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p2 }) { viewModel.startOrSwitch(p2) }
+                                PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 }) { viewModel.startOrSwitch(p3) }
                             }
                         } else {
                             Row(Modifier.weight(1f)) {
@@ -207,10 +210,10 @@ fun TimerScreen(
                                     ClockOrientation.HORIZONTAL_RIGHT -> -90f
                                     else -> 180f
                                 }
-                                PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { viewModel.berserk(p1) }) { viewModel.startOrSwitch(p1) }
-                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { viewModel.berserk(p2) }) { viewModel.startOrSwitch(p2) }
+                                PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { berserkAsked = p1 }) { viewModel.startOrSwitch(p1) }
+                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { berserkAsked = p2 }) { viewModel.startOrSwitch(p2) }
                             }
-                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { viewModel.berserk(p3) }) { viewModel.startOrSwitch(p3) }
+                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 }) { viewModel.startOrSwitch(p3) }
                         }
                     }
                 }
@@ -226,12 +229,12 @@ fun TimerScreen(
                     }
                     Column(Modifier.fillMaxSize()) {
                         Row(Modifier.weight(1f)) {
-                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { viewModel.berserk(p1) }) { viewModel.startOrSwitch(p1) }
-                            PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { viewModel.berserk(p2) }) { viewModel.startOrSwitch(p2) }
+                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { berserkAsked = p1 }) { viewModel.startOrSwitch(p1) }
+                            PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { berserkAsked = p2 }) { viewModel.startOrSwitch(p2) }
                         }
                         Row(Modifier.weight(1f)) {
-                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { viewModel.berserk(p3) }) { viewModel.startOrSwitch(p3) }
-                            PlayerButton(Modifier.weight(1f), state, p4, settings, contentRotation = iconRotation, onBerserk = { viewModel.berserk(p4) }) { viewModel.startOrSwitch(p4) }
+                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 }) { viewModel.startOrSwitch(p3) }
+                            PlayerButton(Modifier.weight(1f), state, p4, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p4 }) { viewModel.startOrSwitch(p4) }
                         }
                     }
                 }
@@ -317,6 +320,18 @@ fun TimerScreen(
             rotation = iconRotation,
             onDismiss = { showResetDialog = false },
             onConfirm = { viewModel.reset(); showResetDialog = false },
+        )
+    }
+
+    berserkAsked?.let { player ->
+        TimerConfirmDialog(
+            title = stringResource(R.string.timer_berserk_title, player),
+            message = stringResource(R.string.timer_berserk_message),
+            confirm = stringResource(R.string.timer_berserk),
+            rotation = iconRotation,
+            onDismiss = { berserkAsked = null },
+            // berserk() asks canBerserk again: a first move made meanwhile ends the offer.
+            onConfirm = { viewModel.berserk(player); berserkAsked = null },
         )
     }
 
@@ -608,7 +623,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     } else if (isActive && !runsForAll && !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
-    val spokenLabel = if (playerState.hasBerserked) "$a11yLabel, ${stringResource(R.string.timer_berserk)}" else a11yLabel
+    val berserkMark = stringResource(if (playerState.moveCount >= BERSERK_POINT_MOVES) R.string.timer_berserk_point else R.string.timer_berserk)
+    val spokenLabel = if (playerState.hasBerserked) "$a11yLabel, $berserkMark" else a11yLabel
 
     // Beside the face, not on it: the face takes a press on the way down, so a button inside it would
     // have passed the turn as well.
@@ -747,7 +763,9 @@ private fun BoxScope.BerserkControl(state: ChessClockState, playerIndex: Int, se
     // Inside the bars: the clock is drawn under them, and these sat on the status bar and the gesture bar.
     val modifier = Modifier.align(place).windowInsetsPadding(WindowInsets.safeDrawing).padding(12.dp).rotate(rotation)
     if (canBerserk(state, playerIndex, settings)) {
-        FilledTonalButton(onClick = onBerserk, modifier = modifier) { Text(stringResource(R.string.timer_berserk)) }
+        // Every player's read "Berserk", and with three or four only the order told whose was whose.
+        val named = stringResource(R.string.a11y_berserk_player, playerIndex)
+        FilledTonalButton(onClick = onBerserk, modifier = modifier.semantics { contentDescription = named }) { Text(stringResource(R.string.timer_berserk)) }
     } else if (player.hasBerserked) {
         // No more than a mark: nothing here takes a touch, so the clock can still be pressed through it.
         val earned = player.moveCount >= BERSERK_POINT_MOVES
@@ -756,7 +774,8 @@ private fun BoxScope.BerserkControl(state: ChessClockState, playerIndex: Int, se
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onPrimary,
-            modifier = modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 2.dp),
+            // The face already says it, in its description; read here as well, it was said twice.
+            modifier = modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 2.dp).clearAndSetSemantics {},
         )
     }
 }

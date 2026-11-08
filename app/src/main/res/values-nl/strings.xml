@@ -555,6 +555,9 @@
     <string name="timer_reset_title">Partij resetten?</string>
     <string name="preset_end_game_title">Lopende partij beëindigen?</string>
     <string name="timer_reset_message">De huidige stand gaat verloren.</string>
+    <string name="timer_berserk_title">Berserk voor speler %1$d?</string>
+    <string name="timer_berserk_message">De helft van de tijd en het increment vervallen voor deze partij. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="a11y_berserk_player">Berserk, speler %1$d</string>
     <string name="timer_reroll">Nieuwe willekeurige tijd</string>
     <string name="timer_reroll_title">Een nieuwe tijd loten?</string>
     <string name="timer_reroll_message">De partij begint opnieuw met een nieuwe willekeurige tijd.</string>

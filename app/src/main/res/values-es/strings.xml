@@ -573,6 +573,9 @@
     <string name="timer_reset_title">¿Reiniciar la partida?</string>
     <string name="preset_end_game_title">¿Terminar la partida en curso?</string>
     <string name="timer_reset_message">Se perderá el estado actual.</string>
+    <string name="timer_berserk_title">¿Berserk para el jugador %1$d?</string>
+    <string name="timer_berserk_message">Se pierden la mitad del tiempo y el incremento en esta partida. No se puede deshacer.</string>
+    <string name="a11y_berserk_player">Berserk, jugador %1$d</string>
     <string name="timer_reroll">Nuevo tiempo aleatorio</string>
     <string name="timer_reroll_title">¿Sortear un tiempo nuevo?</string>
     <string name="timer_reroll_message">La partida se reinicia con un tiempo aleatorio nuevo.</string>
