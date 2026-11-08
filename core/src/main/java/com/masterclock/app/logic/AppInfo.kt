@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-01"
+    const val BUILD_DATE = "2026-11-08"
 
     data class ChangelogEntry(
         val version: String,
@@ -12,6 +12,17 @@ object AppInfo {
     )
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.38",
+            date = "2026-11-08",
+            notes = listOf(
+                "Berserk, in Behavior: before their first move a player gives up half their time and their increment, as on Lichess.",
+                "The arbiter's corrections act on the clock that needs them, and a penalty past zero runs on into byoyomi or the next period.",
+                "A game left survives the app being closed. Settings and Presets pause a running game, and a time control edited mid-game asks first.",
+                "The clock is silent until asked, TalkBack reads a running clock by steps, and the digits grow on tablets and foldables.",
+                "Many fixes across the clocks at zero, Omni, the notebook and the board connections. The board is still untested with a real one.",
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.37",
             date = "2026-11-01",

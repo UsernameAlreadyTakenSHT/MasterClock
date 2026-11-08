@@ -1,3 +1,53 @@
+## v0.8.38 — 2026-11-08
+
+Berserk arrives, the arbiter's corrections and the moment a clock reaches zero were reworked
+against thousands of simulated games, a game survives the app being closed far better, TalkBack
+says much less and more of what matters, and the clock is silent until asked.
+
+### Added
+- **Berserk** (Complete, Standard), in Behavior, off by default. As on Lichess: before their first move a player gives up half their time and their increment, 1+2 keeping its minute, never at 0+1 or 0+2. Sudden Death and Fischer only. The log records the choice; the extra point is the players' to count.
+- **Large screens.** Android ignores the portrait lock from 600 dp, so on a tablet or an open foldable the clock's digits now grow with the face, up to three times, and Phases sits in the middle. Phones are unchanged.
+- **Omni:** Launch on a paused session asks whether to resume it or start a new one with the settings just edited. It resumed the old one, silently.
+
+### Changed
+- **Opening Settings or Presets pauses a running game, and editing the time control during a game asks before ending it**, as Reset and presets do. On E-Ink too.
+- **The arbiter's corrections act on the clock that needs them.** Taking more time than a player has is an overrun under Negative and Reverse and a flag under Freeze and Flag, no longer a silent 0:00. In byoyomi and FIDE periods it runs on as the time would: into byoyomi, or into the next period. In Global, Global Shared and Overtime, time given goes to the move clock when that is the one run out, and a player brought back from a move-clock flag gets a whole move.
+- **The clock is silent until asked.** The beeps for a FIDE or byoyomi period run out and for each Phases stage sounded whatever the settings said; they follow "Triple beep when times up" now, which is the single sound switch on Lite, Mini and E-Ink. The gong of the Gong mode still sounds: it is the mode.
+- **TalkBack.** A running clock is read to the minute, then to ten seconds in its last minute, rather than anew every few seconds. Every switch is one stop that says its state, mode cards say which is selected, colour swatches say their colour, and the Reset and Reroll dialogs hold the clock behind them.
+- **The voice** uses any voice the speech engine has before giving up, finds an engine the user installed, and keeps the phone's language only when the app is translated into it. Overtime's warnings count the reserve, and no "thirty seconds" follows a move that lowered a clock (Shrink, Transfer).
+- **Gong:** the first press chooses who moves first. Count Up stops at zero, and neither Gong nor a table's Countdown names anyone as flagged.
+
+### Fixed
+- **A game paused and then closed came back up to fifteen seconds earlier**, with the moves since cut from the history; closing it again before Resume left nothing to come back to. Writes still queued as the screen closed were lost.
+- **A corrupt settings file crashed the app at every launch**, and one unreadable setting reset them all. An imported game too large for the database did the same to the history; one from a newer version emptied a game or refused a resume.
+- **Reset settings put the history limit back to 100**, and the next game deleted every game past the hundredth. Two restores at once lost media, and a restore cut short left up to 4 GB behind.
+- A Berserk before the first press made the game come back Berserk from Last Games, and a new game could overwrite the interrupted one still on offer.
+- Clocks at zero: an Overtime move clock at exactly zero stayed in play a tick, Accelerate miscounted its last tick and lost fractions on every one, Move Count Down never ended under Negative or Reverse and its last move under Flag started the next clock, and a delay ending exactly on zero showed 0:00 without a flag.
+- Japanese byoyomi brought a player back at "0 periods"; three or four players under Flag kept naming a player brought back; Simultaneous Gong per player sounded only player 1's phases.
+- The log recorded the player's own field after a move: nothing in a table's Chrono, the move clock alone in Global, 0:00 in Overtime with reserve left and for a move count. It records the clock that was running out, or nothing.
+- FIDE periods showed a second move count, a count of 40 on the last period, 1' for 1:30, and "Add a period" made a Fischer period on a delay control.
+- "-" and "." in a time field set it to zero. Two switches on Player 2's tab did nothing. Lite could be left on Reverse by a built-in preset, with no way back.
+- **Omni:** a transition with no pause stopped on "I AM READY", a bank in Round scope never paid out, a looping round read TURN 1 throughout, a turn and its phase ending together beeped twice, and a session went on counting with the phone locked whatever Pause when in background said.
+- Three and four players' faces, Hidden and Move Counts were cut at large fonts; the arbiter panel scrolls and fits FIDE's move row at 360 dp; a turned face no longer runs off a large screen.
+- Sharing settings with games froze the screen and could hand over a file no import would read. Last Games said "no games yet" while the history loaded, and a "Last game" shortcut to a game since deleted did nothing.
+- Notebook: Undo after Clear, or a letter typed and deleted, saved the wrong drawing or text; a voice note left while recording lost its take; a video sat in its card's corner; a recording's length was up to a second short; a refused microphone or camera left a button that did nothing.
+- E-Ink: Settings left the game running behind it. The app now holds only its two screens, the clock and the Modes page.
+
+### Board (Complete)
+Still never tested with a real board: everything below was checked against frames built to each
+protocol's description.
+- Bytes from a device the app does not recognise were taken for moves: a keep-alive could switch the clock.
+- Certabo was read upside down, and a ChessLink with its cable on the left was not understood.
+- A castle played one piece at a time charged the opponent a move. En passant with the capturing pawn put down first stopped moves being read. Setting up the pieces starts a new game.
+- In Gong, Shared (Auto), a table's Chrono and Phases a move is noted and passes no turn; in Phases it ended a pause or skipped a phase. A move held for a press no longer goes into the next game.
+- Connections: a failed Bluetooth attempt kept its socket, a Bluetooth LE error left the link open, USB opened on the main thread, and one board on two connections switched the clock twice. A connection's error is in your language.
+
+### Known issues
+- Board: a castle started with the rook goes into the record as the rook's move, and one made with both pieces in hand at once stops moves being read until the starting position is set up again. A Certabo promotion to a piece the calibration has not learned is written "e7e8?".
+
+### Translations
+- Time control labels on Last Games and launcher shortcuts are translated. Portuguese says "Repor" throughout, Brazilian Portuguese keeps "Zerar", and Spanish says "bonificación".
+
 ## v0.8.37 — 2026-11-01
 
 Two of the timing modes work differently, every mode had another review, the backup can hold any

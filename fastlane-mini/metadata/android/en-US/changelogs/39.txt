@@ -1,0 +1,3 @@
+Silent until asked: no beep sounds with the sound off.
+TalkBack reads a running clock by steps. On tablets and foldables the digits grow with the screen.
+Fixes across the clocks at zero, the voice and the time fields.
