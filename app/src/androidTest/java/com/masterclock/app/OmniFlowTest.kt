@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
@@ -41,8 +42,8 @@ class OmniFlowTest {
         await(hasContentDescription(say(R.string.timer_settings)))
     }
 
-    @Test
-    fun aSessionLaunchesPausesAndResumes() {
+    /** From the clock through the wizard's defaults to a running session. */
+    private fun launchASession() {
         control(R.string.timer_settings).performClick()
         await(hasText("Omni-Timer", substring = true))
         rule.onNode(hasText("Omni-Timer", substring = true) and hasClickAction()).performScrollTo().performClick()
@@ -57,13 +58,27 @@ class OmniFlowTest {
         }
         await(launch)
         rule.onNode(launch).performClick()
-
         await(hasText(say(R.string.omni_running)))
+    }
+
+    @Test
+    fun aSessionLaunchesPausesAndResumes() {
+        launchASession()
         control(R.string.omni_pause).performClick()
         await(hasText(say(R.string.omni_paused)))
 
         control(R.string.timer_resume).performClick()
         await(hasText(say(R.string.omni_running)))
+    }
+
+    @Test
+    fun aRunningSessionGoesOnThroughARecreation() {
+        // What turning a tablet or a foldable does, which ignore the portrait lock; and a theme change.
+        launchASession()
+        rule.activityRule.scenario.recreate()
+        await(hasText(say(R.string.omni_running)))
+        rule.waitForIdle()
+        assertTrue(rule.onAllNodes(hasText(say(R.string.omni_paused))).fetchSemanticsNodes().isEmpty())
     }
 
     private companion object {

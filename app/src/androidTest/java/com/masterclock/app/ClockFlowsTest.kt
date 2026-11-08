@@ -215,6 +215,19 @@ class ClockFlowsTest {
     }
 
     @Test
+    fun aRunningGameGoesOnThroughARecreation() {
+        // Pause when in background is on by default, and a recreation is not the background: a
+        // tablet or a foldable ignores the portrait lock, and turning one paused the game.
+        assertTrue(viewModel.settings.value.pauseOnBackground)
+        control(R.string.timer_start).performClick()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null && !viewModel.uiState.value.isPaused }
+        rule.activityRule.scenario.recreate()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.isReady.value }
+        rule.waitForIdle()
+        assertFalse(viewModel.uiState.value.isPaused)
+    }
+
+    @Test
     fun aClockOffersTalkBackTheSwitchByName() {
         val action = player(1).fetchSemanticsNode().config[SemanticsActions.OnClick]
         assertEquals(say(R.string.timer_switch_turn), action.label)

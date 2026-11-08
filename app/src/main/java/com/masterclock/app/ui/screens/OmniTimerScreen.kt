@@ -45,7 +45,9 @@ fun OmniTimerScreen(
     val pauseWhenLeft by androidx.compose.runtime.rememberUpdatedState(pauseOnBackground)
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_PAUSE && pauseWhenLeft) viewModel.pauseOmni()
+            // Not for a recreation either, as onDispose above has it: a tablet or a foldable ignores
+            // the portrait lock, and turning one paused the session.
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_PAUSE && pauseWhenLeft && activity?.isChangingConfigurations != true) viewModel.pauseOmni()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }

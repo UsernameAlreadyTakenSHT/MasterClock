@@ -327,7 +327,9 @@ class MainActivity : ComponentActivity() {
             val lifecycleOwner = LocalLifecycleOwner.current
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_PAUSE) {
+                    // A recreation is not leaving the app: from 600 dp Android ignores the portrait
+                    // lock, and turning a tablet or a foldable, or changing the theme, paused the game.
+                    if (event == Lifecycle.Event.ON_PAUSE && !isChangingConfigurations) {
                         if (settings.pauseOnBackground) {
                             timerViewModel.pause()
                         }
