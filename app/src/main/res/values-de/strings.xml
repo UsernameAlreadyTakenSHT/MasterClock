@@ -292,6 +292,9 @@
     <string name="settings_confirm_reset">Zurücksetzen bestätigen</string>
     <string name="settings_trigger_on_press">Beim Drücken auslösen (sonst beim Loslassen)</string>
     <string name="settings_pause_background">Im Hintergrund pausieren</string>
+    <string name="settings_keep_running">Im Hintergrund weiterlaufen</string>
+    <string name="settings_keep_running_desc">Ist die Pause oben aus, hält eine Benachrichtigung die Uhr in Gang, solange die App im Hintergrund ist, damit Android sie nicht schließt. Sie zeigt, wer am Zug ist und wie viel Zeit bleibt, mit einer Pause-Taste.</string>
+    <string name="notif_channel_clock">Laufende Partie</string>
     <string name="settings_advanced">Erweitert</string>
     <string name="settings_different_per_player">Eigene Einstellungen je Spieler</string>
     <string name="settings_more_players">Mehr Spieler aktivieren (experimentell)</string>

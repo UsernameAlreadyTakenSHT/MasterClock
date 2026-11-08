@@ -24,5 +24,12 @@
 
     <uses-feature android:name="android.hardware.camera" tools:node="remove" />
     <uses-feature android:name="android.hardware.usb.host" tools:node="remove" />
+    <!-- Keeping a game running in the background is Complete and Standard's; see runsInBackground. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" tools:node="remove" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
 
+    <application>
+        <service android:name="com.masterclock.app.BackgroundClockService" tools:node="remove" />
+    </application>
 </manifest>

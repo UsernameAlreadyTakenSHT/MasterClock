@@ -348,6 +348,42 @@ fun countdownTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode
     else alertTimeMs(state, player, mode)
 
 /**
+ * Whether a game left running is kept alive in the background, by a foreground service and its
+ * notification. Without one Android may close the app during a long absence, and the game then came
+ * back only from its last autosave, in Complete, Standard and Lite, or not at all.
+ *
+ * Only with the pause off, since a game paused on leaving has nothing to keep running, and only where
+ * the Behaviour tab can switch it, as it can the pause: Complete and Standard. Lite and Mini declare
+ * neither the service nor its permissions.
+ */
+fun ChessClockSettings.runsInBackground(): Boolean =
+    keepRunningInBackground && !pauseOnBackground && FlavorConfig.hasFullSettingsTabs()
+
+/**
+ * What the background notification shows: whose turn it is, and the time running out for them.
+ * [playerIndex] is null for a clock that is the table's. [countdownMs] is null where the face does
+ * not count down to a flag -- a stopwatch, a move count, an overrun -- and the notification then says
+ * only that the clock runs. It is the time as it stood when read: the notification counts it down on
+ * its own, and is read again whenever the turn changes.
+ */
+data class BackgroundClock(val playerIndex: Int?, val countdownMs: Long?)
+
+/** The game [backgroundClockOf] keeps alive, or null when nothing is running and the service can stop. */
+fun backgroundClockOf(state: ChessClockState, settings: ChessClockSettings): BackgroundClock? {
+    val active = state.activePlayer ?: return null
+    if (state.isPaused || isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) return null
+    val player = state.players.getOrNull(active - 1) ?: return null
+    val mode = settings.playerSettings(active).mode
+    val counts = mode !in setOf(TimerMode.CHRONO_COUNTUP, TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN) &&
+        !player.isOverrun(settings.flagBehavior)
+    val shown = countdownTimeMs(state, player, mode)
+    return BackgroundClock(
+        playerIndex = active.takeUnless { mode.isWholeTable },
+        countdownMs = shown.takeIf { counts && it > 0 },
+    )
+}
+
+/**
  * The time a MOVE event records: the clock that was running out, as the warnings take it. It read
  * the player's own field, which in a table's Chrono never moves, in Global is the move clock with
  * the total left out, and in Overtime reads 0:00 with a reserve still to play. A move count has no
@@ -816,6 +852,8 @@ data class ChessClockSettings(
     val forcedMoveCounter: Boolean = true,
     val triggerOnPress: Boolean = true,
     val pauseOnBackground: Boolean = true,
+    /** With [pauseOnBackground] off, a foreground service keeps the game alive; see [runsInBackground]. */
+    val keepRunningInBackground: Boolean = false,
 
     val alwaysShowHours: Boolean = false,
     val alwaysShowMinutes: Boolean = true,

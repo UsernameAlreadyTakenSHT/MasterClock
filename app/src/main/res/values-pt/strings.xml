@@ -301,6 +301,9 @@
     <string name="settings_confirm_reset">Confirmar a reposição</string>
     <string name="settings_trigger_on_press">Ativar ao premir (caso contrário ao largar)</string>
     <string name="settings_pause_background">Pausar em segundo plano</string>
+    <string name="settings_keep_running">Continuar em segundo plano</string>
+    <string name="settings_keep_running_desc">Com a pausa acima desligada, uma notificação mantém o relógio a contar enquanto a app está em segundo plano, para que o Android não a feche. Mostra de quem é a vez e o seu tempo, com um botão de pausa.</string>
+    <string name="notif_channel_clock">Partida em curso</string>
     <string name="settings_advanced">Avançado</string>
     <string name="settings_different_per_player">Definições diferentes por jogador</string>
     <string name="settings_more_players">Ativar mais jogadores (experimental)</string>

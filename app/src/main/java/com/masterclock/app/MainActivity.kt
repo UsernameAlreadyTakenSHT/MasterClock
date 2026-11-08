@@ -31,6 +31,9 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
@@ -89,6 +92,15 @@ class MainActivity : ComponentActivity() {
         val isFreshLaunch = savedInstanceState == null &&
             ((intent?.flags ?: 0) and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0
         val launchShortcutId = if (isFreshLaunch) intent?.getStringExtra(PresetShortcuts.EXTRA_SHORTCUT_ID) else null
+
+        // What the background notification shows, kept current while the app is away: a turn passed by
+        // Shared (Auto) or a flag changes it, and a game no longer running ends the service. Collected on
+        // the activity's own scope, which outlives its being on screen.
+        val clockModel = ViewModelProvider(this)[ChessTimerViewModel::class.java]
+        lifecycleScope.launch {
+            combine(clockModel.uiState, clockModel.settings) { state, settings -> backgroundClockOf(state, settings) }
+                .collect { clock -> if (BackgroundClockLink.clock.value != null) BackgroundClockLink.clock.value = clock }
+        }
 
         enableEdgeToEdge()
         setContent {
@@ -328,8 +340,14 @@ class MainActivity : ComponentActivity() {
                     if (event == Lifecycle.Event.ON_PAUSE && !isChangingConfigurations) {
                         if (settings.pauseOnBackground) {
                             timerViewModel.pause()
+                        } else if (settings.runsInBackground()) {
+                            backgroundClockOf(timerViewModel.uiState.value, settings)?.let { clock ->
+                                BackgroundClockService.start(this@MainActivity, clock) { timerViewModel.pause() }
+                            }
                         }
                     }
+                    // In front again: the clock is on the screen, and the notification goes.
+                    if (event == Lifecycle.Event.ON_RESUME) BackgroundClockService.stop(this@MainActivity)
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose {

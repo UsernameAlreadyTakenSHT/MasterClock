@@ -13,6 +13,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Keep running in the background, Complete and Standard only: Lite and Mini remove these. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!--
       Removed for every flavour, not only the reduced three.
 
@@ -64,6 +68,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          No foreground service type fits a chess clock: it is not media, a call, a location or a sync.
+          specialUse is the one for what the others do not cover, and says what it is for.
+        -->
+        <service
+            android:name=".BackgroundClockService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="A chess clock keeping the time of a game left running while the app is in the background, at the user's choice" />
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

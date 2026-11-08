@@ -296,6 +296,9 @@
     <string name="settings_confirm_reset">Conferma l\'azzeramento</string>
     <string name="settings_trigger_on_press">Attiva alla pressione (altrimenti al rilascio)</string>
     <string name="settings_pause_background">Metti in pausa in secondo piano</string>
+    <string name="settings_keep_running">Continua in secondo piano</string>
+    <string name="settings_keep_running_desc">Con la pausa qui sopra disattivata, una notifica tiene l\'orologio in funzione mentre l\'app è in secondo piano, così Android non la chiude. Mostra a chi tocca e il suo tempo, con un pulsante Pausa.</string>
+    <string name="notif_channel_clock">Partita in corso</string>
     <string name="settings_advanced">Avanzate</string>
     <string name="settings_different_per_player">Impostazioni diverse per giocatore</string>
     <string name="settings_more_players">Attiva più giocatori (sperimentale)</string>

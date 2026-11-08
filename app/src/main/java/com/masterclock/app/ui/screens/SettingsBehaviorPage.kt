@@ -1,5 +1,10 @@
 package com.masterclock.app.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,7 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,11 +79,31 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                     label = stringResource(R.string.settings_pause_background),
                     checked = currentSettings.pauseOnBackground
                 ) { onSettingsChanged(currentSettings.copy(pauseOnBackground = it)) }
+                // Asked for as it is switched on, not before: nobody who keeps the pause sees the
+                // question. Refused, the service runs all the same; its notification is only hidden.
+                val askToNotify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+                val context = LocalContext.current
+                BehaviorSwitch(
+                    label = stringResource(R.string.settings_keep_running),
+                    checked = currentSettings.keepRunningInBackground && !currentSettings.pauseOnBackground,
+                    enabled = !currentSettings.pauseOnBackground,
+                ) { on ->
+                    if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    ) askToNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    onSettingsChanged(currentSettings.copy(keepRunningInBackground = on))
+                }
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_allow_berserk),
                     checked = currentSettings.allowBerserk,
                     bottomRounded = true
                 ) { onSettingsChanged(currentSettings.copy(allowBerserk = it)) }
+                Text(
+                    stringResource(R.string.settings_keep_running_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp),
+                )
                 Text(
                     stringResource(R.string.settings_berserk_desc),
                     style = MaterialTheme.typography.bodySmall,

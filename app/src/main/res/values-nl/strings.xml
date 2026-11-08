@@ -291,6 +291,9 @@
     <string name="settings_confirm_reset">Resetten bevestigen</string>
     <string name="settings_trigger_on_press">Activeren bij indrukken (anders bij loslaten)</string>
     <string name="settings_pause_background">Pauzeren op de achtergrond</string>
+    <string name="settings_keep_running">Op de achtergrond doorlopen</string>
+    <string name="settings_keep_running_desc">Met de pauze hierboven uit houdt een melding de klok lopend zolang de app op de achtergrond staat, zodat Android hem niet sluit. Ze toont wie aan zet is en de resterende tijd, met een pauzeknop.</string>
+    <string name="notif_channel_clock">Lopende partij</string>
     <string name="settings_advanced">Geavanceerd</string>
     <string name="settings_different_per_player">Aparte instellingen per speler</string>
     <string name="settings_more_players">Meer spelers inschakelen (experimenteel)</string>

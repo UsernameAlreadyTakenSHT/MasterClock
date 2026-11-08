@@ -317,6 +317,9 @@
     <string name="settings_confirm_reset">Confirm reset</string>
     <string name="settings_trigger_on_press">Trigger on Press (else on Release)</string>
     <string name="settings_pause_background">Pause when in background</string>
+    <string name="settings_keep_running">Keep running in the background</string>
+    <string name="settings_keep_running_desc">With the pause above off, a notification keeps the clock going while the app is in the background, so that Android does not close it. It shows whose turn it is and their time, with a Pause button.</string>
+    <string name="notif_channel_clock">Game in progress</string>
     <string name="settings_advanced">Advanced</string>
     <string name="settings_different_per_player">Different settings per player</string>
     <string name="settings_more_players">Enable more players (experimental)</string>

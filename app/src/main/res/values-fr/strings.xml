@@ -312,6 +312,9 @@
     <string name="settings_confirm_reset">Confirmer la réinitialisation</string>
     <string name="settings_trigger_on_press">Déclencher à l\'appui (sinon au relâchement)</string>
     <string name="settings_pause_background">Mettre en pause en arrière-plan</string>
+    <string name="settings_keep_running">Continuer en arrière-plan</string>
+    <string name="settings_keep_running_desc">Avec la pause ci-dessus désactivée, une notification garde la pendule en marche quand l\'appli est en arrière-plan, pour qu\'Android ne la ferme pas. Elle indique qui a le trait et son temps, avec un bouton Pause.</string>
+    <string name="notif_channel_clock">Partie en cours</string>
     <string name="settings_advanced">Avancé</string>
     <string name="settings_different_per_player">Réglages différents par joueur</string>
     <string name="settings_more_players">Activer plus de joueurs (expérimental)</string>
