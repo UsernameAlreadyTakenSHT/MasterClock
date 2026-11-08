@@ -3,6 +3,7 @@ package com.masterclock.app.logic
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Test
 
 /** Berserk as Lichess words it: half the time, no increment, 1+2 apart, never at 0+1 or 0+2. */
@@ -15,6 +16,25 @@ class BerserkTest {
         PlayerSettings(mode = TimerMode.FISCHER, initialTimeMs = minutes * 60_000, incrementMs = incrementSeconds * 1000)
 
     private fun start(settings: ChessClockSettings) = initialClockState(settings, ClockSim.RANDOM_ROLL)
+
+    @After
+    fun restoreFlavor() {
+        FlavorConfig.currentFlavor = AppFlavor.COMPLETE
+    }
+
+    @Test
+    fun `only the builds with a Behaviour tab offer it`() {
+        val s = settings(fischer(3, 2))
+        listOf(AppFlavor.COMPLETE, AppFlavor.STANDARD).forEach { flavor ->
+            FlavorConfig.currentFlavor = flavor
+            assertTrue("$flavor should offer it", canBerserk(start(s), 1, s))
+        }
+        listOf(AppFlavor.LITE, AppFlavor.MINI, AppFlavor.E_INK).forEach { flavor ->
+            FlavorConfig.currentFlavor = flavor
+            assertFalse("$flavor has no switch for it", canBerserk(start(s), 1, s))
+            assertEquals(start(s), goBerserk(start(s), 1, s))
+        }
+    }
 
     @Test
     fun `it is off unless asked for`() {

@@ -366,7 +366,9 @@ private fun berserkPenaltyMs(s: PlayerSettings): Long =
 
 /** Whether [playerIndex] can still go Berserk: before their first move, and never at 0+1 or 0+2. */
 fun canBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSettings): Boolean {
-    if (!settings.allowBerserk) return false
+    // Allowed from the Behaviour tab, which only Complete and Standard have. Elsewhere a stored true
+    // could only have come from outside, and would show a button nothing on that build turns off.
+    if (!settings.allowBerserk || !FlavorConfig.hasFullSettingsTabs()) return false
     val s = settings.playerSettings(playerIndex)
     val p = state.players.getOrNull(playerIndex - 1) ?: return false
     if (s.mode !in BERSERK_MODES || s.initialTimeMs <= 0) return false
