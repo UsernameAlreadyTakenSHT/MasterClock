@@ -82,6 +82,37 @@ class BoardFlowTest {
     @Test
     fun withoutAutoSwitchTheNextPressCarriesTheMove() {
         settings { it.copy(autoSwitchOnBoardMove = false) }
+    @Test
+    fun aCastleReportedRookFirstPassesTheTurnOnceAndIsLoggedAsTheKingsMove() {
+        settings { it.copy(autoSwitchOnBoardMove = true) }
+        startTheClock()
+        val mover = viewModel.uiState.value.activePlayer
+
+        board("h1f1")
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != mover }
+        val next = viewModel.uiState.value.activePlayer
+        board("e1g1")
+        rule.waitForIdle()
+        assertEquals("the king's half passed the turn back", next, viewModel.uiState.value.activePlayer)
+
+        endTheGameAndWaitFor { movesNoted("e1g1").isNotEmpty() }
+        assertTrue("the rook's move is still in the log", events().none { it.moveNotation == "h1f1" })
+    }
+
+    @Test
+    fun withoutAutoSwitchACastleRookFirstIsHeldAsTheKingsMove() {
+        settings { it.copy(autoSwitchOnBoardMove = false) }
+        startTheClock()
+        val mover = viewModel.uiState.value.activePlayer!!
+
+        board("a1d1")
+        board("e1c1")
+        rule.runOnUiThread { viewModel.startOrSwitch(mover) }
+
+        endTheGameAndWaitFor { movesNoted("e1c1").isNotEmpty() }
+        assertTrue("the rook's move is still in the log", events().none { it.moveNotation == "a1d1" })
+    }
+
         startTheClock()
         val mover = viewModel.uiState.value.activePlayer!!
 

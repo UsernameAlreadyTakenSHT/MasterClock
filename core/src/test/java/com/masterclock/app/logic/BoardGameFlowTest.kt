@@ -59,10 +59,36 @@ class BoardGameFlowTest {
     }
 
     @Test
-    fun `castling rook first is one move`() {
+    fun `castling rook first reports the rook, then the king that renames it`() {
         connectReadyToCastle()
+        // The rook's move may be just that, so it is reported; the king jumping it is passed on for
+        // recordBoardMove to rename the rook's move, and is never a move of its own.
         assertEquals(listOf("h1f1"), play("h1", "f1"))
-        assertEquals(emptyList<String>(), play("e1", "g1"))
+        assertEquals(listOf("e1g1"), play("e1", "g1"))
+        assertEquals(true, BoardDiffer.completesCastle("h1f1", "e1g1"))
+        assertEquals(listOf("e7e6"), play("e7", "e6"))
+    }
+
+    @Test
+    fun `castling with both pieces in hand, the king put down first`() {
+        connectReadyToCastle()
+        assertEquals(emptyList<String>(), lift("e1"))
+        assertEquals(emptyList<String>(), lift("h1"))
+        assertEquals(emptyList<String>(), put("g1", 'K'))
+        assertEquals(listOf("e1g1"), put("f1", 'R'))
+        // And the board goes on being read: this was where every later move was lost.
+        assertEquals(listOf("e7e6"), play("e7", "e6"))
+        assertEquals(listOf("f1e1"), play("f1", "e1"))
+    }
+
+    @Test
+    fun `castling with both pieces in hand, the rook put down first`() {
+        connectReadyToCastle()
+        lift("e1")
+        lift("a1")
+        assertEquals(emptyList<String>(), put("d1", 'R'))
+        assertEquals(listOf("e1c1"), put("c1", 'K'))
+        assertEquals(listOf("e7e6"), play("e7", "e6"))
     }
 
     @Test

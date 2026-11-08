@@ -170,6 +170,9 @@ class BoardMoveTracker {
     /** The square an en passant capture has yet to empty, for the same reason. */
     private var captureToClear: Int? = null
 
+    /** The last move reported, which a king completing a castle names. */
+    private var previousMove: String? = null
+
     /** Whether this board stands turned half way round; see [BoardReport.Position.mayBeTurned]. */
     private var turned = false
 
@@ -250,6 +253,7 @@ class BoardMoveTracker {
             settled = position
             secondHalf = null
             captureToClear = null
+            previousMove = null
             return emptyList()
         }
         val ghost = captureToClear
@@ -262,8 +266,11 @@ class BoardMoveTracker {
         settled = position
         if (move == secondHalf) {
             secondHalf = null
-            return emptyList()
+            // The king after its rook is passed on, for the rook's move to be renamed after it; see
+            // BoardDiffer.completesCastle. The rook after its king is the castle already reported.
+            return if (BoardDiffer.completesCastle(previousMove, move)) listOf(move) else emptyList()
         }
+        previousMove = move
         secondHalf = BoardDiffer.secondHalfOf(move, from)
         captureToClear = BoardDiffer.capturedEnPassantBy(move, from)
         return listOf(move)
@@ -278,6 +285,7 @@ class BoardMoveTracker {
         turned = false
         secondHalf = null
         captureToClear = null
+        previousMove = null
         // A different set of pieces may be on the next board, so the learned tags go too.
         calibration.reset()
     }

@@ -1222,6 +1222,20 @@ data class GameLog(
  * change -- PHASES has no moves -- or, for a CHRONO that runs for everyone and takes no taps, its
  * clock having been started.
  */
+/**
+ * These events with the last one noted [from] -- a move, or a board's move held for a press -- noted
+ * [to] instead. A castle reported rook first reaches the log as the rook's move; see
+ * [BoardDiffer.completesCastle].
+ */
+internal fun List<GameEvent>.withLastNotationRenamed(from: String, to: String): List<GameEvent> {
+    val i = indexOfLast { it.moveNotation == from }
+    if (i < 0) return this
+    val e = this[i]
+    return toMutableList().apply {
+        this[i] = e.copy(moveNotation = to, detail = e.detail?.replace(from, to))
+    }
+}
+
 internal fun GameLog.isWorthKeeping(): Boolean {
     val s1 = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
     // PHASES too: a single long phase reset before it ended logged no PHASE, and was dropped.
@@ -3267,6 +3281,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * if the board reports twice before the player presses, the first is stale.
      */
     private var pendingBoardNotation: String? = null
+
+    /** The last notation a board reported, for a castle's king to rename; see recordBoardMove. */
+    private var lastBoardNotation: String? = null
     private val soundManager = SoundManager(application)
     private val voiceManager = VoiceManager(application)
     // Built on first use, not on construction.
@@ -3434,7 +3451,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     bluetoothSerialBoardManager.connectionState,
                 ) { states -> states.any { it is ConnectionState.Connected } }
                     .distinctUntilChanged()
-                    .collect { anyBoardConnected -> if (!anyBoardConnected) pendingBoardNotation = null }
+                    .collect { anyBoardConnected -> if (!anyBoardConnected) { pendingBoardNotation = null; lastBoardNotation = null } }
             }
         }
 
@@ -4161,6 +4178,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Anything the board reported but no press claimed belongs to the game being ended, not to
         // the next one.
         pendingBoardNotation = null
+        lastBoardNotation = null
         // The autosave belongs to the game being ended too. Nothing but resumeSavedClock ever
         // cleared it, so the arbitre overlay went on offering "Resume" for a game that had been
         // reset -- indefinitely, and long after its snapshot had stopped resembling anything the
@@ -4332,6 +4350,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             pausedAt = null
             // A notation held for a press belongs to this game, and went into the next one's PGN.
             pendingBoardNotation = null
+            lastBoardNotation = null
             // The clock below is a new game, so the one being played ends here, the same way Reset
             // ends it. Saved with the settings it was played under: _settings has moved on, but
             // the log carries its own copy from the first press.
@@ -4559,6 +4578,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun resumeSavedClock() {
         pendingBoardNotation = null
+        lastBoardNotation = null
         viewModelScope.launch {
             val saved = gameDao.getSavedClock() ?: return@launch
             try {
@@ -4644,6 +4664,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun recordBoardMove(notation: String) {
+        // The king of a castle whose rook went first: the rook's move, already noted and maybe
+        // already pressed for, is renamed after the king, and nothing else happens.
+        val rookHalf = lastBoardNotation
+        lastBoardNotation = notation
+        if (BoardDiffer.completesCastle(rookHalf, notation) && rookHalf != null) {
+            if (pendingBoardNotation == rookHalf) pendingBoardNotation = notation
+            renameLastBoardMove(rookHalf, notation)
+            return
+        }
         val currentState = _uiState.value
         val outcome = boardMoveOutcome(
             notation = notation,
@@ -4680,6 +4709,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             is BoardMoveOutcome.NoGameRunning ->
                 addEvent(GameEvent(eventType = "BOARD_DATA", detail = "Data with no clock running: ${outcome.notation}"))
         }
+    }
+
+    private fun renameLastBoardMove(from: String, to: String) {
+        val log = currentLog ?: return
+        val updated = log.copy(events = log.events.withLastNotationRenamed(from, to))
+        if (updated == log) return
+        currentLog = updated
+        if (updated.isWorthKeeping()) historyWrites.trySend(HistoryWrite.Store(updated))
     }
 
     private fun getPlayerSettings(playerIndex: Int): PlayerSettings = settings.value.playerSettings(playerIndex)

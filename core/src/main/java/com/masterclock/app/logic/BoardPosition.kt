@@ -178,11 +178,13 @@ object BoardDiffer {
             }
 
             // En passant: the captured pawn is not on the square the capturer lands on, so two
-            // squares empty and only one fills.
+            // squares empty and only one fills. Never a king's or a rook's: that shape is also a
+            // castle with both pieces in hand, the king put down first, and read as a king's move it
+            // left a position with no rook in it as the baseline, which no later move matched.
             vacated.size == 2 && appeared.size == 1 && replaced.isEmpty() -> {
                 val landed = appeared.single()
                 val from = vacated.firstOrNull { before[it] == after[landed] }
-                if (from != null) move(from, landed, before, after) else null
+                if (from != null && !before[from].isKingOrRook()) move(from, landed, before, after) else null
             }
 
             else -> null
@@ -193,12 +195,30 @@ object BoardDiffer {
         val moved = before[from]
         val landed = after[to]
         val notation = BoardPosition.squareName(from) + BoardPosition.squareName(to)
-        // A pawn that arrives as something else has promoted; PGN spells the new piece in lower
-        // case regardless of colour.
-        return if (moved.equals('p', ignoreCase = true) && !landed.equals('p', ignoreCase = true)) {
-            notation + landed.lowercaseChar()
-        } else {
-            notation
+        val lastRank = notation[3] == '1' || notation[3] == '8'
+        // A pawn that arrives on the last rank as something else has promoted; PGN spells the new
+        // piece in lower case regardless of colour. Only there: a chip misread on e4 made "e2e4?".
+        // A piece the board cannot name is the spare queen of [PieceTagCalibration], and was
+        // written "e7e8?", which a PGN reader takes for an annotation with no piece at all.
+        return when {
+            !moved.equals('p', ignoreCase = true) || !lastRank || landed.equals('p', ignoreCase = true) -> notation
+            landed == BoardPosition.UNKNOWN_PIECE -> notation + 'q'
+            else -> notation + landed.lowercaseChar()
         }
     }
+
+    private fun Char.isKingOrRook() = equals('k', ignoreCase = true) || equals('r', ignoreCase = true)
+
+    /**
+     * Whether [move] is the king's half of a castle whose rook went first as [previous].
+     *
+     * The rook's half is a move like any other -- a rook beside an unmoved king may simply be moving
+     * -- so it is reported, and the clock passes on it. Only the king jumping it says it was a castle,
+     * and a king moves two files in no other move: what was recorded as the rook's move is then
+     * renamed after the king, as PGN wants it.
+     */
+    fun completesCastle(previous: String?, move: String): Boolean = previous != null && CASTLES[move] == previous
+
+    /** Each castle's king move, and the rook move that can come before it. */
+    private val CASTLES = mapOf("e1g1" to "h1f1", "e1c1" to "a1d1", "e8g8" to "h8f8", "e8c8" to "a8d8")
 }
