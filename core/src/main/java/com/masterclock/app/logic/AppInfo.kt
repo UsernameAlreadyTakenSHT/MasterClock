@@ -155,7 +155,7 @@ object AppInfo {
             version = "0.8.26",
             date = "2026-08-29",
             notes = listOf(
-                "Link board works now — but nothing in it has ever met a real board. It is written and tested against recorded frames only, because there is no device here to test with. Treat it as an experiment, and please report what happens either way.",
+                "Link board works now — but nothing in it has ever met a real board. It is written and tested against frames built to each protocol's description only, because there is no device here to test with. Treat it as an experiment, and please report what happens either way.",
                 "Five protocols are understood: the open BLE board protocol, Chessnut, DGT, Millennium ChessLink and Certabo.",
                 "Three ways to connect: Bluetooth LE, USB cable, and Bluetooth Classic for the older DGT e-Boards.",
                 "Moves read from a board are recorded with the game and reach the PGN export. \"Auto switch turn on move\" presses the clock for you; with it off, the board still names the move your own press records.",
