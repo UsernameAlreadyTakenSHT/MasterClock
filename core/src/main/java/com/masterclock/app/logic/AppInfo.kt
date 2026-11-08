@@ -5,11 +5,24 @@ package com.masterclock.app.logic
 object AppInfo {
     const val BUILD_DATE = "2026-11-08"
 
+    /**
+     * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
+     * changes are mostly in core and reach all five, but Berserk is not in Mini, nor the board in
+     * Standard, and every build read every note. An empty list leaves the release out of that build's
+     * changelog, for one that changed nothing in it.
+     */
     data class ChangelogEntry(
         val version: String,
         val date: String,
         val notes: List<String>,
-    )
+        val perFlavor: Map<AppFlavor, List<String>> = emptyMap(),
+    ) {
+        fun notesFor(flavor: AppFlavor): List<String> = perFlavor[flavor] ?: notes
+    }
+
+    /** The changelog as [flavor] has it: its own notes, and none of the releases that left it untouched. */
+    fun changelogFor(flavor: AppFlavor = FlavorConfig.currentFlavor): List<ChangelogEntry> =
+        CHANGELOG.mapNotNull { entry -> entry.notesFor(flavor).takeIf { it.isNotEmpty() }?.let { entry.copy(notes = it, perFlavor = emptyMap()) } }
 
     val CHANGELOG = listOf(
         ChangelogEntry(
@@ -21,6 +34,31 @@ object AppInfo {
                 "A game left survives the app being closed. Settings and Presets pause a running game, and a time control edited mid-game asks first.",
                 "The clock is silent until asked, TalkBack reads a running clock by steps, and the digits grow on tablets and foldables.",
                 "Many fixes across the clocks at zero, Omni, the notebook and the board connections. The board is still untested with a real one.",
+            ),
+            perFlavor = mapOf(
+                AppFlavor.STANDARD to listOf(
+                    "Berserk, in Behavior: before their first move a player gives up half their time and their increment, as on Lichess.",
+                    "The arbiter's corrections act on the clock that needs them, and a penalty past zero runs on into byoyomi or the next period.",
+                    "A game left survives the app being closed. Settings and Presets pause a running game, and a time control edited mid-game asks first.",
+                    "The clock is silent until asked, TalkBack reads a running clock by steps, and the digits grow on tablets and foldables.",
+                    "Many fixes across the clocks at zero and Omni.",
+                ),
+                AppFlavor.LITE to listOf(
+                    "The arbiter's corrections act on the clock that needs them, and a penalty past zero runs on into byoyomi or the next period.",
+                    "A game left survives the app being closed. Settings and Presets pause a running game, and a time control edited mid-game asks first.",
+                    "The clock is silent until asked, TalkBack reads a running clock by steps, and the digits grow on tablets and foldables.",
+                    "Many fixes across the clocks at zero and Omni.",
+                ),
+                AppFlavor.MINI to listOf(
+                    "The clock is silent until asked: no beep sounds with the sound off.",
+                    "TalkBack reads a running clock by steps, and the digits grow on tablets and foldables.",
+                    "Fixes across the clocks at zero, the voice and the time fields.",
+                ),
+                AppFlavor.E_INK to listOf(
+                    "Settings pause a running game, and a time control edited mid-game asks first.",
+                    "The clock is silent until asked: no beep sounds with the sound off.",
+                    "Fixes across the clocks at zero and the voice.",
+                ),
             ),
         ),
         ChangelogEntry(
@@ -42,6 +80,7 @@ object AppInfo {
                 "E-Ink: screens change at once, with no grey fade, and reversed colours start black with no white flash.",
                 "E-Ink: easier with TalkBack, the keyboard and a finger. The other builds have no changes.",
             ),
+            perFlavor = AppFlavor.entries.filter { it != AppFlavor.E_INK }.associateWith { emptyList() },
         ),
         ChangelogEntry(
             version = "0.8.35",

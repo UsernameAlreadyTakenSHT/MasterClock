@@ -1263,7 +1263,7 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     when (selectedTab) {
-                        0 -> AppInfo.CHANGELOG.forEach { entry ->
+                        0 -> AppInfo.changelogFor().forEach { entry ->
                             Column {
                                 Text(
                                     "${entry.version} — ${entry.date}",

@@ -40,7 +40,11 @@ The same notes have to be written seven times, in three different shapes.
   It takes the **first** section, so a missing entry silently republishes the previous release's
   notes. Keep the `### Added` / `### Changed` / `### Fixed` headings.
 - **`core/src/main/java/com/masterclock/app/logic/AppInfo.kt`** — bump `BUILD_DATE` and prepend a
-  `ChangelogEntry`. This is what the in-app changelog dialog shows.
+  `ChangelogEntry`. This is what the in-app changelog dialog shows, each build reading its own:
+  `notes` are every build's, and `perFlavor` gives a build its own list instead -- the same choice
+  of notes as its fastlane file below. An empty list leaves the release out of that build's dialog.
+  `ChangelogTest` checks that the entry is the version being built and that the five fastlane files
+  exist for its `versionCode`.
 - **`fastlane*/metadata/android/en-US/changelogs/<versionCode>.txt`** — five files, one per
   listing: `fastlane/` (complete), `fastlane-standard/`, `fastlane-lite/`, `fastlane-mini/`,
   `fastlane-paper/`. Plain text, one note per line, no Markdown.
