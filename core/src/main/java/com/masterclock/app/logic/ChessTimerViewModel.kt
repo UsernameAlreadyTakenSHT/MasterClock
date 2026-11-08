@@ -2281,7 +2281,7 @@ private fun hourglassGains(players: List<PlayerState>, active: Int, before: Play
  * voice's "10 seconds" goes by.
  */
 /** A sound the clock makes on its own, as against one a press makes. */
-internal enum class ClockSound { SHORT_BEEP, TRIPLE_BEEP }
+internal enum class ClockSound { SHORT_BEEP, TRIPLE_BEEP, GONG }
 
 internal fun byoyomiPeriodLost(before: PlayerState, after: PlayerState): Boolean =
     after.isInByoyomi && before.isInByoyomi && after.byoyomiPeriodsRemaining < before.byoyomiPeriodsRemaining
@@ -2325,13 +2325,41 @@ internal fun cueSound(before: PlayerState, after: PlayerState, settings: ChessCl
 internal fun phaseSound(before: PlayerState, afterState: ChessClockState, settings: ChessClockSettings): ClockSound? {
     val after = afterState.players[0]
     val sound = when {
-        // A phase run out that is not the last is a flag, and handleAudio sounds it.
+        // A phase run out that is not the last is a flag, which phaseTransitionSounds sounds as one.
         after.isOutOfTime -> if (!before.isOutOfTime && afterState.phasesFinished) ClockSound.TRIPLE_BEEP else null
         after.isPhaseAwaitingTap -> if (!before.isPhaseAwaitingTap) ClockSound.SHORT_BEEP else null
         after.isInInterPhasePause -> if (!before.isInInterPhasePause && !before.isPhaseAwaitingTap) ClockSound.SHORT_BEEP else null
         else -> if (!before.isInInterPhasePause && !before.isPhaseAwaitingTap) ClockSound.SHORT_BEEP else null
     }
     return sound?.takeIf { settings.tripleBeepTimeUp }
+}
+
+/**
+ * Everything PHASES moving to another stage sounds, from a tick or a tap: [phaseSound], and a phase
+ * that flags before the last, which sounds as any flag does.
+ */
+internal fun phaseTransitionSounds(before: PlayerState, afterState: ChessClockState, settings: ChessClockSettings): List<ClockSound> {
+    val after = afterState.players[0]
+    val flag = if (after.isOutOfTime && !before.isOutOfTime && !afterState.phasesFinished) {
+        cueSound(before, after, settings, TimerMode.PHASES, lastBeepSecond = -1)
+    } else null
+    return listOfNotNull(phaseSound(before, afterState, settings), flag)
+}
+
+/**
+ * Everything one tick makes heard, which the ViewModel plays as it stands: the cue's beep, a PHASES
+ * stage, and the coupled modes' gong and handover.
+ *
+ * The gong is Gong itself, the mode's whole signal, and sounds whatever the settings say. Shared
+ * (Auto)'s handover beep stands where a press would have made the switch sound, so it follows that.
+ */
+internal fun tickSounds(tick: ClockTick, settings: ChessClockSettings, lastBeepSecond: Long): List<ClockSound> = buildList {
+    tick.cue?.let { cue -> cueSound(cue.before, cue.after, settings, settings.playerSettings(cue.playerIndex).mode, lastBeepSecond)?.let(::add) }
+    tick.phaseChangedFrom?.let { addAll(phaseTransitionSounds(it, tick.state, settings)) }
+    tick.coupled?.let { coupled ->
+        if (coupled.playGong) add(ClockSound.GONG)
+        if (coupled.handedOverBy != null && settings.playSwitchSound) add(ClockSound.SHORT_BEEP)
+    }
 }
 
 internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int, val timeLeft: Pair<Long, Long>? = null)
@@ -3842,21 +3870,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             if (state.isPaused) return@update state
             val settings = _settings.value
             val result = tickClock(state, delta, settings)
+            // Read before handleAudio moves lastBeepSecond on.
+            tickSounds(result, settings, lastBeepSecond).forEach(::play)
             result.cue?.let { cue ->
-                handleAudio(cue.before, cue.after, settings, cue.playerIndex)
+                handleAudio(cue.before, cue.after, settings, cue.playerIndex, sound = false)
                 handleVoice(cue.before, cue.after, settings, cue.playerIndex, cue.timeLeft)
             }
-            result.phaseChangedFrom?.let { onPhaseTransition(it, result.state) }
+            result.phaseChangedFrom?.let { onPhaseTransition(it, result.state, sound = false) }
             result.coupled?.let { coupled ->
-                if (coupled.playGong) soundManager.playGong()
                 for ((mover, spent) in coupled.gongMoves) {
                     addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = spent))
                     moveStartTime = now
                 }
                 coupled.handedOverBy?.let { mover ->
-                    // A plain beep where a press would have made the switch sound, and nothing
-                    // spoken: the turn passing is the ordinary course of this mode.
-                    if (settings.playSwitchSound) soundManager.playShortBeep()
+                    // Nothing spoken, and its beep is tickSounds': the turn passing is the ordinary
+                    // course of this mode.
                     addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = settings.playerSettings(mover).moveTimeMs))
                     moveStartTime = now
                 }
@@ -3908,8 +3936,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         clearSavedClock()
     }
 
-    private fun handleAudio(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int) {
-        play(cueSound(oldState, newState, settings, getPlayerSettings(playerIdx).mode, lastBeepSecond))
+    /** The log and the countdown's place for a clock changing; and its sound, unless [sound] is false because tickSounds has it. */
+    private fun handleAudio(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int, sound: Boolean = true) {
+        if (sound) play(cueSound(oldState, newState, settings, getPlayerSettings(playerIdx).mode, lastBeepSecond))
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
             // Nobody's, when it is the table's clock that ran out; it went down as "P1 FLAG".
             val flagged = playerIdx.takeUnless { settings.playerSettings(it).mode == TimerMode.CHRONO_COUNTDOWN }
@@ -3944,6 +3973,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         when (sound) {
             ClockSound.SHORT_BEEP -> soundManager.playShortBeep()
             ClockSound.TRIPLE_BEEP -> soundManager.playTripleBeep()
+            ClockSound.GONG -> soundManager.playGong()
             null -> {}
         }
     }
@@ -3973,11 +4003,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * The countdown beeps start afresh with each phase: the last second beeped in one phase could
      * otherwise be taken for the same second of the next and stay silent.
      */
-    private fun onPhaseTransition(before: PlayerState, afterState: ChessClockState) {
+    private fun onPhaseTransition(before: PlayerState, afterState: ChessClockState, sound: Boolean = true) {
         val settings = _settings.value
         val after = afterState.players[0]
         lastBeepSecond = -1
-        play(phaseSound(before, afterState, settings))
+        if (sound) phaseTransitionSounds(before, afterState, settings).forEach(::play)
         when {
             after.isOutOfTime -> if (!before.isOutOfTime) {
                 if (afterState.phasesFinished) {
@@ -3987,7 +4017,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     addEvent(GameEvent(eventType = "PHASE", playerIndex = 1, detail = "Finished"))
                     if (settings.voiceAnnouncementsEnabled) voiceManager.speak(CoreR.string.voice_finished, settings.voiceVolume)
                 } else {
-                    handleAudio(before, after, settings, 1)
+                    handleAudio(before, after, settings, 1, sound = false)
                     handleVoice(before, after, settings, 1)
                 }
             }

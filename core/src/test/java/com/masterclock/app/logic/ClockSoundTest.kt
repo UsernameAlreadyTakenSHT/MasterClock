@@ -7,11 +7,14 @@ import org.junit.Test
 import kotlin.random.Random
 
 /**
- * What the clock sounds on its own: the flag, a period run out, PHASES changing stage, the countdown.
+ * What the clock sounds on its own: the flag, a period run out, PHASES changing stage, the countdown,
+ * Gong's gong and Shared (Auto)'s handover.
  *
  * Every sound is off until asked for, and five beeps -- a FIDE period, a byoyomi period, and three
- * PHASES stages -- sounded whatever the settings said. These go through [cueSound] and [phaseSound],
- * which the ViewModel plays exactly as they answer; the speaker itself cannot be heard from here.
+ * PHASES stages -- sounded whatever the settings said. A tick's sounds are [tickSounds]', a tap's in
+ * PHASES [phaseTransitionSounds]', a flag on a press [cueSound]'s, and the ViewModel plays exactly what
+ * they answer, so these games call them rather than a copy. The speaker itself cannot be heard from
+ * here. The gong is the one sound with no switch: it is Gong.
  */
 class ClockSoundTest {
 
@@ -72,9 +75,11 @@ class ClockSoundTest {
             "the next phase" to (running to ChessClockState(players = listOf(PlayerState(60_000, currentPhaseIndex = 1)))),
             "the last phase's end" to (running to ChessClockState(players = listOf(PlayerState(0, isOutOfTime = true)), phasesFinished = true)),
         )
-        for ((name, change) in stages) {
+        val expected = listOf(ClockSound.SHORT_BEEP, ClockSound.SHORT_BEEP, ClockSound.SHORT_BEEP, ClockSound.TRIPLE_BEEP)
+        for ((stage, sound) in stages.zip(expected)) {
+            val (name, change) = stage
             assertNull("$name sounded with every sound off", phaseSound(change.first, change.second, silent))
-            assertTrue("$name made no sound under the switch", phaseSound(change.first, change.second, timeUp) != null)
+            assertEquals(name, sound, phaseSound(change.first, change.second, timeUp))
         }
     }
 
@@ -86,57 +91,94 @@ class ClockSoundTest {
     }
 
     @Test
-    fun `no random game makes a sound with every sound off`() {
-        val heard = mutableMapOf<String, String>()
-        var heardWithSwitch = 0
-        val r = Random(20261108L)
-        repeat(GAMES) {
-            val base = randomSimSettings(r)
-            for (s in listOf(base.copy(tripleBeepTimeUp = false, beepThreshold = BeepCountdownThreshold.OFF), base.copy(tripleBeepTimeUp = true))) {
-                val sounds = play(ClockSim(s), Random(r.nextLong()))
-                if (!s.tripleBeepTimeUp && sounds.isNotEmpty()) heard.getOrPut(sounds.first()) { "${s.main.mode} ${s.flagBehavior}: ${sounds.first()}" }
-                if (s.tripleBeepTimeUp) heardWithSwitch += sounds.size
-            }
-        }
-        assertTrue(heard.values.joinToString("\n"), heard.isEmpty())
-        // Or the silence above proves nothing: the games do reach flags, periods and phases.
-        assertTrue(heardWithSwitch > 0)
+    fun `a phase that flags before the last sounds as a flag`() {
+        val flagged = ChessClockState(players = listOf(PlayerState(0, isOutOfTime = true)))
+        assertEquals(listOf(ClockSound.TRIPLE_BEEP), phaseTransitionSounds(PlayerState(1_000), flagged, timeUp))
+        assertEquals(emptyList<ClockSound>(), phaseTransitionSounds(PlayerState(1_000), flagged, silent))
     }
 
-    /** What one game sounds, played as the ViewModel plays it: each tick's cue and phase, and a press's flag. */
-    private fun play(sim: ClockSim, r: Random): List<String> {
-        val sounds = mutableListOf<String>()
-        var lastBeepSecond = -1L
+    @Test
+    fun `Shared (Auto)'s handover follows the switch sound, and the gong follows nothing`() {
+        val state = ChessClockState(players = listOf(PlayerState(10_000), PlayerState(10_000)), activePlayer = 2)
+        val handover = ClockTick(state, coupled = CoupledTick(state, handedOverBy = 1))
+        assertEquals(emptyList<ClockSound>(), tickSounds(handover, silent, -1))
+        assertEquals(listOf(ClockSound.SHORT_BEEP), tickSounds(handover, silent.copy(playSwitchSound = true), -1))
+        val gong = ClockTick(state, coupled = CoupledTick(state, playGong = true))
+        assertEquals(listOf(ClockSound.GONG), tickSounds(gong, silent, -1))
+    }
+
+    @Test
+    fun `no random game makes a sound with every sound off, and every one is heard with the switch on`() {
+        val broken = linkedMapOf<String, String>()
+        val reached = mutableMapOf<String, Int>().withDefault { 0 }
+        val r = Random(20261108L)
+        repeat(GAMES) {
+            // The countdown is off in both: it has a switch of its own, the threshold, pinned above.
+            val base = randomSimSettings(r).copy(beepThreshold = BeepCountdownThreshold.OFF)
+            val silentGame = base.copy(tripleBeepTimeUp = false, playSwitchSound = false)
+            val seed = r.nextLong()
+            for (s in listOf(silentGame, base.copy(tripleBeepTimeUp = true))) {
+                for (failure in play(ClockSim(s), Random(seed), reached)) {
+                    broken.getOrPut(failure) { "$failure\n  ${s.main.mode} ${s.flagBehavior} players=${s.numberOfPlayers}" }
+                }
+            }
+        }
+        assertTrue(broken.values.joinToString("\n\n"), broken.isEmpty())
+        // Or the rules above proved nothing: the games do reach each of these.
+        for (kind in listOf("flag", "FIDE period", "byoyomi period", "phase stage")) {
+            assertTrue("no game reached a $kind", reached.getValue(kind) > 0)
+        }
+    }
+
+    /**
+     * Plays one game and returns the rules its sounds broke. The ViewModel plays a tick's [tickSounds],
+     * a PHASES tap's [phaseTransitionSounds] and a flag on a press [cueSound]; so does this, with the
+     * second last counted down left out, the countdown being off.
+     */
+    private fun play(sim: ClockSim, r: Random, reached: MutableMap<String, Int>): List<String> {
+        val s = sim.settings
+        val switchOn = s.tripleBeepTimeUp
+        val broken = mutableListOf<String>()
+        fun heard(sounds: List<ClockSound>, mode: TimerMode, what: String) {
+            if (ClockSound.GONG in sounds && mode != TimerMode.GONG) broken += "a gong outside Gong ($what)"
+            if (!switchOn && sounds.any { it != ClockSound.GONG }) broken += "a sound with every sound off ($what: $sounds)"
+        }
+        fun count(kind: String) { if (switchOn) reached[kind] = reached.getValue(kind) + 1 }
         repeat(ACTIONS_PER_GAME) {
             val action = randomSimAction(r, sim)
             val before = sim.state
             action.applyTo(sim)
             val tick = sim.lastTick
             if (action is SimAction.Tick && tick != null) {
+                val sounds = tickSounds(tick, s, lastBeepSecond = -1)
+                val mode = s.playerSettings(tick.cue?.playerIndex ?: before.activePlayer ?: 1).mode
+                heard(sounds, mode, "tick")
                 tick.cue?.let { c ->
-                    cueSound(c.before, c.after, sim.settings, sim.settings.playerSettings(c.playerIndex).mode, lastBeepSecond)?.let { sounds += "cue $it" }
-                    lastBeepSecond = c.after.timeRemainingMs / 1000
+                    val period = c.after.currentPeriodIndex > c.before.currentPeriodIndex
+                    val byoyomi = byoyomiPeriodLost(c.before, c.after)
+                    val flag = c.after.isOutOfTime && !c.before.isOutOfTime
+                    if (period) count("FIDE period")
+                    if (byoyomi) count("byoyomi period")
+                    if (flag) count("flag")
+                    if (switchOn && (period || byoyomi) && !flag && ClockSound.SHORT_BEEP !in sounds) broken += "a period ran out unheard"
+                    if (switchOn && flag && ClockSound.TRIPLE_BEEP !in sounds) broken += "a flag fell unheard"
                 }
-                tick.phaseChangedFrom?.let { from ->
-                    lastBeepSecond = -1
-                    phaseSound(from, tick.state, sim.settings)?.let { sounds += "phase $it" }
-                    // A phase run out that is not the last goes to handleAudio, as a flag.
-                    val after = tick.state.players[0]
-                    if (after.isOutOfTime && !from.isOutOfTime && !tick.state.phasesFinished) {
-                        cueSound(from, after, sim.settings, TimerMode.PHASES, -1)?.let { sounds += "phase flag $it" }
+                if (tick.phaseChangedFrom != null) count("phase stage")
+            }
+            if (action is SimAction.Press) {
+                val mode = s.playerSettings(action.player).mode
+                if (mode == TimerMode.PHASES) {
+                    if (sim.state != before) heard(phaseTransitionSounds(before.players[0], sim.state, s), mode, "tap")
+                } else {
+                    val was = before.players.getOrNull(action.player - 1)
+                    val now = sim.state.players.getOrNull(action.player - 1)
+                    if (was != null && now != null && !was.isOutOfTime && now.isOutOfTime) {
+                        heard(listOfNotNull(cueSound(was, now, s, mode, lastBeepSecond = -1)), mode, "press")
                     }
                 }
             }
-            if (action is SimAction.Press) {
-                val p = action.player - 1
-                val was = before.players.getOrNull(p)
-                val now = sim.state.players.getOrNull(p)
-                if (was != null && now != null && !was.isOutOfTime && now.isOutOfTime) {
-                    cueSound(was, now, sim.settings, sim.settings.playerSettings(action.player).mode, lastBeepSecond)?.let { sounds += "press $it" }
-                }
-            }
         }
-        return sounds
+        return broken
     }
 
     private companion object {
