@@ -11,11 +11,14 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
+import com.masterclock.app.logic.FlavorConfig
+import com.masterclock.app.logic.TimerMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -213,6 +216,30 @@ class ClockFlowsTest {
 
     private fun playerDescription(number: Int) =
         player(number).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
+
+    @Test
+    fun nothingBeneathTheArbitersPanelTakesATouch() {
+        assumeTrue(FlavorConfig.hasArbitre())
+        // PHASES: the bar sits low on the screen, clear of the panel, under the dimmed area alone.
+        // With two clocks the bar is in the middle, and the panel itself would be what stopped it.
+        rule.runOnUiThread {
+            val settings = viewModel.settings.value
+            viewModel.updateSettings(settings.copy(main = settings.main.copy(mode = TimerMode.PHASES)))
+        }
+        await(hasContentDescription(say(R.string.timer_start)))
+        control(R.string.timer_start).performClick()
+        await(hasContentDescription(say(R.string.timer_pause)))
+        control(R.string.timer_pause).performClick()
+        await(hasContentDescription(say(R.string.timer_resume)))
+        control(R.string.timer_arbitre).performClick()
+        await(hasText(say(R.string.timer_arbitre_control)))
+
+        control(R.string.timer_resume).performClick()
+        rule.waitForIdle()
+
+        assertTrue(viewModel.uiState.value.isPaused)
+        assertTrue(viewModel.uiState.value.isArbitreMode)
+    }
 
     private val YOUR_TURN get() = say(R.string.a11y_player_clock_active, 1, "").substringAfterLast(",").trim()
 
