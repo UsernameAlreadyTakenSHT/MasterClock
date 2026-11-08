@@ -174,6 +174,8 @@ class ClockFlowsTest {
 
     @Test
     fun berserkHalvesOneClockAndPassesNoTurn() {
+        // Lite and Mini have no Behaviour tab, where Berserk is allowed, and no import to bring it in.
+        assumeTrue(FlavorConfig.hasFullSettingsTabs())
         rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(allowBerserk = true)) }
         val button = hasText(say(R.string.timer_berserk)) and hasClickAction()
         await(button)
@@ -189,6 +191,8 @@ class ClockFlowsTest {
 
     @Test
     fun aBerserkBeforeTheFirstPressGoesInTheLog() {
+        // Lite and Mini have no Behaviour tab, where Berserk is allowed, and no import to bring it in.
+        assumeTrue(FlavorConfig.hasFullSettingsTabs())
         rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(allowBerserk = true)) }
         val button = hasText(say(R.string.timer_berserk)) and hasClickAction()
         await(button)
@@ -197,9 +201,12 @@ class ClockFlowsTest {
 
         control(R.string.timer_start).performClick()
         rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null }
+        // One move, so that the game is one Last Games keeps: an empty one is dropped, and this passed
+        // only on a device whose history some earlier game had already filled.
+        rule.runOnUiThread { viewModel.startOrSwitch(viewModel.uiState.value.activePlayer!!) }
         rule.runOnUiThread { viewModel.reset() }
 
-        rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.isNotEmpty() || !com.masterclock.app.logic.FlavorConfig.keepsGameHistory() }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.firstOrNull()?.events.orEmpty().any { it.eventType == "BERSERK" } }
     }
 
     @Test
