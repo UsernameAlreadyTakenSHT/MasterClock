@@ -9,8 +9,21 @@ import android.util.Log
 import androidx.annotation.StringRes
 import java.util.*
 
-/** The languages of core's spoken strings. */
-private val TRANSLATED_LANGUAGES = setOf("en", "de", "es", "fr", "it", "nl", "pt")
+/** The languages of core's spoken strings, one per values-XX folder; VoiceCandidatesTest holds them to it. */
+internal val TRANSLATED_LANGUAGES = setOf("en", "de", "es", "fr", "it", "nl", "pt")
+
+/**
+ * The voices to try, best first: the device's language if the app speaks it, then English, then the
+ * engine's own voices in a language the app has, and only then any other, since a voice in the wrong
+ * language beats none. The engine's were taken in whatever order its set came in, so a phone in Polish
+ * whose engine had no English could get a Polish voice reading English strings with Spanish on offer.
+ */
+internal fun voiceCandidates(device: Locale, engineDefault: Locale?, engineLanguages: Collection<Locale>): List<Locale> {
+    val engine = (listOfNotNull(engineDefault) + engineLanguages.sortedBy { it.toLanguageTag() }).distinct()
+    val (translated, other) = engine.partition { it.language in TRANSLATED_LANGUAGES }
+    val spoken = if (device.language in TRANSLATED_LANGUAGES) listOf(device) else emptyList()
+    return (spoken + Locale.US + translated + other).distinct()
+}
 private const val TAG = "VoiceManager"
 
 /**
@@ -44,11 +57,11 @@ class VoiceManager(private val context: Context) : TextToSpeech.OnInitListener {
         // The device's language, then English, then whatever the engine has. An engine other than
         // Google's -- the one GrapheneOS ships, or one from F-Droid -- need not offer either of the
         // first two, and the app then had no voice at all with a working engine on the phone.
-        val engineOwn = runCatching { listOfNotNull(engine.defaultVoice?.locale) + engine.availableLanguages.orEmpty() }.getOrDefault(emptyList())
         // The device's only if the app says its sentences in it: a phone in Polish had a Polish voice
-        // reading the English strings.
-        val spoken = if (device.language in TRANSLATED_LANGUAGES) listOf(device) else emptyList()
-        for (locale in spoken + Locale.US + engineOwn) {
+        // reading the English strings. See voiceCandidates.
+        val engineDefault = runCatching { engine.defaultVoice?.locale }.getOrNull()
+        val engineLanguages = runCatching { engine.availableLanguages.orEmpty() }.getOrDefault(emptySet())
+        for (locale in voiceCandidates(device, engineDefault, engineLanguages)) {
             // LANG_AVAILABLE and better are non-negative; MISSING_DATA and NOT_SUPPORTED are not.
             if (engine.setLanguage(locale) >= TextToSpeech.LANG_AVAILABLE) {
                 speechResources = resourcesFor(locale)
