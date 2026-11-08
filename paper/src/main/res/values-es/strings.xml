@@ -26,7 +26,6 @@
 
     <!-- Settings -->
     <string name="settings_tab_modes">Modos</string>
-    <!-- Same shortening as the app module: "Comportamiento" would wrap in the tab bar. -->
     <string name="settings_initial_time">Tiempo inicial</string>
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tiempo por jugada</string>

@@ -2275,11 +2275,6 @@ private fun hourglassGains(players: List<PlayerState>, active: Int, before: Play
     return recipients.associateWith { idx -> share + if (leastFirst.indexOf(idx) < remainder) 1 else 0 }
 }
 
-/**
- * A player's state before and after a tick, for the audio and voice cues to compare. [timeLeft] is
- * the time really left, before and after, where that is more than the clock counting down: what the
- * voice's "10 seconds" goes by.
- */
 /** A sound the clock makes on its own, as against one a press makes. */
 internal enum class ClockSound { SHORT_BEEP, TRIPLE_BEEP, GONG }
 
@@ -2362,6 +2357,11 @@ internal fun tickSounds(tick: ClockTick, settings: ChessClockSettings, lastBeepS
     }
 }
 
+/**
+ * A player's state before and after a tick, for the audio and voice cues to compare. [timeLeft] is
+ * the time really left, before and after, where that is more than the clock counting down: what the
+ * voice's "10 seconds" goes by.
+ */
 internal class TickCue(val before: PlayerState, val after: PlayerState, val playerIndex: Int, val timeLeft: Pair<Long, Long>? = null)
 
 /**
@@ -2578,7 +2578,7 @@ internal fun PlayerState.credited(amountMs: Long, flagBehavior: FlagBehavior): P
  * [credited], for time an arbiter gives. Under FREEZE and FLAG a player who ran out has no overrun
  * to pay off, so credit left them out: two minutes given after a clock malfunction showed 2:00 in
  * the loss colour, and the game stayed over. An arbiter's credit that leaves time on the clock puts
- * the player back in play. The flag that fell is still on record in firstToFlag and the log.
+ * the player back in play. The flag that fell stays in the log; firstToFlag moves to a player still out, or goes.
  */
 internal fun PlayerState.arbiterCredited(amountMs: Long, flagBehavior: FlagBehavior): PlayerState {
     val c = credited(amountMs, flagBehavior)

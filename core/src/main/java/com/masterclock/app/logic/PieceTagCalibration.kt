@@ -34,10 +34,10 @@ class PieceTagCalibration {
     /**
      * Turns tags into a position, calibrating first if this frame is the starting layout.
      *
-     * Returns null while no mapping is known, or when a tag in the frame has never been seen --
-     * a piece from another set, or a chip that was not on the board during calibration. Refusing is
-     * the right answer there: guessing a piece would feed [BoardDiffer] a position that never
-     * existed.
+     * Returns null while no mapping is known. A tag never seen -- the spare queen of a promotion, or a
+     * piece from another set -- is a piece all the same, [BoardPosition.UNKNOWN_PIECE]: refusing the
+     * frame stopped every move while it stood there. [BoardDiffer] names no piece from it, and a
+     * promotion to it is a queen.
      */
     fun identify(tags: List<String?>): BoardPosition? {
         if (tags.size != BoardPosition.SQUARE_COUNT) return null

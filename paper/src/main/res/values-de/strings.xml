@@ -31,7 +31,6 @@
 
     <!-- Settings -->
     <string name="settings_tab_modes">Modi</string>
-    <!-- Short like the French "Jeu" and Spanish "Juego": "Verhalten" crowds the tab row. -->
     <string name="settings_initial_time">Startzeit</string>
     <string name="settings_increment">Inkrement</string>
     <string name="settings_move_time">Zeit pro Zug</string>

@@ -30,11 +30,6 @@
 
     <!-- Settings -->
     <string name="settings_tab_modes">Modos</string>
-    <!-- Short like the French "Jeu", Spanish "Juego", German "Spiel" and Italian "Gioco". -->
-    <!--
-      "eletrónica" is the European spelling after the 1990 orthographic agreement, which dropped the
-      silent c. Lint's dictionary predates it and offers "electrónica" or the Brazilian "eletrônica".
-    -->
     <string name="settings_initial_time">Tempo inicial</string>
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tempo por lance</string>
