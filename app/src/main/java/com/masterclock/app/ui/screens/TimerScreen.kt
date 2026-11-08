@@ -369,8 +369,18 @@ private fun TimerConfirmDialog(title: String, message: String, confirm: String, 
  * under them came to more than that, and the first and last were cut. Their proportions are kept, and
  * at the default font nothing shrinks.
  */
+/**
+ * Whether a face drawn at [rotation] degrees reads along its box's other side: nearer a quarter turn
+ * than upright or upside down. The digit size and the fit both ask here; the size asked whether it was
+ * upright at all, and while the face turned it measured the other way from the fit for a moment.
+ */
+private fun isQuarterTurned(rotation: Float): Boolean {
+    val half = ((rotation % 180f) + 180f) % 180f
+    return kotlin.math.abs(half - 90f) <= 45f
+}
+
 private fun Modifier.fittedForTurn(rotation: Float): Modifier = layout { measurable, constraints ->
-    val turned = kotlin.math.abs(rotation) in 45f..135f
+    val turned = isQuarterTurned(rotation)
     val across = if (turned) constraints.maxHeight else constraints.maxWidth
     val along = if (turned) constraints.maxWidth else constraints.maxHeight
     val placeable = measurable.measure(Constraints(maxWidth = across))
@@ -636,7 +646,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
             BoxWithConstraints(modifier = Modifier.fillMaxSize(), contentAlignment = if (highUp) Alignment.TopCenter else Alignment.Center) {
                 val crowded = settings.numberOfPlayers > 2 && !isGlobal
                 // A face turned a quarter runs its digits along the other side.
-                val sideways = (contentRotation % 180f) != 0f
+                val sideways = isQuarterTurned(contentRotation)
                 val digitScale = largeScreenDigitScale(
                     LocalConfiguration.current.smallestScreenWidthDp,
                     if (sideways) maxHeight.value else maxWidth.value,
