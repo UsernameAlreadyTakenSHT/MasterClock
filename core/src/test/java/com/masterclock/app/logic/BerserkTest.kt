@@ -37,6 +37,30 @@ class BerserkTest {
     }
 
     @Test
+    fun `it is refused unless the clock can pay all of it`() {
+        // 3+2 with the first move's bonus: going Berserk costs 1:30 and the 2s advance. A clock that
+        // had run down to 1:31 paid 1:30.999 and kept a millisecond.
+        val p = fischer(3, 2)
+        val s = settings(p, firstMove = true)
+        val runDown = start(s).let { it.copy(players = it.players.mapIndexed { i, pl -> if (i == 1) pl.copy(timeRemainingMs = 91_000) else pl }) }
+        assertFalse(canBerserk(runDown, 2, s))
+        val enough = runDown.copy(players = runDown.players.mapIndexed { i, pl -> if (i == 1) pl.copy(timeRemainingMs = 93_000) else pl })
+        assertEquals(1_000, goBerserk(enough, 2, s).players[1].timeRemainingMs)
+    }
+
+    @Test
+    fun `a log opened mid-game starts from the time control, not from the interruption`() {
+        val s = settings(PlayerSettings(mode = TimerMode.SUDDEN_DEATH, initialTimeMs = 600_000))
+        val timeControl = start(s)
+        val berserked = goBerserk(timeControl, 1, s)
+        // Not started: the clock as it stands, the Berserk taken back.
+        assertEquals(listOf(600_000L, 600_000L), gameStartPlayers(berserked, s) { timeControl }.map { it.timeRemainingMs })
+        // Under way: a saved clock resumed with no log of its own, at 1:00 after a Berserk.
+        val resumed = berserked.copy(activePlayer = 2, players = berserked.players.map { it.copy(timeRemainingMs = 60_000, moveCount = 12) })
+        assertEquals(listOf(600_000L, 600_000L), gameStartPlayers(resumed, s) { timeControl }.map { it.timeRemainingMs })
+    }
+
+    @Test
     fun `it is off unless asked for`() {
         val s = settings(fischer(3, 2), allow = false)
         assertFalse(canBerserk(start(s), 1, s))

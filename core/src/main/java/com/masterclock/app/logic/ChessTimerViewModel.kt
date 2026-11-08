@@ -381,8 +381,23 @@ fun canBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSet
     val p = state.players.getOrNull(playerIndex - 1) ?: return false
     if (s.mode !in BERSERK_MODES || s.initialTimeMs <= 0) return false
     if (p.hasBerserked || p.moveCount > 0 || p.isOutOfTime) return false
-    return !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers) && p.timeRemainingMs > berserkPenaltyMs(s)
+    // The whole cost, the first move's bonus with the half: with only the half asked for, a player
+    // whose clock had run down to just over it paid what was left and kept a millisecond, short of
+    // the price by up to the bonus.
+    return !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers) &&
+        p.timeRemainingMs > berserkPenaltyMs(s) + berserkBonusMs(s, settings)
 }
+
+/**
+ * The clocks a game's log records as its start. Before the first move, the ones on the clock with any
+ * Berserk taken back ([beforeBerserk]). Once the game is under way, the time control's
+ * ([timeControlStart]): a log opens mid-game only for a saved clock whose own log was trimmed or could
+ * not be read, and it took the interruption's clocks for the start -- with a Berserk's half added back
+ * onto clocks that had long since paid it.
+ */
+internal fun gameStartPlayers(current: ChessClockState, settings: ChessClockSettings, timeControlStart: () -> ChessClockState): List<PlayerState> =
+    if (current.activePlayer != null) timeControlStart().players
+    else current.players.mapIndexed { i, p -> p.beforeBerserk(settings.playerSettings(i + 1), settings) }
 
 /** This player as they stood before going Berserk; see [goBerserk]. */
 internal fun PlayerState.beforeBerserk(s: PlayerSettings, settings: ChessClockSettings): PlayerState =
@@ -402,7 +417,7 @@ internal fun goBerserk(state: ChessClockState, playerIndex: Int, settings: Chess
     val firstMoveBonus = berserkBonusMs(s, settings)
     return state.copy(players = state.players.mapIndexed { i, p ->
         if (i + 1 != playerIndex) p
-        else p.copy(timeRemainingMs = (p.timeRemainingMs - berserkPenaltyMs(s) - firstMoveBonus).coerceAtLeast(1), hasBerserked = true)
+        else p.copy(timeRemainingMs = p.timeRemainingMs - berserkPenaltyMs(s) - firstMoveBonus, hasBerserked = true)
     })
 }
 
@@ -4798,9 +4813,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * first press, and the log, opened by that press, took the halved clock for the start: the game
      * replayed from Last Games came back with that player Berserk, and nobody had chosen that.
      */
-    private fun gameStartStates(): List<PlayerStateProxy> = _uiState.value.players.mapIndexed { i, p ->
-        p.beforeBerserk(getPlayerSettings(i + 1), settings.value).toProxy()
-    }
+    private fun gameStartStates(): List<PlayerStateProxy> =
+        gameStartPlayers(_uiState.value, settings.value) { createInitialState(_settings.value, reuseRandomRoll = true) }.map { it.toProxy() }
 
     /**
      * What a log opening has to catch up on. A Berserk before the first press had no log to go into.
