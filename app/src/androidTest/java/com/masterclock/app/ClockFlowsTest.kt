@@ -193,6 +193,11 @@ class ClockFlowsTest {
     fun aBerserkBeforeTheFirstPressGoesInTheLog() {
         // Lite and Mini have no Behaviour tab, where Berserk is allowed, and no import to bring it in.
         assumeTrue(FlavorConfig.hasFullSettingsTabs())
+        // The game looked for is the one played here: a previous run's Berserk game, newest in the
+        // history, would otherwise answer for it.
+        rule.waitUntil(TIMEOUT_MS) { viewModel.isHistoryLoaded.value }
+        rule.runOnUiThread { viewModel.clearAllLogs() }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.isEmpty() }
         rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(allowBerserk = true)) }
         val button = hasText(say(R.string.timer_berserk)) and hasClickAction()
         await(button)

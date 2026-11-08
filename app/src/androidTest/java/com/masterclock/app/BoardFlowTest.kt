@@ -57,6 +57,9 @@ class BoardFlowTest {
     fun startFromTheDefaults() {
         assumeTrue(FlavorConfig.hasBoards() && FlavorConfig.keepsGameHistory())
         rule.waitUntil(TIMEOUT_MS) { viewModel.isReady.value }
+        // isReady comes before the history is read, and a load landing after the clear below put the
+        // last run's games back: a move one of them held was then read as this one's.
+        rule.waitUntil(TIMEOUT_MS) { viewModel.isHistoryLoaded.value }
         rule.runOnUiThread {
             viewModel.resetAllSettings()
             viewModel.reset()
@@ -79,9 +82,6 @@ class BoardFlowTest {
         endTheGameAndWaitFor { movesNoted("e4").isNotEmpty() }
     }
 
-    @Test
-    fun withoutAutoSwitchTheNextPressCarriesTheMove() {
-        settings { it.copy(autoSwitchOnBoardMove = false) }
     @Test
     fun aCastleReportedRookFirstPassesTheTurnOnceAndIsLoggedAsTheKingsMove() {
         settings { it.copy(autoSwitchOnBoardMove = true) }
@@ -113,6 +113,9 @@ class BoardFlowTest {
         assertTrue("the rook's move is still in the log", events().none { it.moveNotation == "a1d1" })
     }
 
+    @Test
+    fun withoutAutoSwitchTheNextPressCarriesTheMove() {
+        settings { it.copy(autoSwitchOnBoardMove = false) }
         startTheClock()
         val mover = viewModel.uiState.value.activePlayer!!
 
@@ -142,9 +145,10 @@ class BoardFlowTest {
 
     @Test
     fun inPhasesAMoveIsNotedAndSkipsNothing() {
-        // Two phases, so that a move taken for a tap would have somewhere to skip to.
+        // Two phases and skipping allowed, so that a move taken for a tap would skip one: with the default,
+        // no skip, a tap mid-phase does nothing and this could not fail.
         val phases = listOf(GamePhase(timeMs = 60_000), GamePhase(timeMs = 60_000))
-        settings { it.copy(autoSwitchOnBoardMove = true, main = it.main.copy(mode = TimerMode.PHASES, phases = phases)) }
+        settings { it.copy(autoSwitchOnBoardMove = true, allowPhaseSkip = true, main = it.main.copy(mode = TimerMode.PHASES, phases = phases)) }
         rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.mode == TimerMode.PHASES }
         rule.runOnUiThread { viewModel.resume() }
         rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null && !viewModel.uiState.value.isPaused }
