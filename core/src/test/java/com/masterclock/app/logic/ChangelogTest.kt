@@ -52,5 +52,9 @@ class ChangelogTest {
         assertTrue(eInk.notes.all { it.startsWith("E-Ink") })
         assertEquals(listOf(AppInfo.SHARED_ONLY), complete.notes)
         assertEquals(AppInfo.CHANGELOG.size, AppInfo.changelogFor(AppFlavor.MINI).size)
+        // A board and Omni are not in Mini, and their notes are not in its changelog.
+        val miniNotes = AppInfo.changelogFor(AppFlavor.MINI).flatMap { it.notes }
+        assertFalse(miniNotes.any { "Link board" in it || it.startsWith("Omni") })
+        assertTrue(AppInfo.changelogFor(AppFlavor.COMPLETE).flatMap { it.notes }.any { "Link board" in it })
     }
 }
