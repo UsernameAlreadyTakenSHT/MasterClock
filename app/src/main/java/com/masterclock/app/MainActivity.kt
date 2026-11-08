@@ -195,12 +195,8 @@ class MainActivity : ComponentActivity() {
                         // overwrite: removing it on every failure lost that one too.
                         var opened = false
                         val written = runCatching {
-                            val pkg = sharePackageOf(timerViewModel.exportSnapshot(), includeLogs)
-                            val bytes = json.encodeToString(pkg).toByteArray()
-                            // The import reads at most MAX_IMPORT_TEXT_BYTES, and this wrote whatever
-                            // the history came to: some five hundred games made a file that "Export
-                            // successful" had produced and the import then refused.
-                            if (bytes.size > MAX_IMPORT_TEXT_BYTES) throw ImportTooLargeException("Settings file would be too large to import")
+                            // Refused past what the import reads; see encodeSharePackage.
+                            val bytes = encodeSharePackage(sharePackageOf(timerViewModel.exportSnapshot(), includeLogs))
                             opened = true
                             context.contentResolver.openOutputStream(it)?.use { stream ->
                                 stream.write(bytes)
@@ -424,9 +420,8 @@ class MainActivity : ComponentActivity() {
                                         // the stored state is in, so a share could go out without games.
                                         scope.launch(Dispatchers.IO) {
                                             val shared = runCatching {
-                                                val pkg = sharePackageOf(timerViewModel.exportSnapshot(), includeLogs)
-                                                val bytes = json.encodeToString(pkg).toByteArray()
-                                                if (bytes.size > MAX_IMPORT_TEXT_BYTES) throw ImportTooLargeException("Settings file would be too large to import")
+                                                // Refused past what the import reads; see encodeSharePackage.
+                                                val bytes = encodeSharePackage(sharePackageOf(timerViewModel.exportSnapshot(), includeLogs))
                                                 val chooser = shareChooser(context, bytes)
                                                 withContext(Dispatchers.Main) { context.startActivity(chooser) }
                                             }
@@ -713,20 +708,6 @@ class MainActivity : ComponentActivity() {
         val size = runCatching { context.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize } }.getOrNull()
         if (size == 0L) runCatching { android.provider.DocumentsContract.deleteDocument(context.contentResolver, uri) }
     }
-
-    /** What an export or a share holds. Photos and voice notes only travel in the media backup. */
-    private fun sharePackageOf(snapshot: ExportSnapshot, includeLogs: Boolean): SharePackage =
-        if (includeLogs) {
-            SharePackage(
-                settings = snapshot.settings.copy(
-                    notebookNotes = snapshot.settings.notebookNotes.filter { note -> note.type == NotebookNoteType.TEXT }
-                ),
-                logs = snapshot.logs,
-                scoreboard = snapshot.scoreboard,
-            )
-        } else {
-            SharePackage(settings = snapshot.settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null)
-        }
 
     /** Writes [bytes] where a share can read them and returns the chooser. Writes a file, so not on the main thread. */
     private fun shareChooser(context: Context, bytes: ByteArray): Intent {

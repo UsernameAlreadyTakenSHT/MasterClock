@@ -4,7 +4,8 @@ import android.net.Uri
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
-import com.masterclock.app.logic.SharePackage
+import com.masterclock.app.logic.encodeSharePackage
+import com.masterclock.app.logic.sharePackageOf
 import com.masterclock.app.logic.TimerMode
 import com.masterclock.app.logic.decodeSharePackage
 import com.masterclock.app.logic.readImportText
@@ -20,8 +21,8 @@ import org.junit.Test
 import java.io.File
 
 /**
- * A settings file out and back in, through the same calls MainActivity makes, against the real
- * storage. Everything but the system's file picker, which is another app and out of Compose's reach:
+ * A settings file out and back in, through the same calls MainActivity makes -- sharePackageOf and
+ * encodeSharePackage, in core -- against the real storage. Everything but the system's file picker, which is another app and out of Compose's reach:
  * the file here is opened through the content resolver as the picked one is.
  */
 class ExportImportFlowTest {
@@ -55,14 +56,30 @@ class ExportImportFlowTest {
         }
         rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.initialTimeMs == 180_000L && viewModel.scoreboard.value.games.isNotEmpty() }
 
+        // A game in the history, which an export with the games carries: one move, so that it is kept.
+        val keepsGames = com.masterclock.app.logic.FlavorConfig.keepsGameHistory()
+        if (keepsGames) {
+            rule.waitUntil(TIMEOUT_MS) { viewModel.isHistoryLoaded.value }
+            rule.runOnUiThread { viewModel.clearAllLogs() }
+            rule.runOnUiThread { viewModel.startOrSwitch(1) }
+            rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null }
+            rule.runOnUiThread { viewModel.startOrSwitch(viewModel.uiState.value.activePlayer!!) }
+            rule.runOnUiThread { viewModel.reset() }
+            rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.size == 1 }
+        }
+        val played = viewModel.gameHistory.value.map { it.id }
+
+        // What MainActivity writes, by the same two calls.
         val snapshot = runBlocking { viewModel.exportSnapshot() }
         val file = File(rule.activity.cacheDir, "round_trip.json")
-        file.writeText(json.encodeToString(SharePackage(settings = snapshot.settings, logs = snapshot.logs, scoreboard = snapshot.scoreboard)))
+        file.writeBytes(encodeSharePackage(sharePackageOf(snapshot, includeLogs = true)))
 
         rule.runOnUiThread {
             viewModel.resetAllSettings()
             viewModel.resetScoreboard()
+            viewModel.clearAllLogs()
         }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.isEmpty() }
         rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.initialTimeMs != 180_000L }
         assertNotEquals(TimerMode.FISCHER, viewModel.settings.value.main.mode)
 
@@ -76,6 +93,7 @@ class ExportImportFlowTest {
         assertEquals(TimerMode.FISCHER, viewModel.settings.value.main.mode)
         assertEquals(2_000, viewModel.settings.value.main.incrementMs)
         rule.waitUntil(TIMEOUT_MS) { viewModel.scoreboard.value.games.map { it.result } == listOf("1 - 0") }
+        if (keepsGames) rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.map { it.id } == played }
         file.delete()
     }
 

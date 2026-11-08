@@ -10,6 +10,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
+import androidx.compose.ui.semantics.SemanticsProperties
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -61,14 +63,31 @@ class OmniFlowTest {
         await(hasText(say(R.string.omni_running)))
     }
 
+    /**
+     * Every text on screen. The session's ViewModel belongs to its route, out of a test's reach, so its
+     * clocks are read where the player reads them.
+     */
+    private fun sessionTime(): List<String> =
+        rule.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+            .fetchSemanticsNodes().flatMap { node -> node.config[SemanticsProperties.Text].map { it.text } }
+
     @Test
     fun aSessionLaunchesPausesAndResumes() {
         launchASession()
+        // The words on screen, and the clock behind them: a session whose ticker had stopped read
+        // "running" all the same.
+        val started = sessionTime()
+        rule.waitUntil(TIMEOUT_MS) { sessionTime() != started }
+
         control(R.string.omni_pause).performClick()
         await(hasText(say(R.string.omni_paused)))
+        val held = sessionTime()
+        Thread.sleep(1_200)
+        assertEquals("a paused session's clock moved", held, sessionTime())
 
         control(R.string.timer_resume).performClick()
         await(hasText(say(R.string.omni_running)))
+        rule.waitUntil(TIMEOUT_MS) { sessionTime() != held }
     }
 
     @Test

@@ -129,3 +129,36 @@ fun decodeSharePackage(content: String): SharePackage {
     }
     return SharePackage(settings = importJson.decodeFromJsonElement(ChessClockSettings.serializer(), root))
 }
+
+/**
+ * What an export or a share holds. Photos and voice notes only travel in the media backup, so a
+ * notebook goes as its text notes; without the games, nothing of the notebook or the scoreboard goes.
+ *
+ * It lived in MainActivity, out of reach of any test: the interface test built its own package, and
+ * a change to what an export holds passed it unseen.
+ */
+fun sharePackageOf(snapshot: ExportSnapshot, includeLogs: Boolean): SharePackage =
+    if (includeLogs) {
+        SharePackage(
+            settings = snapshot.settings.copy(
+                notebookNotes = snapshot.settings.notebookNotes.filter { note -> note.type == NotebookNoteType.TEXT }
+            ),
+            logs = snapshot.logs,
+            scoreboard = snapshot.scoreboard,
+        )
+    } else {
+        SharePackage(settings = snapshot.settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null)
+    }
+
+private val exportJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+/**
+ * [pkg] as the file an export or a share writes. Refused past what the import reads, which this wrote
+ * whatever the history came to: some five hundred games made a file "Export successful" had produced
+ * and the import then refused.
+ */
+fun encodeSharePackage(pkg: SharePackage): ByteArray {
+    val bytes = exportJson.encodeToString(SharePackage.serializer(), pkg).toByteArray()
+    if (bytes.size > MAX_IMPORT_TEXT_BYTES) throw ImportTooLargeException("Settings file would be too large to import")
+    return bytes
+}
