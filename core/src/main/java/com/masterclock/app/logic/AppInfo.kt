@@ -36,14 +36,17 @@ object AppInfo {
     // Who a note is about, by what each build has: every mode, presets, the arbiter, Omni and Last
     // Games are Complete, Standard and Lite's, since Mini and E-Ink keep three modes; the Behaviour and
     // Display tabs are Complete and Standard's; the notebook, boards, QR codes, the full backup, rules
-    // and game logs Complete's. A note names a build when it was about one, and says what that build
-    // had then: statistics, before 0.8.32, were in Standard and Lite as well.
+    // and game logs Complete's -- import and export too, which E-Ink never had. A note names a build
+    // when it was about one, and says what that build had then: statistics, before 0.8.32, were in
+    // Standard and Lite as well, and every build showed every credit before 0.8.30.
     private val ALL = AppFlavor.entries.toSet()
     private val PHONE = setOf(AppFlavor.COMPLETE, AppFlavor.STANDARD, AppFlavor.LITE, AppFlavor.MINI)
     private val FULL_MODES = setOf(AppFlavor.COMPLETE, AppFlavor.STANDARD, AppFlavor.LITE)
     private val BEHAVIOUR_TAB = setOf(AppFlavor.COMPLETE, AppFlavor.STANDARD)
     private val COMPLETE_ONLY = setOf(AppFlavor.COMPLETE)
     private val E_INK_ONLY = setOf(AppFlavor.E_INK)
+    /** A note that was wrong: 0.8.29 said the E-Ink build's import and export were fixed, and it has neither. */
+    private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
         ChangelogEntry(
@@ -73,12 +76,12 @@ object AppInfo {
                 AppFlavor.MINI to listOf(
                     "The clock is silent until asked: no beep sounds with the sound off.",
                     "TalkBack reads a running clock by steps, and the digits grow on tablets and foldables.",
-                    "Fixes across the clocks at zero, the voice and the time fields.",
+                    "Fixes across the clocks at zero and the time fields.",
                 ),
                 AppFlavor.E_INK to listOf(
                     "Settings pause a running game, and a time control edited mid-game asks first.",
                     "The clock is silent until asked: no beep sounds with the sound off.",
-                    "Fixes across the clocks at zero and the voice.",
+                    "Fixes across the clocks at zero.",
                 ),
             ),
         ),
@@ -106,13 +109,13 @@ object AppInfo {
             version = "0.8.35",
             date = "2026-10-30",
             notes = listOf(
-                Note("A full review of the app fixed close to a hundred issues, across every mode, the game history, presets, imports and the notebook."),
+                Note("A full review of the app fixed close to a hundred issues, across every mode, the game history, presets, imports and the notebook.", FULL_MODES),
                 Note("Play charges the first move from the moment it is pressed. It was charged the time since the phone was switched on."),
-                Note("A finished game stops ticking, and resuming a saved game or resetting the settings no longer loses your notes."),
+                Note("A finished game stops ticking, and resuming a saved game or resetting the settings no longer loses your notes.", FULL_MODES),
                 Note("The arbiter's adjustments reach the clock on screen, and can give a flagged player time back.", FULL_MODES),
                 Note("Back pressed twice on the clock leaves the app."),
                 Note("Texts that were in English in every language are translated. Electronic boards are handled more reliably."),
-                Note("The game history is converted once on the first launch; nothing you can see is lost."),
+                Note("The game history is converted once on the first launch; nothing you can see is lost.", FULL_MODES),
             ),
         ),
         ChangelogEntry(
@@ -128,13 +131,13 @@ object AppInfo {
             version = "0.8.33",
             date = "2026-10-16",
             notes = listOf(
-                Note("Pauses no longer count as thinking time. In Bronstein a pause was even paid back, and histories and statistics counted pauses as moves."),
+                Note("Pauses no longer count as thinking time. In Bronstein a pause was even paid back, and histories and statistics counted pauses as moves.", FULL_MODES),
                 Note("A move is charged exactly up to the press. The time since the clock's last refresh was charged to no one, about three seconds a player over sixty moves."),
                 Note("Hidden mode no longer gives its time away through beeps, vibration, the voice, the low-time flash or TalkBack.", FULL_MODES),
                 Note("A game that plays on after a flag can be resumed after a pause. Negative time works in byoyomi, FIDE periods, Hidden, Global and Overtime.", FULL_MODES),
                 Note("Phases, Gong, FIDE periods, Move Counts, the hourglass and Omni fixed, with their sounds and voice lines.", FULL_MODES),
-                Note("Voice announcements speak the device's language when a voice for it is installed, and are heard every time a threshold is crossed."),
-                Note("QR codes carry accented and non-Latin text intact. Pressing Play then Reset no longer adds an empty game."),
+                Note("Voice announcements speak the device's language when a voice for it is installed, and are heard every time a threshold is crossed.", BEHAVIOUR_TAB),
+                Note("QR codes carry accented and non-Latin text intact. Pressing Play then Reset no longer adds an empty game.", FULL_MODES),
                 Note("E-Ink: built with Mudita Mindful Design, Mudita's own interface library, which is credited in Licenses.", E_INK_ONLY),
             ),
         ),
@@ -176,7 +179,7 @@ object AppInfo {
                 Note("A FIDE period with a delay gave no delay on the first move of each player.", FULL_MODES),
                 Note("Save & Cap counted its bank twice from the second move on, and its ceiling now applies to the clock rather than to the bank alone: thirty-second moves with a two-minute cap stop at two minutes, not two and a half.", FULL_MODES),
                 Note("Turning Bluetooth off with a board connected crashed the app, and so did opening it on a device with no Bluetooth hardware at all."),
-                Note("The mode guide described Overtime backwards: it draws on the reserve when you go past your move time, it does not add unused time to it.", FULL_MODES),
+                Note("The mode guide described Overtime backwards: it draws on the reserve when you go past your move time, it does not add unused time to it.", COMPLETE_ONLY),
                 Note("The four builds with no board screen no longer reach for Bluetooth and USB hardware at launch, and credits now list only what your build actually contains."),
             ),
         ),
@@ -186,12 +189,12 @@ object AppInfo {
             notes = listOf(
                 Note("A security release. Nothing here is reachable without importing a file, scanning a code or restoring an archive somebody else gave you — but all of it survives a restart once it is in."),
                 Note("An imported note could point the notebook's shredder at your own settings file, so deleting that note destroyed every setting, preset and note you had, unrecoverably.", COMPLETE_ONLY),
-                Note("A crafted import could make the app crash on every launch afterwards — a board note sized wrong, an empty phase list, or a game log too large for the database — until app data was cleared.", setOf(AppFlavor.COMPLETE, AppFlavor.E_INK)),
-                Note("An imported file could silently delete your entire game history by setting the history limit to zero.", setOf(AppFlavor.COMPLETE, AppFlavor.E_INK)),
+                Note("A crafted import could make the app crash on every launch afterwards — a board note sized wrong, an empty phase list, or a game log too large for the database — until app data was cleared.", COMPLETE_ONLY),
+                Note("An imported file could silently delete your entire game history by setting the history limit to zero.", COMPLETE_ONLY),
                 Note("A scanned QR code now shows what it will do and waits for you, instead of replacing your settings the moment the camera sees it.", COMPLETE_ONLY),
                 Note("The Complete build no longer asks for a network permission. It arrived through a camera library and this app makes no network call at all.", COMPLETE_ONLY),
-                Note("The E-Ink build's import and export were a release behind: they ran on the drawing thread and reported nothing either way.", E_INK_ONLY),
-                Note("Sharing your settings writes to a fresh location each time, and a failed backup export no longer leaves the archive in the cache.", setOf(AppFlavor.COMPLETE, AppFlavor.E_INK)),
+                Note("The E-Ink build's import and export were a release behind: they ran on the drawing thread and reported nothing either way.", NOWHERE),
+                Note("Sharing your settings writes to a fresh location each time, and a failed backup export no longer leaves the archive in the cache.", COMPLETE_ONLY),
             ),
         ),
         ChangelogEntry(
@@ -200,7 +203,7 @@ object AppInfo {
             notes = listOf(
                 Note("A voice note recorded for the full minute was always lost, and the microphone kept recording after the screen said it had stopped. The one-minute limit only changed the label.", COMPLETE_ONLY),
                 Note("Leaving a voice note while it was still recording threw the recording away. It is kept now.", COMPLETE_ONLY),
-                Note("Importing a JSON file said nothing at all, whether it worked or not. Both outcomes are reported now.", setOf(AppFlavor.COMPLETE, AppFlavor.E_INK)),
+                Note("Importing a JSON file said nothing at all, whether it worked or not. Both outcomes are reported now.", COMPLETE_ONLY),
                 Note("The precision trainer measured with a clock that can be reset mid-attempt, and kept the reading from its last poll rather than from your tap — on the one screen where the measurement is the whole point.", COMPLETE_ONLY),
                 Note("Retaking a video kept showing the previous one.", COMPLETE_ONLY),
                 Note("The clock no longer stops to serialise the notebook every fifteen seconds, and the game history no longer loads on the drawing thread — nor without limit when history is set to unlimited."),
@@ -218,7 +221,7 @@ object AppInfo {
                 Note("Link board: a board going out of range used to keep a Bluetooth connection slot for good, until the phone was restarted.", COMPLETE_ONLY),
                 Note("Link board: a move read from the board is dropped when the board goes away, instead of being recorded against a later game.", COMPLETE_ONLY),
                 Note("Link board: reconnecting no longer leaks the previous connection, acknowledgements are no longer silently dropped, and a Certabo now says it is waiting for the pieces to be set up.", COMPLETE_ONLY),
-                Note("The credit for the draughts pieces pointed at Wikimedia's chess piece category instead of the draughts one.", COMPLETE_ONLY),
+                Note("The credit for the draughts pieces pointed at Wikimedia's chess piece category instead of the draughts one."),
             ),
         ),
         ChangelogEntry(
@@ -253,7 +256,7 @@ object AppInfo {
                 Note("The Complete build's icon no longer carries a FULL badge.", COMPLETE_ONLY),
                 Note("Releases now include a SHA256SUMS.txt so you can check what you downloaded, and release tags are signed from this version on."),
                 Note("Restoring a backup: an oversized archive is refused as it arrives instead of being written to the cache in full first.", COMPLETE_ONLY),
-                Note("The Lato typeface used by the E-Ink build is credited in Credits.", E_INK_ONLY),
+                Note("The Lato typeface used by the E-Ink build is credited in Credits."),
             ),
         ),
         ChangelogEntry(
@@ -341,7 +344,7 @@ object AppInfo {
             date = "2026-08-02",
             notes = listOf(
                 Note("Standard, Light and Mini no longer ask for the camera, microphone, Bluetooth or location permissions. They never had a feature that could use them; only Complete does.", setOf(AppFlavor.STANDARD, AppFlavor.LITE, AppFlavor.MINI)),
-                Note("Importing a settings or backup file is now bounded, so an oversized or malformed one can no longer freeze the app instead of being rejected.", setOf(AppFlavor.COMPLETE, AppFlavor.E_INK)),
+                Note("Importing a settings or backup file is now bounded, so an oversized or malformed one can no longer freeze the app instead of being rejected.", COMPLETE_ONLY),
                 Note("A game log could show the wrong time against a move when the recording was incomplete.", COMPLETE_ONLY),
             ),
         ),
@@ -373,7 +376,7 @@ object AppInfo {
             date = "2026-08-01",
             notes = listOf(
                 Note("The bundled rulebooks now open offline — six buttons on the rules screen used to do nothing at all.", COMPLETE_ONLY),
-                Note("Every rules document is credited to its author or publisher, in the app and in the README.", COMPLETE_ONLY),
+                Note("Every rules document is credited to its author or publisher, in the app and in the README."),
                 Note("New Licenses tab listing the open-source libraries the app ships."),
             ),
         ),
@@ -400,7 +403,7 @@ object AppInfo {
             notes = listOf(
                 Note("Light/Mini/paper's \"Sound\" toggle now also controls the time's-up/flag sound.", setOf(AppFlavor.LITE, AppFlavor.MINI, AppFlavor.E_INK)),
                 Note("Omni-Timer is now labeled \"(alpha)\" in the mode picker.", FULL_MODES),
-                Note("Byoyomi's 3 sub-modes and Mini's 3 mode cards are now all on one row instead of splitting one onto its own line."),
+                Note("Byoyomi's 3 sub-modes and Mini's 3 mode cards are now all on one row instead of splitting one onto its own line.", PHONE),
             ),
         ),
         ChangelogEntry(
@@ -424,7 +427,7 @@ object AppInfo {
             version = "0.8.5",
             date = "2026-07-21",
             notes = listOf(
-                Note("Each flavor now shows its own name in the launcher."),
+                Note("Each flavor now shows its own name in the launcher.", PHONE),
                 Note("Standard and Light now have access to Omni-Timer.", setOf(AppFlavor.STANDARD, AppFlavor.LITE)),
                 Note("Fixed Move Timer (Global Shared) flagging every player out on a single move-timer expiry.", FULL_MODES),
                 Note("Fixed Gong/Phases/Move Timer (Shared)/Chrono (one-for-all) games never being saved to history.", FULL_MODES),
@@ -453,7 +456,7 @@ object AppInfo {
             date = "2026-07-20",
             notes = listOf(
                 Note("Omni: added optional auto-cutoff per level (Phase/Turn/Round/Game/Session).", COMPLETE_ONLY),
-                Note("Fixed sound and voice feedback missing on several timer modes."),
+                Note("Fixed sound and voice feedback missing on several timer modes.", FULL_MODES),
                 Note("Fixed FIDE Periods delay bonus not applying on the US preset.", FULL_MODES),
                 Note("Fixed Phases mode getting stuck instead of waiting for confirmation.", FULL_MODES),
             ),

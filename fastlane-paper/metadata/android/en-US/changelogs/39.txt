@@ -1,3 +1,3 @@
 Settings pause a running game, and a time control edited mid-game asks first.
 Silent until asked: no beep sounds with the sound off.
-Fixes across the clocks at zero and the voice.
+Fixes across the clocks at zero.
