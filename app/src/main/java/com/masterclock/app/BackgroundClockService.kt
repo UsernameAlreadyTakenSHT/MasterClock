@@ -10,17 +10,18 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.masterclock.app.logic.BackgroundClock
+import com.masterclock.app.logic.NotifiedCountdown
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 
 /**
@@ -61,9 +62,11 @@ class BackgroundClockService : Service() {
         startInForeground(notification(BackgroundClockLink.clock.value))
         scope.launch {
             // A tick changes the time, not what the notification says: it counts down on its own, and
-            // is rebuilt only when whose clock it is, or whether one counts down, changes.
-            BackgroundClockLink.clock.distinctUntilChangedBy { it?.playerIndex to (it?.countdownMs != null) }.collect { clock ->
-                if (clock == null) stopSelf() else manager.notify(NOTIFICATION_ID, notification(clock))
+            // is redrawn only when the end it counts to has moved; see NotifiedCountdown.
+            BackgroundClockLink.clock.collect { clock ->
+                if (clock == null) { stopSelf(); return@collect }
+                val now = NotifiedCountdown.of(clock, SystemClock.elapsedRealtime())
+                if (shown?.outOfStepWith(now) != false) manager.notify(NOTIFICATION_ID, notification(clock))
             }
         }
     }
@@ -89,8 +92,16 @@ class BackgroundClockService : Service() {
         ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, type)
     }
 
+    /** What the notification shows now, to tell when it has fallen out of step with the clock. */
+    private var shown: NotifiedCountdown? = null
+
     private fun notification(clock: BackgroundClock?): Notification {
-        val open = packageManager.getLaunchIntentForPackage(packageName)
+        val drawnAt = SystemClock.elapsedRealtime()
+        shown = clock?.let { NotifiedCountdown.of(it, drawnAt) }
+        // Back to the activity that holds the game. The launcher's intent brought a task begun from a
+        // preset shortcut forward with a second MainActivity on top -- a second ViewModel, the game in
+        // the first still ticking underneath. SINGLE_TOP finds the one there.
+        val open = Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val tap = PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val pause = PendingIntent.getService(
             this, 1, Intent(this, BackgroundClockService::class.java).setAction(ACTION_PAUSE),

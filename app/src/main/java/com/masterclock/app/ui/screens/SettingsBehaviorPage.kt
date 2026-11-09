@@ -75,22 +75,30 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                     label = stringResource(R.string.settings_trigger_on_press),
                     checked = currentSettings.triggerOnPress
                 ) { onSettingsChanged(currentSettings.copy(triggerOnPress = it)) }
+                // Asked for as the background run is switched on, not before: nobody who keeps the pause
+                // sees the question. Refused, the service runs all the same; its notification is only
+                // hidden. Also as the pause goes off with the switch below already on, since that is
+                // when the run begins to apply.
+                val askToNotify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+                val context = LocalContext.current
+                fun askToNotifyIfNeeded() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    ) askToNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_pause_background),
                     checked = currentSettings.pauseOnBackground
-                ) { onSettingsChanged(currentSettings.copy(pauseOnBackground = it)) }
-                // Asked for as it is switched on, not before: nobody who keeps the pause sees the
-                // question. Refused, the service runs all the same; its notification is only hidden.
-                val askToNotify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-                val context = LocalContext.current
+                ) {
+                    if (!it && currentSettings.keepRunningInBackground) askToNotifyIfNeeded()
+                    onSettingsChanged(currentSettings.copy(pauseOnBackground = it))
+                }
                 BehaviorSwitch(
                     label = stringResource(R.string.settings_keep_running),
                     checked = currentSettings.keepRunningInBackground && !currentSettings.pauseOnBackground,
                     enabled = !currentSettings.pauseOnBackground,
                 ) { on ->
-                    if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-                    ) askToNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    if (on) askToNotifyIfNeeded()
                     onSettingsChanged(currentSettings.copy(keepRunningInBackground = on))
                 }
                 BehaviorSwitch(

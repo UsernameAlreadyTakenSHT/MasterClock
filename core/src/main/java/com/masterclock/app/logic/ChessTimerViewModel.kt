@@ -360,13 +360,39 @@ fun ChessClockSettings.runsInBackground(): Boolean =
     keepRunningInBackground && !pauseOnBackground && FlavorConfig.hasFullSettingsTabs()
 
 /**
- * What the background notification shows: whose turn it is, and the time running out for them.
- * [playerIndex] is null for a clock that is the table's. [countdownMs] is null where the face does
- * not count down to a flag -- a stopwatch, a move count, an overrun -- and the notification then says
- * only that the clock runs. It is the time as it stood when read: the notification counts it down on
- * its own, and is read again whenever the turn changes.
+ * What the background notification shows: whose turn it is, and the time until their flag.
+ * [playerIndex] is null for a clock that is the table's. [countdownMs] is null where nothing counts
+ * down to a flag -- a stopwatch, a move count, an overrun -- or where the time is not to be shown, in
+ * Hidden, and the notification then says only that the clock runs. It is the time as it stood when
+ * read: the notification counts it down on its own; see [NotifiedCountdown] for when it is read again.
  */
 data class BackgroundClock(val playerIndex: Int?, val countdownMs: Long?)
+
+/**
+ * A countdown as a notification shows it: an end, on the elapsed-real-time clock, that it counts to
+ * by itself. [endsAtMs] is null for no countdown.
+ */
+data class NotifiedCountdown(val playerIndex: Int?, val endsAtMs: Long?) {
+    /**
+     * Whether a notification showing this has to be redrawn for [now]. Keyed on whose turn it was, it
+     * never was in the modes whose clock is the table's: Shared (Auto) handed the turn on every thirty
+     * seconds and the notification went on into minus figures. Nor within a turn: byoyomi starting, a
+     * period used, Overtime's reserve taking over. An end that moved by more than a moment, whatever
+     * moved it, is what says the shown countdown is wrong.
+     */
+    fun outOfStepWith(now: NotifiedCountdown): Boolean {
+        if (playerIndex != now.playerIndex || (endsAtMs == null) != (now.endsAtMs == null)) return true
+        val then = endsAtMs ?: return false
+        return kotlin.math.abs(then - now.endsAtMs!!) > NOTIFIED_DRIFT_MS
+    }
+
+    companion object {
+        /** More than a tick's worth, so that the clock running does not redraw it, and less than anyone would notice. */
+        const val NOTIFIED_DRIFT_MS = 1_500L
+
+        fun of(clock: BackgroundClock, nowElapsedMs: Long) = NotifiedCountdown(clock.playerIndex, clock.countdownMs?.let { nowElapsedMs + it })
+    }
+}
 
 /** The game [backgroundClockOf] keeps alive, or null when nothing is running and the service can stop. */
 fun backgroundClockOf(state: ChessClockState, settings: ChessClockSettings): BackgroundClock? {
@@ -374,9 +400,13 @@ fun backgroundClockOf(state: ChessClockState, settings: ChessClockSettings): Bac
     if (state.isPaused || isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)) return null
     val player = state.players.getOrNull(active - 1) ?: return null
     val mode = settings.playerSettings(active).mode
-    val counts = mode !in setOf(TimerMode.CHRONO_COUNTUP, TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN) &&
+    // Hidden withholds the time, as its beeps and its flash do: on the lock screen to the second, the
+    // notification would say it outright.
+    val counts = mode !in setOf(TimerMode.CHRONO_COUNTUP, TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN, TimerMode.HIDDEN) &&
         !player.isOverrun(settings.flagBehavior)
-    val shown = countdownTimeMs(state, player, mode)
+    // A delay runs before the clock does, so the flag is that much further off. Counted down without it,
+    // the notification ran a whole delay ahead on every move.
+    val shown = countdownTimeMs(state, player, mode) + player.delayRemainingMs.coerceAtLeast(0)
     return BackgroundClock(
         playerIndex = active.takeUnless { mode.isWholeTable },
         countdownMs = shown.takeIf { counts && it > 0 },

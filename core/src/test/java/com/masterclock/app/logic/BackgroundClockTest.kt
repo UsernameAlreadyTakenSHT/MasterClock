@@ -49,6 +49,29 @@ class BackgroundClockTest {
     }
 
     @Test
+    fun `Hidden shows no time, and a delay counts towards the flag`() {
+        val hidden = asked.copy(main = PlayerSettings(mode = TimerMode.HIDDEN))
+        assertNull(backgroundClockOf(game(PlayerState(42_000), PlayerState(42_000)), hidden)!!.countdownMs)
+        val delay = asked.copy(main = PlayerSettings(mode = TimerMode.US_DELAY, incrementMs = 5_000))
+        assertEquals(47_000L, backgroundClockOf(game(PlayerState(42_000, delayRemainingMs = 5_000), PlayerState(60_000)), delay)!!.countdownMs)
+    }
+
+    @Test
+    fun `a countdown that keeps running needs no redraw, one that jumped does`() {
+        val shown = NotifiedCountdown.of(BackgroundClock(1, 60_000), nowElapsedMs = 0)
+        // A second later the clock has run a second: the same end.
+        assertFalse(shown.outOfStepWith(NotifiedCountdown.of(BackgroundClock(1, 59_000), nowElapsedMs = 1_000)))
+        // Shared (Auto) handed the turn on, the table's clock refilled: nobody's turn changed, the end did.
+        assertTrue(shown.outOfStepWith(NotifiedCountdown.of(BackgroundClock(null, 30_000), nowElapsedMs = 30_000)))
+        assertTrue(NotifiedCountdown.of(BackgroundClock(null, 1_000), 29_000).outOfStepWith(NotifiedCountdown.of(BackgroundClock(null, 30_000), 30_000)))
+        // Byoyomi starting within the turn.
+        assertTrue(shown.outOfStepWith(NotifiedCountdown.of(BackgroundClock(1, 30_000), nowElapsedMs = 60_000)))
+        // The turn passing, or the countdown going.
+        assertTrue(shown.outOfStepWith(NotifiedCountdown.of(BackgroundClock(2, 59_000), nowElapsedMs = 1_000)))
+        assertTrue(shown.outOfStepWith(NotifiedCountdown.of(BackgroundClock(1, null), nowElapsedMs = 1_000)))
+    }
+
+    @Test
     fun `a clock that counts up has no countdown`() {
         val stopwatch = asked.copy(main = PlayerSettings(mode = TimerMode.CHRONO_COUNTUP))
         val clock = backgroundClockOf(game(PlayerState(0), PlayerState(0)).copy(globalTimeMs = 5_000), stopwatch)

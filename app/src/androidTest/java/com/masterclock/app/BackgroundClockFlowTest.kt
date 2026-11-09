@@ -10,9 +10,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
+import com.masterclock.app.logic.PlayerSettings
+import com.masterclock.app.logic.TimerMode
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -55,6 +58,19 @@ class BackgroundClockFlowTest {
         rule.waitForIdle()
     }
 
+    /**
+     * The settings back to their defaults and the service stopped, passed or failed: a test that stops
+     * with the activity away leaves both behind, and the next suite would start with the pause off. The
+     * notification permission stays granted -- revoking it ends the process the tests run in.
+     */
+    @After
+    fun leaveNothingBehind() {
+        if (!FlavorConfig.hasFullSettingsTabs()) return
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { BackgroundClockService.stop(context) }
+        comeBack()
+        rule.runOnUiThread { viewModel.resetAllSettings() }
+    }
+
     private fun keepRunning() {
         rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(pauseOnBackground = false, keepRunningInBackground = true)) }
         rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.keepRunningInBackground && !viewModel.settings.value.pauseOnBackground }
@@ -92,10 +108,32 @@ class BackgroundClockFlowTest {
         leave()
         waitFor("the notification") { notificationShown() }
 
-        InstrumentationRegistry.getInstrumentation().runOnMainSync { BackgroundClockLink.pause?.invoke() }
+        // The button itself: its PendingIntent, the action it carries, the service receiving it.
+        val shown = context.getSystemService(NotificationManager::class.java).activeNotifications
+            .single { it.id == BackgroundClockService.NOTIFICATION_ID }.notification
+        shown.actions.single().actionIntent.send()
         waitFor("the pause") { viewModel.uiState.value.isPaused }
         waitFor("the notification to go") { !notificationShown() }
         comeBack()
+    }
+
+    private fun shownEnd(): Long? = context.getSystemService(NotificationManager::class.java).activeNotifications
+        .singleOrNull { it.id == BackgroundClockService.NOTIFICATION_ID }?.notification?.`when`
+
+    @Test
+    fun aTableClockThatRefillsRedrawsItsCountdown() {
+        // Shared (Auto), three seconds a move: the table's clock refills as each turn passes, nobody's
+        // turn in particular. The notification went on counting the first three seconds into minus figures.
+        keepRunning()
+        rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(main = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 3_000))) }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.mode == TimerMode.MOVE_TIMER_SHARED }
+        rule.runOnUiThread { viewModel.resume() }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null && !viewModel.uiState.value.isPaused }
+
+        leave()
+        waitFor("the notification") { shownEnd() != null }
+        val first = shownEnd()!!
+        waitFor("the countdown redrawn for the next turn") { (shownEnd() ?: first) - first >= 2_000 }
     }
 
     @Test
