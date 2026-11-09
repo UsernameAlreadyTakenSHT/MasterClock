@@ -61,6 +61,13 @@ class BerserkTest {
     }
 
     @Test
+    fun `the question says what it costs`() {
+        // The dialog's text follows this: it promised half the time at 1+2, which keeps it.
+        assertTrue(berserkHalvesTheTime(settings(fischer(3, 2)), 1))
+        assertFalse(berserkHalvesTheTime(settings(fischer(1, 2)), 1))
+    }
+
+    @Test
     fun `it is off unless asked for`() {
         val s = settings(fischer(3, 2), allow = false)
         assertFalse(canBerserk(start(s), 1, s))

@@ -67,7 +67,10 @@ fun TimerScreen(
     var showRerollDialog by remember { mutableStateOf(value = false) }
     // Berserk halves a clock and cannot be taken back, and its button sits on the face its player
     // presses to move: a press meant for the clock, a little off, cost half the game's time.
-    var berserkAsked by remember { mutableStateOf<Int?>(null) }
+    // Who asked, and which way their face is turned: the question is theirs, and in the default layout
+    // player 1's face is upside down. Turned with the clock as Reset's is, it read the right way up for
+    // the opponent and upside down for the one deciding.
+    var berserkAsked by remember { mutableStateOf<Pair<Int, Float>?>(null) }
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val showPresets = remember { FlavorConfig.hasPresets() }
@@ -156,7 +159,7 @@ fun TimerScreen(
         // again from out here, so those presses buzzed twice where three and four players' buzzed once.
         if (isGlobalMode) {
             Box(Modifier.fillMaxSize()) {
-                PlayerButton(Modifier.fillMaxSize(), state, 1, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = 1 }) { 
+                PlayerButton(Modifier.fillMaxSize(), state, 1, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = 1 to iconRotation }) { 
                     viewModel.startOrSwitch(1) 
                 }
             }
@@ -172,7 +175,7 @@ fun TimerScreen(
                             ClockOrientation.HORIZONTAL_RIGHT -> -90f
                             else -> 180f
                         }
-                        PlayerButton(Modifier.weight(p1Weight), state, 1, settings, contentRotation = p1Rotation, onBerserk = { berserkAsked = 1 }) { 
+                        PlayerButton(Modifier.weight(p1Weight), state, 1, settings, contentRotation = p1Rotation, onBerserk = { berserkAsked = 1 to p1Rotation }) { 
                             viewModel.startOrSwitch(1) 
                         }
 
@@ -181,7 +184,7 @@ fun TimerScreen(
                             ClockOrientation.HORIZONTAL_RIGHT -> -90f
                             else -> 0f
                         }
-                        PlayerButton(Modifier.weight(p2Weight), state, 2, settings, contentRotation = p2Rotation, onBerserk = { berserkAsked = 2 }) { 
+                        PlayerButton(Modifier.weight(p2Weight), state, 2, settings, contentRotation = p2Rotation, onBerserk = { berserkAsked = 2 to p2Rotation }) { 
                             viewModel.startOrSwitch(2) 
                         }
                     }
@@ -198,10 +201,10 @@ fun TimerScreen(
                                 ClockOrientation.HORIZONTAL_RIGHT -> -90f
                                 else -> 180f
                             }
-                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = p1Rot, onBerserk = { berserkAsked = p1 }) { viewModel.startOrSwitch(p1) }
+                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = p1Rot, onBerserk = { berserkAsked = p1 to p1Rot }) { viewModel.startOrSwitch(p1) }
                             Row(Modifier.weight(1f)) {
-                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p2 }) { viewModel.startOrSwitch(p2) }
-                                PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 }) { viewModel.startOrSwitch(p3) }
+                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p2 to iconRotation }) { viewModel.startOrSwitch(p2) }
+                                PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 to iconRotation }) { viewModel.startOrSwitch(p3) }
                             }
                         } else {
                             Row(Modifier.weight(1f)) {
@@ -210,10 +213,10 @@ fun TimerScreen(
                                     ClockOrientation.HORIZONTAL_RIGHT -> -90f
                                     else -> 180f
                                 }
-                                PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { berserkAsked = p1 }) { viewModel.startOrSwitch(p1) }
-                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { berserkAsked = p2 }) { viewModel.startOrSwitch(p2) }
+                                PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { berserkAsked = p1 to topRot }) { viewModel.startOrSwitch(p1) }
+                                PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { berserkAsked = p2 to topRot }) { viewModel.startOrSwitch(p2) }
                             }
-                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 }) { viewModel.startOrSwitch(p3) }
+                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 to iconRotation }) { viewModel.startOrSwitch(p3) }
                         }
                     }
                 }
@@ -229,12 +232,12 @@ fun TimerScreen(
                     }
                     Column(Modifier.fillMaxSize()) {
                         Row(Modifier.weight(1f)) {
-                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { berserkAsked = p1 }) { viewModel.startOrSwitch(p1) }
-                            PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { berserkAsked = p2 }) { viewModel.startOrSwitch(p2) }
+                            PlayerButton(Modifier.weight(1f), state, p1, settings, contentRotation = topRot, onBerserk = { berserkAsked = p1 to topRot }) { viewModel.startOrSwitch(p1) }
+                            PlayerButton(Modifier.weight(1f), state, p2, settings, contentRotation = topRot, onBerserk = { berserkAsked = p2 to topRot }) { viewModel.startOrSwitch(p2) }
                         }
                         Row(Modifier.weight(1f)) {
-                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 }) { viewModel.startOrSwitch(p3) }
-                            PlayerButton(Modifier.weight(1f), state, p4, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p4 }) { viewModel.startOrSwitch(p4) }
+                            PlayerButton(Modifier.weight(1f), state, p3, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p3 to iconRotation }) { viewModel.startOrSwitch(p3) }
+                            PlayerButton(Modifier.weight(1f), state, p4, settings, contentRotation = iconRotation, onBerserk = { berserkAsked = p4 to iconRotation }) { viewModel.startOrSwitch(p4) }
                         }
                     }
                 }
@@ -323,12 +326,15 @@ fun TimerScreen(
         )
     }
 
-    berserkAsked?.let { player ->
+    berserkAsked?.let { (player, facing) ->
         TimerConfirmDialog(
             title = stringResource(R.string.timer_berserk_title, player),
-            message = stringResource(R.string.timer_berserk_message),
+            // At 1+2 Berserk keeps the time and only the increment goes; the text said half the time.
+            message = stringResource(
+                if (berserkHalvesTheTime(settings, player)) R.string.timer_berserk_message else R.string.timer_berserk_message_increment
+            ),
             confirm = stringResource(R.string.timer_berserk),
-            rotation = iconRotation,
+            rotation = facing,
             onDismiss = { berserkAsked = null },
             // berserk() asks canBerserk again: a first move made meanwhile ends the offer.
             onConfirm = { viewModel.berserk(player); berserkAsked = null },

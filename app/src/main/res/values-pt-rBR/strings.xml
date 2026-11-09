@@ -192,6 +192,7 @@
     <string name="settings_keep_running_desc">Com a pausa acima desligada, uma notificação mantém o relógio correndo enquanto o app está em segundo plano, para que o Android não o feche. Mostra de quem é a vez e o tempo dele, com um botão de pausa.</string>
     <string name="notif_channel_clock">Partida em andamento</string>
     <string name="timer_berserk_message">Metade do tempo e o incremento são perdidos nesta partida. Não é possível desfazer.</string>
+    <string name="timer_berserk_message_increment">O incremento é perdido nesta partida; em 1+2 o tempo é mantido. Não é possível desfazer.</string>
     <string name="omni_reset_title">Zerar a sessão?</string>
     <string name="omni_reset_confirm">ZERAR</string>
     <string name="omni_reset_session">Zerar a sessão</string>

@@ -438,6 +438,9 @@ const val BERSERK_POINT_MOVES = 7
 private fun berserkPenaltyMs(s: PlayerSettings): Long =
     if (s.mode == TimerMode.FISCHER && s.initialTimeMs == 60_000L && s.incrementMs == 2_000L) 0L else s.initialTimeMs / 2
 
+/** Whether going Berserk takes half the time here, as it does but at 1+2, where only the increment goes. */
+fun berserkHalvesTheTime(settings: ChessClockSettings, playerIndex: Int): Boolean = berserkPenaltyMs(settings.playerSettings(playerIndex)) > 0
+
 /** Whether [playerIndex] can still go Berserk: before their first move, and never at 0+1 or 0+2. */
 fun canBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSettings): Boolean {
     // Allowed from the Behaviour tab, which only Complete and Standard have. Elsewhere a stored true

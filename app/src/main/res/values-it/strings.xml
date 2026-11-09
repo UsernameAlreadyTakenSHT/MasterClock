@@ -570,6 +570,7 @@
     <string name="timer_reset_message">Lo stato attuale andrà perso.</string>
     <string name="timer_berserk_title">Berserk per il giocatore %1$d?</string>
     <string name="timer_berserk_message">Metà del tempo e l\'incremento vanno persi per questa partita. Non si può annullare.</string>
+    <string name="timer_berserk_message_increment">L\'incremento va perso per questa partita; a 1+2 il tempo resta. Non si può annullare.</string>
     <string name="a11y_berserk_player">Berserk, giocatore %1$d</string>
     <string name="timer_reroll">Nuovo tempo casuale</string>
     <string name="timer_reroll_title">Estrarre un nuovo tempo?</string>
