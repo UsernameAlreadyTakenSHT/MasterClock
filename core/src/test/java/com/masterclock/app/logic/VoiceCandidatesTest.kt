@@ -35,7 +35,8 @@ class VoiceCandidatesTest {
     fun `the languages are the ones core has strings in`() {
         // Kept by hand beside the folders, so held to them: a language added to res and not here was
         // never spoken, and one listed with no folder read English in its voice.
-        val res = File("src/main/res")
+        // From core, as Gradle runs it, or from the project, as an IDE configuration may.
+        val res = listOf(File("src/main/res"), File("core/src/main/res")).first { it.isDirectory }
         val folders = res.listFiles().orEmpty().map { it.name }
             .filter { it.startsWith("values-") }
             .map { it.removePrefix("values-").substringBefore("-r") }

@@ -383,14 +383,6 @@ private fun TimerConfirmDialog(title: String, message: String, confirm: String, 
 }
 
 /**
- * Fits a face in a player's box as it will be drawn, turned or not, shrinking it whole if it has to.
- *
- * A box is small with three or four players, and turned a quarter its height is what the face has
- * for its width and its width for its height. At a large font the label, the clock and the line
- * under them came to more than that, and the first and last were cut. Their proportions are kept, and
- * at the default font nothing shrinks.
- */
-/**
  * Whether a face drawn at [rotation] degrees reads along its box's other side: nearer a quarter turn
  * than upright or upside down. The digit size and the fit both ask here; the size asked whether it was
  * upright at all, and while the face turned it measured the other way from the fit for a moment.
@@ -400,6 +392,14 @@ private fun isQuarterTurned(rotation: Float): Boolean {
     return kotlin.math.abs(half - 90f) <= 45f
 }
 
+/**
+ * Fits a face in a player's box as it will be drawn, turned or not, shrinking it whole if it has to.
+ *
+ * A box is small with three or four players, and turned a quarter its height is what the face has
+ * for its width and its width for its height. At a large font the label, the clock and the line
+ * under them came to more than that, and the first and last were cut. Their proportions are kept, and
+ * at the default font nothing shrinks.
+ */
 private fun Modifier.fittedForTurn(rotation: Float): Modifier = layout { measurable, constraints ->
     val turned = isQuarterTurned(rotation)
     val across = if (turned) constraints.maxHeight else constraints.maxWidth

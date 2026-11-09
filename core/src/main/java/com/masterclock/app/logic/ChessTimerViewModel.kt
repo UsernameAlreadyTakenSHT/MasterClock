@@ -460,8 +460,9 @@ fun canBerserk(state: ChessClockState, playerIndex: Int, settings: ChessClockSet
 /**
  * The clocks a game's log records as its start. Before the first move, the ones on the clock with any
  * Berserk taken back ([beforeBerserk]). Once the game is under way, the time control's
- * ([timeControlStart]): a log opens mid-game only for a saved clock whose own log was trimmed or could
- * not be read, and it took the interruption's clocks for the start -- with a Berserk's half added back
+ * ([timeControlStart]): a log opens mid-game for a saved clock whose own log was trimmed or could
+ * not be read, or after Clear history during a paused game, and it took the interruption's clocks for
+ * the start -- with a Berserk's half added back
  * onto clocks that had long since paid it.
  */
 internal fun gameStartPlayers(current: ChessClockState, settings: ChessClockSettings, timeControlStart: () -> ChessClockState): List<PlayerState> =

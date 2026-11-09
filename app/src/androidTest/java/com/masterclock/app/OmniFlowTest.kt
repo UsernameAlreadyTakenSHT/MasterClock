@@ -64,12 +64,15 @@ class OmniFlowTest {
     }
 
     /**
-     * Every text on screen. The session's ViewModel belongs to its route, out of a test's reach, so its
-     * clocks are read where the player reads them.
+     * The clocks on screen -- "45:00", and the launch countdown's "9" -- and nothing else. The session's
+     * ViewModel belongs to its route, out of a test's reach, so its clocks are read where the player reads
+     * them. Only the figures: with every text, "PAUSED" going was a change, and the check after Resume
+     * passed with the clock stopped.
      */
     private fun sessionTime(): List<String> =
         rule.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
             .fetchSemanticsNodes().flatMap { node -> node.config[SemanticsProperties.Text].map { it.text } }
+            .filter { CLOCK_TEXT.matches(it) }
 
     @Test
     fun aSessionLaunchesPausesAndResumes() {
@@ -77,7 +80,7 @@ class OmniFlowTest {
         // The words on screen, and the clock behind them: a session whose ticker had stopped read
         // "running" all the same.
         val started = sessionTime()
-        rule.waitUntil(TIMEOUT_MS) { sessionTime() != started }
+        rule.waitUntil(CLOCK_TIMEOUT_MS) { sessionTime() != started }
 
         control(R.string.omni_pause).performClick()
         await(hasText(say(R.string.omni_paused)))
@@ -87,7 +90,8 @@ class OmniFlowTest {
 
         control(R.string.timer_resume).performClick()
         await(hasText(say(R.string.omni_running)))
-        rule.waitUntil(TIMEOUT_MS) { sessionTime() != held }
+        val resumed = sessionTime()
+        rule.waitUntil(CLOCK_TIMEOUT_MS) { sessionTime() != resumed }
     }
 
     @Test
@@ -102,6 +106,9 @@ class OmniFlowTest {
 
     private companion object {
         const val TIMEOUT_MS = 10_000L
+        /** A launch's countdown holds the clocks for up to ten seconds before they start. */
+        const val CLOCK_TIMEOUT_MS = 20_000L
+        val CLOCK_TEXT = Regex("""\d+(:\d{2})*""")
         const val MAX_WIZARD_STEPS = 12
     }
 }

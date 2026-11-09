@@ -187,7 +187,7 @@ object AppInfo {
             version = "0.8.29",
             date = "2026-09-02",
             notes = listOf(
-                Note("A security release. Nothing here is reachable without importing a file, scanning a code or restoring an archive somebody else gave you — but all of it survives a restart once it is in."),
+                Note("A security release. Nothing here is reachable without importing a file, scanning a code or restoring an archive somebody else gave you — but all of it survives a restart once it is in.", COMPLETE_ONLY),
                 Note("An imported note could point the notebook's shredder at your own settings file, so deleting that note destroyed every setting, preset and note you had, unrecoverably.", COMPLETE_ONLY),
                 Note("A crafted import could make the app crash on every launch afterwards — a board note sized wrong, an empty phase list, or a game log too large for the database — until app data was cleared.", COMPLETE_ONLY),
                 Note("An imported file could silently delete your entire game history by setting the history limit to zero.", COMPLETE_ONLY),

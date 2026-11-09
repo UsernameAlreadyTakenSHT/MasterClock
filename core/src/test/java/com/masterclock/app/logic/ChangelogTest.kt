@@ -35,10 +35,20 @@ class ChangelogTest {
     }
 
     @Test
-    fun `every build has notes for the latest release`() {
+    fun `every build has notes of its own for the latest release`() {
+        // Every release is listed in every build since the shared line was added, so the version alone
+        // proved nothing: a build with no notes for this one passed.
         for (flavor in AppFlavor.entries) {
-            assertEquals(flavor.name, AppInfo.CHANGELOG.first().version, AppInfo.changelogFor(flavor).first().version)
+            val latest = AppInfo.changelogFor(flavor).first()
+            assertEquals(flavor.name, AppInfo.CHANGELOG.first().version, latest.version)
+            assertTrue(flavor.name, latest.notes != listOf(AppInfo.SHARED_ONLY))
         }
+    }
+
+    @Test
+    fun `E-Ink is told of no import or export, which it never had`() {
+        val eInk = AppInfo.changelogFor(AppFlavor.E_INK).flatMap { it.notes }
+        assertFalse(eInk.any { "import" in it.lowercase() || "export" in it.lowercase() })
     }
 
     @Test

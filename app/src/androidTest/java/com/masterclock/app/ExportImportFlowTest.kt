@@ -61,6 +61,9 @@ class ExportImportFlowTest {
         if (keepsGames) {
             rule.waitUntil(TIMEOUT_MS) { viewModel.isHistoryLoaded.value }
             rule.runOnUiThread { viewModel.clearAllLogs() }
+            // The clear is queued: until it lands, the game the last run imported is still there, and
+            // a history of one was that game rather than this one.
+            rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.isEmpty() }
             rule.runOnUiThread { viewModel.startOrSwitch(1) }
             rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null }
             rule.runOnUiThread { viewModel.startOrSwitch(viewModel.uiState.value.activePlayer!!) }
