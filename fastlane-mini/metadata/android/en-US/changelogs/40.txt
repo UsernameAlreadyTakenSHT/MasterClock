@@ -1,0 +1,2 @@
+Turning a tablet or changing the theme no longer pauses the game.
+Each build's changelog lists its own changes.

@@ -1,3 +1,29 @@
+## v0.8.39 — 2026-11-09
+
+A game can keep running in the background with a notification, Berserk asks first, the arbiter's
+penalties are heard and logged, the board reads castling however it is played, and each build's
+changelog now speaks of that build alone.
+
+### Added
+- **Keep running in the background** (Complete, Standard), in Behavior, off by default and only with "Pause when in background" off. A game left running shows a notification -- whose turn it is, their time counting down, a Pause button -- so that Android does not close the app while you are away. It goes as soon as you come back or the game stops. The notification permission is asked for when you switch it on; refused, the game still keeps running. Hidden shows no time in it.
+- **Each build's changelog lists its own changes.** A release that changed nothing in a build says so in one line, rather than listing another build's notes.
+
+### Changed
+- **Berserk asks first** (Complete, Standard), turned towards the player whose button it is, and says what it costs: half the time and the increment, or at 1+2 the increment alone. It goes through only when the clock can pay all of it, and TalkBack names each player's button.
+- **The arbiter's penalty is heard and logged as the time running out would be**: a FIDE period gone, byoyomi periods lost, a flag. A player it flags no longer keeps a delay, and one it takes into the next period gets that period's.
+
+### Fixed
+- Turning a tablet or a foldable, or changing the theme, paused a running game and an Omni session.
+- TalkBack said "Paused" for a reserve run out in Global or Global Shared under Freeze or Flag. On E-Ink, the first announcement after Start or Reset could go unspoken.
+- A game resumed without its log recorded the interruption's clocks as its start.
+- On large screens the digits jumped while a face turned.
+- The voice prefers an installed voice in a language the app speaks over one it does not.
+
+### Board (Complete)
+Still never tested with a real board.
+- A castle made with both pieces in hand is read, and the board goes on being read after it. A castle started with the rook goes into the record as the king's move.
+- A Certabo promotion to a piece the calibration has not learned is written as a queen, and a pawn misread off the last rank is no promotion. These were 0.8.38's known issues.
+
 ## v0.8.38 — 2026-11-08
 
 Berserk arrives, the arbiter's corrections and the moment a clock reaches zero were reworked

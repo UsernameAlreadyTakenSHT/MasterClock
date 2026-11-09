@@ -1,0 +1,2 @@
+TalkBack announces the clock from the first Start.
+The changelog lists this build's own changes.

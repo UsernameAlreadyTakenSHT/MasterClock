@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-08"
+    const val BUILD_DATE = "2026-11-09"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,21 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.39",
+            date = "2026-11-09",
+            notes = listOf(
+                Note("Keep running in the background, in Behavior: a game left running shows a notification with whose turn it is and their time, so that Android does not close the app.", BEHAVIOUR_TAB),
+                Note("Berserk asks first, turned towards its player, and says what it costs.", BEHAVIOUR_TAB),
+                Note("The arbiter's penalties are heard and logged as the time running out would be.", FULL_MODES),
+                Note("Turning a tablet or changing the theme no longer pauses a running game or an Omni session.", PHONE),
+                Note("TalkBack announces a reserve run out in Global as a flag, not a pause.", FULL_MODES),
+                Note("The digits no longer jump on large screens while a face turns.", PHONE),
+                Note("The board reads castling however it is played, and a Certabo promotion as a queen.", COMPLETE_ONLY),
+                Note("E-Ink: TalkBack announces the clock from the first Start.", E_INK_ONLY),
+                Note("Each build's changelog now lists its own changes."),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.38",
             date = "2026-11-08",

@@ -1,0 +1,3 @@
+Keep running in the background: a game left running shows a notification, so that Android does not close the app.
+Berserk asks first and says what it costs. The arbiter's penalties are heard and logged.
+Turning a tablet no longer pauses the game. Each build's changelog lists its own changes.

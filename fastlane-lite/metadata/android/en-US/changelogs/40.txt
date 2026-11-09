@@ -1,0 +1,3 @@
+The arbiter's penalties are heard and logged as the time running out would be.
+Turning a tablet or changing the theme no longer pauses a game or an Omni session.
+TalkBack announces a reserve flag in Global. Each build's changelog lists its own changes.
