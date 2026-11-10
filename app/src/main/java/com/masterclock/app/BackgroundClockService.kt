@@ -32,6 +32,8 @@ import kotlinx.coroutines.launch
 object BackgroundClockLink {
     val clock = MutableStateFlow<BackgroundClock?>(null)
     @Volatile var pause: (() -> Unit)? = null
+    /** The activity that started the service, by identity: its ViewModel is the game being kept. */
+    @Volatile var owner: Int? = null
 }
 
 /**
@@ -135,6 +137,7 @@ class BackgroundClockService : Service() {
 
         /** Starts the service for [clock], as the app leaves the screen with it running. */
         fun start(context: Context, clock: BackgroundClock, pause: () -> Unit) {
+            BackgroundClockLink.owner = System.identityHashCode(context)
             BackgroundClockLink.pause = pause
             BackgroundClockLink.clock.value = clock
             // Allowed from ON_PAUSE, while the activity is still the one in front. Should Android refuse
@@ -147,7 +150,17 @@ class BackgroundClockService : Service() {
         fun stop(context: Context) {
             BackgroundClockLink.clock.value = null
             BackgroundClockLink.pause = null
+            BackgroundClockLink.owner = null
             context.stopService(Intent(context, BackgroundClockService::class.java))
+        }
+
+        /**
+         * The activity that started it destroyed for good: its ViewModel is cleared and the game with it,
+         * and the notification went on counting past zero with a Pause that reached nothing. Only that
+         * activity's, so that another one -- opened from a shortcut -- does not end a game it does not hold.
+         */
+        fun stopIfStartedBy(context: Context) {
+            if (BackgroundClockLink.owner == System.identityHashCode(context)) stop(context)
         }
     }
 }

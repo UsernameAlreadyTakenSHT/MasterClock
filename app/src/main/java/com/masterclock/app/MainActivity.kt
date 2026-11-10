@@ -63,6 +63,12 @@ import kotlin.time.Duration.Companion.milliseconds
 private class PendingFileImport(val pkg: SharePackage, val archive: (() -> InputStream)?)
 
 class MainActivity : ComponentActivity() {
+    override fun onDestroy() {
+        super.onDestroy()
+        // Destroyed for good, not recreated: the game kept in the background went with the ViewModel.
+        if (!isChangingConfigurations) BackgroundClockService.stopIfStartedBy(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

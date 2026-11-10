@@ -67,6 +67,8 @@ class BackgroundClockFlowTest {
     fun leaveNothingBehind() {
         if (!FlavorConfig.hasFullSettingsTabs()) return
         InstrumentationRegistry.getInstrumentation().runOnMainSync { BackgroundClockService.stop(context) }
+        // A test that destroyed the activity has nothing to bring back; the next one resets on its way in.
+        if (rule.activityRule.scenario.state == Lifecycle.State.DESTROYED) return
         comeBack()
         rule.runOnUiThread { viewModel.resetAllSettings() }
     }
@@ -134,6 +136,18 @@ class BackgroundClockFlowTest {
         waitFor("the notification") { shownEnd() != null }
         val first = shownEnd()!!
         waitFor("the countdown redrawn for the next turn") { (shownEnd() ?: first) - first >= 2_000 }
+    }
+
+    @Test
+    fun theNotificationGoesWithTheActivityThatKeptTheGame() {
+        // Destroyed for good while away -- "Don't keep activities", or the system -- the ViewModel and
+        // its game go, and the notification went on counting past zero.
+        keepRunning()
+        startTheClock()
+        leave()
+        waitFor("the notification") { notificationShown() }
+        rule.activityRule.scenario.moveToState(Lifecycle.State.DESTROYED)
+        waitFor("the notification to go") { !notificationShown() }
     }
 
     @Test
