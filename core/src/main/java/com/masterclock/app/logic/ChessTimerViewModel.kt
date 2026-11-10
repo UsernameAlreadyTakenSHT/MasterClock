@@ -1726,6 +1726,19 @@ internal fun longerHistoryLimit(a: Int, b: Int): Int = if (a == -1 || b == -1) -
  */
 const val MAX_IMPORTED_EVENTS_PER_LOG = 2_000
 
+/** Places under [MAX_IMPORTED_EVENTS_PER_LOG] kept for the events that end a game; see [eventFitsLog]. */
+internal const val ENDING_EVENTS_HEADROOM = 8
+
+/**
+ * Whether a game's log holding [count] events takes [event]. A long game reaching the cap lost what
+ * ended it -- its FLAG, its PHASE "Finished", its RESET -- since they come last; those keep the last
+ * few places. The cap itself stands, since an import holds a log to it and would cut the same tail.
+ */
+internal fun eventFitsLog(count: Int, event: GameEvent): Boolean {
+    val ending = event.eventType == "FLAG" || event.eventType == "RESET" || (event.eventType == "PHASE" && event.detail == "Finished")
+    return count < if (ending) MAX_IMPORTED_EVENTS_PER_LOG else MAX_IMPORTED_EVENTS_PER_LOG - ENDING_EVENTS_HEADROOM
+}
+
 /**
  * Ceilings on the parts of an imported notebook that the UI composes eagerly.
  *
@@ -1882,9 +1895,9 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
  * duplicate key, so a crafted session would crash the screen the moment it was opened.
  *
  * Fresh ids on the way in, which is the same treatment [sanitizeImportedSettings] gives
- * [NotebookNote.id]. No cap on the number of games: the list renders lazily, and
- * [MAX_IMPORT_TEXT_BYTES] already bounds how much can arrive -- a limit here would be a number
- * invented to look thorough, and would silently drop a real user's own tally.
+ * [NotebookNote.id]. The games are held to [MAX_SCOREBOARD_GAMES], and it is the newest that are
+ * kept: the list is oldest first, and taking its first five thousand dropped, at the next launch,
+ * the games just played -- for good, since the next result saved the shortened list.
  *
  * The stored session goes through this too at every launch, since a restore is what usually wrote
  * it. Regenerating its ids there costs nothing: nothing refers to a scoreboard game by id but the
@@ -1995,7 +2008,7 @@ internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardS
     id = java.util.UUID.randomUUID().toString(),
     player1Name = session.player1Name.take(MAX_SCOREBOARD_TEXT_CHARS),
     player2Name = session.player2Name.take(MAX_SCOREBOARD_TEXT_CHARS),
-    games = session.games.take(MAX_SCOREBOARD_GAMES).map { game ->
+    games = session.games.takeLast(MAX_SCOREBOARD_GAMES).map { game ->
         game.copy(id = java.util.UUID.randomUUID().toString(), result = game.result.take(MAX_SCOREBOARD_TEXT_CHARS))
     },
 )
@@ -3863,7 +3876,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     private fun addEvent(event: GameEvent) {
         val log = currentLog ?: return
-        if (log.events.size >= MAX_IMPORTED_EVENTS_PER_LOG) return
+        if (!eventFitsLog(log.events.size, event)) return
         val updated = log.copy(
             events = log.events + event.copy(
                 moveNotation = event.moveNotation?.take(MAX_MOVE_NOTATION_CHARS),
@@ -4916,7 +4929,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun addScoreboardGame(result: String) {
         val current = _scoreboard.value
-        setScoreboard(current.copy(games = current.games + ScoreboardGame(result = result)))
+        // Held to the cap as the launch holds it, the oldest going first, so that nothing is kept in
+        // memory that the next launch would drop.
+        setScoreboard(current.copy(games = (current.games + ScoreboardGame(result = result)).takeLast(MAX_SCOREBOARD_GAMES)))
     }
 
     fun resetScoreboard() {
