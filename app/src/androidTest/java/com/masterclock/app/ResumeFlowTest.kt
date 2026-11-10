@@ -86,6 +86,46 @@ class ResumeFlowTest {
     }
 
     @Test
+    fun anArbitersPenaltyComesBackWithTheGame() {
+        // Given on a paused clock and the app then closed: pause() has nothing to do on a clock already
+        // paused, and the game came back from the save before the penalty.
+        assumeTrue(FlavorConfig.hasArbitre())
+        val first = ActivityScenario.launch(MainActivity::class.java)
+        val before = viewModelOf(first)
+        rule.waitUntil(TIMEOUT_MS) { before.isReady.value }
+        first.onActivity {
+            before.resetAllSettings()
+            before.reset()
+        }
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(hasContentDescription(say(R.string.timer_start))).fetchSemanticsNodes().isNotEmpty() }
+        tap(R.string.timer_start)
+        rule.waitUntil(TIMEOUT_MS) { before.uiState.value.activePlayer == 1 }
+        first.onActivity { before.startOrSwitch(1) }
+        rule.waitUntil(TIMEOUT_MS) { before.uiState.value.activePlayer == 2 }
+        tap(R.string.timer_pause)
+        rule.waitUntil(TIMEOUT_MS) { before.uiState.value.isPaused }
+        first.onActivity {
+            before.toggleArbitreMode()
+            before.adjustTime(1, -60_000)
+            before.toggleArbitreMode()
+        }
+        val penalised = before.uiState.value.players[0].timeRemainingMs
+        first.close()
+
+        val second = ActivityScenario.launch(MainActivity::class.java)
+        val after = viewModelOf(second)
+        rule.waitUntil(TIMEOUT_MS) { after.isReady.value }
+        rule.waitUntil(TIMEOUT_MS) { after.hasSavedClock.value }
+        tap(R.string.timer_arbitre)
+        val resume = hasText(say(R.string.timer_resume)) and hasClickAction()
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(resume).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNode(resume).performClick()
+        rule.waitUntil(TIMEOUT_MS) { after.uiState.value.activePlayer == 2 }
+        assertEquals("the penalty was lost", penalised, after.uiState.value.players[0].timeRemainingMs)
+        second.close()
+    }
+
+    @Test
     fun aNewGameLeavesTheInterruptedOneOnOfferAtFirst() {
         val first = ActivityScenario.launch(MainActivity::class.java)
         assumeTrue(FlavorConfig.hasArbitre())
