@@ -74,6 +74,16 @@ class ArbiterFlowTest {
         endTheGameAndWaitFor { events().any { it.eventType == "FLAG" && it.playerIndex == 2 } }
     }
 
+    @Test
+    fun aPenaltyThatEndsTheGameLeavesNothingToResume() {
+        // The pause wrote a save of the game in play; a penalty that flags the player ends it, and the
+        // panel went on offering to resume it as it stood before, the flag undone.
+        underArbiter(PlayerSettings(mode = TimerMode.SUDDEN_DEATH, initialTimeMs = 60_000))
+        rule.waitUntil(TIMEOUT_MS) { viewModel.hasSavedClock.value }
+        rule.runOnUiThread { viewModel.adjustTime(2, -120_000) }
+        rule.waitUntil(TIMEOUT_MS) { !viewModel.hasSavedClock.value }
+    }
+
     private companion object {
         const val TIMEOUT_MS = 10_000L
     }

@@ -1313,11 +1313,6 @@ data class GameLog(
 )
 
 /**
- * Whether something happened in a game, so that it belongs in the history: a move, a flag, a phase
- * change -- PHASES has no moves -- or, for a CHRONO that runs for everyone and takes no taps, its
- * clock having been started.
- */
-/**
  * These events with the last one noted [from] -- a move, or a board's move held for a press -- noted
  * [to] instead. A castle reported rook first reaches the log as the rook's move; see
  * [BoardDiffer.completesCastle].
@@ -1331,6 +1326,11 @@ internal fun List<GameEvent>.withLastNotationRenamed(from: String, to: String): 
     }
 }
 
+/**
+ * Whether something happened in a game, so that it belongs in the history: a move, a flag, a phase
+ * change -- PHASES has no moves -- or, for a CHRONO that runs for everyone and takes no taps, its
+ * clock having been started.
+ */
 internal fun GameLog.isWorthKeeping(): Boolean {
     val s1 = if (settings.differentSettingsPerPlayer) settings.p1Custom else settings.main
     // PHASES too: a single long phase reset before it ended logged no PHASE, and was dropped.
@@ -4670,7 +4670,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         val before = _uiState.value.players.getOrNull(playerIndex - 1)
         _uiState.update { state -> arbiterAdjustTime(state, playerIndex, amountMs, settings) }
+        logPenalty(before, playerIndex, settings)
+        // After what it logged: a save taken first had a time before the PERIOD or the FLAG, and
+        // resuming keeps only the events up to the save's time -- the penalty stood, its trace went.
         saveCorrection()
+    }
+
+    private fun logPenalty(before: PlayerState?, playerIndex: Int, settings: ChessClockSettings) {
         val after = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         if (before == null) return
         // A penalty goes where the time running out would, and is heard and logged as that is: a
@@ -4690,12 +4696,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * The arbiter's correction written down at once. The panel opens only on a paused clock, and the
      * save ran from the ticker and from pause(): a penalty given and the app then closed -- pause() has
      * nothing to do on a clock already paused -- came back from the save before it, the penalty gone.
-     * Not for a game that is over, or the panel would offer to resume a finished one.
+     *
+     * A correction that ends the game -- a penalty that flags the player -- clears the save instead, as
+     * every other ending does: the one pause() wrote stayed, and the panel offered to resume the game as
+     * it stood before the penalty, the flag undone.
      */
     private fun saveCorrection() {
         val state = _uiState.value
         if (!FlavorConfig.hasArbitre() || state.activePlayer == null) return
-        if (isGameOver(state, _settings.value.flagBehavior, _settings.value.numberOfPlayers)) return
+        if (isGameOver(state, _settings.value.flagBehavior, _settings.value.numberOfPlayers)) {
+            clearSavedClock()
+            return
+        }
         lastAutoSaveTime = SystemClock.elapsedRealtime()
         saveClockForLater()
     }
@@ -4710,13 +4722,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         val before = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         _uiState.update { state -> arbiterAdjustMoveCount(state, playerIndex, delta, settings) }
-        saveCorrection()
-        val after = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
+        val after = _uiState.value.players.getOrNull(playerIndex - 1)
         // A period the arbiter starts or undoes is in the log and announced, as one a press reaches.
-        if (after.currentPeriodIndex != before.currentPeriodIndex) {
+        if (after != null && after.currentPeriodIndex != before.currentPeriodIndex) {
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIndex, moveCount = after.moveCount, detail = "Arbiter: period ${after.currentPeriodIndex + 1} at move ${after.moveCount}"))
             if (settings.voiceAnnouncementsEnabled) voiceManager.speak(CoreR.string.voice_period, settings.voiceVolume, after.currentPeriodIndex + 1)
         }
+        // After the PERIOD it logged; see adjustTime.
+        saveCorrection()
     }
 
     /** Whether the game runs one clock for the table, which the arbiter's time goes to whoever it is given to. */
