@@ -4254,6 +4254,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // call logged another PAUSE -- which the reconstruction of older logs' move durations
         // reads as the start of a pause span.
         if (_uiState.value.isPaused && timerJob == null) return
+        val wasRunning = timerJob != null
         settleRunningClock()
         // The settling tick can end the game, which stops the ticker and clears the saved clock.
         val stillInPlay = timerJob != null
@@ -4261,7 +4262,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         timerJob = null
         if (pausedAt == null) pausedAt = SystemClock.elapsedRealtime()
         _uiState.update { it.copy(isPaused = true) }
-        addEvent(GameEvent(eventType = "PAUSE"))
+        // Not for a game that tick has just ended: a PAUSE was logged after its FLAG.
+        if (!(wasRunning && !stillInPlay)) addEvent(GameEvent(eventType = "PAUSE"))
         // The autosave ran from tick() alone, so a game paused and then killed -- which is what
         // leaving the app does, with pause-on-background on -- went back to the last save, up to
         // fifteen seconds earlier, and resuming cut the moves played since out of the history. A
@@ -4668,9 +4670,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         val before = _uiState.value.players.getOrNull(playerIndex - 1)
         _uiState.update { state -> arbiterAdjustTime(state, playerIndex, amountMs, settings) }
+        saveCorrection()
         val after = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         if (before == null) return
-        saveCorrection()
         // A penalty goes where the time running out would, and is heard and logged as that is: a
         // FIDE period gone, a byoyomi period lost, a flag. Only the state was stored -- a player
         // dropped from five byoyomi periods to two left no PERIOD in the log, and one flagged no FLAG.
@@ -4684,8 +4686,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    /** Whether the arbiter's ±1 move means anything for this player: FIDE periods ended by moves. */
-    fun isMoveCountAdjustable(playerIndex: Int): Boolean =
     /**
      * The arbiter's correction written down at once. The panel opens only on a paused clock, and the
      * save ran from the ticker and from pause(): a penalty given and the app then closed -- pause() has
@@ -4700,6 +4700,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         saveClockForLater()
     }
 
+    /** Whether the arbiter's ±1 move means anything for this player: FIDE periods ended by moves. */
+    fun isMoveCountAdjustable(playerIndex: Int): Boolean =
         getPlayerSettings(playerIndex).mode == TimerMode.FIDE_PERIODS && _settings.value.forcedMoveCounter
 
     /** The arbiter's correction to a player's move count; see [adjustFideMoveCount]. */
@@ -4708,9 +4710,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         val before = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         _uiState.update { state -> arbiterAdjustMoveCount(state, playerIndex, delta, settings) }
+        saveCorrection()
         val after = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         // A period the arbiter starts or undoes is in the log and announced, as one a press reaches.
-        saveCorrection()
         if (after.currentPeriodIndex != before.currentPeriodIndex) {
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIndex, moveCount = after.moveCount, detail = "Arbiter: period ${after.currentPeriodIndex + 1} at move ${after.moveCount}"))
             if (settings.voiceAnnouncementsEnabled) voiceManager.speak(CoreR.string.voice_period, settings.voiceVolume, after.currentPeriodIndex + 1)
