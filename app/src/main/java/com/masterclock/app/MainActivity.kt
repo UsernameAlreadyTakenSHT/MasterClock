@@ -102,10 +102,19 @@ class MainActivity : ComponentActivity() {
         // What the background notification shows, kept current while the app is away: a turn passed by
         // Shared (Auto) or a flag changes it, and a game no longer running ends the service. Collected on
         // the activity's own scope, which outlives its being on screen.
+        //
+        // Only by the activity that started the service. Two can be alive in one task -- one begun from
+        // a preset shortcut, the launcher's on top -- each with its own game, and the one beneath wrote
+        // its game over the other's: the notification flipped between the two, and a game paused there
+        // stopped the service keeping the one that was running.
         val clockModel = ViewModelProvider(this)[ChessTimerViewModel::class.java]
         lifecycleScope.launch {
             combine(clockModel.uiState, clockModel.settings) { state, settings -> backgroundClockOf(state, settings) }
-                .collect { clock -> if (BackgroundClockLink.clock.value != null) BackgroundClockLink.clock.value = clock }
+                .collect { clock ->
+                    if (BackgroundClockLink.clock.value != null && BackgroundClockLink.owner == System.identityHashCode(this@MainActivity)) {
+                        BackgroundClockLink.clock.value = clock
+                    }
+                }
         }
 
         enableEdgeToEdge()
