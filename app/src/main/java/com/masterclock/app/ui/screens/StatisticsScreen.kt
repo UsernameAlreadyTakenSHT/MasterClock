@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -159,12 +161,16 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
 
 @Composable
 fun StatisticsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () -> Unit) {
-    val stats = remember(history) { computeStatistics(history) }
-    val recentDurations = remember(history) {
-        history.maxByOrNull { it.startTime }?.let { moveDurations(it) }.orEmpty()
+    // Worked out off the main thread: every move of every game, sorted, where the screen was being
+    // opened -- with a long history, a screen that froze as it appeared. Null until it is ready.
+    val computed by produceState<Pair<GameStatistics, List<MoveDuration>>?>(initialValue = null, history) {
+        value = withContext(Dispatchers.Default) {
+            computeStatistics(history) to history.maxByOrNull { it.startTime }?.let { moveDurations(it) }.orEmpty()
+        }
     }
 
     ToolScaffold(title = stringResource(R.string.stats_title), onBack = onBack) { padding ->
+        val (stats, recentDurations) = computed ?: return@ToolScaffold
         if (stats.isEmpty) {
             Box(
                 Modifier.fillMaxSize().padding(padding).padding(32.dp),
