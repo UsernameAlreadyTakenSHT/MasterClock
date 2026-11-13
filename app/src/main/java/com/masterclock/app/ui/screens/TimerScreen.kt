@@ -537,8 +537,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     // Not during the pause between phases, which no beep counts down either: it flashed its last ten
     // seconds as if a phase were running out.
     val isLowTime = (isActive || runsForAll) && !isHidden && !playerState.isOutOfTime && !playerState.isInInterPhasePause && pSettings.mode != TimerMode.CHRONO_COUNTUP && lowTimeMs in 1..10000 && settings.flashOnLowTime
-    val infiniteTransition = rememberInfiniteTransition(label = "lowTimeFlash")
-    val flashAlpha by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
+    // Only while it flashes. The transition stood on every face for the whole game, flashing or not
+    // and with the setting off: a frame callback at every refresh of the screen, for each player.
+    val flashAlpha = if (isLowTime) lowTimeFlashAlpha() else 1f
 
     val activeColor = Color(settings.activeColor)
     val inactiveColor = Color(settings.inactiveColor)
@@ -758,6 +759,14 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     }
     BerserkControl(state, playerIndex, settings, contentRotation, onBerserk)
     }
+}
+
+/** The low-time flash, running only while the face that calls it is composed with it. */
+@Composable
+private fun lowTimeFlashAlpha(): Float {
+    val transition = rememberInfiniteTransition(label = "lowTimeFlash")
+    val alpha by transition.animateFloat(initialValue = 1f, targetValue = 0.5f, animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse), label = "flashAlpha")
+    return alpha
 }
 
 /** The way to go Berserk while a player can, and the mark of having done so; see goBerserk. */
