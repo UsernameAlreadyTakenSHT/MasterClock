@@ -147,9 +147,15 @@ fun ChessClockSettings.withSeatsForPlayers(): ChessClockSettings {
     return if (playerMapping.size == 4 && seated.sorted() == (1..n).toList()) this else copy(playerMapping = listOf(1, 2, 3, 4))
 }
 
-fun ChessClockSettings.wholeTableSettings(): ChessClockSettings =
-    if (differentSettingsPerPlayer && p1Custom.mode.isWholeTable) copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
-    else this
+fun ChessClockSettings.wholeTableSettings(): ChessClockSettings = when {
+    differentSettingsPerPlayer && p1Custom.mode.isWholeTable -> copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
+    // With per-player settings on, the clock runs on player 1's and [main] is what turning them off
+    // goes back to, which is player 1's too. It was left as it stood, and the screens that ask [main]
+    // what the game is could be told another game: a file with PHASES there and Fischer for each
+    // player drew one face for the table over a game of two.
+    differentSettingsPerPlayer && main != p1Custom -> copy(main = p1Custom)
+    else -> this
+}
 
 /**
  * What a screen reader should hear when the clock changes state.

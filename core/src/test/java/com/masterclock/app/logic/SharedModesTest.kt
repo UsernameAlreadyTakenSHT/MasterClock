@@ -55,7 +55,21 @@ class SharedModesTest {
 
     @Test
     fun `any other mode keeps its per-player settings`() {
-        val s = ChessClockSettings(differentSettingsPerPlayer = true, p1Custom = PlayerSettings(initialTimeMs = 300_000), p2Custom = PlayerSettings(initialTimeMs = 240_000))
+        val p1 = PlayerSettings(initialTimeMs = 300_000)
+        val s = ChessClockSettings(differentSettingsPerPlayer = true, main = p1, p1Custom = p1, p2Custom = PlayerSettings(initialTimeMs = 240_000))
         assertSame(s, s.wholeTableSettings())
+    }
+
+    @Test
+    fun `the main settings follow player 1 while each player has their own`() {
+        // What a file can hold and the app's own screens never write: PHASES for the table, and a
+        // Fischer game for each player. The screens ask the main settings what the game is.
+        val p1 = PlayerSettings(mode = TimerMode.FISCHER, initialTimeMs = 300_000)
+        val s = ChessClockSettings(differentSettingsPerPlayer = true, main = PlayerSettings(mode = TimerMode.PHASES), p1Custom = p1, p2Custom = p1.copy(initialTimeMs = 240_000))
+        val read = s.wholeTableSettings()
+        assertEquals(p1, read.main)
+        assertEquals(true, read.differentSettingsPerPlayer)
+        assertEquals(240_000L, read.p2Custom.initialTimeMs)
+        assertSame(read, read.wholeTableSettings())
     }
 }
