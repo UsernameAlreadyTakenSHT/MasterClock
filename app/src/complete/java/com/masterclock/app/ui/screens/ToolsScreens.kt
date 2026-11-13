@@ -40,6 +40,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
@@ -1510,7 +1512,12 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
     // The stroke under the finger is a list added to, not copied: each point of a drag made a new list
     // of every point before it. It stops, as the drawing does, where the store stops keeping them:
     // a longer stroke, or more strokes, were cut at the next launch with nothing said.
-    PersistDebounced(title to currentPaths) { (newTitle, paths) -> onUpdate { it.copy(title = newTitle, drawingPaths = paths) } }
+    // The canvas the strokes belong to, and the one on screen: on another, they are drawn to its scale
+    // and new ones are taken back to theirs. A drawing from before its canvas was kept takes this one's.
+    var drawnOn by remember { mutableStateOf(if (note.drawingWidth > 0f && note.drawingHeight > 0f) androidx.compose.ui.geometry.Size(note.drawingWidth, note.drawingHeight) else null) }
+    var canvas by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    val scale = drawnOn?.let { drawingScale(it.width, it.height, canvas.width.toFloat(), canvas.height.toFloat()) } ?: 1f
+    PersistDebounced(Triple(title, currentPaths, drawnOn)) { (newTitle, paths, size) -> onUpdate { it.copy(title = newTitle, drawingPaths = paths, drawingWidth = size?.width ?: it.drawingWidth, drawingHeight = size?.height ?: it.drawingHeight) } }
     ToolScaffold(title = stringResource(R.string.tools_draw_note), onBack = onBack, actions = { IconButton(onClick = { edit = edit.undo() }, enabled = edit.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }; IconButton(onClick = { edit = edit.clear() }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
@@ -1526,10 +1533,12 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
                     }
                 }
             }
-            Box(modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).pointerInput(isEraser, currentColor, currentWidth) { detectDragGestures(onDragStart = { offset -> activePoints.clear(); activePoints.add(offset.x to offset.y) }, onDrag = { change, _ -> if (activePoints.size < MAX_DRAWING_POINTS) activePoints.add(change.position.x to change.position.y) }, onDragEnd = { if (activePoints.isNotEmpty()) { if (currentPaths.size < MAX_DRAWING_PATHS) edit = edit.addStroke(DrawingPath(points = activePoints.toList(), color = currentColor, strokeWidth = currentWidth, isEraser = isEraser)); activePoints.clear() } }, onDragCancel = { activePoints.clear() }) }) {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).onSizeChanged { canvas = it }.pointerInput(isEraser, currentColor, currentWidth, scale) { detectDragGestures(onDragStart = { offset -> activePoints.clear(); activePoints.add(offset.x / scale to offset.y / scale) }, onDrag = { change, _ -> if (activePoints.size < MAX_DRAWING_POINTS) activePoints.add(change.position.x / scale to change.position.y / scale) }, onDragEnd = { if (activePoints.isNotEmpty()) { if (currentPaths.size < MAX_DRAWING_PATHS) { if (drawnOn == null && canvas != androidx.compose.ui.unit.IntSize.Zero) drawnOn = androidx.compose.ui.geometry.Size(canvas.width.toFloat(), canvas.height.toFloat()); edit = edit.addStroke(DrawingPath(points = activePoints.toList(), color = currentColor, strokeWidth = currentWidth / scale, isEraser = isEraser)) }; activePoints.clear() } }, onDragCancel = { activePoints.clear() }) }) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
+                    scale(scale, pivot = Offset.Zero) {
                     currentPaths.forEach { pathData -> if (pathData.points.size > 1) { val path = Path().apply { val first = pathData.points.first(); moveTo(first.first, first.second); pathData.points.drop(1).forEach { lineTo(it.first, it.second) } }; drawPath(path = path, color = if (pathData.isEraser) Color.White else Color(pathData.color), style = Stroke(width = pathData.strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)) } }
-                    if (activePoints.size > 1) { val path = Path().apply { val first = activePoints.first(); moveTo(first.first, first.second); activePoints.drop(1).forEach { lineTo(it.first, it.second) } }; drawPath(path = path, color = if (isEraser) Color.White else Color(currentColor), style = Stroke(width = currentWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
+                    if (activePoints.size > 1) { val path = Path().apply { val first = activePoints.first(); moveTo(first.first, first.second); activePoints.drop(1).forEach { lineTo(it.first, it.second) } }; drawPath(path = path, color = if (isEraser) Color.White else Color(currentColor), style = Stroke(width = currentWidth / scale, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
+                    }
                 }
             }
         }

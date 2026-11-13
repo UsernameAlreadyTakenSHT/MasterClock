@@ -68,4 +68,17 @@ class DrawingEditTest {
         assertEquals(30, edit.paths.size)
         assertTrue(edit.canUndo)
     }
+
+    @Test
+    fun `a drawing is shown whole on a canvas of another size`() {
+        // Its own canvas, and one from before canvases were kept: as it stands.
+        assertEquals(1f, drawingScale(1000f, 1500f, 1000f, 1500f), 0f)
+        assertEquals(1f, drawingScale(0f, 0f, 1000f, 1500f), 0f)
+        // A canvas twice as wide and three times as high: by the tighter side, nothing stretched.
+        assertEquals(2f, drawingScale(1000f, 1500f, 2000f, 4500f), 0f)
+        // A smaller one: shrunk to fit, nothing cut.
+        assertEquals(0.5f, drawingScale(1000f, 1500f, 500f, 900f), 0f)
+        // Not yet measured.
+        assertEquals(1f, drawingScale(1000f, 1500f, 0f, 0f), 0f)
+    }
 }

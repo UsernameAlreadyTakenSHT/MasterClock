@@ -851,6 +851,14 @@ data class NotebookNote(
     val audioPath: String? = null,
     val audioDurationMs: Long = 0,
     val drawingPaths: List<DrawingPath> = emptyList(),
+    /**
+     * The size of the canvas [drawingPaths] were drawn on, in its pixels, or zero for a drawing from
+     * before it was kept. The strokes are that canvas's own coordinates: opened on a screen of another
+     * size -- a backup restored on a tablet -- they were drawn as they stood, off to a corner or cut
+     * at the edge. See [drawingScale].
+     */
+    val drawingWidth: Float = 0f,
+    val drawingHeight: Float = 0f,
     val imagePath: String? = null,
     val videoPath: String? = null,
     val boardPosition: List<String> = List(64) { "" },
@@ -1499,6 +1507,9 @@ internal fun sanitizeNote(filesDir: java.io.File, note: NotebookNote, freshId: B
             drawingPaths = note.drawingPaths.take(MAX_IMPORTED_DRAWING_PATHS).map { stroke ->
                 stroke.copy(points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS))
             },
+            // A size no screen has, or none: the drawing is then shown as it stands.
+            drawingWidth = note.drawingWidth.takeIf { it.isFinite() && it in 0f..MAX_DRAWING_SIDE_PX } ?: 0f,
+            drawingHeight = note.drawingHeight.takeIf { it.isFinite() && it in 0f..MAX_DRAWING_SIDE_PX } ?: 0f,
             // The grid is laid out from boardVariant.side, so an imported list of any other length
             // means the tap and drag handlers index past its end the first time the board is
             // touched. Normalising here is what keeps the two in step; the editor's own resize
@@ -1788,6 +1799,9 @@ const val MAX_NOTE_TITLE_CHARS = 200
 const val MAX_NOTE_CONTENT_CHARS = 100_000
 private const val MAX_IMPORTED_NOTE_TITLE_CHARS = MAX_NOTE_TITLE_CHARS
 private const val MAX_IMPORTED_NOTE_CONTENT_CHARS = MAX_NOTE_CONTENT_CHARS
+/** More pixels than any canvas is across. */
+private const val MAX_DRAWING_SIDE_PX = 100_000f
+
 /** The strokes a drawing keeps and the points a stroke keeps; public so the editor stops there. */
 const val MAX_DRAWING_PATHS = 5_000
 const val MAX_DRAWING_POINTS = 10_000

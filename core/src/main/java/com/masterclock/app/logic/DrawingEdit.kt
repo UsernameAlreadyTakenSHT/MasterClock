@@ -34,3 +34,12 @@ data class DrawingEdit(
     private fun record(next: List<DrawingPath>) =
         DrawingEdit(paths = next, history = (history + listOf(paths)).takeLast(MAX_DRAWING_HISTORY))
 }
+
+/**
+ * How much a drawing made on a canvas of [drawnWidth] by [drawnHeight] is scaled to show whole on
+ * one of [canvasWidth] by [canvasHeight]: by the tighter side, so nothing is cut and nothing is
+ * stretched. 1 where either size is unknown, which is a drawing from before its canvas was kept.
+ */
+fun drawingScale(drawnWidth: Float, drawnHeight: Float, canvasWidth: Float, canvasHeight: Float): Float =
+    if (drawnWidth <= 0f || drawnHeight <= 0f || canvasWidth <= 0f || canvasHeight <= 0f) 1f
+    else minOf(canvasWidth / drawnWidth, canvasHeight / drawnHeight)
