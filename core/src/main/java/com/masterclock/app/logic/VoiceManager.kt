@@ -36,20 +36,39 @@ private const val TAG = "VoiceManager"
  *
  * The voice is now the device's language when the engine has it, English otherwise, then whatever
  * the engine offers, and the sentences are read from resources in whichever language that turned
- * out to be, so the words always match the voice saying them. [isAvailable] says whether there is a
+ * out to be, so the words always match the voice saying them. [hasNoVoice] says when there is no
  * voice at all.
+ *
+ * The engine is started when it is first needed, by [start] or by something to say. It was started
+ * with the clock, at every launch of every build: a service bound for announcements that are off by
+ * default, and for good in the builds whose settings cannot turn them on.
  */
 class VoiceManager(private val context: Context) : TextToSpeech.OnInitListener {
-    private var tts: TextToSpeech? = TextToSpeech(context, this)
+    private var tts: TextToSpeech? = null
+    private var started = false
     private var speechResources: Resources = context.resources
 
     /** False until the engine is up with a usable language, and for good if it never is. */
-    var isAvailable = false
+    private var isAvailable = false
+
+    /** True once the engine has answered and there is no voice to speak with. */
+    var hasNoVoice = false
         private set
+
+    /** What was to be said while the engine was starting; the latest only, as the queue flushes. */
+    private var waiting: (() -> Unit)? = null
+
+    /** Starts the engine, once. Called ahead of the first announcement where one is expected. */
+    fun start() {
+        if (started) return
+        started = true
+        tts = TextToSpeech(context, this)
+    }
 
     override fun onInit(status: Int) {
         if (status != TextToSpeech.SUCCESS) {
             Log.w(TAG, "Speech engine failed to start: $status")
+            noVoice()
             return
         }
         val engine = tts ?: return
@@ -66,10 +85,18 @@ class VoiceManager(private val context: Context) : TextToSpeech.OnInitListener {
             if (engine.setLanguage(locale) >= TextToSpeech.LANG_AVAILABLE) {
                 speechResources = resourcesFor(locale)
                 isAvailable = true
+                waiting?.invoke()
+                waiting = null
                 return
             }
         }
         Log.w(TAG, "Speech engine has no usable voice")
+        noVoice()
+    }
+
+    private fun noVoice() {
+        hasNoVoice = true
+        waiting = null
     }
 
     private fun resourcesFor(locale: Locale): Resources {
@@ -77,20 +104,34 @@ class VoiceManager(private val context: Context) : TextToSpeech.OnInitListener {
         return context.createConfigurationContext(config).resources
     }
 
+    /** Says it now, or as soon as the engine is up if this is what started it. */
+    private fun whenReady(say: () -> Unit) {
+        start()
+        when {
+            isAvailable -> say()
+            !hasNoVoice -> waiting = say
+        }
+    }
+
     /** Speaks one of the announcement strings, in the voice's own language. */
     fun speak(@StringRes text: Int, volume: Float, vararg args: Any) {
-        if (isAvailable) speak(speechResources.getString(text, *args), volume)
+        // The words are read once the voice is known: its language decides them.
+        whenReady { utter(speechResources.getString(text, *args), volume) }
     }
 
     /** Speaks text as given -- a phase name the user typed, which has no translation. */
     fun speak(text: String, volume: Float) {
-        if (!isAvailable) return
+        whenReady { utter(text, volume) }
+    }
+
+    private fun utter(text: String, volume: Float) {
         val params = Bundle()
         params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume)
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, params, null)
     }
 
     fun release() {
+        waiting = null
         tts?.stop()
         tts?.shutdown()
         tts = null

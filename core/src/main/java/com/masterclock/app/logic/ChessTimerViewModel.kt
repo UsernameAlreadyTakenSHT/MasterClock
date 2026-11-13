@@ -3699,6 +3699,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * arriving at startup would be applied against defaults and then
      * silently overwritten when DataStore resolves. Holding the id until the load finishes makes
      * that ordering explicit rather than leaving it to composition timing.
+            // Ahead of the first announcement, where there will be some; see VoiceManager.
+            if (savedSettings.voiceAnnouncementsEnabled) voiceManager.start()
      */
     fun applyShortcut(id: String) {
         if (!isLoaded) {
@@ -4568,6 +4570,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // before it began -- and a CHRONO countdown flagged at once.
                 _uiState.value = ChessClockState(players = initialStates.map { it.toState() }, globalTimeMs = initialGlobalTimeMs(s1))
             } else {
+        if (newSettings.voiceAnnouncementsEnabled && !oldSettings.voiceAnnouncementsEnabled) voiceManager.start()
+
                 _uiState.value = createInitialState(newSettings)
             }
         }
@@ -4677,7 +4681,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     fun previewVoice(): Boolean {
         voiceManager.speak(CoreR.string.voice_test, settings.value.voiceVolume)
-        return voiceManager.isAvailable
+        // Known to be missing, that is: an engine still starting says the test as soon as it is up.
+        return !voiceManager.hasNoVoice
     }
 
     /**
