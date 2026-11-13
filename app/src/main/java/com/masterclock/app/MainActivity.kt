@@ -31,6 +31,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
 import androidx.lifecycle.lifecycleScope
@@ -63,7 +64,6 @@ import kotlin.time.Duration.Companion.milliseconds
 private class PendingFileImport(val pkg: SharePackage, val archive: (() -> InputStream)?)
 
 class MainActivity : ComponentActivity() {
-    override fun onDestroy() {
     /**
      * The game this activity holds, kept from onCreate. Asked of the ViewModelProvider in onDestroy, it
      * was another one: the store is cleared by then, and the provider made a new ViewModel in it -- one
@@ -71,6 +71,7 @@ class MainActivity : ComponentActivity() {
      */
     private var clockModel: ChessTimerViewModel? = null
 
+    override fun onDestroy() {
         super.onDestroy()
         // Destroyed for good, not recreated: the game kept in the background went with the ViewModel.
         if (!isChangingConfigurations) clockModel?.let { BackgroundClockService.stopIfKeeping(this, it) }
@@ -675,15 +676,21 @@ class MainActivity : ComponentActivity() {
                                 TextButton(onClick = {
                                     pendingFileImport = null
                                     val pkg = pending.pkg
-                                    scope.launch(Dispatchers.IO) {
+                                    val appContext = context.applicationContext
+                                    val omniModel = ViewModelProvider(this@MainActivity)[OmniTimerViewModel::class.java]
+                                    // On the ViewModel's scope, which a recreation does not cancel. The
+                                    // screen's was: a tablet turned or the theme changed mid-restore
+                                    // abandoned it, unannounced, with media already in place and none
+                                    // of the notes that point at them.
+                                    timerViewModel.viewModelScope.launch(Dispatchers.IO) {
                                         try {
                                             // A backup's media is written only now, once the user
                                             // has said yes.
                                             pending.archive?.let { open ->
                                                 ZipBackupManager.restoreMedia(
                                                     open = open,
-                                                    destinations = ZipBackupManager.restoreDestinations(context.filesDir, timerViewModel.settings.value.notebookNotes, pkg.settings.notebookNotes),
-                                                    stagingDir = ZipBackupManager.newStagingDir(context.filesDir),
+                                                    destinations = ZipBackupManager.restoreDestinations(appContext.filesDir, timerViewModel.settings.value.notebookNotes, pkg.settings.notebookNotes),
+                                                    stagingDir = ZipBackupManager.newStagingDir(appContext.filesDir),
                                                 )
                                             }
                                             withContext(Dispatchers.Main) {
@@ -701,14 +708,16 @@ class MainActivity : ComponentActivity() {
                                                 // The Omni ViewModel is activity-scoped like this
                                                 // one, so this is the instance its screens use.
                                                 if (pending.archive != null) pkg.omniSettings?.let { omni ->
-                                                    ViewModelProvider(this@MainActivity)[OmniTimerViewModel::class.java].restoreOmniSettings(omni)
+                                                    omniModel.restoreOmniSettings(omni)
                                                 }
-                                                Toast.makeText(context, importOkText, Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(appContext, importOkText, Toast.LENGTH_SHORT).show()
                                             }
+                                        } catch (e: CancellationException) {
+                                            throw e
                                         } catch (e: Exception) {
                                             Log.w("MainActivity", "Failed to import file", e)
                                             withContext(Dispatchers.Main) {
-                                                Toast.makeText(context, importFailedText, Toast.LENGTH_LONG).show()
+                                                Toast.makeText(appContext, importFailedText, Toast.LENGTH_LONG).show()
                                             }
                                         }
                                     }
