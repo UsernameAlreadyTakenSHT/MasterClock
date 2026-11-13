@@ -1,5 +1,6 @@
 package com.masterclock.app.ui.screens
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.layout
@@ -63,14 +64,16 @@ fun TimerScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState()
-    var showResetDialog by remember { mutableStateOf(value = false) }
-    var showRerollDialog by remember { mutableStateOf(value = false) }
+    // Saved across a recreation -- a tablet turning, which ignores the portrait lock, or the theme
+    // changing -- which closed them as if Cancel had been pressed.
+    var showResetDialog by rememberSaveable { mutableStateOf(value = false) }
+    var showRerollDialog by rememberSaveable { mutableStateOf(value = false) }
     // Berserk halves a clock and cannot be taken back, and its button sits on the face its player
     // presses to move: a press meant for the clock, a little off, cost half the game's time.
     // Who asked, and which way their face is turned: the question is theirs, and in the default layout
     // player 1's face is upside down. Turned with the clock as Reset's is, it read the right way up for
     // the opponent and upside down for the one deciding.
-    var berserkAsked by remember { mutableStateOf<Pair<Int, Float>?>(null) }
+    var berserkAsked by rememberSaveable { mutableStateOf<Pair<Int, Float>?>(null) }
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val showPresets = remember { FlavorConfig.hasPresets() }
