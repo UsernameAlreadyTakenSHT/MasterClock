@@ -32,7 +32,11 @@ import kotlinx.coroutines.launch
 object BackgroundClockLink {
     val clock = MutableStateFlow<BackgroundClock?>(null)
     @Volatile var pause: (() -> Unit)? = null
-    /** The activity that started the service, by identity: its ViewModel is the game being kept. */
+    /**
+     * The game being kept, by its ViewModel's identity. The activity's was used, and an activity is
+     * recreated by a theme change while the game goes on in the same ViewModel; and a second activity,
+     * opened from a shortcut, stopped on its resume the service another's game was kept by.
+     */
     @Volatile var owner: Int? = null
 }
 
@@ -136,8 +140,8 @@ class BackgroundClockService : Service() {
         private const val ACTION_PAUSE = "com.masterclock.app.action.PAUSE_BACKGROUND_CLOCK"
 
         /** Starts the service for [clock], as the app leaves the screen with it running. */
-        fun start(context: Context, clock: BackgroundClock, pause: () -> Unit) {
-            BackgroundClockLink.owner = System.identityHashCode(context)
+        fun start(context: Context, game: Any, clock: BackgroundClock, pause: () -> Unit) {
+            BackgroundClockLink.owner = System.identityHashCode(game)
             BackgroundClockLink.pause = pause
             BackgroundClockLink.clock.value = clock
             // Allowed from ON_PAUSE, while the activity is still the one in front. Should Android refuse
@@ -155,12 +159,13 @@ class BackgroundClockService : Service() {
         }
 
         /**
-         * The activity that started it destroyed for good: its ViewModel is cleared and the game with it,
-         * and the notification went on counting past zero with a Pause that reached nothing. Only that
-         * activity's, so that another one -- opened from a shortcut -- does not end a game it does not hold.
+         * Ends it if it keeps [game]: back in front with that game, or its activity destroyed for good,
+         * the ViewModel and the game cleared with it -- the notification went on counting past zero with a
+         * Pause that reached nothing. Only that game's, so that another activity, opened from a shortcut,
+         * does not end a game it does not hold.
          */
-        fun stopIfStartedBy(context: Context) {
-            if (BackgroundClockLink.owner == System.identityHashCode(context)) stop(context)
+        fun stopIfKeeping(context: Context, game: Any) {
+            if (BackgroundClockLink.owner == System.identityHashCode(game)) stop(context)
         }
     }
 }

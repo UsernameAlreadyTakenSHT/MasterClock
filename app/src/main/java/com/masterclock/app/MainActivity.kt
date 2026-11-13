@@ -64,9 +64,16 @@ private class PendingFileImport(val pkg: SharePackage, val archive: (() -> Input
 
 class MainActivity : ComponentActivity() {
     override fun onDestroy() {
+    /**
+     * The game this activity holds, kept from onCreate. Asked of the ViewModelProvider in onDestroy, it
+     * was another one: the store is cleared by then, and the provider made a new ViewModel in it -- one
+     * the service was not keeping, so the notification stayed, and one nothing would ever clear.
+     */
+    private var clockModel: ChessTimerViewModel? = null
+
         super.onDestroy()
         // Destroyed for good, not recreated: the game kept in the background went with the ViewModel.
-        if (!isChangingConfigurations) BackgroundClockService.stopIfStartedBy(this)
+        if (!isChangingConfigurations) clockModel?.let { BackgroundClockService.stopIfKeeping(this, it) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,11 +114,11 @@ class MainActivity : ComponentActivity() {
         // a preset shortcut, the launcher's on top -- each with its own game, and the one beneath wrote
         // its game over the other's: the notification flipped between the two, and a game paused there
         // stopped the service keeping the one that was running.
-        val clockModel = ViewModelProvider(this)[ChessTimerViewModel::class.java]
+        val clockModel = ViewModelProvider(this)[ChessTimerViewModel::class.java].also { this.clockModel = it }
         lifecycleScope.launch {
             combine(clockModel.uiState, clockModel.settings) { state, settings -> backgroundClockOf(state, settings) }
                 .collect { clock ->
-                    if (BackgroundClockLink.clock.value != null && BackgroundClockLink.owner == System.identityHashCode(this@MainActivity)) {
+                    if (BackgroundClockLink.clock.value != null && BackgroundClockLink.owner == System.identityHashCode(clockModel)) {
                         BackgroundClockLink.clock.value = clock
                     }
                 }
@@ -357,12 +364,12 @@ class MainActivity : ComponentActivity() {
                             timerViewModel.pause()
                         } else if (settings.runsInBackground()) {
                             backgroundClockOf(timerViewModel.uiState.value, settings)?.let { clock ->
-                                BackgroundClockService.start(this@MainActivity, clock) { timerViewModel.pause() }
+                                BackgroundClockService.start(this@MainActivity, timerViewModel, clock) { timerViewModel.pause() }
                             }
                         }
                     }
                     // In front again: the clock is on the screen, and the notification goes.
-                    if (event == Lifecycle.Event.ON_RESUME) BackgroundClockService.stop(this@MainActivity)
+                    if (event == Lifecycle.Event.ON_RESUME) BackgroundClockService.stopIfKeeping(this@MainActivity, timerViewModel)
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose {
