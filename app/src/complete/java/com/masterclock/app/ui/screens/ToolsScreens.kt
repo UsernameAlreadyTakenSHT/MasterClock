@@ -1217,9 +1217,17 @@ private fun <T> PersistDebounced(value: T, onPersist: (T) -> Unit) {
     }
 }
 
+// Compiled once. They were compiled inside the function, which runs at every keystroke in a note:
+// six patterns built again for each character typed.
+private val boldRegex = Regex("\\*\\*(.*?)\\*\\*")
+private val italicRegex = Regex("\\*(.*?)\\*")
+private val underlineRegex = Regex("<u>(.*?)</u>")
+private val h1Regex = Regex("^# (.*)$", RegexOption.MULTILINE)
+private val h2Regex = Regex("^## (.*)$", RegexOption.MULTILINE)
+private val colorRegex = Regex("<color:([0-9A-F]{8})>(.*?)</color>")
+
 fun parseMarkdownToAnnotatedString(text: String): AnnotatedString {
     return buildAnnotatedString {
-        val boldRegex = Regex("\\*\\*(.*?)\\*\\*"); val italicRegex = Regex("\\*(.*?)\\*"); val underlineRegex = Regex("<u>(.*?)</u>"); val h1Regex = Regex("^# (.*)$", RegexOption.MULTILINE); val h2Regex = Regex("^## (.*)$", RegexOption.MULTILINE); val colorRegex = Regex("<color:([0-9A-F]{8})>(.*?)</color>")
         append(text)
         // The markers of what is formatted are hidden, and those alone. Every '*' and '#' was, and the
         // "[ ]" of a checkbox, which nothing draws as a box: "Game #3" lost its '#', a lone '*' its
