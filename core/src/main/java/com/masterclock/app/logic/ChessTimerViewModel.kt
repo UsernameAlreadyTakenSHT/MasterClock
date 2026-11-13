@@ -1769,8 +1769,11 @@ const val MAX_NOTE_TITLE_CHARS = 200
 const val MAX_NOTE_CONTENT_CHARS = 100_000
 private const val MAX_IMPORTED_NOTE_TITLE_CHARS = MAX_NOTE_TITLE_CHARS
 private const val MAX_IMPORTED_NOTE_CONTENT_CHARS = MAX_NOTE_CONTENT_CHARS
-private const val MAX_IMPORTED_DRAWING_PATHS = 5_000
-private const val MAX_IMPORTED_DRAWING_POINTS = 10_000
+/** The strokes a drawing keeps and the points a stroke keeps; public so the editor stops there. */
+const val MAX_DRAWING_PATHS = 5_000
+const val MAX_DRAWING_POINTS = 10_000
+private const val MAX_IMPORTED_DRAWING_PATHS = MAX_DRAWING_PATHS
+private const val MAX_IMPORTED_DRAWING_POINTS = MAX_DRAWING_POINTS
 
 /**
  * A game has one time control, and a period or phase is a thing a person types in one at a time.
