@@ -3588,7 +3588,37 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             Log.w("ChessTimerViewModel", "History has a row too large to read", e)
             gameDao.getRecentLogsUpTo(effective, MAX_READABLE_ROW_BYTES)
         }
-        return withContext(Dispatchers.Default) { entities.map { converters.toGameLog(it) } }
+        return withContext(Dispatchers.Default) {
+            // A game already decoded is taken as it is, if its row has not changed. The history is
+            // read again at the end of every game, and every game in it was decoded again each time:
+            // three JSON columns a row, up to ten thousand rows with the limit off.
+            val known = decodedHistory
+            val decoded = entities.associate { entity ->
+                val mark = RowMark(entity)
+                val kept = known[entity.id]?.takeIf { it.first == mark }
+                entity.id to (kept ?: (mark to converters.toGameLog(entity)))
+            }
+            decodedHistory = decoded
+            entities.map { decoded.getValue(it.id).second }
+        }
+    }
+
+    /**
+     * The rows last read with the games decoded from them; see [loadHistory]. Replaced whole, never
+     * changed in place: two reads at once each leave a complete map, and the later one stays.
+     */
+    @Volatile
+    private var decodedHistory: Map<String, Pair<RowMark, GameLog>> = emptyMap()
+
+    /**
+     * What tells a row from the one decoded before, without keeping the row: its text is as large as
+     * the game, and kept beside each game it doubled what the history holds in memory.
+     */
+    private data class RowMark(val startTime: Long, val imported: Boolean, val settings: Int, val events: Int, val eventsLength: Int, val initialStates: Int) {
+        constructor(entity: com.masterclock.app.data.GameLogEntity) : this(
+            entity.startTime, entity.imported, entity.settingsJson.hashCode(), entity.eventsJson.hashCode(),
+            entity.eventsJson.length, entity.initialStatesJson.hashCode(),
+        )
     }
 
     /**
@@ -3669,6 +3699,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
             _settings.value = savedSettings
             soundManager.loadSounds(savedSettings)
+            // Ahead of the first announcement, where there will be some; see VoiceManager.
+            if (savedSettings.voiceAnnouncementsEnabled) voiceManager.start()
             _uiState.value = createInitialState(savedSettings)
             // Sanitised like an import: it is the same shape of data, and a backup restore is what
             // usually put it there.
@@ -3699,8 +3731,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * arriving at startup would be applied against defaults and then
      * silently overwritten when DataStore resolves. Holding the id until the load finishes makes
      * that ordering explicit rather than leaving it to composition timing.
-            // Ahead of the first announcement, where there will be some; see VoiceManager.
-            if (savedSettings.voiceAnnouncementsEnabled) voiceManager.start()
      */
     fun applyShortcut(id: String) {
         if (!isLoaded) {
@@ -4540,6 +4570,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             soundManager.setVolume(newSettings.soundsVolume)
         }
 
+        if (newSettings.voiceAnnouncementsEnabled && !oldSettings.voiceAnnouncementsEnabled) voiceManager.start()
+
         val coreChanged = settingsEndTheGame(oldSettings, newSettings) || initialStates != null || newGame
 
         if (coreChanged) {
@@ -4570,8 +4602,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // before it began -- and a CHRONO countdown flagged at once.
                 _uiState.value = ChessClockState(players = initialStates.map { it.toState() }, globalTimeMs = initialGlobalTimeMs(s1))
             } else {
-        if (newSettings.voiceAnnouncementsEnabled && !oldSettings.voiceAnnouncementsEnabled) voiceManager.start()
-
                 _uiState.value = createInitialState(newSettings)
             }
         }
