@@ -4742,7 +4742,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * left its photos, recordings and videos on disk with nothing pointing at them.
      */
     fun resetAllSettings() {
-        updateSettings(settingsAfterReset(_settings.value))
+        val before = _settings.value
+        updateSettings(settingsAfterReset(before))
+        // The custom sounds are forgotten, and the leave to read them with them: kept, each reset
+        // left four more grants held for files the app no longer names, towards the limit Android
+        // sets on them.
+        val resolver = getApplication<Application>().contentResolver
+        listOfNotNull(before.customBeepUri, before.customGongUri, before.customFinalBeepUri, before.customSwitchUri).distinct().forEach { uri ->
+            runCatching { resolver.releasePersistableUriPermission(android.net.Uri.parse(uri), android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        }
     }
 
     fun adjustTime(playerIndex: Int, amountMs: Long) {
