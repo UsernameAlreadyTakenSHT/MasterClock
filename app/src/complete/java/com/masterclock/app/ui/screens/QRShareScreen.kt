@@ -2,7 +2,8 @@ package com.masterclock.app.ui.screens
 
 import android.graphics.Bitmap
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.set
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,8 +28,10 @@ fun QRShareScreen(
     data: String,
     onBack: () -> Unit
 ) {
-    val qrBitmap = remember(data) {
-        generateQRCode(data)
+    // Drawn off the main thread: a quarter of a million pixels, set one by one where the screen
+    // was being opened. Null while it is drawn, which is not the same as a code that cannot be.
+    val qr by produceState<QrImage?>(initialValue = null, data) {
+        value = withContext(Dispatchers.Default) { QrImage(generateQRCode(data)) }
     }
 
     ToolScaffold(
@@ -60,7 +63,9 @@ fun QRShareScreen(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 tonalElevation = 2.dp
             ) {
-                qrBitmap?.let {
+                val qrBitmap = qr?.bitmap
+                if (qr == null) Box(Modifier.fillMaxSize())
+                else qrBitmap?.let {
                     Image(
                         bitmap = it.asImageBitmap(),
                         contentDescription = stringResource(R.string.qr_code),
@@ -95,6 +100,9 @@ fun QRShareScreen(
     }
 }
 
+/** A code once drawn: its image, or none when the content does not fit one. */
+private class QrImage(val bitmap: Bitmap?)
+
 private fun generateQRCode(content: String): Bitmap? {
     return try {
         val writer = QRCodeWriter()
@@ -106,13 +114,10 @@ private fun generateQRCode(content: String): Bitmap? {
         val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, 512, 512, hints)
         val width = bitMatrix.width
         val height = bitMatrix.height
-        val bitmap = createBitmap(width, height, Bitmap.Config.RGB_565)
-        for (x in 0 until width) {
-            for (y in 0 until height) {
-                bitmap[x, y] = if (bitMatrix.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-            }
+        val pixels = IntArray(width * height) { i ->
+            if (bitMatrix.get(i % width, i / width)) android.graphics.Color.BLACK else android.graphics.Color.WHITE
         }
-        bitmap
+        createBitmap(width, height, Bitmap.Config.RGB_565).apply { setPixels(pixels, 0, width, 0, 0, width, height) }
     } catch (_: Exception) {
         null
     }

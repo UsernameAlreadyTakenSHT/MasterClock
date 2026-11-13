@@ -99,10 +99,25 @@ fun QRReceiveScreen(
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .build()
 
+                            // One reader and one buffer for every frame, on the analyser's single
+                            // thread. Each frame built a reader for every kind of barcode and a new
+                            // array the size of the image, thirty times a second while the camera
+                            // looked for a code; this app's are QR codes.
+                            // Codes from this app now carry an ECI marker for UTF-8; the character
+                            // set is for codes that state none. Older ones from this app hold only
+                            // what survived ISO-8859-1 -- anything else was already '?' -- and
+                            // JSON's ASCII reads the same either way.
+                            val reader = MultiFormatReader().apply {
+                                setHints(mapOf(
+                                    DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+                                    DecodeHintType.CHARACTER_SET to Charsets.UTF_8.name(),
+                                ))
+                            }
+                            var data = ByteArray(0)
                             imageAnalysis.setAnalyzer(analysisExecutor) { imageProxy ->
                                 val plane = imageProxy.planes[0]
                                 val buffer = plane.buffer
-                                val data = ByteArray(buffer.remaining())
+                                if (data.size != buffer.remaining()) data = ByteArray(buffer.remaining())
                                 buffer.get(data)
 
                                 // A row of the Y plane is rowStride bytes long, which is the image
@@ -117,18 +132,14 @@ fun QRReceiveScreen(
                                 val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
                                 
                                 try {
-                                    val reader = MultiFormatReader()
-                                    // Codes from this app now carry an ECI marker for UTF-8; this
-                                    // is for codes that state no set. Older ones from this app hold
-                                    // only what survived ISO-8859-1 -- anything else was already
-                                    // '?' -- and JSON's ASCII reads the same either way.
-                                    val result = reader.decode(binaryBitmap, mapOf(DecodeHintType.CHARACTER_SET to Charsets.UTF_8.name()))
+                                    val result = reader.decodeWithState(binaryBitmap)
                                     if (hasScanned.compareAndSet(false, true)) {
                                         currentOnResult(result.text)
                                     }
                                 } catch (_: Exception) {
                                     // No code found
                                 } finally {
+                                    reader.reset()
                                     imageProxy.close()
                                 }
                             }
