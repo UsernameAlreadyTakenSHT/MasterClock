@@ -1911,7 +1911,9 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
 internal fun sanitizeImportedPresets(context: android.content.Context, presets: List<SavedPreset>, cap: Int = MAX_IMPORTED_PRESETS): List<SavedPreset> {
     val grants = persistedReadGrants(context)
     // A blank name showed as an empty tile, and as Delete ""?; such a preset is not worth keeping.
-    return presets.filter { it.name.isNotBlank() }.take(cap).map { preset ->
+    // The newest, should a backup hold more than the cap: presets are saved in order, and taking the
+    // first kept the oldest -- restored onto a new phone, the newest went under "Import successful".
+    return presets.filter { it.name.isNotBlank() }.takeLast(cap).map { preset ->
         preset.copy(
             // Kept, so a restore onto the same device doubles nothing -- unless it is no id this
             // app could have made: it was unbounded, and it becomes a launcher shortcut's id.
@@ -1937,7 +1939,8 @@ internal fun mergeImportedPresets(local: List<SavedPreset>, imported: List<Saved
     val present = local.mapTo(HashSet()) { it.id }
     // Held to the cap an import applies, the device's own first: past it, restoring this backup
     // elsewhere kept the first 500 and silently dropped the newest.
-    return (local + imported.filter { present.add(it.id) }).take(MAX_IMPORTED_PRESETS.coerceAtLeast(local.size))
+    // Of the restored ones, the newest that fit; the device's own are kept whole.
+    return local + imported.filter { present.add(it.id) }.takeLast((MAX_IMPORTED_PRESETS - local.size).coerceAtLeast(0))
 }
 
 /** A preset's name: what the tile has room for and then some; saving, renaming and restoring all hold to it. */
@@ -1998,7 +2001,8 @@ internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings 
 internal fun mergeImportedScoreboard(local: ScoreboardSession, imported: ScoreboardSession): ScoreboardSession {
     val seen = local.games.map { it.result to it.timestamp }.toHashSet()
     // Within the cap, the device's own first, as presets and notes are merged.
-    val added = imported.games.filter { seen.add(it.result to it.timestamp) }.take((MAX_SCOREBOARD_GAMES - local.games.size).coerceAtLeast(0))
+    // Of the imported ones, the newest that fit, as sanitizeImportedScoreboard keeps them.
+    val added = imported.games.filter { seen.add(it.result to it.timestamp) }.takeLast((MAX_SCOREBOARD_GAMES - local.games.size).coerceAtLeast(0))
     return if (added.isEmpty()) local else local.copy(games = (local.games + added).sortedBy { it.timestamp })
 }
 
