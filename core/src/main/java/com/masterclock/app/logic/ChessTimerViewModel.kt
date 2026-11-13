@@ -1986,6 +1986,9 @@ const val MAX_PRESET_NAME_CHARS = 200
  * Omni settings from a backup. The engine already falls back to a default for every list it finds
  * empty, so what is bounded here is what the settings page composes from: one row per player, per
  * game, per round, per turn and per phase.
+ *
+ * Durations are held above as the clock's are. They were held to zero or more and no further: one
+ * near the largest number there is overflowed as banked time was added to it.
  */
 internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings = settings.copy(
     // The settings page's slider runs from 1 to 20.
@@ -2013,9 +2016,6 @@ internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings 
                         turn.copy(
                             durationMs = turn.durationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
                             phases = turn.phases.take(MAX_IMPORTED_PERIODS).map { phase ->
- *
- * Durations are held above as the clock's are. They were held to zero or more and no further: one
- * near the largest number there is overflowed as banked time was added to it.
                                 phase.copy(
                                     name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
                                     durationMs = phase.durationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
@@ -3180,6 +3180,34 @@ internal fun phaseTap(state: ChessClockState, tapped: PlayerState, settings: Che
  * [cue] is the states the beeps and the voice compare, [coupled] what a coupled mode added to it,
  * and [phaseChangedFrom] player 1 as they stood when this tick took PHASES to another stage.
  */
+/**
+ * How much of [delta] a clock that passes the turn by itself can take in one step: up to the end of
+ * the turn, or of the Gong phase, that is running.
+ *
+ * Shared (Auto) and Gong hand the turn on once a tick, whatever the tick's length. A phone asleep
+ * with the game left running comes back with one long tick: ten minutes of thirty-second turns
+ * passed one turn, the rest of the time went nowhere, and the table found the wrong player on the
+ * move and the wrong cycle. Stepped to each edge, every turn that went by is passed and counted.
+ * Any other clock takes [delta] whole: one player's time is one subtraction, however long.
+ */
+internal fun catchUpStepMs(state: ChessClockState, delta: Long, settings: ChessClockSettings): Long {
+    val active = state.activePlayer ?: return delta
+    val s = settings.playerSettings(active)
+    val untilEdge = when (s.mode) {
+        TimerMode.MOVE_TIMER_SHARED -> if (s.moveTimeMs > 0) state.players.firstOrNull()?.timeRemainingMs else null
+        TimerMode.GONG -> {
+            val together = settings.playerSettings(1).gongSimultaneous
+            val running = if (together) state.players.take(settings.numberOfPlayers.coerceIn(1, 4)) else listOfNotNull(state.players.getOrNull(active - 1))
+            running.minOfOrNull { it.timeRemainingMs }
+        }
+        else -> null
+    } ?: return delta
+    return minOf(delta, untilEdge.coerceAtLeast(1))
+}
+
+/** More turns than any sleep is worth following one by one; past it the rest is taken at once. */
+private const val MAX_CATCH_UP_STEPS = 500
+
 internal class ClockTick(
     val state: ChessClockState,
     val cue: TickCue? = null,
@@ -4079,27 +4107,41 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.update { state ->
             if (state.isPaused) return@update state
             val settings = _settings.value
-            val result = tickClock(state, delta, settings)
-            // Read before handleAudio moves lastBeepSecond on.
-            tickSounds(result, settings, lastBeepSecond).forEach(::play)
-            result.cue?.let { cue ->
-                handleAudio(cue.before, cue.after, settings, cue.playerIndex, sound = false)
-                handleVoice(cue.before, cue.after, settings, cue.playerIndex, cue.timeLeft)
-            }
-            result.phaseChangedFrom?.let { onPhaseTransition(it, result.state, sound = false) }
-            result.coupled?.let { coupled ->
-                for ((mover, spent) in coupled.gongMoves) {
-                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = spent))
-                    moveStartTime = now
+            // In steps, for the clocks that pass the turn by themselves; see catchUpStepMs. Every
+            // other clock takes the whole of it at once, as before.
+            var current = state
+            var left = delta
+            var steps = 0
+            val sounds = mutableListOf<ClockSound>()
+            while (true) {
+                val step = if (steps++ < MAX_CATCH_UP_STEPS) catchUpStepMs(current, left, settings) else left
+                val result = tickClock(current, step, settings)
+                // Read before handleAudio moves lastBeepSecond on.
+                sounds += tickSounds(result, settings, lastBeepSecond)
+                result.cue?.let { cue ->
+                    handleAudio(cue.before, cue.after, settings, cue.playerIndex, sound = false)
+                    handleVoice(cue.before, cue.after, settings, cue.playerIndex, cue.timeLeft)
                 }
-                coupled.handedOverBy?.let { mover ->
-                    // Nothing spoken, and its beep is tickSounds': the turn passing is the ordinary
-                    // course of this mode.
-                    addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = settings.playerSettings(mover).moveTimeMs))
-                    moveStartTime = now
+                result.phaseChangedFrom?.let { onPhaseTransition(it, result.state, sound = false) }
+                result.coupled?.let { coupled ->
+                    for ((mover, spent) in coupled.gongMoves) {
+                        addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = spent))
+                        moveStartTime = now
+                    }
+                    coupled.handedOverBy?.let { mover ->
+                        // Nothing spoken, and its beep is tickSounds': the turn passing is the ordinary
+                        // course of this mode.
+                        addEvent(GameEvent(eventType = "MOVE", playerIndex = mover, timeRemainingMs = null, moveCount = coupled.state.players[mover - 1].moveCount, timeSpentMs = settings.playerSettings(mover).moveTimeMs))
+                        moveStartTime = now
+                    }
                 }
+                current = result.state
+                left -= step
+                if (left <= 0 || current.isPaused) break
             }
-            result.state
+            // Each sound once: the turns a sleep ran through are not beeped one after the other.
+            sounds.distinct().forEach(::play)
+            current
         }
         stopIfGameOver(now)
         passTurnFromEliminated(now)
