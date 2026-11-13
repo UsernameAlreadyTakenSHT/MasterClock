@@ -212,21 +212,22 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
     // rows say what they are. The count doubles as the heading, so it takes the section-title
     // style SettingsSection would have used.
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        Text(
-            stringResource(R.string.omni_cfg_count, settings.numberOfPlayers),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 4.dp)
-        )
-        Slider(
+        SettledSlider(
             value = settings.numberOfPlayers.toFloat(),
-            onValueChange = { onSettingsChanged(settings.copy(numberOfPlayers = Math.round(it))) },
+            onValueSettled = { onSettingsChanged(settings.copy(numberOfPlayers = Math.round(it))) },
             valueRange = 1f..20f,
             // Stops between the ends: 18 for the 20 values. 19 made 21 positions for 20 values, so
             // the thumb could rest between two numbers and read as the one below.
-            steps = 18
-        )
+            steps = 18,
+        ) { count ->
+            Text(
+                stringResource(R.string.omni_cfg_count, Math.round(count)),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
     }
 
     // One row per player would push the rest of the step (Turn Order and its own settings) far

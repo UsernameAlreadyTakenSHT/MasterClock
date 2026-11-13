@@ -1099,28 +1099,24 @@ fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit, follows
         if (p.fastMoveMode == FastMoveType.ACCELERATE) {
             HMSInput(stringResource(R.string.settings_grace_period), p.fastMoveGracePeriodMs) { onUpdate(p.copy(fastMoveGracePeriodMs = it)) }
             
-            Column {
-                val rateDisplay = String.format(java.util.Locale.US, "%.1f", p.fastMoveAccelRate)
-                Text(stringResource(R.string.settings_fast_accel_rate, rateDisplay), style = MaterialTheme.typography.labelMedium)
-                Slider(
-                    value = p.fastMoveAccelRate,
-                    onValueChange = { onUpdate(p.copy(fastMoveAccelRate = it)) },
-                    valueRange = 0.1f..20.0f
-                )
+            SettledSlider(
+                value = p.fastMoveAccelRate,
+                onValueSettled = { onUpdate(p.copy(fastMoveAccelRate = it)) },
+                valueRange = 0.1f..20.0f,
+            ) { rate ->
+                Text(stringResource(R.string.settings_fast_accel_rate, String.format(java.util.Locale.US, "%.1f", rate)), style = MaterialTheme.typography.labelMedium)
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             HMSInput(stringResource(R.string.settings_full_fast_starts), p.fastMoveFastPeriodMs) { onUpdate(p.copy(fastMoveFastPeriodMs = it)) }
 
-            Column {
-                val fullRateDisplay = String.format(java.util.Locale.US, "%.1f", p.fastMoveFullAccelRate)
-                Text(stringResource(R.string.settings_full_fast_accel_rate, fullRateDisplay), style = MaterialTheme.typography.labelMedium)
-                Slider(
-                    value = p.fastMoveFullAccelRate,
-                    onValueChange = { onUpdate(p.copy(fastMoveFullAccelRate = it)) },
-                    valueRange = 0.1f..20.0f
-                )
+            SettledSlider(
+                value = p.fastMoveFullAccelRate,
+                onValueSettled = { onUpdate(p.copy(fastMoveFullAccelRate = it)) },
+                valueRange = 0.1f..20.0f,
+            ) { rate ->
+                Text(stringResource(R.string.settings_full_fast_accel_rate, String.format(java.util.Locale.US, "%.1f", rate)), style = MaterialTheme.typography.labelMedium)
             }
         } else if (p.fastMoveMode == FastMoveType.SHRINK) {
             HMSInput(stringResource(R.string.settings_decrement_per_move), p.fastMoveShrinkDecrementMs) { onUpdate(p.copy(fastMoveShrinkDecrementMs = it)) }
@@ -1141,6 +1137,39 @@ fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit, follows
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
         }
+    }
+}
+
+/**
+ * A slider that follows the finger and hands its value over when the finger lifts.
+ *
+ * Every slider wrote its value on each frame of a drag. A setting written is the whole store
+ * rewritten, and for the Fast Move rates -- part of the time control -- the clock rebuilt, the game
+ * on it ended, its log finished and its saved clock cleared, sixty times a second. [label] is drawn
+ * above with the value under the finger, which the settings do not hold until it lifts.
+ */
+@Composable
+fun SettledSlider(
+    value: Float,
+    onValueSettled: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    steps: Int = 0,
+    label: @Composable (Float) -> Unit = {},
+) {
+    var dragged by remember { mutableStateOf<Float?>(null) }
+    // Let go of once the settings have caught up: cleared as the finger lifted, the thumb went back
+    // to the old value for a frame.
+    LaunchedEffect(value) { dragged = null }
+    val shown = dragged ?: value
+    Column {
+        label(shown)
+        Slider(
+            value = shown,
+            onValueChange = { dragged = it },
+            onValueChangeFinished = { dragged?.let(onValueSettled) },
+            valueRange = valueRange,
+            steps = steps,
+        )
     }
 }
 

@@ -147,18 +147,16 @@ fun AudioSettingsPage(
                 ) {
                     Column {
                         Text(stringResource(R.string.settings_sounds_volume), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                        Slider(
+                        SettledSlider(
                             value = currentSettings.soundsVolume,
-                            onValueChange = { onSettingsChanged(currentSettings.copy(soundsVolume = it)) },
-                            valueRange = 0f..1f
+                            onValueSettled = { onSettingsChanged(currentSettings.copy(soundsVolume = it)) },
                         )
                     }
                     Column {
                         Text(stringResource(R.string.settings_voice_volume), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                        Slider(
+                        SettledSlider(
                             value = currentSettings.voiceVolume,
-                            onValueChange = { onSettingsChanged(currentSettings.copy(voiceVolume = it)) },
-                            valueRange = 0f..1f
+                            onValueSettled = { onSettingsChanged(currentSettings.copy(voiceVolume = it)) },
                         )
                     }
                 }
