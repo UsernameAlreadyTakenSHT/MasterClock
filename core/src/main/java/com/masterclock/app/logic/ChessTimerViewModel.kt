@@ -1964,31 +1964,34 @@ internal fun sanitizeImportedOmniSettings(settings: OmniSettings): OmniSettings 
     // The settings page's slider runs from 1 to 20.
     numberOfPlayers = settings.numberOfPlayers.coerceIn(1, 20),
     playerColors = settings.playerColors.take(20),
-    globalDurationMs = settings.globalDurationMs.coerceAtLeast(0),
-    gameDurationMs = settings.gameDurationMs.coerceAtLeast(0),
-    interTurnPauseMs = settings.interTurnPauseMs.coerceAtLeast(0),
-    interRoundPauseMs = settings.interRoundPauseMs.coerceAtLeast(0),
-    interGamePauseMs = settings.interGamePauseMs.coerceAtLeast(0),
-    launchCountdownMs = settings.launchCountdownMs.coerceAtLeast(0),
+    globalDurationMs = settings.globalDurationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+    gameDurationMs = settings.gameDurationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+    interTurnPauseMs = settings.interTurnPauseMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+    interRoundPauseMs = settings.interRoundPauseMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+    interGamePauseMs = settings.interGamePauseMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+    launchCountdownMs = settings.launchCountdownMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
     games = settings.games.take(MAX_IMPORTED_PERIODS).map { game ->
         game.copy(
             name = game.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
-            durationMs = game.durationMs.coerceAtLeast(0),
+            durationMs = game.durationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
             rounds = game.rounds.take(MAX_IMPORTED_PERIODS).map { round ->
                 round.copy(
                     name = round.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
-                    durationMs = round.durationMs.coerceAtLeast(0),
-                    turnDurationMs = round.turnDurationMs.coerceAtLeast(0),
+                    durationMs = round.durationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
+                    turnDurationMs = round.turnDurationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
                     fixedTurnPhases = round.fixedTurnPhases.take(MAX_IMPORTED_PERIODS).map { phase ->
-                        phase.copy(name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS), durationMs = phase.durationMs.coerceAtLeast(0))
+                        phase.copy(name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS), durationMs = phase.durationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS))
                     },
                     customTurns = round.customTurns.take(MAX_IMPORTED_PERIODS).map { turn ->
                         turn.copy(
-                            durationMs = turn.durationMs.coerceAtLeast(0),
+                            durationMs = turn.durationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
                             phases = turn.phases.take(MAX_IMPORTED_PERIODS).map { phase ->
+ *
+ * Durations are held above as the clock's are. They were held to zero or more and no further: one
+ * near the largest number there is overflowed as banked time was added to it.
                                 phase.copy(
                                     name = phase.name.take(MAX_IMPORTED_NOTE_TITLE_CHARS),
-                                    durationMs = phase.durationMs.coerceAtLeast(0),
+                                    durationMs = phase.durationMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
                                 )
                             },
                         )
