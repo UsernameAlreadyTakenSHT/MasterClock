@@ -18,6 +18,24 @@ class ReviewFixesTest {
     }
 
     @Test
+    fun `a face of whole seconds ticks to its next reading`() {
+        // Rounded down: 4.500 reads 0:04 until 3.999.
+        assertEquals(501L, wholeSecondTickMs(4_500))
+        assertEquals(1_000L, wholeSecondTickMs(3_999))
+        // On the edge, and just short of it, the next reading is at hand: not zero, not a busy loop.
+        assertEquals(20L, wholeSecondTickMs(5_000))
+        assertEquals(20L, wholeSecondTickMs(5_003))
+        // The last second ends on the flag.
+        assertEquals(401L, wholeSecondTickMs(400))
+        // An overrun counts up.
+        assertEquals(700L, wholeSecondTickMs(-300))
+        var remaining = 10_000L
+        var ticks = 0
+        while (remaining > 0) { remaining -= wholeSecondTickMs(remaining); ticks++ }
+        assertTrue("ten seconds took $ticks ticks", ticks in 10..12)
+    }
+
+    @Test
     fun `a restore keeps the newest presets that fit`() {
         val local = List(495) { SavedPreset(name = "L$it", settings = ChessClockSettings()) }
         val imported = List(10) { SavedPreset(name = "I$it", settings = ChessClockSettings()) }

@@ -3373,6 +3373,26 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
 }
 
 /** Tick rate while the smallest digit on screen is hundredths of a second. */
+/**
+ * How long until a clock reading [remainingMs] shows its next second, for a face that shows nothing
+ * finer: the E Ink build's, minutes and seconds. It ticked every 100ms like the phone, ten wake-ups a
+ * second to redraw a reading that changes once, on a device that lives on its battery. The time is
+ * taken from the difference between two readings, so a slower tick counts the same; and the flag
+ * falls on a second's edge, so it is not late for it.
+ *
+ * A millisecond past the edge, since the face shows whole seconds rounded down: at 4.000 it still
+ * reads 0:04, and 0:03 only from 3.999. Never less than [MIN_WHOLE_SECOND_TICK_MS], so a tick that
+ * lands just short of an edge does not ask for it again at once.
+ */
+internal fun wholeSecondTickMs(remainingMs: Long): Long {
+    val intoSecond = kotlin.math.abs(remainingMs) % 1000
+    // Counting down, the next reading is just under this second's start; an overrun counts up.
+    val toNextReading = if (remainingMs > 0) intoSecond + 1 else 1000 - intoSecond
+    return toNextReading.coerceIn(MIN_WHOLE_SECOND_TICK_MS, 1000L)
+}
+
+private const val MIN_WHOLE_SECOND_TICK_MS = 20L
+
 private const val FAST_TICK_MS = 10L
 
 /** Tick rate the rest of the time: enough for tenths, and ten times cheaper. */
@@ -3946,9 +3966,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     private fun tickIntervalMs(): Long {
         val settings = _settings.value
+        val state = _uiState.value
+        if (FlavorConfig.isEInk()) {
+            val active = state.activePlayer ?: return SLOW_TICK_MS
+            val player = state.players.getOrNull(active - 1) ?: return SLOW_TICK_MS
+            return wholeSecondTickMs(displayedTimeMs(state, player, getPlayerSettings(active).mode))
+        }
         if (!settings.showHundredths) return SLOW_TICK_MS
 
-        val state = _uiState.value
         val active = state.activePlayer ?: return SLOW_TICK_MS
         val player = state.players.getOrNull(active - 1) ?: return SLOW_TICK_MS
         val remaining = displayedTimeMs(state, player, getPlayerSettings(active).mode)
