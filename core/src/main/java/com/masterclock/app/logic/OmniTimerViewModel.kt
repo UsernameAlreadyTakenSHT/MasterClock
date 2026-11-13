@@ -539,8 +539,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
             // every write -- a volume slider writes on every frame of a drag -- and that ran on the
             // main thread here once Omni had been opened: settings edits stuttered in proportion to
             // the notebook. A note edited, or settings written back unchanged, no longer reach it.
-            settingsRepo.settingsFlow
-                .map { it.copy(notebookNotes = emptyList()) }
+            settingsRepo.settingsWithoutNotebookFlow
                 .distinctUntilChanged()
                 .flowOn(Dispatchers.Default)
                 .collect { s ->

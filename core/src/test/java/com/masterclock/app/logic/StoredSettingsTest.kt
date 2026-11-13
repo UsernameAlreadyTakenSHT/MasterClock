@@ -1,7 +1,9 @@
 package com.masterclock.app.logic
 
 import com.masterclock.app.data.Converters
+import com.masterclock.app.data.decodeStoredNotebook
 import com.masterclock.app.data.decodeStoredSettings
+import com.masterclock.app.data.storedSettingsOf
 import com.masterclock.app.data.storedJson
 import org.junit.Assert.*
 import org.junit.Test
@@ -37,6 +39,39 @@ class StoredSettingsTest {
         val read = decodeStoredSettings(stored)
         assertEquals(FlagBehavior.NEGATIVE, read.flagBehavior)
         assertEquals(notes, read.notebookNotes)
+    }
+
+    @Test
+    fun `a store from before the notebook had its own key is read as it was`() {
+        val read = storedSettingsOf(stored, notebookText = null)
+        assertEquals(FlagBehavior.NEGATIVE, read.flagBehavior)
+        assertEquals(notes, read.notebookNotes)
+    }
+
+    @Test
+    fun `the notebook is read from its own key beside the settings`() {
+        val settingsOnly = storedJson.encodeToString(ChessClockSettings.serializer(), ChessClockSettings(flagBehavior = FlagBehavior.NEGATIVE))
+        val notebook = storedJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(NotebookNote.serializer()), notes)
+        val read = storedSettingsOf(settingsOnly, notebook)
+        assertEquals(FlagBehavior.NEGATIVE, read.flagBehavior)
+        assertEquals(notes, read.notebookNotes)
+    }
+
+    @Test
+    fun `notes an older build wrote back into the settings are kept beside the notebook's`() {
+        val late = NotebookNote(id = "c", title = "Written by an older build", timestamp = 3_000)
+        // The older build knows nothing of the notebook's key: it sees none, and stores its own.
+        val settingsWithOne = storedJson.encodeToString(ChessClockSettings.serializer(), ChessClockSettings(notebookNotes = listOf(late, notes[0])))
+        val notebook = storedJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(NotebookNote.serializer()), notes)
+        assertEquals(notes + late, storedSettingsOf(settingsWithOne, notebook).notebookNotes)
+    }
+
+    @Test
+    fun `a note of the notebook's own key that cannot be read costs only itself`() {
+        val notebook =storedJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(NotebookNote.serializer()), notes)
+            .replace("\"timestamp\":1000", "\"timestamp\":{}")
+        assertEquals(listOf(notes[1]), decodeStoredNotebook(notebook))
+        assertEquals(emptyList<NotebookNote>(), decodeStoredNotebook("not json"))
     }
 
     @Test
