@@ -227,10 +227,15 @@ internal fun omniRoundOrderFor(
     if (settings.playerOrderType != PlayerOrderType.RANDOM) emptyList()
     else generateOmniRoundOrder(settings, omniTurnCount(settings, gameIdx, roundIdx), previousPlayer, random)
 
-/** The player taking [turnIndex] of the current round, reading the drawn order under RANDOM. */
+/**
+ * The player taking [turnIndex] of the current round, reading the drawn order under RANDOM. An order
+ * drawn for more players than there now are -- the count lowered on a paused session, then resumed --
+ * named players who were gone: the screen wrapped them onto someone else, and their banked time went
+ * where nobody drew it.
+ */
 internal fun omniPlayerForTurn(order: List<Int>, turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int =
     if (settings.playerOrderType == PlayerOrderType.RANDOM) {
-        order.getOrNull(turnIndex) ?: calculateNextPlayerIndex(turnIndex, roundIndex, settings)
+        order.getOrNull(turnIndex)?.takeIf { it < settings.numberOfPlayers } ?: calculateNextPlayerIndex(turnIndex, roundIndex, settings)
     } else {
         calculateNextPlayerIndex(turnIndex, roundIndex, settings)
     }
@@ -564,6 +569,9 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
         // away a paused session's games, rounds and banks. Reset is there to start over.
         if (!_omniState.value.hasStarted) {
             _omniState.value = createInitialOmniState(newSettings)
+        } else {
+            // Fewer players than the session has seated: the one on turn must be one who is still there.
+            _omniState.update { if (it.currentPlayerIndex >= newSettings.numberOfPlayers) it.copy(currentPlayerIndex = 0) else it }
         }
         // Not viewModelScope, which is cancelled as the screen closes and can take the write with it.
         writerScope.launch {
