@@ -4279,14 +4279,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
     fun resume() {
         val starting = _uiState.value
-        // A PHASES game that is over -- finished, or flagged by its phase -- has nothing to restart.
-        if (getPlayerSettings(1).mode == TimerMode.PHASES && starting.players.firstOrNull()?.isOutOfTime == true) return
-        // Nor has any other game that is over. Play on one logged a RESUME, and the check further
-        // down then refused to start it; a finished game now shows Play, so it is pressed.
         // Not under the arbiter's panel, which is for a stopped clock: started behind it -- TalkBack
         // reached Play through it -- the clock ran with the panel open, Close and Back doing nothing
         // off a pause, and no player able to press.
         if (starting.isArbitreMode) return
+        // A PHASES game that is over -- finished, or flagged by its phase -- has nothing to restart.
+        if (getPlayerSettings(1).mode == TimerMode.PHASES && starting.players.firstOrNull()?.isOutOfTime == true) return
+        // Nor has any other game that is over. Play on one logged a RESUME, and the check further
+        // down then refused to start it; a finished game now shows Play, so it is pressed.
         val st = _settings.value
         // One that has not started can be over too: a penalty can run the table's clock out first.
         if (isGameOver(starting, st.flagBehavior, st.numberOfPlayers)) return
@@ -4768,6 +4768,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val savedAt = System.currentTimeMillis()
 
         val generation = savedClockGeneration
+        // Written in the order taken: each encodes on its own thread and was sent as it finished, so
+        // a correction's save could land before the one taken a tap earlier, which then replaced it.
+        val previous = autosaveEncoding
         autosaveEncoding = writerScope.launch {
             val entity = withContext(Dispatchers.Default) {
                 com.masterclock.app.data.SavedClockEntity(
@@ -4776,6 +4779,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     stateJson = json.encodeToString(ChessClockStateProxy.serializer(), stateSnapshot),
                 )
             }
+            previous?.join()
             // Back on the main thread: a clear since the snapshot was taken means this game was
             // reset or resumed while it encoded, and the snapshot no longer belongs anywhere.
             if (generation == savedClockGeneration) historyWrites.trySend(HistoryWrite.SaveClock(entity))
