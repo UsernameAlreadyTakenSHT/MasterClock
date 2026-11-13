@@ -258,6 +258,24 @@ class ClockFlowsTest {
     }
 
     @Test
+    fun underTheArbitersPanelTheBarIsOutOfReachAndTheClockStaysStopped() {
+        assumeTrue(FlavorConfig.hasArbitre())
+        control(R.string.timer_start).performClick()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null }
+        rule.runOnUiThread { viewModel.pause() }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.isPaused }
+        rule.runOnUiThread { viewModel.toggleArbitreMode() }
+        await(hasText(say(R.string.timer_arbitre_control)))
+
+        // TalkBack went through the panel to Play: the clock ran with the panel open and nothing closed it.
+        assertFalse(exists(hasContentDescription(say(R.string.timer_settings)) and hasClickAction()))
+        assertFalse(exists(hasContentDescription(say(R.string.timer_resume)) and hasClickAction()))
+        rule.runOnUiThread { viewModel.resume() }
+        rule.waitForIdle()
+        assertTrue(viewModel.uiState.value.isPaused)
+    }
+
+    @Test
     fun aClockOffersTalkBackTheSwitchByName() {
         val action = player(1).fetchSemanticsNode().config[SemanticsActions.OnClick]
         assertEquals(say(R.string.timer_switch_turn), action.label)

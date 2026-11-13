@@ -4279,6 +4279,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (getPlayerSettings(1).mode == TimerMode.PHASES && starting.players.firstOrNull()?.isOutOfTime == true) return
         // Nor has any other game that is over. Play on one logged a RESUME, and the check further
         // down then refused to start it; a finished game now shows Play, so it is pressed.
+        // Not under the arbiter's panel, which is for a stopped clock: started behind it -- TalkBack
+        // reached Play through it -- the clock ran with the panel open, Close and Back doing nothing
+        // off a pause, and no player able to press.
+        if (starting.isArbitreMode) return
         val st = _settings.value
         // One that has not started can be over too: a penalty can run the table's clock out first.
         if (isGameOver(starting, st.flagBehavior, st.numberOfPlayers)) return

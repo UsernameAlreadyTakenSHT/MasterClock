@@ -249,7 +249,9 @@ fun TimerScreen(
             (p1Weight / totalWeight - 0.5f) * 2f
         } else if (isGlobalMode) 0.85f else 0f
 
-        Box(Modifier.fillMaxSize(), contentAlignment = BiasAlignment(0f, bias)) {
+        // Under the arbiter's panel, out of a screen reader's reach as it is out of a finger's: TalkBack
+        // went through the panel to Play, and to Settings and Presets with the panel left open.
+        Box(Modifier.fillMaxSize().then(if (state.isArbitreMode) Modifier.clearAndSetSemantics {} else Modifier), contentAlignment = BiasAlignment(0f, bias)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 ControlBar(
                     isPaused = state.isPaused,
