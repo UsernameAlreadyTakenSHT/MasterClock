@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +33,9 @@ fun SettingsOmniPage(
     onPlay: () -> Unit
 ) {
     val settings by viewModel.omniSettings.collectAsState()
-    var currentStep by remember { mutableIntStateOf(1) }
+    // Saved, with the tabs of each step: a recreation -- the theme, a tablet turned -- put the
+    // wizard back on its first step, and the next edit on the first game's first round.
+    var currentStep by rememberSaveable { mutableIntStateOf(1) }
     val totalSteps = 7 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -434,7 +437,7 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         }
     }
 
-    var gameTab by remember { mutableIntStateOf(0) }
+    var gameTab by rememberSaveable { mutableIntStateOf(0) }
     // Clamped like the tabs of the Turns and Phases steps.
     val selectedGameIdx = gameTab.coerceIn(0, (settings.games.size - 1).coerceAtLeast(0))
     val currentGame = settings.games.getOrNull(selectedGameIdx) ?: settings.games.first()
@@ -525,8 +528,8 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
         return
     }
 
-    var gameTab by remember { mutableIntStateOf(0) }
-    var roundTab by remember { mutableIntStateOf(0) }
+    var gameTab by rememberSaveable { mutableIntStateOf(0) }
+    var roundTab by rememberSaveable { mutableIntStateOf(0) }
     // The tabs are clamped every time they are read. A round chosen on one game outlived a switch to
     // a game with fewer rounds: the screen fell back to the first round, while every edit still
     // wrote this[selectedRoundIdx] past the end of the list, and the wizard crashed.
@@ -654,9 +657,9 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
         return
     }
 
-    var gameTab by remember { mutableIntStateOf(0) }
-    var roundTab by remember { mutableIntStateOf(0) }
-    var turnTab by remember { mutableIntStateOf(0) }
+    var gameTab by rememberSaveable { mutableIntStateOf(0) }
+    var roundTab by rememberSaveable { mutableIntStateOf(0) }
+    var turnTab by rememberSaveable { mutableIntStateOf(0) }
 
     // The tabs are clamped every time they are read. A round chosen on one game outlived a switch to
     // a game with fewer rounds: the screen fell back to the first round, while every edit still
