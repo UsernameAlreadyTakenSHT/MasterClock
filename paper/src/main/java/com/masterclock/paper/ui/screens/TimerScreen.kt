@@ -52,8 +52,8 @@ fun TimerScreen(
     // A press now vibrates when it is on, as on the phone app.
     val haptic = LocalHapticFeedback.current
     fun press(playerIndex: Int) {
-        if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        viewModel.startOrSwitch(playerIndex)
+        // The buzz answers a press that did something; see startOrSwitch.
+        if (viewModel.startOrSwitch(playerIndex) && settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
     }
 
     // The announcer overlays the clock rather than sitting in the Column below. It emits nothing

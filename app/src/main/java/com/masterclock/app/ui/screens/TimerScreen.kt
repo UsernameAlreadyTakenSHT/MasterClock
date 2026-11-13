@@ -499,7 +499,7 @@ private fun ClockAnnouncer(state: ChessClockState, flagBehavior: FlagBehavior, p
 }
 
 @Composable
-fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIndex: Int, settings: ChessClockSettings, contentRotation: Float = 0f, onBerserk: () -> Unit = {}, onClick: () -> Unit) {
+fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIndex: Int, settings: ChessClockSettings, contentRotation: Float = 0f, onBerserk: () -> Unit = {}, onClick: () -> Boolean) {
     val playerState = state.players.getOrNull(playerIndex - 1) ?: PlayerState(0)
     val isActive = state.activePlayer == playerIndex && !state.isPaused
     val pSettings = if (settings.differentSettingsPerPlayer) {
@@ -644,8 +644,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
     Surface(
         modifier = Modifier.fillMaxSize().pointerInput(settings.triggerOnPress, enabled) {
                 if (!enabled) return@pointerInput
-                detectTapGestures(onPress = { if (settings.triggerOnPress) { if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() } },
-                                  onTap = { if (!settings.triggerOnPress) { if (settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() } })
+                // The buzz answers a press that did something; see startOrSwitch.
+                detectTapGestures(onPress = { if (settings.triggerOnPress && onClick() && settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
+                                  onTap = { if (!settings.triggerOnPress && onClick() && settings.hapticFeedback) haptic.performHapticFeedback(HapticFeedbackType.LongPress) })
             }
             // detectTapGestures publishes no semantics node at all, so without this the whole player
             // area is invisible to TalkBack -- the clock could be read but the turn could never be

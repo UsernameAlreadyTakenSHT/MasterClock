@@ -504,6 +504,19 @@ internal fun PlayerState.overtimeTimeLeftMs(): Long = timeRemainingMs.coerceAtLe
 internal fun PlayerState.withOvertimeClock(): PlayerState =
     if (!isOutOfTime && timeRemainingMs <= 0) copy(timeRemainingMs = secondaryTimeMs) else this
 
+/**
+ * Whether a press changed the game between [before] and [after], and not merely the time, which the
+ * press settles on its way: the turn, a pause, a move counted, a phase.
+ */
+internal fun pressTook(before: ChessClockState, after: ChessClockState): Boolean =
+    before.activePlayer != after.activePlayer || before.isPaused != after.isPaused || before.phasesFinished != after.phasesFinished ||
+        before.players.size != after.players.size ||
+        before.players.indices.any { i ->
+            val a = before.players[i]; val b = after.players[i]
+            a.moveCount != b.moveCount || a.currentPhaseIndex != b.currentPhaseIndex || a.isInInterPhasePause != b.isInInterPhasePause ||
+                a.isPhaseAwaitingTap != b.isPhaseAwaitingTap || a.isOutOfTime != b.isOutOfTime
+        }
+
 /** Whether [clockAnnouncement] is urgent enough to interrupt whatever the reader is saying. */
 fun isUrgentAnnouncement(state: ChessClockState, flagBehavior: FlagBehavior = FlagBehavior.FREEZE): Boolean =
     clockAnnouncement(state, flagBehavior) is ClockAnnouncement.OutOfTime
@@ -3843,7 +3856,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (timerJob != null && !_uiState.value.isPaused) tick()
     }
 
-    fun startOrSwitch(playerIndex: Int, boardNotation: String? = null) {
+    /**
+     * A press on [playerIndex]'s side. Returns whether it did anything, for the screen to answer it:
+     * the side not on the move buzzed under the finger like a move made.
+     */
+    fun startOrSwitch(playerIndex: Int, boardNotation: String? = null): Boolean {
+        val before = _uiState.value
+        press(playerIndex, boardNotation)
+        return pressTook(before, _uiState.value)
+    }
+
+    private fun press(playerIndex: Int, boardNotation: String?) {
         val beforeSettle = _uiState.value
         settleRunningClock()
         val currentState = _uiState.value
