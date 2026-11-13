@@ -1805,8 +1805,8 @@ private const val MAX_IMPORTED_ID_CHARS = 64
 /** More results than any club night records; the scoreboard composes them all. */
 const val MAX_SCOREBOARD_GAMES = 5_000
 
-/** A result is "1 - 0" or a few words, a name a name. */
-private const val MAX_SCOREBOARD_TEXT_CHARS = 100
+/** A result is "1 - 0" or a few words, a name a name. Public so the screen that takes them stops there. */
+const val MAX_SCOREBOARD_TEXT_CHARS = 100
 
 /** A month per move is already absurd; anything past it is a crafted value, not a slow player. */
 private const val MAX_IMPORTED_DURATION_MS = 30L * 24 * 60 * 60 * 1000
