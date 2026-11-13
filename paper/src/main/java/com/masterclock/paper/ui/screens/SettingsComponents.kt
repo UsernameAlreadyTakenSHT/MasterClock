@@ -1,5 +1,6 @@
 package com.masterclock.paper.ui.screens
 
+import androidx.compose.ui.semantics.selected
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
@@ -63,11 +64,14 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
 
 @Composable
 fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    // Which is chosen showed in the fill alone, and TalkBack read the three cards alike, as the phone's
+    // did until they said it.
+    val chosen = Modifier.semantics { this.selected = selected }
     if (selected) {
         ButtonMMD(
             onClick = onClick,
             // 48dp, the smallest target Android recommends; 44 was under it.
-            modifier = modifier.height(48.dp)
+            modifier = modifier.height(48.dp).then(chosen)
         ) {
             Text(
                 text = title,
@@ -77,7 +81,7 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, on
     } else {
         OutlinedButtonMMD(
             onClick = onClick,
-            modifier = modifier.height(48.dp),
+            modifier = modifier.height(48.dp).then(chosen),
             border = outlinedButtonBorderMMD()
         ) {
             Text(
