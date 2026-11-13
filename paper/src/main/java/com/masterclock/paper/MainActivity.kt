@@ -105,7 +105,9 @@ class MainActivity : ComponentActivity() {
             val lifecycleOwner = LocalLifecycleOwner.current
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_PAUSE) {
+                    // A recreation is not leaving the app, as on the phone: the colours reversed, the
+                    // language or the font size changed, and the game was paused.
+                    if (event == Lifecycle.Event.ON_PAUSE && !isChangingConfigurations) {
                         if (settings.pauseOnBackground) {
                             timerViewModel.pause()
                         }
