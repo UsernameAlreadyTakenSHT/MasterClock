@@ -173,6 +173,7 @@
     <string name="tools_tails">PILE</string>
     <string name="tools_image">Image</string>
     <string name="tools_image_note">Note image</string>
+    <string name="tools_highlight">Surligner</string>
     <string name="tools_italic">Italique</string>
     <string name="tools_large">Grand titre</string>
     <string name="tools_left">Gauche</string>

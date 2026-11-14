@@ -100,8 +100,9 @@ class TextNoteFlowTest {
         await(hasSetTextAction())
 
         content().performTextInput("Play")
-        // Bold chosen with nothing selected: what is typed next is bold.
+        // Bold and highlight chosen with nothing selected: what is typed next is both.
         press("tools_bold")
+        press("tools_highlight")
         content().performTextInput(" e4")
         // The line made a list item, then a box.
         press("tools_bullet_list")
@@ -113,6 +114,7 @@ class TextNoteFlowTest {
         assertTrue(written.richFormat)
         val rich = written.richTextOf()
         assertTrue("e4 is not bold", rich.allHave(rich.text.indexOf("e4"), rich.text.length, NoteStyle.BOLD))
+        assertTrue("e4 is not highlighted", rich.allHave(rich.text.indexOf("e4"), rich.text.length, NoteStyle.HIGHLIGHT))
         assertTrue("Play is bold", !rich.allHave(rich.text.indexOf("Play"), rich.text.indexOf("Play") + 4, NoteStyle.BOLD))
 
         // A tap on the box -- the cursor put beside it -- ticks it.

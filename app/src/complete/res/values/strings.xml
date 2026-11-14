@@ -197,6 +197,7 @@
     <string name="tools_heads">HEADS</string>
     <string name="tools_image">Image</string>
     <string name="tools_image_note">Image Note</string>
+    <string name="tools_highlight">Highlight</string>
     <string name="tools_italic">Italic</string>
     <string name="tools_large">Large heading</string>
     <string name="tools_left">Left</string>

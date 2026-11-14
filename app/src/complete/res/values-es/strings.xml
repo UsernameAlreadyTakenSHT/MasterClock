@@ -175,6 +175,7 @@
     <string name="tools_tails">CRUZ</string>
     <string name="tools_image">Imagen</string>
     <string name="tools_image_note">Nota de imagen</string>
+    <string name="tools_highlight">Resaltar</string>
     <string name="tools_italic">Cursiva</string>
     <string name="tools_large">Título grande</string>
     <string name="tools_left">Izquierda</string>

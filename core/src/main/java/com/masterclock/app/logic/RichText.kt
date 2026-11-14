@@ -27,6 +27,8 @@ object NoteStyle {
     /** A line in the smaller heading size. */
     const val TITLE = 32
     const val HEADINGS = LARGE or TITLE
+    /** Text marked as with a highlighter: behind it, not in it, so it goes with any text colour. */
+    const val HIGHLIGHT = 64
 }
 
 /** A text and its formatting, as the editor works on them. */

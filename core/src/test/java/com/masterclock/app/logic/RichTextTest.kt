@@ -9,6 +9,18 @@ import org.junit.Test
 
 class RichTextTest {
 
+    @Test
+    fun `a highlight is a style like bold, beside the others and kept through an edit`() {
+        val rich = RichText("play e4 now").toggled(5, 7, NoteStyle.BOLD).toggled(0, 7, NoteStyle.HIGHLIGHT)
+        assertTrue(rich.allHave(0, 7, NoteStyle.HIGHLIGHT))
+        assertTrue(rich.allHave(5, 7, NoteStyle.BOLD or NoteStyle.HIGHLIGHT))
+        // A character typed at its end takes the style before it.
+        val typed = rich.edited("play e4! now", cursor = 8)
+        assertTrue(typed.allHave(0, 8, NoteStyle.HIGHLIGHT))
+        assertFalse(typed.allHave(8, 12, NoteStyle.HIGHLIGHT))
+        assertFalse(rich.toggled(0, 7, NoteStyle.HIGHLIGHT).allHave(0, 1, NoteStyle.HIGHLIGHT))
+    }
+
     private fun RichText.has(at: Int, bit: Int) = allHave(at, at + 1, bit)
 
     @Test

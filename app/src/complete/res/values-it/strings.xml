@@ -175,6 +175,7 @@
     <string name="tools_tails">CROCE</string>
     <string name="tools_image">Immagine</string>
     <string name="tools_image_note">Nota immagine</string>
+    <string name="tools_highlight">Evidenzia</string>
     <string name="tools_italic">Corsivo</string>
     <string name="tools_large">Titolo grande</string>
     <string name="tools_left">Sinistra</string>

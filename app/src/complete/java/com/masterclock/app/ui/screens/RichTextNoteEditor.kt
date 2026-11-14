@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.BorderColor
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FormatBold
@@ -219,21 +220,23 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 // On as many lines as it takes. It scrolled sideways, with nothing to say it did: on a
                 // phone the lists, the box and the colour were past the edge, and looked to be missing.
+                // Each line centred, the space left over shared between its two ends.
                 FlowRow(
-                    modifier = Modifier.padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.fillMaxWidth().padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     StyleButton(Icons.Default.FormatBold, R.string.tools_bold, isOn(NoteStyle.BOLD)) { style(NoteStyle.BOLD) }
                     StyleButton(Icons.Default.FormatItalic, R.string.tools_italic, isOn(NoteStyle.ITALIC)) { style(NoteStyle.ITALIC) }
                     StyleButton(Icons.Default.FormatUnderlined, R.string.tools_underline, isOn(NoteStyle.UNDERLINE)) { style(NoteStyle.UNDERLINE) }
                     StyleButton(Icons.Default.FormatStrikethrough, R.string.tools_strikethrough, isOn(NoteStyle.STRIKE)) { style(NoteStyle.STRIKE) }
+                    StyleButton(Icons.Default.BorderColor, R.string.tools_highlight, isOn(NoteStyle.HIGHLIGHT)) { style(NoteStyle.HIGHLIGHT) }
                     // Named for what it makes: an icon of a T said nothing of a heading. One heading only,
                     // the user's choice; a small heading (TITLE) from an older note is still drawn.
                     MarkButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
+                    IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
                     IconButton(onClick = { list(ListKind.BULLET) }) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.tools_bullet_list)) }
                     IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
-                    IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
                     IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
                     MarkButton("♞", R.string.tools_insert_pieces, inserting == InsertKind.PIECES) { toggleInsert(InsertKind.PIECES) }
                     MarkButton("!?", R.string.tools_insert_annotations, inserting == InsertKind.ANNOTATIONS) { toggleInsert(InsertKind.ANNOTATIONS) }
@@ -331,14 +334,16 @@ private fun MarkButton(mark: String, label: Int, on: Boolean, font: FontFamily? 
 }
 
 /**
- * OpenMoji, by the HfG Schwäbisch Gmünd, CC BY-SA 4.0: the font a note's emojis are drawn in. Its
- * bitmap form (CBDT), which every Android since 7 draws, cut down with pyftsubset to the emojis of
- * Unicode 17, skin tones included, all of which it draws: OpenMoji's own extras sit in the private
- * use area, where no keyboard reaches them, and were half a megabyte.
+ * OpenMoji, by the HfG Schwäbisch Gmünd, CC BY-SA 4.0: the font a note's emojis are drawn in, built
+ * with its catalog by tools/openmoji_font.py, which says what is done to it and why: cut down to
+ * Unicode's emojis, and taught the emoji variations, without which Android drew some of them in the
+ * phone's font, and split a rainbow flag in two.
  */
 internal val OpenMoji = FontFamily(Font(R.font.openmoji))
 
-private val NOTE_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
+private val HIGHLIGHTER = Color(0x80FFEB3B)
+
+private val NOTE_COLORS =listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
 
 /** The note as it is drawn: each run in its style, and a ticked box's line struck through. */
 private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
@@ -364,6 +369,8 @@ private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
                 },
                 textDecoration = if (decorations.isEmpty()) null else TextDecoration.combine(decorations),
                 color = if (run.color != 0L) Color(run.color) else Color.Unspecified,
+                // See-through, so that the text reads through it in a light theme and a dark one.
+                background = if (s and NoteStyle.HIGHLIGHT != 0) HIGHLIGHTER else Color.Unspecified,
             ),
             run.start, run.end,
         )
