@@ -126,12 +126,17 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
         typing = null
     }
 
-    val selection = field.selection
-    fun isOn(bit: Int): Boolean =
-        if (selection.collapsed) ((typing ?: rich.styleAt(selection.start)).first and bit) != 0
+    // Each action reads the cursor as it stands when it runs, never as it stood when the screen was
+    // last drawn: two symbols put in one after the other went in the wrong order, the second at the
+    // place the first had taken.
+    fun isOn(bit: Int): Boolean {
+        val selection = field.selection
+        return if (selection.collapsed) ((typing ?: rich.styleAt(selection.start)).first and bit) != 0
         else rich.allHave(selection.min, selection.max, bit)
+    }
 
     fun style(bit: Int) {
+        val selection = field.selection
         if (selection.collapsed) {
             val current = typing ?: rich.styleAt(selection.start)
             typing = (current.first xor bit) to current.second
@@ -142,17 +147,20 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     }
 
     fun heading(bit: Int) {
+        val selection = field.selection
         record(false)
         show(rich.headingToggled(selection.min, selection.max, bit), selection.start, selection.end)
     }
 
     fun list(kind: ListKind) {
+        val selection = field.selection
         record(false)
         val edit = rich.listToggled(selection.min, selection.max, kind)
         show(edit.rich, edit.selectionStart, edit.selectionEnd)
     }
 
     fun color(color: Long) {
+        val selection = field.selection
         if (selection.collapsed) {
             typing = (typing ?: rich.styleAt(selection.start)).first to color
         } else {
@@ -163,6 +171,7 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
 
     /** [text] where the cursor is, over the selection if there is one, in the style typed there. */
     fun insert(text: String) {
+        val selection = field.selection
         record(false)
         val newText = rich.text.replaceRange(selection.min, selection.max, text)
         if (newText.length > MAX_NOTE_CONTENT_CHARS) return
