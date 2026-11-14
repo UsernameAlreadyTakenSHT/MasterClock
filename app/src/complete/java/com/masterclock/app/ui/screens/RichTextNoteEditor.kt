@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatColorReset
 import androidx.compose.material.icons.filled.FormatItalic
@@ -169,6 +170,11 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                 show(RichText(snapshot.text, snapshot.spans), snapshot.selectionStart, snapshot.selectionEnd)
             }
         }, enabled = history.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }
+        // As the drawing's Clear: the whole text and its formatting, one step that Undo gives back.
+        IconButton(onClick = {
+            record(false)
+            show(RichText(""), 0)
+        }, enabled = rich.text.isNotEmpty()) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) }
     }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(

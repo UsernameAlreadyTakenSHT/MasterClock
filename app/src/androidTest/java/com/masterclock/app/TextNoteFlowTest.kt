@@ -118,6 +118,14 @@ class TextNoteFlowTest {
         // A tap on the box -- the cursor put beside it -- ticks it.
         content().performTextInputSelection(TextRange(1))
         waitForTheNote("the tick") { it.content == "☑ Play e4" }
+
+        // Clear takes it all, and Undo gives it all back, formatting with it.
+        rule.onNode(hasContentDescription(say(R.string.common_clear)) and hasClickAction()).performClick()
+        waitForTheNote("the clear") { it.content.isEmpty() }
+        press("tools_undo")
+        waitForTheNote("the undo") { it.content == "☑ Play e4" }
+        val back = note().richTextOf()
+        assertTrue("the undo lost the bold", back.allHave(back.text.indexOf("e4"), back.text.length, NoteStyle.BOLD))
     }
 
     @Test
