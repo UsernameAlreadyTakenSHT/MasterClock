@@ -1543,17 +1543,31 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
                     builtPaths.keys.retainAll(java.util.Collections.newSetFromMap(java.util.IdentityHashMap<DrawingPath, Boolean>()).apply { addAll(currentPaths) })
                     currentPaths.filter { it.points.size > 1 }.map { stroke -> stroke to builtPaths.getOrPut(stroke) { strokePath(stroke.points) } }
                 }
-                Canvas(modifier = Modifier.fillMaxSize()) {
+                // The eraser takes away what is under it. It painted white instead: right on a white page
+                // and wrong on any other -- a white stroke over the background, and over whatever comes
+                // to be drawn beneath the strokes. The strokes are drawn on a layer of their own, where
+                // the eraser clears them, and the page shows through. Drawings already made keep their
+                // eraser strokes, and look the same on the white page.
+                Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
                     scale(scale, pivot = Offset.Zero) {
-                    strokes.forEach { (pathData, path) -> drawPath(path = path, color = if (pathData.isEraser) Color.White else Color(pathData.color), style = Stroke(width = pathData.strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
+                    strokes.forEach { (pathData, path) -> drawStroke(path, pathData.isEraser, Color(pathData.color), pathData.strokeWidth) }
                     // The stroke under the finger alone is built again as it grows.
-                    if (activePoints.size > 1) drawPath(path = strokePath(activePoints), color = if (isEraser) Color.White else Color(currentColor), style = Stroke(width = currentWidth / scale, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    if (activePoints.size > 1) drawStroke(strokePath(activePoints), isEraser, Color(currentColor), currentWidth / scale)
                     }
                 }
             }
         }
     }
 }
+
+/** One stroke of a drawing: in its colour, or, for the eraser, clearing what was drawn before it. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStroke(path: Path, eraser: Boolean, color: Color, width: Float) =
+    drawPath(
+        path = path,
+        color = if (eraser) Color.Black else color,
+        style = Stroke(width = width, cap = StrokeCap.Round, join = StrokeJoin.Round),
+        blendMode = if (eraser) androidx.compose.ui.graphics.BlendMode.Clear else androidx.compose.ui.graphics.BlendMode.SrcOver,
+    )
 
 /** A stroke's points as one line from the first to the last. */
 private fun strokePath(points: List<Pair<Float, Float>>): Path = Path().apply {
