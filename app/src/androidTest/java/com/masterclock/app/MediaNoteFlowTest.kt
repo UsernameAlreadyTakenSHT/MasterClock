@@ -1,7 +1,11 @@
 package com.masterclock.app
 
 import android.annotation.SuppressLint
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pinch
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
@@ -87,6 +91,10 @@ class MediaNoteFlowTest {
         for (file in 0 until 8) for (rank in 0 until 6) {
             paint.color = if ((file + rank) % 2 == 0) android.graphics.Color.rgb(240, 217, 181) else android.graphics.Color.rgb(181, 136, 99)
             canvas.drawRect(file * 80f, rank * 80f, file * 80f + 80f, rank * 80f + 80f, paint)
+            // Its squares named small, as a scoresheet's writing is: what a zoom is for.
+            paint.color = android.graphics.Color.rgb(60, 40, 20)
+            paint.textSize = 14f
+            canvas.drawText("${'a' + file}${6 - rank}", file * 80f + 6f, rank * 80f + 20f, paint)
         }
         outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
     }
@@ -118,6 +126,24 @@ class MediaNoteFlowTest {
         await(hasText(complete("tools_no_photo")))
         rule.waitUntil(TIMEOUT_MS) { !photo.exists() }
         assertFalse(photo.exists())
+    }
+
+    /** A double tap enlarges the photo where it is, a pinch more, and a double tap shows it whole. */
+    @Test
+    fun aPhotoIsZoomedAndShownWholeAgain() {
+        val note = NotebookNote(title = "Zoomed", type = NotebookNoteType.IMAGE)
+        open(note.copy(imagePath = aPhoto(note.id).absolutePath))
+        val photo = rule.onNode(hasContentDescription(complete("tools_note_image")))
+        rule.waitForIdle()
+        shot("zoom_whole")
+        photo.performTouchInput { doubleClick(Offset(width * 0.2f, height * 0.4f)) }
+        shot("zoom_double_tap")
+        photo.performTouchInput {
+            pinch(center - Offset(60f, 0f), center + Offset(60f, 0f), center - Offset(200f, 0f), center + Offset(200f, 0f), durationMillis = 400)
+        }
+        shot("zoom_pinched")
+        photo.performTouchInput { doubleClick(center) }
+        shot("zoom_whole_again")
     }
 
     @Test

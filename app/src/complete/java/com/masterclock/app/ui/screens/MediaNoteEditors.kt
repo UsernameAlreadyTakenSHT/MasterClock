@@ -29,6 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -218,7 +222,27 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                     ImageRequest.Builder(context).data(path).memoryCacheKey(key).diskCacheKey(key).build()
                 }
             }
-            AsyncImage(model = imageModel, contentDescription = stringResource(R.string.tools_note_image), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+            // Pinched, dragged and double-tapped to read a scoresheet, which shown whole was too small
+            // to; see PhotoZoom. Held to its place, so that enlarged it does not run over the caption
+            // and the buttons; whole again for each new photo.
+            var zoom by remember(imagePath, take.count) { mutableStateOf(PhotoZoom()) }
+            AsyncImage(
+                model = imageModel,
+                contentDescription = stringResource(R.string.tools_note_image),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clipToBounds()
+                    .pointerInput(imageModel) {
+                        detectTapGestures(onDoubleTap = { at -> zoom = zoom.doubleTapped(at.x, at.y, size.width.toFloat(), size.height.toFloat()) })
+                    }
+                    .pointerInput(imageModel) {
+                        detectTransformGestures { centroid, pan, pinch, _ ->
+                            zoom = zoom.transformed(pinch, centroid.x, centroid.y, pan.x, pan.y, size.width.toFloat(), size.height.toFloat())
+                        }
+                    }
+                    .graphicsLayer { scaleX = zoom.scale; scaleY = zoom.scale; translationX = zoom.x; translationY = zoom.y },
+            )
         }
         CaptionField(caption)
         CaptureButton(
