@@ -55,15 +55,23 @@ internal fun handleTimeBankScope(currentBanks: Map<Int, Long>, scope: TimeBankSc
 }
 
 /**
- * The turns [round] holds, in order: its own list for a SEQUENCE round, one per player for a
- * FIXED one, each carrying the round's [OmniRoundSettings.fixedTurnPhases].
+ * The turns [round] holds, in the order they are played: for a FIXED round one per player, each
+ * carrying the round's [OmniRoundSettings.fixedTurnPhases]; for a SEQUENCE round each of its own
+ * turns once per player, every player playing the first before anyone plays the second.
+ *
+ * A SEQUENCE round's turns were the round's whole list: two turns set up for four players made a
+ * round of two, and players 3 and 4 never played in it. They are the turns each player plays, as the
+ * wizard sets them up -- one turn is a FIXED round, and a second is each player's second turn.
+ * [numberOfPlayers] of 1 gives the turns as they are set up, which is what the wizard lists.
  *
  * The one place this is decided. The engine and the screens each built the list themselves, four
  * times over, and a FIXED round's synthesised turns had no phases in any of them.
  */
-fun omniTurnsOf(round: OmniRoundSettings, numberOfPlayers: Int): List<OmniTurnSettings> =
-    if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns
-    else List(numberOfPlayers.coerceAtLeast(0)) { OmniTurnSettings(durationMs = round.turnDurationMs, phases = round.fixedTurnPhases) }
+fun omniTurnsOf(round: OmniRoundSettings, numberOfPlayers: Int): List<OmniTurnSettings> {
+    val players = numberOfPlayers.coerceAtLeast(0)
+    return if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns.flatMap { turn -> List(players) { turn } }
+    else List(players) { OmniTurnSettings(durationMs = round.turnDurationMs, phases = round.fixedTurnPhases) }
+}
 
 /**
  * The game [state] is in. An index can be past the list when a paused session's structure has been
@@ -100,7 +108,8 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
     val round = game.rounds.getOrNull(roundIdx) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
     return when (level) {
         "ROUND" -> round.durationMs
-        "TURN" -> if (round.turnLogic == RoundTurnLogic.SEQUENCE) { val turn = round.customTurns.getOrNull(playerIdx); turn?.durationMs ?: round.turnDurationMs } else round.turnDurationMs
+        // [playerIdx] is the turn's place in the round, which omniTurnsOf maps to the turn set up.
+        "TURN" -> omniTurnsOf(round, settings.numberOfPlayers).getOrNull(playerIdx)?.durationMs ?: round.turnDurationMs
         "PHASE" -> {
             val turn = omniTurnsOf(round, settings.numberOfPlayers).getOrNull(playerIdx)
             when {
@@ -132,7 +141,7 @@ internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings:
 internal fun omniTurnCount(settings: OmniSettings, gameIdx: Int, roundIdx: Int): Int {
     val game = settings.games.getOrNull(gameIdx) ?: settings.games.lastOrNull() ?: OmniGameSettings()
     val round = game.rounds.getOrNull(roundIdx) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
-    return if (round.turnLogic == RoundTurnLogic.SEQUENCE) round.customTurns.size else settings.numberOfPlayers
+    return omniTurnsOf(round, settings.numberOfPlayers).size
 }
 
 /**

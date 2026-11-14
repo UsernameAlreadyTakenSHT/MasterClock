@@ -200,7 +200,7 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
                 Spacer(Modifier.width(8.dp))
                 Column {
                     val currentRound = omniCurrentRound(settings, state)
-                    val totalTurnsInRound = if (currentRound.turnLogic == RoundTurnLogic.SEQUENCE) currentRound.customTurns.size else numPlayers
+                    val totalTurnsInRound = omniTurnsOf(currentRound, numPlayers).size
                     val turnsPerPlayer = totalTurnsInRound / numPlayers
 
                     if (turnsPerPlayer > 1 || currentRound.roundEndBehavior == RoundEndBehavior.LOOP) {

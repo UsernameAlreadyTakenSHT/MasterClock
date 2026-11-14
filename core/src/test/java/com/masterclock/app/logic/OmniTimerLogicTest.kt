@@ -185,17 +185,19 @@ class OmniTimerLogicTest {
             usePhaseClock = true, timeBankMode = TimeBankMode.ACCUMULATIVE, timeBankScope = TimeBankScope.SESSION_WIDE,
             games = listOf(OmniGameSettings(rounds = listOf(round))), numberOfPlayers = 2
         )
+        // Player 2 ends the round's first pass, turn A; player 1 is next, with turn B.
         val state = OmniState(
-            currentPhaseIndex = 0, turnCounterInRound = 0, currentPlayerIndex = 0,
-            currentTurnTimeMs = 30_000, playerTimeBanks = mapOf(1 to 5_000L)
+            currentPhaseIndex = 0, turnCounterInRound = 1, currentPlayerIndex = 1,
+            currentTurnTimeMs = 30_000, playerTimeBanks = mapOf(0 to 5_000L)
         )
 
         val next = computeOmniAdvance(state, settings)
         assertEquals("TURN", next.transitionLabel)
-        assertEquals(30_000L, next.playerTimeBanks[0])
+        assertEquals(30_000L, next.playerTimeBanks[1])
         // Player 1's pre-banked 5s is drawn into their new turn and cleared from the bank.
+        assertEquals(0, next.currentPlayerIndex)
         assertEquals(90_000 + 5_000, next.currentTurnTimeMs)
-        assertEquals(0L, next.playerTimeBanks[1])
+        assertEquals(0L, next.playerTimeBanks[0])
     }
 
     // --- Phase clock reinitialization on every advance level ---
@@ -206,7 +208,8 @@ class OmniTimerLogicTest {
         val turnB = OmniTurnSettings(durationMs = 90_000, phases = listOf(OmniPhaseSettings(durationMs = 45_000)))
         val round = OmniRoundSettings(customTurns = listOf(turnA, turnB), turnLogic = RoundTurnLogic.SEQUENCE)
         val settings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(round))), numberOfPlayers = 2)
-        val state = OmniState(currentPhaseIndex = 0, turnCounterInRound = 0, currentPhaseTimeMs = 0)
+        // The last turn A of the round's first pass: turn B comes next.
+        val state = OmniState(currentPhaseIndex = 0, turnCounterInRound = 1, currentPhaseTimeMs = 0)
 
         val next = computeOmniAdvance(state, settings)
         assertEquals(45_000, next.currentPhaseTimeMs)
@@ -217,7 +220,8 @@ class OmniTimerLogicTest {
         val round1 = OmniRoundSettings(customTurns = listOf(OmniTurnSettings(durationMs = 60_000, phases = listOf(OmniPhaseSettings(durationMs = 20_000)))), turnLogic = RoundTurnLogic.SEQUENCE)
         val round2 = OmniRoundSettings(customTurns = listOf(OmniTurnSettings(durationMs = 120_000, phases = listOf(OmniPhaseSettings(durationMs = 75_000)))), turnLogic = RoundTurnLogic.SEQUENCE)
         val settings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(round1, round2))), numberOfPlayers = 2)
-        val state = OmniState(currentPhaseIndex = 0, turnCounterInRound = 0, currentPhaseTimeMs = 0)
+        // The second player's turn, the round's last.
+        val state = OmniState(currentPhaseIndex = 0, turnCounterInRound = 1, currentPlayerIndex = 1, currentPhaseTimeMs = 0)
 
         val next = computeOmniAdvance(state, settings)
         assertEquals("ROUND", next.transitionLabel)
@@ -234,7 +238,8 @@ class OmniTimerLogicTest {
             OmniRoundSettings(customTurns = listOf(OmniTurnSettings(durationMs = 150_000, phases = listOf(OmniPhaseSettings(durationMs = 99_000)))), turnLogic = RoundTurnLogic.SEQUENCE)
         ))
         val settings = OmniSettings(usePhaseClock = true, games = listOf(game1, game2), numberOfPlayers = 2)
-        val state = OmniState(currentPhaseIndex = 0, turnCounterInRound = 0, currentPhaseTimeMs = 0)
+        // The second player's turn, the game's last.
+        val state = OmniState(currentPhaseIndex = 0, turnCounterInRound = 1, currentPlayerIndex = 1, currentPhaseTimeMs = 0)
 
         val next = computeOmniAdvance(state, settings)
         assertEquals("GAME", next.transitionLabel)
@@ -461,6 +466,32 @@ class OmniTimerLogicTest {
         val round = OmniRoundSettings(turnDurationMs = 600_000)
         val settings = OmniSettings(usePhaseClock = true, games = listOf(OmniGameSettings(rounds = listOf(round))), numberOfPlayers = 2)
         assertEquals(600_000, getOmniDuration(settings, "PHASE", playerIdx = 1, phaseIdx = 0))
+    }
+
+    @Test
+    fun `every player plays each turn of a round set up with several`() {
+        val long = OmniTurnSettings(durationMs = 120_000)
+        val short = OmniTurnSettings(durationMs = 30_000)
+        val round = OmniRoundSettings(turnLogic = RoundTurnLogic.SEQUENCE, customTurns = listOf(long, short))
+        val settings = OmniSettings(games = listOf(OmniGameSettings(rounds = listOf(round, OmniRoundSettings()))), numberOfPlayers = 4)
+        // Four players, two turns each: everyone plays the long turn, then everyone the short one.
+        assertEquals(8, omniTurnCount(settings, 0, 0))
+        assertEquals(listOf(120_000L, 120_000L, 120_000L, 120_000L, 30_000L, 30_000L, 30_000L, 30_000L), omniTurnsOf(round, 4).map { it.durationMs })
+        // The wizard lists the turns as they are set up.
+        assertEquals(listOf(long, short), omniTurnsOf(round, 1))
+
+        var state = OmniState(currentTurnTimeMs = 120_000)
+        val played = mutableListOf(state.currentPlayerIndex to state.currentTurnTimeMs)
+        repeat(7) {
+            state = computeOmniAdvance(state.copy(isInTransition = false), settings)
+            played += state.currentPlayerIndex to state.currentTurnTimeMs
+        }
+        assertEquals(listOf(0, 1, 2, 3, 0, 1, 2, 3), played.map { it.first })
+        assertEquals(listOf(120_000L, 120_000L, 120_000L, 120_000L, 30_000L, 30_000L, 30_000L, 30_000L), played.map { it.second })
+        assertEquals(2, omniTurnNumber(settings, state))
+        // Players 3 and 4 played; and the round ends after the eighth turn, not the second.
+        assertEquals(0, state.currentRoundIndex)
+        assertEquals(1, computeOmniAdvance(state.copy(isInTransition = false), settings).currentRoundIndex)
     }
 
     @Test
