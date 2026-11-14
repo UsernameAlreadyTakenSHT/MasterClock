@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FormatBold
@@ -56,6 +55,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.OffsetMapping
@@ -81,6 +82,7 @@ import com.masterclock.app.logic.allHave
 import com.masterclock.app.logic.checkboxToggled
 import com.masterclock.app.logic.colored
 import com.masterclock.app.logic.edited
+import com.masterclock.app.logic.emojiRanges
 import com.masterclock.app.logic.headingToggled
 import com.masterclock.app.logic.isTickedLine
 import com.masterclock.app.logic.listContinued
@@ -111,7 +113,9 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     var typing by remember { mutableStateOf<Pair<Int, Long>?>(null) }
     var history by remember { mutableStateOf(TextEditHistory()) }
     var showColorPicker by remember { mutableStateOf(false) }
-    var showInsert by rememberSaveable { mutableStateOf(false) }
+    // The insert panel open, if any: one at a time, the same button closing it.
+    var inserting by rememberSaveable { mutableStateOf<InsertKind?>(null) }
+    fun toggleInsert(kind: InsertKind) { inserting = if (inserting == kind) null else kind }
 
     PersistDebounced(title to rich) { (newTitle, newRich) -> onUpdate { it.copy(title = newTitle).withRichText(newRich) } }
 
@@ -211,7 +215,8 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                 singleLine = true,
                 textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             )
-            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)) {
+            // As wide as the title and the note above and below it: it stopped where its buttons did.
+            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 // On as many lines as it takes. It scrolled sideways, with nothing to say it did: on a
                 // phone the lists, the box and the colour were past the edge, and looked to be missing.
                 FlowRow(
@@ -223,17 +228,19 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                     StyleButton(Icons.Default.FormatItalic, R.string.tools_italic, isOn(NoteStyle.ITALIC)) { style(NoteStyle.ITALIC) }
                     StyleButton(Icons.Default.FormatUnderlined, R.string.tools_underline, isOn(NoteStyle.UNDERLINE)) { style(NoteStyle.UNDERLINE) }
                     StyleButton(Icons.Default.FormatStrikethrough, R.string.tools_strikethrough, isOn(NoteStyle.STRIKE)) { style(NoteStyle.STRIKE) }
-                    // Named for what they make: two icons of a T said nothing of headings, nor which was larger.
-                    HeadingButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
-                    HeadingButton("H2", R.string.tools_normal, isOn(NoteStyle.TITLE)) { heading(NoteStyle.TITLE) }
+                    // Named for what it makes: an icon of a T said nothing of a heading. One heading only,
+                    // the user's choice; a small heading (TITLE) from an older note is still drawn.
+                    MarkButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
                     IconButton(onClick = { list(ListKind.BULLET) }) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.tools_bullet_list)) }
                     IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
                     IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
                     IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
-                    StyleButton(Icons.Default.AddBox, R.string.tools_insert, showInsert) { showInsert = !showInsert }
+                    MarkButton("♞", R.string.tools_insert_pieces, inserting == InsertKind.PIECES) { toggleInsert(InsertKind.PIECES) }
+                    MarkButton("!?", R.string.tools_insert_annotations, inserting == InsertKind.ANNOTATIONS) { toggleInsert(InsertKind.ANNOTATIONS) }
+                    MarkButton("🙂", R.string.tools_insert_emojis, inserting == InsertKind.EMOJIS, font = OpenMoji) { toggleInsert(InsertKind.EMOJIS) }
                 }
             }
-            if (showInsert) InsertPanel(onInsert = ::insert)
+            inserting?.let { InsertPanel(it, onInsert = ::insert) }
             if (showColorPicker) {
                 Dialog(onDismissRequest = { showColorPicker = false }) {
                     Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
@@ -308,17 +315,28 @@ private fun StyleButton(icon: ImageVector, label: Int, on: Boolean, onClick: () 
     ) { Icon(icon, stringResource(label)) }
 }
 
-/** A heading size, which a letter and a number say better than an icon. */
+/**
+ * A button shown by what it makes or puts in -- "H1", a knight, "!?" -- which says it better than an
+ * icon would; TalkBack reads its name instead.
+ */
 @Composable
-private fun HeadingButton(mark: String, label: Int, on: Boolean, onClick: () -> Unit) {
+private fun MarkButton(mark: String, label: Int, on: Boolean, font: FontFamily? = null, onClick: () -> Unit) {
     val name = stringResource(label)
     IconToggleButton(
         checked = on,
         onCheckedChange = { onClick() },
         modifier = Modifier.semantics { contentDescription = name },
         colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-    ) { Text(mark, fontWeight = FontWeight.Black, modifier = Modifier.clearAndSetSemantics {}) }
+    ) { Text(mark, fontWeight = FontWeight.Black, fontSize = 18.sp, fontFamily = font, maxLines = 1, modifier = Modifier.clearAndSetSemantics {}) }
 }
+
+/**
+ * OpenMoji, by the HfG Schwäbisch Gmünd, CC BY-SA 4.0: the font a note's emojis are drawn in. Its
+ * bitmap form (CBDT), which every Android since 7 draws, cut down with pyftsubset to the emojis of
+ * Unicode 17, skin tones included, all of which it draws: OpenMoji's own extras sit in the private
+ * use area, where no keyboard reaches them, and were half a megabyte.
+ */
+internal val OpenMoji = FontFamily(Font(R.font.openmoji))
 
 private val NOTE_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
 
@@ -350,6 +368,8 @@ private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
             run.start, run.end,
         )
     }
+    // Emojis in OpenMoji, the same on every phone, newer ones included.
+    for (range in emojiRanges(rich.text)) addStyle(SpanStyle(fontFamily = OpenMoji), range.first, range.last + 1)
     var lineStart = 0
     while (lineStart <= rich.text.length) {
         val lineEnd = rich.text.indexOf('\n', lineStart).let { if (it < 0) rich.text.length else it }

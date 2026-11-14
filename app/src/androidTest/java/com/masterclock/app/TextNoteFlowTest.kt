@@ -139,12 +139,37 @@ class TextNoteFlowTest {
         val paint = android.graphics.Paint()
         android.util.Log.i("TextNoteFlowTest", "draughts pieces drawn: " + com.masterclock.app.logic.NoteInserts.DRAUGHTS_PIECES.map { it to paint.hasGlyph(it) })
 
-        press("tools_insert")
+        // A button each, the one pressed closing its panel and the next opening its own.
+        press("tools_insert_pieces")
         rule.onNode(hasText("♔") and hasClickAction()).performClick()
-        rule.onNode(hasText(complete("tools_insert_annotations")) and hasClickAction()).performClick()
+        press("tools_insert_annotations")
         rule.onNode(hasText("!?") and hasClickAction()).performClick()
         rule.onNode(hasText("±") and hasClickAction()).performClick()
         waitForTheNote("the inserts") { it.content == "♔!?±" }
+    }
+
+    @Test
+    fun emojisGoInFromTheirTabWhole() {
+        openTheNotebook()
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_text")))
+        rule.onNode(hasText(complete("tools_text")) and hasClickAction()).performClick()
+        await(hasSetTextAction())
+        content().performTextInput("Won ")
+        press("tools_insert_emojis")
+        for (emoji in listOf("🏆", "⏱️", "🧠")) rule.onNode(hasText(emoji) and hasClickAction()).performClick()
+        waitForTheNote("the emojis") { it.content == "Won 🏆⏱️🧠" }
+        // Another group, named for TalkBack, and its emojis in place of the game's.
+        rule.onNode(hasContentDescription(complete("tools_emoji_food")) and hasClickAction()).performClick()
+        rule.onNode(hasText("🍇") and hasClickAction()).performClick()
+        waitForTheNote("the grapes") { it.content == "Won 🏆⏱️🧠🍇" }
+        // One from the keyboard, which the panel leaves to it: a skin tone.
+        content().performTextInput(" 👍🏽")
+        waitForTheNote("the thumb") { it.content == "Won 🏆⏱️🧠🍇 👍🏽" }
+        // What it looks like, kept where the tests' runner can fetch it: see run-as.
+        rule.waitForIdle()
+        val shot = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        java.io.File(rule.activity.filesDir, "note_emojis.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     @Test

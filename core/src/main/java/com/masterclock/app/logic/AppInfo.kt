@@ -532,6 +532,13 @@ object AppInfo {
             completeOnly = true,
         ),
         CreditEntry(
+            title = "Emojis — OpenMoji",
+            // CC BY-SA asks for changes to be stated: the font is cut down to Unicode's own emojis.
+            detail = "OpenMoji 17.0, HfG Schwäbisch Gmünd — CC BY-SA 4.0. Font reduced to the Unicode emojis.",
+            url = "https://openmoji.org/",
+            completeOnly = true,
+        ),
+        CreditEntry(
             title = "Audio — Gong",
             detail = "Zen Gong, Alex_Jauk (Pixabay)",
             url = "https://pixabay.com/sound-effects/film-special-effects-zen-gong-199844/",

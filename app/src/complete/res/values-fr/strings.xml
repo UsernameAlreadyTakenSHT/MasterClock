@@ -121,12 +121,22 @@
     <string name="tools_bullet_list">Liste à puces</string>
     <string name="tools_numbered_list">Liste numérotée</string>
     <string name="tools_color_default">Couleur du texte</string>
-    <string name="tools_insert">Insérer</string>
     <string name="tools_insert_pieces">Pièces</string>
     <string name="tools_insert_annotations">Annotations</string>
     <string name="tools_insert_quality">Qualité du coup</string>
     <string name="tools_insert_evaluation">Évaluation</string>
     <string name="tools_insert_other">Divers</string>
+    <string name="tools_insert_emojis">Emojis</string>
+    <string name="tools_emoji_game">Pour une partie</string>
+    <string name="tools_emoji_smileys">Smileys et émotions</string>
+    <string name="tools_emoji_people">Personnes et corps</string>
+    <string name="tools_emoji_animals">Animaux et nature</string>
+    <string name="tools_emoji_food">Nourriture et boissons</string>
+    <string name="tools_emoji_travel">Voyages et lieux</string>
+    <string name="tools_emoji_activities">Activités</string>
+    <string name="tools_emoji_objects">Objets</string>
+    <string name="tools_emoji_symbols">Symboles</string>
+    <string name="tools_emoji_flags">Drapeaux</string>
     <string name="tools_bold">Gras</string>
     <string name="tools_checkbox">Case à cocher</string>
     <string name="tools_clear_board">Vider l\'échiquier</string>
@@ -182,7 +192,6 @@
     <string name="tools_no_notes">Aucune note. Appuyez sur + pour en créer une.</string>
     <string name="tools_no_photo">Aucune photo</string>
     <string name="tools_no_video" tools:ignore="Typos">Aucune vidéo (1 min max)</string>
-    <string name="tools_normal">Petit titre</string>
     <string name="tools_note_image">Image de la note</string>
     <string name="tools_offset">Écart : %1$s%2$d ms</string>
     <string name="tools_pick_straw">Tirer la paille %d</string>

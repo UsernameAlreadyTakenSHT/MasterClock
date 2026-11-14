@@ -123,12 +123,22 @@
     <string name="tools_bullet_list">Lista con viñetas</string>
     <string name="tools_numbered_list">Lista numerada</string>
     <string name="tools_color_default">Color del texto</string>
-    <string name="tools_insert">Insertar</string>
     <string name="tools_insert_pieces">Piezas</string>
     <string name="tools_insert_annotations">Anotaciones</string>
     <string name="tools_insert_quality">Calidad de la jugada</string>
     <string name="tools_insert_evaluation">Valoración</string>
     <string name="tools_insert_other">Otros</string>
+    <string name="tools_insert_emojis">Emojis</string>
+    <string name="tools_emoji_game">Para una partida</string>
+    <string name="tools_emoji_smileys">Caras y emociones</string>
+    <string name="tools_emoji_people">Personas y cuerpo</string>
+    <string name="tools_emoji_animals">Animales y naturaleza</string>
+    <string name="tools_emoji_food">Comida y bebida</string>
+    <string name="tools_emoji_travel">Viajes y lugares</string>
+    <string name="tools_emoji_activities">Actividades</string>
+    <string name="tools_emoji_objects">Objetos</string>
+    <string name="tools_emoji_symbols">Símbolos</string>
+    <string name="tools_emoji_flags">Banderas</string>
     <string name="tools_bold">Negrita</string>
     <string name="tools_checkbox">Casilla</string>
     <string name="tools_clear_board">Vaciar el tablero</string>
@@ -184,7 +194,6 @@
     <string name="tools_no_notes">Todavía no hay notas. Pulsa + para crear una.</string>
     <string name="tools_no_photo">Todavía no hay foto</string>
     <string name="tools_no_video" tools:ignore="Typos">Todavía no hay vídeo (máx. 1 min)</string>
-    <string name="tools_normal">Título pequeño</string>
     <string name="tools_note_image">Imagen de la nota</string>
     <string name="tools_offset">Desfase: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Sacar la pajita %d</string>

@@ -123,12 +123,22 @@
     <string name="tools_bullet_list">Elenco puntato</string>
     <string name="tools_numbered_list">Elenco numerato</string>
     <string name="tools_color_default">Colore del testo</string>
-    <string name="tools_insert">Inserisci</string>
     <string name="tools_insert_pieces">Pezzi</string>
     <string name="tools_insert_annotations">Annotazioni</string>
     <string name="tools_insert_quality">Qualità della mossa</string>
     <string name="tools_insert_evaluation">Valutazione</string>
     <string name="tools_insert_other">Altro</string>
+    <string name="tools_insert_emojis">Emoji</string>
+    <string name="tools_emoji_game">Per una partita</string>
+    <string name="tools_emoji_smileys">Faccine ed emozioni</string>
+    <string name="tools_emoji_people">Persone e corpo</string>
+    <string name="tools_emoji_animals">Animali e natura</string>
+    <string name="tools_emoji_food">Cibo e bevande</string>
+    <string name="tools_emoji_travel">Viaggi e luoghi</string>
+    <string name="tools_emoji_activities">Attività</string>
+    <string name="tools_emoji_objects">Oggetti</string>
+    <string name="tools_emoji_symbols">Simboli</string>
+    <string name="tools_emoji_flags">Bandiere</string>
     <string name="tools_bold">Grassetto</string>
     <string name="tools_checkbox">Casella</string>
     <string name="tools_clear_board">Svuota la scacchiera</string>
@@ -184,7 +194,6 @@
     <string name="tools_no_notes">Nessuna nota. Tocca + per crearne una.</string>
     <string name="tools_no_photo">Nessuna foto</string>
     <string name="tools_no_video" tools:ignore="Typos">Nessun video (max 1 min)</string>
-    <string name="tools_normal">Titolo piccolo</string>
     <string name="tools_note_image">Immagine della nota</string>
     <string name="tools_offset">Scarto: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Estrai la pagliuzza %d</string>

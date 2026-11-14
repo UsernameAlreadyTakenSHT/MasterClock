@@ -147,12 +147,22 @@
     <string name="tools_bullet_list">Bulleted list</string>
     <string name="tools_numbered_list">Numbered list</string>
     <string name="tools_color_default">Text colour</string>
-    <string name="tools_insert">Insert</string>
     <string name="tools_insert_pieces">Pieces</string>
     <string name="tools_insert_annotations">Annotations</string>
     <string name="tools_insert_quality">Move quality</string>
     <string name="tools_insert_evaluation">Evaluation</string>
     <string name="tools_insert_other">Other</string>
+    <string name="tools_insert_emojis">Emojis</string>
+    <string name="tools_emoji_game">For a game</string>
+    <string name="tools_emoji_smileys">Smileys &amp; emotions</string>
+    <string name="tools_emoji_people">People &amp; body</string>
+    <string name="tools_emoji_animals">Animals &amp; nature</string>
+    <string name="tools_emoji_food">Food &amp; drink</string>
+    <string name="tools_emoji_travel">Travel &amp; places</string>
+    <string name="tools_emoji_activities">Activities</string>
+    <string name="tools_emoji_objects">Objects</string>
+    <string name="tools_emoji_symbols">Symbols</string>
+    <string name="tools_emoji_flags">Flags</string>
     <string name="tools_bold">Bold</string>
     <string name="tools_checkbox">Checkbox</string>
     <string name="tools_clear_board">Clear Board</string>
@@ -206,7 +216,6 @@
     <string name="tools_no_notes">No notes yet. Tap + to create one.</string>
     <string name="tools_no_photo">No photo yet</string>
     <string name="tools_no_video" tools:ignore="Typos">No video yet (Max 1 min)</string>
-    <string name="tools_normal">Small heading</string>
     <string name="tools_note_image">Note image</string>
     <string name="tools_offset">Offset: %1$s%2$dms</string>
     <string name="tools_pick_straw">Pick straw %d</string>

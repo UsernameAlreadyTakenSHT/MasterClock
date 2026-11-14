@@ -123,12 +123,22 @@
     <string name="tools_bullet_list">Aufzählung</string>
     <string name="tools_numbered_list">Nummerierte Liste</string>
     <string name="tools_color_default">Textfarbe</string>
-    <string name="tools_insert">Einfügen</string>
     <string name="tools_insert_pieces">Figuren</string>
     <string name="tools_insert_annotations">Anmerkungen</string>
     <string name="tools_insert_quality">Zugbewertung</string>
     <string name="tools_insert_evaluation">Stellungsbewertung</string>
     <string name="tools_insert_other">Sonstiges</string>
+    <string name="tools_insert_emojis">Emojis</string>
+    <string name="tools_emoji_game">Für eine Partie</string>
+    <string name="tools_emoji_smileys">Smileys und Emotionen</string>
+    <string name="tools_emoji_people">Menschen und Körper</string>
+    <string name="tools_emoji_animals">Tiere und Natur</string>
+    <string name="tools_emoji_food">Essen und Trinken</string>
+    <string name="tools_emoji_travel">Reisen und Orte</string>
+    <string name="tools_emoji_activities">Aktivitäten</string>
+    <string name="tools_emoji_objects">Objekte</string>
+    <string name="tools_emoji_symbols">Symbole</string>
+    <string name="tools_emoji_flags">Flaggen</string>
     <string name="tools_bold">Fett</string>
     <string name="tools_checkbox">Kontrollkästchen</string>
     <string name="tools_clear_board">Brett leeren</string>
@@ -183,7 +193,6 @@
     <string name="tools_no_notes">Noch keine Notizen. Zum Anlegen auf + tippen.</string>
     <string name="tools_no_photo">Noch kein Foto</string>
     <string name="tools_no_video" tools:ignore="Typos">Noch kein Video (max. 1 Min)</string>
-    <string name="tools_normal">Kleine Überschrift</string>
     <string name="tools_note_image">Bild der Notiz</string>
     <string name="tools_offset">Abweichung: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Halm %d ziehen</string>

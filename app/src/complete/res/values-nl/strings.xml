@@ -123,12 +123,22 @@
     <string name="tools_bullet_list">Opsomming</string>
     <string name="tools_numbered_list">Genummerde lijst</string>
     <string name="tools_color_default">Tekstkleur</string>
-    <string name="tools_insert">Invoegen</string>
     <string name="tools_insert_pieces">Stukken</string>
     <string name="tools_insert_annotations">Annotaties</string>
     <string name="tools_insert_quality">Kwaliteit van de zet</string>
     <string name="tools_insert_evaluation">Beoordeling</string>
     <string name="tools_insert_other">Overig</string>
+    <string name="tools_insert_emojis">Emoji</string>
+    <string name="tools_emoji_game">Voor een partij</string>
+    <string name="tools_emoji_smileys">Smileys en emoties</string>
+    <string name="tools_emoji_people">Mensen en lichaam</string>
+    <string name="tools_emoji_animals">Dieren en natuur</string>
+    <string name="tools_emoji_food">Eten en drinken</string>
+    <string name="tools_emoji_travel">Reizen en plaatsen</string>
+    <string name="tools_emoji_activities">Activiteiten</string>
+    <string name="tools_emoji_objects">Objecten</string>
+    <string name="tools_emoji_symbols">Symbolen</string>
+    <string name="tools_emoji_flags">Vlaggen</string>
     <string name="tools_bold">Vet</string>
     <string name="tools_checkbox">Selectievakje</string>
     <string name="tools_clear_board">Bord leegmaken</string>
@@ -183,7 +193,6 @@
     <string name="tools_no_notes">Nog geen notities. Tik op + om er een te maken.</string>
     <string name="tools_no_photo">Nog geen foto</string>
     <string name="tools_no_video" tools:ignore="Typos">Nog geen video (max. 1 min)</string>
-    <string name="tools_normal">Kleine kop</string>
     <string name="tools_note_image">Afbeelding van de notitie</string>
     <string name="tools_offset">Afwijking: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Strootje %d trekken</string>
