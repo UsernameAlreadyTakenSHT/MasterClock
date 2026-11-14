@@ -48,7 +48,6 @@ import coil3.request.ImageRequest
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.RandomAccessFile
 import java.util.*
@@ -57,8 +56,9 @@ import kotlin.random.Random
 /**
  * The voice note: a recording of up to a minute, played back, recorded again or deleted.
  *
- * Built from what the three media notes share (see MediaNoteScreen): only the recorder and the
- * player are its own.
+ * Built from what the three media notes share (see MediaNoteScreen). The recorder and the player,
+ * and the order things must happen in between them, are a VoiceSession, tested in core; what is
+ * left here is the files, the messages and the screen.
  */
 @Composable
 fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
@@ -69,34 +69,16 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     val title = rememberNoteTitle(note, onUpdate)
-    var isRecording by remember { mutableStateOf(false) }; var isPlaying by remember { mutableStateOf(false) }; var recorder by remember { mutableStateOf<MediaRecorder?>(null) }; var player by remember { mutableStateOf<MediaPlayer?>(null) }; var recordingTime by remember { mutableIntStateOf(0) }; var playbackTime by remember { mutableIntStateOf(0) }
-    val scope = rememberCoroutineScope()
-    var recordingStartedAt by remember { mutableLongStateOf(0L) }
+    val session = remember { VoiceSession({ MicRecorder(context) }, { MediaVoicePlayer() }, SystemClock::elapsedRealtime) }
+    val state by session.state.collectAsState()
+    var recordingTime by remember { mutableIntStateOf(0) }
+    var playbackTime by remember { mutableIntStateOf(0) }
+    val noteFile = remember { File(context.filesDir, "audio_${note.id}.mp4") }
+
     fun beginRecording() {
         // Into the pending file, never the note's own: see pendingMediaFile.
-        val pending = pendingMediaFile(File(context.filesDir, "audio_${note.id}.mp4"))
-        @Suppress("DEPRECATION")
-        val newRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            MediaRecorder(context)
-        } else {
-            MediaRecorder()
-        }
-        try {
-            newRecorder.apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setOutputFile(pending.absolutePath)
-                prepare()
-                start()
-            }
-            recorder = newRecorder
-            recordingStartedAt = SystemClock.elapsedRealtime()
-            isRecording = true
-        } catch (_: Exception) {
-            // A recorder that failed to prepare or start still holds the microphone until it is
-            // released, which nothing did -- the next attempt, or another app, then found it busy.
-            newRecorder.release()
+        val pending = pendingMediaFile(noteFile)
+        if (!session.startRecording(pending.absolutePath)) {
             pending.delete()
             Toast.makeText(context, startFailedText, Toast.LENGTH_SHORT).show()
         }
@@ -104,82 +86,110 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     // Granted, it says so and waits for the next press, as it always has.
     val startRecording = rememberPermitted(Manifest.permission.RECORD_AUDIO, R.string.toast_mic_permission, onGranted = { Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() }) { beginRecording() }
     fun stopRecording() {
-        val active = recorder ?: return
-        // Cleared before stop() so a second call -- the ceiling and a disposal can arrive together
-        // -- finds nothing to stop rather than stopping the same recorder twice.
-        recorder = null
-        isRecording = false
-        val file = File(context.filesDir, "audio_${note.id}.mp4")
-        val pending = pendingMediaFile(file)
-        try {
-            active.stop()
-        } catch (_: Exception) {
-            // stop() throws when the recorder has captured nothing yet, which is any take under
-            // about a second. What it leaves on disk is a stub with no playable audio in it, so it
-            // is deleted rather than offered to the note as a recording -- and since it was never
-            // the note's own file, the recording the note already had is still there. Releasing
-            // here matters: the old catch left the recorder holding the microphone.
-            active.release()
-            pending.delete()
-            return
-        }
-        active.release()
-        if (!commitTake(context, pending, file)) return
-        shredReplacedMedia(context, note.audioPath, file)
+        val pending = pendingMediaFile(noteFile)
+        // No take: what is on disk is a stub with no playable audio in it, deleted rather than offered
+        // to the note -- and since it was never the note's own file, the recording the note already
+        // had is still there.
+        val durationMs = session.stopRecording() ?: run { pending.delete(); return }
+        if (!commitTake(context, pending, noteFile)) return
+        shredReplacedMedia(context, note.audioPath, noteFile)
         // Measured, where this took the counter of whole seconds: every take came out up to a second
         // short, and one under a second as 00:00.
-        val durationMs = SystemClock.elapsedRealtime() - recordingStartedAt
-        onUpdate { it.copy(title = title.value, audioPath = file.absolutePath, audioDurationMs = durationMs) }
+        onUpdate { it.copy(title = title.value, audioPath = noteFile.absolutePath, audioDurationMs = durationMs) }
     }
-    fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true
-        // Each loop follows its own player and stops as soon as that is no longer the one playing.
-        // It used to run on isPlaying alone, so Stop then Play -- or Play right after a playback
-        // ended -- inside its 100 ms sleep set isPlaying back to true before the old loop woke,
-        // and it read currentPosition off a player already released: an IllegalStateException
-        // nothing caught, and the app closed.
-        scope.launch { while (isPlaying && player === newPlayer) { playbackTime = runCatching { newPlayer.currentPosition }.getOrDefault(0) / 1000; delay(100) }; if (player == null) playbackTime = 0 } } catch (_: Exception) { Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show() } }
-    fun stopPlayback() { player?.stop(); player?.release(); player = null; isPlaying = false; playbackTime = 0 }
+    fun startPlayback() {
+        val path = note.audioPath ?: return
+        if (!session.startPlayback(path)) Toast.makeText(context, audioFailedText, Toast.LENGTH_SHORT).show()
+    }
 
-    // Below stopRecording() rather than above, because it has to call it. Reaching the one-minute
-    // ceiling used to flip isRecording and nothing else: the MediaRecorder kept running with the
-    // microphone open and the file still growing, while the screen said the recording had stopped,
-    // and the take was never attached to the note. Pressing record again then started a second
-    // recorder on the same file and abandoned the first, still holding the mic.
-    //
-    // isRecording is still true here only when the loop ended by hitting the ceiling; a manual stop
-    // clears it, which both ends the loop and cancels this effect.
-    LaunchedEffect(isRecording) {
-        if (!isRecording) return@LaunchedEffect
+    // The minute's end stops the take as the button would. It once flipped a flag and nothing else:
+    // the recorder kept running with the microphone open and the file growing, while the screen said
+    // the recording had stopped, and the take was never attached to the note.
+    LaunchedEffect(state.recording) {
         recordingTime = 0
-        while (isRecording && recordingTime < 60) {
-            delay(1000)
-            recordingTime++
+        while (state.recording) {
+            val ms = session.recordingMs
+            recordingTime = (ms / 1000).toInt()
+            if (ms >= MAX_VOICE_MS) { stopRecording(); break }
+            delay(200)
         }
-        if (isRecording) stopRecording()
+    }
+    LaunchedEffect(state.playing) {
+        while (state.playing) {
+            playbackTime = session.playbackMs / 1000
+            delay(100)
+        }
+        playbackTime = 0
     }
     // Leaving the screen while recording is treated as stopping, because releasing a running
     // recorder is not the same as stopping one: release() without stop() never writes the MP4's
-    // index, so the file left behind will not play, and onUpdate was never reached either. Walking
+    // index, so the file left behind will not play, and the note was never updated either. Walking
     // away therefore cost the whole take and left the unplayable orphan in filesDir.
     //
     // Through rememberUpdatedState: an effect keyed on Unit keeps the first composition's lambda, and
     // that stopRecording held the note as it was on opening. A retake left this way compared itself to
     // the original, so the recording it replaced was not shredded.
     val stopLatest by rememberUpdatedState({ stopRecording() })
-    DisposableEffect(Unit) { onDispose { stopLatest(); player?.release() } }
+    DisposableEffect(Unit) { onDispose { stopLatest(); session.stopPlayback() } }
 
+    val isRecording = state.recording
+    val isPlaying = state.playing
     MediaNoteScreen(R.string.tools_audio_note, title, onBack, spacing = 24.dp) {
         Spacer(Modifier.weight(1f))
-        Box(modifier = Modifier.size(160.dp).clip(CircleShape).background(if (isRecording) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(imageVector = if (isRecording) Icons.Default.Mic else Icons.Default.MicNone, contentDescription = null, modifier = Modifier.size(64.dp).scale(if (isRecording) 1.2f else 1f), tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
+        Box(modifier = Modifier.size(160.dp).clip(CircleShape).background(if (isRecording) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+            Icon(imageVector = if (isRecording) Icons.Default.Mic else Icons.Default.MicNone, contentDescription = null, modifier = Modifier.size(64.dp).scale(if (isRecording) 1.2f else 1f), tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+        }
         if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
         else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else ((note.audioDurationMs + 500) / 1000).let { seconds -> String.format(locale, "%02d:%02d", seconds / 60, seconds % 60) }, style = MaterialTheme.typography.headlineMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) }) }
-            if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play)) }
+            if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) {
+                Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null)
+                Spacer(Modifier.width(8.dp))
+                Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) })
+            }
+            if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) session.stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) {
+                Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null)
+                Spacer(Modifier.width(8.dp))
+                Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play))
+            }
         }
         if (note.audioPath != null && !isRecording && !isPlaying) DeleteMediaButton(stringResource(R.string.tools_delete_recording)) { shredNoteMedia(context, note.audioPath); onUpdate { it.copy(title = title.value, audioPath = null, audioDurationMs = 0) } }
         Spacer(Modifier.weight(1f))
     }
+}
+
+/** The microphone, through MediaRecorder: AAC in an MP4, as voice notes have always been. */
+private class MicRecorder(context: android.content.Context) : VoiceRecorder {
+    @Suppress("DEPRECATION")
+    private val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(context) else MediaRecorder()
+
+    override fun start(outputPath: String) {
+        recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+        recorder.setOutputFile(outputPath)
+        recorder.prepare()
+        recorder.start()
+    }
+
+    override fun stop() = recorder.stop()
+    override fun release() = recorder.release()
+}
+
+/** Playback through MediaPlayer. */
+private class MediaVoicePlayer : VoicePlayer {
+    private val player = MediaPlayer()
+
+    override fun start(path: String, onDone: () -> Unit) {
+        player.setDataSource(path)
+        player.prepare()
+        player.setOnCompletionListener { onDone() }
+        player.start()
+    }
+
+    override val positionMs: Int get() = player.currentPosition
+    override fun stop() = player.stop()
+    override fun release() = player.release()
 }
 
 /** The photo note: a picture taken with the camera, taken again or deleted. */

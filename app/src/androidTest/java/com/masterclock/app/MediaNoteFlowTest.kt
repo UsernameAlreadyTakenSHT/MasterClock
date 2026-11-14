@@ -124,6 +124,32 @@ class MediaNoteFlowTest {
         rule.waitUntil(TIMEOUT_MS) { !recording.exists() }
     }
 
+    /**
+     * A take recorded through the emulator's microphone: what the recorder and the player went
+     * through before they had a class of their own, VoiceSession, and still go through.
+     */
+    @Test
+    fun aVoiceNoteRecordsATakeAndPlaysIt() {
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
+            .grantRuntimePermission(rule.activity.packageName, android.Manifest.permission.RECORD_AUDIO)
+        open(NotebookNote(title = "Spoken", type = NotebookNoteType.VOICE))
+        rule.onNode(hasText(complete("tools_record")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_stop")))
+        Thread.sleep(2_000)
+        rule.onNode(hasText(complete("tools_stop")) and hasClickAction()).performClick()
+        waitForTheNote("the take") { it.audioPath != null && it.audioDurationMs >= 1_000 }
+        val take = File(note().audioPath!!)
+        rule.waitUntil(TIMEOUT_MS) { take.length() > 0 }
+        // Played, it can be stopped; the button comes back.
+        await(hasText(complete("tools_play")))
+        rule.onNode(hasText(complete("tools_play")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_stop")))
+        rule.onNode(hasText(complete("tools_stop")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_play")))
+    }
+
+    private fun note(): NotebookNote = viewModel.settings.value.notebookNotes.single()
+
     @Test
     fun anEmptyVideoNoteOffersToRecord() {
         open(NotebookNote(title = "Blitz", type = NotebookNoteType.VIDEO))
