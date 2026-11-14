@@ -235,6 +235,7 @@
     <string name="tools_text">Tekst</string>
     <string name="tools_time_per_move">Tijd per zet</string>
     <string name="tools_title">Titel</string>
+    <string name="tools_caption">Bijschrift</string>
     <string name="tools_toss_coin">Munt opgooien</string>
     <string name="tools_underline">Onderstreept</string>
     <string name="tools_undo">Ongedaan maken</string>

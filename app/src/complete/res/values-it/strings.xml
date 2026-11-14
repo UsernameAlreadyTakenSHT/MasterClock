@@ -236,6 +236,7 @@
     <string name="tools_text">Testo</string>
     <string name="tools_time_per_move">Tempo per mossa</string>
     <string name="tools_title">Titolo</string>
+    <string name="tools_caption">Didascalia</string>
     <string name="tools_toss_coin">Lancia la moneta</string>
     <string name="tools_underline">Sottolineato</string>
     <string name="tools_undo">Annulla</string>

@@ -236,6 +236,7 @@
     <string name="tools_text">Texto</string>
     <string name="tools_time_per_move">Tiempo por jugada</string>
     <string name="tools_title">Título</string>
+    <string name="tools_caption">Leyenda</string>
     <string name="tools_toss_coin">Lanzar la moneda</string>
     <string name="tools_underline">Subrayado</string>
     <string name="tools_undo">Deshacer</string>

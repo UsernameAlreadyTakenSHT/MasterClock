@@ -69,6 +69,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     val title = rememberNoteTitle(note, onUpdate)
+    val caption = rememberNoteCaption(note, onUpdate)
     val session = remember { VoiceSession({ MicRecorder(context) }, { MediaVoicePlayer() }, SystemClock::elapsedRealtime) }
     val state by session.state.collectAsState()
     var recordingTime by remember { mutableIntStateOf(0) }
@@ -141,6 +142,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
         }
         if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
         else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else ((note.audioDurationMs + 500) / 1000).let { seconds -> String.format(locale, "%02d:%02d", seconds / 60, seconds % 60) }, style = MaterialTheme.typography.headlineMedium)
+        CaptionField(caption)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) {
                 Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null)
@@ -197,6 +199,7 @@ private class MediaVoicePlayer : VoicePlayer {
 fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     val context = LocalContext.current
     val title = rememberNoteTitle(note, onUpdate)
+    val caption = rememberNoteCaption(note, onUpdate)
     val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }
     val take = rememberCameraTake(photoFile, ActivityResultContracts.TakePicture()) { file ->
         shredReplacedMedia(context, note.imagePath, file)
@@ -217,6 +220,7 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
             }
             AsyncImage(model = imageModel, contentDescription = stringResource(R.string.tools_note_image), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
         }
+        CaptionField(caption)
         CaptureButton(
             icon = if (imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay,
             label = stringResource(if (imagePath == null) R.string.tools_take_photo else R.string.tools_retake_photo),
@@ -231,6 +235,7 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
 fun VideoNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     val context = LocalContext.current
     val title = rememberNoteTitle(note, onUpdate)
+    val caption = rememberNoteCaption(note, onUpdate)
     val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }
     // A retake ends up at video_<id>.mp4 again, so the path is identical before and after and nothing
     // in the note tells the two apart. The take's counter is what does: it changes on every capture,
@@ -260,6 +265,7 @@ fun VideoNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                 onRelease = { view -> view.stopPlayback() },
             )
         }
+        CaptionField(caption)
         CaptureButton(
             icon = if (videoPath == null) Icons.Default.Videocam else Icons.Default.Replay,
             label = stringResource(if (videoPath == null) R.string.tools_record_video else R.string.tools_retake_video),
@@ -299,19 +305,55 @@ private fun MediaNoteScreen(screenTitle: Int, title: MutableState<String>, onBac
     }
 }
 
-/** Where a photo or a film is shown, centred, or what says there is none yet. */
+/**
+ * Where a photo or a film is shown, centred, or what says there is none yet.
+ *
+ * Framed only when empty, where the frame marks out the place the media will go. Around a photo it
+ * only added a border and grey bands above and below one not of the screen's shape.
+ */
 @Composable
 private fun ColumnScope.MediaFrame(empty: Boolean, emptyIcon: ImageVector, emptyText: Int, content: @Composable BoxScope.() -> Unit) {
+    if (!empty) {
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { content() }
+        return
+    }
     Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            if (!empty) content()
-            else Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(emptyIcon, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(stringResource(emptyText), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
+
+/**
+ * A media note's caption, saved as it is typed, as its title is. It is the note's content, which a
+ * text note keeps its text in and no other note used: import and export already carry it and hold
+ * it to its length, so it needs nothing new from either.
+ */
+@Composable
+private fun rememberNoteCaption(note: NotebookNote, onUpdate: NoteChange): MutableState<String> {
+    val caption = remember { mutableStateOf(note.content) }
+    PersistDebounced(caption.value) { newCaption -> onUpdate { it.copy(content = newCaption) } }
+    return caption
+}
+
+/** What is said about the photo, the recording or the film, under it. */
+@Composable
+private fun CaptionField(caption: MutableState<String>) {
+    OutlinedTextField(
+        value = caption.value,
+        onValueChange = { caption.value = it.take(MAX_NOTE_CAPTION_CHARS) },
+        label = { Text(stringResource(R.string.tools_caption)) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        maxLines = 3,
+    )
+}
+
+/** A caption is a line or two; a longer text is a text note's. */
+private const val MAX_NOTE_CAPTION_CHARS = 500
 
 /** A media note's main button: take, record, or take again. */
 @Composable

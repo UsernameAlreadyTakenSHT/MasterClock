@@ -235,6 +235,7 @@
     <string name="tools_text">Text</string>
     <string name="tools_time_per_move">Zeit pro Zug</string>
     <string name="tools_title">Titel</string>
+    <string name="tools_caption">Bildunterschrift</string>
     <string name="tools_toss_coin">Münze werfen</string>
     <string name="tools_underline">Unterstrichen</string>
     <string name="tools_undo">Rückgängig</string>

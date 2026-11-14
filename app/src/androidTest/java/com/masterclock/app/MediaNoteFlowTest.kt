@@ -80,8 +80,14 @@ class MediaNoteFlowTest {
 
     /** A small photo where the camera would have put one. */
     private fun aPhoto(id: String): File = File(File(rule.activity.filesDir, "shares").apply { mkdirs() }, "image_$id.jpg").apply {
-        val bitmap = android.graphics.Bitmap.createBitmap(64, 48, android.graphics.Bitmap.Config.ARGB_8888)
-        bitmap.eraseColor(android.graphics.Color.rgb(30, 120, 200))
+        // A board, of a photo's shape: wider than it is tall.
+        val bitmap = android.graphics.Bitmap.createBitmap(640, 480, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        val paint = android.graphics.Paint()
+        for (file in 0 until 8) for (rank in 0 until 6) {
+            paint.color = if ((file + rank) % 2 == 0) android.graphics.Color.rgb(240, 217, 181) else android.graphics.Color.rgb(181, 136, 99)
+            canvas.drawRect(file * 80f, rank * 80f, file * 80f + 80f, rank * 80f + 80f, paint)
+        }
         outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
     }
 
@@ -99,10 +105,15 @@ class MediaNoteFlowTest {
         open(note.copy(imagePath = photo.absolutePath))
         rule.onAllNodes(hasSetTextAction())[0].performTextReplacement("Scoresheet round 3")
         waitForTheNote("the title") { it.title == "Scoresheet round 3" }
+        // The caption, under the photo, kept as the note's content.
+        rule.onAllNodes(hasSetTextAction())[1].performTextReplacement("Lost on time, move 41")
+        waitForTheNote("the caption") { it.content == "Lost on time, move 41" }
         await(hasText(complete("tools_retake_photo")))
         shot("media_photo")
         deleteTheMedia("tools_delete_photo")
-        waitForTheNote("the delete") { it.imagePath == null }
+        // The photo goes; what was said about it stays.
+        waitForTheNote("the delete") { it.imagePath == null && it.content == "Lost on time, move 41" }
+        shot("media_photo_empty")
         await(hasText(complete("tools_take_photo")))
         await(hasText(complete("tools_no_photo")))
         rule.waitUntil(TIMEOUT_MS) { !photo.exists() }
@@ -113,7 +124,7 @@ class MediaNoteFlowTest {
     fun aVoiceNoteOffersPlayAndDeletesItsRecording() {
         val note = NotebookNote(title = "Analysis", type = NotebookNoteType.VOICE)
         val recording = File(rule.activity.filesDir, "audio_${note.id}.mp4").apply { writeBytes(ByteArray(256) { it.toByte() }) }
-        open(note.copy(audioPath = recording.absolutePath, audioDurationMs = 12_000))
+        open(note.copy(audioPath = recording.absolutePath, audioDurationMs = 12_000, content = "The plan after 12...Nf6"))
         await(hasText(complete("tools_play")))
         await(hasText(complete("tools_record_again")))
         await(hasText("00:12"))

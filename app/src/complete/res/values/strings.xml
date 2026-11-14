@@ -259,6 +259,7 @@
     <string name="tools_text">Text</string>
     <string name="tools_time_per_move">Time per Move</string>
     <string name="tools_title">Title</string>
+    <string name="tools_caption">Caption</string>
     <string name="tools_toss_coin">Toss the coin</string>
     <string name="tools_underline">Underline</string>
     <string name="tools_undo">Undo</string>

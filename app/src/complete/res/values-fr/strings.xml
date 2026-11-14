@@ -234,6 +234,7 @@
     <string name="tools_text">Texte</string>
     <string name="tools_time_per_move">Temps par coup</string>
     <string name="tools_title">Titre</string>
+    <string name="tools_caption">Légende</string>
     <string name="tools_toss_coin">Lancer la pièce</string>
     <string name="tools_underline">Souligné</string>
     <string name="tools_undo">Annuler</string>

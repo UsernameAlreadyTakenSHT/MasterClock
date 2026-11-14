@@ -239,6 +239,7 @@
     <string name="tools_text">Texto</string>
     <string name="tools_time_per_move">Tempo por lance</string>
     <string name="tools_title">Título</string>
+    <string name="tools_caption">Legenda</string>
     <string name="tools_toss_coin">Lançar a moeda</string>
     <string name="tools_underline">Sublinhado</string>
     <string name="tools_undo">Anular</string>
