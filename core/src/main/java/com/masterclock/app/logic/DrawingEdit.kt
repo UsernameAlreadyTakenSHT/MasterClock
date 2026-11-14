@@ -13,12 +13,16 @@ private const val MAX_DRAWING_HISTORY = 50
  *
  * The history covers this editing session only. A note reopened later starts without one, and Undo
  * then falls back to dropping the last saved stroke, which is what it always did.
+ *
+ * Redo gives back what Undo took, stroke dropped that way included, until something new is drawn.
  */
 data class DrawingEdit(
     val paths: List<DrawingPath>,
     val history: List<List<DrawingPath>> = emptyList(),
+    val future: List<List<DrawingPath>> = emptyList(),
 ) {
     val canUndo: Boolean get() = history.isNotEmpty() || paths.isNotEmpty()
+    val canRedo: Boolean get() = future.isNotEmpty()
 
     fun addStroke(stroke: DrawingPath): DrawingEdit = record(paths + stroke)
 
@@ -26,13 +30,19 @@ data class DrawingEdit(
     fun clear(): DrawingEdit = if (paths.isEmpty()) this else record(emptyList())
 
     fun undo(): DrawingEdit = when {
-        history.isNotEmpty() -> DrawingEdit(paths = history.last(), history = history.dropLast(1))
-        paths.isNotEmpty() -> copy(paths = paths.dropLast(1))
+        history.isNotEmpty() -> DrawingEdit(paths = history.last(), history = history.dropLast(1), future = keep(future + listOf(paths)))
+        paths.isNotEmpty() -> copy(paths = paths.dropLast(1), future = keep(future + listOf(paths)))
         else -> this
     }
 
+    fun redo(): DrawingEdit =
+        if (future.isEmpty()) this
+        else DrawingEdit(paths = future.last(), history = keep(history + listOf(paths)), future = future.dropLast(1))
+
     private fun record(next: List<DrawingPath>) =
-        DrawingEdit(paths = next, history = (history + listOf(paths)).takeLast(MAX_DRAWING_HISTORY))
+        DrawingEdit(paths = next, history = keep(history + listOf(paths)))
+
+    private fun keep(states: List<List<DrawingPath>>) = states.takeLast(MAX_DRAWING_HISTORY)
 }
 
 /**

@@ -22,6 +22,7 @@ import com.masterclock.app.logic.NoteStyle
 import com.masterclock.app.logic.NotebookNote
 import com.masterclock.app.logic.NotebookNoteType
 import com.masterclock.app.logic.allHave
+import com.masterclock.app.logic.isCenteredLine
 import com.masterclock.app.logic.richTextOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -172,6 +173,26 @@ class TextNoteFlowTest {
         rule.waitForIdle()
         val shot = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         java.io.File(rule.activity.filesDir, "note_emojis.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    @Test
+    fun aLineIsCentredAndUndoneAndRedone() {
+        openTheNotebook()
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_text")))
+        rule.onNode(hasText(complete("tools_text")) and hasClickAction()).performClick()
+        await(hasSetTextAction())
+        content().performTextInput("Round one")
+        press("tools_center")
+        waitForTheNote("the centring") { it.richTextOf().isCenteredLine(0) }
+        rule.onNode(hasContentDescription(complete("tools_undo")) and hasClickAction()).performClick()
+        waitForTheNote("the undo") { !it.richTextOf().isCenteredLine(0) && it.content == "Round one" }
+        rule.onNode(hasContentDescription(complete("tools_redo")) and hasClickAction()).performClick()
+        waitForTheNote("the redo") { it.richTextOf().isCenteredLine(0) && it.content == "Round one" }
+        content().performTextInput("\nleft")
+        rule.waitForIdle()
+        val shot = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        java.io.File(rule.activity.filesDir, "note_center.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     @Test

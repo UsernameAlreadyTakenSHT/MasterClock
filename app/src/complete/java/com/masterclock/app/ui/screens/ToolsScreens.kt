@@ -33,6 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
+import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -1452,7 +1453,7 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
     var canvas by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     val scale = drawnOn?.let { drawingScale(it.width, it.height, canvas.width.toFloat(), canvas.height.toFloat()) } ?: 1f
     PersistDebounced(Triple(title, currentPaths, drawnOn)) { (newTitle, paths, size) -> onUpdate { it.copy(title = newTitle, drawingPaths = paths, drawingWidth = size?.width ?: it.drawingWidth, drawingHeight = size?.height ?: it.drawingHeight) } }
-    ToolScaffold(title = stringResource(R.string.tools_draw_note), onBack = onBack, actions = { IconButton(onClick = { edit = edit.undo() }, enabled = edit.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }; IconButton(onClick = { edit = edit.clear() }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) } }) { padding ->
+    ToolScaffold(title = stringResource(R.string.tools_draw_note), onBack = onBack, actions = { IconButton(onClick = { edit = edit.undo() }, enabled = edit.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }; IconButton(onClick = { edit = edit.redo() }, enabled = edit.canRedo) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.tools_redo)) }; IconButton(onClick = { edit = edit.clear() }) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) } }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)) {
@@ -1662,16 +1663,16 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     // edits and the whole history would otherwise sit in memory for as long as the note is open.
     // The variant travels with the squares, so changing board is undoable like any other edit --
     // and it is the edit that destroys the most, since the two geometries share no squares.
-    var history by remember { mutableStateOf(listOf<Pair<BoardNoteVariant, List<String>>>()) }
+    var history by remember { mutableStateOf(EditHistory<Pair<BoardNoteVariant, List<String>>>(limit = MAX_BOARD_HISTORY)) }
     val editBoard: (List<String>) -> Unit = { next ->
         if (next != board) {
-            history = (history + listOf(variant to board)).takeLast(MAX_BOARD_HISTORY)
+            history = history.record(variant to board)
             board = next
         }
     }
     val changeVariant: (BoardNoteVariant) -> Unit = { next ->
         if (next != variant) {
-            history = (history + listOf(variant to board)).takeLast(MAX_BOARD_HISTORY)
+            history = history.record(variant to board)
             board = resizeBoard(board, variant, next)
             variant = next
             // A chess piece cannot be held over a draughts board, nor the other way round.
@@ -1733,14 +1734,26 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
         actions = {
             IconButton(
                 onClick = {
-                    history.lastOrNull()?.let { (previousVariant, previousBoard) ->
-                        variant = previousVariant
-                        board = previousBoard
-                        history = history.dropLast(1)
+                    history.undo(variant to board)?.let { (state, rest) ->
+                        if (state.first != variant) selectedPiece = null
+                        variant = state.first
+                        board = state.second
+                        history = rest
                     }
                 },
-                enabled = history.isNotEmpty(),
+                enabled = history.canUndo,
             ) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }
+            IconButton(
+                onClick = {
+                    history.redo(variant to board)?.let { (state, rest) ->
+                        if (state.first != variant) selectedPiece = null
+                        variant = state.first
+                        board = state.second
+                        history = rest
+                    }
+                },
+                enabled = history.canRedo,
+            ) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.tools_redo)) }
             // Clearing goes through the history too: emptying a board by accident is the one
             // mistake here that costs the most to make good by hand.
             IconButton(onClick = { editBoard(List(variant.squareCount) { "" }) }) {

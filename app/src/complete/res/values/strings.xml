@@ -198,6 +198,7 @@
     <string name="tools_image">Image</string>
     <string name="tools_image_note">Image Note</string>
     <string name="tools_highlight">Highlight</string>
+    <string name="tools_center">Center</string>
     <string name="tools_italic">Italic</string>
     <string name="tools_large">Large heading</string>
     <string name="tools_left">Left</string>
@@ -254,6 +255,7 @@
     <string name="tools_toss_coin">Toss the coin</string>
     <string name="tools_underline">Underline</string>
     <string name="tools_undo">Undo</string>
+    <string name="tools_redo">Redo</string>
     <string name="tools_variant_generator">Variant Generator</string>
     <string name="tools_video" tools:ignore="Typos">Video</string>
     <string name="tools_video_note" tools:ignore="Typos">Video Note</string>

@@ -18,9 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
+import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.BorderColor
 import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.FormatAlignCenter
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatColorReset
@@ -53,6 +55,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
@@ -64,6 +67,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,7 +86,9 @@ import com.masterclock.app.logic.TextSnapshot
 import com.masterclock.app.logic.allHave
 import com.masterclock.app.logic.checkboxToggled
 import com.masterclock.app.logic.colored
+import com.masterclock.app.logic.centerToggled
 import com.masterclock.app.logic.edited
+import com.masterclock.app.logic.isCenteredLine
 import com.masterclock.app.logic.emojiRanges
 import com.masterclock.app.logic.headingToggled
 import com.masterclock.app.logic.isTickedLine
@@ -157,6 +163,20 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
         show(rich.headingToggled(selection.min, selection.max, bit), selection.start, selection.end)
     }
 
+    fun center() {
+        val selection = field.selection
+        record(false)
+        show(rich.centerToggled(selection.min, selection.max), selection.start, selection.end)
+    }
+
+    /** Whether the line the cursor is on is centred. */
+    fun lineCentered(): Boolean {
+        val at = field.selection.min.coerceIn(0, rich.text.length)
+        return rich.isCenteredLine(rich.text.lastIndexOf('\n', at - 1) + 1)
+    }
+
+    fun snapshot() = TextSnapshot(rich.text, field.selection.start, field.selection.end, rich.spans)
+
     fun list(kind: ListKind) {
         val selection = field.selection
         record(false)
@@ -189,17 +209,26 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     }
 
     val styled = remember(rich) { annotated(rich) }
-    val transformation = remember(styled) {
-        VisualTransformation { text -> TransformedText(if (text.text == styled.text) styled else AnnotatedString(text.text), OffsetMapping.Identity) }
+    // Drawn in its styles when the field holds the note's text; the drawing may differ from it in
+    // its new lines (see annotated), never in its length, so the offsets map one to one.
+    val shownFor = rich.text
+    val transformation = remember(styled, shownFor) {
+        VisualTransformation { text -> TransformedText(if (text.text == shownFor) styled else AnnotatedString(text.text), OffsetMapping.Identity) }
     }
 
     ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = onBack, actions = {
         IconButton(onClick = {
-            history.undo()?.let { (snapshot, rest) ->
+            history.undo(snapshot())?.let { (snapshot, rest) ->
                 history = rest
                 show(RichText(snapshot.text, snapshot.spans), snapshot.selectionStart, snapshot.selectionEnd)
             }
         }, enabled = history.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }
+        IconButton(onClick = {
+            history.redo(snapshot())?.let { (snapshot, rest) ->
+                history = rest
+                show(RichText(snapshot.text, snapshot.spans), snapshot.selectionStart, snapshot.selectionEnd)
+            }
+        }, enabled = history.canRedo) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.tools_redo)) }
         // As the drawing's Clear: the whole text and its formatting, one step that Undo gives back.
         IconButton(onClick = {
             record(false)
@@ -235,6 +264,7 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                     // the user's choice; a small heading (TITLE) from an older note is still drawn.
                     MarkButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
                     IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
+                    StyleButton(Icons.Default.FormatAlignCenter, R.string.tools_center, lineCentered()) { center() }
                     IconButton(onClick = { list(ListKind.BULLET) }) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.tools_bullet_list)) }
                     IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
                     IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
@@ -343,11 +373,24 @@ internal val OpenMoji = FontFamily(Font(R.font.openmoji))
 
 private val HIGHLIGHTER = Color(0x80FFEB3B)
 
-private val NOTE_COLORS =listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
+private val NOTE_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
 
-/** The note as it is drawn: each run in its style, and a ticked box's line struck through. */
+/**
+ * The note as it is drawn: each run in its style, a ticked box's line struck through, and a centred
+ * line centred.
+ *
+ * Centring is a paragraph's, and Compose breaks the line between two paragraphs itself: the note's
+ * own new line then made a second break, an empty line under every centred one. So in a note with a
+ * centred line, each line is its own paragraph and is drawn with its new line turned into a
+ * zero-width space, which takes the same place, keeps every offset where it was, and breaks nothing.
+ * The last character, if it is a new line, stays one: it is what puts the cursor on the empty line
+ * after it. Only the drawing changes; the text, the cursor and what is copied are the note's own.
+ */
 private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
-    append(rich.text)
+    val text = rich.text
+    val lineStarts = generateSequence(0) { at -> text.indexOf('\n', at).takeIf { it >= 0 }?.plus(1) }.toList()
+    val centring = lineStarts.any { rich.isCenteredLine(it) }
+    append(if (!centring) text else String(CharArray(text.length) { i -> if (text[i] == '\n' && i < text.length - 1) '​' else text[i] }))
     for (run in rich.runs()) {
         val s = run.styles
         val decorations = listOfNotNull(
@@ -377,12 +420,15 @@ private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
     }
     // Emojis in OpenMoji, the same on every phone, newer ones included.
     for (range in emojiRanges(rich.text)) addStyle(SpanStyle(fontFamily = OpenMoji), range.first, range.last + 1)
-    var lineStart = 0
-    while (lineStart <= rich.text.length) {
-        val lineEnd = rich.text.indexOf('\n', lineStart).let { if (it < 0) rich.text.length else it }
+    for (lineStart in lineStarts) {
+        val lineEnd = text.indexOf('\n', lineStart).let { if (it < 0) text.length else it }
         if (rich.isTickedLine(lineStart) && lineStart + 2 < lineEnd) {
             addStyle(SpanStyle(textDecoration = TextDecoration.LineThrough, color = Color.Gray), lineStart + 2, lineEnd)
         }
-        lineStart = lineEnd + 1
+        // The paragraph takes the line's new line with it, so that the paragraphs cover the text.
+        val paragraphEnd = minOf(lineEnd + 1, text.length)
+        if (centring && paragraphEnd > lineStart) {
+            addStyle(ParagraphStyle(textAlign = if (rich.isCenteredLine(lineStart)) TextAlign.Center else TextAlign.Start), lineStart, paragraphEnd)
+        }
     }
 }

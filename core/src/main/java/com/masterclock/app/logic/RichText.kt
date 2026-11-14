@@ -29,6 +29,10 @@ object NoteStyle {
     const val HEADINGS = LARGE or TITLE
     /** Text marked as with a highlighter: behind it, not in it, so it goes with any text colour. */
     const val HIGHLIGHT = 64
+    /** A line centred. Like a heading it is the whole line's, and the line after it starts plain. */
+    const val CENTER = 128
+    /** What belongs to a line rather than to its characters, and so stops at its end. */
+    const val LINE_STYLES = HEADINGS or CENTER
 }
 
 /** A text and its formatting, as the editor works on them. */
@@ -175,7 +179,7 @@ fun RichText.edited(newText: String, typing: Pair<Int, Long>? = null, cursor: In
     var afterNewLine = false
     for (k in 0 until insertedLength) {
         val at = prefix + k
-        styles[at] = if (afterNewLine) style and NoteStyle.HEADINGS.inv() else style
+        styles[at] = if (afterNewLine) style and NoteStyle.LINE_STYLES.inv() else style
         colors[at] = color
         if (newText[at] == '\n') afterNewLine = true
     }
@@ -233,6 +237,32 @@ fun RichText.headingToggled(start: Int, end: Int, bit: Int): RichText {
         c.styles[i] = (c.styles[i] and NoteStyle.HEADINGS.inv()) or (if (on) bit else 0)
     }
     return RichText(text, spansOf(c.styles, c.colors))
+}
+
+/** The lines touched by the selection centred, or put back to the left if they all were. */
+fun RichText.centerToggled(start: Int, end: Int): RichText {
+    val lines = linesAround(start, end)
+    if (lines.isEmpty()) return this
+    val c = charStylesOf(this)
+    // Line by line: the new lines between them never carry the style, so all of the range never has
+    // it; and an empty line, which has nothing to carry it, does not count.
+    val on = !lineStarts(start, end).filter { it < text.length && text[it] != '\n' }.all { isCenteredLine(it) }
+    for (i in lines) {
+        if (text[i] == '\n') continue
+        c.styles[i] = if (on) c.styles[i] or NoteStyle.CENTER else c.styles[i] and NoteStyle.CENTER.inv()
+    }
+    return RichText(text, spansOf(c.styles, c.colors))
+}
+
+/**
+ * Whether the line starting at [lineStart] is centred: any of its characters is. Not every one, so
+ * that a bullet or a box put in front of a centred line, which comes in plain, leaves it centred.
+ */
+fun RichText.isCenteredLine(lineStart: Int): Boolean {
+    val end = text.indexOf('\n', lineStart).let { if (it < 0) text.length else it }
+    if (lineStart >= end) return false
+    val styles = charStylesOf(this).styles
+    return (lineStart until end.coerceAtMost(styles.size)).any { styles[it] and NoteStyle.CENTER != 0 }
 }
 
 /** The start of each line touched by [start]..[end]. */

@@ -175,6 +175,7 @@
     <string name="tools_image">Afbeelding</string>
     <string name="tools_image_note">Afbeeldingsnotitie</string>
     <string name="tools_highlight">Markeren</string>
+    <string name="tools_center">Centreren</string>
     <string name="tools_italic">Cursief</string>
     <string name="tools_large">Grote kop</string>
     <string name="tools_left">Links</string>
@@ -230,6 +231,7 @@
     <string name="tools_toss_coin">Munt opgooien</string>
     <string name="tools_underline">Onderstreept</string>
     <string name="tools_undo">Ongedaan maken</string>
+    <string name="tools_redo">Opnieuw</string>
     <string name="tools_variant_generator">Variantengenerator</string>
     <string name="tools_video" tools:ignore="Typos">Video</string>
     <string name="tools_video_note" tools:ignore="Typos">Videonotitie</string>

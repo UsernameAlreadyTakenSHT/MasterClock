@@ -176,6 +176,7 @@
     <string name="tools_image">Immagine</string>
     <string name="tools_image_note">Nota immagine</string>
     <string name="tools_highlight">Evidenzia</string>
+    <string name="tools_center">Centra</string>
     <string name="tools_italic">Corsivo</string>
     <string name="tools_large">Titolo grande</string>
     <string name="tools_left">Sinistra</string>
@@ -231,6 +232,7 @@
     <string name="tools_toss_coin">Lancia la moneta</string>
     <string name="tools_underline">Sottolineato</string>
     <string name="tools_undo">Annulla</string>
+    <string name="tools_redo">Ripeti</string>
     <string name="tools_variant_generator">Generatore di varianti</string>
     <string name="tools_video" tools:ignore="Typos">Video</string>
     <string name="tools_video_note" tools:ignore="Typos">Nota video</string>
