@@ -163,7 +163,7 @@
     <string name="tools_image">Imagem</string>
     <string name="tools_image_note">Nota de imagem</string>
     <string name="tools_italic">Itálico</string>
-    <string name="tools_large">Grande</string>
+    <string name="tools_large">Título grande</string>
     <string name="tools_left">Esquerda</string>
     <string name="tools_log_details">Detalhes do registo</string>
     <string name="tools_match_summary">Resumo do encontro</string>
@@ -181,7 +181,7 @@
     <string name="tools_no_notes">Ainda não há notas. Toque em + para criar uma.</string>
     <string name="tools_no_photo">Ainda não há fotografia</string>
     <string name="tools_no_video" tools:ignore="Typos">Ainda não há vídeo (máx. 1 min)</string>
-    <string name="tools_normal">Normal</string>
+    <string name="tools_normal">Título pequeno</string>
     <string name="tools_note_image">Imagem da nota</string>
     <string name="tools_offset">Desvio: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Tirar a palhinha %d</string>

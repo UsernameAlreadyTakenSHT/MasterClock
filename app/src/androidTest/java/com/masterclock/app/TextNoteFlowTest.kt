@@ -3,6 +3,7 @@ package com.masterclock.app
 import android.annotation.SuppressLint
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
@@ -51,8 +52,11 @@ class TextNoteFlowTest {
     private fun await(matcher: SemanticsMatcher) =
         rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty() }
 
-    /** A toolbar button, scrolled to first: the bar is wider than the screen, and a touch off it lands elsewhere. */
-    private fun press(name: String) = rule.onNode(hasContentDescription(complete(name)) and hasClickAction()).performScrollTo().performClick()
+    /**
+     * A toolbar button, which must be in view: the bar scrolled sideways, and the box, the numbered
+     * list and the colour were past the edge of a phone's screen, where nobody saw them.
+     */
+    private fun press(name: String) = rule.onNode(hasContentDescription(complete(name)) and hasClickAction()).assertIsDisplayed().performClick()
 
     /** The note's text field: the second field on the page, under the title. */
     private fun content() = rule.onAllNodes(hasSetTextAction())[1]

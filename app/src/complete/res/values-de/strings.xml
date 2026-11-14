@@ -159,7 +159,7 @@
     <string name="tools_image">Bild</string>
     <string name="tools_image_note">Bildnotiz</string>
     <string name="tools_italic">Kursiv</string>
-    <string name="tools_large">Groß</string>
+    <string name="tools_large">Große Überschrift</string>
     <string name="tools_left">Links</string>
     <string name="tools_log_details">Protokolldetails</string>
     <string name="tools_match_summary">Spielübersicht</string>
@@ -177,7 +177,7 @@
     <string name="tools_no_notes">Noch keine Notizen. Zum Anlegen auf + tippen.</string>
     <string name="tools_no_photo">Noch kein Foto</string>
     <string name="tools_no_video" tools:ignore="Typos">Noch kein Video (max. 1 Min)</string>
-    <string name="tools_normal">Normal</string>
+    <string name="tools_normal">Kleine Überschrift</string>
     <string name="tools_note_image">Bild der Notiz</string>
     <string name="tools_offset">Abweichung: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Halm %d ziehen</string>

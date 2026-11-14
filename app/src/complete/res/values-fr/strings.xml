@@ -158,7 +158,7 @@
     <string name="tools_image">Image</string>
     <string name="tools_image_note">Note image</string>
     <string name="tools_italic">Italique</string>
-    <string name="tools_large">Grand</string>
+    <string name="tools_large">Grand titre</string>
     <string name="tools_left">Gauche</string>
     <string name="tools_log_details">Détail du journal</string>
     <string name="tools_match_summary">Résumé du match</string>
@@ -176,7 +176,7 @@
     <string name="tools_no_notes">Aucune note. Appuyez sur + pour en créer une.</string>
     <string name="tools_no_photo">Aucune photo</string>
     <string name="tools_no_video" tools:ignore="Typos">Aucune vidéo (1 min max)</string>
-    <string name="tools_normal">Normal</string>
+    <string name="tools_normal">Petit titre</string>
     <string name="tools_note_image">Image de la note</string>
     <string name="tools_offset">Écart : %1$s%2$d ms</string>
     <string name="tools_pick_straw">Tirer la paille %d</string>

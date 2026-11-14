@@ -159,7 +159,7 @@
     <string name="tools_image">Afbeelding</string>
     <string name="tools_image_note">Afbeeldingsnotitie</string>
     <string name="tools_italic">Cursief</string>
-    <string name="tools_large">Groot</string>
+    <string name="tools_large">Grote kop</string>
     <string name="tools_left">Links</string>
     <string name="tools_log_details">Details van het logboek</string>
     <string name="tools_match_summary">Samenvatting van de wedstrijd</string>
@@ -177,7 +177,7 @@
     <string name="tools_no_notes">Nog geen notities. Tik op + om er een te maken.</string>
     <string name="tools_no_photo">Nog geen foto</string>
     <string name="tools_no_video" tools:ignore="Typos">Nog geen video (max. 1 min)</string>
-    <string name="tools_normal">Normaal</string>
+    <string name="tools_normal">Kleine kop</string>
     <string name="tools_note_image">Afbeelding van de notitie</string>
     <string name="tools_offset">Afwijking: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Strootje %d trekken</string>

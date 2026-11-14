@@ -160,7 +160,7 @@
     <string name="tools_image">Immagine</string>
     <string name="tools_image_note">Nota immagine</string>
     <string name="tools_italic">Corsivo</string>
-    <string name="tools_large">Grande</string>
+    <string name="tools_large">Titolo grande</string>
     <string name="tools_left">Sinistra</string>
     <string name="tools_log_details">Dettagli del registro</string>
     <string name="tools_match_summary">Riepilogo dell\'incontro</string>
@@ -178,7 +178,7 @@
     <string name="tools_no_notes">Nessuna nota. Tocca + per crearne una.</string>
     <string name="tools_no_photo">Nessuna foto</string>
     <string name="tools_no_video" tools:ignore="Typos">Nessun video (max 1 min)</string>
-    <string name="tools_normal">Normale</string>
+    <string name="tools_normal">Titolo piccolo</string>
     <string name="tools_note_image">Immagine della nota</string>
     <string name="tools_offset">Scarto: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Estrai la pagliuzza %d</string>

@@ -3,20 +3,17 @@ package com.masterclock.app.ui.screens
 import android.os.SystemClock
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,11 +24,9 @@ import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatColorReset
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatListNumbered
-import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.FormatStrikethrough
 import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Title
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
@@ -41,7 +36,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +46,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -184,24 +181,23 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                 textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             )
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)) {
-                // Scrolled: eleven buttons are wider than a phone.
-                Row(
-                    modifier = Modifier.padding(4.dp).horizontalScroll(rememberScrollState()),
+                // On as many lines as it takes. It scrolled sideways, with nothing to say it did: on a
+                // phone the lists, the box and the colour were past the edge, and looked to be missing.
+                FlowRow(
+                    modifier = Modifier.padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     StyleButton(Icons.Default.FormatBold, R.string.tools_bold, isOn(NoteStyle.BOLD)) { style(NoteStyle.BOLD) }
                     StyleButton(Icons.Default.FormatItalic, R.string.tools_italic, isOn(NoteStyle.ITALIC)) { style(NoteStyle.ITALIC) }
                     StyleButton(Icons.Default.FormatUnderlined, R.string.tools_underline, isOn(NoteStyle.UNDERLINE)) { style(NoteStyle.UNDERLINE) }
                     StyleButton(Icons.Default.FormatStrikethrough, R.string.tools_strikethrough, isOn(NoteStyle.STRIKE)) { style(NoteStyle.STRIKE) }
-                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp))
-                    StyleButton(Icons.Default.FormatSize, R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
-                    StyleButton(Icons.Default.Title, R.string.tools_normal, isOn(NoteStyle.TITLE)) { heading(NoteStyle.TITLE) }
-                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp))
+                    // Named for what they make: two icons of a T said nothing of headings, nor which was larger.
+                    HeadingButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
+                    HeadingButton("H2", R.string.tools_normal, isOn(NoteStyle.TITLE)) { heading(NoteStyle.TITLE) }
                     IconButton(onClick = { list(ListKind.BULLET) }) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.tools_bullet_list)) }
                     IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
                     IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
-                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp))
                     IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
                 }
             }
@@ -277,6 +273,18 @@ private fun StyleButton(icon: ImageVector, label: Int, on: Boolean, onClick: () 
         onCheckedChange = { onClick() },
         colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
     ) { Icon(icon, stringResource(label)) }
+}
+
+/** A heading size, which a letter and a number say better than an icon. */
+@Composable
+private fun HeadingButton(mark: String, label: Int, on: Boolean, onClick: () -> Unit) {
+    val name = stringResource(label)
+    IconToggleButton(
+        checked = on,
+        onCheckedChange = { onClick() },
+        modifier = Modifier.semantics { contentDescription = name },
+        colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+    ) { Text(mark, fontWeight = FontWeight.Black, modifier = Modifier.clearAndSetSemantics {}) }
 }
 
 private val NOTE_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)

@@ -182,7 +182,7 @@
     <string name="tools_image">Image</string>
     <string name="tools_image_note">Image Note</string>
     <string name="tools_italic">Italic</string>
-    <string name="tools_large">Large</string>
+    <string name="tools_large">Large heading</string>
     <string name="tools_left">Left</string>
     <string name="tools_log_details">Log Details</string>
     <string name="tools_match_summary">Match Summary</string>
@@ -200,7 +200,7 @@
     <string name="tools_no_notes">No notes yet. Tap + to create one.</string>
     <string name="tools_no_photo">No photo yet</string>
     <string name="tools_no_video" tools:ignore="Typos">No video yet (Max 1 min)</string>
-    <string name="tools_normal">Normal</string>
+    <string name="tools_normal">Small heading</string>
     <string name="tools_note_image">Note image</string>
     <string name="tools_offset">Offset: %1$s%2$dms</string>
     <string name="tools_pick_straw">Pick straw %d</string>
