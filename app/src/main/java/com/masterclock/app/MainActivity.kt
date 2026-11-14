@@ -71,6 +71,18 @@ class MainActivity : ComponentActivity() {
      */
     private var clockModel: ChessTimerViewModel? = null
 
+    /** A shortcut tapped while the app was open, waiting for the screen to take it; see [onNewIntent]. */
+    private val laterShortcut = mutableStateOf<String?>(null)
+
+    /**
+     * The activity is singleTask: a shortcut tapped with the app open arrives here, not through
+     * onCreate. It is handed to the screen, which asks first if a game is in play, as a preset does.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra(PresetShortcuts.EXTRA_SHORTCUT_ID)?.let { laterShortcut.value = it }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // Destroyed for good, not recreated: the game kept in the background went with the ViewModel.
@@ -94,8 +106,7 @@ class MainActivity : ComponentActivity() {
             else -> AppFlavor.COMPLETE
         }
 
-        // The activity has no launchMode, so it defaults to "standard" and a shortcut launch always
-        // arrives through onCreate with a fresh intent -- no onNewIntent needed.
+        // A shortcut that starts the app arrives here; one tapped with the app open, in onNewIntent.
         //
         // Only on the launch itself, though. The activity is recreated with the same intent on a
         // dark-mode switch, a font-scale change, a resize or a restore after process death, and
@@ -389,6 +400,21 @@ class MainActivity : ComponentActivity() {
                 topLevelRoutes = setOf(Route.Timer),
             )
             val navigator = remember { Navigator(navigationState) }
+
+            // A shortcut tapped with the app open. It starts a new game, so with one in play it asks
+            // what a preset asks; and it shows the clock, wherever the app had been left.
+            val shortcutAsked = laterShortcut.value
+            LaunchedEffect(shortcutAsked) {
+                val id = shortcutAsked ?: return@LaunchedEffect
+                laterShortcut.value = null
+                val apply: () -> Unit = {
+                    timerViewModel.applyShortcut(id)
+                    PresetShortcuts.reportUsed(context, id)
+                    while (navigator.goBack()) Unit
+                }
+                if (timerViewModel.settings.value.confirmReset && timerViewModel.uiState.value.activePlayer != null) pendingPreset = apply
+                else apply()
+            }
 
             // Back on the clock -- the root, where there is nothing to go back to -- leaves the app on
             // a second press within two seconds; the first says so. It did nothing at all, however

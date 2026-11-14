@@ -56,9 +56,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MasterClock">
+        <!--
+          One MainActivity, whatever starts it. With the default launch mode a preset shortcut tapped
+          while the app was open put a second activity on the first: a second clock, the game in the
+          first still running underneath with nothing on screen to show it, and both writing the one
+          saved clock. A shortcut now reaches the activity that is there; see onNewIntent.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.MasterClock"
             tools:ignore="LockedOrientationActivity,DiscouragedApi">
