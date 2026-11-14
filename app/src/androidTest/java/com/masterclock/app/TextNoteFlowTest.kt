@@ -129,6 +129,29 @@ class TextNoteFlowTest {
     }
 
     @Test
+    fun theInsertPanelPutsPiecesAnnotationsAndSquaresAtTheCursor() {
+        openTheNotebook()
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_text")))
+        rule.onNode(hasText(complete("tools_text")) and hasClickAction()).performClick()
+        await(hasSetTextAction())
+        // What this phone's font draws, for the record: the panel leaves out what it does not.
+        val paint = android.graphics.Paint()
+        android.util.Log.i("TextNoteFlowTest", "draughts pieces drawn: " + com.masterclock.app.logic.NoteInserts.DRAUGHTS_PIECES.map { it to paint.hasGlyph(it) })
+
+        press("tools_insert")
+        rule.onNode(hasText("♔") and hasClickAction()).performClick()
+        rule.onNode(hasText(complete("tools_insert_annotations")) and hasClickAction()).performClick()
+        rule.onNode(hasText("!?") and hasClickAction()).performClick()
+        rule.onNode(hasText(complete("tools_insert_squares")) and hasClickAction()).performClick()
+        rule.onNode(hasContentDescription("e4") and hasClickAction()).performClick()
+        rule.onNode(hasText(complete("tools_board_variant_draughts_10")) and hasClickAction()).performClick()
+        // The bottom row, below what the panel shows at once: scrolled to, as a finger would.
+        rule.onNode(hasContentDescription("50") and hasClickAction()).performScrollTo().performClick()
+        waitForTheNote("the inserts") { it.content == "♔!?e450" }
+    }
+
+    @Test
     fun aNoteWrittenWithMarkersOpensWithoutThem() {
         val old = NotebookNote(title = "Old", content = "**Bold** and <u>under</u>", type = NotebookNoteType.TEXT)
         rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(notebookNotes = listOf(old))) }

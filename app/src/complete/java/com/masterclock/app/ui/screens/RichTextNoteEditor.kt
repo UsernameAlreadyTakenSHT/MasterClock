@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FormatBold
@@ -41,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -109,6 +111,7 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     var typing by remember { mutableStateOf<Pair<Int, Long>?>(null) }
     var history by remember { mutableStateOf(TextEditHistory()) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var showInsert by rememberSaveable { mutableStateOf(false) }
 
     PersistDebounced(title to rich) { (newTitle, newRich) -> onUpdate { it.copy(title = newTitle).withRichText(newRich) } }
 
@@ -158,6 +161,19 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
         }
     }
 
+    /** [text] where the cursor is, over the selection if there is one, in the style typed there. */
+    fun insert(text: String) {
+        record(false)
+        val newText = rich.text.replaceRange(selection.min, selection.max, text)
+        if (newText.length > MAX_NOTE_CONTENT_CHARS) return
+        val cursor = selection.min + text.length
+        val next = rich.edited(newText, typing, cursor = cursor)
+        rich = next
+        // The field's value kept, its cursor moved past what went in: rebuilt, the keyboard lost
+        // the word it was composing.
+        field = field.copy(text = newText, selection = TextRange(cursor))
+    }
+
     val styled = remember(rich) { annotated(rich) }
     val transformation = remember(styled) {
         VisualTransformation { text -> TransformedText(if (text.text == styled.text) styled else AnnotatedString(text.text), OffsetMapping.Identity) }
@@ -205,8 +221,10 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                     IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
                     IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
                     IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
+                    StyleButton(Icons.Default.AddBox, R.string.tools_insert, showInsert) { showInsert = !showInsert }
                 }
             }
+            if (showInsert) InsertPanel(onInsert = ::insert)
             if (showColorPicker) {
                 Dialog(onDismissRequest = { showColorPicker = false }) {
                     Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {

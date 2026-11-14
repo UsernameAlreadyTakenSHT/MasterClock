@@ -126,6 +126,14 @@
     <string name="tools_bullet_list">Lista com marcadores</string>
     <string name="tools_numbered_list">Lista numerada</string>
     <string name="tools_color_default">Cor do texto</string>
+    <string name="tools_insert">Inserir</string>
+    <string name="tools_insert_pieces">Peças</string>
+    <string name="tools_insert_annotations">Anotações</string>
+    <string name="tools_insert_squares">Casas</string>
+    <string name="tools_insert_quality">Qualidade do lance</string>
+    <string name="tools_insert_evaluation">Avaliação</string>
+    <string name="tools_insert_other">Outros</string>
+    <string name="tools_insert_chess">Xadrez</string>
     <string name="tools_bold">Negrito</string>
     <string name="tools_checkbox">Caixa de seleção</string>
     <string name="tools_clear_board">Esvaziar o tabuleiro</string>

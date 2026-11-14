@@ -123,6 +123,14 @@
     <string name="tools_bullet_list">Opsomming</string>
     <string name="tools_numbered_list">Genummerde lijst</string>
     <string name="tools_color_default">Tekstkleur</string>
+    <string name="tools_insert">Invoegen</string>
+    <string name="tools_insert_pieces">Stukken</string>
+    <string name="tools_insert_annotations">Annotaties</string>
+    <string name="tools_insert_squares">Velden</string>
+    <string name="tools_insert_quality">Kwaliteit van de zet</string>
+    <string name="tools_insert_evaluation">Beoordeling</string>
+    <string name="tools_insert_other">Overig</string>
+    <string name="tools_insert_chess">Schaken</string>
     <string name="tools_bold">Vet</string>
     <string name="tools_checkbox">Selectievakje</string>
     <string name="tools_clear_board">Bord leegmaken</string>

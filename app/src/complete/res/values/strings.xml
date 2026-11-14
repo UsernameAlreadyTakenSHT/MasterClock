@@ -147,6 +147,14 @@
     <string name="tools_bullet_list">Bulleted list</string>
     <string name="tools_numbered_list">Numbered list</string>
     <string name="tools_color_default">Text colour</string>
+    <string name="tools_insert">Insert</string>
+    <string name="tools_insert_pieces">Pieces</string>
+    <string name="tools_insert_annotations">Annotations</string>
+    <string name="tools_insert_squares">Squares</string>
+    <string name="tools_insert_quality">Move quality</string>
+    <string name="tools_insert_evaluation">Evaluation</string>
+    <string name="tools_insert_other">Other</string>
+    <string name="tools_insert_chess">Chess</string>
     <string name="tools_bold">Bold</string>
     <string name="tools_checkbox">Checkbox</string>
     <string name="tools_clear_board">Clear Board</string>
