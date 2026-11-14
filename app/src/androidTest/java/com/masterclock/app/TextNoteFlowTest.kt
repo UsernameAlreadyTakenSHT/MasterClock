@@ -129,7 +129,7 @@ class TextNoteFlowTest {
     }
 
     @Test
-    fun theInsertPanelPutsPiecesAnnotationsAndSquaresAtTheCursor() {
+    fun theInsertPanelPutsPiecesAndAnnotationsAtTheCursor() {
         openTheNotebook()
         rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
         await(hasText(complete("tools_text")))
@@ -143,12 +143,8 @@ class TextNoteFlowTest {
         rule.onNode(hasText("♔") and hasClickAction()).performClick()
         rule.onNode(hasText(complete("tools_insert_annotations")) and hasClickAction()).performClick()
         rule.onNode(hasText("!?") and hasClickAction()).performClick()
-        rule.onNode(hasText(complete("tools_insert_squares")) and hasClickAction()).performClick()
-        rule.onNode(hasContentDescription("e4") and hasClickAction()).performClick()
-        rule.onNode(hasText(complete("tools_board_variant_draughts_10")) and hasClickAction()).performClick()
-        // The bottom row, below what the panel shows at once: scrolled to, as a finger would.
-        rule.onNode(hasContentDescription("50") and hasClickAction()).performScrollTo().performClick()
-        waitForTheNote("the inserts") { it.content == "♔!?e450" }
+        rule.onNode(hasText("±") and hasClickAction()).performClick()
+        waitForTheNote("the inserts") { it.content == "♔!?±" }
     }
 
     @Test

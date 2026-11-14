@@ -126,11 +126,9 @@
     <string name="tools_insert">Insertar</string>
     <string name="tools_insert_pieces">Piezas</string>
     <string name="tools_insert_annotations">Anotaciones</string>
-    <string name="tools_insert_squares">Casillas</string>
     <string name="tools_insert_quality">Calidad de la jugada</string>
     <string name="tools_insert_evaluation">Valoración</string>
     <string name="tools_insert_other">Otros</string>
-    <string name="tools_insert_chess">Ajedrez</string>
     <string name="tools_bold">Negrita</string>
     <string name="tools_checkbox">Casilla</string>
     <string name="tools_clear_board">Vaciar el tablero</string>

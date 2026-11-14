@@ -124,11 +124,9 @@
     <string name="tools_insert">Insérer</string>
     <string name="tools_insert_pieces">Pièces</string>
     <string name="tools_insert_annotations">Annotations</string>
-    <string name="tools_insert_squares">Cases</string>
     <string name="tools_insert_quality">Qualité du coup</string>
     <string name="tools_insert_evaluation">Évaluation</string>
     <string name="tools_insert_other">Divers</string>
-    <string name="tools_insert_chess">Échecs</string>
     <string name="tools_bold">Gras</string>
     <string name="tools_checkbox">Case à cocher</string>
     <string name="tools_clear_board">Vider l\'échiquier</string>

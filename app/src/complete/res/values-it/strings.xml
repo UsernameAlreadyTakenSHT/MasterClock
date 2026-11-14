@@ -126,11 +126,9 @@
     <string name="tools_insert">Inserisci</string>
     <string name="tools_insert_pieces">Pezzi</string>
     <string name="tools_insert_annotations">Annotazioni</string>
-    <string name="tools_insert_squares">Case</string>
     <string name="tools_insert_quality">Qualità della mossa</string>
     <string name="tools_insert_evaluation">Valutazione</string>
     <string name="tools_insert_other">Altro</string>
-    <string name="tools_insert_chess">Scacchi</string>
     <string name="tools_bold">Grassetto</string>
     <string name="tools_checkbox">Casella</string>
     <string name="tools_clear_board">Svuota la scacchiera</string>

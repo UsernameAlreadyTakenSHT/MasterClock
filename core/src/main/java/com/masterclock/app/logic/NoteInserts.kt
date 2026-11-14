@@ -28,24 +28,3 @@ object NoteInserts {
         "1-0", "½-½", "0-1", "2-0", "1-1", "0-2",
     )
 }
-
-/** The boards whose squares the Insert panel names. */
-enum class SquareBoard(val side: Int) { CHESS(8), DRAUGHTS_10(10), DRAUGHTS_8(8) }
-
-/**
- * The name of the square at [row] from the top and [column] from the left of [board], as seen from
- * White's or the first player's side: "e4" on a chessboard; on a draughts board the number of a
- * dark square, 1 at the top left and counting along each row, which is how draughts writes its
- * moves; null for a light draughts square, which nothing is ever played on.
- */
-fun squareName(board: SquareBoard, row: Int, column: Int): String? {
-    if (row !in 0 until board.side || column !in 0 until board.side) return null
-    return when (board) {
-        SquareBoard.CHESS -> "${'a' + column}${board.side - row}"
-        SquareBoard.DRAUGHTS_10, SquareBoard.DRAUGHTS_8 ->
-            if ((row + column) % 2 == 1) (row * board.side / 2 + column / 2 + 1).toString() else null
-    }
-}
-
-/** Whether the square at [row], [column] is a dark one, as a board draws it. */
-fun isDarkSquare(row: Int, column: Int): Boolean = (row + column) % 2 == 1

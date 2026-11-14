@@ -126,11 +126,9 @@
     <string name="tools_insert">Einfügen</string>
     <string name="tools_insert_pieces">Figuren</string>
     <string name="tools_insert_annotations">Anmerkungen</string>
-    <string name="tools_insert_squares">Felder</string>
     <string name="tools_insert_quality">Zugbewertung</string>
     <string name="tools_insert_evaluation">Stellungsbewertung</string>
     <string name="tools_insert_other">Sonstiges</string>
-    <string name="tools_insert_chess">Schach</string>
     <string name="tools_bold">Fett</string>
     <string name="tools_checkbox">Kontrollkästchen</string>
     <string name="tools_clear_board">Brett leeren</string>
