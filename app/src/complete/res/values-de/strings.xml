@@ -164,6 +164,13 @@
     <string name="tools_edit_board">Brett bearbeiten</string>
     <string name="tools_edit_note">Notiz bearbeiten</string>
     <string name="tools_eraser">Radierer</string>
+    <string name="tools_pen">Stift</string>
+    <string name="tools_line">Linie</string>
+    <string name="tools_arrow">Pfeil</string>
+    <string name="tools_rectangle">Rechteck</string>
+    <string name="tools_ellipse">Ellipse</string>
+    <string name="tools_shape_done">Fertig</string>
+    <string name="tools_shapes">Formen</string>
     <string name="tools_final_score">Endstand: %d</string>
     <string name="tools_format_hint">Text markieren und mit der Werkzeugleiste formatieren…</string>
     <string name="tools_game_logs">Partieprotokolle</string>

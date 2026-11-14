@@ -189,6 +189,13 @@
     <string name="tools_edit_board">Edit Board</string>
     <string name="tools_edit_note">Edit Note</string>
     <string name="tools_eraser">Eraser</string>
+    <string name="tools_pen">Pen</string>
+    <string name="tools_line">Line</string>
+    <string name="tools_arrow">Arrow</string>
+    <string name="tools_rectangle">Rectangle</string>
+    <string name="tools_ellipse">Ellipse</string>
+    <string name="tools_shape_done">Done</string>
+    <string name="tools_shapes">Shapes</string>
     <string name="tools_final_score">Final Score: %d</string>
     <string name="tools_format_hint">Select text and use toolbar to format…</string>
     <string name="tools_game_logs">Game Logs</string>

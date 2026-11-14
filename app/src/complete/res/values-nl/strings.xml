@@ -164,6 +164,13 @@
     <string name="tools_edit_board">Bord bewerken</string>
     <string name="tools_edit_note">Notitie bewerken</string>
     <string name="tools_eraser">Gum</string>
+    <string name="tools_pen">Pen</string>
+    <string name="tools_line">Lijn</string>
+    <string name="tools_arrow">Pijl</string>
+    <string name="tools_rectangle">Rechthoek</string>
+    <string name="tools_ellipse">Ellips</string>
+    <string name="tools_shape_done">Klaar</string>
+    <string name="tools_shapes">Vormen</string>
     <string name="tools_final_score">Eindstand: %d</string>
     <string name="tools_format_hint">Selecteer tekst en gebruik de werkbalk om die op te maken…</string>
     <string name="tools_game_logs">Partijlogboeken</string>

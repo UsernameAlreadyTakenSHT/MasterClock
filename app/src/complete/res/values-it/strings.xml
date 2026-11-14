@@ -165,6 +165,13 @@
     <string name="tools_edit_board">Modifica la scacchiera</string>
     <string name="tools_edit_note">Modifica la nota</string>
     <string name="tools_eraser">Gomma</string>
+    <string name="tools_pen">Penna</string>
+    <string name="tools_line">Linea</string>
+    <string name="tools_arrow">Freccia</string>
+    <string name="tools_rectangle">Rettangolo</string>
+    <string name="tools_ellipse">Ellisse</string>
+    <string name="tools_shape_done">Fatto</string>
+    <string name="tools_shapes">Forme</string>
     <string name="tools_final_score">Punteggio finale: %d</string>
     <string name="tools_format_hint">Seleziona il testo e usa la barra degli strumenti per formattarlo…</string>
     <string name="tools_game_logs">Registri delle partite</string>

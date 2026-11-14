@@ -26,6 +26,15 @@ data class DrawingEdit(
 
     fun addStroke(stroke: DrawingPath): DrawingEdit = record(paths + stroke)
 
+    /** The stroke at [index] taken out, as one step. */
+    fun remove(index: Int): DrawingEdit =
+        if (index !in paths.indices) this else record(paths.filterIndexed { i, _ -> i != index })
+
+    /** The stroke at [index] changed to [stroke] -- a shape moved, resized or made another -- as one step. */
+    fun replace(index: Int, stroke: DrawingPath): DrawingEdit =
+        if (index !in paths.indices || paths[index] == stroke) this
+        else record(paths.toMutableList().also { it[index] = stroke })
+
     /** Empties the drawing. Clearing one that is already empty records nothing to undo. */
     fun clear(): DrawingEdit = if (paths.isEmpty()) this else record(emptyList())
 

@@ -168,6 +168,13 @@
     <string name="tools_edit_board">Editar o tabuleiro</string>
     <string name="tools_edit_note">Editar a nota</string>
     <string name="tools_eraser">Borracha</string>
+    <string name="tools_pen">Caneta</string>
+    <string name="tools_line">Linha</string>
+    <string name="tools_arrow">Seta</string>
+    <string name="tools_rectangle">Retângulo</string>
+    <string name="tools_ellipse">Elipse</string>
+    <string name="tools_shape_done">Concluído</string>
+    <string name="tools_shapes">Formas</string>
     <string name="tools_final_score">Pontuação final: %d</string>
     <string name="tools_format_hint">Selecione o texto e use a barra de ferramentas para o formatar…</string>
     <string name="tools_game_logs">Registos de partidas</string>

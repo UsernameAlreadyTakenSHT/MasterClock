@@ -839,7 +839,13 @@ data class DrawingPath(
     val points: List<Pair<Float, Float>> = emptyList(),
     val color: Long = 0xFF000000,
     val strokeWidth: Float = 5f,
-    val isEraser: Boolean = false
+    val isEraser: Boolean = false,
+    /**
+     * A [DrawingShape], drawn from its first point to its last; [DrawingShape.FREE] for a stroke of
+     * the finger. A number rather than an enum, so that a shape a later version adds reads here as a
+     * line between its two points instead of failing the whole settings file.
+     */
+    val shape: Int = DrawingShape.FREE,
 )
 
 @Serializable
@@ -1515,7 +1521,10 @@ internal fun sanitizeNote(filesDir: java.io.File, note: NotebookNote, freshId: B
             // Held to the text as it is kept, cut as it may have been.
             richSpans = cleanSpans(note.richSpans, note.content.length.coerceAtMost(MAX_IMPORTED_NOTE_CONTENT_CHARS)),
             drawingPaths = note.drawingPaths.take(MAX_IMPORTED_DRAWING_PATHS).map { stroke ->
-                stroke.copy(points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS))
+                stroke.copy(
+                    points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS),
+                    shape = stroke.shape.takeIf { it in DrawingShape.KNOWN } ?: DrawingShape.FREE,
+                )
             },
             // A size no screen has, or none: the drawing is then shown as it stands.
             drawingWidth = note.drawingWidth.takeIf { it.isFinite() && it in 0f..MAX_DRAWING_SIDE_PX } ?: 0f,

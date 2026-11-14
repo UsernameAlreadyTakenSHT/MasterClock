@@ -163,6 +163,13 @@
     <string name="tools_edit_board">Modifier l\'échiquier</string>
     <string name="tools_edit_note">Modifier la note</string>
     <string name="tools_eraser">Gomme</string>
+    <string name="tools_pen">Stylo</string>
+    <string name="tools_line">Ligne</string>
+    <string name="tools_arrow">Flèche</string>
+    <string name="tools_rectangle">Rectangle</string>
+    <string name="tools_ellipse">Ellipse</string>
+    <string name="tools_shape_done">Terminé</string>
+    <string name="tools_shapes">Formes</string>
     <string name="tools_final_score">Score final : %d</string>
     <string name="tools_format_hint">Sélectionnez du texte et utilisez la barre d\'outils pour le mettre en forme…</string>
     <string name="tools_game_logs">Journaux de parties</string>
