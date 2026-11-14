@@ -71,6 +71,43 @@ class MainActivity : ComponentActivity() {
      */
     private var clockModel: ChessTimerViewModel? = null
 
+    /**
+     * The Omni session's, once its screen has been opened; null before, since the Omni ViewModel is
+     * built only for that screen. A session runs only with its screen up -- leaving it pauses the
+     * session -- so it is there whenever there is one to keep in the background.
+     */
+    private var omniModel: OmniTimerViewModel? = null
+
+    /** Keeps the notification on the Omni session while the service keeps it; see [keepOmniInBackground]. */
+    private var omniNotifying: kotlinx.coroutines.Job? = null
+
+    /**
+     * Keeps a running Omni session alive in the background, as a chess game is: the service and its
+     * notification, which follows the session from turn to turn. Pause there pauses the session.
+     */
+    private fun keepOmniInBackground(omni: OmniTimerViewModel): Boolean {
+        val clock = omniBackgroundClockOf(omni.omniState.value, omni.omniSettings.value) ?: return false
+        BackgroundClockService.start(this, omni, clock) { omni.pauseOmni() }
+        omniNotifying?.cancel()
+        omniNotifying = lifecycleScope.launch {
+            combine(omni.omniState, omni.omniSettings) { state, settings -> omniBackgroundClockOf(state, settings) }
+                .collect { next ->
+                    if (BackgroundClockLink.clock.value != null && BackgroundClockLink.owner == System.identityHashCode(omni)) {
+                        BackgroundClockLink.clock.value = next
+                    }
+                }
+        }
+        return true
+    }
+
+    /** Back in front, or gone for good: the notification goes, for whichever of the two it kept. */
+    private fun stopKeeping(clock: ChessTimerViewModel?) {
+        clock?.let { BackgroundClockService.stopIfKeeping(this, it) }
+        omniModel?.let { BackgroundClockService.stopIfKeeping(this, it) }
+        omniNotifying?.cancel()
+        omniNotifying = null
+    }
+
     /** A shortcut tapped while the app was open, waiting for the screen to take it; see [onNewIntent]. */
     private val laterShortcut = mutableStateOf<String?>(null)
 
@@ -86,7 +123,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         // Destroyed for good, not recreated: the game kept in the background went with the ViewModel.
-        if (!isChangingConfigurations) clockModel?.let { BackgroundClockService.stopIfKeeping(this, it) }
+        if (!isChangingConfigurations) stopKeeping(clockModel)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -375,13 +412,15 @@ class MainActivity : ComponentActivity() {
                         if (settings.pauseOnBackground) {
                             timerViewModel.pause()
                         } else if (settings.runsInBackground()) {
-                            backgroundClockOf(timerViewModel.uiState.value, settings)?.let { clock ->
-                                BackgroundClockService.start(this@MainActivity, timerViewModel, clock) { timerViewModel.pause() }
-                            }
+                            val chess = backgroundClockOf(timerViewModel.uiState.value, settings)
+                            // The chess game if one runs; otherwise an Omni session, which runs only
+                            // with its own screen up and the chess clock behind it paused.
+                            if (chess != null) BackgroundClockService.start(this@MainActivity, timerViewModel, chess) { timerViewModel.pause() }
+                            else omniModel?.let { keepOmniInBackground(it) }
                         }
                     }
                     // In front again: the clock is on the screen, and the notification goes.
-                    if (event == Lifecycle.Event.ON_RESUME) BackgroundClockService.stopIfKeeping(this@MainActivity, timerViewModel)
+                    if (event == Lifecycle.Event.ON_RESUME) stopKeeping(timerViewModel)
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose {
@@ -636,6 +675,7 @@ class MainActivity : ComponentActivity() {
                             // in Mini, where FlavorConfig.hasOmni() is false and there is no way to
                             // reach this route at all.
                             val omniViewModel: OmniTimerViewModel = viewModel()
+                            SideEffect { omniModel = omniViewModel }
                             OmniTimerScreen(
                                 viewModel = omniViewModel,
                                 pauseOnBackground = settings.pauseOnBackground,

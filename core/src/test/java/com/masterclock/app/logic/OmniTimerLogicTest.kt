@@ -1,5 +1,6 @@
 package com.masterclock.app.logic
 
+import com.masterclock.app.data.storedJson
 import org.junit.Test
 import org.junit.Assert.*
 import kotlin.random.Random
@@ -469,7 +470,6 @@ class OmniTimerLogicTest {
     }
 
     @Test
-    @Test
     fun `a session under way comes back paused where it was`() {
         val settings = OmniSettings(numberOfPlayers = 3)
         val running = OmniState(
@@ -507,6 +507,7 @@ class OmniTimerLogicTest {
         assertNull(omniBackgroundClockOf(OmniState(), settings))
     }
 
+    @Test
     fun `every player plays each turn of a round set up with several`() {
         val long = OmniTurnSettings(durationMs = 120_000)
         val short = OmniTurnSettings(durationMs = 30_000)
