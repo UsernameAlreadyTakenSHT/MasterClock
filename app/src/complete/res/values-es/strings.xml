@@ -57,10 +57,10 @@
     <string name="guide_byoyomi_progressive_desc">El número de jugadas exigidas aumenta cada vez que se completa un periodo.</string>
     <string name="guide_chrono_countdown_desc">Reloj maestro que descuenta durante toda la partida.</string>
     <string name="guide_chrono_countup_desc">Modo cronómetro que mide el tiempo total transcurrido.</string>
-    <string name="guide_chrono_one_for_all_desc">Reloj global que no cambia de jugador cuando se pulsan los botones.</string>
+    <string name="guide_chrono_one_for_all_desc">No es un modo aparte: es una opción de Countdown y Countup. Activada, un solo reloj corre para toda la mesa, y pulsarlo no cambia de jugador.</string>
     <string name="guide_counts_down_desc">Parte de un límite y descuenta hasta cero jugadas restantes.</string>
     <string name="guide_counts_up_desc">Muestra el número total de jugadas realizadas desde el inicio.</string>
-    <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Shrink: cada jugada tiene menos tiempo, hasta un mínimo. Transfer: el tiempo que gastas pasa a tu rival.</string>
+    <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Shrink: cada jugada tiene menos tiempo, hasta un mínimo. Transfer: la próxima jugada del rival recibe el tiempo por jugada más el que acabas de gastar, y la tuya vuelve a empezar desde el tiempo por jugada; con Cumulative Transfer se suma a lo que le queda, y tú conservas lo que tenías.</string>
     <string name="guide_fide_desc">Ritmo de torneo por periodos: por ejemplo, 90 min para 40 jugadas, luego 30 min para el resto, con 30 s añadidos por jugada.</string>
     <string name="guide_gong_desc">Jugadas forzadas a intervalos fijos (simultáneas o por turnos).</string>
     <string name="guide_hidden_desc">Un tiempo sorteado al azar y oculto. Con los porcentajes activados, se muestra un momento al pasar por el 50, 25, 10, 5, 2 y 1 %.</string>
@@ -71,7 +71,7 @@
     <string name="guide_move_save_cap_desc">El tiempo de jugada no utilizado pasa a la siguiente jugada, hasta un tope en el reloj.</string>
     <string name="guide_move_shared_desc">Un único reloj para todos los jugadores. Cambia automáticamente a las 0:00.</string>
     <string name="guide_move_standard_desc">Vuelve a una duración fija en cada jugada.</string>
-    <string name="guide_omni_desc">Estación profesional de 6 niveles para estructuras de juego complejas (partidas &gt; rondas &gt; turnos &gt; fases).</string>
+    <string name="guide_omni_desc">Estación de varios niveles para estructuras de juego complejas: sesión &gt; partidas &gt; rondas &gt; turnos &gt; fases, cada nivel con su propio reloj, activado o no. Cada jugador juega cada uno de los turnos previstos para una ronda. Bancos de tiempo, cortes y pausas entre turnos, rondas y partidas; una sesión abandonada se puede reanudar, incluso después de cerrar la app.</string>
     <string name="guide_phases_desc">Secuencia de relojes distintos (por ejemplo, preparación 5 min -&gt; partida 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">El tiempo base y los incrementos se sortean dentro de un rango definido.</string>
     <string name="guide_section_advanced">Motores avanzados y experimentales</string>

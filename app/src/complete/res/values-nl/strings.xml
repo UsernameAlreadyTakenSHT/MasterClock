@@ -57,10 +57,10 @@
     <string name="guide_byoyomi_progressive_desc">Het aantal vereiste zetten neemt toe bij elke voltooide periode.</string>
     <string name="guide_chrono_countdown_desc">Hoofdklok die de hele partij aftelt.</string>
     <string name="guide_chrono_countup_desc">Stopwatchmodus die de totale verstreken tijd meet.</string>
-    <string name="guide_chrono_one_for_all_desc">Globale klok die niet van speler wisselt wanneer op de knoppen wordt gedrukt.</string>
+    <string name="guide_chrono_one_for_all_desc">Geen eigen modus, maar een schakelaar van Countdown en Countup. Aan loopt er één klok voor de hele tafel, en erop drukken wisselt niet van speler.</string>
     <string name="guide_counts_down_desc">Begint bij een limiet en telt af tot nul resterende zetten.</string>
     <string name="guide_counts_up_desc">Toont het totale aantal zetten sinds het begin.</string>
-    <string name="guide_fast_move_desc">Beloont snelle zetten. Accelerate: hoe langer je nadenkt, hoe sneller je klok loopt. Shrink: elke zet krijgt minder tijd, tot een ondergrens. Transfer: de tijd die je gebruikt gaat naar je tegenstander.</string>
+    <string name="guide_fast_move_desc">Beloont snelle zetten. Accelerate: hoe langer je nadenkt, hoe sneller je klok loopt. Shrink: elke zet krijgt minder tijd, tot een ondergrens. Transfer: de volgende zet van je tegenstander krijgt de zettijd plus de tijd die jij net gebruikte, en de jouwe begint weer bij de zettijd; met Cumulative Transfer komt die bij wat hij nog had, en houd jij wat je had.</string>
     <string name="guide_fide_desc">Toernooitempo in periodes: bijvoorbeeld 90 min voor 40 zetten, daarna 30 min voor de rest, met 30 s erbij per zet.</string>
     <string name="guide_gong_desc">Verplichte zetten op vaste intervallen (gelijktijdig of om beurten).</string>
     <string name="guide_hidden_desc">Een willekeurig getrokken tijd die verborgen blijft. Met percentages aan verschijnt hij even bij 50, 25, 10, 5, 2 en 1 %.</string>
@@ -71,7 +71,7 @@
     <string name="guide_move_save_cap_desc">Ongebruikte zettijd gaat mee naar de volgende zet, tot een maximum op de klok.</string>
     <string name="guide_move_shared_desc">Eén klok voor alle spelers. Wisselt automatisch bij 0:00.</string>
     <string name="guide_move_standard_desc">Gaat bij elke zet terug naar een vaste duur.</string>
-    <string name="guide_omni_desc">Professionele centrale met 6 niveaus voor complexe spelstructuren (partijen &gt; rondes &gt; beurten &gt; fases).</string>
+    <string name="guide_omni_desc">Centrale met meerdere niveaus voor complexe spelstructuren: sessie &gt; partijen &gt; rondes &gt; beurten &gt; fases, elk niveau met een eigen klok, aan of uit. Elke speler speelt elke beurt die voor een ronde is ingesteld. Tijdbanken, afbrekingen en pauzes tussen beurten, rondes en partijen; een verlaten sessie kan worden hervat, ook nadat de app is gesloten.</string>
     <string name="guide_phases_desc">Opeenvolging van verschillende klokken (bijvoorbeeld voorbereiding 5 min -&gt; partij 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">Basistijd en incrementen worden geloot binnen een ingesteld bereik.</string>
     <string name="guide_section_advanced">Geavanceerde en experimentele modi</string>

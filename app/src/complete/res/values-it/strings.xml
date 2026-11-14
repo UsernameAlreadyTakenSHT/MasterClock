@@ -57,10 +57,10 @@
     <string name="guide_byoyomi_progressive_desc">Il numero di mosse richieste cresce a ogni periodo completato.</string>
     <string name="guide_chrono_countdown_desc">Orologio principale che conta alla rovescia per tutta la partita.</string>
     <string name="guide_chrono_countup_desc">Modalità cronometro che misura il tempo totale trascorso.</string>
-    <string name="guide_chrono_one_for_all_desc">Orologio globale che non cambia giocatore quando si premono i pulsanti.</string>
+    <string name="guide_chrono_one_for_all_desc">Non è una modalità a sé: è un\'opzione di Countdown e Countup. Attiva, un solo orologio corre per tutto il tavolo, e premerlo non cambia giocatore.</string>
     <string name="guide_counts_down_desc">Parte da un limite e scende fino a zero mosse rimaste.</string>
     <string name="guide_counts_up_desc">Mostra il numero totale di mosse giocate dall\'inizio.</string>
-    <string name="guide_fast_move_desc">Premia le mosse rapide. Accelerate: più pensi, più veloce corre il tuo orologio. Shrink: ogni mossa ha meno tempo, fino a un minimo. Transfer: il tempo che usi passa all\'avversario.</string>
+    <string name="guide_fast_move_desc">Premia le mosse rapide. Accelerate: più pensi, più veloce corre il tuo orologio. Shrink: ogni mossa ha meno tempo, fino a un minimo. Transfer: la prossima mossa dell\'avversario riceve il tempo per mossa più quello che hai appena usato, e la tua riparte dal tempo per mossa; con Cumulative Transfer si aggiunge a quello che gli resta, e tu tieni quello che avevi.</string>
     <string name="guide_fide_desc">Cadenza da torneo a periodi: per esempio 90 min per 40 mosse, poi 30 min per il resto, con 30 s aggiunti per mossa.</string>
     <string name="guide_gong_desc">Mosse imposte a intervalli fissi (simultanee o a turno).</string>
     <string name="guide_hidden_desc">Un tempo estratto a caso e nascosto. Con le percentuali attive, compare per un attimo al 50, 25, 10, 5, 2 e 1 %.</string>
@@ -71,7 +71,7 @@
     <string name="guide_move_save_cap_desc">Il tempo di mossa non usato passa alla mossa successiva, fino a un tetto massimo sull\'orologio.</string>
     <string name="guide_move_shared_desc">Un solo orologio per tutti i giocatori. Cambia automaticamente a 0:00.</string>
     <string name="guide_move_standard_desc">Torna a una durata fissa a ogni mossa.</string>
-    <string name="guide_omni_desc">Stazione professionale a 6 livelli per strutture di gioco complesse (partite &gt; manche &gt; turni &gt; fasi).</string>
+    <string name="guide_omni_desc">Stazione a più livelli per strutture di gioco complesse: sessione &gt; partite &gt; manche &gt; turni &gt; fasi, ogni livello con il suo orologio, attivo o no. Ogni giocatore gioca ciascuno dei turni previsti per una manche. Banche del tempo, interruzioni e pause tra turni, manche e partite; una sessione lasciata si può riprendere, anche dopo la chiusura dell\'app.</string>
     <string name="guide_phases_desc">Sequenza di orologi diversi (per esempio preparazione 5 min -&gt; partita 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">Tempo base e incrementi sono estratti a caso in un intervallo definito.</string>
     <string name="guide_section_advanced">Motori avanzati e sperimentali</string>

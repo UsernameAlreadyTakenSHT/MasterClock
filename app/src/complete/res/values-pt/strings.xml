@@ -60,10 +60,10 @@
     <string name="guide_byoyomi_progressive_desc">O número de lances exigidos aumenta a cada período concluído.</string>
     <string name="guide_chrono_countdown_desc">Relógio principal em contagem decrescente durante toda a partida.</string>
     <string name="guide_chrono_countup_desc">Modo cronómetro que mede o tempo total decorrido.</string>
-    <string name="guide_chrono_one_for_all_desc">Relógio global que não muda de jogador quando se premem os botões.</string>
+    <string name="guide_chrono_one_for_all_desc">Não é um modo à parte: é uma opção de Countdown e Countup. Ativada, um só relógio corre para toda a mesa, e premi-lo não muda de jogador.</string>
     <string name="guide_counts_down_desc">Parte de um limite e desce até zero lances restantes.</string>
     <string name="guide_counts_up_desc">Mostra o número total de lances jogados desde o início.</string>
-    <string name="guide_fast_move_desc">Premeia os lances rápidos. Accelerate: quanto mais pensa, mais depressa corre o seu relógio. Shrink: cada lance tem menos tempo, até um mínimo. Transfer: o tempo que gasta passa para o adversário.</string>
+    <string name="guide_fast_move_desc">Premeia os lances rápidos. Accelerate: quanto mais pensa, mais depressa corre o seu relógio. Shrink: cada lance tem menos tempo, até um mínimo. Transfer: o próximo lance do adversário recebe o tempo por lance mais o tempo que acabou de gastar, e o seu recomeça no tempo por lance; com Cumulative Transfer soma-se ao que lhe resta, e fica com o que tinha.</string>
     <string name="guide_fide_desc">Ritmo de torneio por períodos: por exemplo, 90 min para 40 lances, depois 30 min para o resto, com 30 s adicionados por lance.</string>
     <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou por turnos).</string>
     <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as percentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
@@ -74,7 +74,7 @@
     <string name="guide_move_save_cap_desc">O tempo de lance não usado passa para o lance seguinte, até um teto no relógio.</string>
     <string name="guide_move_shared_desc">Um único relógio para todos os jogadores. Muda automaticamente às 0:00.</string>
     <string name="guide_move_standard_desc">Volta a uma duração fixa em cada lance.</string>
-    <string name="guide_omni_desc">Estação profissional de 6 níveis para estruturas de jogo complexas (partidas &gt; rondas &gt; turnos &gt; fases).</string>
+    <string name="guide_omni_desc">Estação de vários níveis para estruturas de jogo complexas: sessão &gt; partidas &gt; rondas &gt; turnos &gt; fases, cada nível com o seu próprio relógio, ativado ou não. Cada jogador joga cada um dos turnos previstos para uma ronda. Bancos de tempo, cortes e pausas entre turnos, rondas e partidas; uma sessão deixada pode ser retomada, mesmo depois de a app ter sido fechada.</string>
     <string name="guide_phases_desc">Sequência de relógios diferentes (por exemplo, preparação 5 min -&gt; partida 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">O tempo base e os incrementos são sorteados dentro de um intervalo definido.</string>
     <string name="guide_section_advanced">Motores avançados e experimentais</string>

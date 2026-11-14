@@ -55,10 +55,10 @@
     <string name="guide_byoyomi_progressive_desc">Le nombre de coups exigés augmente à chaque période terminée.</string>
     <string name="guide_chrono_countdown_desc">Chrono maître décomptant pour toute la partie.</string>
     <string name="guide_chrono_countup_desc">Mode chronomètre mesurant le temps total écoulé.</string>
-    <string name="guide_chrono_one_for_all_desc">Chrono global qui ne change pas de joueur lorsqu\'on appuie sur les boutons.</string>
+    <string name="guide_chrono_one_for_all_desc">Pas un mode à part : une option de Countdown et de Countup. Activée, une seule horloge tourne pour toute la table, et appuyer dessus ne change pas de joueur.</string>
     <string name="guide_counts_down_desc">Part d\'une limite et décompte jusqu\'à zéro coup restant.</string>
     <string name="guide_counts_up_desc">Affiche le nombre total de coups joués depuis le début.</string>
-    <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate : plus vous réfléchissez, plus votre pendule va vite. Shrink : chaque coup a moins de temps, jusqu\'à un plancher. Transfer : le temps que vous passez va à l\'adversaire.</string>
+    <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate : plus vous réfléchissez, plus votre pendule va vite. Shrink : chaque coup a moins de temps, jusqu\'à un plancher. Transfer : le prochain coup de l\'adversaire reçoit le temps par coup plus le temps que vous venez de passer, et le vôtre repart du temps par coup ; avec Cumulative Transfer, il s\'ajoute à ce qui lui reste, et vous gardez ce que vous aviez.</string>
     <string name="guide_fide_desc">Cadence de tournoi par périodes : par exemple 90 min pour 40 coups, puis 30 min pour la fin, avec 30 s ajoutées par coup.</string>
     <string name="guide_gong_desc">Coups imposés à intervalles fixes (simultanés ou à tour de rôle).</string>
     <string name="guide_hidden_desc">Un temps tiré au hasard et caché. Avec les pourcentages activés, il s\'affiche un instant en passant 50, 25, 10, 5, 2 et 1 %.</string>
@@ -69,7 +69,7 @@
     <string name="guide_move_save_cap_desc">Le temps de coup non utilisé est reporté sur le coup suivant, dans la limite d\'un plafond sur la pendule.</string>
     <string name="guide_move_shared_desc">Un seul chrono pour tous les joueurs. Changement automatique à 0:00.</string>
     <string name="guide_move_standard_desc">Remise à une durée fixe à chaque coup.</string>
-    <string name="guide_omni_desc">Station professionnelle à 6 niveaux pour les structures de jeu complexes (parties &gt; manches &gt; tours &gt; phases).</string>
+    <string name="guide_omni_desc">Station à plusieurs niveaux pour les structures de jeu complexes : session &gt; parties &gt; manches &gt; tours &gt; phases, chaque niveau avec sa propre horloge, activée ou non. Chaque joueur joue chacun des tours prévus pour une manche. Banques de temps, coupures et pauses entre tours, manches et parties ; une session quittée peut être reprise, même après la fermeture de l\'app.</string>
     <string name="guide_phases_desc">Succession de chronos différents (par ex. préparation 5 min -&gt; partie 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">Le temps de base et les incréments sont tirés au hasard dans une plage définie.</string>
     <string name="guide_section_advanced">Moteurs avancés et expérimentaux</string>
