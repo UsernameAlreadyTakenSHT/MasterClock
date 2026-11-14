@@ -74,8 +74,6 @@ class BluetoothSerialBoardManager(private val context: Context) {
 
     /** The game this round is, for makes that have to be told before play starts. */
     private var gameType: GameType = GameType.CHESS
-    private val moveTracker = BoardMoveTracker()
-    private var assembler: StreamAssembler? = null
     // Written from the IO thread that opens it and read from the main thread that closes it, so the
     // identity check above needs this to be seeing the same value both sides.
     @Volatile
@@ -132,15 +130,20 @@ class BluetoothSerialBoardManager(private val context: Context) {
         disconnect()
 
         protocol = BoardProtocols.forDeviceName(device.name)
-        assembler = protocol.framing?.let { StreamAssembler(it) }
-        moveTracker.reset()
+        // Its own for each connection, as over USB: a read loop keeps the ones it started with.
+        // They were this manager's, reset here on the main thread while the loop of the connection
+        // before, still inside its last read, could decode into them.
+        val session = Session(protocol, protocol.framing?.let { StreamAssembler(it) }, BoardMoveTracker())
         _needsCalibration.value = protocol.needsPieceCalibration
         _connectionState.value = ConnectionState.Connecting
 
-        readJob = scope.launch { openAndRead(device, onMoveReceived) }
+        readJob = scope.launch { openAndRead(device, session, onMoveReceived) }
     }
 
-    private suspend fun openAndRead(device: BluetoothDevice, onMoveReceived: (String) -> Unit) {
+    /** What one connection decodes with; see [connect]. */
+    private class Session(val protocol: BoardProtocol, val assembler: StreamAssembler?, val tracker: BoardMoveTracker)
+
+    private suspend fun openAndRead(device: BluetoothDevice, session: Session, onMoveReceived: (String) -> Unit) {
         val opened = try {
             // Discovery is expensive and slows every connection attempt down while it runs; Android
             // asks for it to be stopped before opening a socket.
@@ -178,14 +181,15 @@ class BluetoothSerialBoardManager(private val context: Context) {
                 if (opening === opened) opening = null
             }
             if (!currentCoroutineContext().isActive) return
-            readUntilDone(device, opened, onMoveReceived)
+            readUntilDone(device, opened, session, onMoveReceived)
         } finally {
             runCatching { opened.close() }
             if (socket === opened) socket = null
         }
     }
 
-    private suspend fun readUntilDone(device: BluetoothDevice, opened: BluetoothSocket, onMoveReceived: (String) -> Unit) {
+    private suspend fun readUntilDone(device: BluetoothDevice, opened: BluetoothSocket, session: Session, onMoveReceived: (String) -> Unit) {
+        val protocol = session.protocol
         socket = opened
         withContext(Dispatchers.Main) {
             _connectionState.value = ConnectionState.Connected(device.name ?: device.address)
@@ -215,13 +219,13 @@ class BluetoothSerialBoardManager(private val context: Context) {
             if (read <= 0) break
 
             val chunk = buffer.copyOf(read)
-            val payloads = assembler?.offer(chunk) ?: listOf(chunk)
+            val payloads = session.assembler?.offer(chunk) ?: listOf(chunk)
             val reports = payloads.map { protocol.decode(it) }
             reports.filterIsInstance<BoardReport.Raw>().lastOrNull()?.let { _lastMove.value = it.hex }
-            val moves = reports.flatMap { moveTracker.onReport(it) }
+            val moves = reports.flatMap { session.tracker.onReport(it) }
             // The hint disappears the moment the board has been shown its pieces, which is the only
             // feedback the player gets that the setup worked.
-            _needsCalibration.value = protocol.needsPieceCalibration && moveTracker.needsCalibration
+            _needsCalibration.value = protocol.needsPieceCalibration && session.tracker.needsCalibration
             if (moves.isEmpty()) continue
             withContext(Dispatchers.Main) {
                 moves.forEach { move ->
@@ -239,7 +243,6 @@ class BluetoothSerialBoardManager(private val context: Context) {
         withContext(Dispatchers.Main) {
             if (socket === opened) {
                 socket = null
-                assembler?.reset()
                 _connectionState.value = ConnectionState.Idle
             }
         }
@@ -257,7 +260,6 @@ class BluetoothSerialBoardManager(private val context: Context) {
         opening = null
         runCatching { socket?.close() }
         socket = null
-        assembler?.reset()
         // Belongs to the board that has just gone; keeping it would have the next connection start
         // with the previous one's answer.
         _needsCalibration.value = false

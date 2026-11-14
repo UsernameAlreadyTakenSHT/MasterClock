@@ -309,12 +309,12 @@ class BluetoothBoardManager(private val context: Context) {
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             @Suppress("DEPRECATION")
             val copy = characteristic.value?.copyOf()
-            mainHandler.post { handlePayload(copy) }
+            mainHandler.post { handlePayload(gatt, copy) }
         }
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
             val copy = value.copyOf()
-            mainHandler.post { handlePayload(copy) }
+            mainHandler.post { handlePayload(gatt, copy) }
         }
     }
 
@@ -339,6 +339,11 @@ class BluetoothBoardManager(private val context: Context) {
             val requested = runCatching { gatt.requestMtu(REQUESTED_MTU) }.getOrDefault(false)
             if (requested) mainHandler.postDelayed(mtuFallback, MTU_TIMEOUT_MS) else discoverServices(gatt)
         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            // A connection already let go of, whose farewell arrives late: disconnect() closed it,
+            // and it says nothing of the one that took its place. It set the state to disconnected
+            // over a board that was connected. One that failed before it connected is still the
+            // active one, and goes on below.
+            if (gatt !== activeGatt) return
             mainHandler.removeCallbacks(mtuFallback)
             // An attempt that never connected says so. It went back to Idle as quietly as a board
             // switched off mid-game: the button's spinner stopped, and nothing said the board was
@@ -432,7 +437,11 @@ class BluetoothBoardManager(private val context: Context) {
         return (bytes.indices step size).map { GattOperation.Write(bytes.copyOfRange(it, minOf(it + size, bytes.size))) }
     }
 
-    private fun handlePayload(payload: ByteArray?) {
+    private fun handlePayload(gatt: BluetoothGatt, payload: ByteArray?) {
+        // The board connected now, not the one before it: its last notification could still be on
+        // its way here when the next connection had taken its place, and was decoded as the new
+        // board's, into the new board's position.
+        if (gatt !== activeGatt) return
         val bytes = payload?.take(MAX_CHARACTERISTIC_BYTES)?.toByteArray() ?: return
         val payloads = assembler?.offer(bytes) ?: listOf(bytes)
         payloads.forEach { message ->
