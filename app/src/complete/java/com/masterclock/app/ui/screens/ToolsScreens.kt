@@ -1534,15 +1534,32 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
                 }
             }
             Box(modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).onSizeChanged { canvas = it }.pointerInput(isEraser, currentColor, currentWidth, scale) { detectDragGestures(onDragStart = { offset -> activePoints.clear(); activePoints.add(offset.x / scale to offset.y / scale) }, onDrag = { change, _ -> if (activePoints.size < MAX_DRAWING_POINTS) activePoints.add(change.position.x / scale to change.position.y / scale) }, onDragEnd = { if (activePoints.isNotEmpty()) { if (currentPaths.size < MAX_DRAWING_PATHS) { if (drawnOn == null && canvas != androidx.compose.ui.unit.IntSize.Zero) drawnOn = androidx.compose.ui.geometry.Size(canvas.width.toFloat(), canvas.height.toFloat()); edit = edit.addStroke(DrawingPath(points = activePoints.toList(), color = currentColor, strokeWidth = currentWidth / scale, isEraser = isEraser)) }; activePoints.clear() } }, onDragCancel = { activePoints.clear() }) }) {
+                // Each finished stroke's Path is built once, and kept for as long as the stroke is in the
+                // drawing. They were all built again at every frame -- every point of every stroke, for
+                // each point the finger added to the one being drawn. By identity: a stroke is never
+                // changed, only added, removed by Undo or cleared.
+                val builtPaths = remember { java.util.IdentityHashMap<DrawingPath, Path>() }
+                val strokes = remember(currentPaths) {
+                    builtPaths.keys.retainAll(java.util.Collections.newSetFromMap(java.util.IdentityHashMap<DrawingPath, Boolean>()).apply { addAll(currentPaths) })
+                    currentPaths.filter { it.points.size > 1 }.map { stroke -> stroke to builtPaths.getOrPut(stroke) { strokePath(stroke.points) } }
+                }
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     scale(scale, pivot = Offset.Zero) {
-                    currentPaths.forEach { pathData -> if (pathData.points.size > 1) { val path = Path().apply { val first = pathData.points.first(); moveTo(first.first, first.second); pathData.points.drop(1).forEach { lineTo(it.first, it.second) } }; drawPath(path = path, color = if (pathData.isEraser) Color.White else Color(pathData.color), style = Stroke(width = pathData.strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)) } }
-                    if (activePoints.size > 1) { val path = Path().apply { val first = activePoints.first(); moveTo(first.first, first.second); activePoints.drop(1).forEach { lineTo(it.first, it.second) } }; drawPath(path = path, color = if (isEraser) Color.White else Color(currentColor), style = Stroke(width = currentWidth / scale, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
+                    strokes.forEach { (pathData, path) -> drawPath(path = path, color = if (pathData.isEraser) Color.White else Color(pathData.color), style = Stroke(width = pathData.strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
+                    // The stroke under the finger alone is built again as it grows.
+                    if (activePoints.size > 1) drawPath(path = strokePath(activePoints), color = if (isEraser) Color.White else Color(currentColor), style = Stroke(width = currentWidth / scale, cap = StrokeCap.Round, join = StrokeJoin.Round))
                     }
                 }
             }
         }
     }
+}
+
+/** A stroke's points as one line from the first to the last. */
+private fun strokePath(points: List<Pair<Float, Float>>): Path = Path().apply {
+    val first = points.first()
+    moveTo(first.first, first.second)
+    for (i in 1 until points.size) lineTo(points[i].first, points[i].second)
 }
 
 /** How many board states the editor can step back through. Far more than anyone undoes in a row. */
