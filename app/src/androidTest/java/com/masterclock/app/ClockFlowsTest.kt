@@ -7,8 +7,11 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
@@ -304,10 +307,13 @@ class ClockFlowsTest {
         await(hasContentDescription(say(R.string.timer_pause)))
         control(R.string.timer_pause).performClick()
         await(hasContentDescription(say(R.string.timer_resume)))
+        // Where Resume is, taken before the panel opens: under it the bar is out of a screen
+        // reader's reach, so there is no node left to click, and it is the finger this is about.
+        val resume = control(R.string.timer_resume).fetchSemanticsNode().boundsInRoot.center
         control(R.string.timer_arbitre).performClick()
         await(hasText(say(R.string.timer_arbitre_control)))
 
-        control(R.string.timer_resume).performClick()
+        rule.onRoot().performTouchInput { click(resume) }
         rule.waitForIdle()
 
         assertTrue(viewModel.uiState.value.isPaused)
