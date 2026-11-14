@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -30,12 +31,14 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -51,32 +54,25 @@ import java.io.RandomAccessFile
 import java.util.*
 import kotlin.random.Random
 
+/**
+ * The voice note: a recording of up to a minute, played back, recorded again or deleted.
+ *
+ * Built from what the three media notes share (see MediaNoteScreen): only the recorder and the
+ * player are its own.
+ */
 @Composable
 fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
     // Hoisted: these are used from permission and player callbacks, not composable scope.
     val permissionGrantedText = stringResource(R.string.toast_permission_granted)
-    val micPermissionText = stringResource(R.string.toast_mic_permission)
     val startFailedText = stringResource(R.string.toast_start_failed)
     val audioFailedText = stringResource(R.string.toast_audio_failed)
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
-    var title by remember { mutableStateOf(note.title) }; var isRecording by remember { mutableStateOf(false) }; var isPlaying by remember { mutableStateOf(false) }; var recorder by remember { mutableStateOf<MediaRecorder?>(null) }; var player by remember { mutableStateOf<MediaPlayer?>(null) }; var recordingTime by remember { mutableIntStateOf(0) }; var playbackTime by remember { mutableIntStateOf(0) }
-    // Saves the title continuously instead of only on the toolbar back arrow: MainActivity's system
-    // back handler (gesture/button) calls navigator.goBack() directly and never runs ToolScaffold's
-    // onBack lambda, so a title edit followed by a system back used to be silently lost.
-    // Debounced like every other note: this wrote the whole settings on each character of the title,
-    // and once on merely opening the note. See PersistDebounced.
-    PersistDebounced(title) { newTitle -> onUpdate { it.copy(title = newTitle) } }
+    val title = rememberNoteTitle(note, onUpdate)
+    var isRecording by remember { mutableStateOf(false) }; var isPlaying by remember { mutableStateOf(false) }; var recorder by remember { mutableStateOf<MediaRecorder?>(null) }; var player by remember { mutableStateOf<MediaPlayer?>(null) }; var recordingTime by remember { mutableIntStateOf(0) }; var playbackTime by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     var recordingStartedAt by remember { mutableLongStateOf(0L) }
-    var permissionRefused by remember { mutableStateOf(false) }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() else permissionRefused = true }
-    if (permissionRefused) PermissionRefusedDialog(micPermissionText) { permissionRefused = false }
-    fun startRecording() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-            return
-        }
+    fun beginRecording() {
         // Into the pending file, never the note's own: see pendingMediaFile.
         val pending = pendingMediaFile(File(context.filesDir, "audio_${note.id}.mp4"))
         @Suppress("DEPRECATION")
@@ -105,6 +101,8 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
             Toast.makeText(context, startFailedText, Toast.LENGTH_SHORT).show()
         }
     }
+    // Granted, it says so and waits for the next press, as it always has.
+    val startRecording = rememberPermitted(Manifest.permission.RECORD_AUDIO, R.string.toast_mic_permission, onGranted = { Toast.makeText(context, permissionGrantedText, Toast.LENGTH_SHORT).show() }) { beginRecording() }
     fun stopRecording() {
         val active = recorder ?: return
         // Cleared before stop() so a second call -- the ceiling and a disposal can arrive together
@@ -131,7 +129,7 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
         // Measured, where this took the counter of whole seconds: every take came out up to a second
         // short, and one under a second as 00:00.
         val durationMs = SystemClock.elapsedRealtime() - recordingStartedAt
-        onUpdate { it.copy(title = title, audioPath = file.absolutePath, audioDurationMs = durationMs) }
+        onUpdate { it.copy(title = title.value, audioPath = file.absolutePath, audioDurationMs = durationMs) }
     }
     fun startPlayback() { if (note.audioPath == null) return; try { val newPlayer = MediaPlayer().apply { setDataSource(note.audioPath); prepare(); start(); setOnCompletionListener { finished -> isPlaying = false; finished.release(); if (player === finished) player = null } }; player = newPlayer; isPlaying = true
         // Each loop follows its own player and stops as soon as that is no longer the one playing.
@@ -170,16 +168,190 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     val stopLatest by rememberUpdatedState({ stopRecording() })
     DisposableEffect(Unit) { onDispose { stopLatest(); player?.release() } }
 
-    ToolScaffold(title = stringResource(R.string.tools_audio_note), onBack = onBack) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true); Spacer(Modifier.weight(1f))
-            Box(modifier = Modifier.size(160.dp).clip(CircleShape).background(if (isRecording) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(imageVector = if (isRecording) Icons.Default.Mic else Icons.Default.MicNone, contentDescription = null, modifier = Modifier.size(64.dp).scale(if (isRecording) 1.2f else 1f), tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
-            if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
-            else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else ((note.audioDurationMs + 500) / 1000).let { seconds -> String.format(locale, "%02d:%02d", seconds / 60, seconds % 60) }, style = MaterialTheme.typography.headlineMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) { if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) }) }; if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play)) } }
-            if (note.audioPath != null && !isRecording && !isPlaying) DeleteMediaButton(stringResource(R.string.tools_delete_recording)) { shredNoteMedia(context, note.audioPath); onUpdate { it.copy(title = title, audioPath = null, audioDurationMs = 0) } }; Spacer(Modifier.weight(1f))
+    MediaNoteScreen(R.string.tools_audio_note, title, onBack, spacing = 24.dp) {
+        Spacer(Modifier.weight(1f))
+        Box(modifier = Modifier.size(160.dp).clip(CircleShape).background(if (isRecording) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(imageVector = if (isRecording) Icons.Default.Mic else Icons.Default.MicNone, contentDescription = null, modifier = Modifier.size(64.dp).scale(if (isRecording) 1.2f else 1f), tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
+        if (isRecording) Text(text = String.format(locale, "%02d:%02d / 01:00", recordingTime / 60, recordingTime % 60), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+        else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else ((note.audioDurationMs + 500) / 1000).let { seconds -> String.format(locale, "%02d:%02d", seconds / 60, seconds % 60) }, style = MaterialTheme.typography.headlineMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) }) }
+            if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) { Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play)) }
+        }
+        if (note.audioPath != null && !isRecording && !isPlaying) DeleteMediaButton(stringResource(R.string.tools_delete_recording)) { shredNoteMedia(context, note.audioPath); onUpdate { it.copy(title = title.value, audioPath = null, audioDurationMs = 0) } }
+        Spacer(Modifier.weight(1f))
+    }
+}
+
+/** The photo note: a picture taken with the camera, taken again or deleted. */
+@Composable
+fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val title = rememberNoteTitle(note, onUpdate)
+    val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }
+    val take = rememberCameraTake(photoFile, ActivityResultContracts.TakePicture()) { file ->
+        shredReplacedMedia(context, note.imagePath, file)
+        onUpdate { it.copy(title = title.value, imagePath = file.absolutePath) }
+    }
+    MediaNoteScreen(R.string.tools_image_note, title, onBack) {
+        val imagePath = note.imagePath
+        MediaFrame(empty = imagePath == null, emptyIcon = Icons.Default.AddAPhoto, emptyText = R.string.tools_no_photo) {
+            // A retake lands at the same path, and Coil caches a file by its path alone, so the
+            // old photo went on showing -- until the app was restarted, sometimes. The key adds
+            // the file's modification time, which a retake changes, and is worked out again on
+            // every capture even when nothing else about the note has changed.
+            val imageModel = remember(imagePath, take.count) {
+                imagePath?.let { path ->
+                    val key = "$path#${File(path).lastModified()}"
+                    ImageRequest.Builder(context).data(path).memoryCacheKey(key).diskCacheKey(key).build()
+                }
+            }
+            AsyncImage(model = imageModel, contentDescription = stringResource(R.string.tools_note_image), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+        }
+        CaptureButton(
+            icon = if (imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay,
+            label = stringResource(if (imagePath == null) R.string.tools_take_photo else R.string.tools_retake_photo),
+            onClick = take.launch,
+        )
+        if (imagePath != null) DeleteMediaButton(stringResource(R.string.tools_delete_photo)) { shredNoteMedia(context, imagePath); onUpdate { it.copy(title = title.value, imagePath = null) } }
+    }
+}
+
+/** The video note: up to a minute filmed with the camera, filmed again or deleted. */
+@Composable
+fun VideoNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val title = rememberNoteTitle(note, onUpdate)
+    val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }
+    // A retake ends up at video_<id>.mp4 again, so the path is identical before and after and nothing
+    // in the note tells the two apart. The take's counter is what does: it changes on every capture,
+    // and the player reloads when it does.
+    val take = rememberCameraTake(videoFile, CaptureVideoUpToAMinute()) { file ->
+        shredReplacedMedia(context, note.videoPath, file)
+        onUpdate { it.copy(title = title.value, videoPath = file.absolutePath) }
+    }
+    MediaNoteScreen(R.string.tools_video_note, title, onBack) {
+        val videoPath = note.videoPath
+        MediaFrame(empty = videoPath == null, emptyIcon = Icons.Default.VideoCall, emptyText = R.string.tools_no_video) {
+            // The source used to be set in factory, which runs once: a retake left the old
+            // recording playing, since the path it compared had not changed. Loading it from
+            // update, keyed on the capture counter, is what actually picks up a new take. The
+            // view also has to give the decoder back, which nothing did.
+            //
+            // It no longer starts by itself: opening a note played it, sound and all, which is
+            // the last thing wanted at a board. Once loaded it shows its first frame and the
+            // controls, and plays when asked.
+            //
+            // Sized by the view and centred by the frame. A VideoView keeps the film's proportions
+            // and sits at its parent's origin, so filling the card left it in the top left corner.
+            val count = take.count
+            AndroidView(
+                factory = { ctx -> VideoView(ctx).apply { val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller); setOnPreparedListener { seekTo(1); controller.show() } } },
+                update = { view -> if (view.tag != count) { view.tag = count; view.setVideoPath(videoPath) } },
+                onRelease = { view -> view.stopPlayback() },
+            )
+        }
+        CaptureButton(
+            icon = if (videoPath == null) Icons.Default.Videocam else Icons.Default.Replay,
+            label = stringResource(if (videoPath == null) R.string.tools_record_video else R.string.tools_retake_video),
+            onClick = take.launch,
+        )
+        if (videoPath != null) DeleteMediaButton(stringResource(R.string.tools_delete_video)) { shredNoteMedia(context, videoPath); onUpdate { it.copy(title = title.value, videoPath = null) } }
+    }
+}
+
+/**
+ * A media note's title, saved as it is typed.
+ *
+ * Continuously rather than only on the toolbar's back arrow: MainActivity's system back handler
+ * (gesture or button) calls navigator.goBack() directly and never runs ToolScaffold's onBack, so a
+ * title edit followed by a system back used to be lost. Debounced like every other note: this wrote
+ * the whole settings on each character of the title, and once on merely opening the note.
+ */
+@Composable
+private fun rememberNoteTitle(note: NotebookNote, onUpdate: NoteChange): MutableState<String> {
+    val title = remember { mutableStateOf(note.title) }
+    PersistDebounced(title.value) { newTitle -> onUpdate { it.copy(title = newTitle) } }
+    return title
+}
+
+/**
+ * What the three media notes have in common on screen: the bar, the title, and the column the rest
+ * goes in. Image, audio and video each wrote it out on its own, so a fix to one of them had to be
+ * made three times, and was not always.
+ */
+@Composable
+private fun MediaNoteScreen(screenTitle: Int, title: MutableState<String>, onBack: () -> Unit, spacing: Dp = 16.dp, content: @Composable ColumnScope.() -> Unit) {
+    ToolScaffold(title = stringResource(screenTitle), onBack = onBack) { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(spacing), verticalArrangement = Arrangement.spacedBy(spacing), horizontalAlignment = Alignment.CenterHorizontally) {
+            OutlinedTextField(value = title.value, onValueChange = { title.value = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
+            content()
         }
     }
+}
+
+/** Where a photo or a film is shown, centred, or what says there is none yet. */
+@Composable
+private fun ColumnScope.MediaFrame(empty: Boolean, emptyIcon: ImageVector, emptyText: Int, content: @Composable BoxScope.() -> Unit) {
+    Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (!empty) content()
+            else Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(emptyIcon, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(emptyText), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** A media note's main button: take, record, or take again. */
+@Composable
+private fun CaptureButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Button(onClick = onClick, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) {
+        Icon(icon, null)
+        Spacer(Modifier.width(8.dp))
+        Text(label)
+    }
+}
+
+/**
+ * [action], once [permission] is granted: at once if it is, after asking if not. Refused, it says
+ * so with the way to change that (see PermissionRefusedDialog). Granted on asking, it runs
+ * [onGranted] when given, or else [action].
+ */
+@Composable
+private fun rememberPermitted(permission: String, refusedText: Int, onGranted: (() -> Unit)? = null, action: () -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val refusedMessage = stringResource(refusedText)
+    var refused by remember { mutableStateOf(false) }
+    val latestAction by rememberUpdatedState(action)
+    val latestGranted by rememberUpdatedState(onGranted)
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) (latestGranted ?: latestAction)() else refused = true
+    }
+    if (refused) PermissionRefusedDialog(refusedMessage) { refused = false }
+    return { if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) latestAction() else launcher.launch(permission) }
+}
+
+/** A take from the camera: how to start one, and how many have come in, which a new one changes. */
+private class CameraTake(val launch: () -> Unit, val count: Int)
+
+/**
+ * The camera, asked for a take into [file] through [contract] once it may be used. The camera
+ * writes into the pending file, never the note's own (see pendingMediaFile); a take that came in is
+ * moved over [file] and handed to [onTaken], and one that did not is thrown away.
+ */
+@Composable
+private fun rememberCameraTake(file: File, contract: ActivityResultContract<android.net.Uri, Boolean>, onTaken: (File) -> Unit): CameraTake {
+    val context = LocalContext.current
+    val pending = remember(file) { pendingMediaFile(file) }
+    val uri = remember(pending) { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pending) }
+    var count by remember { mutableIntStateOf(0) }
+    val launcher = rememberLauncherForActivityResult(contract) { success ->
+        if (success && commitTake(context, pending, file)) { count++; onTaken(file) }
+        else pending.delete()
+    }
+    val launch = rememberPermitted(Manifest.permission.CAMERA, R.string.toast_camera_permission) { launcher.launch(uri) }
+    return CameraTake(launch, count)
 }
 
 /**
@@ -205,111 +377,6 @@ private fun PermissionRefusedDialog(message: String, onDismiss: () -> Unit) {
     )
 }
 
-@Composable
-fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
-    val cameraPermissionText = stringResource(R.string.toast_camera_permission)
-    val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val photoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "image_${note.id}.jpg") }
-    // The camera writes into the pending file, never the note's own; see pendingMediaFile.
-    val pendingFile = remember { pendingMediaFile(photoFile) }; val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pendingFile) }
-    // Saves the title continuously; see the matching comment in VoiceNoteEditor.
-    // Debounced like every other note: this wrote the whole settings on each character of the title,
-    // and once on merely opening the note. See PersistDebounced.
-    PersistDebounced(title) { newTitle -> onUpdate { it.copy(title = newTitle) } }
-    // Bumped on every new photo; see the image below.
-    var captureCount by remember { mutableIntStateOf(0) }
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && commitTake(context, pendingFile, photoFile)) { captureCount++; shredReplacedMedia(context, note.imagePath, photoFile); onUpdate { it.copy(title = title, imagePath = photoFile.absolutePath) } }
-        else pendingFile.delete()
-    }
-    var permissionRefused by remember { mutableStateOf(false) }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) cameraLauncher.launch(photoUri) else permissionRefused = true }
-    if (permissionRefused) PermissionRefusedDialog(cameraPermissionText) { permissionRefused = false }
-
-    ToolScaffold(title = stringResource(R.string.tools_image_note), onBack = onBack) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
-            Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) ) {
-                val imagePath = note.imagePath
-                // A retake lands at the same path, and Coil caches a file by its path alone, so the
-                // old photo went on showing -- until the app was restarted, sometimes. The key adds
-                // the file's modification time, which a retake changes, and is worked out again on
-                // every capture even when nothing else about the note has changed.
-                val imageModel = remember(imagePath, captureCount) {
-                    imagePath?.let { path ->
-                        val key = "$path#${File(path).lastModified()}"
-                        ImageRequest.Builder(context).data(path).memoryCacheKey(key).diskCacheKey(key).build()
-                    }
-                }
-                if (imageModel != null) AsyncImage(model = imageModel, contentDescription = stringResource(R.string.tools_note_image), modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_photo), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
-            }
-            Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) cameraLauncher.launch(photoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.imagePath == null) Icons.Default.PhotoCamera else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.imagePath == null) stringResource(R.string.tools_take_photo) else stringResource(R.string.tools_retake_photo)) }
-            if (note.imagePath != null) DeleteMediaButton(stringResource(R.string.tools_delete_photo)) { shredNoteMedia(context, note.imagePath); onUpdate { it.copy(title = title, imagePath = null) } }
-        }
-    }
-}
-
-@Composable
-fun VideoNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
-    val cameraPermissionText = stringResource(R.string.toast_camera_permission)
-    val context = LocalContext.current; var title by remember { mutableStateOf(note.title) }; val videoFile = remember { File(File(context.filesDir, "shares").apply { mkdirs() }, "video_${note.id}.mp4") }
-    // The camera writes into the pending file, never the note's own; see pendingMediaFile.
-    val pendingFile = remember { pendingMediaFile(videoFile) }; val videoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", pendingFile) }
-    // Saves the title continuously; see the matching comment in VoiceNoteEditor.
-    // Debounced like every other note: this wrote the whole settings on each character of the title,
-    // and once on merely opening the note. See PersistDebounced.
-    PersistDebounced(title) { newTitle -> onUpdate { it.copy(title = newTitle) } }
-    // A retake ends up at video_<id>.mp4 again, so the path is identical before and after and nothing
-    // in the note tells the two apart. This counter is what does: it changes on every capture, and
-    // the player reloads when it does.
-    var captureCount by remember { mutableIntStateOf(0) }
-    val videoLauncher = rememberLauncherForActivityResult(CaptureVideoUpToAMinute()) { success ->
-        if (success && commitTake(context, pendingFile, videoFile)) { captureCount++; shredReplacedMedia(context, note.videoPath, videoFile); onUpdate { it.copy(title = title, videoPath = videoFile.absolutePath) } }
-        else pendingFile.delete()
-    }
-    var permissionRefused by remember { mutableStateOf(false) }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -> if (isGranted) videoLauncher.launch(videoUri) else permissionRefused = true }
-    if (permissionRefused) PermissionRefusedDialog(cameraPermissionText) { permissionRefused = false }
-
-    ToolScaffold(title = stringResource(R.string.tools_video_note), onBack = onBack) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
-            Card(modifier = Modifier.weight(1f).fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                val videoPath = note.videoPath
-                // The source used to be set in factory, which runs once: a retake left the old
-                // recording playing, since the path it compared had not changed. Loading it from
-                // update, keyed on the capture counter, is what actually picks up a new take. The
-                // view also has to give the decoder back, which nothing did.
-                //
-                // It no longer starts by itself: opening a note played it, sound and all, which is
-                // the last thing wanted at a board. Once loaded it shows its first frame and the
-                // controls, and plays when asked.
-                //
-                // Sized by the view and centred by the Box. A VideoView keeps the film's proportions
-                // and sits at its parent's origin, so filling the card left it in the top left corner.
-                if (videoPath != null) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                AndroidView(
-                    factory = { ctx -> VideoView(ctx).apply { val controller = MediaController(ctx); controller.setAnchorView(this); setMediaController(controller); setOnPreparedListener { seekTo(1); controller.show() } } },
-                    update = { view -> if (view.tag != captureCount) { view.tag = captureCount; view.setVideoPath(videoPath) } },
-                    onRelease = { view -> view.stopPlayback() },
-                )
-                }
-                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant); Text(stringResource(R.string.tools_no_video), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
-            }
-            Button(onClick = { if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) videoLauncher.launch(videoUri) else permissionLauncher.launch(Manifest.permission.CAMERA) }, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) { Icon(if (note.videoPath == null) Icons.Default.Videocam else Icons.Default.Replay, null); Spacer(Modifier.width(8.dp)); Text(if (note.videoPath == null) stringResource(R.string.tools_record_video) else stringResource(R.string.tools_retake_video)) }
-            if (note.videoPath != null) DeleteMediaButton(stringResource(R.string.tools_delete_video)) { shredNoteMedia(context, note.videoPath); onUpdate { it.copy(title = title, videoPath = null) } }
-        }
-    }
-}
-
-/**
- * Shreds the media a note pointed at before a retake, when the retake wrote somewhere else.
- *
- * A capture always writes under the note's current id. An imported or restored note gets a fresh
- * id but keeps media named after its old one, so its first retake wrote a new file beside the old
- * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
- * of it. Off the main thread, since it may be exactly that video.
- */
 /**
  * The camera, asked to stop recording at a minute.
  *
@@ -360,6 +427,14 @@ private fun commitTake(context: android.content.Context, pending: File, target: 
     }
 }
 
+/**
+ * Shreds the media a note pointed at before a retake, when the retake wrote somewhere else.
+ *
+ * A capture always writes under the note's current id. An imported or restored note gets a fresh
+ * id but keeps media named after its old one, so its first retake wrote a new file beside the old
+ * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
+ * of it. Off the main thread, since it may be exactly that video.
+ */
 private fun shredReplacedMedia(context: android.content.Context, oldPath: String?, newFile: File) {
     if (oldPath == null) return
     val old = File(oldPath)
