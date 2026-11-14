@@ -10,6 +10,13 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
+import com.masterclock.app.logic.OmniGameSettings
+import com.masterclock.app.logic.OmniRoundSettings
+import com.masterclock.app.logic.OmniSettings
+import com.masterclock.app.logic.OmniTimerViewModel
+import com.masterclock.app.logic.OmniTurnSettings
+import com.masterclock.app.logic.RoundTurnLogic
+import org.junit.After
 import androidx.compose.ui.semantics.SemanticsProperties
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -26,7 +33,15 @@ class OmniFlowTest {
 
     private val viewModel get() = ViewModelProvider(rule.activity)[ChessTimerViewModel::class.java]
 
+    /**
+     * The activity's, which is the one the Omni screens use: the navigation keeps no store of its own
+     * per screen, so viewModel() in a route reaches the activity's.
+     */
+    private val omni get() = ViewModelProvider(rule.activity)[OmniTimerViewModel::class.java]
+
     private fun say(id: Int) = rule.activity.getString(id)
+
+    private fun say(id: Int, n: Int) = rule.activity.getString(id, n)
 
     private fun await(matcher: SemanticsMatcher) =
         rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty() }
@@ -42,6 +57,16 @@ class OmniFlowTest {
             viewModel.reset()
         }
         await(hasContentDescription(say(R.string.timer_settings)))
+        rule.runOnUiThread { omni.resetOmni() }
+    }
+
+    /** Omni's settings are stored, and a test that set its own must not leave them to the next. */
+    @After
+    fun backToOmniDefaults() {
+        rule.runOnUiThread {
+            omni.resetOmni()
+            omni.updateOmniSettings(OmniSettings())
+        }
     }
 
     /** From the clock through the wizard's defaults to a running session. */
@@ -64,9 +89,8 @@ class OmniFlowTest {
     }
 
     /**
-     * The clocks on screen -- "45:00", and the launch countdown's "9" -- and nothing else. The session's
-     * ViewModel belongs to its route, out of a test's reach, so its clocks are read where the player reads
-     * them. Only the figures: with every text, "PAUSED" going was a change, and the check after Resume
+     * The clocks on screen -- "45:00", and the launch countdown's "9" -- and nothing else, read where the
+     * player reads them. Only the figures: with every text, "PAUSED" going was a change, and the check after Resume
      * passed with the clock stopped.
      */
     private fun sessionTime(): List<String> =
@@ -92,6 +116,49 @@ class OmniFlowTest {
         await(hasText(say(R.string.omni_running)))
         val resumed = sessionTime()
         rule.waitUntil(CLOCK_TIMEOUT_MS) { sessionTime() != resumed }
+    }
+
+    @Test
+    fun everyPlayerPlaysEachTurnOfARound() {
+        // Three players, and a round of two turns: a long one and a short one. Every player plays the
+        // long turn, then every player the short one -- six turns. It was a round of two, and player 3
+        // never played in it.
+        val long = OmniTurnSettings(durationMs = 600_000)
+        val short = OmniTurnSettings(durationMs = 120_000)
+        val round = OmniRoundSettings(turnLogic = RoundTurnLogic.SEQUENCE, customTurns = listOf(long, short))
+        rule.runOnUiThread {
+            omni.updateOmniSettings(
+                OmniSettings(
+                    numberOfPlayers = 3,
+                    games = listOf(OmniGameSettings(rounds = listOf(round, OmniRoundSettings()))),
+                    launchCountdownMs = 0,
+                )
+            )
+        }
+        launchASession()
+
+        val played = mutableListOf<Pair<Int, Long>>()
+        fun note() = omni.omniState.value.let { played += (it.currentPlayerIndex + 1) to it.currentTurnTimeMs }
+        note()
+        repeat(5) {
+            control(R.string.omni_next).performClick()
+            rule.waitForIdle()
+            note()
+        }
+        assertEquals("who played", listOf(1, 2, 3, 1, 2, 3), played.map { it.first })
+        // Each turn starts at its own length, a few seconds of it gone at most by the time it is read.
+        played.forEachIndexed { i, (_, timeMs) ->
+            val length = if (i < 3) long.durationMs else short.durationMs
+            assertTrue("turn ${i + 1} started at $timeMs", timeMs in length - 5_000..length)
+        }
+        // The second pass is each player's second turn, and the face says so.
+        await(hasText(say(R.string.omni_cfg_turn_n, 2), ignoreCase = true))
+        assertTrue(rule.onAllNodes(hasText(say(R.string.common_player_n, 3), ignoreCase = true)).fetchSemanticsNodes().isNotEmpty())
+        // The round is still the first: it ends after the sixth turn, not the second.
+        assertEquals(0, omni.omniState.value.currentRoundIndex)
+        control(R.string.omni_next).performClick()
+        rule.waitForIdle()
+        assertEquals(1, omni.omniState.value.currentRoundIndex)
     }
 
     @Test
