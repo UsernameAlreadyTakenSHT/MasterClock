@@ -119,6 +119,10 @@
     <string name="tools_audio">Audio</string>
     <string name="tools_audio_note">Audionotitie</string>
     <string name="tools_board">Bord</string>
+    <string name="tools_strikethrough">Doorgestreept</string>
+    <string name="tools_bullet_list">Opsomming</string>
+    <string name="tools_numbered_list">Genummerde lijst</string>
+    <string name="tools_color_default">Tekstkleur</string>
     <string name="tools_bold">Vet</string>
     <string name="tools_checkbox">Selectievakje</string>
     <string name="tools_clear_board">Bord leegmaken</string>

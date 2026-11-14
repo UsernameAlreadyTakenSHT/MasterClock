@@ -119,6 +119,10 @@
     <string name="tools_audio">Audio</string>
     <string name="tools_audio_note">Nota audio</string>
     <string name="tools_board">Scacchiera</string>
+    <string name="tools_strikethrough">Barrato</string>
+    <string name="tools_bullet_list">Elenco puntato</string>
+    <string name="tools_numbered_list">Elenco numerato</string>
+    <string name="tools_color_default">Colore del testo</string>
     <string name="tools_bold">Grassetto</string>
     <string name="tools_checkbox">Casella</string>
     <string name="tools_clear_board">Svuota la scacchiera</string>

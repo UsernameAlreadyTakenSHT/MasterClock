@@ -143,6 +143,10 @@
     <string name="tools_audio">Audio</string>
     <string name="tools_audio_note">Audio Note</string>
     <string name="tools_board">Board</string>
+    <string name="tools_strikethrough">Strikethrough</string>
+    <string name="tools_bullet_list">Bulleted list</string>
+    <string name="tools_numbered_list">Numbered list</string>
+    <string name="tools_color_default">Text colour</string>
     <string name="tools_bold">Bold</string>
     <string name="tools_checkbox">Checkbox</string>
     <string name="tools_clear_board">Clear Board</string>

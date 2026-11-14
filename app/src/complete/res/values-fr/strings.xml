@@ -117,6 +117,10 @@
     <string name="tools_audio">Audio</string>
     <string name="tools_audio_note">Note audio</string>
     <string name="tools_board">Échiquier</string>
+    <string name="tools_strikethrough">Barré</string>
+    <string name="tools_bullet_list">Liste à puces</string>
+    <string name="tools_numbered_list">Liste numérotée</string>
+    <string name="tools_color_default">Couleur du texte</string>
     <string name="tools_bold">Gras</string>
     <string name="tools_checkbox">Case à cocher</string>
     <string name="tools_clear_board">Vider l\'échiquier</string>

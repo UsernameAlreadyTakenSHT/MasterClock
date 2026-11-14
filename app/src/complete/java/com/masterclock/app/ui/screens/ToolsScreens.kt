@@ -1140,38 +1140,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
             NotebookNoteType.IMAGE -> ImageNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
             NotebookNoteType.VIDEO -> VideoNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
             NotebookNoteType.BOARD -> BoardNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
-            else -> {
-                var title by remember(selectedNoteId) { mutableStateOf(selectedNote.title) }; var rawText by remember(selectedNoteId) { mutableStateOf(selectedNote.content) }; var contentValue by remember(selectedNoteId) { mutableStateOf(TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(selectedNote.content), selection = TextRange(selectedNote.content.length))) }; var showColorPicker by remember { mutableStateOf(false) }
-                // What Undo steps back through; see TextEditHistory. Only changes to the text are
-                // recorded, never a cursor that merely moved.
-                var history by remember(selectedNoteId) { mutableStateOf(TextEditHistory()) }
-                fun recordBeforeEdit(typing: Boolean) { history = history.beforeEdit(TextSnapshot(rawText, contentValue.selection.start, contentValue.selection.end), android.os.SystemClock.uptimeMillis(), typing) }
-                // The note's own id, fixed here: selectedNoteId is cleared before the save on the way
-                // out runs, so matching on it lost the last edit on Back. See updateNote.
-                val editedNoteId = selectedNote.id
-                PersistDebounced(title to rawText) { (newTitle, newText) -> viewModel.updateNote(editedNoteId) { it.copy(title = newTitle, content = newText) } }
-                fun applyFormat(prefix: String, suffix: String = prefix) { recordBeforeEdit(typing = false); val selection = contentValue.selection; val text = rawText; val selectedText = text.substring(selection.min, selection.max); val newText = text.replaceRange(selection.min, selection.max, "$prefix$selectedText$suffix"); rawText = newText; val newCursorPos = selection.min + prefix.length + selectedText.length + suffix.length; contentValue = contentValue.copy(annotatedString = parseMarkdownToAnnotatedString(newText), selection = TextRange(newCursorPos)) }
-                ToolScaffold(title = stringResource(R.string.tools_edit_note), onBack = { selectedNoteId = null }, actions = {
-                    IconButton(onClick = {
-                        history.undo()?.let { (snapshot, rest) ->
-                            history = rest
-                            rawText = snapshot.text
-                            contentValue = TextFieldValue(annotatedString = parseMarkdownToAnnotatedString(snapshot.text), selection = TextRange(snapshot.selectionStart, snapshot.selectionEnd))
-                        }
-                    }, enabled = history.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }
-                }) { padding ->
-                    Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true, textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                        Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)) {
-                            Row(modifier = Modifier.padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(onClick = { applyFormat("**") }) { Icon(Icons.Default.FormatBold, stringResource(R.string.tools_bold)) }; IconButton(onClick = { applyFormat("*") }) { Icon(Icons.Default.FormatItalic, stringResource(R.string.tools_italic)) }; IconButton(onClick = { applyFormat("<u>", "</u>") }) { Icon(Icons.Default.FormatUnderlined, stringResource(R.string.tools_underline)) }; VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp)); IconButton(onClick = { applyFormat("\n# ", "\n") }) { Icon(Icons.Default.FormatSize, stringResource(R.string.tools_large)) }; IconButton(onClick = { applyFormat("\n## ", "\n") }) { Icon(Icons.Default.Title, stringResource(R.string.tools_normal)) }; IconButton(onClick = { applyFormat("\n[ ] ", "") }) { Icon(Icons.Default.CheckBoxOutlineBlank, stringResource(R.string.tools_checkbox)) }; VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp)); IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
-                            }
-                        }
-                        if (showColorPicker) { Dialog(onDismissRequest = { showColorPicker = false }) { Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) { Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.tools_select_text_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold); Spacer(Modifier.height(16.dp)); val colors = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF); FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { colors.forEach { colorVal -> Surface(modifier = Modifier.size(40.dp).clickable { val hex = String.format("%08X", colorVal); applyFormat("<color:$hex>", "</color>"); showColorPicker = false }, shape = CircleShape, color = Color(colorVal), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {} } }; Spacer(Modifier.height(16.dp)); TextButton(onClick = { showColorPicker = false }) { Text(stringResource(R.string.common_cancel)) } } } } }
-                        OutlinedTextField(value = contentValue, onValueChange = { if (it.text.length <= MAX_NOTE_CONTENT_CHARS) { if (it.text != rawText) recordBeforeEdit(typing = true); contentValue = it; rawText = it.text; contentValue = it.copy(annotatedString = parseMarkdownToAnnotatedString(it.text)) } }, modifier = Modifier.fillMaxWidth().weight(1f), placeholder = { Text(stringResource(R.string.tools_format_hint)) }, shape = RoundedCornerShape(12.dp))
-                    }
-                }
-            }
+            else -> RichTextNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
         }
     }
 }
@@ -1204,7 +1173,7 @@ private const val NOTE_PERSIST_DEBOUNCE_MS = 400L
  * NoteSaveTracker for the two ways the old comparison lost an edit.
  */
 @Composable
-private fun <T> PersistDebounced(value: T, onPersist: (T) -> Unit) {
+internal fun <T> PersistDebounced(value: T, onPersist: (T) -> Unit) {
     val persist by rememberUpdatedState(onPersist)
     val tracker = remember { NoteSaveTracker(value) }
 
@@ -1216,41 +1185,6 @@ private fun <T> PersistDebounced(value: T, onPersist: (T) -> Unit) {
     }
     DisposableEffect(Unit) {
         onDispose { tracker.flush { persist(it) } }
-    }
-}
-
-// Compiled once. They were compiled inside the function, which runs at every keystroke in a note:
-// six patterns built again for each character typed.
-private val boldRegex = Regex("\\*\\*(.*?)\\*\\*")
-private val italicRegex = Regex("\\*(.*?)\\*")
-private val underlineRegex = Regex("<u>(.*?)</u>")
-private val h1Regex = Regex("^# (.*)$", RegexOption.MULTILINE)
-private val h2Regex = Regex("^## (.*)$", RegexOption.MULTILINE)
-private val colorRegex = Regex("<color:([0-9A-F]{8})>(.*?)</color>")
-
-fun parseMarkdownToAnnotatedString(text: String): AnnotatedString {
-    return buildAnnotatedString {
-        append(text)
-        // The markers of what is formatted are hidden, and those alone. Every '*' and '#' was, and the
-        // "[ ]" of a checkbox, which nothing draws as a box: "Game #3" lost its '#', a lone '*' its
-        // star, and the checkbox button inserted text that could not be seen.
-        val hidden = SpanStyle(color = Color.Transparent, fontSize = 0.1.sp)
-        fun hideEnds(match: MatchResult, open: Int, close: Int) {
-            addStyle(hidden, match.range.first, match.range.first + open)
-            if (close > 0) addStyle(hidden, match.range.last + 1 - close, match.range.last + 1)
-        }
-        boldRegex.findAll(text).forEach { hideEnds(it, 2, 2) }
-        italicRegex.findAll(text).forEach { hideEnds(it, 1, 1) }
-        underlineRegex.findAll(text).forEach { hideEnds(it, 3, 4) }
-        h1Regex.findAll(text).forEach { hideEnds(it, 2, 0) }
-        h2Regex.findAll(text).forEach { hideEnds(it, 3, 0) }
-        colorRegex.findAll(text).forEach { hideEnds(it, 16, 8) }
-        boldRegex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(fontWeight = FontWeight.Bold), range.first, range.last + 1) } }
-        italicRegex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(fontStyle = FontStyle.Italic), range.first, range.last + 1) } }
-        underlineRegex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(textDecoration = TextDecoration.Underline), range.first, range.last + 1) } }
-        h1Regex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(fontWeight = FontWeight.Black, fontSize = 24.sp), range.first, range.last + 1) } }
-        h2Regex.findAll(text).forEach { match -> match.groups[1]?.range?.let { range -> addStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp), range.first, range.last + 1) } }
-        colorRegex.findAll(text).forEach { match -> val colorHex = match.groupValues[1]; match.groups[2]?.range?.let { range -> try { val color = Color("#$colorHex".toColorInt()); addStyle(SpanStyle(color = color), range.first, range.last + 1) } catch (_: Exception) {} } }
     }
 }
 

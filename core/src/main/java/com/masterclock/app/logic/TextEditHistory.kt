@@ -7,7 +7,7 @@ private const val MAX_TEXT_HISTORY = 50
 const val TEXT_UNDO_GROUP_MS = 1_000L
 
 /** A text note's content and where its cursor or selection was, as Undo puts it back. */
-data class TextSnapshot(val text: String, val selectionStart: Int, val selectionEnd: Int)
+data class TextSnapshot(val text: String, val selectionStart: Int, val selectionEnd: Int, val spans: List<NoteSpan> = emptyList())
 
 /**
  * What a text note's Undo steps back through.

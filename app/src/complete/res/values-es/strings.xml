@@ -119,6 +119,10 @@
     <string name="tools_audio">Audio</string>
     <string name="tools_audio_note">Nota de audio</string>
     <string name="tools_board">Tablero</string>
+    <string name="tools_strikethrough">Tachado</string>
+    <string name="tools_bullet_list">Lista con viñetas</string>
+    <string name="tools_numbered_list">Lista numerada</string>
+    <string name="tools_color_default">Color del texto</string>
     <string name="tools_bold">Negrita</string>
     <string name="tools_checkbox">Casilla</string>
     <string name="tools_clear_board">Vaciar el tablero</string>
