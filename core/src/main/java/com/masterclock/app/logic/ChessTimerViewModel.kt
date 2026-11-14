@@ -3,6 +3,7 @@ package com.masterclock.app.logic
 import android.app.Application
 import android.os.SystemClock
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.masterclock.app.data.storedJson
@@ -4828,7 +4829,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // sets on them.
         val resolver = getApplication<Application>().contentResolver
         listOfNotNull(before.customBeepUri, before.customGongUri, before.customFinalBeepUri, before.customSwitchUri).distinct().forEach { uri ->
-            runCatching { resolver.releasePersistableUriPermission(android.net.Uri.parse(uri), android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            runCatching { resolver.releasePersistableUriPermission(uri.toUri(), android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
     }
 
