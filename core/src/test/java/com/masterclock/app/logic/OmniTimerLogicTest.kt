@@ -469,6 +469,44 @@ class OmniTimerLogicTest {
     }
 
     @Test
+    @Test
+    fun `a session under way comes back paused where it was`() {
+        val settings = OmniSettings(numberOfPlayers = 3)
+        val running = OmniState(
+            isRunning = true, hasStarted = true, currentGameIndex = 1, currentRoundIndex = 2, currentPlayerIndex = 2,
+            turnCounterInRound = 2, currentTurnTimeMs = 42_000, playerTimeBanks = mapOf(0 to 5_000L, OMNI_GLOBAL_TIME_BANK_KEY to 1_000L),
+        )
+        // As the store holds it: written and read back.
+        val stored = storedJson.decodeFromString(OmniState.serializer(), storedJson.encodeToString(OmniState.serializer(), omniSessionToStore(running)!!))
+        val back = omniSessionToRestore(stored, settings)!!
+        assertEquals(running.copy(isRunning = false), back)
+    }
+
+    @Test
+    fun `only a session under way is kept to come back to`() {
+        val settings = OmniSettings(numberOfPlayers = 2)
+        assertNull(omniSessionToStore(OmniState()))
+        assertNull(omniSessionToStore(OmniState(hasStarted = true, isInTransition = true, transitionLabel = "SESSION")))
+        assertNull(omniSessionToRestore(null, settings))
+        assertNull(omniSessionToRestore(OmniState(hasStarted = false), settings))
+        // Fewer players since it was stored: the one on turn is one who is still there.
+        assertEquals(0, omniSessionToRestore(OmniState(hasStarted = true, currentPlayerIndex = 4), settings)!!.currentPlayerIndex)
+    }
+
+    @Test
+    fun `the background notification follows the turn that is counting down`() {
+        val settings = OmniSettings(numberOfPlayers = 3)
+        val turn = OmniState(isRunning = true, hasStarted = true, currentPlayerIndex = 1, currentTurnTimeMs = 30_000)
+        assertEquals(BackgroundClock(playerIndex = 2, countdownMs = 30_000), omniBackgroundClockOf(turn, settings))
+        // Running, with nothing counting down to a flag: between turns, before the start, turn clock off.
+        assertEquals(BackgroundClock(2, null), omniBackgroundClockOf(turn.copy(isInTransition = true), settings))
+        assertEquals(BackgroundClock(2, null), omniBackgroundClockOf(turn.copy(isLaunching = true), settings))
+        assertEquals(BackgroundClock(2, null), omniBackgroundClockOf(turn, settings.copy(useTurnClock = false)))
+        // Nothing running, nothing to keep.
+        assertNull(omniBackgroundClockOf(turn.copy(isRunning = false), settings))
+        assertNull(omniBackgroundClockOf(OmniState(), settings))
+    }
+
     fun `every player plays each turn of a round set up with several`() {
         val long = OmniTurnSettings(durationMs = 120_000)
         val short = OmniTurnSettings(durationMs = 30_000)

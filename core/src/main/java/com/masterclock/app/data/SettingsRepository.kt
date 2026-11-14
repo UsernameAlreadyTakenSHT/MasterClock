@@ -12,6 +12,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.masterclock.app.logic.ChessClockSettings
 import com.masterclock.app.logic.NotebookNote
 import com.masterclock.app.logic.OmniSettings
+import com.masterclock.app.logic.OmniState
 import com.masterclock.app.logic.SavedPreset
 import com.masterclock.app.logic.ScoreboardSession
 import kotlinx.coroutines.Dispatchers
@@ -105,6 +106,7 @@ class SettingsRepository(private val context: Context) {
     private val OMNI_SETTINGS_KEY = stringPreferencesKey("omni_timer_settings")
     private val CUSTOM_PRESETS_KEY = stringPreferencesKey("custom_presets")
     private val SCOREBOARD_KEY = stringPreferencesKey("scoreboard_session")
+    private val OMNI_SESSION_KEY = stringPreferencesKey("omni_session")
 
     val settingsFlow: Flow<ChessClockSettings> = context.dataStore.data.map { preferences ->
         storedSettingsOf(preferences[SETTINGS_KEY], preferences[NOTEBOOK_KEY])
@@ -162,6 +164,11 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
+    /** The Omni session under way when it was last written, or null for none; see OmniTimerViewModel. */
+    val omniSessionFlow: Flow<OmniState?> = context.dataStore.data.map { preferences ->
+        preferences[OMNI_SESSION_KEY]?.let { text -> runCatching { json.decodeFromString<OmniState>(text) }.getOrNull() }
+    }
+
     val scoreboardFlow: Flow<ScoreboardSession> = context.dataStore.data.map { preferences ->
         val jsonStr = preferences[SCOREBOARD_KEY]
         if (jsonStr != null) {
@@ -204,6 +211,16 @@ class SettingsRepository(private val context: Context) {
                 if (notebookText != null) preferences[NOTEBOOK_KEY] = notebookText
             }
             writtenNotes = notes
+        }
+    }
+
+    /** Writes the Omni session under way, or takes it away for null. */
+    suspend fun saveOmniSession(state: OmniState?) {
+        writes.withLock {
+            val text = state?.let { withContext(Dispatchers.Default) { json.encodeToString(it) } }
+            context.dataStore.edit { preferences ->
+                if (text == null) preferences.remove(OMNI_SESSION_KEY) else preferences[OMNI_SESSION_KEY] = text
+            }
         }
     }
 

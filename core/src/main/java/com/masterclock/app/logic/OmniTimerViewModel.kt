@@ -391,6 +391,42 @@ internal fun computeOmniAdvance(
     return state.copy(currentPhaseIndex = nextPhaseIdx, currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = nextPhaseIdx))
 }
 
+/**
+ * A stored session as it is taken back: paused, since nothing ran it while it was away, and with the
+ * player on turn one of [settings]'s, whose count may have changed since. Null for one that is no
+ * session to go back to -- never started, or run to its end.
+ */
+internal fun omniSessionToRestore(saved: OmniState?, settings: OmniSettings): OmniState? {
+    if (saved == null || !saved.hasStarted || (saved.isInTransition && saved.transitionLabel == "SESSION")) return null
+    val players = settings.numberOfPlayers.coerceAtLeast(1)
+    return saved.copy(
+        isRunning = false,
+        currentPlayerIndex = saved.currentPlayerIndex.takeIf { it in 0 until players } ?: 0,
+    )
+}
+
+/**
+ * What the background notification shows for a running Omni session: the player on turn, and the
+ * time left of their turn while one is counting down. Null when nothing is running, and the service
+ * can stop. Between turns, during the launch countdown and with the turn clock off, it says only that
+ * the clock runs: no turn is counting down to anything.
+ *
+ * The service kept the chess clock alone, so a session left running in the background was the first
+ * thing Android closed.
+ */
+fun omniBackgroundClockOf(state: OmniState, settings: OmniSettings): BackgroundClock? {
+    if (!state.isRunning || !state.hasStarted) return null
+    val counting = settings.useTurnClock && !state.isInTransition && !state.isLaunching && state.currentTurnTimeMs > 0
+    return BackgroundClock(
+        playerIndex = state.currentPlayerIndex % settings.numberOfPlayers.coerceAtLeast(1) + 1,
+        countdownMs = state.currentTurnTimeMs.takeIf { counting },
+    )
+}
+
+/** What of [state] is worth storing: a session under way, or nothing; see [omniSessionToRestore]. */
+internal fun omniSessionToStore(state: OmniState): OmniState? =
+    state.takeIf { it.hasStarted && !(it.isInTransition && it.transitionLabel == "SESSION") }
+
 internal fun createInitialOmniState(settings: OmniSettings): OmniState {
     val order = omniRoundOrderFor(settings, gameIdx = 0, roundIdx = 0, previousPlayer = null)
     return OmniState(
@@ -527,6 +563,20 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val writerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    /** When the session was last written; see [saveSession]. [SystemClock.elapsedRealtime]. */
+    private var lastSessionSave = 0L
+
+    /**
+     * Writes the session as it stands, or takes it away when there is none. On every pause, every
+     * turn ended and every [SESSION_SAVE_INTERVAL_MS] of play, so a session Android closes in the
+     * background comes back from at most that far behind.
+     */
+    private fun saveSession() {
+        lastSessionSave = SystemClock.elapsedRealtime()
+        val session = omniSessionToStore(_omniState.value)
+        writerScope.launch { settingsRepo.saveOmniSession(session) }
+    }
+
     init {
         viewModelScope.launch {
             val savedOmni = settingsRepo.omniSettingsFlow.first()
@@ -536,6 +586,13 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
             if (!settingsUpdatedBeforeLoad) {
                 _omniSettings.value = savedOmni
                 _omniState.value = createInitialOmniState(savedOmni)
+                // The session under way when the app was last closed, paused where it was. It lived
+                // in memory alone: Android closing the app in the background, or the app swiped
+                // away, lost every game, round and bank of it. The wizard's Launch then offers to
+                // resume it or start a new one, as for a session paused in this run.
+                omniSessionToRestore(settingsRepo.omniSessionFlow.first(), savedOmni)?.let { saved ->
+                    if (!_omniState.value.hasStarted) _omniState.value = saved
+                }
             }
 
             // Reuses the classic clock's own audio prefs (custom sounds/volume) rather than adding
@@ -604,6 +661,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
         } else {
             _omniState.update { it.copy(isRunning = true) }
         }
+        saveSession()
 
         if (timerJob == null) {
             lastTickTime = SystemClock.elapsedRealtime()
@@ -624,6 +682,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                     val now = SystemClock.elapsedRealtime()
                     tickOmni(now - lastTickTime)
                     lastTickTime = now
+                    if (now - lastSessionSave >= SESSION_SAVE_INTERVAL_MS) saveSession()
                 }
                 timerJob = null
             }
@@ -644,22 +703,26 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun pauseOmni() {
         _omniState.update { it.copy(isRunning = false) }
+        saveSession()
     }
 
     fun stopOmni() {
         timerJob?.cancel()
         timerJob = null
         _omniState.update { it.copy(isRunning = false, hasStarted = false) }
+        saveSession()
     }
 
     fun resetOmni() {
         timerJob?.cancel()
         timerJob = null
         _omniState.value = createInitialOmniState(_omniSettings.value)
+        saveSession()
     }
 
     fun advanceOmni() {
         _omniState.update { state -> computeOmniAdvance(state, _omniSettings.value) }
+        saveSession()
     }
 
     fun confirmOmniReady() {
@@ -684,5 +747,12 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     override fun onCleared() {
         soundManager.release()
         timerJob?.cancel()
+        // As it stood, paused: nothing runs it any more. The write outlives this ViewModel.
+        _omniState.update { it.copy(isRunning = false) }
+        saveSession()
+    }
+
+    private companion object {
+        const val SESSION_SAVE_INTERVAL_MS = 15_000L
     }
 }
