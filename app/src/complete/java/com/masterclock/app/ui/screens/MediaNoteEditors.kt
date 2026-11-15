@@ -486,7 +486,7 @@ private fun DeleteMediaButton(label: String, onConfirm: () -> Unit) {
 }
 
 /** Shreds a note's media file off the main thread, within the app's own storage only. */
-private fun shredNoteMedia(context: android.content.Context, path: String?) {
+internal fun shredNoteMedia(context: android.content.Context, path: String?) {
     if (path == null) return
     val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
     kotlin.concurrent.thread(name = "shred-note-media") { shredFile(File(path), sandboxRoots) }
@@ -496,7 +496,7 @@ private fun shredNoteMedia(context: android.content.Context, path: String?) {
  * Moves a finished take from [pending] over [target], shredding the take it replaces off the main
  * thread; false when there was no take to commit, with [target] untouched. See commitPendingMedia.
  */
-private fun commitTake(context: android.content.Context, pending: File, target: File): Boolean {
+internal fun commitTake(context: android.content.Context, pending: File, target: File): Boolean {
     val sandboxRoots = listOf(context.filesDir.canonicalFile, context.cacheDir.canonicalFile)
     return commitPendingMedia(pending, target) { replaced ->
         kotlin.concurrent.thread(name = "shred-replaced-take") { shredFile(replaced, sandboxRoots) }
@@ -511,7 +511,7 @@ private fun commitTake(context: android.content.Context, pending: File, target: 
  * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
  * of it. Off the main thread, since it may be exactly that video.
  */
-private fun shredReplacedMedia(context: android.content.Context, oldPath: String?, newFile: File) {
+internal fun shredReplacedMedia(context: android.content.Context, oldPath: String?, newFile: File) {
     if (oldPath == null) return
     val old = File(oldPath)
     if (runCatching { old.canonicalPath == newFile.canonicalPath }.getOrDefault(true)) return

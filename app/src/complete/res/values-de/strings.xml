@@ -171,6 +171,9 @@
     <string name="tools_ellipse">Ellipse</string>
     <string name="tools_shape_done">Fertig</string>
     <string name="tools_shapes">Formen</string>
+    <string name="tools_background">Hintergrund</string>
+    <string name="tools_background_none">Kein Hintergrund</string>
+    <string name="tools_background_empty">Noch keine Foto- oder Brettnotiz zum Bemalen</string>
     <string name="tools_final_score">Endstand: %d</string>
     <string name="tools_format_hint">Text markieren und mit der Werkzeugleiste formatieren…</string>
     <string name="tools_game_logs">Partieprotokolle</string>

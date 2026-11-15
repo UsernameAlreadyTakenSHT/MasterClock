@@ -175,6 +175,9 @@
     <string name="tools_ellipse">Elipse</string>
     <string name="tools_shape_done">Concluído</string>
     <string name="tools_shapes">Formas</string>
+    <string name="tools_background">Fundo</string>
+    <string name="tools_background_none">Sem fundo</string>
+    <string name="tools_background_empty">Ainda não há notas de foto ou tabuleiro para desenhar por cima</string>
     <string name="tools_final_score">Pontuação final: %d</string>
     <string name="tools_format_hint">Selecione o texto e use a barra de ferramentas para o formatar…</string>
     <string name="tools_game_logs">Registos de partidas</string>

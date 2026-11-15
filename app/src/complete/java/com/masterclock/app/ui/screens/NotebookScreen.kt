@@ -148,7 +148,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                         }; TextButton(onClick = { showTypeSelection = false }, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.common_cancel)) } } } } }
     } else {
         when (selectedNote.type) {
-            NotebookNoteType.DRAWING -> DrawingNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
+            NotebookNoteType.DRAWING -> DrawingNoteEditor(note = selectedNote, notes = settings.notebookNotes, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
             NotebookNoteType.VOICE -> VoiceNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
             NotebookNoteType.IMAGE -> ImageNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })
             NotebookNoteType.VIDEO -> VideoNoteEditor(note = selectedNote, onUpdate = { change -> viewModel.updateNote(selectedNote.id, change) }, onBack = { selectedNoteId = null })

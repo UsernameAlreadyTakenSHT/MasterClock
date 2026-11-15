@@ -230,6 +230,19 @@ class ZipBackupManagerTest {
         return archive
     }
 
+    /**
+     * A drawing over a photo keeps its own copy of it in its imagePath, as a photo note does: the
+     * backup carries it the same way, with no case of its own.
+     */
+    @Test
+    fun `a drawing's background photo is backed up as a photo note's is`() {
+        val files = sandbox()
+        val photo = File(files, "shares/image_d4.jpg").apply { writeBytes(text("photo")) }
+        val drawing = NotebookNote(id = "d4", type = NotebookNoteType.DRAWING, imagePath = photo.path)
+        assertEquals(listOf(photo.canonicalFile), ZipBackupManager.mediaFilesToBackUp(files, listOf(drawing)).map { it.canonicalFile })
+        assertTrue(isNoteMediaFile(photo.name, drawing.id))
+    }
+
     @Test
     fun `each restore has a staging folder of its own`() {
         val files = sandbox()

@@ -196,6 +196,9 @@
     <string name="tools_ellipse">Ellipse</string>
     <string name="tools_shape_done">Done</string>
     <string name="tools_shapes">Shapes</string>
+    <string name="tools_background">Background</string>
+    <string name="tools_background_none">No background</string>
+    <string name="tools_background_empty">No photo or board note to draw on yet</string>
     <string name="tools_final_score">Final Score: %d</string>
     <string name="tools_format_hint">Select text and use toolbar to format…</string>
     <string name="tools_game_logs">Game Logs</string>

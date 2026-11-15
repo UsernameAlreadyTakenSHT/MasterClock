@@ -41,6 +41,10 @@ import java.util.*
 /** How many board states the editor can step back through. Far more than anyone undoes in a row. */
 private const val MAX_BOARD_HISTORY = 50
 
+/** A board note's squares, also a drawing's when it is drawn over one. */
+internal val BOARD_DARK = Color(0xFF769656)
+internal val BOARD_LIGHT = Color(0xFFEEEED2)
+
 /** Side of one square in the board note's grid. */
 private val BOARD_SQUARE_SIZE = 40.dp
 
@@ -101,7 +105,7 @@ private fun resizeBoard(squares: List<String>, from: BoardNoteVariant, to: Board
  * which file a letter means.
  */
 @Composable
-private fun BoardPiece(piece: String, size: Dp, imageLoader: ImageLoader, modifier: Modifier = Modifier) {
+internal fun BoardPiece(piece: String, size: Dp, imageLoader: ImageLoader, modifier: Modifier = Modifier) {
     AsyncImage(
         model = getPieceSvgPath(piece),
         contentDescription = piece,
@@ -322,7 +326,7 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                                 Box(
                                     modifier = Modifier
                                         .size(squareSize)
-                                        .background(if (isDark) Color(0xFF769656) else Color(0xFFEEEED2))
+                                        .background(if (isDark) BOARD_DARK else BOARD_LIGHT)
                                         .clickable {
                                             // Same reason as finishDrag: the list may be shorter
                                             // than the grid for a note stored before imports were

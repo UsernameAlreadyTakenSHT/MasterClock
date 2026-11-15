@@ -171,6 +171,9 @@
     <string name="tools_ellipse">Ellips</string>
     <string name="tools_shape_done">Klaar</string>
     <string name="tools_shapes">Vormen</string>
+    <string name="tools_background">Achtergrond</string>
+    <string name="tools_background_none">Geen achtergrond</string>
+    <string name="tools_background_empty">Nog geen foto- of bordnotitie om op te tekenen</string>
     <string name="tools_final_score">Eindstand: %d</string>
     <string name="tools_format_hint">Selecteer tekst en gebruik de werkbalk om die op te maken…</string>
     <string name="tools_game_logs">Partijlogboeken</string>

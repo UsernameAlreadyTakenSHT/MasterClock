@@ -170,6 +170,9 @@
     <string name="tools_ellipse">Ellipse</string>
     <string name="tools_shape_done">Terminé</string>
     <string name="tools_shapes">Formes</string>
+    <string name="tools_background">Fond</string>
+    <string name="tools_background_none">Aucun fond</string>
+    <string name="tools_background_empty">Aucune note photo ou plateau sur laquelle dessiner</string>
     <string name="tools_final_score">Score final : %d</string>
     <string name="tools_format_hint">Sélectionnez du texte et utilisez la barre d\'outils pour le mettre en forme…</string>
     <string name="tools_game_logs">Journaux de parties</string>

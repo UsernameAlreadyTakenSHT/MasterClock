@@ -35,7 +35,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import coil3.ImageLoader
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.svg.SvgDecoder
+import java.io.File
 import java.util.*
 
 /** What the finger does on a drawing: draw, draw one of the shapes, or rub out. */
@@ -66,7 +79,7 @@ private val SHAPE_HANDLE_DRAWN = 7.dp
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit) {
+fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: NoteChange, onBack: () -> Unit) {
     var title by remember { mutableStateOf(note.title) }
     // Strokes and the states Undo steps back through, Clear included; see DrawingEdit.
     var edit by remember { mutableStateOf(DrawingEdit(note.drawingPaths)) }
@@ -104,6 +117,46 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
     // What Undo, Redo and Clear change may not be the shape selected any more.
     fun step(next: DrawingEdit) { edit = next; selected = null }
 
+    // The background: a copy of a photo note's photo, or of a board note's position, drawn under the
+    // strokes. A copy, so that the note it came from can be changed or deleted and the drawing keeps
+    // what it was drawn on. Placed on the drawing's own canvas, as its strokes are, so that the two
+    // stay together on another screen; chosen before anything is drawn, it takes this one's.
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var choosingBackground by remember { mutableStateOf(false) }
+    // Bumped on each photo taken as the background: a second lands at the same path, which an image
+    // cache would otherwise take for the first.
+    var backgroundCount by remember { mutableIntStateOf(0) }
+    fun photoBackground(source: NotebookNote) {
+        val from = source.imagePath ?: return
+        noteTheCanvas()
+        scope.launch {
+            // Off the main thread: a photo is megabytes.
+            val copied = withContext(Dispatchers.IO) { copyBackgroundPhoto(context, note.id, from) } ?: return@launch
+            backgroundCount++
+            onUpdate { it.copy(imagePath = copied.absolutePath, drawingBoard = false) }
+        }
+    }
+    fun boardBackground(source: NotebookNote) {
+        noteTheCanvas()
+        val photo = note.imagePath
+        onUpdate { it.copy(boardPosition = source.boardPosition, boardVariant = source.boardVariant, drawingBoard = true, imagePath = null) }
+        shredNoteMedia(context, photo)
+    }
+    fun noBackground() {
+        val photo = note.imagePath
+        onUpdate { it.copy(drawingBoard = false, imagePath = null) }
+        shredNoteMedia(context, photo)
+    }
+    if (choosingBackground) BackgroundChoice(
+        notes = notes,
+        hasBackground = note.imagePath != null || note.drawingBoard,
+        onPhoto = { photoBackground(it); choosingBackground = false },
+        onBoard = { boardBackground(it); choosingBackground = false },
+        onNone = { noBackground(); choosingBackground = false },
+        onDismiss = { choosingBackground = false },
+    )
+
     ToolScaffold(title = stringResource(R.string.tools_draw_note), onBack = onBack, actions = {
         IconButton(onClick = { step(edit.undo()) }, enabled = edit.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.tools_undo)) }
         IconButton(onClick = { step(edit.redo()) }, enabled = edit.canRedo) { Icon(Icons.AutoMirrored.Filled.Redo, stringResource(R.string.tools_redo)) }
@@ -140,6 +193,13 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
                             else { tool = shapeKind; choosingShape = true }
                         }
                         DrawToolButton(DrawTool.ERASER, tool == DrawTool.ERASER) { tool = DrawTool.ERASER; selected = null; choosingShape = false }
+                        VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
+                        // Not a tool: what the drawing is drawn on. Marked when there is one.
+                        IconToggleButton(
+                            checked = note.imagePath != null || note.drawingBoard,
+                            onCheckedChange = { choosingBackground = true },
+                            colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                        ) { Icon(Icons.Default.Wallpaper, stringResource(R.string.tools_background)) }
                     }
                     if (choosingShape) {
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -250,6 +310,8 @@ fun DrawingNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Un
                 // to be drawn beneath the strokes. The strokes are drawn on a layer of their own, where
                 // the eraser clears them, and the page shows through. Drawings already made keep their
                 // eraser strokes, and look the same on the white page.
+                // Under the strokes' layer, which is where the eraser clears: the background is never rubbed out.
+                DrawingBackground(note, backgroundCount, drawnOn?.let { androidx.compose.ui.geometry.Size(it.width * scale, it.height * scale) })
                 Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
                     scale(scale, pivot = Offset.Zero) {
                         val changing = preview != null && selected != null
@@ -353,4 +415,126 @@ private fun strokePath(points: List<Pair<Float, Float>>): Path = Path().apply {
     val first = points.first()
     moveTo(first.first, first.second)
     for (i in 1 until points.size) lineTo(points[i].first, points[i].second)
+}
+
+/**
+ * The choice of a drawing's background: a photo note's photo, a board note's position, or none.
+ * Each source note by its title; a photo by its picture as well.
+ */
+@Composable
+private fun BackgroundChoice(
+    notes: List<NotebookNote>,
+    hasBackground: Boolean,
+    onPhoto: (NotebookNote) -> Unit,
+    onBoard: (NotebookNote) -> Unit,
+    onNone: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val photos = notes.filter { it.type == NotebookNoteType.IMAGE && it.imagePath != null }
+    val boards = notes.filter { it.type == NotebookNoteType.BOARD }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.tools_background)) },
+        text = {
+            LazyColumn(Modifier.heightIn(max = 380.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (hasBackground) item { BackgroundRow(stringResource(R.string.tools_background_none), onClick = onNone) { Icon(Icons.Default.HideImage, null) } }
+                if (photos.isEmpty() && boards.isEmpty()) item { Text(stringResource(R.string.tools_background_empty), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                if (photos.isNotEmpty()) item { BackgroundHeading(R.string.tools_image) }
+                items(photos, key = { "photo-" + it.id }) { photo ->
+                    BackgroundRow(photo.title, onClick = { onPhoto(photo) }) {
+                        AsyncImage(model = photo.imagePath, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.size(40.dp).clip(RoundedCornerShape(6.dp)))
+                    }
+                }
+                if (boards.isNotEmpty()) item { BackgroundHeading(R.string.tools_board) }
+                items(boards, key = { "board-" + it.id }) { board ->
+                    BackgroundRow(board.title, onClick = { onBoard(board) }) { Icon(Icons.Default.Grid4x4, null) }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) } },
+    )
+}
+
+@Composable
+private fun BackgroundHeading(label: Int) {
+    Text(stringResource(label), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
+}
+
+@Composable
+private fun BackgroundRow(label: String, onClick: () -> Unit, leading: @Composable () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) { leading() }
+        Text(label, maxLines = 2)
+    }
+}
+
+/**
+ * A drawing's background, in [area] -- the drawing's own canvas as it is shown, from the top left
+ * corner, as its strokes are -- or the whole page when the drawing has none yet. A photo is shown
+ * whole; a board as large as fits, centred.
+ */
+@Composable
+private fun DrawingBackground(note: NotebookNote, version: Int, area: androidx.compose.ui.geometry.Size?) {
+    val photo = note.imagePath
+    if (photo == null && !note.drawingBoard) return
+    val context = LocalContext.current
+    val place = if (area == null) Modifier.fillMaxSize() else with(LocalDensity.current) { Modifier.size(area.width.toDp(), area.height.toDp()) }
+    Box(place, contentAlignment = Alignment.Center) {
+        if (photo != null) {
+            // Keyed on the file's time as well as its path: a new background lands at the same path.
+            val model = remember(photo, version) {
+                val key = "$photo#${File(photo).lastModified()}"
+                ImageRequest.Builder(context).data(photo).memoryCacheKey(key).diskCacheKey(key).build()
+            }
+            AsyncImage(model = model, contentDescription = stringResource(R.string.tools_background), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        } else {
+            BoardBackground(note.boardPosition, note.boardVariant)
+        }
+    }
+}
+
+/** A board note's position, drawn as the board note draws it, but not to be touched. */
+@Composable
+private fun BoardBackground(position: List<String>, variant: BoardNoteVariant) {
+    val context = LocalContext.current
+    val imageLoader = remember { ImageLoader.Builder(context).components { add(SvgDecoder.Factory()) }.build() }
+    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val square = minOf(maxWidth, maxHeight) / variant.side
+        Column {
+            for (rank in variant.side - 1 downTo 0) {
+                Row {
+                    for (file in 0 until variant.side) {
+                        val index = rank * variant.side + file
+                        Box(Modifier.size(square).background(if ((rank + file) % 2 == 0) BOARD_DARK else BOARD_LIGHT), contentAlignment = Alignment.Center) {
+                            val piece = position.getOrElse(index) { "" }
+                            if (piece.isNotEmpty()) BoardPiece(piece, square * 4 / 5, imageLoader)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * [sourcePath], a photo note's photo, copied as [drawingId]'s background: into the drawing's own
+ * photo file, written aside and moved into place as a camera take is (see commitTake). Null when
+ * there was nothing to copy.
+ */
+private fun copyBackgroundPhoto(context: android.content.Context, drawingId: String, sourcePath: String): File? {
+    val target = File(File(context.filesDir, "shares").apply { mkdirs() }, "image_$drawingId.jpg")
+    val source = File(sourcePath)
+    if (!source.isFile || runCatching { source.canonicalPath == target.canonicalPath }.getOrDefault(true)) return null
+    val pending = pendingMediaFile(target)
+    return try {
+        source.copyTo(pending, overwrite = true)
+        if (commitTake(context, pending, target)) target else null
+    } catch (_: Exception) {
+        pending.delete()
+        null
+    }
 }

@@ -871,6 +871,13 @@ data class NotebookNote(
     val boardPosition: List<String> = List(64) { "" },
     val boardVariant: BoardNoteVariant = BoardNoteVariant.CHESS,
     /**
+     * A drawing drawn over a board: [boardPosition] and [boardVariant], copied from a board note,
+     * shown under its strokes. A drawing over a photo has [imagePath] instead, its own copy, which
+     * import, backup and deletion already treat as they do a photo note's. Both are a drawing's
+     * fields used for its background, so that a background needs nothing new from any of them.
+     */
+    val drawingBoard: Boolean = false,
+    /**
      * A text note's formatting, beside its [content]; see [NoteSpan]. [richFormat] is false for a
      * note written before, whose content still carries the old markers and is converted when it is
      * read; see [richTextOf].
