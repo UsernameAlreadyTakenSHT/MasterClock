@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.IconButtonDefaults
@@ -344,13 +345,25 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(stringResource(R.string.tools_select_text_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(16.dp))
-                            // Six on a line on any phone, as the highlighters are; custom ones used go first.
+                            // The custom colours the note already uses, on a line of their own above, as a
+                            // drawing has them; then six on a line on any phone, as the highlighters are.
+                            val mine = customColoursIn(rich.runs().map { it.color }, NOTE_COLORS)
+                            if (mine.isNotEmpty()) {
+                                Text(stringResource(R.string.tools_custom_colours), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Start))
+                                Spacer(Modifier.height(6.dp))
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.align(Alignment.Start)) {
+                                    mine.forEach { value ->
+                                        Surface(modifier = Modifier.size(36.dp).clickable { color(value); showColorPicker = false }.testTag("text_color_$value"), shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
+                                    }
+                                }
+                                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                            }
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 // The text's own colour again, which the markers had no way to say.
                                 Surface(modifier = Modifier.size(36.dp).clickable { color(0L); showColorPicker = false }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                                     Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, stringResource(R.string.tools_color_default)) }
                                 }
-                                (customColoursIn(rich.runs().map { it.color }, NOTE_COLORS) + NOTE_COLORS).forEach { value ->
+                                NOTE_COLORS.forEach { value ->
                                     Surface(modifier = Modifier.size(36.dp).clickable { color(value); showColorPicker = false }.testTag("text_color_$value"), shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
                                 }
                                 CustomColourButton(Modifier.testTag("text_color_custom"), size = 36.dp) { showColorPicker = false; showCustomColor = true }

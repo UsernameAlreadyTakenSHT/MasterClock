@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.ViewModelProvider
@@ -180,6 +181,27 @@ class TextNoteFlowTest {
         java.io.File(rule.activity.filesDir, "note_emojis.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /** Typing undone, a pause apart: the second word goes, then the first; Redo brings them back. */
+    @Test
+    fun typingIsUndoneAndRedone() {
+        openTheNotebook()
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_text")))
+        rule.onNode(hasText(complete("tools_text")) and hasClickAction()).performClick()
+        await(hasSetTextAction())
+        content().performTextInput("first")
+        waitForTheNote("the first word") { it.content == "first" }
+        Thread.sleep(1_500)
+        content().performTextInput(" second")
+        waitForTheNote("the second word") { it.content == "first second" }
+        press("tools_undo")
+        waitForTheNote("the first undo") { it.content == "first" }
+        press("tools_undo")
+        waitForTheNote("the second undo") { it.content == "" }
+        press("tools_redo")
+        waitForTheNote("the redo") { it.content == "first" }
+    }
+
     /** Four words highlighted in four colours, by selecting each and choosing. */
     @Test
     fun wordsAreHighlightedInTheirColours() {
@@ -204,11 +226,27 @@ class TextNoteFlowTest {
         content().performTextInputSelection(TextRange(0))
         rule.waitForIdle()
         shotOf("note_highlighted")
-        // The text's colours: four, the text's own, and a custom one.
+        // The text's colours: four, the text's own, and a custom one, which once used is offered apart.
+        content().performTextInputSelection(TextRange(0, 4))
         press("tools_color")
         rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(androidx.compose.ui.test.hasTestTag("text_color_custom")).fetchSemanticsNodes().isNotEmpty() }
         rule.waitForIdle()
         shotOf("note_colors")
+        rule.onNode(androidx.compose.ui.test.hasTestTag("text_color_custom")).performClick()
+        val rgb = SemanticsMatcher("an RGB slider") {
+            it.config.getOrElseNullable(SemanticsProperties.ProgressBarRangeInfo) { null }?.range == 0f..1f
+        }
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(rgb).fetchSemanticsNodes().size == 3 }
+        listOf(0.1f, 0.6f, 0.5f).forEachIndexed { i, v ->
+            rule.onAllNodes(rgb)[i].performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(v) }
+        }
+        rule.onNode(hasText(say(R.string.common_select)) and hasClickAction()).performClick()
+        waitForTheNote("the custom colour") { n -> n.richTextOf().runs().any { it.color != 0L && it.color !in listOf(0xFF000000, 0xFF2196F3, 0xFFF44336, 0xFF4CAF50) } }
+        content().performTextInputSelection(TextRange(5, 11))
+        press("tools_color")
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(hasText(complete("tools_custom_colours"))).fetchSemanticsNodes().isNotEmpty() }
+        rule.waitForIdle()
+        shotOf("note_colors_mine")
     }
 
     private fun shotOf(name: String) {
