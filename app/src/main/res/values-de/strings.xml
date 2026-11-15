@@ -54,6 +54,7 @@
     <string name="settings_chrono_type">Chronos-Typ</string>
     <string name="settings_move_counts_type">Move-Counts-Typ</string>
     <string name="settings_fast_move_type">Fast-Move-Typ</string>
+    <string name="settings_staircase_type">Staircase-Typ</string>
     <string name="settings_time_parameters">Zeitparameter</string>
     <string name="settings_initial_time">Startzeit</string>
     <string name="settings_increment">Inkrement</string>
@@ -70,6 +71,8 @@
     <string name="settings_max_moves">Maximale Züge</string>
     <string name="settings_decrement_per_move">Abzug pro Zug</string>
     <string name="settings_min_time_floor">Mindestzeit</string>
+    <string name="settings_increase_per_move">Zuschlag pro Zug</string>
+    <string name="settings_max_time_ceiling">Höchstzeit</string>
     <string name="settings_grace_period">Schonfrist (normales Tempo)</string>
     <string name="settings_full_fast_starts">Volle Beschleunigung ab</string>
     <string name="settings_reflection_time">Bedenkzeit</string>

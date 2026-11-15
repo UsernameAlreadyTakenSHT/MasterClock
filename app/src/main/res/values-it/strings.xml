@@ -53,6 +53,7 @@
     <string name="settings_chrono_type">Tipo di Chronos</string>
     <string name="settings_move_counts_type">Tipo di Move Counts</string>
     <string name="settings_fast_move_type">Tipo di Fast Move</string>
+    <string name="settings_staircase_type">Tipo di Staircase</string>
     <string name="settings_time_parameters">Parametri di tempo</string>
     <string name="settings_initial_time">Tempo iniziale</string>
     <string name="settings_increment">Incremento</string>
@@ -69,6 +70,8 @@
     <string name="settings_max_moves">Mosse massime</string>
     <string name="settings_decrement_per_move">Decremento per mossa</string>
     <string name="settings_min_time_floor">Tempo minimo garantito</string>
+    <string name="settings_increase_per_move">Aumento per mossa</string>
+    <string name="settings_max_time_ceiling">Tempo massimo</string>
     <string name="settings_grace_period">Periodo di grazia (velocità normale)</string>
     <string name="settings_full_fast_starts">Accelerazione massima da</string>
     <string name="settings_reflection_time">Tempo di riflessione</string>

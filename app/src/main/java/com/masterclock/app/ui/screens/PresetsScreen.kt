@@ -221,7 +221,7 @@ fun PresetsScreen(
                             // Player 1's mode, the game's, as the statistics read it: with per-player
                             // settings main can hold anything.
                             val modeName = remember(log.settings) {
-                                (if (log.settings.differentSettingsPerPlayer) log.settings.p1Custom else log.settings.main).mode.displayName()
+                                (if (log.settings.differentSettingsPerPlayer) log.settings.p1Custom else log.settings.main).modeName()
                             }
                             // The time control, not player 1's starting clock: that read "90m0s"
                             // for 1:30, counted a first-move bonus into the time -- 5+3 as "5m3s" --

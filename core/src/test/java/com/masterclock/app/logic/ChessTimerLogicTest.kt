@@ -319,6 +319,27 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `Staircase goes down a step a move to its floor, and up a step a move to its ceiling`() {
+        fun moves(s: PlayerSettings, start: Long, n: Int): List<Long> {
+            val settings = ChessClockSettings(main = s)
+            var p = PlayerState(timeRemainingMs = start, initialTotalTimeMs = start)
+            return (1..n).map {
+                p = computePostMoveState(ChessClockState(players = listOf(p, PlayerState(0)), activePlayer = 1), 1, 1_000, settings, s).players[0]
+                p.timeRemainingMs
+            }
+        }
+        val down = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.SHRINK, fastMoveShrinkDecrementMs = 30_000, fastMoveShrinkFloorMs = 500_000)
+        assertEquals(listOf(570_000L, 540_000L, 510_000L, 500_000L, 500_000L), moves(down, 600_000, 5))
+        val up = down.copy(fastMoveShrinkGrows = true, fastMoveShrinkFloorMs = 700_000)
+        assertEquals(listOf(630_000L, 660_000L, 690_000L, 700_000L, 700_000L), moves(up, 600_000, 5))
+        // A ceiling below where it starts holds it there, rather than bringing it down.
+        assertEquals(listOf(600_000L, 600_000L), moves(up.copy(fastMoveShrinkFloorMs = 100_000), 600_000, 2))
+        assertTrue(up.isStaircase)
+        assertEquals("Staircase", up.modeName())
+        assertEquals("Fast Move", up.copy(fastMoveMode = FastMoveType.TRANSFER).modeName())
+    }
+
+    @Test
     fun `FAST_MOVE TRANSFER non-cumulative gives the move time plus the time spent, and drops what was left`() {
         val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = false, moveTimeMs = 30_000)
         val settings = ChessClockSettings(main = s, numberOfPlayers = 2)

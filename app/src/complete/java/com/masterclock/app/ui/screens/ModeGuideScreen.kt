@@ -90,6 +90,7 @@ fun ModeGuideScreen(onBack: () -> Unit) {
                 EngineItem(stringResource(R.string.guide_random), stringResource(R.string.guide_random_desc))
                 EngineItem(stringResource(R.string.guide_hidden), stringResource(R.string.guide_hidden_desc))
                 EngineItem(stringResource(R.string.guide_fast_move), stringResource(R.string.guide_fast_move_desc))
+                EngineItem(stringResource(R.string.guide_staircase), stringResource(R.string.guide_staircase_desc))
                 EngineItem(stringResource(R.string.guide_omni), stringResource(R.string.guide_omni_desc))
             }
 

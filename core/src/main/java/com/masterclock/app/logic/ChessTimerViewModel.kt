@@ -132,6 +132,7 @@ fun PlayerSettings.followingModeOf(p1: PlayerSettings): PlayerSettings = copy(
     mode = p1.mode,
     fastMoveMode = p1.fastMoveMode,
     fastMoveTransferCumulative = p1.fastMoveTransferCumulative,
+    fastMoveShrinkGrows = p1.fastMoveShrinkGrows,
     gongSimultaneous = p1.gongSimultaneous,
 )
 
@@ -797,8 +798,21 @@ data class PlayerSettings(
     val fastMoveFullAccelRate: Float = 2.0f,
     val fastMoveShrinkDecrementMs: Long = 10_000,
     val fastMoveShrinkFloorMs: Long = 5000,
-    val fastMoveTransferCumulative: Boolean = true
+    val fastMoveTransferCumulative: Boolean = true,
+    /**
+     * Staircase Up: the move time grows by [fastMoveShrinkDecrementMs] at each move, up to
+     * [fastMoveShrinkFloorMs], which is then a ceiling. Staircase is stored as Fast Move's SHRINK, as
+     * it was before it was a mode of its own, so presets, backups and older versions read it as it
+     * always was; an older version reads Up as Down, rather than failing the file.
+     */
+    val fastMoveShrinkGrows: Boolean = false,
 )
+
+/** Whether [this] is the Staircase mode, which is stored as Fast Move's SHRINK; see [fastMoveShrinkGrows]. */
+val PlayerSettings.isStaircase: Boolean get() = mode == TimerMode.FAST_MOVE && fastMoveMode == FastMoveType.SHRINK
+
+/** The mode's name as the settings show it: Staircase apart from Fast Move, whose variant it is stored as. */
+fun PlayerSettings.modeName(): String = if (isStaircase) "Staircase" else mode.displayName()
 
 @Serializable
 enum class FastMoveType { ACCELERATE, SHRINK, TRANSFER }
@@ -1227,7 +1241,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings, words: TimeControlWor
     val named = when {
         s.mode == TimerMode.HOURGLASS || s.mode == TimerMode.CHRONO_COUNTDOWN -> s.mode.displayName()
         s.mode == TimerMode.FAST_MOVE && s.fastMoveMode == FastMoveType.ACCELERATE -> "Accelerate"
-        s.mode == TimerMode.FAST_MOVE && s.fastMoveMode == FastMoveType.SHRINK -> "Shrink"
+        s.isStaircase -> if (s.fastMoveShrinkGrows) "Staircase Up" else "Staircase Down"
         else -> null
     }
     if (named != null) return "$named $base"
@@ -3452,8 +3466,14 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
             if (s.fastMoveMode == FastMoveType.SHRINK) {
                 // Each move starts a fresh allowance, so an overrun of the last one ends with it.
                 val fresh = if (p.isOverrun(settings.flagBehavior)) tempP.copy(isNegative = false, isOutOfTime = false) else tempP
-                // A clock that only shrinks: a floor set above it made the first move raise it.
-                val nextTurnStartTime = (p.initialTotalTimeMs - s.fastMoveShrinkDecrementMs).coerceAtLeast(minOf(s.fastMoveShrinkFloorMs, p.initialTotalTimeMs))
+                // Staircase Down only shrinks: a floor set above it made the first move raise it.
+                // Up only grows, to its ceiling, and a ceiling set below the time it starts at keeps
+                // it there rather than bringing it down.
+                val nextTurnStartTime = if (s.fastMoveShrinkGrows) {
+                    (p.initialTotalTimeMs + s.fastMoveShrinkDecrementMs).coerceAtMost(maxOf(s.fastMoveShrinkFloorMs, p.initialTotalTimeMs))
+                } else {
+                    (p.initialTotalTimeMs - s.fastMoveShrinkDecrementMs).coerceAtLeast(minOf(s.fastMoveShrinkFloorMs, p.initialTotalTimeMs))
+                }
                 fresh.copy(timeRemainingMs = nextTurnStartTime, initialTotalTimeMs = nextTurnStartTime)
             } else {
                 // ACCELERATE is one clock for the whole game, as Sudden Death is: nothing is

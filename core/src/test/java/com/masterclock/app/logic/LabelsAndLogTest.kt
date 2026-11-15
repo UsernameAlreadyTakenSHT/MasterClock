@@ -28,7 +28,8 @@ class LabelsAndLogTest {
         assertEquals("Hourglass 5 min", label(PlayerSettings(mode = TimerMode.HOURGLASS, initialTimeMs = 300_000)))
         assertEquals("Chrono Countdown 5 min", label(PlayerSettings(mode = TimerMode.CHRONO_COUNTDOWN, initialTimeMs = 300_000)))
         assertEquals("Accelerate 5 min", label(PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.ACCELERATE, initialTimeMs = 300_000)))
-        assertEquals("Shrink 5 min", label(PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.SHRINK, initialTimeMs = 300_000)))
+        assertEquals("Staircase Down 5 min", label(PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.SHRINK, initialTimeMs = 300_000)))
+        assertEquals("Staircase Up 5 min", label(PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.SHRINK, fastMoveShrinkGrows = true, initialTimeMs = 300_000)))
     }
 
     @Test

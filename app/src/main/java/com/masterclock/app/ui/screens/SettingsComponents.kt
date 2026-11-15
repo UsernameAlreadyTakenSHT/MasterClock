@@ -860,6 +860,8 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         p.mode == TimerMode.PHASES -> 10
         p.mode == TimerMode.RANDOM -> 11
         p.mode == TimerMode.HIDDEN -> 12
+        // Staircase is stored as Fast Move's SHRINK, and shown as a mode of its own; see isStaircase.
+        p.isStaircase -> 14
         p.mode == TimerMode.FAST_MOVE -> 13
         else -> 0 
     }
@@ -911,10 +913,18 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     ModeCard("Hidden", mainMode == 12, Modifier.weight(1f)) { if (mainMode != 12) onUpdateP(p.copy(mode = TimerMode.HIDDEN)) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    ModeCard("Fast Move", mainMode == 13, Modifier.weight(1f)) { if (mainMode != 13) onUpdateP(p.copy(mode = TimerMode.FAST_MOVE)) }
-                    if (FlavorConfig.hasOmni()) {
+                    // Fast Move's variants are the ones that go by how fast a move is played; Staircase,
+                    // which does not, was one of them, as Shrink, and is a mode of its own.
+                    ModeCard("Fast Move", mainMode == 13, Modifier.weight(1f)) {
+                        if (mainMode != 13) onUpdateP(p.copy(mode = TimerMode.FAST_MOVE, fastMoveMode = if (p.fastMoveMode == FastMoveType.SHRINK) FastMoveType.ACCELERATE else p.fastMoveMode))
+                    }
+                    ModeCard("Staircase", mainMode == 14, Modifier.weight(1f)) {
+                        if (mainMode != 14) onUpdateP(p.copy(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.SHRINK, fastMoveShrinkGrows = false))
+                    }
+                }
+                if (FlavorConfig.hasOmni()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         ModeCard("Omni-Timer (alpha)", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
-                    } else {
                         Spacer(Modifier.weight(1f))
                     }
                 }
@@ -935,7 +945,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
     val hasSubModeSection = when (mainMode) {
         1 -> bonusOptionsAllowed > 1
         2 -> moveTimerOptionsAllowed > 1
-        4, 5, 6, 13 -> true
+        4, 5, 6, 13, 14 -> true
         else -> false
     }
     if (hasSubModeSection) Spacer(Modifier.height(12.dp))
@@ -1009,8 +1019,13 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         13 -> SettingsSection(stringResource(R.string.settings_fast_move_type)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ModeCard("Accelerate", p.fastMoveMode == FastMoveType.ACCELERATE, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveMode = FastMoveType.ACCELERATE)) }
-                ModeCard("Shrink", p.fastMoveMode == FastMoveType.SHRINK, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveMode = FastMoveType.SHRINK)) }
                 ModeCard("Transfer", p.fastMoveMode == FastMoveType.TRANSFER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveMode = FastMoveType.TRANSFER)) }
+            }
+        }
+        14 -> SettingsSection(stringResource(R.string.settings_staircase_type)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ModeCard("Down", !p.fastMoveShrinkGrows, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveShrinkGrows = false)) }
+                ModeCard("Up", p.fastMoveShrinkGrows, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveShrinkGrows = true)) }
             }
         }
     }
@@ -1119,8 +1134,9 @@ fun FastMovePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit, follows
                 Text(stringResource(R.string.settings_full_fast_accel_rate, String.format(java.util.Locale.US, "%.1f", rate)), style = MaterialTheme.typography.labelMedium)
             }
         } else if (p.fastMoveMode == FastMoveType.SHRINK) {
-            HMSInput(stringResource(R.string.settings_decrement_per_move), p.fastMoveShrinkDecrementMs) { onUpdate(p.copy(fastMoveShrinkDecrementMs = it)) }
-            HMSInput(stringResource(R.string.settings_min_time_floor), p.fastMoveShrinkFloorMs) { onUpdate(p.copy(fastMoveShrinkFloorMs = it)) }
+            // Staircase: the same two fields, a step and a limit, which Up reads as a ceiling.
+            HMSInput(stringResource(if (p.fastMoveShrinkGrows) R.string.settings_increase_per_move else R.string.settings_decrement_per_move), p.fastMoveShrinkDecrementMs) { onUpdate(p.copy(fastMoveShrinkDecrementMs = it)) }
+            HMSInput(stringResource(if (p.fastMoveShrinkGrows) R.string.settings_max_time_ceiling else R.string.settings_min_time_floor), p.fastMoveShrinkFloorMs) { onUpdate(p.copy(fastMoveShrinkFloorMs = it)) }
         } else if (p.fastMoveMode == FastMoveType.TRANSFER && !followsPlayerOne) {
             // One choice for the game, Player 1's. On Player 2's tab a tap wrote a value nothing reads
             // and the switch sprang back; RandomModePanel and GongPanel hide theirs for the same reason.

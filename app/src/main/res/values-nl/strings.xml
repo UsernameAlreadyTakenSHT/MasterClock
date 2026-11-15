@@ -53,6 +53,7 @@
     <string name="settings_chrono_type">Type Chronos</string>
     <string name="settings_move_counts_type">Type Move Counts</string>
     <string name="settings_fast_move_type">Type Fast Move</string>
+    <string name="settings_staircase_type">Type Staircase</string>
     <string name="settings_time_parameters">Tijdparameters</string>
     <string name="settings_initial_time">Starttijd</string>
     <string name="settings_increment">Increment</string>
@@ -69,6 +70,8 @@
     <string name="settings_max_moves">Maximum aantal zetten</string>
     <string name="settings_decrement_per_move">Aftrek per zet</string>
     <string name="settings_min_time_floor">Minimale tijd</string>
+    <string name="settings_increase_per_move">Toename per zet</string>
+    <string name="settings_max_time_ceiling">Maximale tijd</string>
     <string name="settings_grace_period">Respijtperiode (normaal tempo)</string>
     <string name="settings_full_fast_starts">Volledige versnelling vanaf</string>
     <string name="settings_reflection_time">Bedenktijd</string>

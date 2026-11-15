@@ -60,7 +60,8 @@
     <string name="guide_chrono_one_for_all_desc">No es un modo aparte: es una opción de Countdown y Countup. Activada, un solo reloj corre para toda la mesa, y pulsarlo no cambia de jugador.</string>
     <string name="guide_counts_down_desc">Parte de un límite y descuenta hasta cero jugadas restantes.</string>
     <string name="guide_counts_up_desc">Muestra el número total de jugadas realizadas desde el inicio.</string>
-    <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Shrink: cada jugada tiene menos tiempo, hasta un mínimo. Transfer: la próxima jugada del rival recibe el tiempo por jugada más el que acabas de gastar, y la tuya vuelve a empezar desde el tiempo por jugada; con Cumulative Transfer se suma a lo que le queda, y tú conservas lo que tenías.</string>
+    <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Transfer: la próxima jugada del rival recibe el tiempo por jugada más el que acabas de gastar, y la tuya vuelve a empezar desde el tiempo por jugada; con Cumulative Transfer se suma a lo que le queda, y tú conservas lo que tenías.</string>
+    <string name="guide_staircase_desc">El tiempo de cada jugada cambia en un paso fijo. Down: cada jugada tiene menos tiempo, hasta un mínimo. Up: cada jugada tiene más, hasta un máximo.</string>
     <string name="guide_fide_desc">Ritmo de torneo por periodos: por ejemplo, 90 min para 40 jugadas, luego 30 min para el resto, con 30 s añadidos por jugada.</string>
     <string name="guide_gong_desc">Jugadas forzadas a intervalos fijos (simultáneas o por turnos).</string>
     <string name="guide_hidden_desc">Un tiempo sorteado al azar y oculto. Con los porcentajes activados, se muestra un momento al pasar por el 50, 25, 10, 5, 2 y 1 %.</string>
