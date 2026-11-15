@@ -17,7 +17,7 @@
       module has room and keeps the full word.
     -->
     <string name="common_reset">Réinit.</string>
-    <string name="timer_reset_title">Réinitialiser la partie ?</string>
+    <string name="timer_reset_title">Réinitialiser la partie\u00A0?</string>
     <string name="timer_reset_message">L\'état actuel sera perdu.</string>
     <string name="common_back">Retour</string>
     <string name="common_close">Fermer</string>

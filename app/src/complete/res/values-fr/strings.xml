@@ -24,17 +24,17 @@
 
     <!-- Bluetooth board -->
     <string name="board_connected">Prêt à recevoir les coups</string>
-    <string name="board_connected_to">Connecté : %s</string>
+    <string name="board_connected_to">Connecté\u00A0: %s</string>
     <string name="board_connecting">Connexion…</string>
     <string name="board_disconnect">Déconnecter</string>
     <string name="board_disconnected">Déconnecté</string>
-    <string name="board_error">Erreur : %s</string>
-    <string name="board_last_move">Dernier coup : %s</string>
+    <string name="board_error">Erreur\u00A0: %s</string>
+    <string name="board_last_move">Dernier coup\u00A0: %s</string>
     <string name="board_looking">Recherche d\'échiquiers…</string>
     <string name="board_nearby">Appareils à proximité</string>
     <string name="board_usb_section">Branché</string>
     <string name="board_paired_section">Appairé</string>
-    <string name="board_needs_calibration">Placez les pièces en position de départ. Cet échiquier lit une puce sous chaque pièce : il doit apprendre laquelle est laquelle avant de pouvoir suivre une partie.</string>
+    <string name="board_needs_calibration">Placez les pièces en position de départ. Cet échiquier lit une puce sous chaque pièce\u00A0: il doit apprendre laquelle est laquelle avant de pouvoir suivre une partie.</string>
     <string name="board_paired_none">Aucun échiquier appairé. Appairez-le d\'abord dans les réglages Bluetooth du système.</string>
     <string name="board_usb_none">Aucun échiquier branché.</string>
     <string name="board_usb_charging_warning">Tant qu\'un échiquier occupe le port USB, le téléphone ne se recharge pas.</string>
@@ -55,12 +55,12 @@
     <string name="guide_byoyomi_progressive_desc">Le nombre de coups exigés augmente à chaque période terminée.</string>
     <string name="guide_chrono_countdown_desc">Chrono maître décomptant pour toute la partie.</string>
     <string name="guide_chrono_countup_desc">Mode chronomètre mesurant le temps total écoulé.</string>
-    <string name="guide_chrono_one_for_all_desc">Pas un mode à part : une option de Countdown et de Countup. Activée, une seule horloge tourne pour toute la table, et appuyer dessus ne change pas de joueur.</string>
+    <string name="guide_chrono_one_for_all_desc">Pas un mode à part\u00A0: une option de Countdown et de Countup. Activée, une seule horloge tourne pour toute la table, et appuyer dessus ne change pas de joueur.</string>
     <string name="guide_counts_down_desc">Part d\'une limite et décompte jusqu\'à zéro coup restant.</string>
     <string name="guide_counts_up_desc">Affiche le nombre total de coups joués depuis le début.</string>
-    <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate : plus vous réfléchissez, plus votre pendule va vite. Transfer : le prochain coup de l\'adversaire reçoit le temps par coup plus le temps que vous venez de passer, et le vôtre repart du temps par coup ; avec Cumulative Transfer, il s\'ajoute à ce qui lui reste, et vous gardez ce que vous aviez.</string>
-    <string name="guide_staircase_desc">Le temps de chaque coup change d\'un pas fixe. Down : chaque coup a moins de temps, jusqu\'à un plancher. Up : chaque coup en a plus, jusqu\'à un plafond.</string>
-    <string name="guide_fide_desc">Cadence de tournoi par périodes : par exemple 90 min pour 40 coups, puis 30 min pour la fin, avec 30 s ajoutées par coup.</string>
+    <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate\u00A0: plus vous réfléchissez, plus votre pendule va vite. Transfer\u00A0: le prochain coup de l\'adversaire reçoit le temps par coup plus le temps que vous venez de passer, et le vôtre repart du temps par coup\u00A0; avec Cumulative Transfer, il s\'ajoute à ce qui lui reste, et vous gardez ce que vous aviez.</string>
+    <string name="guide_staircase_desc">Le temps de chaque coup change d\'un pas fixe. Down\u00A0: chaque coup a moins de temps, jusqu\'à un plancher. Up\u00A0: chaque coup en a plus, jusqu\'à un plafond.</string>
+    <string name="guide_fide_desc">Cadence de tournoi par périodes\u00A0: par exemple 90 min pour 40 coups, puis 30 min pour la fin, avec 30 s ajoutées par coup.</string>
     <string name="guide_gong_desc">Coups imposés à intervalles fixes (simultanés ou à tour de rôle).</string>
     <string name="guide_hidden_desc">Un temps tiré au hasard et caché. Avec les pourcentages activés, il s\'affiche un instant en passant 50, 25, 10, 5, 2 et 1 %.</string>
     <string name="guide_hourglass_desc">Le temps perdu par un joueur est ajouté à l\'adversaire. Le temps total reste constant.</string>
@@ -70,7 +70,7 @@
     <string name="guide_move_save_cap_desc">Le temps de coup non utilisé est reporté sur le coup suivant, dans la limite d\'un plafond sur la pendule.</string>
     <string name="guide_move_shared_desc">Un seul chrono pour tous les joueurs. Changement automatique à 0:00.</string>
     <string name="guide_move_standard_desc">Remise à une durée fixe à chaque coup.</string>
-    <string name="guide_omni_desc">Station à plusieurs niveaux pour les structures de jeu complexes : session &gt; parties &gt; manches &gt; tours &gt; phases, chaque niveau avec sa propre horloge, activée ou non. Chaque joueur joue chacun des tours prévus pour une manche. Banques de temps, coupures et pauses entre tours, manches et parties ; une session quittée peut être reprise, même après la fermeture de l\'app.</string>
+    <string name="guide_omni_desc">Station à plusieurs niveaux pour les structures de jeu complexes\u00A0: session &gt; parties &gt; manches &gt; tours &gt; phases, chaque niveau avec sa propre horloge, activée ou non. Chaque joueur joue chacun des tours prévus pour une manche. Banques de temps, coupures et pauses entre tours, manches et parties\u00A0; une session quittée peut être reprise, même après la fermeture de l\'app.</string>
     <string name="guide_phases_desc">Succession de chronos différents (par ex. préparation 5 min -&gt; partie 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">Le temps de base et les incréments sont tirés au hasard dans une plage définie.</string>
     <string name="guide_section_advanced">Moteurs avancés et expérimentaux</string>
@@ -84,7 +84,7 @@
     <string name="qr_code">QR code</string>
     <string name="qr_scan_title">Scanner un QR code</string>
     <string name="qr_share_hint">Scannez ce code sur un autre appareil pour importer la configuration.</string>
-    <string name="qr_share_includes">Contient : configuration de la pendule</string>
+    <string name="qr_share_includes">Contient\u00A0: configuration de la pendule</string>
     <string name="qr_share_title">Partager par QR code</string>
     <string name="qr_too_large">Impossible de générer un QR code — ces réglages sont trop volumineux pour un seul code. Partagez-les plutôt sous forme de fichier.</string>
 
@@ -106,7 +106,7 @@
     <string name="a11y_piece_rook">Tour</string>
     <string name="a11y_piece_bishop">Fou</string>
     <string name="a11y_piece_knight">Cavalier</string>
-    <string name="a11y_board_back_ranks">Blancs, de a à h : %1$s. Noirs : %2$s.</string>
+    <string name="a11y_board_back_ranks">Blancs, de a à h\u00A0: %1$s. Noirs\u00A0: %2$s.</string>
     <string name="toast_mic_permission">L\'autorisation du microphone est nécessaire.</string>
     <string name="toast_note_deleted">Note supprimée</string>
     <string name="toast_permission_granted">Autorisation accordée. Appuyez à nouveau sur Enregistrer.</string>
@@ -223,7 +223,7 @@
     <string name="tools_background">Fond</string>
     <string name="tools_background_none">Aucun fond</string>
     <string name="tools_background_empty">Aucune note photo ou plateau sur laquelle dessiner</string>
-    <string name="tools_final_score">Score final : %d</string>
+    <string name="tools_final_score">Score final\u00A0: %d</string>
     <string name="tools_format_hint">Sélectionnez du texte et utilisez la barre d\'outils pour le mettre en forme…</string>
     <string name="tools_game_logs">Journaux de parties</string>
     <string name="tools_game_over">PARTIE TERMINÉE</string>
@@ -246,7 +246,7 @@
     <string name="tools_left">Gauche</string>
     <string name="tools_log_details">Détail du journal</string>
     <string name="tools_match_summary">Résumé du match</string>
-    <string name="tools_min_moves">Coups minimum ?</string>
+    <string name="tools_min_moves">Coups minimum\u00A0?</string>
     <string name="tools_move">Coup</string>
     <string name="tools_name_square_title">Nommer la case</string>
     <string name="tools_new_audio_note">Nouvelle note audio</string>
@@ -261,7 +261,7 @@
     <string name="tools_no_photo">Aucune photo</string>
     <string name="tools_no_video" tools:ignore="Typos">Aucune vidéo (1 min max)</string>
     <string name="tools_note_image">Image de la note</string>
-    <string name="tools_offset">Écart : %1$s%2$d ms</string>
+    <string name="tools_offset">Écart\u00A0: %1$s%2$d ms</string>
     <string name="tools_pick_straw">Tirer la paille %d</string>
     <string name="tools_play">Lire</string>
     <string name="tools_prepare">PRÉPAREZ-VOUS</string>
@@ -272,7 +272,7 @@
     <string name="tools_retake_photo">Reprendre la photo</string>
     <string name="tools_retake_video" tools:ignore="Typos">Reprendre la vidéo</string>
     <string name="tools_roll_dice">Lancer les dés</string>
-    <string name="tools_score">Score : %d</string>
+    <string name="tools_score">Score\u00A0: %d</string>
     <string name="tools_select_piece">Choisir une pièce</string>
     <string name="tools_board_eraser_hint">Aucune pièce choisie — appuyez sur une case pour la vider</string>
     <string name="tools_board_variant_draughts_10">Dames 10×10</string>
@@ -289,7 +289,7 @@
     <string name="tools_stop_precision">Précision d\'arrêt</string>
     <string name="tools_take_photo">Prendre une photo</string>
     <string name="tools_target">CIBLE</string>
-    <string name="tools_target_time">Cible : 5,000 s</string>
+    <string name="tools_target_time">Cible\u00A0: 5,000 s</string>
     <string name="tools_text">Texte</string>
     <string name="tools_time_per_move">Temps par coup</string>
     <string name="tools_title">Titre</string>
@@ -311,9 +311,9 @@
     <string name="variant_transcendental_desc">Asymétrique, fous de couleurs opposées, roi n\'importe où (très tactique).</string>
 
     <plurals name="tools_straws">
-        <item quantity="one">Pailles : %d</item>
-        <item quantity="many">Pailles : %d</item>
-        <item quantity="other">Pailles : %d</item>
+        <item quantity="one">Pailles\u00A0: %d</item>
+        <item quantity="many">Pailles\u00A0: %d</item>
+        <item quantity="other">Pailles\u00A0: %d</item>
     </plurals>
     <string name="qr_open_settings">Ouvrir les réglages de l\'app</string>
     <string name="toast_no_browser">Aucun navigateur installé</string>

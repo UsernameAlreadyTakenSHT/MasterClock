@@ -48,7 +48,7 @@
     <string name="preset_manage_action">Renommer ou supprimer</string>
     <string name="preset_view_statistics">Voir les statistiques</string>
     <string name="preset_empty_history">Aucune partie jouée pour l\'instant.</string>
-    <string name="preset_delete_title">Supprimer « %s » ?</string>
+    <string name="preset_delete_title">Supprimer «\u00A0%s\u00A0»\u00A0?</string>
     <string name="preset_delete_message">Ce préréglage sera définitivement supprimé.</string>
 
     <!-- Mode settings -->
@@ -90,7 +90,7 @@
     <string name="settings_min_increment">Incrément minimal</string>
     <string name="settings_max_increment">Incrément maximal</string>
     <string name="settings_rounded_time">Temps arrondi (minutes/secondes)</string>
-    <string name="settings_random_shared_draw">Les deux joueurs reçoivent le tirage du joueur 1 : réglez les plages dans l\'onglet du joueur 1.</string>
+    <string name="settings_random_shared_draw">Les deux joueurs reçoivent le tirage du joueur 1\u00A0: réglez les plages dans l\'onglet du joueur 1.</string>
     <string name="settings_random_config">Configuration du mode Random</string>
     <string name="settings_hidden_config">Configuration du mode Hidden</string>
     <string name="settings_show_percentage">Afficher les alertes de pourcentage</string>
@@ -101,15 +101,15 @@
     <string name="settings_moves_unlock">Coups pour débloquer la suivante (0 = finale)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Coups au total avant la période %d</string>
     <plurals name="settings_moves_read_as_more">
-        <item quantity="one">Compté comme %1$d coup de plus : %2$d au total</item>
-        <item quantity="many">Compté comme %1$d coups de plus : %2$d au total</item>
-        <item quantity="other">Compté comme %1$d coups de plus : %2$d au total</item>
+        <item quantity="one">Compté comme %1$d coup de plus\u00A0: %2$d au total</item>
+        <item quantity="many">Compté comme %1$d coups de plus\u00A0: %2$d au total</item>
+        <item quantity="other">Compté comme %1$d coups de plus\u00A0: %2$d au total</item>
     </plurals>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nom de la phase %d</string>
     <string name="settings_phase_n">Phase %d</string>
-    <string name="settings_color_red">Rouge : %d</string>
-    <string name="settings_color_green">Vert : %d</string>
-    <string name="settings_color_blue">Bleu : %d</string>
+    <string name="settings_color_red">Rouge\u00A0: %d</string>
+    <string name="settings_color_green">Vert\u00A0: %d</string>
+    <string name="settings_color_blue">Bleu\u00A0: %d</string>
     <string name="settings_fast_accel_rate">Taux d\'accélération rapide (+%s s/s)</string>
     <string name="settings_full_fast_accel_rate">Taux d\'accélération maximale (+%s s/s)</string>
     <string name="settings_version">Version %s</string>
@@ -123,7 +123,7 @@
     <string name="settings_allow_skip">Autoriser le passage manuel (appuyer pour avancer)</string>
     <string name="settings_phase_placeholder">Préparation, manche X…</string>
     <string name="settings_cumulative_transfer">Transfer cumulatif</string>
-    <string name="settings_cumulative_explain">Chaque coup reçoit le temps par coup plus le temps passé par l\'adversaire sur son dernier coup. Activé, ce qui restait des coups précédents est conservé ; désactivé, il est perdu. Pour un temps total fixe, où ce qu\'un joueur dépense l\'autre le gagne, voir Hourglass.</string>
+    <string name="settings_cumulative_explain">Chaque coup reçoit le temps par coup plus le temps passé par l\'adversaire sur son dernier coup. Activé, ce qui restait des coups précédents est conservé\u00A0; désactivé, il est perdu. Pour un temps total fixe, où ce qu\'un joueur dépense l\'autre le gagne, voir Hourglass.</string>
     <string name="settings_one_for_all">One for All (sans appui)</string>
 
     <string name="settings_select_custom_color">Choisir une couleur personnalisée</string>
@@ -134,20 +134,20 @@
     <string name="settings_sound_change">Changer le son personnalisé</string>
     <string name="settings_sound_choose">Choisir un son personnalisé</string>
 
-    <string name="toast_backup_ok">Sauvegarde réussie !</string>
-    <string name="toast_import_ok">Import réussi !</string>
-    <string name="toast_import_failed">Import impossible : fichier illisible.</string>
-    <string name="toast_export_ok">Export réussi !</string>
-    <string name="toast_export_failed">Export impossible : écriture du fichier refusée.</string>
-    <string name="toast_backup_too_large">Sauvegarde non enregistrée : elle serait trop volumineuse pour être restaurée.</string>
-    <string name="toast_export_too_large">Trop de parties pour un fichier de réglages : utilisez plutôt la sauvegarde complète.</string>
+    <string name="toast_backup_ok">Sauvegarde réussie\u00A0!</string>
+    <string name="toast_import_ok">Import réussi\u00A0!</string>
+    <string name="toast_import_failed">Import impossible\u00A0: fichier illisible.</string>
+    <string name="toast_export_ok">Export réussi\u00A0!</string>
+    <string name="toast_export_failed">Export impossible\u00A0: écriture du fichier refusée.</string>
+    <string name="toast_backup_too_large">Sauvegarde non enregistrée\u00A0: elle serait trop volumineuse pour être restaurée.</string>
+    <string name="toast_export_too_large">Trop de parties pour un fichier de réglages\u00A0: utilisez plutôt la sauvegarde complète.</string>
     <string name="toast_no_voice">Aucune voix de synthèse disponible. Installez-en une dans les réglages de l\'appareil pour entendre les annonces.</string>
-    <string name="toast_sound_not_kept">L\'app ne peut pas garder l\'accès à ce fichier : il ne jouerait plus après un redémarrage. Choisissez plutôt un son dans le stockage de l\'appareil.</string>
-    <string name="qr_confirm_title">Appliquer les réglages scannés ?</string>
+    <string name="toast_sound_not_kept">L\'app ne peut pas garder l\'accès à ce fichier\u00A0: il ne jouerait plus après un redémarrage. Choisissez plutôt un son dans le stockage de l\'appareil.</string>
+    <string name="qr_confirm_title">Appliquer les réglages scannés\u00A0?</string>
     <string name="qr_confirm_message">Ce code remplace vos réglages actuels et peut ajouter des parties et un tableau des scores. N\'acceptez un code que d\'une personne de confiance.</string>
     <string name="qr_confirm_apply">Appliquer</string>
-    <string name="import_confirm_title">Importer ce fichier ?</string>
-    <string name="import_confirm_message">Ce fichier remplace vos réglages actuels. Ses parties, préréglages, notes et résultats du tableau des scores s\'ajoutent aux vôtres : rien de ce qui est à vous n\'est supprimé.</string>
+    <string name="import_confirm_title">Importer ce fichier\u00A0?</string>
+    <string name="import_confirm_message">Ce fichier remplace vos réglages actuels. Ses parties, préréglages, notes et résultats du tableau des scores s\'ajoutent aux vôtres\u00A0: rien de ce qui est à vous n\'est supprimé.</string>
     <string name="import_confirm_action">Importer</string>
 
     <!-- Screen-reader wording -->
@@ -219,9 +219,9 @@
     <string name="settings_tab_audio">Audio</string>
     <string name="settings_tab_more">Plus</string>
     <string name="settings_tab_omni">Omni</string>
-    <string name="settings_clear_logs_title">Effacer tout l\'historique des parties ?</string>
+    <string name="settings_clear_logs_title">Effacer tout l\'historique des parties\u00A0?</string>
     <string name="settings_clear_logs_message">Tout l\'historique enregistré sera définitivement supprimé.</string>
-    <string name="settings_reset_title">Réinitialiser tous les réglages ?</string>
+    <string name="settings_reset_title">Réinitialiser tous les réglages\u00A0?</string>
     <string name="settings_reset_message">Cette action est irréversible.</string>
 
     <!-- Enum-backed option labels -->
@@ -261,10 +261,10 @@
     <string name="settings_inactive_text">Texte de la pendule inactive</string>
     <string name="settings_secondary_info">Informations secondaires</string>
     <string name="settings_label_text_color">Couleur des libellés (coups, périodes, délai)</string>
-    <string name="settings_alert_text_color">Couleur des alertes (TOMBÉ, JOUEZ !)</string>
+    <string name="settings_alert_text_color">Couleur des alertes (TOMBÉ, JOUEZ\u00A0!)</string>
     <string name="settings_special_states">États particuliers</string>
     <string name="settings_loss_bg">Fond en cas de défaite</string>
-    <string name="settings_gong_reflection_bg">Gong : fond de réflexion</string>
+    <string name="settings_gong_reflection_bg">Gong\u00A0: fond de réflexion</string>
     <string name="settings_time_format">Format du temps</string>
     <string name="settings_always_hours">Toujours afficher les heures</string>
     <string name="settings_always_minutes">Toujours afficher les minutes</string>
@@ -311,7 +311,7 @@
     <string name="settings_tournament_rules">Règles de tournoi</string>
     <string name="settings_fischer_fide">Fischer FIDE (bonus dès le coup 0)</string>
     <string name="settings_forced_move_counter">Compteur de coups obligatoire</string>
-    <string name="settings_tournament_rules_explain">Le premier ne concerne que Fischer : le bonus est donné avant le 1er coup. Le second ne concerne que FIDE Periods : activé, une période se termine au nombre de coups prévu ; désactivé, quand son temps est écoulé.</string>
+    <string name="settings_tournament_rules_explain">Le premier ne concerne que Fischer\u00A0: le bonus est donné avant le 1er coup. Le second ne concerne que FIDE Periods\u00A0: activé, une période se termine au nombre de coups prévu\u00A0; désactivé, quand son temps est écoulé.</string>
     <string name="settings_interaction">Interaction</string>
     <string name="settings_confirm_reset">Confirmer la réinitialisation</string>
     <string name="settings_trigger_on_press">Déclencher à l\'appui (sinon au relâchement)</string>
@@ -389,7 +389,7 @@
     <string name="omni_cfg_turn">Tour</string>
     <string name="omni_cfg_turn_n">Tour %d</string>
     <string name="omni_cfg_step">Étape %1$d/%2$d</string>
-    <string name="omni_cfg_count">Nombre : %d</string>
+    <string name="omni_cfg_count">Nombre\u00A0: %d</string>
     <string name="omni_cfg_player_short">J%d</string>
     <string name="omni_cfg_game_n">Partie %d</string>
     <string name="omni_cfg_round_n">Manche %d</string>
@@ -401,10 +401,10 @@
     <string name="omni_cfg_delete_round">Supprimer la manche %d</string>
     <string name="omni_cfg_delete_turn">Supprimer le tour %d</string>
     <string name="omni_cfg_delete_phase">Supprimer la phase %d</string>
-    <string name="omni_cfg_phase_budget">Total : %1$d s / limite : %2$d s</string>
-    <string name="omni_cfg_summary_rounds_varied">• Manches par partie : %s</string>
-    <string name="omni_cfg_summary_order">• Ordre : %s</string>
-    <string name="omni_cfg_phases_exceed">Partie « %1$s », manche « %2$s », %3$s : les phases dépassent le temps de tour !</string>
+    <string name="omni_cfg_phase_budget">Total\u00A0: %1$d s / limite\u00A0: %2$d s</string>
+    <string name="omni_cfg_summary_rounds_varied">• Manches par partie\u00A0: %s</string>
+    <string name="omni_cfg_summary_order">• Ordre\u00A0: %s</string>
+    <string name="omni_cfg_phases_exceed">Partie «\u00A0%1$s\u00A0», manche «\u00A0%2$s\u00A0», %3$s\u00A0: les phases dépassent le temps de tour\u00A0!</string>
     <string name="omni_cfg_turns">Tours</string>
     <string name="omni_cfg_phases">Phases</string>
     <string name="omni_cfg_game_name">Nom de la partie</string>
@@ -421,11 +421,11 @@
 
     <string name="omni_cfg_players_order">Joueurs et ordre</string>
     <string name="omni_cfg_turn_order">Ordre des tours</string>
-    <string name="omni_cfg_pattern_linear">Schéma (3 joueurs) : 123, 123, 123</string>
-    <string name="omni_cfg_pattern_snake">Schéma (3 joueurs) : 123, 321, 123</string>
-    <string name="omni_cfg_pattern_rotate">Schéma (3 joueurs) : 123, 231, 312</string>
-    <string name="omni_cfg_pattern_random_turn">Schéma (3 joueurs) : 132, 312, 231 — un joueur peut être sauté ou tiré deux fois</string>
-    <string name="omni_cfg_pattern_random_round">Schéma (3 joueurs) : 231, 312, 123 — chacun joue une fois par manche</string>
+    <string name="omni_cfg_pattern_linear">Schéma (3 joueurs)\u00A0: 123, 123, 123</string>
+    <string name="omni_cfg_pattern_snake">Schéma (3 joueurs)\u00A0: 123, 321, 123</string>
+    <string name="omni_cfg_pattern_rotate">Schéma (3 joueurs)\u00A0: 123, 231, 312</string>
+    <string name="omni_cfg_pattern_random_turn">Schéma (3 joueurs)\u00A0: 132, 312, 231 — un joueur peut être sauté ou tiré deux fois</string>
+    <string name="omni_cfg_pattern_random_round">Schéma (3 joueurs)\u00A0: 231, 312, 123 — chacun joue une fois par manche</string>
     <string name="omni_cfg_shuffle_per_round">Mélanger à chaque manche</string>
     <string name="omni_cfg_draw_per_turn">Tirage à chaque tour</string>
     <string name="omni_cfg_balance_draw">Équilibrer le tirage</string>
@@ -449,7 +449,7 @@
     <string name="omni_cfg_time_bank">Banque de temps</string>
     <string name="omni_cfg_bank_per_player">Par joueur</string>
     <string name="omni_cfg_bank_shared">Réserve commune</string>
-    <string name="omni_cfg_bank_clear">Vider la banque à la fin de :</string>
+    <string name="omni_cfg_bank_clear">Vider la banque à la fin de\u00A0:</string>
 
     <string name="omni_cfg_audio">Alertes sonores</string>
     <string name="omni_cfg_turn_beep">Bip de tour</string>
@@ -493,12 +493,12 @@
     <string name="settings_more_share_apk">Partager l\'application</string>
     <string name="settings_more_share_apk_via">Partager l\'APK via</string>
     <string name="settings_more_share_apk_format_title">Partager l\'app en</string>
-    <string name="settings_more_share_apk_format_text">Un APK s\'installe directement. Certains téléphones refusent les fichiers APK par Bluetooth : envoyez alors un ZIP, dont le destinataire extrait l\'APK pour l\'installer.</string>
+    <string name="settings_more_share_apk_format_text">Un APK s\'installe directement. Certains téléphones refusent les fichiers APK par Bluetooth\u00A0: envoyez alors un ZIP, dont le destinataire extrait l\'APK pour l\'installer.</string>
     <string name="settings_more_danger">Zone sensible</string>
     <string name="settings_more_clear_logs">Effacer les journaux</string>
     <string name="settings_more_reset_settings">Réinitialiser les réglages</string>
     <string name="toast_preparing_apk">Préparation du fichier d\'application…</string>
-    <string name="toast_apk_error">Erreur : impossible de préparer le fichier</string>
+    <string name="toast_apk_error">Erreur\u00A0: impossible de préparer le fichier</string>
 
     <!-- Compact age limits -->
     <string name="age_one_day">1 j</string>
@@ -508,18 +508,18 @@
     <string name="age_one_year">1 an</string>
 
     <!-- Omni station -->
-    <string name="omni_reset_title">Réinitialiser la session ?</string>
+    <string name="omni_reset_title">Réinitialiser la session\u00A0?</string>
     <string name="omni_reset_message">Toute la progression des manches et des parties sera perdue.</string>
     <string name="omni_reset_confirm">RÉINITIALISER</string>
-    <string name="omni_stop_title">Arrêter la session ?</string>
+    <string name="omni_stop_title">Arrêter la session\u00A0?</string>
     <string name="omni_stop_confirm">ARRÊTER</string>
     <string name="omni_launch_title">Session en cours</string>
-    <string name="omni_launch_message">Une session est en pause. La reprendre telle quelle, ou en commencer une nouvelle avec ces réglages ?</string>
+    <string name="omni_launch_message">Une session est en pause. La reprendre telle quelle, ou en commencer une nouvelle avec ces réglages\u00A0?</string>
     <string name="omni_launch_resume">REPRENDRE</string>
     <string name="omni_launch_new">NOUVELLE SESSION</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANNULER</string>
     <string name="omni_progress_session">Session</string>
-    <string name="omni_header">Omni : %s</string>
+    <string name="omni_header">Omni\u00A0: %s</string>
     <string name="omni_progress_game">Partie %1$d/%2$d</string>
     <string name="omni_progress_round">Manche %1$d/%2$d</string>
     <string name="omni_get_ready">PRÉPAREZ-VOUS</string>
@@ -536,14 +536,14 @@
     <string name="omni_turn_finished">TOUR TERMINÉ</string>
     <string name="omni_prepare_round">Préparez-vous pour la manche %d</string>
     <string name="omni_prepare_game">Préparez-vous pour la partie %d</string>
-    <string name="omni_thanks">Merci d\'avoir joué !</string>
-    <string name="omni_next_player">Suivant : joueur %d</string>
+    <string name="omni_thanks">Merci d\'avoir joué\u00A0!</string>
+    <string name="omni_next_player">Suivant\u00A0: joueur %d</string>
     <string name="omni_i_am_ready">JE SUIS PRÊT</string>
     <string name="omni_close_session">FERMER LA SESSION</string>
 
     <!-- Statistics -->
     <string name="stats_title">Statistiques</string>
-    <string name="stats_empty">Aucune partie terminée pour l\'instant.\n\nUne partie est enregistrée lorsque vous la réinitialisez : jouez une partie et appuyez sur Réinitialiser pour voir vos statistiques ici.</string>
+    <string name="stats_empty">Aucune partie terminée pour l\'instant.\n\nUne partie est enregistrée lorsque vous la réinitialisez\u00A0: jouez une partie et appuyez sur Réinitialiser pour voir vos statistiques ici.</string>
     <string name="stats_games_played">Parties jouées</string>
     <string name="stats_moves">Coups</string>
     <string name="stats_average_move">Coup moyen</string>
@@ -579,22 +579,22 @@
     </plurals>
 
     <plurals name="stats_chart_description">
-        <item quantity="one">Temps par coup. Le plus lent : %1$s sur %2$d coup.</item>
-        <item quantity="many">Temps par coup. Le plus lent : %1$s sur %2$d de coups.</item>
-        <item quantity="other">Temps par coup. Le plus lent : %1$s sur %2$d coups.</item>
+        <item quantity="one">Temps par coup. Le plus lent\u00A0: %1$s sur %2$d coup.</item>
+        <item quantity="many">Temps par coup. Le plus lent\u00A0: %1$s sur %2$d de coups.</item>
+        <item quantity="other">Temps par coup. Le plus lent\u00A0: %1$s sur %2$d coups.</item>
     </plurals>
 
     <!-- Timer Screen -->
-    <string name="timer_reset_title">Réinitialiser la partie ?</string>
-    <string name="preset_end_game_title">Terminer la partie en cours ?</string>
+    <string name="timer_reset_title">Réinitialiser la partie\u00A0?</string>
+    <string name="preset_end_game_title">Terminer la partie en cours\u00A0?</string>
     <string name="preset_end_game_confirm">Terminer</string>
     <string name="timer_reset_message">L\'état actuel sera perdu.</string>
-    <string name="timer_berserk_title">Berserk pour le joueur %1$d ?</string>
+    <string name="timer_berserk_title">Berserk pour le joueur %1$d\u00A0?</string>
     <string name="timer_berserk_message">La moitié du temps et l\'incrément sont perdus pour cette partie. Impossible d\'annuler.</string>
-    <string name="timer_berserk_message_increment">L\'incrément est perdu pour cette partie ; en 1+2, le temps est conservé. Impossible d\'annuler.</string>
+    <string name="timer_berserk_message_increment">L\'incrément est perdu pour cette partie\u00A0; en 1+2, le temps est conservé. Impossible d\'annuler.</string>
     <string name="a11y_berserk_player">Berserk, joueur %1$d</string>
     <string name="timer_reroll">Nouveau temps aléatoire</string>
-    <string name="timer_reroll_title">Tirer un nouveau temps ?</string>
+    <string name="timer_reroll_title">Tirer un nouveau temps\u00A0?</string>
     <string name="timer_reroll_confirm">Tirer</string>
     <string name="timer_reroll_message">La partie redémarre avec un nouveau temps aléatoire.</string>
     <string name="timer_arbitre_control">Contrôle arbitre</string>
@@ -603,16 +603,16 @@
     <string name="timer_resume">Reprendre</string>
     <string name="timer_start">Démarrer</string>
     <string name="timer_byoyomi">BYOYOMI</string>
-    <string name="timer_cycle">CYCLE : %d</string>
-    <string name="timer_moves">COUPS : %d</string>
-    <string name="timer_delay">DÉLAI : %s</string>
+    <string name="timer_cycle">CYCLE\u00A0: %d</string>
+    <string name="timer_moves">COUPS\u00A0: %d</string>
+    <string name="timer_delay">DÉLAI\u00A0: %s</string>
     <string name="timer_flagged">TOMBÉ</string>
     <string name="timer_finished">TERMINÉ</string>
     <string name="timer_period_flag">PÉRIODE ÉCOULÉE</string>
-    <string name="timer_period">PÉRIODE : %1$d/%2$d</string>
-    <string name="timer_periods">PÉRIODES : %1$d</string>
+    <string name="timer_period">PÉRIODE\u00A0: %1$d/%2$d</string>
+    <string name="timer_periods">PÉRIODES\u00A0: %1$d</string>
     <string name="timer_reflect">RÉFLEXION</string>
-    <string name="timer_move_alert">JOUEZ !</string>
+    <string name="timer_move_alert">JOUEZ\u00A0!</string>
     <string name="timer_pause_label">PAUSE</string>
     <string name="preset_desc_1_min">Sudden Death 1:00</string>
     <string name="preset_desc_5_min">Sudden Death 5:00</string>
@@ -627,9 +627,9 @@
     <string name="preset_desc_us_25_5s">Sudden Death 25:00, délai 5 s</string>
     <string name="preset_desc_us_80_40_30_30s">80 min/40 + 30 min (délai 30 s)</string>
     <string name="preset_desc_bronst_90_5s">Bronstein 90:00, délai 5 s</string>
-    <string name="preset_desc_jap_byo_20">Byoyomi Japanese : 20 min + 1×30 s</string>
-    <string name="preset_desc_jap_byo_60">Byoyomi Japanese : 60 min + 3×20 s</string>
-    <string name="preset_desc_can_byo_60">Byoyomi Canadian : 60 min + 5 min/20 coups</string>
+    <string name="preset_desc_jap_byo_20">Byoyomi Japanese\u00A0: 20 min + 1×30 s</string>
+    <string name="preset_desc_jap_byo_60">Byoyomi Japanese\u00A0: 60 min + 3×20 s</string>
+    <string name="preset_desc_can_byo_60">Byoyomi Canadian\u00A0: 60 min + 5 min/20 coups</string>
     <string name="preset_desc_armag_5_4">Blancs 5:00, Noirs 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 chacun</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/coup</string>
@@ -645,7 +645,7 @@
     <string name="settings_horiz_left">Gauche</string>
     <string name="settings_horiz_right">Droite</string>
     <string name="omni_in_reserve">+%1$s en réserve</string>
-    <string name="omni_cfg_unbalanced_explain">Chaque joueur a autant de chances à chaque tour : l\'un d\'eux peut vraiment jouer la plus grande partie d\'une manche.</string>
+    <string name="omni_cfg_unbalanced_explain">Chaque joueur a autant de chances à chaque tour\u00A0: l\'un d\'eux peut vraiment jouer la plus grande partie d\'une manche.</string>
     <string name="tools_player_short">J%d</string>
     <string name="back_press_again_to_exit">Appuyez à nouveau sur Retour pour quitter</string>
     <string name="arbiter_clock">Horloge</string>
