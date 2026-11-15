@@ -172,6 +172,7 @@
     <string name="tools_shape_done">Fertig</string>
     <string name="tools_shapes">Formen</string>
     <string name="tools_width">Strichstärke</string>
+    <string name="tools_custom_colours">Eigene Farben</string>
     <string name="tools_background">Hintergrund</string>
     <string name="tools_background_none">Kein Hintergrund</string>
     <string name="tools_background_empty">Noch keine Foto- oder Brettnotiz zum Bemalen</string>

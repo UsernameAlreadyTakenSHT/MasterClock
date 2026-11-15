@@ -650,10 +650,16 @@ private fun StickerOnDrawing(sticker: DrawingPath, scale: Float, loader: ImageLo
 }
 
 /**
- * The colours a drawing is drawn in, and any other through the custom one: purple, pink and brown
- * beside the first eight, brown for the wood of a board and its pieces.
+ * The colours a drawing is drawn in, by rows of a family: the neutrals, brown among them for the
+ * wood of a board and its pieces; the warm ones; the cool ones, which leave the custom colour the
+ * last place. In the order they came, eleven in a heap over three lines read as a muddle.
  */
-private val DRAWING_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF9C27B0, 0xFFE91E63, 0xFF795548, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
+private val DRAWING_COLOR_ROWS = listOf(
+    listOf(0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF, 0xFF795548),
+    listOf(0xFFF44336, 0xFFFF9800, 0xFFFFEB3B, 0xFFE91E63),
+    listOf(0xFF4CAF50, 0xFF2196F3, 0xFF9C27B0),
+)
+private val DRAWING_COLORS = DRAWING_COLOR_ROWS.flatten()
 
 /**
  * The choice of a drawing's colour: [current] ringed, none with the eraser held. Custom colours the
@@ -675,17 +681,31 @@ private fun DrawingColorChoice(current: Long?, used: List<Long>, onDismiss: () -
             Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.tools_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    (customColoursIn(used, DRAWING_COLORS) + DRAWING_COLORS).forEach { value ->
-                        val chosen = value == current
-                        Surface(
-                            modifier = Modifier.size(40.dp).clickable { onChoose(value) }.testTag("drawing_color_$value"),
-                            shape = CircleShape,
-                            color = Color(value),
-                            border = BorderStroke(if (chosen) 3.dp else 1.dp, if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-                        ) {}
+                @Composable
+                fun Swatch(value: Long) {
+                    val chosen = value == current
+                    Surface(
+                        modifier = Modifier.size(40.dp).clickable { onChoose(value) }.testTag("drawing_color_$value"),
+                        shape = CircleShape,
+                        color = Color(value),
+                        border = BorderStroke(if (chosen) 3.dp else 1.dp, if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                    ) {}
+                }
+                // The custom colours the drawing already has, apart, so the families keep their rows.
+                val mine = customColoursIn(used, DRAWING_COLORS)
+                if (mine.isNotEmpty()) {
+                    Text(stringResource(R.string.tools_custom_colours), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Start))
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.Start)) { mine.forEach { Swatch(it) } }
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DRAWING_COLOR_ROWS.forEachIndexed { i, row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { Swatch(it) }
+                            if (i == DRAWING_COLOR_ROWS.lastIndex) CustomColourButton(Modifier.testTag("drawing_color_custom")) { custom = true }
+                        }
                     }
-                    CustomColourButton(Modifier.testTag("drawing_color_custom")) { custom = true }
                 }
             }
         }

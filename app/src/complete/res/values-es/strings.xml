@@ -173,6 +173,7 @@
     <string name="tools_shape_done">Hecho</string>
     <string name="tools_shapes">Formas</string>
     <string name="tools_width">Grosor</string>
+    <string name="tools_custom_colours">Tus colores</string>
     <string name="tools_background">Fondo</string>
     <string name="tools_background_none">Sin fondo</string>
     <string name="tools_background_empty">Aún no hay notas de foto o tablero sobre las que dibujar</string>

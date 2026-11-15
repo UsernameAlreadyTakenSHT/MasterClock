@@ -172,6 +172,7 @@
     <string name="tools_shape_done">Klaar</string>
     <string name="tools_shapes">Vormen</string>
     <string name="tools_width">Dikte</string>
+    <string name="tools_custom_colours">Je eigen kleuren</string>
     <string name="tools_background">Achtergrond</string>
     <string name="tools_background_none">Geen achtergrond</string>
     <string name="tools_background_empty">Nog geen foto- of bordnotitie om op te tekenen</string>
