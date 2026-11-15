@@ -155,6 +155,16 @@ class DrawingShapeFlowTest {
         // The widest step is 32 times the finest, on whatever canvas.
         assertEquals(32f, wide / fine, 0.01f)
         shot("drawing_width")
+
+        // The colours, behind the palette button: red chosen, the next stroke is red.
+        press("tools_color")
+        rule.waitForIdle()
+        shot("drawing_colors")
+        rule.onNode(androidx.compose.ui.test.hasTestTag("drawing_color_${0xFFF44336}")).performClick()
+        rule.onRoot().performTouchInput { swipe(Offset(root.width * 0.2f, root.height * 0.6f), Offset(root.width * 0.8f, root.height * 0.62f), 300) }
+        waitForTheNote("the red stroke") { it.drawingPaths.size == 3 }
+        assertEquals(0xFFF44336, note().drawingPaths[2].color)
+        shot("drawing_red")
     }
 
     /** A piece put on the drawing from the Pieces button, moved and enlarged, then taken out. */

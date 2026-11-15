@@ -1,6 +1,7 @@
 package com.masterclock.app.ui.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,6 +46,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import coil3.ImageLoader
@@ -99,6 +101,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     // The shape the Shapes button draws, and whether its choice is open under the tools.
     var shapeKind by remember { mutableStateOf(DrawTool.RECTANGLE) }
     var choosingShape by remember { mutableStateOf(false) }
+    var choosingColor by remember { mutableStateOf(false) }
     // Whether the pieces are open under the tools, to put one on the drawing.
     var choosingPiece by remember { mutableStateOf(false) }
     // The stroke under the finger is a list added to, not copied: each point of a drag made a new list
@@ -186,16 +189,13 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
             // As wide as the title above it and the page below, as the text note's toolbar is.
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val colors = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
-                        colors.forEach { colorVal ->
-                            val chosen = currentColor == colorVal && tool != DrawTool.ERASER
-                            Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(Color(colorVal)).border(width = if (chosen) 2.dp else 0.5.dp, color = if (chosen) MaterialTheme.colorScheme.primary else Color.Gray, shape = CircleShape).clickable {
-                                currentColor = colorVal
-                                if (tool == DrawTool.ERASER) tool = DrawTool.PEN
-                                changeSelected { it.copy(color = colorVal) }
-                            })
-                        }
+                    // The colours behind one button, as in a text note: a row of them took a line of
+                    // the toolbar for something chosen now and then.
+                    if (choosingColor) DrawingColorChoice(current = currentColor.takeIf { tool != DrawTool.ERASER }, onDismiss = { choosingColor = false }) { colorVal ->
+                        currentColor = colorVal
+                        if (tool == DrawTool.ERASER) tool = DrawTool.PEN
+                        changeSelected { it.copy(color = colorVal) }
+                        choosingColor = false
                     }
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
@@ -221,6 +221,10 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                             colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                         ) { BoardPiece("N", 28.dp, pieceLoader, Modifier.clearAndSetSemantics { }) }
                         DrawToolButton(DrawTool.ERASER, tool == DrawTool.ERASER) { tool = DrawTool.ERASER; selected = null; choosingShape = false; choosingPiece = false }
+                        // In the colour it draws in, so that it says which without being opened.
+                        IconButton(onClick = { choosingColor = true }) {
+                            Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = if (Color(currentColor).luminance() > 0.9f) Color.Gray else Color(currentColor))
+                        }
                         VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
                         // Not a tool: what the drawing is drawn on. Marked when there is one.
                         IconToggleButton(
@@ -607,4 +611,31 @@ private fun PieceOnDrawing(piece: DrawingPath, scale: Float, loader: ImageLoader
     val (left, top, side) = piece.pieceSquare()
     val size = with(LocalDensity.current) { (side * scale).toDp() }
     BoardPiece(piece.label, size, loader, Modifier.offset { IntOffset((left * scale).roundToInt(), (top * scale).roundToInt()) })
+}
+
+/** The colours a drawing is drawn in, as a text note offers them. */
+private val DRAWING_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
+
+/** The choice of a drawing's colour, as a text note's: [current] ringed, none with the eraser held. */
+@Composable
+private fun DrawingColorChoice(current: Long?, onDismiss: () -> Unit, onChoose: (Long) -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
+            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(stringResource(R.string.tools_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DRAWING_COLORS.forEach { value ->
+                        val chosen = value == current
+                        Surface(
+                            modifier = Modifier.size(40.dp).clickable { onChoose(value) }.testTag("drawing_color_$value"),
+                            shape = CircleShape,
+                            color = Color(value),
+                            border = BorderStroke(if (chosen) 3.dp else 1.dp, if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                        ) {}
+                    }
+                }
+            }
+        }
+    }
 }
