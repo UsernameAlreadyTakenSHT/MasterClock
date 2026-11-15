@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.ImageLoader
 import coil3.svg.SvgDecoder
@@ -370,12 +371,15 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
             ) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     // The label doubles as the only sign of which mode the board is in: with no
-                    // piece held, a tap on a square clears it, and nothing else would say so.
-                    Text(
+                    // piece held, a tap on a square clears it, and nothing else would say so. One
+                    // line, so the pieces below do not jump when the label changes: in Portuguese
+                    // the eraser's took two.
+                    OneLineText(
                         stringResource(
                             if (selectedPiece == null) R.string.tools_board_eraser_hint else R.string.tools_select_piece
                         ),
                         style = MaterialTheme.typography.labelMedium,
+                        minSize = 9.sp,
                     )
                     // One row per colour, whatever the game: six chess pieces or two draughts ones.
                     piecesList.chunked(piecesList.size / 2).forEach { row ->

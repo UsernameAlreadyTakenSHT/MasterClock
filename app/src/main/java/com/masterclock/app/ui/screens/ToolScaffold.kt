@@ -2,17 +2,26 @@ package com.masterclock.app.ui.screens
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
 
 /**
@@ -34,7 +43,9 @@ fun ToolScaffold(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title, fontWeight = FontWeight.Bold) },
+                // Undo, redo and clear leave a title little room, and "Modifica la scacchiera" took
+                // two lines of the bar.
+                title = { OneLineText(title, fontWeight = FontWeight.Bold, minSize = 16.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
@@ -42,5 +53,33 @@ fun ToolScaffold(
             )
         },
         content = content
+    )
+}
+
+/**
+ * A label kept to one line: it shrinks, down to [minSize], rather than wrap where a translation
+ * runs longer than the English it was laid out for, and only past that is it cut short.
+ */
+@Composable
+fun OneLineText(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle = LocalTextStyle.current,
+    minSize: TextUnit = 11.sp,
+    color: Color = Color.Unspecified,
+    fontWeight: FontWeight? = null,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
+) {
+    val full = if (style.fontSize.isSpecified) style.fontSize else 14.sp
+    Text(
+        text,
+        modifier = modifier,
+        style = style,
+        color = color,
+        fontWeight = fontWeight,
+        letterSpacing = letterSpacing,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        autoSize = if (full.value > minSize.value) TextAutoSize.StepBased(minFontSize = minSize, maxFontSize = full) else null,
     )
 }

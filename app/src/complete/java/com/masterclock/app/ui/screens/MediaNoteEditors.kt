@@ -148,12 +148,14 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
         else if (note.audioPath != null) Text(text = if (isPlaying) String.format(locale, "%02d:%02d", playbackTime / 60, playbackTime % 60) else ((note.audioDurationMs + 500) / 1000).let { seconds -> String.format(locale, "%02d:%02d", seconds / 60, seconds % 60) }, style = MaterialTheme.typography.headlineMedium)
         CaptionField(caption)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) {
+            if (!isPlaying) Button(onClick = { if (isRecording) stopRecording() else startRecording() }, colors = ButtonDefaults.buttonColors(containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(16.dp), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp), modifier = Modifier.height(56.dp).weight(1f)) {
                 Icon(if (isRecording) Icons.Default.Stop else Icons.Default.Mic, null)
                 Spacer(Modifier.width(8.dp))
-                Text(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) })
+                // One line: "Neu aufnehmen" took two beside its icon, half a row wide. The narrower padding,
+                // on both buttons, lets "Gravar novamente" keep a size near its neighbour's.
+                OneLineText(when { isRecording -> stringResource(R.string.tools_stop); note.audioPath != null -> stringResource(R.string.tools_record_again); else -> stringResource(R.string.tools_record) })
             }
-            if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) session.stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), modifier = Modifier.height(56.dp).weight(1f)) {
+            if (note.audioPath != null && !isRecording) Button(onClick = { if (isPlaying) session.stopPlayback() else startPlayback() }, shape = RoundedCornerShape(16.dp), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp), modifier = Modifier.height(56.dp).weight(1f)) {
                 Icon(if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow, null)
                 Spacer(Modifier.width(8.dp))
                 Text(if (isPlaying) stringResource(R.string.tools_stop) else stringResource(R.string.tools_play))

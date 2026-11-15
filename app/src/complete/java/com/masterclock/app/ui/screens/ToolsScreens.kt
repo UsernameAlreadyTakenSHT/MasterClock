@@ -687,9 +687,7 @@ fun BlindfoldTrainerScreen(onBack: () -> Unit) {
                             Text(stringResource(R.string.tools_final_score, score), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
                             Spacer(Modifier.height(32.dp))
                         }
-                        Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) {
-                            Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) }
-                        }
+                        StartTrialButton { score = 0; isPlaying = true; nextRound() }
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -741,7 +739,7 @@ fun KnightPathScreen(onBack: () -> Unit) {
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text(stringResource(R.string.tools_final_score, score), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
-                        Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
+                        StartTrialButton { score = 0; isPlaying = true; nextRound() }
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -801,7 +799,7 @@ fun NameSquareScreen(onBack: () -> Unit) {
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (timeLeft == 0) { Text(stringResource(R.string.tools_game_over), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Black); Text(stringResource(R.string.tools_final_score, score), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold); Spacer(Modifier.height(32.dp)) }
-                        Surface(onClick = { score = 0; isPlaying = true; nextRound() }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_start_trial), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
+                        StartTrialButton { score = 0; isPlaying = true; nextRound() }
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -967,7 +965,7 @@ fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 if (session.games.isEmpty()) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.tools_no_games), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
                 else { LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(sortedGames, key = { it.id }) { game -> Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)) { Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(game.result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold); Text(isoDateTime(game.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } }
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it.take(MAX_SCOREBOARD_TEXT_CHARS) }, placeholder = { Text(stringResource(R.string.tools_add_result_placeholder)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, stringResource(R.string.tools_add_result)) } }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it.take(MAX_SCOREBOARD_TEXT_CHARS) }, placeholder = { OneLineText(stringResource(R.string.tools_add_result_placeholder)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, stringResource(R.string.tools_add_result)) } }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { viewModel.addScoreboardGame("1 - 0") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("1 - 0") }; Button(onClick = { viewModel.addScoreboardGame("½ - ½") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("½ - ½") }; Button(onClick = { viewModel.addScoreboardGame("0 - 1") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("0 - 1") } }
         }
     }
@@ -1150,4 +1148,18 @@ internal fun ConfirmDestructiveDialog(title: String, confirmLabel: String, onCon
         confirmButton = { TextButton(onClick = { onDismiss(); onConfirm() }) { Text(confirmLabel) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
+}
+
+/**
+ * The trainers' start button. It was 240dp whatever it said, and "VERSUCH STARTEN" filled it to
+ * both edges on two lines: it now grows with its label, keeps a margin, and shrinks the label only
+ * where the screen itself is too narrow.
+ */
+@Composable
+private fun StartTrialButton(onClick: () -> Unit) {
+    Surface(onClick = onClick, modifier = Modifier.widthIn(min = 240.dp).height(72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) {
+        Box(Modifier.padding(horizontal = 24.dp), contentAlignment = Alignment.Center) {
+            OneLineText(stringResource(R.string.tools_start_trial), style = LocalTextStyle.current.copy(fontSize = 24.sp), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp, minSize = 14.sp)
+        }
+    }
 }

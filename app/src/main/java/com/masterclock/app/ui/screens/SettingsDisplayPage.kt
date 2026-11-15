@@ -103,9 +103,11 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                         color = Color.Transparent,
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.settings_threshold), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                            SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(2f)) {
+                        // The label above, not beside: beside it, the choices had two thirds of the row
+                        // and "Como las décimas" wrapped under its check mark.
+                        Column {
+                            Text(stringResource(R.string.settings_threshold), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(bottom = 6.dp))
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                                 SegmentedButton(
                                     selected = !currentSettings.showHundredthsOnlyUnder10s,
                                     onClick = { onSettingsChanged(currentSettings.copy(showHundredthsOnlyUnder10s = false)) },
@@ -135,12 +137,13 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
         SettingsSection(stringResource(R.string.settings_layout_scale)) {
             Column {
                 BehaviorSwitch(stringResource(R.string.settings_active_side_bigger), currentSettings.activePlayerSideBigger, topRounded = true) { onSettingsChanged(currentSettings.copy(activePlayerSideBigger = it)) }
-                Row(
-                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // The label above the choices: beside them it had what three segments left over,
+                // and "Orientación" broke in the middle of the word.
+                Column(
+                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
-                    Text(stringResource(R.string.settings_orientation), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    SingleChoiceSegmentedButtonRow {
+                    Text(stringResource(R.string.settings_orientation), modifier = Modifier.padding(bottom = 8.dp), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         ClockOrientation.entries.forEachIndexed { i, o ->
                             val label = when(o) {
                                 ClockOrientation.VERTICAL -> stringResource(R.string.settings_vert)

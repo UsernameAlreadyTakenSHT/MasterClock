@@ -688,6 +688,10 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                 modifier = Modifier
                     .then(if (crowded || (largeScreen && sideways)) Modifier.fittedForTurn(contentRotation) else Modifier)
                     .graphicsLayer { rotationZ = contentRotation }
+                    // Inside the turn, so it is a margin across the face whichever way it faces. The
+                    // clock is shrunk to fit the width it is given, and given the whole box it ran
+                    // edge to edge: two players side by side read as one number, "01:30:3001:30:30".
+                    .padding(horizontal = 12.dp)
                     .padding(top = if (highUp) 100.dp else 0.dp)
             ) {
                 Box(modifier = Modifier.height(48.dp), contentAlignment = Alignment.Center) {
