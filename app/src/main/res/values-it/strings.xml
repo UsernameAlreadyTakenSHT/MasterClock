@@ -205,7 +205,7 @@
     <string name="settings_tab_omni">Omni</string>
     <string name="settings_clear_logs_title">Cancellare tutta la cronologia delle partite?</string>
     <string name="settings_clear_logs_message">Tutta la cronologia registrata sarà eliminata definitivamente.</string>
-    <string name="settings_reset_title">Ripristinare tutte le impostazioni?</string>
+    <string name="settings_reset_title">Azzerare tutte le impostazioni?</string>
     <string name="settings_reset_message">L\'operazione non può essere annullata.</string>
 
     <!-- Enum-backed option labels -->
@@ -479,7 +479,7 @@
     <string name="settings_more_share_apk_format_text">Un APK si installa direttamente. Alcuni telefoni rifiutano i file APK via Bluetooth: invia allora uno ZIP, da cui il destinatario estrae l\'APK per installarlo.</string>
     <string name="settings_more_danger">Zona a rischio</string>
     <string name="settings_more_clear_logs">Cancella i registri</string>
-    <string name="settings_more_reset_settings">Ripristina le impostazioni</string>
+    <string name="settings_more_reset_settings">Azzera le impostazioni</string>
     <string name="toast_preparing_apk">Preparazione del file dell\'applicazione…</string>
     <string name="toast_apk_error">Errore: impossibile preparare il file</string>
 
@@ -614,7 +614,7 @@
     <string name="preset_desc_armag_5_4">Bianco 5:00, Nero 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 ciascuno</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/mossa</string>
-    <string name="preset_desc_scrabble_25">Sudden Death 25:00, conteggio inverso</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bandierina invertita</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, arrotondato</string>
     <string name="preset_shortcut_deleted">Questo preset è stato eliminato</string>
     <string name="arbiter_remove_minute">%1$s, meno 1 minuto</string>

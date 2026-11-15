@@ -604,7 +604,7 @@
     <string name="preset_desc_armag_5_4">Wit 5:00, zwart 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 elk</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/zet</string>
-    <string name="preset_desc_scrabble_25">Sudden Death 25:00, terugtellen</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, vlag omgekeerd</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, afgerond</string>
     <string name="preset_shortcut_deleted">Deze preset is verwijderd</string>
     <string name="arbiter_remove_minute">%1$s, min 1 minuut</string>

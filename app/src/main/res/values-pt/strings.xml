@@ -334,8 +334,8 @@
     <string name="share_scan_qr">Ler um código QR</string>
     <string name="share_scan_qr_desc">Importar rapidamente as definições lendo outro ecrã.</string>
     <string name="share_import_full">Importar uma cópia completa</string>
-    <string name="share_import_full_desc">Repor as suas definições ou importá-las de outro dispositivo.</string>
-    <string name="share_restore_full_desc">Repor tudo (definições e ficheiros) a partir de um arquivo .zip.</string>
+    <string name="share_import_full_desc">Restaure as suas definições ou importe-as de outro dispositivo.</string>
+    <string name="share_restore_full_desc">Restaurar tudo (definições e ficheiros) a partir de um arquivo .zip.</string>
 
     <!-- Credits dialog -->
     <string name="credits_tab_credits">Créditos</string>
@@ -619,7 +619,7 @@
     <string name="preset_desc_armag_5_4">Brancas 5:00, pretas 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 cada</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/lance</string>
-    <string name="preset_desc_scrabble_25">Sudden Death 25:00, contagem inversa</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bandeirinha invertida</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, arredondado</string>
     <string name="preset_shortcut_deleted">Esta predefinição foi eliminada</string>
     <string name="arbiter_remove_minute">%1$s, menos 1 minuto</string>

@@ -41,11 +41,11 @@
 
     <!-- Settings: configurações, not definições -->
     <string name="timer_settings">Configurações</string>
-    <string name="settings_reset_title">Redefinir todas as configurações?</string>
+    <string name="settings_reset_title">Zerar todas as configurações?</string>
     <string name="settings_reset_message">Esta ação não pode ser desfeita.</string>
-    <string name="settings_confirm_reset">Confirmar a redefinição</string>
+    <string name="settings_confirm_reset">Confirmar antes de zerar</string>
     <string name="settings_different_per_player">Configurações diferentes por jogador</string>
-    <string name="settings_more_reset_settings">Redefinir as configurações</string>
+    <string name="settings_more_reset_settings">Zerar as configurações</string>
     <string name="settings_trigger_on_press">Ativar ao pressionar (caso contrário ao soltar)</string>
     <string name="settings_sound_default">Usando o som padrão</string>
 
