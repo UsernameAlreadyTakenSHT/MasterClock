@@ -108,7 +108,8 @@ private fun resizeBoard(squares: List<String>, from: BoardNoteVariant, to: Board
 internal fun BoardPiece(piece: String, size: Dp, imageLoader: ImageLoader, modifier: Modifier = Modifier) {
     AsyncImage(
         model = getPieceSvgPath(piece),
-        contentDescription = piece,
+        // Its name rather than the letter it is stored as, which TalkBack read out: "q" for a queen.
+        contentDescription = PIECE_NAMES[piece]?.let { stringResource(it) } ?: piece,
         modifier = modifier.size(size),
         imageLoader = imageLoader,
     )

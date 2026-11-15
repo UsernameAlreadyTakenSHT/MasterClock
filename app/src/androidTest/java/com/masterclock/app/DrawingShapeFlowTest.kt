@@ -206,10 +206,10 @@ class DrawingShapeFlowTest {
 
         // A knight first, so that the two are seen together.
         press("tools_insert_pieces")
-        rule.onNode(hasContentDescription("N") and hasClickAction()).performClick()
+        rule.onNode(hasContentDescription(complete("tools_piece_white_knight")) and hasClickAction()).performClick()
         waitForTheNote("the knight") { it.drawingPaths.size == 1 }
         val knightAt = note().drawingPaths.single().points
-        val knight = rule.onAllNodes(hasContentDescription("N"))[0].fetchSemanticsNode().boundsInRoot.center
+        val knight = rule.onAllNodes(hasContentDescription(complete("tools_piece_white_knight")))[0].fetchSemanticsNode().boundsInRoot.center
         rule.onRoot().performTouchInput { swipe(knight, knight + Offset(-200f, -250f), 300) }
         waitForTheNote("the knight's move") { it.drawingPaths.single().points != knightAt }
 
@@ -240,14 +240,14 @@ class DrawingShapeFlowTest {
         await(hasContentDescription(complete("tools_insert_pieces")))
 
         press("tools_insert_pieces")
-        await(hasContentDescription("q") and hasClickAction())
+        await(hasContentDescription(complete("tools_piece_black_queen")) and hasClickAction())
         shot("drawing_pieces_menu")
-        rule.onNode(hasContentDescription("q") and hasClickAction()).performClick()
+        rule.onNode(hasContentDescription(complete("tools_piece_black_queen")) and hasClickAction()).performClick()
         waitForTheNote("the queen") { it.drawingPaths.singleOrNull()?.let { p -> p.isPiece && p.label == "q" } == true }
         val placed = note().drawingPaths.single().points
 
         // On the drawing it is a picture, not a button: the one without a click action.
-        val onDrawing = rule.onAllNodes(hasContentDescription("q"))[0].fetchSemanticsNode().boundsInRoot
+        val onDrawing = rule.onAllNodes(hasContentDescription(complete("tools_piece_black_queen")))[0].fetchSemanticsNode().boundsInRoot
         val centre = onDrawing.center
         rule.onRoot().performTouchInput { swipe(centre, centre + Offset(-120f, 200f), 300) }
         waitForTheNote("the move") { it.drawingPaths.single().points != placed }
@@ -255,7 +255,7 @@ class DrawingShapeFlowTest {
         assertEquals(placed[1].first - placed[0].first, moved[1].first - moved[0].first, 0.5f)
 
         // Its lower right handle pulls it larger, and it stays square.
-        val corner = rule.onAllNodes(hasContentDescription("q"))[0].fetchSemanticsNode().boundsInRoot.bottomRight
+        val corner = rule.onAllNodes(hasContentDescription(complete("tools_piece_black_queen")))[0].fetchSemanticsNode().boundsInRoot.bottomRight
         rule.onRoot().performTouchInput { swipe(corner, corner + Offset(150f, 150f), 300) }
         waitForTheNote("the size") { it.drawingPaths.single().points[1] != moved[1] }
         val (_, _, side) = note().drawingPaths.single().pieceSquare()

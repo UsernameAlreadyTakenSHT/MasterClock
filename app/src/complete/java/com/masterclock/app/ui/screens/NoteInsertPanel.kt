@@ -180,14 +180,16 @@ private fun Section(title: Int, content: @Composable () -> Unit) {
 private fun Symbols(symbols: List<String>, onInsert: (String) -> Unit, large: Boolean = false) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         symbols.forEach { symbol ->
+            // Its name, for TalkBack: "!?" was read as two marks, and the Informant's signs not at all.
+            val name = (SYMBOL_NAMES[symbol] ?: PIECE_NAMES[symbol])?.let { stringResource(it) } ?: symbol
             Surface(
                 onClick = { onInsert(symbol) },
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp),
+                modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).semantics { contentDescription = name },
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 6.dp)) {
-                    Text(symbol, fontSize = if (large) 26.sp else 18.sp, fontWeight = FontWeight.Medium)
+                    Text(symbol, fontSize = if (large) 26.sp else 18.sp, fontWeight = FontWeight.Medium, modifier = Modifier.clearAndSetSemantics { })
                 }
             }
         }

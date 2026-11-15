@@ -150,10 +150,10 @@ class TextNoteFlowTest {
 
         // A button each, the one pressed closing its panel and the next opening its own.
         press("tools_insert_pieces")
-        rule.onNode(hasText("♔") and hasClickAction()).performClick()
+        rule.onNode(hasContentDescription(complete("tools_piece_white_king")) and hasClickAction()).performClick()
         press("tools_insert_annotations")
-        rule.onNode(hasText("!?") and hasClickAction()).performClick()
-        rule.onNode(hasText("±") and hasClickAction()).performClick()
+        rule.onNode(hasContentDescription(complete("tools_sym_interesting")) and hasClickAction()).performClick()
+        rule.onNode(hasContentDescription(complete("tools_sym_white_clearly")) and hasClickAction()).performClick()
         waitForTheNote("the inserts") { it.content == "♔!?±" }
     }
 
