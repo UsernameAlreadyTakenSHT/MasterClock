@@ -1,3 +1,45 @@
+## v0.8.40 — 2026-11-15
+
+The notebook becomes an editor -- colours, highlighters, pieces and emojis in text, shapes, pieces
+and a photo under a drawing, captions and zoom on media -- Shrink becomes a mode of its own that can
+climb as well as fall, an Omni session survives the app being closed, and a review of the whole app
+fixed what it found.
+
+### Added
+- **Staircase** (Complete, Standard, Lite), a mode of its own: Fast Move's Shrink, where a move takes a fixed step off the time down to a floor, now beside **Up**, a fixed step more a move up to a ceiling. Presets and backups holding Shrink open as Staircase Down; an older version plays Up as Down.
+- **An Omni session is kept** (Complete, Standard, Lite). Closed by Android or swiped away, it comes back paused where it was, and Launch offers to resume it. With Keep running in the background on (Complete, Standard), a running session keeps a notification as a game does: the player on turn, their time, a Pause.
+
+### Changed
+- **Omni: every player plays each turn of a round.** Two turns set up for four players made a round of two, and players 3 and 4 never played in it. Rounds already set up with several turns are now played by everyone.
+- **A preset shortcut tapped with the app open** reaches the clock already there, and asks first with a game in play, instead of opening a second clock over the first.
+- **The buzz answers a press that did something**: the side not on the move no longer buzzes like a move.
+- **Four clocks keep apart.** With four players, two clocks side by side ran into each other and read as one number. The Display tab's Orientation and threshold put their label above the choices, and translated labels keep to one line.
+- E-Ink: the clock wakes once a second, which is what its face shows, rather than ten times.
+- The speech engine starts when there is something to say, not at every launch.
+- The mode guide's One for All, Fast Move Transfer and Omni entries are corrected.
+
+### Fixed
+- **An arbiter's correction given and the app then closed came back gone**, or on the clock with no trace in the log; a penalty that ended the game could be resumed as though it had not. TalkBack could reach the control bar under the arbiter's panel and start the clock.
+- **The background notification went on counting** after Android closed the game it kept, and flipped between two clocks opened from a shortcut.
+- Turning a tablet or changing the theme closed Reset's, the redraw's and Berserk's questions as if Cancel had been pressed, sent the Omni wizard back to its first step, and could cut a restore short with its media half written. On E-Ink it paused the game.
+- Omni: a turn could go to a player removed since ("player 6 of 3"), and Shared (Auto) and Gong passed only one of the turns a phone asleep ran through.
+- The scoreboard, and imports past their limit, dropped the newest games and presets rather than the oldest. A very long game's log lost what ended it.
+- Sliders and the scoreboard's names wrote the settings at every frame or key, and dragging a Fast Move rate restarted the game.
+- Reset settings kept the leave to read the custom sounds it forgot.
+- The low-time flash ran at every frame of the game, flashing or not. Statistics, the history and the QR code were worked out as their screens opened, and froze them with a long history.
+- E-Ink: TalkBack did not say which mode is selected.
+
+### Notebook (Complete)
+- **Text notes:** the toolbar shows whole and names its headings; a line can be centred; highlight in yellow, orange, pink, blue or green; black, blue, red and green text, or a colour of your own, kept on a line apart; pieces, annotations and every emoji (drawn in OpenMoji) to insert; Undo goes back word by word, and Redo is there; Clear takes one step; a checkbox ticks only when tapped.
+- **Drawing notes:** shapes; chess and draughts pieces and emojis; a stroke width of ten steps; eleven colours by family behind one palette button, and your own; an eraser that removes strokes rather than painting over them; a photo note's photo or a board note's position to draw over; Redo. A drawing shows whole on a screen of another size.
+- **Photo, voice and video notes** take a caption and show their media unframed; a photo zooms with a pinch, a drag or a double tap.
+- TalkBack names each symbol and each piece.
+- The notebook is stored apart from the settings, and drawings and text are no longer rebuilt at each frame or key.
+
+### Board (Complete)
+Still never tested with a real board.
+- A Bluetooth or BLE connection's last data could be read into the next one, or show a connected board as disconnected.
+
 ## v0.8.39 — 2026-11-09
 
 A game can keep running in the background with a notification, Berserk asks first, the arbiter's

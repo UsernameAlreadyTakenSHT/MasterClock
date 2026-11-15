@@ -53,9 +53,11 @@ class ChangelogTest {
 
     @Test
     fun `a build reads only its own notes`() {
-        val mini = AppInfo.changelogFor(AppFlavor.MINI).first().notes
+        // 0.8.39 by name, not the first entry: it was the first when this was written, and the
+        // next release, with no Berserk in it, failed the test for being newer.
+        val mini = AppInfo.changelogFor(AppFlavor.MINI).single { it.version == "0.8.39" }.notes
         assertFalse(mini.any { "Berserk" in it })
-        assertTrue(AppInfo.changelogFor(AppFlavor.COMPLETE).first().notes.any { "Berserk" in it })
+        assertTrue(AppInfo.changelogFor(AppFlavor.COMPLETE).single { it.version == "0.8.39" }.notes.any { "Berserk" in it })
         // 0.8.36 changed the E-Ink build alone: listed everywhere, with its notes only there.
         val eInk = AppInfo.changelogFor(AppFlavor.E_INK).single { it.version == "0.8.36" }
         val complete = AppInfo.changelogFor(AppFlavor.COMPLETE).single { it.version == "0.8.36" }

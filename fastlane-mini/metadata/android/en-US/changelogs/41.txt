@@ -1,0 +1,2 @@
+The buzz answers only a press that did something.
+Turning a tablet or changing the theme no longer closes the clock's questions.

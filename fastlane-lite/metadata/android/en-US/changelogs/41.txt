@@ -1,0 +1,3 @@
+Staircase, a mode of its own: Shrink, and now Up, a step more each move up to a ceiling.
+An Omni session survives the app being closed, and every player plays each turn of a round.
+Arbiter corrections survive a closed app. A preset shortcut reaches the clock already open.

@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-09"
+    const val BUILD_DATE = "2026-11-15"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,23 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.40",
+            date = "2026-11-15",
+            notes = listOf(
+                Note("Staircase, a mode of its own: Shrink, a step off each move down to a floor, and now Up, a step more each move up to a ceiling.", FULL_MODES),
+                Note("The notebook becomes an editor: colours, highlighters, pieces and emojis in text; shapes, pieces and a photo under a drawing; captions and zoom on media.", COMPLETE_ONLY),
+                Note("An Omni session survives the app being closed, and every player plays each turn of a round.", FULL_MODES),
+                Note("A running Omni session keeps the background notification, as a game does.", BEHAVIOUR_TAB),
+                Note("An arbiter's correction survives the app being closed, and is logged with it.", FULL_MODES),
+                Note("A preset shortcut tapped with the app open reaches the clock already there.", FULL_MODES),
+                Note("Four clocks keep apart, and translated labels keep to one line.", BEHAVIOUR_TAB),
+                Note("The buzz answers only a press that did something.", PHONE),
+                Note("Turning a tablet or changing the theme no longer closes the clock's questions.", PHONE),
+                Note("The scoreboard and imports keep the newest games and presets, and long histories no longer freeze the statistics.", COMPLETE_ONLY),
+                Note("E-Ink: the clock wakes once a second rather than ten times, TalkBack says which mode is selected, and changing the colours or the font no longer pauses the game.", E_INK_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.39",
             date = "2026-11-09",

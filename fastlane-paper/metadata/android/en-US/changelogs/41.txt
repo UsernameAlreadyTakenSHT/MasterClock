@@ -1,0 +1,3 @@
+The clock wakes once a second rather than ten times.
+TalkBack says which mode is selected.
+Changing the colours or the font no longer pauses the game.
