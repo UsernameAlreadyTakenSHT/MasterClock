@@ -90,13 +90,13 @@ constantly:
 <string name="example">Fin de l\'échange</string>
 ```
 
-**French spaces before `: ; ? !` and inside `« »` are non-breaking**, written ` `. A plain
+**French spaces before `: ; ? !` and inside `« »` are non-breaking**, written `\u00A0`. A plain
 space lets a narrow screen wrap the line just before the `?`, which then starts the next line on
 its own. The escape rather than the character itself, because a non-breaking space is invisible in
 an editor and the next person to touch the line could not tell it was there:
 
 ```xml
-<string name="example">Supprimer « %s » ?</string>
+<string name="example">Supprimer «\u00A0%s\u00A0»\u00A0?</string>
 ```
 
 **Some things stay in English on purpose.** Anything marked `translatable="false"` is left alone.
