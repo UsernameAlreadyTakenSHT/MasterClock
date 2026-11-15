@@ -1532,11 +1532,14 @@ internal fun sanitizeNote(filesDir: java.io.File, note: NotebookNote, freshId: B
             drawingPaths = note.drawingPaths.take(MAX_IMPORTED_DRAWING_PATHS).map { stroke ->
                 // A piece is kept only as one of the pieces drawn; anything else in its label goes,
                 // and a piece of no known name is read as a stroke.
+                // So is an emoji, as one emoji and nothing else.
                 val piece = stroke.shape == DrawingShape.PIECE && stroke.label in DRAWING_PIECES
+                val emoji = stroke.shape == DrawingShape.EMOJI && isOneEmoji(stroke.label)
+                val sticker = piece || emoji
                 stroke.copy(
                     points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS),
-                    shape = stroke.shape.takeIf { it in DrawingShape.KNOWN && (it != DrawingShape.PIECE || piece) } ?: DrawingShape.FREE,
-                    label = if (piece) stroke.label else "",
+                    shape = stroke.shape.takeIf { it in DrawingShape.KNOWN && (it !in STICKER_SHAPES || sticker) } ?: DrawingShape.FREE,
+                    label = if (sticker) stroke.label else "",
                 )
             },
             // A size no screen has, or none: the drawing is then shown as it stands.

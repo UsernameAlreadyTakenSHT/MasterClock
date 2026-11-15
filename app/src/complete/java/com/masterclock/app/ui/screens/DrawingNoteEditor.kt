@@ -40,6 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.lazy.LazyColumn
@@ -104,6 +105,8 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     var choosingColor by remember { mutableStateOf(false) }
     // Whether the pieces are open under the tools, to put one on the drawing.
     var choosingPiece by remember { mutableStateOf(false) }
+    // And the emojis, as a text note offers them.
+    var choosingEmoji by remember { mutableStateOf(false) }
     // The stroke under the finger is a list added to, not copied: each point of a drag made a new list
     // of every point before it. It stops, as the drawing does, where the store stops keeping them:
     // a longer stroke, or more strokes, were cut at the next launch with nothing said.
@@ -142,11 +145,14 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     // cache would otherwise take for the first.
     var backgroundCount by remember { mutableIntStateOf(0) }
     val pieceLoader = remember { ImageLoader.Builder(context).components { add(SvgDecoder.Factory()) }.build() }
-    fun placePiece(piece: String) {
+    // A piece or an emoji, put in the middle of the drawing, a fifth of it across, and selected.
+    fun placeSticker(sticker: DrawingPath) {
         noteTheCanvas()
         val area = drawnOn ?: return
         if (edit.paths.size >= MAX_DRAWING_PATHS) return
-        edit = edit.addStroke(pieceSticker(piece, area.width / 2, area.height / 2, minOf(area.width, area.height) / 5))
+        val side = minOf(area.width, area.height) / 5
+        val (cx, cy) = area.width / 2 to area.height / 2
+        edit = edit.addStroke(sticker.copy(points = listOf((cx - side / 2) to (cy - side / 2), (cx + side / 2) to (cy + side / 2))))
         selected = edit.paths.lastIndex
     }
     fun photoBackground(source: NotebookNote) {
@@ -203,12 +209,13 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                         itemVerticalAlignment = Alignment.CenterVertically,
                     ) {
                         // Another tool is something else to draw: the shape selected is left as it is.
-                        DrawToolButton(DrawTool.PEN, tool == DrawTool.PEN) { tool = DrawTool.PEN; selected = null; choosingShape = false; choosingPiece = false }
+                        DrawToolButton(DrawTool.PEN, tool == DrawTool.PEN) { tool = DrawTool.PEN; selected = null; choosingShape = false; choosingPiece = false; choosingEmoji = false }
                         // The shapes behind one button, which shows the one it draws: a button each
                         // filled the line, with pieces and emojis still to come.
                         DrawToolButton(shapeKind, tool.shape in DrawingShape.SHAPES, label = R.string.tools_shapes) {
                             selected = null
                             choosingPiece = false
+                            choosingEmoji = false
                             if (tool.shape in DrawingShape.SHAPES) choosingShape = !choosingShape
                             else { tool = shapeKind; choosingShape = true }
                         }
@@ -216,11 +223,18 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                         val piecesName = stringResource(R.string.tools_insert_pieces)
                         IconToggleButton(
                             checked = choosingPiece,
-                            onCheckedChange = { choosingPiece = !choosingPiece; choosingShape = false; selected = null },
+                            onCheckedChange = { choosingPiece = !choosingPiece; choosingShape = false; choosingEmoji = false; selected = null },
                             modifier = Modifier.semantics { contentDescription = piecesName },
                             colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                         ) { BoardPiece("N", 28.dp, pieceLoader, Modifier.clearAndSetSemantics { }) }
-                        DrawToolButton(DrawTool.ERASER, tool == DrawTool.ERASER) { tool = DrawTool.ERASER; selected = null; choosingShape = false; choosingPiece = false }
+                        val emojisName = stringResource(R.string.tools_insert_emojis)
+                        IconToggleButton(
+                            checked = choosingEmoji,
+                            onCheckedChange = { choosingEmoji = !choosingEmoji; choosingShape = false; choosingPiece = false; selected = null },
+                            modifier = Modifier.semantics { contentDescription = emojisName },
+                            colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                        ) { Text("🙂", fontFamily = OpenMoji, fontSize = 22.sp, modifier = Modifier.clearAndSetSemantics { }) }
+                        DrawToolButton(DrawTool.ERASER, tool == DrawTool.ERASER) { tool = DrawTool.ERASER; selected = null; choosingShape = false; choosingPiece = false; choosingEmoji = false }
                         // In the colour it draws in, so that it says which without being opened.
                         IconButton(onClick = { choosingColor = true }) {
                             Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = if (Color(currentColor).luminance() > 0.9f) Color.Gray else Color(currentColor))
@@ -240,11 +254,13 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                             }
                         }
                     }
+                    // An emoji chosen, the same; from the picker a text note has.
+                    if (choosingEmoji) EmojiPicker(onInsert = { emoji -> placeSticker(emojiSticker(emoji, 0f, 0f, 0f)); choosingEmoji = false })
                     // A piece chosen goes in the middle of the drawing, selected, to be moved and sized.
                     if (choosingPiece) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally)) {
                             DRAWING_PIECES.forEach { piece ->
-                                IconButton(onClick = { placePiece(piece); choosingPiece = false }) { BoardPiece(piece, 34.dp, pieceLoader) }
+                                IconButton(onClick = { placeSticker(pieceSticker(piece, 0f, 0f, 0f)); choosingPiece = false }) { BoardPiece(piece, 34.dp, pieceLoader) }
                             }
                         }
                     }
@@ -372,16 +388,16 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                 val changing = preview != null && selected != null
                 Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
                     scale(scale, pivot = Offset.Zero) {
-                        strokes.forEach { (i, data, path) -> if (!data.isPiece && !(changing && i == selected)) drawStroke(path, data.isEraser, Color(data.color), data.strokeWidth) }
-                        preview?.takeIf { !it.isPiece }?.let { drawStroke(pathOf(it), false, Color(it.color), it.strokeWidth) }
+                        strokes.forEach { (i, data, path) -> if (!data.isSticker && !(changing && i == selected)) drawStroke(path, data.isEraser, Color(data.color), data.strokeWidth) }
+                        preview?.takeIf { !it.isSticker }?.let { drawStroke(pathOf(it), false, Color(it.color), it.strokeWidth) }
                         // The stroke under the finger alone is built again as it grows.
                         if (activePoints.size > 1) drawStroke(strokePath(activePoints), tool == DrawTool.ERASER, Color(currentColor), currentWidth / scale)
                     }
                 }
                 // Pieces over the strokes: pictures rather than paint, which the eraser leaves alone;
                 // Delete takes one out.
-                currentPaths.forEachIndexed { i, path -> if (path.isPiece && !(changing && i == selected)) PieceOnDrawing(path, scale, pieceLoader) }
-                preview?.takeIf { it.isPiece }?.let { PieceOnDrawing(it, scale, pieceLoader) }
+                currentPaths.forEachIndexed { i, path -> if (path.isSticker && !(changing && i == selected)) StickerOnDrawing(path, scale, pieceLoader) }
+                preview?.takeIf { it.isSticker }?.let { StickerOnDrawing(it, scale, pieceLoader) }
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     scale(scale, pivot = Offset.Zero) {
                         // The shape or piece selected: its two handles, the size of a fingertip's aim,
@@ -605,12 +621,31 @@ private fun copyBackgroundPhoto(context: android.content.Context, drawingId: Str
     }
 }
 
-/** A piece on a drawing, at its place and size on screen, kept square in its box; see pieceSquare. */
+/**
+ * A piece or an emoji on a drawing, at its place and size on screen, kept square in its box; see
+ * pieceSquare. An emoji in OpenMoji, as a text note draws it.
+ */
 @Composable
-private fun PieceOnDrawing(piece: DrawingPath, scale: Float, loader: ImageLoader) {
-    val (left, top, side) = piece.pieceSquare()
-    val size = with(LocalDensity.current) { (side * scale).toDp() }
-    BoardPiece(piece.label, size, loader, Modifier.offset { IntOffset((left * scale).roundToInt(), (top * scale).roundToInt()) })
+private fun StickerOnDrawing(sticker: DrawingPath, scale: Float, loader: ImageLoader) {
+    val (left, top, side) = sticker.pieceSquare()
+    val density = LocalDensity.current
+    val size = with(density) { (side * scale).toDp() }
+    val place = Modifier.offset { IntOffset((left * scale).roundToInt(), (top * scale).roundToInt()) }
+    if (sticker.isPiece) {
+        BoardPiece(sticker.label, size, loader, place)
+    } else {
+        Box(place.size(size), contentAlignment = Alignment.Center) {
+            // A little under the box, as an emoji's glyph has room around it.
+            val fontSize = with(density) { (side * scale * 0.82f).toSp() }
+            Text(
+                sticker.label,
+                fontFamily = OpenMoji,
+                fontSize = fontSize,
+                lineHeight = fontSize,
+                style = androidx.compose.ui.text.TextStyle(platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)),
+            )
+        }
+    }
 }
 
 /** The colours a drawing is drawn in, as a text note offers them. */

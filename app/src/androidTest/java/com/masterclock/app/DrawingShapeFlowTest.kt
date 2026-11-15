@@ -20,6 +20,7 @@ import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.DrawingShape
 import com.masterclock.app.logic.FlavorConfig
 import com.masterclock.app.logic.NotebookNote
+import com.masterclock.app.logic.isEmoji
 import com.masterclock.app.logic.isPiece
 import com.masterclock.app.logic.pieceSquare
 import org.junit.Assert.assertEquals
@@ -165,6 +166,41 @@ class DrawingShapeFlowTest {
         waitForTheNote("the red stroke") { it.drawingPaths.size == 3 }
         assertEquals(0xFFF44336, note().drawingPaths[2].color)
         shot("drawing_red")
+    }
+
+    /** An emoji put on the drawing from its button, beside a piece, then moved. */
+    @Test
+    fun anEmojiIsPutOnAndMoved() {
+        rule.onNode(hasContentDescription(say(R.string.timer_settings)) and hasClickAction()).performClick()
+        await(hasText(say(R.string.settings_tab_more)))
+        rule.onAllNodesWithText(say(R.string.settings_tab_more))[0].performClick()
+        await(hasText(say(R.string.settings_more_notebook)))
+        rule.onNode(hasText(say(R.string.settings_more_notebook)) and hasClickAction()).performScrollTo().performClick()
+        await(hasContentDescription(complete("tools_new_note")))
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_draw")))
+        rule.onNode(hasText(complete("tools_draw")) and hasClickAction()).performClick()
+        await(hasContentDescription(complete("tools_insert_emojis")))
+
+        // A knight first, so that the two are seen together.
+        press("tools_insert_pieces")
+        rule.onNode(hasContentDescription("N") and hasClickAction()).performClick()
+        waitForTheNote("the knight") { it.drawingPaths.size == 1 }
+        val knightAt = note().drawingPaths.single().points
+        val knight = rule.onAllNodes(hasContentDescription("N"))[0].fetchSemanticsNode().boundsInRoot.center
+        rule.onRoot().performTouchInput { swipe(knight, knight + Offset(-200f, -250f), 300) }
+        waitForTheNote("the knight's move") { it.drawingPaths.single().points != knightAt }
+
+        press("tools_insert_emojis")
+        await(hasText("🏆") and hasClickAction())
+        shot("drawing_emojis_menu")
+        rule.onNode(hasText("🏆") and hasClickAction()).performClick()
+        waitForTheNote("the trophy") { it.drawingPaths.size == 2 && it.drawingPaths[1].isEmoji && it.drawingPaths[1].label == "🏆" }
+        val placed = note().drawingPaths[1].points
+        val trophy = rule.onAllNodes(hasText("🏆"))[0].fetchSemanticsNode().boundsInRoot.center
+        rule.onRoot().performTouchInput { swipe(trophy, trophy + Offset(150f, 250f), 300) }
+        waitForTheNote("the trophy's move") { it.drawingPaths[1].points != placed }
+        shot("drawing_emoji")
     }
 
     /** A piece put on the drawing from the Pieces button, moved and enlarged, then taken out. */

@@ -19,9 +19,21 @@ object DrawingShape {
     const val ELLIPSE = 4
     /** A piece's picture, [DrawingPath.label] naming it, in the box of its two points. */
     const val PIECE = 5
+    /** An emoji, [DrawingPath.label] holding it, in the box of its two points. */
+    const val EMOJI = 6
     val SHAPES = LINE..ELLIPSE
-    val KNOWN = FREE..PIECE
+    val KNOWN = FREE..EMOJI
 }
+
+/** The shapes that are pictures named by their label rather than drawn. */
+val STICKER_SHAPES = setOf(DrawingShape.PIECE, DrawingShape.EMOJI)
+
+/** No emoji is longer than this, a family of four with its skin tones included. */
+private const val MAX_EMOJI_CHARS = 32
+
+/** Whether [text] is one emoji and nothing else, as a drawing's emoji must be. */
+fun isOneEmoji(text: String): Boolean =
+    text.length in 1..MAX_EMOJI_CHARS && emojiRanges(text).singleOrNull() == 0 until text.length
 
 /**
  * The pieces a drawing can have put on it, as a board note writes them: chess, white in capitals,
@@ -35,8 +47,18 @@ val DrawingPath.isShape: Boolean get() = shape in DrawingShape.SHAPES && points.
 /** Whether [this] is a piece put on the drawing, a picture in a box rather than something drawn. */
 val DrawingPath.isPiece: Boolean get() = shape == DrawingShape.PIECE && points.size >= 2 && !isEraser && label in DRAWING_PIECES
 
-/** What the editor can select, move and resize: a shape or a piece. */
-val DrawingPath.isSelectable: Boolean get() = isShape || isPiece
+/** Whether [this] is an emoji put on the drawing, as a piece is. */
+val DrawingPath.isEmoji: Boolean get() = shape == DrawingShape.EMOJI && points.size >= 2 && !isEraser && isOneEmoji(label)
+
+/** A picture put on the drawing, a piece or an emoji, rather than something drawn. */
+val DrawingPath.isSticker: Boolean get() = isPiece || isEmoji
+
+/** What the editor can select, move and resize: a shape, a piece or an emoji. */
+val DrawingPath.isSelectable: Boolean get() = isShape || isSticker
+
+/** An emoji put on a drawing, [side] across, centred on [centreX], [centreY]. */
+fun emojiSticker(emoji: String, centreX: Float, centreY: Float, side: Float) =
+    pieceSticker(emoji, centreX, centreY, side).copy(shape = DrawingShape.EMOJI)
 
 /** A piece put on a drawing, [side] across, centred on [centreX], [centreY]. */
 fun pieceSticker(piece: String, centreX: Float, centreY: Float, side: Float) = DrawingPath(

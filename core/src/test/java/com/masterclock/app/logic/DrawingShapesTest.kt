@@ -94,6 +94,35 @@ class DrawingShapesTest {
     }
 
     @Test
+    fun `an emoji is put on as a piece is, and only one emoji is one`() {
+        val trophy = emojiSticker("🏆", 50f, 50f, 20f)
+        assertTrue(trophy.isEmoji)
+        assertTrue(trophy.isSticker)
+        assertTrue(trophy.isSelectable)
+        assertFalse(trophy.isPiece)
+        assertTrue(touches(trophy, 55f, 45f, reach = 0f))
+        assertTrue(isOneEmoji("👨‍👩‍👧"))
+        assertTrue(isOneEmoji("🇫🇷"))
+        assertTrue(isOneEmoji("⏱️"))
+        assertFalse(isOneEmoji("🏆🏆"))
+        assertFalse(isOneEmoji("🏆 won"))
+        assertFalse(isOneEmoji("abc"))
+        assertFalse(isOneEmoji(""))
+        assertFalse(trophy.copy(label = "N").isEmoji)
+    }
+
+    @Test
+    fun `an imported emoji is kept only as one emoji`() {
+        val note = NotebookNote(
+            title = "d", type = NotebookNoteType.DRAWING,
+            drawingPaths = listOf(emojiSticker("🏆", 1f, 1f, 2f), emojiSticker("not an emoji", 1f, 1f, 2f), emojiSticker("🏆".repeat(20), 1f, 1f, 2f)),
+        )
+        val kept = sanitizeNote(java.io.File("unused"), note, freshId = false).drawingPaths
+        assertEquals(listOf(DrawingShape.EMOJI, DrawingShape.FREE, DrawingShape.FREE), kept.map { it.shape })
+        assertEquals(listOf("🏆", "", ""), kept.map { it.label })
+    }
+
+    @Test
     fun `an imported shape of no known kind is read as a stroke`() {
         val note = NotebookNote(
             title = "d", type = NotebookNoteType.DRAWING,

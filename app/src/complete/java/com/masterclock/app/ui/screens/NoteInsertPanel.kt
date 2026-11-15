@@ -99,7 +99,7 @@ fun InsertPanel(kind: InsertKind, onInsert: (String) -> Unit) {
  * has it; the grid is lazy, since there are close to two thousand.
  */
 @Composable
-private fun EmojiPicker(onInsert: (String) -> Unit) {
+internal fun EmojiPicker(onInsert: (String) -> Unit) {
     val resources = LocalContext.current.resources
     val groups = remember {
         listOf(EmojiGroup(GAME_GROUP, NOTE_EMOJIS)) +
