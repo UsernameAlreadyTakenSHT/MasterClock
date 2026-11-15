@@ -143,6 +143,7 @@
     <string name="qr_confirm_apply">Aplicar</string>
     <string name="import_confirm_title">¿Importar este archivo?</string>
     <string name="import_confirm_message">Este archivo sustituye tus ajustes actuales. Sus partidas, preajustes, notas y resultados del marcador se añaden a los tuyos: no se borra nada tuyo.</string>
+    <string name="import_confirm_action">Importar</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Jugador %1$d, %2$s</string>
@@ -578,6 +579,7 @@
     <!-- Timer Screen -->
     <string name="timer_reset_title">¿Reiniciar la partida?</string>
     <string name="preset_end_game_title">¿Terminar la partida en curso?</string>
+    <string name="preset_end_game_confirm">Terminar</string>
     <string name="timer_reset_message">Se perderá el estado actual.</string>
     <string name="timer_berserk_title">¿Berserk para el jugador %1$d?</string>
     <string name="timer_berserk_message">Se pierden la mitad del tiempo y el incremento en esta partida. No se puede deshacer.</string>
@@ -585,6 +587,7 @@
     <string name="a11y_berserk_player">Berserk, jugador %1$d</string>
     <string name="timer_reroll">Nuevo tiempo aleatorio</string>
     <string name="timer_reroll_title">¿Sortear un tiempo nuevo?</string>
+    <string name="timer_reroll_confirm">Sortear</string>
     <string name="timer_reroll_message">La partida se reinicia con un tiempo aleatorio nuevo.</string>
     <string name="timer_arbitre_control">Control del árbitro</string>
     <string name="timer_arbitre">Árbitro</string>

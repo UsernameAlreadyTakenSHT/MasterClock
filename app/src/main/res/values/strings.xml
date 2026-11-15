@@ -153,6 +153,7 @@
     <string name="qr_confirm_apply">Apply</string>
     <string name="import_confirm_title">Import this file?</string>
     <string name="import_confirm_message">This file replaces your current settings. Its games, presets, notes and scoreboard results are added to yours: nothing of yours is deleted.</string>
+    <string name="import_confirm_action">Import</string>
 
     <!--
       Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,
@@ -612,6 +613,7 @@
     <!-- Timer Screen -->
     <string name="timer_reset_title">Reset Game?</string>
     <string name="preset_end_game_title">End the current game?</string>
+    <string name="preset_end_game_confirm">End game</string>
     <string name="timer_reset_message">The current state will be lost.</string>
     <string name="timer_berserk_title">Berserk for player %1$d?</string>
     <string name="timer_berserk_message">Half their time and their increment go, for this game. It cannot be undone.</string>
@@ -619,6 +621,7 @@
     <string name="a11y_berserk_player">Berserk, player %1$d</string>
     <string name="timer_reroll">New random time</string>
     <string name="timer_reroll_title">Draw a new time?</string>
+    <string name="timer_reroll_confirm">Draw</string>
     <string name="timer_reroll_message">The game restarts with a new random time.</string>
     <string name="timer_arbitre_control">Arbiter Control</string>
     <string name="timer_arbitre">Arbiter</string>

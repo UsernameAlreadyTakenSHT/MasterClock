@@ -725,7 +725,7 @@ class MainActivity : ComponentActivity() {
                             title = { Text(stringResource(R.string.preset_end_game_title)) },
                             text = { Text(stringResource(R.string.timer_reset_message)) },
                             confirmButton = {
-                                TextButton(onClick = { pendingPreset = null; apply() }) { Text(stringResource(R.string.qr_confirm_apply)) }
+                                TextButton(onClick = { pendingPreset = null; apply() }) { Text(stringResource(R.string.preset_end_game_confirm)) }
                             },
                             dismissButton = {
                                 TextButton(onClick = { pendingPreset = null }) { Text(stringResource(R.string.common_cancel)) }
@@ -787,7 +787,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     }
-                                }) { Text(stringResource(R.string.qr_confirm_apply)) }
+                                }) { Text(stringResource(R.string.import_confirm_action)) }
                             },
                             dismissButton = {
                                 TextButton(onClick = { pendingFileImport = null }) {

@@ -350,7 +350,7 @@ fun TimerScreen(
         TimerConfirmDialog(
             title = stringResource(R.string.timer_reroll_title),
             message = stringResource(R.string.timer_reroll_message),
-            confirm = stringResource(R.string.timer_reroll),
+            confirm = stringResource(R.string.timer_reroll_confirm),
             rotation = iconRotation,
             onDismiss = { showRerollDialog = false },
             onConfirm = { viewModel.rerollRandomTime(); showRerollDialog = false },
