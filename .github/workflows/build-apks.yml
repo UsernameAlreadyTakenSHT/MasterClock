@@ -6,6 +6,10 @@ on:
       - "v*"
   workflow_dispatch:
 
+# Write is needed by one step only, Create GitHub Release, which runs on tags. It stays at the
+# workflow level rather than in a separate release job because that job would need the APKs handed
+# over through another third-party action. With persist-credentials off below, the token reaches
+# only actions that take it as an input, all pinned to a SHA -- never the code the build executes.
 permissions:
   contents: write
 
@@ -18,8 +22,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # By default checkout writes this job's token into .git/config, where every later step can
+      # read it -- including the Gradle build below, which runs hundreds of third-party plugins and
+      # libraries. That token holds contents:write: enough to push to the repository or rewrite a
+      # release. Nothing after this step uses git with credentials: the release action talks to the
+      # API with the token passed as its input.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # gradle-wrapper.jar is the code that enforces distributionSha256Sum, so it is the one file
       # whose tampering would silently switch off the only integrity check this build has on Gradle
