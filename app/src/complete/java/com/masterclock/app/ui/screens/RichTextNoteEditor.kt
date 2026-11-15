@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -71,6 +72,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.masterclock.app.R
@@ -301,9 +303,9 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                     IconButton(onClick = { list(ListKind.BULLET) }) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.tools_bullet_list)) }
                     IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
                     IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
-                    MarkButton("♞", R.string.tools_insert_pieces, inserting == InsertKind.PIECES) { toggleInsert(InsertKind.PIECES) }
+                    MarkButton("♞", R.string.tools_insert_pieces, inserting == InsertKind.PIECES, size = 26.sp) { toggleInsert(InsertKind.PIECES) }
                     MarkButton("!?", R.string.tools_insert_annotations, inserting == InsertKind.ANNOTATIONS) { toggleInsert(InsertKind.ANNOTATIONS) }
-                    MarkButton("🙂", R.string.tools_insert_emojis, inserting == InsertKind.EMOJIS, font = OpenMoji) { toggleInsert(InsertKind.EMOJIS) }
+                    MarkButton("🙂", R.string.tools_insert_emojis, inserting == InsertKind.EMOJIS, font = OpenMoji, size = 24.sp) { toggleInsert(InsertKind.EMOJIS) }
                 }
             }
             inserting?.let { InsertPanel(it, onInsert = ::insert) }
@@ -313,14 +315,14 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(stringResource(R.string.tools_highlight), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(16.dp))
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 val noneName = stringResource(R.string.tools_highlight_none)
-                                Surface(modifier = Modifier.size(40.dp).clickable { highlight(null); showHighlighters = false }.semantics { contentDescription = noneName }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                                Surface(modifier = Modifier.size(36.dp).clickable { highlight(null); showHighlighters = false }.semantics { contentDescription = noneName }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                                     Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, null) }
                                 }
                                 HIGHLIGHTERS.forEachIndexed { i, colour ->
                                     val name = stringResource(HIGHLIGHTER_NAMES[i])
-                                    Surface(modifier = Modifier.size(40.dp).clickable { highlight(i); showHighlighters = false }.semantics { contentDescription = name }, shape = CircleShape, color = colour, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
+                                    Surface(modifier = Modifier.size(36.dp).clickable { highlight(i); showHighlighters = false }.semantics { contentDescription = name }, shape = CircleShape, color = colour, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
                                 }
                             }
                             Spacer(Modifier.height(16.dp))
@@ -408,14 +410,14 @@ private fun StyleButton(icon: ImageVector, label: Int, on: Boolean, onClick: () 
  * icon would; TalkBack reads its name instead.
  */
 @Composable
-private fun MarkButton(mark: String, label: Int, on: Boolean, font: FontFamily? = null, onClick: () -> Unit) {
+private fun MarkButton(mark: String, label: Int, on: Boolean, font: FontFamily? = null, size: TextUnit = 18.sp, onClick: () -> Unit) {
     val name = stringResource(label)
     IconToggleButton(
         checked = on,
         onCheckedChange = { onClick() },
         modifier = Modifier.semantics { contentDescription = name },
         colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-    ) { Text(mark, fontWeight = FontWeight.Black, fontSize = 18.sp, fontFamily = font, maxLines = 1, modifier = Modifier.clearAndSetSemantics {}) }
+    ) { Text(mark, fontWeight = FontWeight.Black, fontSize = size, fontFamily = font, maxLines = 1, modifier = Modifier.clearAndSetSemantics {}) }
 }
 
 /**
