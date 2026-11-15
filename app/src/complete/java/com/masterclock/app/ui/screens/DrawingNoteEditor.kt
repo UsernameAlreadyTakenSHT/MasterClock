@@ -74,6 +74,9 @@ private val SHAPE_REACH = 12.dp
 /** The widths the slider offers, in the canvas's pixels, finer where a difference shows more. */
 private val STROKE_WIDTHS = listOf(1f, 2f, 4f, 6f, 8f, 11f, 14f, 18f, 24f, 32f)
 
+/** How much wider the eraser clears than its width, in the drawing's pixels: a pixel each side. */
+private const val ERASER_MARGIN = 2f
+
 /** The width a drawing starts with, as it always has. */
 private const val DEFAULT_STROKE_WIDTH = 8f
 
@@ -463,12 +466,17 @@ private fun DrawToolGlyph(tool: DrawTool, color: Color) {
     }
 }
 
-/** One stroke of a drawing: in its colour, or, for the eraser, clearing what was drawn before it. */
+/**
+ * One stroke of a drawing: in its colour, or, for the eraser, clearing what was drawn before it.
+ *
+ * The eraser clears a little wider than it is drawn, [ERASER_MARGIN] more: a stroke's smoothed edge
+ * reaches past its width, and an eraser as wide, run along it, left that edge as a faint outline.
+ */
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStroke(path: Path, eraser: Boolean, color: Color, width: Float) =
     drawPath(
         path = path,
         color = if (eraser) Color.Black else color,
-        style = Stroke(width = width, cap = StrokeCap.Round, join = StrokeJoin.Round),
+        style = Stroke(width = if (eraser) width + ERASER_MARGIN else width, cap = StrokeCap.Round, join = StrokeJoin.Round),
         blendMode = if (eraser) androidx.compose.ui.graphics.BlendMode.Clear else androidx.compose.ui.graphics.BlendMode.SrcOver,
     )
 
