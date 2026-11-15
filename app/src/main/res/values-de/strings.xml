@@ -39,7 +39,7 @@
     <string name="preset_save_title">Bedenkzeit speichern</string>
     <string name="preset_rename_title">Voreinstellung umbenennen</string>
     <string name="preset_empty_custom">Stelle eine Bedenkzeit ein und speichere sie hier.</string>
-    <string name="preset_long_press_hint">Lange auf eine Voreinstellung tippen, um sie umzubenennen oder zu löschen.</string>
+    <string name="preset_long_press_hint">Tippe lange auf eine Voreinstellung, um sie umzubenennen oder zu löschen.</string>
     <string name="preset_manage_action">Umbenennen oder löschen</string>
     <string name="preset_view_statistics">Statistik ansehen</string>
     <string name="preset_empty_history">Noch keine Partie gespielt.</string>
@@ -232,7 +232,7 @@
     <string name="settings_active_side_bigger">Aktive Seite größer</string>
     <string name="settings_fullscreen">Vollbild</string>
     <string name="settings_flash_low_time">Blinken bei wenig Zeit (&lt;10 s)</string>
-    <string name="settings_keep_awake">Bildschirm anlassen</string>
+    <string name="settings_keep_awake">Bildschirm eingeschaltet lassen</string>
     <string name="settings_force_brightness">Volle Helligkeit erzwingen</string>
     <string name="settings_primary_colors">Hauptfarben</string>
     <string name="settings_active_bg">Hintergrund der aktiven Seite</string>
@@ -355,11 +355,11 @@
     <string name="omni_cfg_round_timer">Rundenuhr</string>
     <string name="omni_cfg_turn_timer">Zuguhr</string>
     <string name="omni_cfg_phase_timer">Phasenuhr</string>
-    <string name="omni_cfg_cutoff_session">Hart abbrechen, wenn die Sitzungszeit endet</string>
-    <string name="omni_cfg_cutoff_game">Hart abbrechen, wenn die Partiezeit endet</string>
-    <string name="omni_cfg_cutoff_round">Hart abbrechen, wenn die Rundenzeit endet</string>
-    <string name="omni_cfg_cutoff_turn">Hart abbrechen, wenn die Zugzeit endet</string>
-    <string name="omni_cfg_cutoff_phase">Hart abbrechen, wenn die Phasenzeit endet</string>
+    <string name="omni_cfg_cutoff_session">Sofort abbrechen, wenn die Sitzungszeit endet</string>
+    <string name="omni_cfg_cutoff_game">Sofort abbrechen, wenn die Partiezeit endet</string>
+    <string name="omni_cfg_cutoff_round">Sofort abbrechen, wenn die Rundenzeit endet</string>
+    <string name="omni_cfg_cutoff_turn">Sofort abbrechen, wenn die Zugzeit endet</string>
+    <string name="omni_cfg_cutoff_phase">Sofort abbrechen, wenn die Phasenzeit endet</string>
     <string name="omni_cfg_turn_disabled">Zuguhr deaktiviert.</string>
     <string name="omni_cfg_phase_disabled">Phasenuhr deaktiviert.</string>
 

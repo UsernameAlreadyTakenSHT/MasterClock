@@ -197,4 +197,9 @@
     <string name="omni_reset_title">Zerar a sessão?</string>
     <string name="omni_reset_confirm">ZERAR</string>
     <string name="omni_reset_session">Zerar a sessão</string>
+    <string name="settings_use_media_output">Usar a saída multimídia</string>
+    <string name="settings_haptics">Feedback tátil</string>
+    <string name="settings_haptic_feedback">Feedback tátil</string>
+    <string name="settings_sound_previews">Prévia dos sons</string>
+    <string name="settings_threshold">Limite</string>
 </resources>

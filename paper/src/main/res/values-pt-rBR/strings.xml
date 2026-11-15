@@ -17,4 +17,5 @@
     <string name="timer_switch_turn">Trocar o turno</string>
     <string name="common_reset">Zerar</string>
     <string name="timer_reset_title">Zerar a partida?</string>
+    <string name="settings_haptic_feedback">Feedback tátil</string>
 </resources>

@@ -66,7 +66,7 @@
     <string name="settings_time_cap">Tijdplafond</string>
     <string name="settings_byoyomi_time">Byoyomi-tijd</string>
     <string name="settings_periods_goal">Periodes / zettendoel</string>
-    <string name="settings_progression">Toename (zetten)</string>
+    <string name="settings_progression">Opbouw (zetten)</string>
     <string name="settings_max_moves">Maximum aantal zetten</string>
     <string name="settings_decrement_per_move">Aftrek per zet</string>
     <string name="settings_min_time_floor">Minimale tijd</string>
@@ -354,11 +354,11 @@
     <string name="omni_cfg_round_timer">Rondeklok</string>
     <string name="omni_cfg_turn_timer">Beurtklok</string>
     <string name="omni_cfg_phase_timer">Faseklok</string>
-    <string name="omni_cfg_cutoff_session">Hard afbreken als de sessietijd op is</string>
-    <string name="omni_cfg_cutoff_game">Hard afbreken als de partijtijd op is</string>
-    <string name="omni_cfg_cutoff_round">Hard afbreken als de rondetijd op is</string>
-    <string name="omni_cfg_cutoff_turn">Hard afbreken als de beurttijd op is</string>
-    <string name="omni_cfg_cutoff_phase">Hard afbreken als de fasetijd op is</string>
+    <string name="omni_cfg_cutoff_session">Direct afbreken als de sessietijd op is</string>
+    <string name="omni_cfg_cutoff_game">Direct afbreken als de partijtijd op is</string>
+    <string name="omni_cfg_cutoff_round">Direct afbreken als de rondetijd op is</string>
+    <string name="omni_cfg_cutoff_turn">Direct afbreken als de beurttijd op is</string>
+    <string name="omni_cfg_cutoff_phase">Direct afbreken als de fasetijd op is</string>
     <string name="omni_cfg_turn_disabled">Beurtklok uitgeschakeld.</string>
     <string name="omni_cfg_phase_disabled">Faseklok uitgeschakeld.</string>
 
