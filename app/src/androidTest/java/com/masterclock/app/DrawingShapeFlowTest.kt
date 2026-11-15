@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
@@ -124,6 +125,36 @@ class DrawingShapeFlowTest {
         rule.onRoot().performTouchInput { click(middle + Offset(0f, -root.height * 0.1f)) }
         rule.onNode(hasContentDescription(say(R.string.common_delete)) and hasClickAction()).performClick()
         waitForTheNote("the delete") { it.drawingPaths.isEmpty() }
+    }
+
+    /** The width slider's ten steps: the widest gives a stroke of the widest width. */
+    @Test
+    fun theWidthSliderSetsTheStrokesWidth() {
+        rule.onNode(hasContentDescription(say(R.string.timer_settings)) and hasClickAction()).performClick()
+        await(hasText(say(R.string.settings_tab_more)))
+        rule.onAllNodesWithText(say(R.string.settings_tab_more))[0].performClick()
+        await(hasText(say(R.string.settings_more_notebook)))
+        rule.onNode(hasText(say(R.string.settings_more_notebook)) and hasClickAction()).performScrollTo().performClick()
+        await(hasContentDescription(complete("tools_new_note")))
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_draw")))
+        rule.onNode(hasText(complete("tools_draw")) and hasClickAction()).performClick()
+        await(hasContentDescription(complete("tools_width")))
+
+        val slider = rule.onNode(hasContentDescription(complete("tools_width")))
+        slider.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(9f) }
+        val root = rule.onRoot().fetchSemanticsNode().size
+        rule.onRoot().performTouchInput { swipe(Offset(root.width * 0.2f, root.height * 0.7f), Offset(root.width * 0.8f, root.height * 0.8f), 300) }
+        waitForTheNote("the wide stroke") { it.drawingPaths.size == 1 }
+        val wide = note().drawingPaths.single().strokeWidth
+        shot("drawing_width_wide")
+        slider.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(0f) }
+        rule.onRoot().performTouchInput { swipe(Offset(root.width * 0.2f, root.height * 0.85f), Offset(root.width * 0.8f, root.height * 0.9f), 300) }
+        waitForTheNote("the fine stroke") { it.drawingPaths.size == 2 }
+        val fine = note().drawingPaths[1].strokeWidth
+        // The widest step is 32 times the finest, on whatever canvas.
+        assertEquals(32f, wide / fine, 0.01f)
+        shot("drawing_width")
     }
 
     /** A piece put on the drawing from the Pieces button, moved and enlarged, then taken out. */

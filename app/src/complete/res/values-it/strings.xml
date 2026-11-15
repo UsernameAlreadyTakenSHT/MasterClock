@@ -172,6 +172,7 @@
     <string name="tools_ellipse">Ellisse</string>
     <string name="tools_shape_done">Fatto</string>
     <string name="tools_shapes">Forme</string>
+    <string name="tools_width">Spessore</string>
     <string name="tools_background">Sfondo</string>
     <string name="tools_background_none">Nessuno sfondo</string>
     <string name="tools_background_empty">Ancora nessuna nota foto o scacchiera su cui disegnare</string>

@@ -170,6 +170,7 @@
     <string name="tools_ellipse">Ellipse</string>
     <string name="tools_shape_done">Terminé</string>
     <string name="tools_shapes">Formes</string>
+    <string name="tools_width">Épaisseur</string>
     <string name="tools_background">Fond</string>
     <string name="tools_background_none">Aucun fond</string>
     <string name="tools_background_empty">Aucune note photo ou plateau sur laquelle dessiner</string>

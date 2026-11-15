@@ -67,6 +67,12 @@ private enum class DrawTool(val shape: Int, val label: Int) {
 /** How far from a shape, on screen, a finger still takes it. */
 private val SHAPE_REACH = 12.dp
 
+/** The widths the slider offers, in the canvas's pixels, finer where a difference shows more. */
+private val STROKE_WIDTHS = listOf(1f, 2f, 4f, 6f, 8f, 11f, 14f, 18f, 24f, 32f)
+
+/** The width a drawing starts with, as it always has. */
+private const val DEFAULT_STROKE_WIDTH = 8f
+
 /** The shapes, in the order the Shapes button offers them. */
 private val SHAPE_TOOLS = listOf(DrawTool.LINE, DrawTool.ARROW, DrawTool.RECTANGLE, DrawTool.ELLIPSE)
 
@@ -88,7 +94,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     var edit by remember { mutableStateOf(DrawingEdit(note.drawingPaths)) }
     val currentPaths = edit.paths
     var currentColor by remember { mutableLongStateOf(0xFF000000L) }
-    var currentWidth by remember { mutableFloatStateOf(8f) }
+    var currentWidth by remember { mutableFloatStateOf(DEFAULT_STROKE_WIDTH) }
     var tool by remember { mutableStateOf(DrawTool.PEN) }
     // The shape the Shapes button draws, and whether its choice is open under the tools.
     var shapeKind by remember { mutableStateOf(DrawTool.RECTANGLE) }
@@ -238,13 +244,27 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                             }
                         }
                     }
-                    // The widths on a line of their own: after the tools, one was left at the end of
-                    // their line and the other two alone under it.
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        listOf(2f, 8f, 20f).forEach { size ->
-                            IconButton(onClick = { currentWidth = size; changeSelected { it.copy(strokeWidth = size / scale) } }, modifier = Modifier.size(40.dp).background(if (currentWidth == size) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent, CircleShape)) {
-                                Box(Modifier.size((size / 2 + 4).dp).background(MaterialTheme.colorScheme.onSurface, CircleShape))
-                            }
+                    // The width, in ten steps from a hairline to a marker's: three sizes were too few.
+                    // Beside it the stroke as it will be drawn, its size and its colour. A shape
+                    // selected takes the width when the slider is let go, as one step for Undo.
+                    val step = STROKE_WIDTHS.indexOf(currentWidth).takeIf { it >= 0 } ?: STROKE_WIDTHS.indexOf(DEFAULT_STROKE_WIDTH)
+                    val widthName = stringResource(R.string.tools_width)
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Slider(
+                            value = step.toFloat(),
+                            onValueChange = { currentWidth = STROKE_WIDTHS[it.roundToInt().coerceIn(STROKE_WIDTHS.indices)] },
+                            onValueChangeFinished = { changeSelected { it.copy(strokeWidth = currentWidth / scale) } },
+                            valueRange = 0f..(STROKE_WIDTHS.size - 1).toFloat(),
+                            steps = STROKE_WIDTHS.size - 2,
+                            modifier = Modifier.weight(1f).semantics { contentDescription = widthName },
+                        )
+                        // A short stroke rather than a dot, which at the finest width was a pixel.
+                        val sample = if (tool == DrawTool.ERASER) MaterialTheme.colorScheme.outline else Color(currentColor)
+                        Canvas(Modifier.size(width = 48.dp, height = 40.dp)) {
+                            val y = size.height / 2
+                            // A white stroke still shows, against a ground of its own.
+                            if (sample.luminance() > 0.9f) drawRoundRect(Color.LightGray, cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx()))
+                            drawLine(sample, Offset(10.dp.toPx(), y), Offset(size.width - 10.dp.toPx(), y), strokeWidth = currentWidth, cap = StrokeCap.Round)
                         }
                     }
                     // The shape selected, made another one or taken out.
