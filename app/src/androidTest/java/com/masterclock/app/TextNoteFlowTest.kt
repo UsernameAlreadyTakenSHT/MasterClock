@@ -15,6 +15,9 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInputSelection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
@@ -124,8 +127,15 @@ class TextNoteFlowTest {
         assertEquals("e4 is not pink", 2, highlighterOf(rich.runs().last().styles))
         assertTrue("Play is bold", !rich.allHave(rich.text.indexOf("Play"), rich.text.indexOf("Play") + 4, NoteStyle.BOLD))
 
-        // A tap on the box -- the cursor put beside it -- ticks it.
+        // The cursor brought beside the box, as an arrow key or Home would, leaves it as it is...
+        content().performTextInputSelection(TextRange(0))
         content().performTextInputSelection(TextRange(1))
+        rule.waitForIdle()
+        Thread.sleep(700)
+        rule.waitForIdle()
+        assertEquals("☐ Play e4", note().content)
+        // ...and a tap on it ticks it: the box is the field's first character, past its padding.
+        content().performTouchInput { click(androidx.compose.ui.geometry.Offset(22.dp.toPx(), 28.dp.toPx())) }
         waitForTheNote("the tick") { it.content == "☑ Play e4" }
 
         // Clear takes it all, and Undo gives it all back, formatting with it.

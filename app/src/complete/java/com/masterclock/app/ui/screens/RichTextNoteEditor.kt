@@ -51,6 +51,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -132,6 +137,8 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     var showColorPicker by remember { mutableStateOf(false) }
     var showHighlighters by remember { mutableStateOf(false) }
     var showCustomColor by remember { mutableStateOf(false) }
+    // When the field was last tapped, which a box is ticked only after; not state, nothing to redraw.
+    val lastTap = remember { longArrayOf(0L) }
     // The insert panel open, if any: one at a time, the same button closing it.
     var inserting by rememberSaveable { mutableStateOf<InsertKind?>(null) }
     fun toggleInsert(kind: InsertKind) { inserting = if (inserting == kind) null else kind }
@@ -399,7 +406,10 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                         // A tap on a box ticks it: the cursor lands on one side of the box or the other.
                         val at = value.selection
                         val lineStart = if (at.start == 0) 0 else value.text.lastIndexOf('\n', at.start - 1) + 1
-                        val onBox = at.collapsed && at != field.selection && at.start - lineStart <= 1 &&
+                        // Only after a tap: the cursor brought beside a box by an arrow key, Home or the
+                        // keyboard's own cursor control ticked it too, by accident.
+                        val tapped = SystemClock.uptimeMillis() - lastTap[0] < TAP_TICK_WINDOW_MS
+                        val onBox = tapped && at.collapsed && at != field.selection && at.start - lineStart <= 1 &&
                             value.text.getOrNull(lineStart).let { it == CHECKBOX_OPEN || it == CHECKBOX_DONE }
                         val ticked = if (onBox) rich.checkboxToggled(at.start) else null
                         if (ticked != null) {
@@ -412,7 +422,14 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                     }
                 },
                 visualTransformation = transformation,
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                // Taps are noted on their way to the field, which still has them: see onBox.
+                modifier = Modifier.fillMaxWidth().weight(1f).pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                        if (up != null && (up.position - down.position).getDistance() < viewConfiguration.touchSlop) lastTap[0] = SystemClock.uptimeMillis()
+                    }
+                },
                 placeholder = { Text(stringResource(R.string.tools_format_hint)) },
                 shape = RoundedCornerShape(12.dp),
             )
@@ -524,3 +541,6 @@ private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
         }
     }
 }
+
+/** How soon after a tap the cursor landing beside a box ticks it: the tap's own selection, not a later move. */
+private const val TAP_TICK_WINDOW_MS = 500L
