@@ -185,6 +185,12 @@
     <string name="tools_image">Image</string>
     <string name="tools_image_note">Note image</string>
     <string name="tools_highlight">Surligner</string>
+    <string name="tools_highlight_none">Aucun surlignage</string>
+    <string name="tools_highlight_yellow">Jaune</string>
+    <string name="tools_highlight_orange">Orange</string>
+    <string name="tools_highlight_pink">Rose</string>
+    <string name="tools_highlight_blue">Bleu</string>
+    <string name="tools_highlight_green">Vert</string>
     <string name="tools_center">Centrer</string>
     <string name="tools_italic">Italique</string>
     <string name="tools_large">Grand titre</string>

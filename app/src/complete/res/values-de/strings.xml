@@ -186,6 +186,12 @@
     <string name="tools_image">Bild</string>
     <string name="tools_image_note">Bildnotiz</string>
     <string name="tools_highlight">Hervorheben</string>
+    <string name="tools_highlight_none">Keine Markierung</string>
+    <string name="tools_highlight_yellow">Gelb</string>
+    <string name="tools_highlight_orange">Orange</string>
+    <string name="tools_highlight_pink">Rosa</string>
+    <string name="tools_highlight_blue">Blau</string>
+    <string name="tools_highlight_green">Grün</string>
     <string name="tools_center">Zentrieren</string>
     <string name="tools_italic">Kursiv</string>
     <string name="tools_large">Große Überschrift</string>

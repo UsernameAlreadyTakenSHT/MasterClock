@@ -186,6 +186,12 @@
     <string name="tools_image">Afbeelding</string>
     <string name="tools_image_note">Afbeeldingsnotitie</string>
     <string name="tools_highlight">Markeren</string>
+    <string name="tools_highlight_none">Geen markering</string>
+    <string name="tools_highlight_yellow">Geel</string>
+    <string name="tools_highlight_orange">Oranje</string>
+    <string name="tools_highlight_pink">Roze</string>
+    <string name="tools_highlight_blue">Blauw</string>
+    <string name="tools_highlight_green">Groen</string>
     <string name="tools_center">Centreren</string>
     <string name="tools_italic">Cursief</string>
     <string name="tools_large">Grote kop</string>

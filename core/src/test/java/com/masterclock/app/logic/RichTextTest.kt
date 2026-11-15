@@ -10,6 +10,25 @@ import org.junit.Test
 class RichTextTest {
 
     @Test
+    fun `a highlight has one of five colours, an old one is yellow, and none takes it off`() {
+        val rich = RichText("play e4 now").toggled(5, 7, NoteStyle.BOLD).highlighted(0, 7, 3)
+        assertTrue(rich.allHave(0, 7, NoteStyle.HIGHLIGHT))
+        assertEquals(3, highlighterOf(rich.runs().first().styles))
+        // Bold kept beside it, and typing on from it goes on in the same colour.
+        assertTrue(rich.allHave(5, 7, NoteStyle.BOLD))
+        val typed = rich.edited("play e4! now", cursor = 8)
+        assertEquals(3, highlighterOf(typed.runs().first { 7 in it.start until it.end }.styles))
+        // Another colour over part of it; then none.
+        val pink = rich.highlighted(0, 4, 2)
+        assertEquals(2, highlighterOf(pink.runs().first().styles))
+        assertFalse(rich.highlighted(0, 7, null).allHave(0, 1, NoteStyle.HIGHLIGHT))
+        assertTrue(rich.highlighted(0, 7, null).allHave(5, 7, NoteStyle.BOLD))
+        // A highlight from before, with no number, is the yellow; a number no highlighter has, too.
+        assertEquals(0, highlighterOf(NoteStyle.HIGHLIGHT))
+        assertEquals(0, highlighterOf(NoteStyle.HIGHLIGHT or (7 shl NoteStyle.HIGHLIGHT_SHIFT)))
+    }
+
+    @Test
     fun `a highlight is a style like bold, beside the others and kept through an edit`() {
         val rich = RichText("play e4 now").toggled(5, 7, NoteStyle.BOLD).toggled(0, 7, NoteStyle.HIGHLIGHT)
         assertTrue(rich.allHave(0, 7, NoteStyle.HIGHLIGHT))

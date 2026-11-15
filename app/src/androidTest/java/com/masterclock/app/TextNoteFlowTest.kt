@@ -22,6 +22,8 @@ import com.masterclock.app.logic.NoteStyle
 import com.masterclock.app.logic.NotebookNote
 import com.masterclock.app.logic.NotebookNoteType
 import com.masterclock.app.logic.allHave
+import com.masterclock.app.logic.highlighterOf
+import com.masterclock.app.logic.runs
 import com.masterclock.app.logic.isCenteredLine
 import com.masterclock.app.logic.richTextOf
 import org.junit.Assert.assertEquals
@@ -103,7 +105,9 @@ class TextNoteFlowTest {
         content().performTextInput("Play")
         // Bold and highlight chosen with nothing selected: what is typed next is both.
         press("tools_bold")
+        // The highlighter is chosen among five: pink.
         press("tools_highlight")
+        rule.onNode(hasContentDescription(complete("tools_highlight_pink")) and hasClickAction()).performClick()
         content().performTextInput(" e4")
         // The line made a list item, then a box.
         press("tools_bullet_list")
@@ -116,6 +120,7 @@ class TextNoteFlowTest {
         val rich = written.richTextOf()
         assertTrue("e4 is not bold", rich.allHave(rich.text.indexOf("e4"), rich.text.length, NoteStyle.BOLD))
         assertTrue("e4 is not highlighted", rich.allHave(rich.text.indexOf("e4"), rich.text.length, NoteStyle.HIGHLIGHT))
+        assertEquals("e4 is not pink", 2, highlighterOf(rich.runs().last().styles))
         assertTrue("Play is bold", !rich.allHave(rich.text.indexOf("Play"), rich.text.indexOf("Play") + 4, NoteStyle.BOLD))
 
         // A tap on the box -- the cursor put beside it -- ticks it.
@@ -173,6 +178,37 @@ class TextNoteFlowTest {
         rule.waitForIdle()
         val shot = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         java.io.File(rule.activity.filesDir, "note_emojis.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** Four words highlighted in four colours, by selecting each and choosing. */
+    @Test
+    fun wordsAreHighlightedInTheirColours() {
+        openTheNotebook()
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_text")))
+        rule.onNode(hasText(complete("tools_text")) and hasClickAction()).performClick()
+        await(hasSetTextAction())
+        content().performTextInput("Plan attack defend endgame")
+        waitForTheNote("the text") { it.content == "Plan attack defend endgame" }
+        val words = listOf("Plan" to "tools_highlight_yellow", "attack" to "tools_highlight_orange", "defend" to "tools_highlight_blue", "endgame" to "tools_highlight_green")
+        for ((word, colour) in words) {
+            val at = "Plan attack defend endgame".indexOf(word)
+            content().performTextInputSelection(TextRange(at, at + word.length))
+            press("tools_highlight")
+            if (word == "Plan") { rule.waitForIdle(); shotOf("note_highlighters") }
+            rule.onNode(hasContentDescription(complete(colour)) and hasClickAction()).performClick()
+        }
+        waitForTheNote("the highlights") { n -> n.richTextOf().runs().count { it.styles and NoteStyle.HIGHLIGHT != 0 } == 4 }
+        val colours = note().richTextOf().runs().filter { it.styles and NoteStyle.HIGHLIGHT != 0 }.map { highlighterOf(it.styles) }
+        assertEquals(listOf(0, 1, 3, 4), colours)
+        content().performTextInputSelection(TextRange(0))
+        rule.waitForIdle()
+        shotOf("note_highlighted")
+    }
+
+    private fun shotOf(name: String) {
+        val shot = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        java.io.File(rule.activity.filesDir, "$name.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     @Test

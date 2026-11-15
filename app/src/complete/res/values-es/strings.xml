@@ -187,6 +187,12 @@
     <string name="tools_image">Imagen</string>
     <string name="tools_image_note">Nota de imagen</string>
     <string name="tools_highlight">Resaltar</string>
+    <string name="tools_highlight_none">Sin resaltado</string>
+    <string name="tools_highlight_yellow">Amarillo</string>
+    <string name="tools_highlight_orange">Naranja</string>
+    <string name="tools_highlight_pink">Rosa</string>
+    <string name="tools_highlight_blue">Azul</string>
+    <string name="tools_highlight_green">Verde</string>
     <string name="tools_center">Centrar</string>
     <string name="tools_italic">Cursiva</string>
     <string name="tools_large">Título grande</string>

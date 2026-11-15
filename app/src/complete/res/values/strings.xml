@@ -209,6 +209,12 @@
     <string name="tools_image">Image</string>
     <string name="tools_image_note">Image Note</string>
     <string name="tools_highlight">Highlight</string>
+    <string name="tools_highlight_none">No highlight</string>
+    <string name="tools_highlight_yellow">Yellow</string>
+    <string name="tools_highlight_orange">Orange</string>
+    <string name="tools_highlight_pink">Pink</string>
+    <string name="tools_highlight_blue">Blue</string>
+    <string name="tools_highlight_green">Green</string>
     <string name="tools_center">Center</string>
     <string name="tools_italic">Italic</string>
     <string name="tools_large">Large heading</string>

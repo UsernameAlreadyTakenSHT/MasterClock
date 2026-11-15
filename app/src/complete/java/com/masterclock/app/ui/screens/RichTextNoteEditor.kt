@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -87,6 +88,10 @@ import com.masterclock.app.logic.allHave
 import com.masterclock.app.logic.checkboxToggled
 import com.masterclock.app.logic.colored
 import com.masterclock.app.logic.centerToggled
+import com.masterclock.app.logic.highlighted
+import com.masterclock.app.logic.highlighterOf
+import com.masterclock.app.logic.withHighlighter
+import com.masterclock.app.logic.runs
 import com.masterclock.app.logic.edited
 import com.masterclock.app.logic.isCenteredLine
 import com.masterclock.app.logic.emojiRanges
@@ -120,6 +125,7 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     var typing by remember { mutableStateOf<Pair<Int, Long>?>(null) }
     var history by remember { mutableStateOf(TextEditHistory()) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var showHighlighters by remember { mutableStateOf(false) }
     // The insert panel open, if any: one at a time, the same button closing it.
     var inserting by rememberSaveable { mutableStateOf<InsertKind?>(null) }
     fun toggleInsert(kind: InsertKind) { inserting = if (inserting == kind) null else kind }
@@ -194,6 +200,27 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
         }
     }
 
+    /** The selection highlighted with [highlighter], or no longer for null; with none, what is typed next. */
+    fun highlight(highlighter: Int?) {
+        val selection = field.selection
+        if (selection.collapsed) {
+            val current = typing ?: rich.styleAt(selection.start)
+            typing = withHighlighter(current.first, highlighter) to current.second
+        } else {
+            record(false)
+            show(rich.highlighted(selection.min, selection.max, highlighter), selection.start, selection.end)
+        }
+    }
+
+    /** The highlighter where the cursor is, or under the whole selection; null where there is none. */
+    fun highlighterHere(): Int? {
+        val selection = field.selection
+        val styles = if (selection.collapsed) (typing ?: rich.styleAt(selection.start)).first
+        else if (rich.allHave(selection.min, selection.max, NoteStyle.HIGHLIGHT)) rich.runs().first { selection.min in it.start until it.end }.styles
+        else return null
+        return if (styles and NoteStyle.HIGHLIGHT != 0) highlighterOf(styles) else null
+    }
+
     /** [text] where the cursor is, over the selection if there is one, in the style typed there. */
     fun insert(text: String) {
         val selection = field.selection
@@ -259,7 +286,13 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                     StyleButton(Icons.Default.FormatItalic, R.string.tools_italic, isOn(NoteStyle.ITALIC)) { style(NoteStyle.ITALIC) }
                     StyleButton(Icons.Default.FormatUnderlined, R.string.tools_underline, isOn(NoteStyle.UNDERLINE)) { style(NoteStyle.UNDERLINE) }
                     StyleButton(Icons.Default.FormatStrikethrough, R.string.tools_strikethrough, isOn(NoteStyle.STRIKE)) { style(NoteStyle.STRIKE) }
-                    StyleButton(Icons.Default.BorderColor, R.string.tools_highlight, isOn(NoteStyle.HIGHLIGHT)) { style(NoteStyle.HIGHLIGHT) }
+                    // Five highlighters behind it; marked, and in the colour, where the text is highlighted.
+                    val here = highlighterHere()
+                    IconToggleButton(
+                        checked = here != null,
+                        onCheckedChange = { showHighlighters = true },
+                        colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                    ) { Icon(Icons.Default.BorderColor, stringResource(R.string.tools_highlight), tint = here?.let { HIGHLIGHTERS[it].copy(alpha = 1f) } ?: LocalContentColor.current) }
                     // Named for what it makes: an icon of a T said nothing of a heading. One heading only,
                     // the user's choice; a small heading (TITLE) from an older note is still drawn.
                     MarkButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
@@ -274,6 +307,28 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                 }
             }
             inserting?.let { InsertPanel(it, onInsert = ::insert) }
+            if (showHighlighters) {
+                Dialog(onDismissRequest = { showHighlighters = false }) {
+                    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
+                        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(stringResource(R.string.tools_highlight), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(16.dp))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                val noneName = stringResource(R.string.tools_highlight_none)
+                                Surface(modifier = Modifier.size(40.dp).clickable { highlight(null); showHighlighters = false }.semantics { contentDescription = noneName }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, null) }
+                                }
+                                HIGHLIGHTERS.forEachIndexed { i, colour ->
+                                    val name = stringResource(HIGHLIGHTER_NAMES[i])
+                                    Surface(modifier = Modifier.size(40.dp).clickable { highlight(i); showHighlighters = false }.semantics { contentDescription = name }, shape = CircleShape, color = colour, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            TextButton(onClick = { showHighlighters = false }) { Text(stringResource(R.string.common_cancel)) }
+                        }
+                    }
+                }
+            }
             if (showColorPicker) {
                 Dialog(onDismissRequest = { showColorPicker = false }) {
                     Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
@@ -371,7 +426,12 @@ private fun MarkButton(mark: String, label: Int, on: Boolean, font: FontFamily? 
  */
 internal val OpenMoji = FontFamily(Font(R.font.openmoji))
 
-private val HIGHLIGHTER = Color(0x80FFEB3B)
+/**
+ * The highlighters, by number: see NoteStyle.HIGHLIGHT_SHIFT. See-through, so that the text reads
+ * through them in a light theme and a dark one. Yellow first, the one there always was.
+ */
+private val HIGHLIGHTERS = listOf(Color(0x80FFEB3B), Color(0x80FFB74D), Color(0x80F48FB1), Color(0x8081D4FA), Color(0x80A5D6A7))
+private val HIGHLIGHTER_NAMES = listOf(R.string.tools_highlight_yellow, R.string.tools_highlight_orange, R.string.tools_highlight_pink, R.string.tools_highlight_blue, R.string.tools_highlight_green)
 
 private val NOTE_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
 
@@ -413,7 +473,7 @@ private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
                 textDecoration = if (decorations.isEmpty()) null else TextDecoration.combine(decorations),
                 color = if (run.color != 0L) Color(run.color) else Color.Unspecified,
                 // See-through, so that the text reads through it in a light theme and a dark one.
-                background = if (s and NoteStyle.HIGHLIGHT != 0) HIGHLIGHTER else Color.Unspecified,
+                background = if (s and NoteStyle.HIGHLIGHT != 0) HIGHLIGHTERS[highlighterOf(s)] else Color.Unspecified,
             ),
             run.start, run.end,
         )

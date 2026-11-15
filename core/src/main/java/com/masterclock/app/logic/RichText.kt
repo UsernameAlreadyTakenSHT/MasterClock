@@ -29,6 +29,15 @@ object NoteStyle {
     const val HEADINGS = LARGE or TITLE
     /** Text marked as with a highlighter: behind it, not in it, so it goes with any text colour. */
     const val HIGHLIGHT = 64
+    /**
+     * Which of [HIGHLIGHTER_COUNT] highlighters, as a number in the three bits from
+     * [HIGHLIGHT_SHIFT]: in the styles rather than a field of its own, so that a span needs nothing
+     * new. 0 is the yellow there always was, which a highlight written before this, with no number,
+     * reads as -- and so does an older version reading any highlight.
+     */
+    const val HIGHLIGHT_SHIFT = 8
+    const val HIGHLIGHT_COLOR = 7 shl HIGHLIGHT_SHIFT
+    const val HIGHLIGHTER_COUNT = 5
     /** A line centred. Like a heading it is the whole line's, and the line after it starts plain. */
     const val CENTER = 128
     /** What belongs to a line rather than to its characters, and so stops at its end. */
@@ -208,6 +217,25 @@ fun RichText.toggled(start: Int, end: Int, bit: Int): RichText {
     val c = charStylesOf(this)
     val on = !allHave(start, end, bit)
     for (i in start until end.coerceAtMost(c.styles.size)) c.styles[i] = if (on) c.styles[i] or bit else c.styles[i] and bit.inv()
+    return RichText(text, spansOf(c.styles, c.colors))
+}
+
+/** Which highlighter [styles] are in; 0 for a number no highlighter has, as from an import. */
+fun highlighterOf(styles: Int): Int =
+    ((styles and NoteStyle.HIGHLIGHT_COLOR) shr NoteStyle.HIGHLIGHT_SHIFT).takeIf { it < NoteStyle.HIGHLIGHTER_COUNT } ?: 0
+
+/** [styles] highlighted with [highlighter], or no longer highlighted for null. */
+fun withHighlighter(styles: Int, highlighter: Int?): Int {
+    val plain = styles and (NoteStyle.HIGHLIGHT or NoteStyle.HIGHLIGHT_COLOR).inv()
+    return if (highlighter == null) plain
+    else plain or NoteStyle.HIGHLIGHT or (highlighter.coerceIn(0, NoteStyle.HIGHLIGHTER_COUNT - 1) shl NoteStyle.HIGHLIGHT_SHIFT)
+}
+
+/** From [start] to [end] highlighted with [highlighter], or no longer highlighted for null. */
+fun RichText.highlighted(start: Int, end: Int, highlighter: Int?): RichText {
+    if (start >= end) return this
+    val c = charStylesOf(this)
+    for (i in start until end.coerceAtMost(c.styles.size)) c.styles[i] = withHighlighter(c.styles[i], highlighter)
     return RichText(text, spansOf(c.styles, c.colors))
 }
 

@@ -190,6 +190,12 @@
     <string name="tools_image">Imagem</string>
     <string name="tools_image_note">Nota de imagem</string>
     <string name="tools_highlight">Realçar</string>
+    <string name="tools_highlight_none">Sem realce</string>
+    <string name="tools_highlight_yellow">Amarelo</string>
+    <string name="tools_highlight_orange">Laranja</string>
+    <string name="tools_highlight_pink">Rosa</string>
+    <string name="tools_highlight_blue">Azul</string>
+    <string name="tools_highlight_green">Verde</string>
     <string name="tools_center">Centrar</string>
     <string name="tools_italic">Itálico</string>
     <string name="tools_large">Título grande</string>
