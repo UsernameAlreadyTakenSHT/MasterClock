@@ -2,6 +2,7 @@ package com.masterclock.app
 
 import android.annotation.SuppressLint
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.swipe
@@ -166,6 +167,27 @@ class DrawingShapeFlowTest {
         waitForTheNote("the red stroke") { it.drawingPaths.size == 3 }
         assertEquals(0xFFF44336, note().drawingPaths[2].color)
         shot("drawing_red")
+
+        // A colour of one's own, through the settings' picker; offered again, first, once used.
+        press("tools_color")
+        rule.onNode(androidx.compose.ui.test.hasTestTag("drawing_color_custom")).performClick()
+        val rgb = androidx.compose.ui.test.SemanticsMatcher("an RGB slider") {
+            it.config.getOrElseNullable(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo) { null }?.range == 0f..1f
+        }
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(rgb).fetchSemanticsNodes().size == 3 }
+        listOf(0.5f, 0.2f, 0.8f).forEachIndexed { i, v ->
+            rule.onAllNodes(rgb)[i].performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(v) }
+        }
+        rule.waitForIdle()
+        shot("drawing_custom_picker")
+        rule.onNode(hasText(say(R.string.common_select)) and hasClickAction()).performClick()
+        rule.onRoot().performTouchInput { swipe(Offset(root.width * 0.2f, root.height * 0.66f), Offset(root.width * 0.8f, root.height * 0.68f), 300) }
+        waitForTheNote("the custom stroke") { it.drawingPaths.size == 4 }
+        val custom = androidx.compose.ui.graphics.Color(0.5f, 0.2f, 0.8f).let { c -> (androidx.compose.ui.graphics.Color(c.red, c.green, c.blue).toArgb().toLong() and 0xFFFFFFFFL) }
+        assertEquals(custom, note().drawingPaths[3].color)
+        press("tools_color")
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(androidx.compose.ui.test.hasTestTag("drawing_color_$custom")).fetchSemanticsNodes().isNotEmpty() }
+        shot("drawing_custom_offered")
     }
 
     /** An emoji put on the drawing from its button, beside a piece, then moved. */

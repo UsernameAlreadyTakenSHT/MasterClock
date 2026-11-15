@@ -52,6 +52,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -128,6 +130,7 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     var history by remember { mutableStateOf(TextEditHistory()) }
     var showColorPicker by remember { mutableStateOf(false) }
     var showHighlighters by remember { mutableStateOf(false) }
+    var showCustomColor by remember { mutableStateOf(false) }
     // The insert panel open, if any: one at a time, the same button closing it.
     var inserting by rememberSaveable { mutableStateOf<InsertKind?>(null) }
     fun toggleInsert(kind: InsertKind) { inserting = if (inserting == kind) null else kind }
@@ -331,20 +334,26 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                     }
                 }
             }
+            if (showCustomColor) ColorPickerDialog(initialColor = Color.Black, onDismiss = { showCustomColor = false }) { chosen ->
+                showCustomColor = false
+                color(chosen.toArgb().toLong() and 0xFFFFFFFFL)
+            }
             if (showColorPicker) {
                 Dialog(onDismissRequest = { showColorPicker = false }) {
                     Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
                         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(stringResource(R.string.tools_select_text_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(16.dp))
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Six on a line on any phone, as the highlighters are; custom ones used go first.
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 // The text's own colour again, which the markers had no way to say.
-                                Surface(modifier = Modifier.size(40.dp).clickable { color(0L); showColorPicker = false }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                                Surface(modifier = Modifier.size(36.dp).clickable { color(0L); showColorPicker = false }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                                     Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, stringResource(R.string.tools_color_default)) }
                                 }
-                                NOTE_COLORS.forEach { value ->
-                                    Surface(modifier = Modifier.size(40.dp).clickable { color(value); showColorPicker = false }, shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
+                                (customColoursIn(rich.runs().map { it.color }, NOTE_COLORS) + NOTE_COLORS).forEach { value ->
+                                    Surface(modifier = Modifier.size(36.dp).clickable { color(value); showColorPicker = false }.testTag("text_color_$value"), shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
                                 }
+                                CustomColourButton(Modifier.testTag("text_color_custom"), size = 36.dp) { showColorPicker = false; showCustomColor = true }
                             }
                             Spacer(Modifier.height(16.dp))
                             TextButton(onClick = { showColorPicker = false }) { Text(stringResource(R.string.common_cancel)) }
@@ -435,7 +444,12 @@ internal val OpenMoji = FontFamily(Font(R.font.openmoji))
 private val HIGHLIGHTERS = listOf(Color(0x80FFEB3B), Color(0x80FFB74D), Color(0x80F48FB1), Color(0x8081D4FA), Color(0x80A5D6A7))
 private val HIGHLIGHTER_NAMES = listOf(R.string.tools_highlight_yellow, R.string.tools_highlight_orange, R.string.tools_highlight_pink, R.string.tools_highlight_blue, R.string.tools_highlight_green)
 
-private val NOTE_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
+/**
+ * A text note's colours: black, blue, red and green, which read on the page, and any other through
+ * the custom one. Yellow, orange, grey and white were hard to read on it; a note that has them keeps
+ * them, and they are offered again among the custom ones it has used.
+ */
+private val NOTE_COLORS = listOf(0xFF000000, 0xFF2196F3, 0xFFF44336, 0xFF4CAF50)
 
 /**
  * The note as it is drawn: each run in its style, a ticked box's line struck through, and a centred

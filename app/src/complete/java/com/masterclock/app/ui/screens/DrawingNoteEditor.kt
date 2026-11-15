@@ -33,6 +33,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
@@ -197,7 +198,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                 Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     // The colours behind one button, as in a text note: a row of them took a line of
                     // the toolbar for something chosen now and then.
-                    if (choosingColor) DrawingColorChoice(current = currentColor.takeIf { tool != DrawTool.ERASER }, onDismiss = { choosingColor = false }) { colorVal ->
+                    if (choosingColor) DrawingColorChoice(current = currentColor.takeIf { tool != DrawTool.ERASER }, used = currentPaths.filter { !it.isEraser && !it.isSticker }.map { it.color }, onDismiss = { choosingColor = false }) { colorVal ->
                         currentColor = colorVal
                         if (tool == DrawTool.ERASER) tool = DrawTool.PEN
                         changeSelected { it.copy(color = colorVal) }
@@ -648,19 +649,34 @@ private fun StickerOnDrawing(sticker: DrawingPath, scale: Float, loader: ImageLo
     }
 }
 
-/** The colours a drawing is drawn in, as a text note offers them. */
-private val DRAWING_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
+/**
+ * The colours a drawing is drawn in, and any other through the custom one: purple, pink and brown
+ * beside the first eight, brown for the wood of a board and its pieces.
+ */
+private val DRAWING_COLORS = listOf(0xFF4CAF50, 0xFF2196F3, 0xFFF44336, 0xFFFFEB3B, 0xFFFF9800, 0xFF9C27B0, 0xFFE91E63, 0xFF795548, 0xFF000000, 0xFF9E9E9E, 0xFFFFFFFF)
 
-/** The choice of a drawing's colour, as a text note's: [current] ringed, none with the eraser held. */
+/**
+ * The choice of a drawing's colour: [current] ringed, none with the eraser held. Custom colours the
+ * drawing already has come first, read from its strokes, so that one can be taken up again; the last
+ * circle opens the picker the settings have.
+ */
 @Composable
-private fun DrawingColorChoice(current: Long?, onDismiss: () -> Unit, onChoose: (Long) -> Unit) {
+private fun DrawingColorChoice(current: Long?, used: List<Long>, onDismiss: () -> Unit, onChoose: (Long) -> Unit) {
+    var custom by remember { mutableStateOf(false) }
+    if (custom) {
+        ColorPickerDialog(initialColor = Color(current ?: 0xFF000000), onDismiss = { custom = false }) { chosen ->
+            custom = false
+            onChoose(chosen.toArgb().toLong() and 0xFFFFFFFFL)
+        }
+        return
+    }
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
             Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.tools_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DRAWING_COLORS.forEach { value ->
+                    (customColoursIn(used, DRAWING_COLORS) + DRAWING_COLORS).forEach { value ->
                         val chosen = value == current
                         Surface(
                             modifier = Modifier.size(40.dp).clickable { onChoose(value) }.testTag("drawing_color_$value"),
@@ -669,8 +685,28 @@ private fun DrawingColorChoice(current: Long?, onDismiss: () -> Unit, onChoose: 
                             border = BorderStroke(if (chosen) 3.dp else 1.dp, if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
                         ) {}
                     }
+                    CustomColourButton(Modifier.testTag("drawing_color_custom")) { custom = true }
                 }
             }
         }
     }
+}
+
+/**
+ * The colours of [used] that are none of [presets], the most recent last, at most six: what a custom
+ * colour chosen before looks like when it is offered again.
+ */
+internal fun customColoursIn(used: List<Long>, presets: List<Long>): List<Long> =
+    used.filter { it != 0L && it !in presets }.distinct().takeLast(6)
+
+/** The last circle of a colour choice: any colour, through the picker the settings have. */
+@Composable
+internal fun CustomColourButton(modifier: Modifier = Modifier, size: Dp = 40.dp, onClick: () -> Unit) {
+    val name = stringResource(R.string.settings_select_custom_color)
+    Surface(
+        modifier = modifier.size(size).clickable(onClick = onClick).semantics { contentDescription = name },
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) { Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Add, null) } }
 }

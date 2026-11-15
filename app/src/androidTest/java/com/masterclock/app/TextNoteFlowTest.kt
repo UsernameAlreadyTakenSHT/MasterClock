@@ -204,6 +204,11 @@ class TextNoteFlowTest {
         content().performTextInputSelection(TextRange(0))
         rule.waitForIdle()
         shotOf("note_highlighted")
+        // The text's colours: four, the text's own, and a custom one.
+        press("tools_color")
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(androidx.compose.ui.test.hasTestTag("text_color_custom")).fetchSemanticsNodes().isNotEmpty() }
+        rule.waitForIdle()
+        shotOf("note_colors")
     }
 
     private fun shotOf(name: String) {
