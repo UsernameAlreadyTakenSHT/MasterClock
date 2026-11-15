@@ -34,12 +34,16 @@ data class TextEditHistory(
     /**
      * Records [before], the state an edit is about to replace. [typing] is a keystroke or a paste
      * from the keyboard; anything else -- a formatting button -- always stands alone.
+     *
+     * [endsWord] is a keystroke that ends a word, a space or a new line: the step it belongs to ends
+     * with it, and the next word is a step of its own. A pause alone did not do: typed without one,
+     * a whole note was one step, and Undo took all of it.
      */
-    fun beforeEdit(before: TextSnapshot, nowMs: Long, typing: Boolean): TextEditHistory {
+    fun beforeEdit(before: TextSnapshot, nowMs: Long, typing: Boolean, endsWord: Boolean = false): TextEditHistory {
         val last = lastTypedAtMs
         val continuesTyping = typing && last != null && nowMs - last < TEXT_UNDO_GROUP_MS
         val nextPast = if (continuesTyping) past else (past + before).takeLast(MAX_TEXT_HISTORY)
-        return TextEditHistory(nextPast, lastTypedAtMs = if (typing) nowMs else null)
+        return TextEditHistory(nextPast, lastTypedAtMs = if (typing && !endsWord) nowMs else null)
     }
 
     /**

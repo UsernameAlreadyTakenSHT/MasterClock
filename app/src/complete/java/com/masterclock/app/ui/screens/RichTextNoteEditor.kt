@@ -138,8 +138,8 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
 
     PersistDebounced(title to rich) { (newTitle, newRich) -> onUpdate { it.copy(title = newTitle).withRichText(newRich) } }
 
-    fun record(typingEdit: Boolean) {
-        history = history.beforeEdit(TextSnapshot(rich.text, field.selection.start, field.selection.end, rich.spans), SystemClock.uptimeMillis(), typingEdit)
+    fun record(typingEdit: Boolean, endsWord: Boolean = false) {
+        history = history.beforeEdit(TextSnapshot(rich.text, field.selection.start, field.selection.end, rich.spans), SystemClock.uptimeMillis(), typingEdit, endsWord)
     }
 
     /** Puts [next] in the field, the cursor or selection at [start]..[end]. */
@@ -379,7 +379,10 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                 onValueChange = { value ->
                     if (value.text.length > MAX_NOTE_CONTENT_CHARS) return@OutlinedTextField
                     if (value.text != rich.text) {
-                        record(true)
+                        // A space or a new line just typed ends the word, and Undo's step with it.
+                        val endsWord = value.text.length > rich.text.length && value.selection.collapsed &&
+                            value.text.getOrNull(value.selection.start - 1)?.isWhitespace() == true
+                        record(true, endsWord)
                         var next = rich.edited(value.text, typing, cursor = value.selection.end)
                         var shown = value
                         // Enter on a list line: the next item, or the end of the list.

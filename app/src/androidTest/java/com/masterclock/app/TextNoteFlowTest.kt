@@ -181,6 +181,27 @@ class TextNoteFlowTest {
         java.io.File(rule.activity.filesDir, "note_emojis.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /**
+     * Typed letter by letter with no pause, as on a phone's keyboard: Undo takes the last word, then
+     * the one before. It took the whole text at once, a pause being all that ended a step.
+     */
+    @Test
+    fun typingWithoutAPauseIsUndoneWordByWord() {
+        openTheNotebook()
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_text")))
+        rule.onNode(hasText(complete("tools_text")) and hasClickAction()).performClick()
+        await(hasSetTextAction())
+        for (c in "first second") content().performTextInput(c.toString())
+        waitForTheNote("the words") { it.content == "first second" }
+        press("tools_undo")
+        waitForTheNote("the first undo") { it.content == "first " }
+        press("tools_undo")
+        waitForTheNote("the second undo") { it.content == "" }
+        press("tools_redo")
+        waitForTheNote("the redo") { it.content == "first " }
+    }
+
     /** Typing undone, a pause apart: the second word goes, then the first; Redo brings them back. */
     @Test
     fun typingIsUndoneAndRedone() {

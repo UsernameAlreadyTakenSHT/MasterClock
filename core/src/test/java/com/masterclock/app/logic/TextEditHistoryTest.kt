@@ -20,6 +20,26 @@ class TextEditHistoryTest {
         assertFalse(after.canUndo)
     }
 
+    /** Typed without a pause, as on a phone's keyboard: each word is still a step of its own. */
+    @Test
+    fun `a word ended by a space or a new line is a step of its own`() {
+        var h = TextEditHistory()
+        var text = ""
+        var now = 0L
+        for (c in "play e4\nwin") {
+            h = h.beforeEdit(at(text), nowMs = now, typing = true, endsWord = c == ' ' || c == '\n')
+            text += c
+            now += 100
+        }
+        val (first, h1) = h.undo(at(text))!!
+        assertEquals("play e4\n", first.text)
+        val (second, h2) = h1.undo(first)!!
+        assertEquals("play ", second.text)
+        val (third, h3) = h2.undo(second)!!
+        assertEquals("", third.text)
+        assertFalse(h3.canUndo)
+    }
+
     @Test
     fun `a pause in typing starts a new step`() {
         var h = TextEditHistory()
