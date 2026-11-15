@@ -19,7 +19,10 @@ import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.DrawingShape
 import com.masterclock.app.logic.FlavorConfig
 import com.masterclock.app.logic.NotebookNote
+import com.masterclock.app.logic.isPiece
+import com.masterclock.app.logic.pieceSquare
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
@@ -119,6 +122,47 @@ class DrawingShapeFlowTest {
 
         // Redo let go of it; tapped where it now is, it is selected again, and taken out.
         rule.onRoot().performTouchInput { click(middle + Offset(0f, -root.height * 0.1f)) }
+        rule.onNode(hasContentDescription(say(R.string.common_delete)) and hasClickAction()).performClick()
+        waitForTheNote("the delete") { it.drawingPaths.isEmpty() }
+    }
+
+    /** A piece put on the drawing from the Pieces button, moved and enlarged, then taken out. */
+    @Test
+    fun aPieceIsPutOnMovedEnlargedAndTakenOut() {
+        rule.onNode(hasContentDescription(say(R.string.timer_settings)) and hasClickAction()).performClick()
+        await(hasText(say(R.string.settings_tab_more)))
+        rule.onAllNodesWithText(say(R.string.settings_tab_more))[0].performClick()
+        await(hasText(say(R.string.settings_more_notebook)))
+        rule.onNode(hasText(say(R.string.settings_more_notebook)) and hasClickAction()).performScrollTo().performClick()
+        await(hasContentDescription(complete("tools_new_note")))
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_draw")))
+        rule.onNode(hasText(complete("tools_draw")) and hasClickAction()).performClick()
+        await(hasContentDescription(complete("tools_insert_pieces")))
+
+        press("tools_insert_pieces")
+        await(hasContentDescription("q") and hasClickAction())
+        shot("drawing_pieces_menu")
+        rule.onNode(hasContentDescription("q") and hasClickAction()).performClick()
+        waitForTheNote("the queen") { it.drawingPaths.singleOrNull()?.let { p -> p.isPiece && p.label == "q" } == true }
+        val placed = note().drawingPaths.single().points
+
+        // On the drawing it is a picture, not a button: the one without a click action.
+        val onDrawing = rule.onAllNodes(hasContentDescription("q"))[0].fetchSemanticsNode().boundsInRoot
+        val centre = onDrawing.center
+        rule.onRoot().performTouchInput { swipe(centre, centre + Offset(-120f, 200f), 300) }
+        waitForTheNote("the move") { it.drawingPaths.single().points != placed }
+        val moved = note().drawingPaths.single().points
+        assertEquals(placed[1].first - placed[0].first, moved[1].first - moved[0].first, 0.5f)
+
+        // Its lower right handle pulls it larger, and it stays square.
+        val corner = rule.onAllNodes(hasContentDescription("q"))[0].fetchSemanticsNode().boundsInRoot.bottomRight
+        rule.onRoot().performTouchInput { swipe(corner, corner + Offset(150f, 150f), 300) }
+        waitForTheNote("the size") { it.drawingPaths.single().points[1] != moved[1] }
+        val (_, _, side) = note().drawingPaths.single().pieceSquare()
+        assertTrue(side > moved[1].first - moved[0].first)
+        shot("drawing_piece")
+
         rule.onNode(hasContentDescription(say(R.string.common_delete)) and hasClickAction()).performClick()
         waitForTheNote("the delete") { it.drawingPaths.isEmpty() }
     }

@@ -64,6 +64,36 @@ class DrawingShapesTest {
     }
 
     @Test
+    fun `a piece is put in a box, touched in it, and kept square however the box is pulled`() {
+        val knight = pieceSticker("N", 100f, 100f, 40f)
+        assertTrue(knight.isPiece)
+        assertTrue(knight.isSelectable)
+        assertFalse(knight.isShape)
+        assertEquals(listOf(80f to 80f, 120f to 120f), knight.points)
+        assertTrue(touches(knight, 110f, 90f, reach = 0f))
+        assertFalse(touches(knight, 200f, 100f, reach = 5f))
+        // Pulled wide, the piece stays square, in the middle.
+        assertEquals(Triple(100f, 80f, 40f), knight.gripped(ShapeGrip.END, 40f, 0f).pieceSquare())
+        // A label that names no piece is no piece.
+        assertFalse(knight.copy(label = "X").isPiece)
+    }
+
+    @Test
+    fun `an imported piece is kept only as a piece drawn, and nothing else keeps a label`() {
+        val note = NotebookNote(
+            title = "d", type = NotebookNoteType.DRAWING,
+            drawingPaths = listOf(
+                pieceSticker("q", 10f, 10f, 8f),
+                pieceSticker("<script>", 10f, 10f, 8f),
+                DrawingPath(points = listOf(0f to 0f, 1f to 1f), label = "junk"),
+            ),
+        )
+        val kept = sanitizeNote(java.io.File("unused"), note, freshId = false).drawingPaths
+        assertEquals(listOf(DrawingShape.PIECE, DrawingShape.FREE, DrawingShape.FREE), kept.map { it.shape })
+        assertEquals(listOf("q", "", ""), kept.map { it.label })
+    }
+
+    @Test
     fun `an imported shape of no known kind is read as a stroke`() {
         val note = NotebookNote(
             title = "d", type = NotebookNoteType.DRAWING,

@@ -846,6 +846,8 @@ data class DrawingPath(
      * line between its two points instead of failing the whole settings file.
      */
     val shape: Int = DrawingShape.FREE,
+    /** What a [DrawingShape.PIECE] is: one of [DRAWING_PIECES]. Empty for anything else. */
+    val label: String = "",
 )
 
 @Serializable
@@ -1528,9 +1530,13 @@ internal fun sanitizeNote(filesDir: java.io.File, note: NotebookNote, freshId: B
             // Held to the text as it is kept, cut as it may have been.
             richSpans = cleanSpans(note.richSpans, note.content.length.coerceAtMost(MAX_IMPORTED_NOTE_CONTENT_CHARS)),
             drawingPaths = note.drawingPaths.take(MAX_IMPORTED_DRAWING_PATHS).map { stroke ->
+                // A piece is kept only as one of the pieces drawn; anything else in its label goes,
+                // and a piece of no known name is read as a stroke.
+                val piece = stroke.shape == DrawingShape.PIECE && stroke.label in DRAWING_PIECES
                 stroke.copy(
                     points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS),
-                    shape = stroke.shape.takeIf { it in DrawingShape.KNOWN } ?: DrawingShape.FREE,
+                    shape = stroke.shape.takeIf { it in DrawingShape.KNOWN && (it != DrawingShape.PIECE || piece) } ?: DrawingShape.FREE,
+                    label = if (piece) stroke.label else "",
                 )
             },
             // A size no screen has, or none: the drawing is then shown as it stands.

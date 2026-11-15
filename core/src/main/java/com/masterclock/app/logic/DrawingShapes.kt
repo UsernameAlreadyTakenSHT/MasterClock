@@ -17,12 +17,44 @@ object DrawingShape {
     const val ARROW = 2
     const val RECTANGLE = 3
     const val ELLIPSE = 4
+    /** A piece's picture, [DrawingPath.label] naming it, in the box of its two points. */
+    const val PIECE = 5
     val SHAPES = LINE..ELLIPSE
-    val KNOWN = FREE..ELLIPSE
+    val KNOWN = FREE..PIECE
 }
 
-/** Whether [this] is a shape, which the editor can select, move and resize, rather than a stroke. */
+/**
+ * The pieces a drawing can have put on it, as a board note writes them: chess, white in capitals,
+ * then draughts, a man and a dame of each colour.
+ */
+val DRAWING_PIECES = listOf("K", "Q", "R", "B", "N", "P", "k", "q", "r", "b", "n", "p", "M", "D", "m", "d")
+
+/** Whether [this] is a shape -- a line, an arrow, a rectangle or an ellipse -- rather than a stroke. */
 val DrawingPath.isShape: Boolean get() = shape in DrawingShape.SHAPES && points.size >= 2 && !isEraser
+
+/** Whether [this] is a piece put on the drawing, a picture in a box rather than something drawn. */
+val DrawingPath.isPiece: Boolean get() = shape == DrawingShape.PIECE && points.size >= 2 && !isEraser && label in DRAWING_PIECES
+
+/** What the editor can select, move and resize: a shape or a piece. */
+val DrawingPath.isSelectable: Boolean get() = isShape || isPiece
+
+/** A piece put on a drawing, [side] across, centred on [centreX], [centreY]. */
+fun pieceSticker(piece: String, centreX: Float, centreY: Float, side: Float) = DrawingPath(
+    points = listOf((centreX - side / 2) to (centreY - side / 2), (centreX + side / 2) to (centreY + side / 2)),
+    shape = DrawingShape.PIECE,
+    label = piece,
+)
+
+/**
+ * Where a piece's picture goes in its box: the largest square that fits, centred, so that a box
+ * stretched one way does not stretch the piece. Left, top and side.
+ */
+fun DrawingPath.pieceSquare(): Triple<Float, Float, Float> {
+    val (ax, ay) = shapeStart
+    val (bx, by) = shapeEnd
+    val side = minOf(abs(bx - ax), abs(by - ay))
+    return Triple((ax + bx) / 2 - side / 2, (ay + by) / 2 - side / 2, side)
+}
 
 val DrawingPath.shapeStart: Pair<Float, Float> get() = points.first()
 val DrawingPath.shapeEnd: Pair<Float, Float> get() = points.last()
@@ -61,7 +93,7 @@ fun DrawingPath.gripped(grip: ShapeGrip, dx: Float, dy: Float): DrawingPath {
  * to tap on their edge when thin.
  */
 fun touches(shape: DrawingPath, x: Float, y: Float, reach: Float): Boolean {
-    if (!shape.isShape) return false
+    if (!shape.isSelectable) return false
     val (ax, ay) = shape.shapeStart
     val (bx, by) = shape.shapeEnd
     val r = reach + shape.strokeWidth / 2

@@ -36,6 +36,9 @@ import androidx.compose.ui.unit.dp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.lazy.LazyColumn
@@ -90,6 +93,8 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     // The shape the Shapes button draws, and whether its choice is open under the tools.
     var shapeKind by remember { mutableStateOf(DrawTool.RECTANGLE) }
     var choosingShape by remember { mutableStateOf(false) }
+    // Whether the pieces are open under the tools, to put one on the drawing.
+    var choosingPiece by remember { mutableStateOf(false) }
     // The stroke under the finger is a list added to, not copied: each point of a drag made a new list
     // of every point before it. It stops, as the drawing does, where the store stops keeping them:
     // a longer stroke, or more strokes, were cut at the next launch with nothing said.
@@ -105,7 +110,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     val scale = drawnOn?.let { drawingScale(it.width, it.height, canvas.width.toFloat(), canvas.height.toFloat()) } ?: 1f
     PersistDebounced(Triple(title, currentPaths, drawnOn)) { (newTitle, paths, size) -> onUpdate { it.copy(title = newTitle, drawingPaths = paths, drawingWidth = size?.width ?: it.drawingWidth, drawingHeight = size?.height ?: it.drawingHeight) } }
 
-    fun selectedShape(): DrawingPath? = selected?.let { edit.paths.getOrNull(it) }?.takeIf { it.isShape }
+    fun selectedShape(): DrawingPath? = selected?.let { edit.paths.getOrNull(it) }?.takeIf { it.isSelectable }
     fun changeSelected(change: (DrawingPath) -> DrawingPath) {
         val index = selected ?: return
         val shape = selectedShape() ?: return
@@ -127,6 +132,14 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     // Bumped on each photo taken as the background: a second lands at the same path, which an image
     // cache would otherwise take for the first.
     var backgroundCount by remember { mutableIntStateOf(0) }
+    val pieceLoader = remember { ImageLoader.Builder(context).components { add(SvgDecoder.Factory()) }.build() }
+    fun placePiece(piece: String) {
+        noteTheCanvas()
+        val area = drawnOn ?: return
+        if (edit.paths.size >= MAX_DRAWING_PATHS) return
+        edit = edit.addStroke(pieceSticker(piece, area.width / 2, area.height / 2, minOf(area.width, area.height) / 5))
+        selected = edit.paths.lastIndex
+    }
     fun photoBackground(source: NotebookNote) {
         val from = source.imagePath ?: return
         noteTheCanvas()
@@ -184,15 +197,24 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                         itemVerticalAlignment = Alignment.CenterVertically,
                     ) {
                         // Another tool is something else to draw: the shape selected is left as it is.
-                        DrawToolButton(DrawTool.PEN, tool == DrawTool.PEN) { tool = DrawTool.PEN; selected = null; choosingShape = false }
+                        DrawToolButton(DrawTool.PEN, tool == DrawTool.PEN) { tool = DrawTool.PEN; selected = null; choosingShape = false; choosingPiece = false }
                         // The shapes behind one button, which shows the one it draws: a button each
                         // filled the line, with pieces and emojis still to come.
                         DrawToolButton(shapeKind, tool.shape in DrawingShape.SHAPES, label = R.string.tools_shapes) {
                             selected = null
+                            choosingPiece = false
                             if (tool.shape in DrawingShape.SHAPES) choosingShape = !choosingShape
                             else { tool = shapeKind; choosingShape = true }
                         }
-                        DrawToolButton(DrawTool.ERASER, tool == DrawTool.ERASER) { tool = DrawTool.ERASER; selected = null; choosingShape = false }
+                        // Pieces put on the drawing, drawn as the board note draws them.
+                        val piecesName = stringResource(R.string.tools_insert_pieces)
+                        IconToggleButton(
+                            checked = choosingPiece,
+                            onCheckedChange = { choosingPiece = !choosingPiece; choosingShape = false; selected = null },
+                            modifier = Modifier.semantics { contentDescription = piecesName },
+                            colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                        ) { BoardPiece("N", 28.dp, pieceLoader, Modifier.clearAndSetSemantics { }) }
+                        DrawToolButton(DrawTool.ERASER, tool == DrawTool.ERASER) { tool = DrawTool.ERASER; selected = null; choosingShape = false; choosingPiece = false }
                         VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
                         // Not a tool: what the drawing is drawn on. Marked when there is one.
                         IconToggleButton(
@@ -205,6 +227,14 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             SHAPE_TOOLS.forEach { kind ->
                                 DrawToolButton(kind, tool == kind) { tool = kind; shapeKind = kind; choosingShape = false }
+                            }
+                        }
+                    }
+                    // A piece chosen goes in the middle of the drawing, selected, to be moved and sized.
+                    if (choosingPiece) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally)) {
+                            DRAWING_PIECES.forEach { piece ->
+                                IconButton(onClick = { placePiece(piece); choosingPiece = false }) { BoardPiece(piece, 34.dp, pieceLoader) }
                             }
                         }
                     }
@@ -222,10 +252,13 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                     if (shapeNow != null) {
                         HorizontalDivider()
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
-                            SHAPE_TOOLS.forEach { kind ->
-                                DrawToolButton(kind, shapeNow.shape == kind.shape) { changeSelected { it.copy(shape = kind.shape) } }
+                            // A shape can be made another; a piece is what it is.
+                            if (shapeNow.isShape) {
+                                SHAPE_TOOLS.forEach { kind ->
+                                    DrawToolButton(kind, shapeNow.shape == kind.shape) { changeSelected { it.copy(shape = kind.shape) } }
+                                }
+                                VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
                             }
-                            VerticalDivider(Modifier.height(24.dp).padding(horizontal = 4.dp))
                             IconButton(onClick = { selected?.let { edit = edit.remove(it) }; selected = null }) { Icon(Icons.Default.Delete, stringResource(R.string.common_delete)) }
                             IconButton(onClick = { selected = null }) { Icon(Icons.Default.Check, stringResource(R.string.tools_shape_done)) }
                         }
@@ -312,14 +345,23 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                 // eraser strokes, and look the same on the white page.
                 // Under the strokes' layer, which is where the eraser clears: the background is never rubbed out.
                 DrawingBackground(note, backgroundCount, drawnOn?.let { androidx.compose.ui.geometry.Size(it.width * scale, it.height * scale) })
+                val changing = preview != null && selected != null
                 Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
                     scale(scale, pivot = Offset.Zero) {
-                        val changing = preview != null && selected != null
-                        strokes.forEach { (i, data, path) -> if (!(changing && i == selected)) drawStroke(path, data.isEraser, Color(data.color), data.strokeWidth) }
-                        preview?.let { drawStroke(pathOf(it), false, Color(it.color), it.strokeWidth) }
+                        strokes.forEach { (i, data, path) -> if (!data.isPiece && !(changing && i == selected)) drawStroke(path, data.isEraser, Color(data.color), data.strokeWidth) }
+                        preview?.takeIf { !it.isPiece }?.let { drawStroke(pathOf(it), false, Color(it.color), it.strokeWidth) }
                         // The stroke under the finger alone is built again as it grows.
                         if (activePoints.size > 1) drawStroke(strokePath(activePoints), tool == DrawTool.ERASER, Color(currentColor), currentWidth / scale)
-                        // The shape selected: its two handles, the size of a fingertip's aim.
+                    }
+                }
+                // Pieces over the strokes: pictures rather than paint, which the eraser leaves alone;
+                // Delete takes one out.
+                currentPaths.forEachIndexed { i, path -> if (path.isPiece && !(changing && i == selected)) PieceOnDrawing(path, scale, pieceLoader) }
+                preview?.takeIf { it.isPiece }?.let { PieceOnDrawing(it, scale, pieceLoader) }
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    scale(scale, pivot = Offset.Zero) {
+                        // The shape or piece selected: its two handles, the size of a fingertip's aim,
+                        // over everything, a piece included.
                         (if (changing) preview else selectedShape())?.let { shape ->
                             val r = SHAPE_HANDLE_DRAWN.toPx() / scale
                             for ((x, y) in listOf(shape.shapeStart, shape.shapeEnd)) {
@@ -537,4 +579,12 @@ private fun copyBackgroundPhoto(context: android.content.Context, drawingId: Str
         pending.delete()
         null
     }
+}
+
+/** A piece on a drawing, at its place and size on screen, kept square in its box; see pieceSquare. */
+@Composable
+private fun PieceOnDrawing(piece: DrawingPath, scale: Float, loader: ImageLoader) {
+    val (left, top, side) = piece.pieceSquare()
+    val size = with(LocalDensity.current) { (side * scale).toDp() }
+    BoardPiece(piece.label, size, loader, Modifier.offset { IntOffset((left * scale).roundToInt(), (top * scale).roundToInt()) })
 }
