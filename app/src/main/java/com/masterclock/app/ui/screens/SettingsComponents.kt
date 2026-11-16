@@ -33,10 +33,14 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
@@ -49,6 +53,57 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
         Text(text = title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
         Column {
             content()
+        }
+    }
+}
+
+/**
+ * What a [ModeCardRow] hands its cards. They were laid out in a Row and still ask for a weight;
+ * the row shares its width out equally whatever they ask, so the weight is taken and not used.
+ */
+interface ModeCardRowScope {
+    fun Modifier.weight(@Suppress("UNUSED_PARAMETER") weight: Float): Modifier = this
+}
+
+private object ModeCardRowCells : ModeCardRowScope
+
+/**
+ * A row of [ModeCard]s at equal widths, all as tall as the tallest, which breaks into lines when
+ * a title's longest word does not fit a card.
+ *
+ * A title of several words may take two lines, and its card grows; a plain Row left the
+ * neighbours at their own height. A single word too long for its card has nowhere to break but
+ * in the middle -- "Progressi / ve", three to a row at a large font -- so the row holds fewer
+ * cards to a line instead, in lines of equal length.
+ */
+@Composable
+fun ModeCardRow(spacing: Dp, content: @Composable ModeCardRowScope.() -> Unit) {
+    Layout(content = { ModeCardRowCells.content() }, modifier = Modifier.fillMaxWidth()) { measurables, constraints ->
+        if (measurables.isEmpty()) return@Layout layout(constraints.minWidth, constraints.minHeight) {}
+        val count = measurables.size
+        val gap = spacing.roundToPx()
+        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else measurables.sumOf { it.maxIntrinsicWidth(Constraints.Infinity) } + gap * (count - 1)
+        fun share(perLine: Int) = (width - gap * (perLine - 1)) / perLine
+        val longestWord = measurables.maxOf { it.minIntrinsicWidth(Constraints.Infinity) }
+        var perLine = count
+        if (longestWord > share(count)) {
+            for (lines in 2..count) {
+                perLine = kotlin.math.ceil(count / lines.toFloat()).toInt()
+                if (longestWord <= share(perLine)) break
+            }
+        }
+        val lines = kotlin.math.ceil(count / perLine.toFloat()).toInt()
+        // The last line may be shorter; its cards share the whole width all the same.
+        val widths = List(count) { i -> share(if (i / perLine == lines - 1) count - perLine * (lines - 1) else perLine) }
+        val height = measurables.mapIndexed { i, m -> m.maxIntrinsicHeight(widths[i]) }.max()
+        val placeables = measurables.mapIndexed { i, m -> m.measure(Constraints.fixed(widths[i], height)) }
+        layout(width, height * lines + gap * (lines - 1)) {
+            var x = 0
+            placeables.forEachIndexed { i, p ->
+                if (i % perLine == 0) x = 0
+                p.placeRelative(x, (i / perLine) * (height + gap))
+                x += p.width + gap
+            }
         }
     }
 }
@@ -72,17 +127,24 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, co
     Surface(
         selected = selected,
         onClick = onClick,
-        modifier = modifier.height(if (compact) 40.dp else 48.dp).fillMaxWidth(),
+        // At least its usual height, and more when the title needs it. The height was fixed: a
+        // title on two lines -- "Omni-Timer (alpha)" at a large font -- was cut top and bottom.
+        modifier = modifier.heightIn(min = if (compact) 40.dp else 48.dp).fillMaxHeight().fillMaxWidth(),
         color = bgColor, 
         contentColor = contentColor, 
         shape = RoundedCornerShape(12.dp)
     ) { 
-        Box(contentAlignment = Alignment.Center) { 
+        // Padded, so that a title never runs to the card's edge, and centred line by line: a
+        // second line used to start at the left under a centred first one.
+        Box(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), contentAlignment = Alignment.Center) {
             Text(
-                text = title, 
-                style = if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium, 
-                fontWeight = if (selected) FontWeight.Black else FontWeight.Medium
-            ) 
+                text = title,
+                style = if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
+                fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
         } 
     }
 }
@@ -871,7 +933,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
     SettingsSection(stringResource(R.string.settings_select_mode)) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (FlavorConfig.currentFlavor == AppFlavor.MINI) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { if (mainMode != 0) onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
                     // Tapping the card already chosen changes nothing. Each card sets its family's first
                     // variant, so a second tap on Bonus turned Bronstein or US Delay back into Fischer --
@@ -880,7 +942,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { if (mainMode != 2) onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                 }
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     if (FlavorConfig.isModeAllowed(TimerMode.SUDDEN_DEATH)) {
                         ModeCard("Sudden Death", mainMode == 0, Modifier.weight(1f)) { if (mainMode != 0) onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
                     }
@@ -888,7 +950,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                         ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { if (mainMode != 1) onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_STANDARD)) {
                         ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { if (mainMode != 2) onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                     }
@@ -898,23 +960,23 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                 }
             }
             if (FlavorConfig.currentFlavor != AppFlavor.MINI) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { if (mainMode != 3) onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
                     ModeCard("Chronos", mainMode == 5, Modifier.weight(1f)) { if (mainMode != 5) onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     ModeCard("Move Counts", mainMode == 6, Modifier.weight(1f)) { if (mainMode != 6) onUpdateP(p.copy(mode = TimerMode.MOVE_COUNTS_UP)) }
                     ModeCard("Gong", mainMode == 8, Modifier.weight(1f)) { if (mainMode != 8) onUpdateP(p.copy(mode = TimerMode.GONG)) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     ModeCard("FIDE Periods", mainMode == 9, Modifier.weight(1f)) { if (mainMode != 9) onUpdateP(p.copy(mode = TimerMode.FIDE_PERIODS)) }
                     ModeCard("Phases", mainMode == 10, Modifier.weight(1f)) { if (mainMode != 10) onUpdateP(p.copy(mode = TimerMode.PHASES)) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     ModeCard("Random", mainMode == 11, Modifier.weight(1f)) { if (mainMode != 11) onUpdateP(p.copy(mode = TimerMode.RANDOM)) }
                     ModeCard("Hidden", mainMode == 12, Modifier.weight(1f)) { if (mainMode != 12) onUpdateP(p.copy(mode = TimerMode.HIDDEN)) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModeCardRow(6.dp) {
                     // Fast Move's variants are the ones that go by how fast a move is played; Staircase,
                     // which does not, was one of them, as Shrink, and is a mode of its own.
                     ModeCard("Fast Move", mainMode == 13, Modifier.weight(1f)) {
@@ -925,7 +987,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     }
                 }
                 if (FlavorConfig.hasOmni()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ModeCardRow(6.dp) {
                         ModeCard("Omni-Timer (alpha)", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
                         Spacer(Modifier.weight(1f))
                     }
@@ -954,7 +1016,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
 
     when (mainMode) {
         1 -> if (bonusOptionsAllowed > 1) SettingsSection(stringResource(R.string.settings_bonus_type)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ModeCardRow(8.dp) {
                 if (FlavorConfig.isModeAllowed(TimerMode.FISCHER)) {
                     ModeCard("Fischer", p.mode == TimerMode.FISCHER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
                 }
@@ -968,14 +1030,14 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         }
         2 -> if (moveTimerOptionsAllowed > 1) SettingsSection(stringResource(R.string.settings_move_timer_type)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ModeCardRow(8.dp) {
                     ModeCard("Standard", p.mode == TimerMode.MOVE_TIMER_STANDARD, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                     if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_SAVE_CAP)) {
                         ModeCard("Save & Cap", p.mode == TimerMode.MOVE_TIMER_SAVE_CAP, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_SAVE_CAP)) }
                     }
                 }
                 if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_OVERTIME) || FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_GLOBAL)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ModeCardRow(8.dp) {
                         if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_OVERTIME)) {
                             ModeCard("Overtime", p.mode == TimerMode.MOVE_TIMER_OVERTIME, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_OVERTIME)) }
                         }
@@ -985,7 +1047,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     }
                 }
                 if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_SHARED) || FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_GLOBAL_SHARED)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ModeCardRow(8.dp) {
                         if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_SHARED)) {
                             ModeCard("Shared (Auto)", p.mode == TimerMode.MOVE_TIMER_SHARED, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_SHARED)) }
                         }
@@ -997,7 +1059,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
             }
         }
         4 -> SettingsSection(stringResource(R.string.settings_byoyomi_type)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ModeCardRow(8.dp) {
                 ModeCard("Japanese", p.mode == TimerMode.BYOYOMI_JAPANESE, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
                 ModeCard("Canadian", p.mode == TimerMode.BYOYOMI_CANADIAN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_CANADIAN)) }
                 ModeCard("Progressive", p.mode == TimerMode.BYOYOMI_PROGRESSIVE, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.BYOYOMI_PROGRESSIVE)) }
@@ -1005,7 +1067,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         }
         5 -> SettingsSection(stringResource(R.string.settings_chrono_type)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ModeCardRow(8.dp) {
                     ModeCard("Countdown", p.mode == TimerMode.CHRONO_COUNTDOWN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }
                     ModeCard("Countup", p.mode == TimerMode.CHRONO_COUNTUP, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTUP)) }
                 }
@@ -1013,19 +1075,19 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
             }
         }
         6 -> SettingsSection(stringResource(R.string.settings_move_counts_type)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ModeCardRow(8.dp) {
                 ModeCard("Count Up", p.mode == TimerMode.MOVE_COUNTS_UP, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_COUNTS_UP)) }
                 ModeCard("Count Down (Max)", p.mode == TimerMode.MOVE_COUNTS_DOWN, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(mode = TimerMode.MOVE_COUNTS_DOWN)) }
             }
         }
         13 -> SettingsSection(stringResource(R.string.settings_fast_move_type)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ModeCardRow(8.dp) {
                 ModeCard("Accelerate", p.fastMoveMode == FastMoveType.ACCELERATE, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveMode = FastMoveType.ACCELERATE)) }
                 ModeCard("Transfer", p.fastMoveMode == FastMoveType.TRANSFER, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveMode = FastMoveType.TRANSFER)) }
             }
         }
         14 -> SettingsSection(stringResource(R.string.settings_staircase_type)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ModeCardRow(8.dp) {
                 ModeCard("Down", !p.fastMoveShrinkGrows, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveShrinkGrows = false)) }
                 ModeCard("Up", p.fastMoveShrinkGrows, Modifier.weight(1f), compact = true) { onUpdateP(p.copy(fastMoveShrinkGrows = true)) }
             }

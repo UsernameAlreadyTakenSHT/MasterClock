@@ -75,7 +75,7 @@ fun RulesScreen(onBack: () -> Unit) {
 
             // --- DRAUGHTS ---
             RulesGroup(stringResource(R.string.rules_group_draughts)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RuleButton("FMJD Annexes", Modifier.weight(1f)) {
                         open(CoreR.raw.rules_draughts_fmjd, "draughts_fmjd.pdf")
                     }
@@ -95,7 +95,7 @@ fun RulesScreen(onBack: () -> Unit) {
             // --- MORE GAMES ---
             RulesGroup(stringResource(R.string.rules_group_more_games)) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RuleButton("Morris", Modifier.weight(1f)) {
                             open(CoreR.raw.rules_morris, "morris.pdf")
                         }
@@ -155,7 +155,9 @@ private fun RuleButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(56.dp),
+        // At least its usual height, and more when the label needs it: fixed, it cut the second
+        // line of "FMJD Annexes" at a large font. In a row, as tall as its neighbour.
+        modifier = modifier.heightIn(min = 56.dp).fillMaxHeight(),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -167,7 +169,7 @@ private fun RuleButton(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text, fontWeight = FontWeight.SemiBold)
+            Text(text, modifier = Modifier.weight(1f, fill = false), fontWeight = FontWeight.SemiBold)
             if (trailingIcon != null) {
                 Icon(trailingIcon, contentDescription = null, modifier = Modifier.size(18.dp))
             }
