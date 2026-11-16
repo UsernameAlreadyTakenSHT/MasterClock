@@ -50,4 +50,33 @@ class NoteEmojiTest {
         // And side by side, as they are in a note: none runs into the next.
         assertEquals(all, emojis(all.joinToString("")))
     }
+
+    @Test
+    fun `an emoji's drawing is named by its code points, the variation selector left out`() {
+        assertEquals("1F600", emojiDrawingName("😀"))
+        // The heart is U+2764 and the selector, and OpenMoji's file is 2764.
+        assertEquals("2764", emojiDrawingName("❤️"))
+        assertEquals("2764", emojiDrawingName("❤"))
+        // A keycap keeps its other two, a family its joiners.
+        assertEquals("0023-20E3", emojiDrawingName("#️⃣"))
+        assertEquals("1F468-200D-1F469-200D-1F467", emojiDrawingName("👨‍👩‍👧"))
+        assertEquals("", emojiDrawingName(""))
+    }
+
+    /**
+     * A sticker on a drawing is drawn from OpenMoji's own drawing of it, and falls back to the font
+     * only for one it does not have. A catalog regenerated without the drawings would leave its new
+     * emojis blurring as they are enlarged, as all of them did, and nothing else would say so.
+     */
+    @Test
+    fun `every emoji offered has its drawing`() {
+        val catalog = File("../app/src/complete/res/raw/emojis.txt")
+        val drawings = File("../app/src/complete/assets/emojis")
+        assumeTrue("the catalog is not where this test was run from", catalog.exists())
+        val offered = parseEmojiCatalog(catalog.readText()).flatMap { it.emojis } + NOTE_EMOJIS
+        val missing = offered.filterNot { File(drawings, emojiDrawingName(it) + ".svg").exists() }
+        assertTrue("no drawing for $missing: run tools/openmoji_svg.py", missing.isEmpty())
+        // And none left over from an emoji no longer offered.
+        assertEquals(offered.map { emojiDrawingName(it) }.toSet().size, drawings.list { _, name -> name.endsWith(".svg") }!!.size)
+    }
 }

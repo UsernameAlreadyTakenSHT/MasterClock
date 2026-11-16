@@ -632,7 +632,10 @@ private fun copyBackgroundPhoto(context: android.content.Context, drawingId: Str
 
 /**
  * A piece or an emoji on a drawing, at its place and size on screen, kept square in its box; see
- * pieceSquare. An emoji in OpenMoji, as a text note draws it.
+ * pieceSquare. An emoji in OpenMoji, as a text note draws it -- but from OpenMoji's drawing of it
+ * rather than its font. The font holds each emoji as a picture of so many pixels, which is all a
+ * line of text asks; a sticker is dragged to any size, and enlarged it blurred. The drawings are
+ * the vectors, loaded as the pieces are; tools/openmoji_svg.py puts them in the assets.
  */
 @Composable
 private fun StickerOnDrawing(sticker: DrawingPath, scale: Float, loader: ImageLoader) {
@@ -640,8 +643,20 @@ private fun StickerOnDrawing(sticker: DrawingPath, scale: Float, loader: ImageLo
     val density = LocalDensity.current
     val size = with(density) { (side * scale).toDp() }
     val place = Modifier.offset { IntOffset((left * scale).roundToInt(), (top * scale).roundToInt()) }
+    // An emoji with no drawing here: one from a note made by a later version, with a newer
+    // catalog. It is drawn from the font, as every emoji was.
+    var undrawn by remember(sticker.label) { mutableStateOf(false) }
     if (sticker.isPiece) {
         BoardPiece(sticker.label, size, loader, place)
+    } else if (!undrawn) {
+        AsyncImage(
+            model = "file:///android_asset/emojis/${emojiDrawingName(sticker.label)}.svg",
+            // The emoji itself, which TalkBack names, as it did when this was a text.
+            contentDescription = sticker.label,
+            modifier = place.size(size),
+            imageLoader = loader,
+            onError = { undrawn = true },
+        )
     } else {
         Box(place.size(size), contentAlignment = Alignment.Center) {
             // A little under the box, as an emoji's glyph has room around it.

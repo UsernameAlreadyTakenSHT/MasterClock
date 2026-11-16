@@ -98,3 +98,26 @@ val NOTE_EMOJIS = listOf(
     "❤️", "💔", "⚠️", "❌", "✅", "❓", "❗", "📌", "📝", "📚",
     "🔍", "🗓️", "🍀", "🐢", "🐇", "🛡️", "⚔️", "🏁", "🚩", "☕",
 )
+
+/** The variation selector that asks for an emoji's colour picture; see [emojiDrawingName]. */
+private const val VARIATION_SELECTOR_16 = 0xFE0F
+
+/**
+ * The name OpenMoji's drawing of [emoji] is kept under in Complete's assets: its code points in
+ * hexadecimal, joined by a dash, the variation selector left out.
+ *
+ * Left out because OpenMoji's own file names keep it for some emojis and drop it for others, and
+ * the app has only the emoji to go by. tools/openmoji_svg.py writes the files under this same rule.
+ */
+fun emojiDrawingName(emoji: String): String {
+    val name = StringBuilder()
+    var i = 0
+    while (i < emoji.length) {
+        val codePoint = emoji.codePointAt(i)
+        i += Character.charCount(codePoint)
+        if (codePoint == VARIATION_SELECTOR_16) continue
+        if (name.isNotEmpty()) name.append('-')
+        name.append(codePoint.toString(16).uppercase().padStart(4, '0'))
+    }
+    return name.toString()
+}
