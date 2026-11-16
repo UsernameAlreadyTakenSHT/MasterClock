@@ -31,7 +31,7 @@ The five without a reply were asked a second time on 2026-11-16, ahead of the F-
 The FMJD's webmaster granted permission on 2026-11-16: the Annexes are a public document and may be
 used. The document changes from time to time, so bundling is allowed on one condition:
 
-- the copy must be **replaced** whenever the FMJD publishes a new one.
+- the copy should be **replaced** whenever the FMJD publishes a new one.
 
 ## Tafl — the terms we are held to
 
