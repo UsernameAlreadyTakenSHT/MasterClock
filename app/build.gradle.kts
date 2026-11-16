@@ -32,8 +32,8 @@ android {
         applicationId = "io.github.usernamealreadytakensht.masterclock.app"
         minSdk = 24
         targetSdk = 37
-        versionCode = 41
-        versionName = "0.8.40"
+        versionCode = 42
+        versionName = "0.8.41"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

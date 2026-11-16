@@ -1,0 +1,4 @@
+Flag behavior: the game goes on after the first flag, as at a chess clock; Freeze is unchanged.
+Large font sizes and long words no longer break the layout, in any of the eight languages.
+The arbiter's panel shows each player's clock and move count.
+Omni: a looping round with its clock at zero no longer runs for ever.

@@ -1,3 +1,31 @@
+## v0.8.41 — 2026-11-16
+
+Flag plays on past the first flag as a chess clock does, the screens keep their words whole at a
+large font size in every language, and the arbiter sees the clock they are correcting.
+
+### Added
+- **The arbiter's panel shows each player's clock and move count** (Complete, Standard, Lite), and each pair of buttons says what it changes: 1 min, 1 s.
+- A reference of every screen and setting, in `docs/reference/`.
+
+### Changed
+- **Flag behavior: the game goes on after the first flag** (Complete, Standard). The first clock to run out is flagged and turns to the loss colour; turns still alternate, the flagged player's clock stays at 0:00 on their turn, and their press starts the next clock. A clock that reaches zero afterwards stops there without being flagged, and the game is over when every clock has run out. With two players Flag used to end the game at the first flag, exactly as Freeze does; Freeze is unchanged.
+- **Large font sizes and long words no longer break the layout.** Two buttons stack when their labels do not fit side by side; a row of choices breaks into lines of equal length; a row of tabs shrinks together to stay on one line; a mode card grows for a title on two lines, and a row of them breaks for a long word; a long title takes two lines. No word is cut in the middle, in any of the eight languages.
+- Omni: the last step keeps one button to start the session, Launch Game.
+- French calls the Display tab "Aspect". German resumes with "Fortsetzen". Spanish, Italian and Brazilian reset settings in Android's own words. Dutch calls your own presets "Eigen".
+- E-Ink: the three buttons under the clock and the mode cards fit their labels at a large font size, and a switch's label keeps off the switch.
+
+### Fixed
+- Omni: a looping round whose clock was already at zero, after a paused session was edited, never ended.
+- The Scrabble preset described a countdown instead of a reversed flag in Italian, Portuguese and Dutch.
+- French punctuation no longer starts a line on its own.
+
+### Notebook (Complete)
+- Voice notes are recorded at 44.1 kHz, 64 kbit/s.
+- An emoji on a drawing is drawn from OpenMoji's vectors and stays sharp at any size.
+
+### Rules (Complete)
+- The rulebooks of Quoridor, Abalone, Hex and Santorini are removed: their rights holders did not answer the request to bundle them. Chess, draughts, shogi, Tafl and Morris stay; the FMJD has since allowed its Annexes.
+
 ## v0.8.40 — 2026-11-15
 
 The notebook becomes an editor -- colours, highlighters, pieces and emojis in text, shapes, pieces

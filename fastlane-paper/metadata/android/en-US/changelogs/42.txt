@@ -1,0 +1,3 @@
+The three buttons under the clock and the mode cards fit their labels at a large font size.
+A switch's label keeps off the switch.
+German resumes with Fortsetzen.

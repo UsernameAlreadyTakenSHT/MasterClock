@@ -1,0 +1,2 @@
+Large font sizes and long words no longer break the layout, in any of the eight languages.
+German resumes a game with Fortsetzen.

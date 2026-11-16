@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-15"
+    const val BUILD_DATE = "2026-11-16"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,21 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.41",
+            date = "2026-11-16",
+            notes = listOf(
+                Note("Flag behavior: the game goes on after the first flag, as at a chess clock. The first clock to run out is flagged, turns still alternate, and the game ends when every clock has run out. Freeze is unchanged.", BEHAVIOUR_TAB),
+                Note("Large font sizes and long words no longer break the layout: buttons stack, rows of choices break into lines, tabs shrink together, and no word is cut in the middle.", PHONE),
+                Note("The arbiter's panel says what each button changes, and shows each player's clock and move count.", FULL_MODES),
+                Note("Omni: a looping round with its clock already at zero no longer runs for ever, and the last step keeps one button to start the session.", FULL_MODES),
+                Note("Voice notes are recorded at a better quality, and an emoji on a drawing stays sharp at any size.", COMPLETE_ONLY),
+                Note("The rulebooks of Quoridor, Abalone, Hex and Santorini are removed: their rights holders did not answer the request to bundle them.", COMPLETE_ONLY),
+                Note("French says Aspect for Display, and Spanish, Italian and Brazilian reset settings in Android's own words.", BEHAVIOUR_TAB),
+                Note("German resumes a game with Fortsetzen."),
+                Note("E-Ink: the buttons under the clock and the mode cards fit their labels at a large font size.", E_INK_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.40",
             date = "2026-11-15",
