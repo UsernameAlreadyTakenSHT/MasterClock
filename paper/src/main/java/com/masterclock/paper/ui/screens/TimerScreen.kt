@@ -92,59 +92,66 @@ fun TimerScreen(
             // Kompakt's width: "Hervatten", "Reprendre" broke over two lines and the row grew. The
             // labels get the width, on one line.
             val controlPadding = PaddingValues(horizontal = 4.dp, vertical = ButtonDefaultsMMD.buttonVerticalPadding)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButtonMMD(
-                    onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
-                    modifier = Modifier.weight(1f),
-                    border = outlinedButtonBorderMMD(),
-                    contentPadding = controlPadding,
+            // One size for the three, the largest at which the longest fits: "Démarrer" filled its
+            // button from edge to edge at a large font. Every label the middle button can show is
+            // measured, so that the row does not change size when the game starts or pauses.
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val controlLabels = listOf(R.string.common_reset, R.string.timer_start, R.string.timer_resume, R.string.timer_pause, R.string.timer_settings).map { stringResource(it) }
+                val controlStyle = sharedLabelStyle(controlLabels, MaterialTheme.typography.labelLarge, (maxWidth - 24.dp) / 3 - 22.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = stringResource(R.string.common_reset),
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
-                }
-    
-                OutlinedButtonMMD(
-                    onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
-                    modifier = Modifier.weight(1f),
-                    border = outlinedButtonBorderMMD(),
-                    contentPadding = controlPadding,
-                ) {
-                    // Before the first press there is nothing to resume: the button starts P1's clock.
-                    val label = when {
-                        state.activePlayer == null -> stringResource(R.string.timer_start)
-                        state.isPaused -> stringResource(R.string.timer_resume)
-                        else -> stringResource(R.string.timer_pause)
+                    OutlinedButtonMMD(
+                        onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
+                        modifier = Modifier.weight(1f),
+                        border = outlinedButtonBorderMMD(),
+                        contentPadding = controlPadding,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.common_reset),
+                            style = controlStyle,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
                     }
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
-                }
     
-                OutlinedButtonMMD(
-                    // Paused first, as on the phone: a game went on running behind a page with no way
-                    // to press it, and a flag could fall there unseen.
-                    onClick = { if (!state.isPaused) viewModel.pause(); onSettingsClick() },
-                    modifier = Modifier.weight(1f),
-                    border = outlinedButtonBorderMMD(),
-                    contentPadding = controlPadding,
-                ) {
-                    Text(
-                        text = stringResource(R.string.timer_settings),
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
+                    OutlinedButtonMMD(
+                        onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
+                        modifier = Modifier.weight(1f),
+                        border = outlinedButtonBorderMMD(),
+                        contentPadding = controlPadding,
+                    ) {
+                        // Before the first press there is nothing to resume: the button starts P1's clock.
+                        val label = when {
+                            state.activePlayer == null -> stringResource(R.string.timer_start)
+                            state.isPaused -> stringResource(R.string.timer_resume)
+                            else -> stringResource(R.string.timer_pause)
+                        }
+                        Text(
+                            text = label,
+                            style = controlStyle,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
+    
+                    OutlinedButtonMMD(
+                        // Paused first, as on the phone: a game went on running behind a page with no way
+                        // to press it, and a flag could fall there unseen.
+                        onClick = { if (!state.isPaused) viewModel.pause(); onSettingsClick() },
+                        modifier = Modifier.weight(1f),
+                        border = outlinedButtonBorderMMD(),
+                        contentPadding = controlPadding,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.timer_settings),
+                            style = controlStyle,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
                 }
             }
     

@@ -34,6 +34,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.Alignment
@@ -48,10 +49,15 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mudita.mmd.components.buttons.ButtonDefaultsMMD
 import com.mudita.mmd.components.buttons.ButtonMMD
@@ -364,5 +370,28 @@ fun MMDAlertDialog(
                 }
             }
         }
+    }
+}
+
+/**
+ * The style at which every one of [labels] fits [cellWidth] on one line: [style] itself, or the
+ * same style smaller -- one size for the whole group, down to nine dp on the screen.
+ *
+ * The three buttons under the clock and the three mode cards hold their label to one line. At a
+ * large font the label ran from edge to edge of its button, or was cut: "Fisch" for "Fischer".
+ * A row of buttons reads as one thing, so it shrinks as one; the floor is a size on the screen,
+ * because one in sp grows with the very font scale that made the label too wide.
+ */
+@Composable
+fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp): TextStyle {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(labels, style, cellWidth, density.density, density.fontScale) {
+        val room = with(density) { cellWidth.toPx() }
+        val floor = with(density) { 9.dp.toSp() }
+        val widest = labels.maxOfOrNull { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width } ?: 0
+        if (!style.fontSize.isSpecified || room <= 0f || widest <= room) style
+        // A little under the ratio: letter spacing does not shrink with the size.
+        else style.copy(fontSize = (style.fontSize.value * room / widest * 0.96f).coerceAtLeast(floor.value).sp)
     }
 }

@@ -39,6 +39,8 @@ import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.*
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
+import androidx.compose.ui.text.TextStyle
+import com.mudita.mmd.components.buttons.ButtonDefaultsMMD
 import com.mudita.mmd.components.buttons.ButtonMMD
 import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import com.mudita.mmd.components.switcher.SwitchMMD
@@ -62,8 +64,14 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
     }
 }
 
+/**
+ * [style] is the row's, from [sharedLabelStyle]: MMD pads a button's label by 16dp a side, which
+ * left "Fischer" a third of the screen less 32dp, and cut it to "Fisch" at a large font. The label
+ * gets the width, on one line, at the size the three cards share.
+ */
 @Composable
-fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.labelLarge, onClick: () -> Unit) {
+    val cardPadding = PaddingValues(horizontal = 4.dp, vertical = ButtonDefaultsMMD.buttonVerticalPadding)
     // Which is chosen showed in the fill alone, and TalkBack read the three cards alike, as the phone's
     // did until they said it.
     val chosen = Modifier.semantics { this.selected = selected }
@@ -71,23 +79,19 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, on
         ButtonMMD(
             onClick = onClick,
             // 48dp, the smallest target Android recommends; 44 was under it.
-            modifier = modifier.height(48.dp).then(chosen)
+            modifier = modifier.heightIn(min = 48.dp).then(chosen),
+            contentPadding = cardPadding,
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelLarge
-            )
+            Text(text = title, style = style, maxLines = 1, softWrap = false)
         }
     } else {
         OutlinedButtonMMD(
             onClick = onClick,
-            modifier = modifier.height(48.dp).then(chosen),
-            border = outlinedButtonBorderMMD()
+            modifier = modifier.heightIn(min = 48.dp).then(chosen),
+            border = outlinedButtonBorderMMD(),
+            contentPadding = cardPadding,
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelLarge
-            )
+            Text(text = title, style = style, maxLines = 1, softWrap = false)
         }
     }
 }
@@ -118,7 +122,8 @@ fun BehaviorSwitch(
     ) {
         Text(
             text = label,
-            modifier = Modifier.weight(1f),
+            // Kept off the switch: a label as long as the row ran right up to it at a large font.
+            modifier = Modifier.weight(1f).padding(end = 12.dp),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             color = if (enabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
@@ -189,10 +194,13 @@ fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
         else -> 0
     }
 
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        ModeCard("Timer", mainMode == 0, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
-        ModeCard("Fischer", mainMode == 1, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
-        ModeCard("Move", mainMode == 2, Modifier.weight(1f)) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val cardStyle = sharedLabelStyle(listOf("Timer", "Fischer", "Move"), MaterialTheme.typography.labelLarge, (maxWidth - 16.dp) / 3 - 22.dp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ModeCard("Timer", mainMode == 0, Modifier.weight(1f), cardStyle) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
+            ModeCard("Fischer", mainMode == 1, Modifier.weight(1f), cardStyle) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
+            ModeCard("Move", mainMode == 2, Modifier.weight(1f), cardStyle) { onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
+        }
     }
 
     Spacer(Modifier.height(8.dp))
