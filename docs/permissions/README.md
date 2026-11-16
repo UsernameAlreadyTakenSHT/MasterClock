@@ -20,11 +20,14 @@ their document removed in the next release.
 | Nine Men's Morris | Kanare Kato (Kanare_Abstract) | 2026-08-02, again 2026-11-16 | — |
 | Tafl | World Tafl Federation (Aage Nielsen) | 2026-08-02 | **Granted** 2026-08-04 — see the conditions below. |
 | Chess | FIDE | 2026-08-02, again 2026-11-16 | — |
-| Draughts (international) | FMJD | 2026-08-02, again 2026-11-16 | — |
+| Draughts (international) | FMJD | 2026-08-02, again 2026-11-16 | **Granted** 2026-11-16, on condition that the copy is kept up to date. |
 | Draughts (64) | IDF | 2026-08-02, again 2026-11-16 | — |
 | Shogi | FESA | 2026-08-02, again 2026-11-16 | — |
 
 The five without a reply were asked a second time on 2026-11-16, ahead of the F-Droid submission.
+
+The FMJD answered the same day: the Annexes are a public document and may be used. They change from
+time to time, so the copy in the app has to be replaced when the FMJD publishes a new one.
 
 ## Removed: Quoridor, Abalone, Hex, Santorini
 

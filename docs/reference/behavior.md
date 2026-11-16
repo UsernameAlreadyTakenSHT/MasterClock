@@ -68,7 +68,7 @@ A saved game remembers it, and replaying a game starts from the clock Berserk le
 
 | Setting | Default | |
 |---|---|---|
-| **Different settings per player** | off | Each of the two players gets their own mode and times, set on a tab each in Modes. Off again, both play player 1's. Not available with three or four players, nor in the modes with one clock for the table. |
+| **Different settings per player** | off | The two players play the same mode with different times, set on a tab each in Modes. Off again, both play player 1's. Not available with three or four players, nor in the modes with one clock for the table. |
 | **Enable more players (experimental)** | off | Three or four players instead of two. Turning it on turns per-player settings off. |
 
 With more players on, two more settings appear:

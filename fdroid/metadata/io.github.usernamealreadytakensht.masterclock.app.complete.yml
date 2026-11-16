@@ -2,7 +2,8 @@ AntiFeatures:
   NonFreeAssets:
     en-US: Six rulebooks are bundled as PDFs. They are third-party documents -- federation
       rules for chess, draughts and shogi, and rules for Morris and Tafl -- redistributed
-      without an explicit licence grant, except Tafl's, which its federation allowed.
+      without an explicit licence grant, except Tafl's and the draughts Annexes, which their
+      federations allowed.
       The four sounds (gong, beep, final beep, switch) come from Pixabay, under the
       Pixabay Content License, which allows their use in an app but is not a free licence.
 Categories:
