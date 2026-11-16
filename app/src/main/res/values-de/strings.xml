@@ -181,6 +181,7 @@
     <string name="timer_cap">MAX</string>
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">GESAMT</string>
+    <string name="timer_labeled_time">%1$s: %2$s</string>
     <!--
       "OT" labels the Overtime reserve: a fixed amount set at the start, spent once a move
       clock runs out and never refilled by move time left unused. It is not saved time,

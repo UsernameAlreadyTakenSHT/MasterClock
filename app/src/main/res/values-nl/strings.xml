@@ -31,7 +31,7 @@
     <!-- Presets -->
     <string name="preset_title">Presets</string>
     <string name="preset_tab_all">Alle</string>
-    <string name="preset_tab_mine">Mijne</string>
+    <string name="preset_tab_mine">Eigen</string>
     <!-- Short on purpose: the third tab is narrow, as every language before this one found. -->
     <string name="preset_tab_last_games">Laatste</string>
     <string name="preset_save_current">Huidig speeltempo opslaan</string>
@@ -180,6 +180,7 @@
     <string name="timer_cap">MAX</string>
     <string name="timer_global">GLOBAAL</string>
     <string name="timer_total">TOTAAL</string>
+    <string name="timer_labeled_time">%1$s: %2$s</string>
     <!--
       "OT" labels the Overtime reserve: a fixed amount set at the start, spent once a move
       clock runs out and never refilled by move time left unused. It is not saved time,

@@ -729,7 +729,7 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                         }
                         pSettings.mode == TimerMode.MOVE_TIMER_OVERTIME || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL || pSettings.mode == TimerMode.MOVE_TIMER_SAVE_CAP || pSettings.mode == TimerMode.MOVE_TIMER_GLOBAL_SHARED -> {
                             val (label, secondary) = secondaryClock ?: ("" to 0L)
-                            Text("$label: ${formatSecondaryTime(secondary, settings.effectiveTimePadding())}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
+                            Text(stringResource(R.string.timer_labeled_time, label, formatSecondaryTime(secondary, settings.effectiveTimePadding())), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = labelColor)
                         }
                         pSettings.mode == TimerMode.PHASES -> {
                             Text(phaseLabel(pSettings, playerState), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = labelColor)

@@ -24,11 +24,12 @@ fit — see below.
 Every language so far has run into the same three places, and it is worth knowing about them before
 you start rather than after a screenshot:
 
-- **The settings tab for "Behavior".** The bottom tab bar fits about nine characters. "Comportement",
-  "Comportamiento" and "Verhalten" all crowd or wrap it, so French, Spanish and German use "Jeu",
-  "Juego" and "Spiel" instead.
-- **The third presets tab, "Last Games".** It truncates silently, which reads fine until the row
-  changes. Shorten it deliberately: "Dernières", "Últimas", "Letzte".
+- **The settings tab for "Behavior".** The bottom tab bar fits about nine characters at full size.
+  A longer label no longer breaks: the five shrink together to fit, so one long word makes all of
+  them smaller. "Comportement", "Comportamiento" and "Verhalten" would, so French, Spanish and
+  German use "Jeu", "Juego" and "Spiel" instead, and French says "Aspect" for Display.
+- **The third presets tab, "Last Games".** The three tabs shrink together too. Shorten it
+  deliberately: "Dernières", "Últimas", "Letzte".
 - **The three buttons under the E-Ink clock**, in `paper` only. They are narrow, and `paper` has its
   own copy of these strings so it can be shortened without touching the phone app. German needed
   both "Reset" for `common_reset` and "Optionen" for `timer_settings`.
@@ -41,10 +42,16 @@ no need to finish a language before it is useful.
 
 | Module | What it covers | English source |
 |---|---|---|
-| `app` | the phone/tablet app | `app/src/main/res/values/strings.xml` |
+| `app` | the phone/tablet app, every edition | `app/src/main/res/values/strings.xml` |
+| `app`, Complete only | the tools, the notebook, the manual, the rules, QR codes and the board connection | `app/src/complete/res/values/strings.xml` |
+| `core` | what the clock says aloud, and the board connection's error messages | `core/src/main/res/values/strings.xml` |
 | `paper` | the separate E-Ink app | `paper/src/main/res/values/strings.xml` |
 
-Your language goes in the folder next to it, named after its code:
+A language is four files, then, not one. The Complete edition's screens have a file of their own so
+that the smaller editions do not carry their text; it holds over three hundred strings, and is
+easy to miss.
+
+Your language goes in the folder next to each, named after its code:
 
 ```
 app/src/main/res/values-fr/strings.xml      ← French
@@ -52,7 +59,7 @@ app/src/main/res/values-de/strings.xml      ← German
 …
 ```
 
-Those files already exist, with a header comment and nothing else.
+Six languages have these files filled in: French, German, Spanish, Italian, Portuguese and Dutch.
 
 ## How to translate
 
@@ -154,7 +161,8 @@ If you cannot build, send the file anyway — it will be checked before merging.
 
 ## Adding a language that is not listed
 
-1. Create `app/src/main/res/values-XX/strings.xml`, copying the header from an existing one.
+1. Create `values-XX/strings.xml` beside each of the four English files listed under "Where the
+   files are", copying the header from an existing one.
 2. Add `<locale android:name="XX" />` to **both** `app/src/main/res/xml/locales_config.xml` and
    the identical file in `paper`.
 

@@ -203,6 +203,8 @@
     <string name="timer_cap">CAP</string>
     <string name="timer_global">GLOBAL</string>
     <string name="timer_total">TOTAL</string>
+    <!-- A secondary clock under the main one: its name, GLOBAL or TOTAL, and its time. -->
+    <string name="timer_labeled_time">%1$s: %2$s</string>
     <string name="timer_overtime">OT</string>
     <string name="timer_switch_turn">Switch turn</string>
     <string name="timer_presets">Presets</string>
