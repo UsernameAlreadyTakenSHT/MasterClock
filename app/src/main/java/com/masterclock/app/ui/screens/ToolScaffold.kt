@@ -19,7 +19,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
@@ -55,6 +57,16 @@ fun ToolScaffold(
         content = content
     )
 }
+
+/**
+ * The smallest a tab's label is drawn at: a size on the screen, not in the reader's font scale.
+ *
+ * A floor in sp grows with the font scale, so at 130 % a 12 sp label had one step to shrink by
+ * before it was cut -- "Affichag / e", "Les" for "Les miens". Nine dp is a little under what the
+ * label measures at the normal scale, which is where a tab laid out for it still fits.
+ */
+@Composable
+fun tabLabelFloor(): TextUnit = with(LocalDensity.current) { 9.dp.toSp() }
 
 /**
  * A label kept to one line: it shrinks, down to [minSize], rather than wrap where a translation

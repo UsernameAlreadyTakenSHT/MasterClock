@@ -117,9 +117,13 @@ fun PresetsScreen(
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
             PrimaryTabRow(selectedTabIndex = selectedTab) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) { Text(stringResource(R.string.preset_tab_all), Modifier.padding(12.dp), maxLines = 1) }
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text(stringResource(R.string.preset_tab_mine), Modifier.padding(12.dp), maxLines = 1) }
-                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) { Text(stringResource(R.string.preset_tab_last_games), Modifier.padding(12.dp), maxLines = 1) }
+                // One line, shrinking to fit. Held to one line at its full size, a label was cut
+                // where the tab ended: "Les" for "Les miens", "Dernière" for "Dernières".
+                listOf(R.string.preset_tab_all, R.string.preset_tab_mine, R.string.preset_tab_last_games).forEachIndexed { i, label ->
+                    Tab(selected = selectedTab == i, onClick = { selectedTab = i }) {
+                        OneLineText(stringResource(label), Modifier.padding(horizontal = 6.dp, vertical = 12.dp), style = MaterialTheme.typography.titleSmall, minSize = tabLabelFloor())
+                    }
+                }
             }
 
             if (selectedTab == 0) {

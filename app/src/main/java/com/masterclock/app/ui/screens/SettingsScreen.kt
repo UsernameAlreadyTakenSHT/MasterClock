@@ -106,7 +106,9 @@ fun SettingsScreen(
                             selected = category == cat,
                             onClick = { onCategoryChanged(cat) },
                             icon = { Icon(cat.icon, stringResource(cat.labelRes)) },
-                            label = { Text(stringResource(cat.labelRes)) }
+                            // One line, shrinking to fit: at a large font "Affichage" wrapped its
+                            // last letter, and the icon above it rode up out of line with the others.
+                            label = { OneLineText(stringResource(cat.labelRes), style = MaterialTheme.typography.labelMedium, minSize = tabLabelFloor()) }
                         )
                     }
                 }

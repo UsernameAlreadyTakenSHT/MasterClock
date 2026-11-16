@@ -1278,16 +1278,12 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
                             // A third tab leaves each one about a third of the dialog, where the
                             // default label size wrapped "Changelog" onto a second line.
                             text = {
-                                Text(
-                                    label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    maxLines = 1,
-                                    // softWrap = false used to clip mid-glyph once the label no
-                                    // longer fit, which is how "Changelog" lost its tail. An
-                                    // ellipsis degrades readably instead -- it matters more once
-                                    // the labels are translated, since most languages are longer.
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                // softWrap = false used to clip mid-glyph once the label no
+                                // longer fit, which is how "Changelog" lost its tail. It shrinks
+                                // to fit now, and only past its floor ends in an ellipsis -- which
+                                // matters more once the labels are translated, most languages
+                                // being longer.
+                                OneLineText(label, style = MaterialTheme.typography.labelMedium, minSize = tabLabelFloor())
                             }
                         )
                     }
