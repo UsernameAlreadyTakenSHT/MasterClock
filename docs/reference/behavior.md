@@ -18,6 +18,12 @@ What a clock reaching zero means. One choice of four; *Freeze* by default.
 It applies in every mode, and [Modes](modes.md#when-a-clock-reaches-zero-flag-behavior) says how
 each one counts an overrun.
 
+**Flag Cap** shows under the choice when it is Negative or Reverse: how far a clock may run past
+zero. Empty, the default, there is no limit. Set to 10:00, a clock stops at -10:00 under Negative
+and at 10:00 under Reverse; the flag's sound is heard once more, the player keeps their turn on a
+clock that no longer moves, and play goes on. An arbiter's penalty stops at the cap too. A preset
+or a saved game brings its cap with its flag behavior.
+
 ## Tournament Rules
 
 Two switches, each for one mode only.

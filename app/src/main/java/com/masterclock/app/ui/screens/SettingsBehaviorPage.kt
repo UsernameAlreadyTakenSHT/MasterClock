@@ -40,6 +40,18 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                     )
                 }
             }
+            // Only where a clock runs past zero: under Freeze and Flag it stops there, and a cap
+            // on an overrun would be a setting with nothing to act on.
+            if (currentSettings.flagBehavior == FlagBehavior.NEGATIVE || currentSettings.flagBehavior == FlagBehavior.REVERSE) {
+                Spacer(Modifier.height(12.dp))
+                HMSInput(stringResource(R.string.settings_flag_cap), currentSettings.flagCapMs) { onSettingsChanged(currentSettings.copy(flagCapMs = it)) }
+                Text(
+                    stringResource(R.string.settings_flag_cap_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+                )
+            }
         }
 
         SettingsSection(stringResource(R.string.settings_tournament_rules)) {

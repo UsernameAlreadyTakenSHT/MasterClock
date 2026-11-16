@@ -294,6 +294,8 @@
 
     <!-- Settings: Behavior -->
     <string name="settings_flag_behavior">Comportamento alla caduta della bandierina</string>
+    <string name="settings_flag_cap">Tetto dopo la caduta della bandierina</string>
+    <string name="settings_flag_cap_desc">Fin dove un orologio può superare lo zero. Lì si ferma e la partita continua. Vuoto: nessun limite.</string>
     <string name="settings_tournament_rules">Regole di torneo</string>
     <string name="settings_fischer_fide">Fischer FIDE (bonus dalla mossa 0)</string>
     <string name="settings_forced_move_counter">Contamosse obbligatorio</string>
@@ -618,7 +620,7 @@
     <string name="preset_desc_armag_5_4">Bianco 5:00, Nero 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 ciascuno</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/mossa</string>
-    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bandierina invertita</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bandierina invertita fino a 10:00</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, arrotondato</string>
     <string name="preset_shortcut_deleted">Questo preset è stato eliminato</string>
     <string name="arbiter_remove_minute">%1$s, meno 1 minuto</string>

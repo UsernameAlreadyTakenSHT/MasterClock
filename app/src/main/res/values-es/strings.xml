@@ -302,6 +302,8 @@
 
     <!-- Settings: Behavior -->
     <string name="settings_flag_behavior">Comportamiento al caer la bandera</string>
+    <string name="settings_flag_cap">Límite tras la caída de la bandera</string>
+    <string name="settings_flag_cap_desc">Hasta dónde puede pasar de cero un reloj. Ahí se detiene y la partida continúa. Vacío: sin límite.</string>
     <string name="settings_tournament_rules">Reglas de torneo</string>
     <string name="settings_fischer_fide">Fischer FIDE (bonificación desde la jugada 0)</string>
     <string name="settings_forced_move_counter">Contador de jugadas obligatorio</string>
@@ -626,7 +628,7 @@
     <string name="preset_desc_armag_5_4">Blancas 5:00, negras 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass 1:00 cada uno</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/jugada</string>
-    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bandera: invertido</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bandera: invertido hasta 10:00</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, redondeado</string>
     <string name="preset_shortcut_deleted">Este preajuste se ha eliminado</string>
     <string name="arbiter_remove_minute">%1$s, menos 1 minuto</string>

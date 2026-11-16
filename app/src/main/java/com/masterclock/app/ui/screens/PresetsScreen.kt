@@ -99,7 +99,9 @@ fun PresetsScreen(
         ClockPreset("Hourgl. 1 min", R.string.preset_desc_hourgl_1_min, ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000, mode = TimerMode.HOURGLASS))),
         ClockPreset("30s / Move", R.string.preset_desc_30s_move, ChessClockSettings(main = PlayerSettings(moveTimeMs = 30_000, mode = TimerMode.MOVE_TIMER_STANDARD))),
         ClockPreset("Scrabble 25'", R.string.preset_desc_scrabble_25, 
-            ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_500_000, mode = TimerMode.SUDDEN_DEATH), flagBehavior = FlagBehavior.REVERSE),
+            // Ten minutes over is where a tournament game of Scrabble is lost outright; up to
+            // there each minute is a penalty, which is what counting back up shows.
+            ChessClockSettings(main = PlayerSettings(initialTimeMs = 1_500_000, mode = TimerMode.SUDDEN_DEATH), flagBehavior = FlagBehavior.REVERSE, flagCapMs = 600_000),
             setsFlagBehavior = true,
         ),
         ClockPreset("Random (1/10)", R.string.preset_desc_random_1_10,

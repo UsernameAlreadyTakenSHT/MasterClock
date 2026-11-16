@@ -290,6 +290,8 @@
 
     <!-- Settings: Behavior -->
     <string name="settings_flag_behavior">Verhalten beim Blättchenfall</string>
+    <string name="settings_flag_cap">Obergrenze nach dem Blättchenfall</string>
+    <string name="settings_flag_cap_desc">Wie weit eine Uhr über null hinauslaufen darf. Dort bleibt sie stehen, und die Partie geht weiter. Leer: keine Grenze.</string>
     <string name="settings_tournament_rules">Turnierregeln</string>
     <string name="settings_fischer_fide">Fischer FIDE (Bonus ab Zug 0)</string>
     <string name="settings_forced_move_counter">Zugzähler verpflichtend</string>
@@ -609,7 +611,7 @@
     <string name="preset_desc_armag_5_4">Weiß 5:00, Schwarz 4:00</string>
     <string name="preset_desc_hourgl_1_min">Hourglass je 1:00</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 s/Zug</string>
-    <string name="preset_desc_scrabble_25">Sudden Death 25:00, Blättchen: umgekehrt</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, Blättchen: umgekehrt bis 10:00</string>
     <string name="preset_desc_random_1_10">Random 1–10 min, gerundet</string>
     <string name="preset_shortcut_deleted">Diese Voreinstellung wurde gelöscht</string>
     <string name="arbiter_remove_minute">%1$s, minus 1 Minute</string>

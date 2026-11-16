@@ -94,7 +94,7 @@ left as they are.
 | Armag. 5 / 4 | Armageddon: White 5:00, Black 4:00 |
 | Hourgl. 1 min | Hourglass, 1:00 each |
 | 30s / Move | Move Timer Standard, 30 s a move |
-| Scrabble 25' | Sudden Death 25:00, flag behavior Reverse |
+| Scrabble 25' | Sudden Death 25:00, flag behavior Reverse, Flag Cap 10:00 |
 | Random (1/10) | Random, 1 to 10 min, rounded |
 
 A long press on the app's icon offers up to four shortcuts: the time controls of the two most recent

@@ -943,6 +943,12 @@ data class ChessClockSettings(
     
     val isOneForAll: Boolean = true,
     val flagBehavior: FlagBehavior = FlagBehavior.FREEZE,
+    /**
+     * How far a clock may run past zero under NEGATIVE and REVERSE; zero is no limit. At the cap
+     * the clock stops and play goes on: see [capOverrun]. It means nothing under FREEZE and FLAG,
+     * where a clock stops at zero.
+     */
+    val flagCapMs: Long = 0,
     val confirmReset: Boolean = true,
     val fischerFideFirstMove: Boolean = false,
     /** Lets a player go Berserk before their first move; see [goBerserk]. */
@@ -1073,6 +1079,8 @@ fun applyPresetTimeControl(
         multiPlayerLayout = if (keepSeats) current.multiPlayerLayout else preset.multiPlayerLayout,
         isOneForAll = if (keepTable) current.isOneForAll else preset.isOneForAll,
         flagBehavior = if (keepFlagBehavior) current.flagBehavior else preset.flagBehavior,
+        // The cap is part of what the flag does: kept or taken with it.
+        flagCapMs = if (keepFlagBehavior) current.flagCapMs else preset.flagCapMs,
         fischerFideFirstMove = if (keepFirstMoveBonus) current.fischerFideFirstMove else preset.fischerFideFirstMove,
         // How a FIDE period ends is the game's rule as much as the bonus is. Left to the switch as it
         // stood, a game saved with the move counter came back without it: move 40 added nothing,
@@ -1586,6 +1594,7 @@ private fun sanitizeSettingsRest(
         customFinalBeepUri = sanitizeImportedContentUri(grants, settings.customFinalBeepUri),
         customSwitchUri = sanitizeImportedContentUri(grants, settings.customSwitchUri),
         numberOfPlayers = sanitizedNumberOfPlayers,
+        flagCapMs = settings.flagCapMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
         // Volumes are fractions the sliders keep between 0 and 1, and the pause between phases a
         // duration like the others; none of the three was bounded.
         soundsVolume = settings.soundsVolume.coerceIn(0f, 1f),
@@ -2540,6 +2549,8 @@ internal fun tickSounds(tick: ClockTick, settings: ChessClockSettings, lastBeepS
         if (coupled.playGong) add(ClockSound.GONG)
         if (coupled.handedOverBy != null && settings.playSwitchSound) add(ClockSound.SHORT_BEEP)
     }
+    // The flag's own sound, under the same switch: the extra time is spent as the time was.
+    if (tick.capReached && settings.tripleBeepTimeUp) add(ClockSound.TRIPLE_BEEP)
 }
 
 /**
@@ -2925,7 +2936,11 @@ internal fun isTimeAdjustableMode(mode: TimerMode): Boolean = !mode.name.startsW
  * corrections where most of the clock's remaining defects sat were the one thing no test could
  * call. The ViewModel checks that the arbiter panel is open and hands the result to the screen.
  */
-internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountMs: Long, settings: ChessClockSettings): ChessClockState {
+internal fun arbiterAdjustTime(state: ChessClockState, playerIndex: Int, amountMs: Long, settings: ChessClockSettings): ChessClockState =
+    // A penalty takes a clock no further past zero than the game's own cap does.
+    arbiterAdjustTimeUncapped(state, playerIndex, amountMs, settings).capOverrun(settings)
+
+private fun arbiterAdjustTimeUncapped(state: ChessClockState, playerIndex: Int, amountMs: Long, settings: ChessClockSettings): ChessClockState {
     val flagBehavior = settings.flagBehavior
     // Shared (Auto) keeps one move clock, copied into every player and ticked from player 1's,
     // so an adjustment to anyone else's was overwritten by the next tick. It is the table's.
@@ -3255,7 +3270,38 @@ internal class ClockTick(
     val cue: TickCue? = null,
     val coupled: CoupledTick? = null,
     val phaseChangedFrom: PlayerState? = null,
+    /** An overrun reached [ChessClockSettings.flagCapMs] on this tick: heard once, as a flag is. */
+    val capReached: Boolean = false,
 )
+
+/**
+ * Holds every overrun to [ChessClockSettings.flagCapMs] under NEGATIVE and REVERSE.
+ *
+ * An overrun had no end: a clock left running counted below zero, or back up, for as long as
+ * nobody stopped it. With a cap it stops there -- at -10:00, or at 10:00 -- and play goes on, the
+ * player keeping their turn on a clock that no longer moves. One clamp after the event, rather
+ * than a limit in each of the modes that count an overrun their own way: whatever took a clock
+ * past the cap, a tick or an arbiter's penalty, it is brought back to it here.
+ */
+internal fun ChessClockState.capOverrun(settings: ChessClockSettings): ChessClockState {
+    val cap = settings.flagCapMs
+    val fb = settings.flagBehavior
+    if (cap <= 0 || (fb != FlagBehavior.NEGATIVE && fb != FlagBehavior.REVERSE)) return this
+    if (players.none { it.isOverrun(fb) && it.timeRemainingMs > cap }) return this
+    return copy(players = players.map { if (it.isOverrun(fb) && it.timeRemainingMs > cap) it.copy(timeRemainingMs = cap) else it })
+}
+
+/** Whether some clock's overrun, short of the cap in [before], stands at it in [after]. */
+private fun overrunReachedCap(before: ChessClockState, after: ChessClockState, settings: ChessClockSettings): Boolean {
+    val cap = settings.flagCapMs
+    val fb = settings.flagBehavior
+    if (cap <= 0 || (fb != FlagBehavior.NEGATIVE && fb != FlagBehavior.REVERSE)) return false
+    return after.players.indices.any { i ->
+        val was = before.players.getOrNull(i) ?: return@any false
+        val now = after.players[i]
+        now.isOverrun(fb) && now.timeRemainingMs >= cap && !(was.isOverrun(fb) && was.timeRemainingMs >= cap)
+    }
+}
 
 /**
  * One tick of the running clock, in every mode. [ChessTimerViewModel.tick] calls this and performs
@@ -3263,6 +3309,14 @@ internal class ClockTick(
  * copy of this dispatch, which is how the Hourglass bug went unnoticed in the tests before it.
  */
 internal fun tickClock(state: ChessClockState, delta: Long, settings: ChessClockSettings): ClockTick {
+    val tick = tickClockUncapped(state, delta, settings)
+    val capped = tick.state.capOverrun(settings)
+    val reached = overrunReachedCap(state, capped, settings)
+    if (capped === tick.state && !reached) return tick
+    return ClockTick(capped, tick.cue, tick.coupled, tick.phaseChangedFrom, capReached = reached)
+}
+
+private fun tickClockUncapped(state: ChessClockState, delta: Long, settings: ChessClockSettings): ClockTick {
     val active = state.activePlayer ?: 1
     val s = settings.playerSettings(active)
     if (s.mode == TimerMode.PHASES) return tickPhases(state, delta, settings, s)
