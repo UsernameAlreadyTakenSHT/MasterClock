@@ -209,13 +209,16 @@
     <!-- Settings tabs and dialogs -->
     <string name="settings_tab_modes">Modes</string>
     <!--
-      Not "Comportement": at 12 characters it wraps onto two lines in the bottom tab bar, where
-      "Affichage" at 9 is the longest label that fits. This tab holds flag behaviour, tournament
-      rules, interaction and player count (how the game runs), so "Jeu" is short and accurate,
-      and does not collide with Modes, Affichage or Plus.
+      Not "Comportement": at 12 characters it does not fit the bottom tab bar. This tab holds
+      flag behaviour, tournament rules, interaction and player count (how the game runs), so
+      "Jeu" is short and accurate, and does not collide with Modes, Aspect or Plus.
+
+      "Aspect", not "Affichage": at 9 characters that one was the only label of the bar, in any
+      language, to break at a large font, and once labels shrank to fit, the only one drawn
+      smaller than its neighbours.
     -->
     <string name="settings_tab_behavior">Jeu</string>
-    <string name="settings_tab_display">Affichage</string>
+    <string name="settings_tab_display">Aspect</string>
     <string name="settings_tab_audio">Audio</string>
     <string name="settings_tab_more">Plus</string>
     <string name="settings_tab_omni">Omni</string>

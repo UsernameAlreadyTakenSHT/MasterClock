@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.rotate
@@ -879,7 +880,9 @@ fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boo
             // Scrolled: four players with FIDE's move rows are taller than a phone is wide or, on a
             // small one, than it is high, and it was Back to Game that fell off.
             Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(stringResource(R.string.timer_arbitre_control), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                // One line, shrinking to fit: "Schiedsrichter-Steuerung" is one word to a line
+                // breaker, and lost its last letter to a second line.
+                OneLineText(stringResource(R.string.timer_arbitre_control), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, minSize = with(LocalDensity.current) { 14.dp.toSp() })
                 
                 // One clock for the table, one control: "Player 2 +1m" changed the phase's clock, as
                 // every other player's buttons did.

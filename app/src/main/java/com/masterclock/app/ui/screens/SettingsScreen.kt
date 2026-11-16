@@ -100,16 +100,20 @@ fun SettingsScreen(
         bottomBar = {
             val visibleCategories = SettingsCategory.getVisibleCategories()
             if (visibleCategories.size > 1) {
-                NavigationBar {
-                    visibleCategories.forEach { cat ->
-                        NavigationBarItem(
-                            selected = category == cat,
-                            onClick = { onCategoryChanged(cat) },
-                            icon = { Icon(cat.icon, stringResource(cat.labelRes)) },
-                            // One line, shrinking to fit: at a large font "Affichage" wrapped its
-                            // last letter, and the icon above it rode up out of line with the others.
-                            label = { OneLineText(stringResource(cat.labelRes), style = MaterialTheme.typography.labelMedium, minSize = tabLabelFloor()) }
-                        )
+                // One line each, all at one size, shrinking to fit: at a large font "Affichage"
+                // wrapped its last letter, and the icon above it rode up out of line with the others.
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    val labels = visibleCategories.map { stringResource(it.labelRes) }
+                    val labelStyle = sharedLabelStyle(labels, MaterialTheme.typography.labelMedium, maxWidth / labels.size - 8.dp)
+                    NavigationBar {
+                        visibleCategories.forEachIndexed { i, cat ->
+                            NavigationBarItem(
+                                selected = category == cat,
+                                onClick = { onCategoryChanged(cat) },
+                                icon = { Icon(cat.icon, labels[i]) },
+                                label = { TabLabel(labels[i], labelStyle) }
+                            )
+                        }
                     }
                 }
             }

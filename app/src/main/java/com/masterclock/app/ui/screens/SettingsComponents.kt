@@ -445,7 +445,9 @@ fun ToolCard(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1)
+                // Two lines, then an ellipsis. Held to one, a title too long for the row was cut
+                // where the row ended, with nothing to say so: "Manuel des moteurs de".
+                Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
         if (showDivider) {
@@ -1270,22 +1272,17 @@ fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
         },
         text = {
             Column {
-                PrimaryTabRow(selectedTabIndex = selectedTab) {
-                    tabs.forEachIndexed { index, label ->
-                        Tab(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
-                            // A third tab leaves each one about a third of the dialog, where the
-                            // default label size wrapped "Changelog" onto a second line.
-                            text = {
-                                // softWrap = false used to clip mid-glyph once the label no
-                                // longer fit, which is how "Changelog" lost its tail. It shrinks
-                                // to fit now, and only past its floor ends in an ellipsis -- which
-                                // matters more once the labels are translated, most languages
-                                // being longer.
-                                OneLineText(label, style = MaterialTheme.typography.labelMedium, minSize = tabLabelFloor())
-                            }
-                        )
+                // A third tab leaves each one about a third of the dialog, where the default label
+                // size wrapped "Changelog" onto a second line, and softWrap = false then clipped it
+                // mid-glyph. The three shrink together to fit, and only past their floor end in an
+                // ellipsis -- which matters more once the labels are translated, most languages
+                // being longer. Thirty-two dp is the padding a Tab gives its text.
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    val labelStyle = sharedLabelStyle(tabs, MaterialTheme.typography.labelMedium, maxWidth / tabs.size - 32.dp)
+                    PrimaryTabRow(selectedTabIndex = selectedTab) {
+                        tabs.forEachIndexed { index, label ->
+                            Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { TabLabel(label, labelStyle) })
+                        }
                     }
                 }
 

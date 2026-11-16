@@ -116,12 +116,16 @@ fun PresetsScreen(
         }
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
-            PrimaryTabRow(selectedTabIndex = selectedTab) {
-                // One line, shrinking to fit. Held to one line at its full size, a label was cut
-                // where the tab ended: "Les" for "Les miens", "Dernière" for "Dernières".
-                listOf(R.string.preset_tab_all, R.string.preset_tab_mine, R.string.preset_tab_last_games).forEachIndexed { i, label ->
-                    Tab(selected = selectedTab == i, onClick = { selectedTab = i }) {
-                        OneLineText(stringResource(label), Modifier.padding(horizontal = 6.dp, vertical = 12.dp), style = MaterialTheme.typography.titleSmall, minSize = tabLabelFloor())
+            // One line each, all at one size, shrinking to fit. Held to one line at its full size,
+            // a label was cut where the tab ended: "Les" for "Les miens", "Dernière" for "Dernières".
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val labels = listOf(R.string.preset_tab_all, R.string.preset_tab_mine, R.string.preset_tab_last_games).map { stringResource(it) }
+                val labelStyle = sharedLabelStyle(labels, MaterialTheme.typography.titleSmall, maxWidth / labels.size - 12.dp)
+                PrimaryTabRow(selectedTabIndex = selectedTab) {
+                    labels.forEachIndexed { i, label ->
+                        Tab(selected = selectedTab == i, onClick = { selectedTab = i }) {
+                            TabLabel(label, labelStyle, Modifier.padding(horizontal = 6.dp, vertical = 12.dp))
+                        }
                     }
                 }
             }
