@@ -410,23 +410,22 @@ fun MoreSettingsPage(
         }
 
         SettingsSection(stringResource(R.string.settings_more_danger)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // With no padding at all the labels ran to the border, and past it at a large font.
+            ButtonRow(Modifier.fillMaxWidth()) {
                 OutlinedButton(
                     onClick = { onClearLogs() },
-                    modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                     shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(0.dp)
+                    contentPadding = PaddingValues(horizontal = 12.dp)
                 ) {
                     Text(stringResource(R.string.settings_more_clear_logs), style = MaterialTheme.typography.labelMedium)
                 }
 
                 OutlinedButton(
                     onClick = { onResetSettings() },
-                    modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                     shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(0.dp)
+                    contentPadding = PaddingValues(horizontal = 12.dp)
                 ) {
                     Text(stringResource(R.string.settings_more_reset_settings), style = MaterialTheme.typography.labelMedium)
                 }

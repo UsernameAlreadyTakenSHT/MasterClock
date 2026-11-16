@@ -171,23 +171,26 @@ fun WizardNavigationButtons(
         color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp).navigationBarsPadding(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // Previous at the start and Next at the end while both fit; stacked, Next on top. As a Row
+        // the two met in the middle at a large font, and "Next step" broke onto a second line.
+        ButtonRow(
+            modifier = Modifier.fillMaxWidth().padding(16.dp).navigationBarsPadding(),
+            style = ButtonRowStyle.Ends,
+            primaryLast = true,
         ) {
+            // Half a button's default padding: with all of it the pair was a few dp too wide for a
+            // 360 dp screen at the normal font size, and stacked there too.
+            val navPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
             if (currentStep > 1) {
-                OutlinedButton(onClick = onBack, shape = RoundedCornerShape(12.dp)) {
+                OutlinedButton(onClick = onBack, shape = RoundedCornerShape(12.dp), contentPadding = navPadding) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.omni_cfg_previous))
                 }
-            } else {
-                Spacer(Modifier.width(1.dp))
             }
 
             if (currentStep < totalSteps) {
-                Button(onClick = onNext, shape = RoundedCornerShape(12.dp)) {
+                Button(onClick = onNext, shape = RoundedCornerShape(12.dp), contentPadding = navPadding) {
                     Text(stringResource(R.string.omni_cfg_next_step))
                     Spacer(Modifier.width(8.dp))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
@@ -196,6 +199,7 @@ fun WizardNavigationButtons(
                 Button(
                     onClick = { onPlay() },
                     shape = RoundedCornerShape(12.dp),
+                    contentPadding = navPadding,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Default.PlayArrow, null)

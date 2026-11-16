@@ -382,7 +382,9 @@ private fun TimerConfirmDialog(title: String, message: String, confirm: String, 
             Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text(message, style = MaterialTheme.typography.bodyMedium)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                // "Abbrechen" and "Zurücksetzen" do not fit one line at a large font: the confirm
+                // button's last letter went to a second line. Stacked then, confirm on top.
+                ButtonRow(Modifier.fillMaxWidth(), style = ButtonRowStyle.End, spacing = 0.dp, primaryLast = true) {
                     TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
                     TextButton(onClick = onConfirm) { Text(confirm, color = MaterialTheme.colorScheme.error) }
                 }
@@ -903,10 +905,10 @@ fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boo
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Side by side while both labels fit, stacked when they do not: see ButtonRow.
+                ButtonRow(modifier = Modifier.fillMaxWidth(), spacing = 12.dp) {
                     Button(
-                        onClick = onSave, 
-                        modifier = Modifier.weight(1f),
+                        onClick = onSave,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                         shape = RoundedCornerShape(12.dp)
                     ) { 
@@ -919,8 +921,7 @@ fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boo
                     
                     if (hasSavedClock) {
                         Button(
-                            onClick = onResume, 
-                            modifier = Modifier.weight(1f),
+                            onClick = onResume,
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                             shape = RoundedCornerShape(12.dp)
                         ) { 
