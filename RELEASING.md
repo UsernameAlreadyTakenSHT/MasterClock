@@ -6,6 +6,19 @@ the build still succeeds, the tests still pass, and the wrong thing ships. v0.8.
 
 Work through the list. Commit as you go rather than in one lump at the end.
 
+`tools/bump_version.py` does the mechanical half of steps 1 and 2:
+
+```sh
+python tools/bump_version.py X.Y.Z --fdroid replace   # or append: see the F-Droid row below
+```
+
+It bumps every version number in the table below and lays out the seven places the notes go, each
+holding a marker where the writing is still to be done. It writes nothing unless every file matched
+what it expected, and `--dry-run` lists what it would touch. The notes are still yours to write:
+the script ends by printing the `git grep` that has to come back empty before the tag -- the marker
+is not spelled out here so that this file does not answer that search for ever. The steps below
+stay the reference for what a release needs, and for checking the script's work.
+
 ## 1. Version numbers
 
 | File | Change |
