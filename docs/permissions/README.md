@@ -18,7 +18,7 @@ their document removed in the next release.
 | Document | Rights holder | Sent | Reply |
 |---|---|---|---|
 | Chess | FIDE | 2026-08-02, again 2026-11-16 | — |
-| Draughts (international) | FMJD | 2026-08-02, again 2026-11-16 | **Granted** 2026-11-16, on condition that the copy is kept up to date. |
+| Draughts (international) | FMJD | 2026-08-02, again 2026-11-16 | **Granted** 2026-11-16 — see the conditions below. |
 | Draughts (64) | IDF | 2026-08-02, again 2026-11-16 | — |
 | Shogi | FESA | 2026-08-02, again 2026-11-16 | — |
 | Tafl | World Tafl Federation (Aage Nielsen) | 2026-08-02 | **Granted** 2026-08-04 — see the conditions below. |
@@ -26,8 +26,12 @@ their document removed in the next release.
 
 The five without a reply were asked a second time on 2026-11-16, ahead of the F-Droid submission.
 
-The FMJD answered the same day: the Annexes are a public document and may be used. They change from
-time to time, so the copy in the app has to be replaced when the FMJD publishes a new one.
+## FMJD — the terms we are held to
+
+The FMJD's webmaster granted permission on 2026-11-16: the Annexes are a public document and may be
+used. The document changes from time to time, so bundling is allowed on one condition:
+
+- the copy must be **replaced** whenever the FMJD publishes a new one.
 
 ## Tafl — the terms we are held to
 
