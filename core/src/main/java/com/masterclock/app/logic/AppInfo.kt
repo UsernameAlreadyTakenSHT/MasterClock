@@ -630,24 +630,6 @@ object AppInfo {
             detail = "World Tafl Federation",
             url = "https://aagenielsen.dk/",
         ),
-        CreditEntry(
-            title = "Quoridor",
-            detail = "© & ® 1997 Gigamic, from a concept by Mirko Marchesi",
-            url = "https://www.gigamic.com/",
-        ),
-        CreditEntry(
-            title = "Abalone",
-            detail = "© Abalone S.A., France — registered trademark, patent DM/012362. Distributed by FoxMind. All rights reserved",
-            url = "https://www.foxmind.com/",
-        ),
-        CreditEntry(
-            title = "Hex",
-            detail = "David Beckwith, June 2021",
-        ),
-        CreditEntry(
-            title = "Santorini",
-            detail = "© 2007 Dr. Gordon Hamilton — may be reproduced for non-commercial purposes",
-        ),
     )
 
     /**
@@ -793,7 +775,7 @@ object AppInfo {
     /**
      * [RULES_CREDITS], or nothing at all outside the Complete build.
      *
-     * The ten rulebooks live in `core`'s `res/raw` and so are compiled into every consumer, but the
+     * The rulebooks live in `core`'s `res/raw` and so are compiled into every consumer, but the
      * Rules screen that opens them is `app/src/complete` only -- the reduced source set has a stub
      * and paper has no such screen -- so the resource shrinker strips every PDF from the other four
      * APKs. Their `resources.txt` says `raw:rules_chess... is not reachable`. Crediting a rulebook

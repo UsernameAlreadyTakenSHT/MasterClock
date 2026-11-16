@@ -103,22 +103,9 @@ fun RulesScreen(onBack: () -> Unit) {
                             open(CoreR.raw.rules_tafl, "tafl.pdf")
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RuleButton("Quoridor", Modifier.weight(1f)) {
-                            open(CoreR.raw.rules_quoridor, "quoridor.pdf")
-                        }
-                        RuleButton("Abalone", Modifier.weight(1f)) {
-                            open(CoreR.raw.rules_abalone, "abalone.pdf")
-                        }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RuleButton("Hex", Modifier.weight(1f)) {
-                            open(CoreR.raw.rules_hex, "hex.pdf")
-                        }
-                        RuleButton("Santorini", Modifier.weight(1f)) {
-                            open(CoreR.raw.rules_santorini, "santorini.pdf")
-                        }
-                    }
+                    // Quoridor, Abalone, Hex and Santorini were here. Their rulebooks are published
+                    // under their rights holders' own licences, and the requests for permission to
+                    // bundle them, sent on 2026-08-02, had no reply. See docs/permissions/README.md.
                 }
             }
 

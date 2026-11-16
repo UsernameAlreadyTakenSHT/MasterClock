@@ -1,6 +1,6 @@
 # Permission requests — bundled rules documents
 
-MasterClock bundles ten rulebooks in `core/src/main/res/raw/` so the "Some rules" screen works
+MasterClock bundles six rulebooks in `core/src/main/res/raw/` so the "Some rules" screen works
 offline. Every one is credited in-app (version footer → Credits → Rules documents) and in the
 README.
 
@@ -17,16 +17,25 @@ their document removed in the next release.
 
 | Document | Rights holder | Sent | Reply |
 |---|---|---|---|
-| Abalone | Abalone S.A. / FoxMind | 2026-08-02 | — |
-| Quoridor | Gigamic | 2026-08-02 | — |
-| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | 2026-08-02 | — |
+| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | 2026-08-02, again 2026-11-16 | — |
 | Tafl | World Tafl Federation (Aage Nielsen) | 2026-08-02 | **Granted** 2026-08-04 — see the conditions below. |
-| Hex | David Beckwith | 2026-08-02 | — |
-| Chess | FIDE | 2026-08-02 | — |
-| Draughts (international) | FMJD | 2026-08-02 | — |
-| Draughts (64) | IDF | 2026-08-02 | — |
-| Shogi | FESA | 2026-08-02 | — |
-| Santorini | Dr. Gordon Hamilton | 2026-08-02 | **Already granted** — the document states it "may be reproduced for non-commercial purposes". A courtesy note only. |
+| Chess | FIDE | 2026-08-02, again 2026-11-16 | — |
+| Draughts (international) | FMJD | 2026-08-02, again 2026-11-16 | — |
+| Draughts (64) | IDF | 2026-08-02, again 2026-11-16 | — |
+| Shogi | FESA | 2026-08-02, again 2026-11-16 | — |
+
+The five without a reply were asked a second time on 2026-11-16, ahead of the F-Droid submission.
+
+## Removed: Quoridor, Abalone, Hex, Santorini
+
+These four rulebooks were bundled until 2026-11-16 and have been taken out of the app, its credits
+and the README. Each is published under its rights holder's own licence -- Gigamic for Quoridor,
+Abalone S.A. / FoxMind for Abalone, David Beckwith for Hex, Dr. Gordon Hamilton for Santorini --
+and the requests for permission to bundle them, sent on 2026-08-02, had no reply. Santorini's
+document allows reproduction for non-commercial purposes only, which is not a licence a store such
+as F-Droid can pass on.
+
+A grant from one of these holders would be the reason to bring its document back; nothing else is.
 
 ## Tafl — the terms we are held to
 

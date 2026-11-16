@@ -160,6 +160,14 @@ android {
     lint {
         checkDependencies = true
     }
+
+    // AGP writes into every APK a list of the app's dependencies, encrypted with a key only Google
+    // holds: Play reads it, nobody else can. F-Droid will not distribute a blob it cannot inspect,
+    // and nothing here is published through Play, so it is left out of the APK and the bundle.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 // compileOptions above only sets the language level and the class-file version; it does not decide

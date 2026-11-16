@@ -1,3 +1,7 @@
+AntiFeatures:
+  NonFreeAssets:
+    en-US: The four sounds (gong, beep, final beep, switch) come from Pixabay, under the
+      Pixabay Content License, which allows their use in an app but is not a free licence.
 Categories:
   - Game Helper
   - Timer
