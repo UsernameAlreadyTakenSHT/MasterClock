@@ -289,12 +289,13 @@ fun MoreSettingsPage(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Side by side while each label's longest word fits its half, stacked when one does
+                // not: "Importieren / scannen" lost the last letter of its first word at a large font.
+                ButtonRow(Modifier.fillMaxWidth(), spacing = 12.dp, wrapLabels = true) {
                     Button(
                         onClick = { showExportPopup = true },
-                        modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(vertical = 12.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                     ) {
                         Icon(Icons.Default.FileUpload, null)
                         Spacer(Modifier.width(8.dp))
@@ -302,9 +303,8 @@ fun MoreSettingsPage(
                     }
                     Button(
                         onClick = { showImportPopup = true },
-                        modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(vertical = 12.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                     ) {
                         Icon(Icons.Default.FileDownload, null)
                         Spacer(Modifier.width(8.dp))

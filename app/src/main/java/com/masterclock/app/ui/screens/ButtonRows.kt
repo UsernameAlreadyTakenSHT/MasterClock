@@ -27,6 +27,10 @@ enum class ButtonRowStyle {
  *
  * Stacked, [primaryLast] puts the last button on top: the action a reader came for, which sits at
  * the end of a row and at the head of a column.
+ *
+ * [wrapLabels] is for labels of several words, which may take two lines side by side: what is
+ * asked of a button is then the width of its longest word, so that "Exporter / partager" wraps at
+ * the slash and stays in the row, while "Importieren" stacks sooner than lose its last letter.
  */
 @Composable
 fun ButtonRow(
@@ -34,6 +38,7 @@ fun ButtonRow(
     style: ButtonRowStyle = ButtonRowStyle.Fill,
     spacing: Dp = 8.dp,
     primaryLast: Boolean = false,
+    wrapLabels: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     Layout(content = content, modifier = modifier) { measurables, constraints ->
@@ -42,15 +47,18 @@ fun ButtonRow(
         val count = measurables.size
         val bounded = constraints.hasBoundedWidth
         val width = constraints.maxWidth
-        val wanted = measurables.map { it.maxIntrinsicWidth(Constraints.Infinity) }
+        val wanted = measurables.map { if (wrapLabels) it.minIntrinsicWidth(Constraints.Infinity) else it.maxIntrinsicWidth(Constraints.Infinity) }
         val share = if (bounded) (width - gap * (count - 1)) / count else 0
         val fits = !bounded || when (style) {
             ButtonRowStyle.Fill -> wanted.all { it <= share }
             ButtonRowStyle.Ends, ButtonRowStyle.End -> wanted.sum() + gap * (count - 1) <= width
         }
         if (fits) {
+            // Equal heights under Fill: with wrapLabels one label may take two lines and its
+            // neighbour one.
+            val fillHeight = if (style == ButtonRowStyle.Fill && bounded) measurables.maxOf { it.maxIntrinsicHeight(share) } else 0
             val placeables = measurables.mapIndexed { i, m ->
-                if (style == ButtonRowStyle.Fill && bounded) m.measure(Constraints.fixedWidth(share))
+                if (style == ButtonRowStyle.Fill && bounded) m.measure(Constraints.fixed(share, fillHeight))
                 else m.measure(Constraints(maxWidth = wanted[i]))
             }
             val used = placeables.sumOf { it.width } + gap * (count - 1)

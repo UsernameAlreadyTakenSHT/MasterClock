@@ -341,7 +341,6 @@
     <string name="omni_cfg_previous">Vorige</string>
     <string name="omni_cfg_next_step">Volgende stap</string>
     <string name="omni_cfg_launch_game">Partij starten</string>
-    <string name="omni_cfg_launch_station">STARTCENTRALE</string>
     <string name="omni_cfg_ready">Klaar om te spelen</string>
     <string name="omni_cfg_summary">Samenvatting</string>
 

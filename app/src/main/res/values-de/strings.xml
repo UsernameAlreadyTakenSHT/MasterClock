@@ -342,7 +342,6 @@
     <string name="omni_cfg_previous">Zurück</string>
     <string name="omni_cfg_next_step">Nächster Schritt</string>
     <string name="omni_cfg_launch_game">Partie starten</string>
-    <string name="omni_cfg_launch_station">STARTZENTRALE</string>
     <string name="omni_cfg_ready">Bereit zum Spielen</string>
     <string name="omni_cfg_summary">Zusammenfassung</string>
 

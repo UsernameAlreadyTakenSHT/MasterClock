@@ -354,7 +354,6 @@
     <string name="omni_cfg_previous">Anterior</string>
     <string name="omni_cfg_next_step">Paso siguiente</string>
     <string name="omni_cfg_launch_game">Iniciar la partida</string>
-    <string name="omni_cfg_launch_station">LANZAMIENTO</string>
     <string name="omni_cfg_ready">Listo para jugar</string>
     <string name="omni_cfg_summary">Resumen</string>
 

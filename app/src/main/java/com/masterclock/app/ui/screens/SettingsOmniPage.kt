@@ -129,7 +129,7 @@ fun SettingsOmniPage(
                             4 -> StepTurns(settings) { onSettingsChanged(it) }
                             5 -> StepPhases(settings) { onSettingsChanged(it) }
                             6 -> StepAdvancedRules(settings) { onSettingsChanged(it) }
-                            7 -> StepFinalReview(settings, { onSettingsChanged(it) }, { if (validatePhases()) onPlay() })
+                            7 -> StepFinalReview(settings) { onSettingsChanged(it) }
                         }
                         Spacer(Modifier.height(100.dp))
                     }
@@ -929,7 +929,7 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
 }
 
 @Composable
-fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit, onPlay: () -> Unit) {
+fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
     Text(stringResource(R.string.omni_cfg_ready), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
     SettingsSection(stringResource(R.string.omni_cfg_launch_countdown)) {
@@ -965,8 +965,6 @@ fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) ->
             Text(stringResource(R.string.omni_cfg_summary_order, settings.playerOrderType.label()))
         }
     }
-
-    Button(onClick = onPlay, modifier = Modifier.fillMaxWidth().height(64.dp), shape = RoundedCornerShape(16.dp)) {
-        Icon(Icons.Default.PlayArrow, null); Spacer(Modifier.width(12.dp)); Text(stringResource(R.string.omni_cfg_launch_station), fontWeight = FontWeight.Black)
-    }
+    // No button of its own to start the session: "Launch Game" in the bar below is the one. A large
+    // "LAUNCH STATION" stood here above it and did the same thing.
 }

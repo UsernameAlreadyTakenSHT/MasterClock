@@ -427,8 +427,8 @@ They use the sounds and the volume set in [Audio](audio.md).
 |---|---|---|
 | **Launch Countdown** | 10s | **Off**, **10s**, **30s**, **1m**, **2m** or **5m** of **GET READY** before the first turn. No clock runs during it. |
 
-A **Summary** recalls the players, the games, the rounds per game and the order. **LAUNCH STATION**
-starts the session. If one is already under way, the app asks: **RESUME** it as it stands, or start
+A **Summary** recalls the players, the games, the rounds per game and the order. **Launch Game**,
+in the bar at the bottom, starts the session. If one is already under way, the app asks: **RESUME** it as it stands, or start
 a **NEW SESSION** with the settings as they are now.
 
 ### The Omni clock
