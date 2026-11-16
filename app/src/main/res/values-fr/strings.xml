@@ -642,6 +642,8 @@
     <string name="arbiter_add_second">%1$s, plus 1 seconde</string>
     <string name="arbiter_remove_move">Retirer un coup à %1$s</string>
     <string name="arbiter_add_move">Ajouter un coup à %1$s</string>
+    <string name="arbiter_step_minute">1 min</string>
+    <string name="arbiter_step_second">1 s</string>
     <string name="settings_horiz_left">Gauche</string>
     <string name="settings_horiz_right">Droite</string>
     <string name="omni_in_reserve">+%1$s en réserve</string>

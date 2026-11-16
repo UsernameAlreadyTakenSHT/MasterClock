@@ -617,6 +617,8 @@
     <string name="arbiter_add_second">%1$s, plus 1 Sekunde</string>
     <string name="arbiter_remove_move">Einen Zug von %1$s abziehen</string>
     <string name="arbiter_add_move">Einen Zug zu %1$s hinzufügen</string>
+    <string name="arbiter_step_minute">1 min</string>
+    <string name="arbiter_step_second">1 s</string>
     <string name="settings_horiz_left">Links</string>
     <string name="settings_horiz_right">Rechts</string>
     <string name="omni_in_reserve">+%1$s in Reserve</string>

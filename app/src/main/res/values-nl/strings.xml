@@ -616,6 +616,8 @@
     <string name="arbiter_add_second">%1$s, plus 1 seconde</string>
     <string name="arbiter_remove_move">Haal een zet af bij %1$s</string>
     <string name="arbiter_add_move">Tel een zet op bij %1$s</string>
+    <string name="arbiter_step_minute">1 min</string>
+    <string name="arbiter_step_second">1 s</string>
     <string name="settings_horiz_left">Links</string>
     <string name="settings_horiz_right">Rechts</string>
     <string name="omni_in_reserve">+%1$s in reserve</string>

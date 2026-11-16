@@ -313,6 +313,10 @@ fun TimerScreen(
                 canAdjust = { viewModel.isTimeAdjustable(it) },
                 moveCountOf = { idx -> if (viewModel.isMoveCountAdjustable(idx)) state.players.getOrNull(idx - 1)?.moveCount else null },
                 onAdjustMoves = { idx, delta -> viewModel.adjustMoveCount(idx, delta) },
+                // The panel covers the faces, so the arbiter pressed blind and closed it to see what
+                // a correction had done. Each player's reading stands over their buttons, as their
+                // face shows it; the moves too, where no row of their own already counts them.
+                readingOf = { idx -> ArbitreReading(state, idx, viewModel.playerMode(idx), settings, showMoves = !viewModel.isTableClock() && !viewModel.isMoveCountAdjustable(idx)) },
                 onSave = { viewModel.saveClockForLater() },
                 onResume = { viewModel.resumeSavedClock() },
                 onClose = { viewModel.toggleArbitreMode() }
@@ -861,7 +865,7 @@ fun ControlBarItem(onClick: () -> Unit, rotation: Float, colors: IconButtonColor
 }
 
 @Composable
-fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, canAdjust: (Int) -> Boolean, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit, moveCountOf: (Int) -> Int? = { null }, onAdjustMoves: (Int, Int) -> Unit = { _, _ -> }) {
+fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boolean, contentRotation: Float, onAdjust: (Int, Long) -> Unit, canAdjust: (Int) -> Boolean, onSave: () -> Unit, onResume: () -> Unit, onClose: () -> Unit, moveCountOf: (Int) -> Int? = { null }, onAdjustMoves: (Int, Int) -> Unit = { _, _ -> }, readingOf: @Composable (Int) -> Unit = {}) {
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)).clickable(enabled = false) {}, contentAlignment = Alignment.Center) {
         Surface(
             shape = RoundedCornerShape(24.dp), 
@@ -877,18 +881,18 @@ fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boo
                 // One clock for the table, one control: "Player 2 +1m" changed the phase's clock, as
                 // every other player's buttons did.
                 if (tableClock) {
-                    ArbitrePlayerControl(stringResource(R.string.arbiter_clock), enabled = canAdjust(1)) { onAdjust(1, it) }
+                    ArbitrePlayerControl(stringResource(R.string.arbiter_clock), enabled = canAdjust(1), reading = { readingOf(1) }) { onAdjust(1, it) }
                 } else Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 1), modifier = Modifier.weight(1f), enabled = canAdjust(1), moveCount = moveCountOf(1), onAdjustMoves = { onAdjustMoves(1, it) }) { onAdjust(1, it) }
-                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 2), modifier = Modifier.weight(1f), enabled = canAdjust(2), moveCount = moveCountOf(2), onAdjustMoves = { onAdjustMoves(2, it) }) { onAdjust(2, it) }
+                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 1), modifier = Modifier.weight(1f), enabled = canAdjust(1), moveCount = moveCountOf(1), onAdjustMoves = { onAdjustMoves(1, it) }, reading = { readingOf(1) }) { onAdjust(1, it) }
+                        ArbitrePlayerControl(stringResource(R.string.common_player_n, 2), modifier = Modifier.weight(1f), enabled = canAdjust(2), moveCount = moveCountOf(2), onAdjustMoves = { onAdjustMoves(2, it) }, reading = { readingOf(2) }) { onAdjust(2, it) }
                     }
                     
                     if (numberOfPlayers >= 3) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            ArbitrePlayerControl(stringResource(R.string.common_player_n, 3), modifier = Modifier.weight(1f), enabled = canAdjust(3), moveCount = moveCountOf(3), onAdjustMoves = { onAdjustMoves(3, it) }) { onAdjust(3, it) }
+                            ArbitrePlayerControl(stringResource(R.string.common_player_n, 3), modifier = Modifier.weight(1f), enabled = canAdjust(3), moveCount = moveCountOf(3), onAdjustMoves = { onAdjustMoves(3, it) }, reading = { readingOf(3) }) { onAdjust(3, it) }
                             if (numberOfPlayers == 4) {
-                                ArbitrePlayerControl(stringResource(R.string.common_player_n, 4), modifier = Modifier.weight(1f), enabled = canAdjust(4), moveCount = moveCountOf(4), onAdjustMoves = { onAdjustMoves(4, it) }) { onAdjust(4, it) }
+                                ArbitrePlayerControl(stringResource(R.string.common_player_n, 4), modifier = Modifier.weight(1f), enabled = canAdjust(4), moveCount = moveCountOf(4), onAdjustMoves = { onAdjustMoves(4, it) }, reading = { readingOf(4) }) { onAdjust(4, it) }
                             } else {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
@@ -936,21 +940,57 @@ fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boo
     }
 }
 
+/**
+ * A player's clock as their face shows it, for the arbiter's panel, which covers the faces.
+ *
+ * Through TimerDisplay and displayedTimeMs, so it is the face's reading to the digit: the same
+ * tenths, the same sign past zero, the table's clock where the table has one. Hidden stays hidden
+ * -- the panel is on the players' screen, and the arbiter's glance would be theirs too -- and a
+ * mode that counts moves has no time to show.
+ */
+@Composable
+private fun ArbitreReading(state: ChessClockState, playerIndex: Int, mode: TimerMode, settings: ChessClockSettings, showMoves: Boolean) {
+    val player = state.players.getOrNull(playerIndex - 1) ?: return
+    val style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+    when {
+        mode.name.startsWith("MOVE_COUNTS") -> Unit
+        mode == TimerMode.HIDDEN && !player.isOutOfTime -> Text("??:??", style = style)
+        else -> {
+            val shownMs = displayedTimeMs(state, player, mode)
+            // One reading for TalkBack, said as the face says it: TimerDisplay draws each unit as
+            // its own text, and here they were three stops, "09", ":" and "56".
+            val spoken = spokenDurationText(kotlin.math.abs(shownMs))
+            Box(Modifier.clearAndSetSemantics { contentDescription = spoken }) {
+                TimerDisplay(timeMs = shownMs, style = style, settings = settings, isNegative = player.isNegative)
+            }
+        }
+    }
+    if (showMoves) Text(stringResource(R.string.timer_moves, player.moveCount), style = MaterialTheme.typography.labelMedium)
+}
+
 @Composable
 // [enabled] is off where a time means nothing -- a move count -- rather than the buttons doing nothing.
 // Each button says whose clock and by how much. They read "-1m", "+1m", "-1s", "+1s" in English, in
 // every language, and never which of the players' clocks the button would change.
+// That is what TalkBack is told. On screen the four were a bare - + - +, minutes told from seconds
+// by which row came first: each pair now stands under its step, as the moves stand under theirs.
+// The step is over the buttons rather than in them because two buttons side by side have 140dp
+// at 360dp, which "-1 min" twice does not fit in at a large font.
 // [moveCount] is the player's FIDE move count when the arbiter may correct it, null otherwise.
-fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, moveCount: Int? = null, onAdjustMoves: (Int) -> Unit = {}, onAdjust: (Long) -> Unit) {
+// [reading] is what the player's face shows, which the panel is covering; see ArbitreReading.
+fun ArbitrePlayerControl(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, moveCount: Int? = null, onAdjustMoves: (Int) -> Unit = {}, reading: (@Composable () -> Unit)? = null, onAdjust: (Long) -> Unit) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        reading?.invoke()
         Spacer(Modifier.height(8.dp))
+        Text(stringResource(R.string.arbiter_step_minute), style = MaterialTheme.typography.labelMedium)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { 
             FilledTonalIconButton(onClick = { onAdjust(-60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_minute, label)) }
             FilledTonalIconButton(onClick = { onAdjust(60_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_minute, label)) }
         }
         Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { 
+        Text(stringResource(R.string.arbiter_step_second), style = MaterialTheme.typography.labelMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilledTonalIconButton(onClick = { onAdjust(-1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, stringResource(R.string.arbiter_remove_second, label)) }
             FilledTonalIconButton(onClick = { onAdjust(1_000) }, enabled = enabled, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, stringResource(R.string.arbiter_add_second, label)) }
         }

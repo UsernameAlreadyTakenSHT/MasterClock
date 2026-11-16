@@ -4960,6 +4960,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     /** Whether the arbiter's ±1m/±1s means anything for this player: a move count is not a time. */
     fun isTimeAdjustable(playerIndex: Int): Boolean = isTimeAdjustableMode(getPlayerSettings(playerIndex).mode)
 
+    /** The mode [playerIndex] plays in, their own when each player has theirs: what [displayedTimeMs] asks for. */
+    fun playerMode(playerIndex: Int): TimerMode = getPlayerSettings(playerIndex).mode
+
     /**
      * Called from [tick], which runs on the main thread, so nothing here may encode on the caller.
      *

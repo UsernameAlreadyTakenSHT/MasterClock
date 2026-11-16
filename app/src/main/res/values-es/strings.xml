@@ -634,6 +634,8 @@
     <string name="arbiter_add_second">%1$s, más 1 segundo</string>
     <string name="arbiter_remove_move">Quitar una jugada a %1$s</string>
     <string name="arbiter_add_move">Añadir una jugada a %1$s</string>
+    <string name="arbiter_step_minute">1 min</string>
+    <string name="arbiter_step_second">1 s</string>
     <string name="settings_horiz_left">Izquierda</string>
     <string name="settings_horiz_right">Derecha</string>
     <string name="omni_in_reserve">+%1$s en reserva</string>
