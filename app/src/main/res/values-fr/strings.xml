@@ -28,7 +28,7 @@
     <string name="common_remove">Retirer</string>
     <string name="common_select">Sélectionner</string>
     <string name="common_optional">Facultatif</string>
-    <string name="common_off">Aucune</string>
+    <string name="common_off">Non</string>
 
     <!-- Presets -->
     <string name="preset_title">Préréglages</string>
