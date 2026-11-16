@@ -62,7 +62,12 @@ fun AudioSettingsPage(
         SettingsSection(stringResource(R.string.settings_sound)) {
             Column {
                 BehaviorSwitch(stringResource(R.string.settings_play_switch_sound), currentSettings.playSwitchSound, topRounded = true) { onSettingsChanged(currentSettings.copy(playSwitchSound = it)) }
-                BehaviorSwitch(stringResource(R.string.settings_voice_announcements), currentSettings.voiceAnnouncementsEnabled, bottomRounded = true) { onSettingsChanged(currentSettings.copy(voiceAnnouncementsEnabled = it)) }
+                BehaviorSwitch(stringResource(R.string.settings_voice_announcements), currentSettings.voiceAnnouncementsEnabled) { onSettingsChanged(currentSettings.copy(voiceAnnouncementsEnabled = it)) }
+                // Two places kept for what is not built yet: the byoyomi seconds read aloud, as a
+                // shogi timekeeper reads them, and reading them in Japanese whatever the app's
+                // language. Off and unanswering until they are; nothing is stored.
+                BehaviorSwitch(stringResource(R.string.settings_spoken_byoyomi_soon), false, enabled = false) {}
+                BehaviorSwitch(stringResource(R.string.settings_in_japanese_soon), false, enabled = false, bottomRounded = true) {}
             }
         }
 

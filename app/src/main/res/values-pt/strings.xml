@@ -273,6 +273,8 @@
     <!-- Settings: Audio -->
     <string name="settings_sound">Som</string>
     <string name="settings_voice_announcements">Anúncios de voz</string>
+    <string name="settings_spoken_byoyomi_soon">Byoyomi falado (em breve)</string>
+    <string name="settings_in_japanese_soon">Em japonês (em breve)</string>
     <string name="settings_timer_alerts">Alertas do relógio</string>
     <string name="settings_countdown_beep">Bip da contagem decrescente</string>
     <string name="settings_triple_beep">Bip triplo ao esgotar o tempo</string>
