@@ -22,9 +22,10 @@ their document removed in the next release.
 | Draughts (64) | IDF | 2026-08-02, again 2026-11-16 | — |
 | Shogi | FESA | 2026-08-02, again 2026-11-16 | — |
 | Tafl | World Tafl Federation (Aage Nielsen) | 2026-08-02 | **Granted** 2026-08-04 — see the conditions below. |
-| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | 2026-08-02, again 2026-11-16 | — |
+| Nine Men's Morris | Kanare Kato (Kanare_Abstract) | 2026-08-02, again 2026-11-16 | **Granted** 2026-11-16 — see the conditions below. |
 
 The five without a reply were asked a second time on 2026-11-16, ahead of the F-Droid submission.
+Two answered the same day, the FMJD and Kanare Kato; FIDE, the IDF and FESA have not.
 
 ## FMJD — the terms we are held to
 
@@ -42,3 +43,9 @@ Bundling is allowed as a second choice, and only on conditions:
 - the copy must be **unmodified**,
 - **proper credit** must be given,
 - a **link to aagenielsen.dk** must appear **both in the app and in this project's README**.
+
+## Nine Men's Morris — the terms we are held to
+
+Kanare Kato granted permission on 2026-11-16: the rulebook may be redistributed, on one condition:
+
+- its content must be **unaltered**.
