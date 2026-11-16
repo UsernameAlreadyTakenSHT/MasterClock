@@ -175,6 +175,12 @@ private class MicRecorder(context: android.content.Context) : VoiceRecorder {
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
         recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
         recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+        // Said outright, because left unsaid MediaRecorder falls back to telephone quality -- a
+        // few kHz at a dozen kbit/s -- and every voice note sounded like a bad line whatever the
+        // microphone. Mono at 64 kbit/s is a clear voice for about half a megabyte a minute.
+        recorder.setAudioSamplingRate(44_100)
+        recorder.setAudioEncodingBitRate(64_000)
+        recorder.setAudioChannels(1)
         recorder.setOutputFile(outputPath)
         recorder.prepare()
         recorder.start()
