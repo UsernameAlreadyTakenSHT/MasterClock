@@ -316,7 +316,12 @@ internal fun computeOmniAdvance(
         if (turnDone) {
             // A LOOP round ends when its round clock does, so it loops only with one running: with
             // the round clock off, or a round of 0:00, Next went round the same players for ever.
-            val roundCanEnd = settings.useRoundClock &&
+            // Nor with its clock already run out: it is the clock reaching zero that ends the loop, and
+            // one already there never reaches it again. A round whose clock had run out, then set to
+            // loop on a paused session -- or a round of 0:00 then given a time -- went round for ever,
+            // with Reset the only way out. In a session nobody edited the clock's last tick ends the
+            // round before Next can find it at zero, which is why this never showed in play.
+            val roundCanEnd = settings.useRoundClock && state.currentRoundTimeMs > 0 &&
                 getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = state.currentRoundIndex) > 0
             if (currentRound.roundEndBehavior == RoundEndBehavior.LOOP && roundCanEnd && forceLevel != "GAME" && forceLevel != "ROUND") {
                 nextTurnIdx = 0

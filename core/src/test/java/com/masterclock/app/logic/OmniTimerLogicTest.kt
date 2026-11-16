@@ -104,7 +104,9 @@ class OmniTimerLogicTest {
             timeBankScope = TimeBankScope.TURN_TO_TURN,
         )
         // P1 ends with 0:20 left, P2 with 0:05: P1's next turn starts at 1:00 + 0:20.
-        val p2Turn = computeOmniAdvance(OmniState(turnCounterInRound = 0, currentTurnTimeMs = 20_000), settings)
+        // With time on the round's clock, as a looping round always has while it loops: at zero it
+        // has ended, and Next leaves it.
+        val p2Turn = computeOmniAdvance(OmniState(turnCounterInRound = 0, currentTurnTimeMs = 20_000, currentRoundTimeMs = round.durationMs), settings)
         assertEquals(1, p2Turn.currentPlayerIndex)
         assertEquals(60_000, p2Turn.currentTurnTimeMs)
         val p1Again = computeOmniAdvance(p2Turn.copy(isInTransition = false, currentTurnTimeMs = 5_000), settings)
@@ -115,6 +117,19 @@ class OmniTimerLogicTest {
         assertEquals(65_000, p2Again.currentTurnTimeMs)
         val p1Third = computeOmniAdvance(p2Again.copy(isInTransition = false, currentTurnTimeMs = 0), settings)
         assertEquals(60_000, p1Third.currentTurnTimeMs)
+    }
+
+    @Test
+    fun `a looping round whose clock has run out is left by Next`() {
+        // What an edit to a paused session makes: the round's clock ran out while it was an ordinary
+        // round, and then the round was set to loop. Nothing brings that clock to zero a second time,
+        // so nothing ended the loop.
+        val round = OmniRoundSettings(turnDurationMs = 60_000, roundEndBehavior = RoundEndBehavior.LOOP)
+        val settings = OmniSettings(games = listOf(OmniGameSettings(rounds = listOf(round, round))), numberOfPlayers = 2)
+        val lastTurn = OmniState(turnCounterInRound = 1, currentPlayerIndex = 1, currentRoundTimeMs = 0)
+        val next = computeOmniAdvance(lastTurn, settings)
+        assertEquals(1, next.currentRoundIndex)
+        assertEquals(0, next.roundPasses)
     }
 
     @Test
