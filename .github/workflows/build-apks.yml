@@ -22,8 +22,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # By default checkout writes this job's token into .git/config, where every later step can
-      # read it -- including the Gradle build below, which runs hundreds of third-party plugins and
+      # By default checkout leaves this job's token on the runner for git to use -- in .git/config
+      # up to v5, in a file that config points to since v6 -- where every later step can read
+      # it, including the Gradle build below, which runs hundreds of third-party plugins and
       # libraries. That token holds contents:write: enough to push to the repository or rewrite a
       # release. Nothing after this step uses git with credentials: the release action talks to the
       # API with the token passed as its input.
