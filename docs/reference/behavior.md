@@ -10,8 +10,8 @@ What a clock reaching zero means. One choice of four; *Freeze* by default.
 
 | Setting | At zero | The game |
 |---|---|---|
-| **Freeze** | The clock stops at 0:00 and the player is out. | Over as soon as one player is out. |
-| **Flag** | The player is out, and their turn is skipped from then on. | Over when one player is left. The same as Freeze with two players; with three or four the others play on. |
+| **Freeze** | The clock stops at 0:00 and the player is out. | Over as soon as one player is out: every clock stops. |
+| **Flag** | The first clock to run out is flagged: that player has lost, and their face turns to the loss colour. | Not over. Turns still alternate, as at a chess clock: the flagged player's clock stays at 0:00 on their turn, and their press starts the next clock. A clock that reaches zero after the first stops at 0:00 without being flagged. The game is over when every clock has run out. |
 | **Negative** | The clock goes on below zero, with a minus sign. | Not over: play goes on and the overrun is counted. |
 | **Reverse** | The clock counts back up from zero, with no sign. | Not over, as under Negative. |
 

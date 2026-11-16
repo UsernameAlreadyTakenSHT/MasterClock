@@ -139,8 +139,8 @@ in three or four faces. With three, **Single player at top** chooses whether the
 top or at the bottom. A drawing of the screen in the settings shows who sits where and lets the
 seats be changed.
 
-Turns go round the table. Under the Flag behavior a player who is out is skipped, and the game goes
-on until one is left.
+Turns go round the table. Under the Flag behavior the first player out is flagged and keeps their
+turn, with a clock that no longer runs; the game goes on until every clock has run out.
 
 ## The E-Ink app
 

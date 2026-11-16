@@ -30,9 +30,28 @@ class GameOverTest {
     }
 
     @Test
-    fun `under FLAG the game is over only when one player is left`() {
+    fun `under FLAG the game is over only when every clock has run out`() {
         assertFalse(isGameOver(state(true, false, false), FlagBehavior.FLAG, 3))
-        assertTrue(isGameOver(state(true, true, false), FlagBehavior.FLAG, 3))
+        // One player left, with time: they play on. It was the end of the game, and with two players
+        // that made the first flag the end -- FREEZE under another name.
+        assertFalse(isGameOver(state(true, true, false), FlagBehavior.FLAG, 3))
+        assertFalse(isGameOver(state(true, false), FlagBehavior.FLAG, 2))
+        assertTrue(isGameOver(state(true, true).copy(firstToFlag = 1), FlagBehavior.FLAG, 2))
+        assertTrue(isGameOver(state(true, true, true).copy(firstToFlag = 2), FlagBehavior.FLAG, 3))
+    }
+
+    @Test
+    fun `under FLAG only the first clock to run out is flagged`() {
+        val both = state(true, true).copy(firstToFlag = 1)
+        assertTrue(isFlagged(both, 1, FlagBehavior.FLAG))
+        // Out of time after the other had lost on it: stopped at zero, and not marked.
+        assertFalse(isFlagged(both, 2, FlagBehavior.FLAG))
+        assertFalse(isFlagged(state(true, false).copy(firstToFlag = 1), 2, FlagBehavior.FLAG))
+        // Under every other behaviour whoever is out is flagged.
+        for (other in listOf(FlagBehavior.FREEZE, FlagBehavior.NEGATIVE, FlagBehavior.REVERSE)) {
+            assertTrue(other.name, isFlagged(both, 1, other))
+            assertTrue(other.name, isFlagged(both, 2, other))
+        }
     }
 
     @Test
@@ -48,21 +67,12 @@ class GameOverTest {
         assertFalse(isGameOver(state(true, true).copy(firstToFlag = 1), FlagBehavior.NEGATIVE, 2))
     }
 
-    private val globalShared = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL_SHARED)
-
     @Test
-    fun `the turn passes on from a player Global Shared's move clock eliminated`() {
-        val settings = ChessClockSettings(main = globalShared, numberOfPlayers = 3, flagBehavior = FlagBehavior.FLAG)
-        assertTrue(turnPassesFromEliminated(state(true, false, false), settings, TimerMode.MOVE_TIMER_GLOBAL_SHARED))
-        assertFalse(turnPassesFromEliminated(state(false, true, false), settings, TimerMode.MOVE_TIMER_GLOBAL_SHARED))
-        assertFalse(turnPassesFromEliminated(state(true, true, false), settings, TimerMode.MOVE_TIMER_GLOBAL_SHARED)) // game over
-    }
-
-    @Test
-    fun `the turn stays put on the table's own clock and outside FLAG`() {
-        val settings = ChessClockSettings(main = globalShared, numberOfPlayers = 3, flagBehavior = FlagBehavior.FLAG)
-        assertFalse(turnPassesFromEliminated(state(true, false, false), settings, TimerMode.MOVE_TIMER_SHARED))
-        assertFalse(turnPassesFromEliminated(state(true, false, false), settings.copy(flagBehavior = FlagBehavior.NEGATIVE), TimerMode.SUDDEN_DEATH))
-        assertFalse(turnPassesFromEliminated(state(true, false), settings.copy(numberOfPlayers = 2), TimerMode.SUDDEN_DEATH))
+    fun `under FLAG a flagged player keeps their seat in the turn order`() {
+        // As at a chess clock: the player still in presses to the flagged one, whose press starts
+        // their clock again. Skipped, they left the other with a clock no press could stop.
+        assertEquals(1, nextPlayerInTurn(2, state(true, false).players, 2, FlagBehavior.FLAG))
+        assertEquals(2, nextPlayerInTurn(1, state(true, false).players, 2, FlagBehavior.FLAG))
+        assertEquals(2, nextPlayerInTurn(1, state(false, true, false).players, 3, FlagBehavior.FLAG))
     }
 }

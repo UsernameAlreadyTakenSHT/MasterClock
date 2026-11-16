@@ -2359,17 +2359,33 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
 }
 
 /**
- * Whether flags have ended the game. FREEZE stops at the first flag; FLAG plays on until one
- * player is left (or the only one is out); NEGATIVE and REVERSE never stop on a flag -- the
- * overrun is shown and play continues.
+ * Whether flags have ended the game. FREEZE stops at the first flag; FLAG plays on until every
+ * clock has run out; NEGATIVE and REVERSE never stop on a flag -- the overrun is shown and play
+ * continues.
+ *
+ * FLAG stopped when one player was left, which with two players is the first flag: it was FREEZE
+ * under another name. It marks who lost -- see [isFlagged] -- and the game goes on as it would at
+ * a chess clock: turns still alternate, and only the flagged player's clock no longer runs.
  */
 internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior, numberOfPlayers: Int): Boolean {
     val out = players.count { it.isOutOfTime }
     return when (flagBehavior) {
         FlagBehavior.FREEZE -> out > 0
-        FlagBehavior.FLAG -> if (numberOfPlayers <= 1) out > 0 else out >= numberOfPlayers - 1
+        FlagBehavior.FLAG -> out >= numberOfPlayers.coerceAtLeast(1)
         FlagBehavior.NEGATIVE, FlagBehavior.REVERSE -> false
     }
+}
+
+/**
+ * Whether [playerIndex] is the one shown as flagged: out of time, and under FLAG the first to be.
+ *
+ * Under FLAG the first clock to run out is the one that lost. The others play on, and one of them
+ * reaching zero afterwards has run out of time without losing on it: it stops at 0:00, and is not
+ * marked. Under every other behaviour whoever is out is flagged.
+ */
+fun isFlagged(state: ChessClockState, playerIndex: Int, flagBehavior: FlagBehavior): Boolean {
+    if (state.players.getOrNull(playerIndex - 1)?.isOutOfTime != true) return false
+    return flagBehavior != FlagBehavior.FLAG || state.firstToFlag == null || state.firstToFlag == playerIndex
 }
 
 /**
@@ -2386,39 +2402,16 @@ fun isGameOver(state: ChessClockState, flagBehavior: FlagBehavior, numberOfPlaye
     state.phasesFinished || tableClockRanOut(state) || flagsEndGame(state.players, flagBehavior, numberOfPlayers.coerceAtLeast(1))
 
 /**
- * Whether the turn passes on from the player on the move, eliminated under FLAG with three or four
- * players while the game goes on. Not in a mode with only the table's clock, which nobody is
- * eliminated from on their own. Global Shared is one of those for its reserve, but each player has
- * a move clock of their own that does eliminate them: it was left out with the others, and the
- * table waited -- reserve stopped -- for the eliminated player to press.
- */
-internal fun turnPassesFromEliminated(state: ChessClockState, settings: ChessClockSettings, mode: TimerMode): Boolean {
-    val active = state.activePlayer ?: return false
-    if (settings.flagBehavior != FlagBehavior.FLAG || settings.numberOfPlayers < 3) return false
-    if (mode.isWholeTable && mode != TimerMode.MOVE_TIMER_GLOBAL_SHARED) return false
-    if (state.players.getOrNull(active - 1)?.isOutOfTime != true) return false
-    return !isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)
-}
-
-/**
- * Who moves after [current]: the next player round the table, skipping those FLAG has eliminated.
+ * Who moves after [current]: the next seat round the table, whatever the flag behaviour.
  *
- * Turns went round every seat regardless, so with three or four players under FLAG an eliminated
- * player kept being handed the clock -- and since their clock no longer runs once out, each of
- * those turns was unlimited time. Under the other behaviours a player who is out still plays (the
- * overrun is just shown), and is not skipped.
+ * Under FLAG a player who has flagged keeps their seat, as at a chess clock: the others press to
+ * them, their own clock stays at zero while they think, and their press starts the next clock. For
+ * a while they were skipped, and with two players that left the one still in with a clock nothing
+ * could stop -- no press of theirs passed the turn to anybody.
  */
-internal fun nextPlayerInTurn(current: Int, players: List<PlayerState>, playerCount: Int, flagBehavior: FlagBehavior): Int {
-    if (playerCount <= 1) return 1
-    val plainNext = (current % playerCount) + 1
-    if (flagBehavior != FlagBehavior.FLAG) return plainNext
-    var candidate = current
-    repeat(playerCount) {
-        candidate = (candidate % playerCount) + 1
-        if (players.getOrNull(candidate - 1)?.isOutOfTime != true) return candidate
-    }
-    return plainNext
-}
+@Suppress("UNUSED_PARAMETER")
+internal fun nextPlayerInTurn(current: Int, players: List<PlayerState>, playerCount: Int, flagBehavior: FlagBehavior): Int =
+    if (playerCount <= 1) 1 else (current % playerCount) + 1
 
 /**
  * Records who flagged first, if this state is where it happened.
@@ -3342,9 +3335,10 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     // the opponent's transferred time was silently discarded.)
     if (s.mode == TimerMode.FAST_MOVE && s.fastMoveMode == FastMoveType.TRANSFER) {
         val fb = settings.flagBehavior
-        // The time goes to whoever moves next. It went to the next seat, so with three or four
-        // players under FLAG it could go to a player already eliminated, and the one about to move
-        // got nothing.
+        // The time goes to whoever moves next. Under FLAG that can be a player who has flagged:
+        // they keep their turn and their clock stays at zero, so they are given nothing, and their
+        // own press hands the player after them a move's time as anyone's would.
+        val flaggedOut = { q: PlayerState -> fb == FlagBehavior.FLAG && q.isOutOfTime }
         val recipient = nextPlayerInTurn(playerIndex, state.players, settings.numberOfPlayers, fb) - 1
         // The next move gets the move time plus the time just spent. Cumulative keeps what the
         // player had left from their earlier moves on top of that, and the mover keeps what is left
@@ -3358,15 +3352,22 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
         // against 30s was handed across the table and reversed from the second move.
         val recipientSettings = if (settings.differentSettingsPerPlayer) when (recipient) { 0 -> settings.p1Custom; 1 -> settings.p2Custom; 2 -> settings.p3Custom; else -> settings.p4Custom } else settings.main
         val gift = recipientSettings.moveTimeMs + timeSpentOnMove
-        val movedP = if (s.fastMoveTransferCumulative) tempP
+        val movedP = if (s.fastMoveTransferCumulative || flaggedOut(p)) tempP
             else tempP.copy(timeRemainingMs = s.moveTimeMs).let { if (p.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
         val newList = state.players.toMutableList().apply { this[playerIndex - 1] = movedP }
-        if (recipient != playerIndex - 1) {
+        if (recipient != playerIndex - 1 && !flaggedOut(state.players[recipient])) {
             val opponent = state.players[recipient]
             newList[recipient] = if (s.fastMoveTransferCumulative && opponent.moveCount > 0) opponent.credited(gift, fb)
                 else opponent.copy(timeRemainingMs = gift).let { if (opponent.isOverrun(fb)) it.copy(isNegative = false, isOutOfTime = false) else it }
         }
         return state.copy(players = newList)
+    }
+
+    // Under FLAG a player who has flagged still takes their turn, and their press is only that: it
+    // passes the clock on. Without this an increment, a fresh move time or a new period went onto a
+    // clock that is out, and showed time on a face marked FLAGGED.
+    if (settings.flagBehavior == FlagBehavior.FLAG && p.isOutOfTime && s.mode != TimerMode.MOVE_COUNTS_DOWN) {
+        return state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = tempP })
     }
 
     val newP = when (s.mode) {
@@ -4035,7 +4036,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             addEvent(GameEvent(eventType = "MOVE", playerIndex = playerIndex, timeRemainingMs = loggedMoveTimeMs(currentState, p, s.mode, settings.value.flagBehavior), moveCount = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) (p.moveCount - 1).coerceAtLeast(0) else p.moveCount + 1, moveNotation = notation, timeSpentMs = timeSpentOnMove))
             val flaggedByMove = applyPostMoveLogic(playerIndex, timeSpentOnMove)
             // A flag that ends the game stops it, exactly as tick() stops one on the clock: under
-            // FREEZE any flag, under FLAG the one that leaves a single player. Only FREEZE did, so
+            // FREEZE any flag, under FLAG the one that puts the last player out. Only FREEZE did, so
             // the last move of a Move Count Down game under FLAG started the next player's clock,
             // played the switch sound and ticked once before the game was found to be over.
             if (flaggedByMove && isGameOver(_uiState.value, settings.value.flagBehavior, playerCount)) {
@@ -4199,25 +4200,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             current
         }
         stopIfGameOver(now)
-        passTurnFromEliminated(now)
-    }
-
-    /**
-     * Under FLAG with three or four players, play goes on past a flag, and the turn passes to the
-     * next player still in. It stayed with the one just eliminated: their clock stopped, and the
-     * table waited for them to press a side that was out of the game -- a press logged as a move.
-     * Not a move, so nothing is logged and no increment is given; the FLAG is already recorded.
-     */
-    private fun passTurnFromEliminated(now: Long) {
-        val state = _uiState.value
-        val s = _settings.value
-        val active = state.activePlayer ?: return
-        if (timerJob == null || state.isPaused || !turnPassesFromEliminated(state, s, getPlayerSettings(active).mode)) return
-        val next = nextPlayerInTurn(active, state.players, s.numberOfPlayers, s.flagBehavior)
-        if (next == active) return
-        moveStartTime = now
-        startClock(next)
-        if (s.playSwitchSound) soundManager.playSwitch()
     }
 
     /**

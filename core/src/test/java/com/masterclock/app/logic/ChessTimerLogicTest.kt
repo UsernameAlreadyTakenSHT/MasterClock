@@ -297,13 +297,32 @@ class ChessTimerLogicTest {
     }
 
     @Test
-    fun `FAST_MOVE TRANSFER gives the time to the next player still in the game`() {
+    fun `FAST_MOVE TRANSFER gives a flagged player nothing, and their press hands the time on`() {
         val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.TRANSFER, fastMoveTransferCumulative = true, moveTimeMs = 30_000)
         val settings = ChessClockSettings(main = s, numberOfPlayers = 3, flagBehavior = FlagBehavior.FLAG)
         val players = listOf(PlayerState(5000), PlayerState(0, isOutOfTime = true), PlayerState(8000, moveCount = 2))
         val next = computePostMoveState(ChessClockState(players = players, activePlayer = 1), 1, 3000, settings, s)
+        // Player 2 has flagged: they take their turn with a clock that stays at zero.
         assertEquals(0, next.players[1].timeRemainingMs)
-        assertEquals(41_000, next.players[2].timeRemainingMs)
+        assertTrue(next.players[1].isOutOfTime)
+        assertEquals(8000, next.players[2].timeRemainingMs)
+        // Their press gives player 3 the move time and the two seconds the turn took.
+        val after = computePostMoveState(next.copy(activePlayer = 2), 2, 2000, settings, s)
+        assertEquals(0, after.players[1].timeRemainingMs)
+        assertEquals(40_000, after.players[2].timeRemainingMs)
+    }
+
+    @Test
+    fun `under FLAG a flagged player's press puts no time back on their clock`() {
+        for (mode in listOf(TimerMode.FISCHER, TimerMode.MOVE_TIMER_STANDARD, TimerMode.BRONSTEIN, TimerMode.BYOYOMI_JAPANESE)) {
+            val s = PlayerSettings(mode = mode, incrementMs = 5000, moveTimeMs = 30_000)
+            val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.FLAG)
+            val state = ChessClockState(listOf(PlayerState(0, isOutOfTime = true), PlayerState(20_000)), activePlayer = 1, firstToFlag = 1)
+            val next = computePostMoveState(state, 1, 4000, settings, s)
+            assertEquals(mode.name, 0, next.players[0].timeRemainingMs)
+            assertTrue(mode.name, next.players[0].isOutOfTime)
+            assertEquals(mode.name, 20_000, next.players[1].timeRemainingMs)
+        }
     }
 
     @Test
@@ -554,18 +573,20 @@ class ChessTimerLogicTest {
     }
 
     @Test
-    fun `FLAG with four players plays on until one is left`() {
+    fun `FLAG plays on until every clock has run out`() {
         val players = { out: Int -> List(4) { PlayerState(if (it < out) 0 else 60_000, isOutOfTime = it < out) } }
         assertFalse(flagsEndGame(players(1), FlagBehavior.FLAG, 4))
-        assertFalse(flagsEndGame(players(2), FlagBehavior.FLAG, 4))
-        assertTrue(flagsEndGame(players(3), FlagBehavior.FLAG, 4))
-        assertTrue(flagsEndGame(players(1).take(2), FlagBehavior.FLAG, 2))
+        assertFalse(flagsEndGame(players(3), FlagBehavior.FLAG, 4))
+        assertTrue(flagsEndGame(players(4), FlagBehavior.FLAG, 4))
+        // With two players the first flag is not the end, which is what tells FLAG from FREEZE.
+        assertFalse(flagsEndGame(players(1).take(2), FlagBehavior.FLAG, 2))
+        assertTrue(flagsEndGame(players(2).take(2), FlagBehavior.FLAG, 2))
     }
 
     @Test
-    fun `under FLAG an eliminated player's turn is skipped`() {
+    fun `under FLAG a flagged player still takes their turn`() {
         val players = listOf(PlayerState(30_000), PlayerState(0, isOutOfTime = true), PlayerState(30_000), PlayerState(30_000))
-        assertEquals(3, nextPlayerInTurn(1, players, 4, FlagBehavior.FLAG))
+        assertEquals(2, nextPlayerInTurn(1, players, 4, FlagBehavior.FLAG))
         assertEquals(1, nextPlayerInTurn(4, players, 4, FlagBehavior.FLAG))
     }
 

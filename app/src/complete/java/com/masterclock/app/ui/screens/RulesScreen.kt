@@ -105,7 +105,7 @@ fun RulesScreen(onBack: () -> Unit) {
                     }
                     // Quoridor, Abalone, Hex and Santorini were here. Their rulebooks are published
                     // under their rights holders' own licences, and the requests for permission to
-                    // bundle them, sent on 2026-08-02, had no reply. See docs/permissions/README.md.
+                    // bundle them, sent on 2026-08-02, had no reply.
                 }
             }
 

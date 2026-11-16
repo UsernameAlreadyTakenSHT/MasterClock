@@ -5,8 +5,8 @@ import kotlin.random.Random
 /**
  * A game played on the clock's pure functions, in the order the ViewModel calls them.
  *
- * tick() is the app's own [tickClock], followed by what [ChessTimerViewModel]'s stopIfGameOver and
- * passTurnFromEliminated do; press() follows its startOrSwitch, and resume() its resume. Only that
+ * tick() is the app's own [tickClock], followed by what [ChessTimerViewModel]'s stopIfGameOver
+ * does; press() follows its startOrSwitch, and resume() its resume. Only that
  * orchestration is written again here, and every piece of clock arithmetic is the app's:
  * [computePostMoveState], [phaseTap], [arbiterAdjustTime], [arbiterAdjustMoveCount] and
  * [initialClockState]. Sounds, the log and the autosave are left out; nothing in them changes a clock.
@@ -40,13 +40,6 @@ internal class ClockSim(val settings: ChessClockSettings) {
         result.coupled?.let { if (it.handedOverBy != null || it.gongMoves.isNotEmpty()) moveElapsedMs = 0 }
         // stopIfGameOver
         if (state.activePlayer != null && (phasesOver || isGameOver(state, fb, players))) state = state.copy(isPaused = true)
-        // passTurnFromEliminated
-        val now = state.activePlayer ?: return
-        if (state.isPaused || !turnPassesFromEliminated(state, settings, settings.playerSettings(now).mode)) return
-        val next = nextPlayerInTurn(now, state.players, settings.numberOfPlayers, fb)
-        if (next == now) return
-        moveElapsedMs = 0
-        startClock(next)
     }
 
     fun press(playerIndex: Int) {

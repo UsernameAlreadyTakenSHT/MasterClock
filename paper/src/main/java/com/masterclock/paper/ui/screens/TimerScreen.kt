@@ -81,6 +81,7 @@ fun TimerScreen(
                     state = state,
                     padding = settings.effectiveTimePadding(),
                     gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
+                    flagged = isFlagged(state, 1, settings.flagBehavior),
                     triggerOnPress = settings.triggerOnPress,
                     onClick = { press(1) }
                 )
@@ -154,6 +155,7 @@ fun TimerScreen(
                     state = state,
                     padding = settings.effectiveTimePadding(),
                     gameOver = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers),
+                    flagged = isFlagged(state, 2, settings.flagBehavior),
                     triggerOnPress = settings.triggerOnPress,
                     onClick = { press(2) }
                 )
@@ -209,6 +211,7 @@ fun EInkPlayerArea(
     state: ChessClockState,
     padding: TimePadding,
     gameOver: Boolean,
+    flagged: Boolean,
     triggerOnPress: Boolean,
     onClick: () -> Unit
 ) {
@@ -258,7 +261,8 @@ fun EInkPlayerArea(
             modifier = Modifier.size(32.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (isOutOfTime) {
+            // The mark of a flag, so not for a clock that ran out under FLAG after another had: see isFlagged.
+            if (flagged) {
                 Text(
                     text = "/",
                     style = MaterialTheme.typography.titleLarge,

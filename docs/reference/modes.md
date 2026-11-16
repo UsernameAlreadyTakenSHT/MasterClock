@@ -35,8 +35,8 @@ Settings › Behavior › **Flag Behavior** decides what running out of time mea
 
 | Setting | At zero | The game |
 |---|---|---|
-| **Freeze** (default) | The clock stops at 0:00 and the player is out. | Over as soon as one player is out. |
-| **Flag** | The player is out and their turn is skipped from then on. | Over when one player is left. With two players that is the same as Freeze; with three or four the others play on. |
+| **Freeze** (default) | The clock stops at 0:00 and the player is out. | Over as soon as one player is out: every clock stops. |
+| **Flag** | The first clock to run out is flagged: that player has lost, and their face turns to the loss colour. | Not over. Turns still alternate, as at a chess clock: the flagged player's clock stays at 0:00 on their turn, and their press starts the next clock. A clock that reaches zero after the first stops at 0:00 without being flagged. The game is over when every clock has run out. |
 | **Negative** | The clock goes on below zero, shown with a minus sign. | Not over: play goes on, and the overrun is counted. |
 | **Reverse** | The clock counts back up from zero, with no sign. | Not over, as under Negative. This is the Scrabble convention: the overrun is the penalty. |
 

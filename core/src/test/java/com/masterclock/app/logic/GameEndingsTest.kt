@@ -63,7 +63,12 @@ class GameEndingsTest {
         for (fb in FlagBehavior.entries) {
             val settings = ChessClockSettings(main = s, flagBehavior = fb)
             val state = ChessClockState(listOf(PlayerState(0, moveCount = 1), PlayerState(0, moveCount = 1)), activePlayer = 1)
-            assertTrue(fb.name, isGameOver(computePostMoveState(state, 1, 1_000, settings, s), fb, 2))
+            val afterFirst = computePostMoveState(state, 1, 1_000, settings, s)
+            // Under FLAG the other player still has their move to play: over once they have.
+            if (fb == FlagBehavior.FLAG) {
+                assertFalse(fb.name, isGameOver(afterFirst, fb, 2))
+                assertTrue(fb.name, isGameOver(computePostMoveState(afterFirst.copy(activePlayer = 2), 2, 1_000, settings, s), fb, 2))
+            } else assertTrue(fb.name, isGameOver(afterFirst, fb, 2))
         }
     }
 

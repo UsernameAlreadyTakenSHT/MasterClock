@@ -558,9 +558,9 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
         targetValue = when {
             // Over, but lost by nobody: not the loss colour. See ChessClockState.phasesFinished.
             state.phasesFinished || tableClockRanOut(state) -> inactiveColor
-            // Under FLAG the loss colour is for who lost, which with three or four players is everyone
-                // eliminated: only the first had it, and the others looked like clocks still in play.
-                playerState.isOutOfTime -> if (settings.flagBehavior == FlagBehavior.FLAG) (if (state.firstToFlag == playerIndex || (settings.numberOfPlayers > 2 && !pSettings.mode.isWholeTable)) lossColor else if (isActive) activeColor else inactiveColor) else lossColor
+            // Under FLAG the loss colour is for who lost, and that is the first clock to run out: the
+            // others play on, and one that reaches zero afterwards has not lost on time. See isFlagged.
+            playerState.isOutOfTime -> if (isFlagged(state, playerIndex, settings.flagBehavior)) lossColor else if (isActive) activeColor else inactiveColor
             playerState.hasFlagged -> if (isActive) activeColor else inactiveColor
             // Turn-based Gong: only the player whose turn it is shows reflect/move color, everyone
             // else is grey (inactive), same convention as every other mode. Simultaneous Gong has no
@@ -746,7 +746,8 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                 }
                 if (state.phasesFinished || tableClockRanOut(state)) {
                     Text(stringResource(R.string.timer_finished), style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = labelColor, fontWeight = FontWeight.ExtraBold)
-                } else if (playerState.isOutOfTime || playerState.hasFlagged) {
+                // Not a clock that ran out under FLAG after another had: that one is at 0:00, not flagged.
+                } else if (isFlagged(state, playerIndex, settings.flagBehavior) || playerState.hasFlagged) {
                     // A period that ran out leaves the player in the game; the last one does not. It was told apart
                     // by time left on the clock, which under NEGATIVE and REVERSE is the overrun.
                     val flagText = if (pSettings.mode == TimerMode.FIDE_PERIODS && !playerState.isOutOfTime) stringResource(R.string.timer_period_flag) else stringResource(R.string.timer_flagged)
