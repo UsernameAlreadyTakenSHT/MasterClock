@@ -21,6 +21,22 @@ object FlavorConfig {
         return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
     }
 
+    /**
+     * Whether a game in play is written down, so that it survives Android closing the app. Every
+     * phone build: on a phone a call comes in, another app is opened, and Android frees the memory
+     * without a word. Mini was left out because only the arbiter's panel could bring a save back,
+     * and it has none -- so a game there was simply lost; see [resumesSavedGameAtLaunch]. The E-Ink
+     * app stays out, as it was: its device does nothing else.
+     */
+    fun savesGameInPlay(): Boolean = currentFlavor != AppFlavor.E_INK
+
+    /**
+     * Whether a saved game comes back by itself at launch, paused. Where there is no arbiter's
+     * panel to ask for it: Mini. The others keep the panel's Resume, which leaves the choice to
+     * whoever opens it.
+     */
+    fun resumesSavedGameAtLaunch(): Boolean = savesGameInPlay() && !hasArbitre()
+
     fun hasPresets(): Boolean {
         return currentFlavor != AppFlavor.MINI && currentFlavor != AppFlavor.E_INK
     }

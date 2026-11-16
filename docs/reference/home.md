@@ -62,9 +62,11 @@ Back, pressed once, says **Press Back again to exit**; the second press leaves t
    decides, or when the mode itself ends it. The face says `FLAGGED` or `FINISHED`.
 5. **Reset** clears the game and records it.
 
-Complete, Standard and Lite save the game in progress every fifteen seconds and at each pause. If
-Android closes the app, the arbiter's panel offers to resume it. Mini and the E-Ink app do not: a
-game there does not survive the app being closed.
+The phone app saves the game in progress at each move, at each pause, and every two seconds while
+a clock runs -- an interval [Behavior](behavior.md#advanced) can change. If Android
+closes the app, the arbiter's panel offers to resume it in Complete, Standard and Lite; Mini has no
+such panel, and brings the game back by itself at the next launch, paused. The E-Ink app does not
+save it: a game there does not survive the app being closed.
 
 ## Presets
 

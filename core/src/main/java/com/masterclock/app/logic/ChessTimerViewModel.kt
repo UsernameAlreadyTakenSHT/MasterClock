@@ -958,6 +958,12 @@ data class ChessClockSettings(
     val pauseOnBackground: Boolean = true,
     /** With [pauseOnBackground] off, a foreground service keeps the game alive; see [runsInBackground]. */
     val keepRunningInBackground: Boolean = false,
+    /**
+     * How often a running game is written down besides at each move and each pause, which is all a
+     * game closed by surprise loses; see [autoSaveEveryMs]. The player's to set where the Behavior
+     * tab is, since what it costs is theirs: a write a second on an old phone is not nothing.
+     */
+    val autoSaveIntervalMs: Long = DEFAULT_AUTO_SAVE_INTERVAL_MS,
 
     val alwaysShowHours: Boolean = false,
     val alwaysShowMinutes: Boolean = true,
@@ -1595,6 +1601,8 @@ private fun sanitizeSettingsRest(
         customSwitchUri = sanitizeImportedContentUri(grants, settings.customSwitchUri),
         numberOfPlayers = sanitizedNumberOfPlayers,
         flagCapMs = settings.flagCapMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+        // One of the choices or the default: an import cannot set a save every millisecond.
+        autoSaveIntervalMs = settings.autoSaveEveryMs(),
         // Volumes are fractions the sliders keep between 0 and 1, and the pause between phases a
         // duration like the others; none of the three was bounded.
         soundsVolume = settings.soundsVolume.coerceIn(0f, 1f),
@@ -3576,7 +3584,12 @@ private const val FAST_TICK_MS = 10L
 private const val SLOW_TICK_MS = 100L
 
 /** How long a crash may cost a running game. */
-private const val AUTO_SAVE_INTERVAL_MS = 15_000L
+/** What [ChessClockSettings.autoSaveIntervalMs] may be, as the Behavior page offers them. */
+val AUTO_SAVE_CHOICES_MS = listOf(10_000L, 5_000L, 2_000L, 1_000L)
+const val DEFAULT_AUTO_SAVE_INTERVAL_MS = 2_000L
+
+/** The interval in force: the stored one if it is one of the choices, the default if it is anything else. */
+fun ChessClockSettings.autoSaveEveryMs(): Long = autoSaveIntervalMs.takeIf { it in AUTO_SAVE_CHOICES_MS } ?: DEFAULT_AUTO_SAVE_INTERVAL_MS
 
 /**
  * What "unlimited" history actually means when reading it back.
@@ -3880,6 +3893,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // usually put it there.
             _scoreboard.value = sanitizeImportedScoreboard(settingsRepo.scoreboardFlow.first())
             _hasSavedClock.value = gameDao.getSavedClock() != null
+            // With no arbiter's panel to ask for it, the game Android closed comes back by itself,
+            // paused: see FlavorConfig.resumesSavedGameAtLaunch.
+            if (_hasSavedClock.value && FlavorConfig.resumesSavedGameAtLaunch()) resumeSavedClock()
             // Sanitised like the settings and the scoreboard above: a restore is what usually wrote
             // them, and a preset is applied to the clock as it stands.
             // Not held to an import's count: saving has no cap, so past 500 presets the newest was
@@ -3922,7 +3938,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // A shortcut that starts the app finds no game running here, only the autosave of one
         // interrupted -- the process killed, the app closed mid-game -- and it cleared that, with
         // no way back. It is kept, so Resume offers that game until the new one is first autosaved
-        // over it, fifteen seconds into play. A game running in this process ends with the
+        // over it, at its first save. A game running in this process ends with the
         // shortcut, as with a preset.
         updateSettings(
             applyPresetTimeControl(_settings.value, target, keepFlagBehavior = builtIn && builtInKeepsFlagBehavior(), keepFirstMoveBonus = builtIn, keepTable = builtIn),
@@ -4103,6 +4119,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
             moveStartTime = SystemClock.elapsedRealtime(); startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
+            // A move is written down as it is played: closed a second later, the game came back
+            // with the mover's clock still running and the move missing from it.
+            if (FlavorConfig.savesGameInPlay()) {
+                lastAutoSaveTime = moveStartTime
+                saveClockForLater()
+            }
         }
     }
 
@@ -4202,14 +4224,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private fun tick() {
         val now = SystemClock.elapsedRealtime(); val delta = now - lastTickTime; lastTickTime = now
         
-        // Saved so a game survives the app being killed. Every five seconds meant serialising the
-        // settings and the whole state, then writing to the database, some 1,400 times over a
-        // two-hour game -- for a recovery that almost never happens. Fifteen bounds what a crash
-        // costs to fifteen seconds of one player's clock, which is a fair price for a third of the
-        // writes.
-        // Only the arbitre panel can resume a saved clock, so a build without it has no use for
-        // the snapshot -- Mini and the E-Ink build wrote one every fifteen seconds all the same.
-        if (FlavorConfig.hasArbitre() && now - lastAutoSaveTime >= AUTO_SAVE_INTERVAL_MS) {
+        // Saved so a game survives the app being killed: here at the interval the player chose,
+        // two seconds unless they did, and at each move, each pause and each correction where they
+        // happen. It was every five seconds, then every fifteen, when a save serialised the whole
+        // notebook on the thread that draws the clock; it now encodes the time control alone, on
+        // its own thread, and fifteen seconds of one player's clock was more than a crash should cost.
+        // Not where nothing can bring a save back: the E-Ink build wrote one every fifteen seconds
+        // all the same. Mini did too, and was then cut off with it; it takes its save up at launch.
+        if (FlavorConfig.savesGameInPlay() && now - lastAutoSaveTime >= _settings.value.autoSaveEveryMs()) {
             lastAutoSaveTime = now
             saveClockForLater()
         }
@@ -4511,7 +4533,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // leaving the app does, with pause-on-background on -- went back to the last save, up to
         // fifteen seconds earlier, and resuming cut the moves played since out of the history. A
         // paused clock has nothing left to lose by being written down now.
-        if (stillInPlay && FlavorConfig.hasArbitre()) {
+        if (stillInPlay && FlavorConfig.savesGameInPlay()) {
             lastAutoSaveTime = SystemClock.elapsedRealtime()
             saveClockForLater()
         }
@@ -5201,8 +5223,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * What a log opening has to catch up on. A Berserk before the first press had no log to go into.
      *
      * And the autosave's interval starts here. Left at 0 it had always elapsed, so in a new process
-     * the first tick of a new game overwrote the interrupted one still on offer, fifteen seconds
-     * earlier than [applyShortcutNow] promises.
+     * the first tick of a new game overwrote the interrupted one still on offer, sooner than
+     * [applyShortcutNow] promises.
      */
     private fun onGameLogOpened() {
         _uiState.value.players.forEachIndexed { i, p ->

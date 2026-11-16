@@ -31,6 +31,31 @@ class BackgroundClockTest {
         }
     }
 
+    @Test
+    fun `every phone build saves the game in play, and Mini takes it up at launch`() {
+        for (flavor in listOf(AppFlavor.COMPLETE, AppFlavor.STANDARD, AppFlavor.LITE)) {
+            FlavorConfig.currentFlavor = flavor
+            assertTrue(flavor.name, FlavorConfig.savesGameInPlay())
+            // The arbiter's panel offers it there; nothing is resumed unasked.
+            assertFalse(flavor.name, FlavorConfig.resumesSavedGameAtLaunch())
+        }
+        // No panel to ask: the game was lost, and now comes back by itself.
+        FlavorConfig.currentFlavor = AppFlavor.MINI
+        assertTrue(FlavorConfig.savesGameInPlay())
+        assertTrue(FlavorConfig.resumesSavedGameAtLaunch())
+        FlavorConfig.currentFlavor = AppFlavor.E_INK
+        assertFalse(FlavorConfig.savesGameInPlay())
+        assertFalse(FlavorConfig.resumesSavedGameAtLaunch())
+    }
+
+    @Test
+    fun `the save interval is one of the choices, two seconds unless set`() {
+        assertEquals(2_000L, ChessClockSettings().autoSaveEveryMs())
+        for (choice in AUTO_SAVE_CHOICES_MS) assertEquals(choice, ChessClockSettings(autoSaveIntervalMs = choice).autoSaveEveryMs())
+        // Anything else, from an import or an older file, is the default: never a save every millisecond.
+        for (odd in listOf(0L, 1L, 999L, 3_000L, -5L, Long.MAX_VALUE)) assertEquals(2_000L, ChessClockSettings(autoSaveIntervalMs = odd).autoSaveEveryMs())
+    }
+
     private fun game(vararg players: PlayerState, active: Int? = 1, paused: Boolean = false) =
         ChessClockState(players = players.toList(), activePlayer = active, isPaused = paused)
 

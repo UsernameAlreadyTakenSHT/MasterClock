@@ -306,6 +306,8 @@
     <string name="settings_keep_running_desc">Ist die Pause oben aus, hält eine Benachrichtigung die Uhr in Gang, solange die App im Hintergrund ist, damit Android sie nicht schließt. Sie zeigt, wer am Zug ist und wie viel Zeit bleibt, mit einer Pause-Taste.</string>
     <string name="notif_channel_clock">Laufende Partie</string>
     <string name="settings_advanced">Erweitert</string>
+    <string name="settings_save_every">Partie speichern alle</string>
+    <string name="settings_save_every_desc">Solange eine Uhr läuft, zusätzlich zu jedem Zug und jeder Pause. Je kürzer, desto weniger geht verloren, wenn die App unerwartet geschlossen wird.</string>
     <string name="settings_different_per_player">Eigene Einstellungen je Spieler</string>
     <string name="settings_more_players">Mehr Spieler aktivieren (experimentell)</string>
     <string name="settings_players">Spieler</string>
@@ -441,6 +443,9 @@
     <string name="omni_cfg_final_beep">Schlusston</string>
     <string name="omni_cfg_round_gong">Rundengong</string>
 
+    <string name="dur_1s">1 s</string>
+    <string name="dur_2s">2 s</string>
+    <string name="dur_5s">5 s</string>
     <string name="dur_10s">10 s</string>
     <string name="dur_30s">30 s</string>
     <string name="dur_1m">1 Min</string>
