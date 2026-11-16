@@ -271,9 +271,9 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
 
     SettingsSection(stringResource(R.string.omni_cfg_turn_order)) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            ChoiceRow(Modifier.fillMaxWidth()) {
                 PlayerOrderType.entries.forEachIndexed { index, type ->
-                    SegmentedButton(
+                    ChoiceSegment(
                         selected = settings.playerOrderType == type,
                         onClick = { onSettingsChanged(settings.copy(playerOrderType = type)) },
                         shape = SegmentedButtonDefaults.itemShape(index, PlayerOrderType.entries.size),
@@ -310,9 +310,9 @@ fun StepPlayersAndOrder(settings: OmniSettings, onSettingsChanged: (OmniSettings
 private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
     Column {
         val drawModes = listOf(false to stringResource(R.string.omni_cfg_shuffle_per_round), true to stringResource(R.string.omni_cfg_draw_per_turn))
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        ChoiceRow(Modifier.fillMaxWidth()) {
             drawModes.forEachIndexed { index, (eachTurn, label) ->
-                SegmentedButton(
+                ChoiceSegment(
                     selected = settings.randomEachTurn == eachTurn,
                     onClick = { onSettingsChanged(settings.copy(randomEachTurn = eachTurn)) },
                     shape = SegmentedButtonDefaults.itemShape(index, drawModes.size),
@@ -562,9 +562,9 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
             }
         }
 
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        ChoiceRow(Modifier.fillMaxWidth()) {
             RoundEndBehavior.entries.forEachIndexed { index, behavior ->
-                SegmentedButton(
+                ChoiceSegment(
                     selected = currentRound.roundEndBehavior == behavior,
                     onClick = {
                         onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
@@ -879,14 +879,14 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
                 // Was a boolean switch that could only reach NONE/ACCUMULATIVE -- GLOBAL_RESERVE (a
                 // single pool shared by every player, instead of one bank per player) was unreachable
                 // from the UI.
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                ChoiceRow(Modifier.fillMaxWidth()) {
                     TimeBankMode.entries.forEachIndexed { index, mode ->
                         val label = when (mode) {
                             TimeBankMode.NONE -> stringResource(R.string.common_off)
                             TimeBankMode.ACCUMULATIVE -> stringResource(R.string.omni_cfg_bank_per_player)
                             TimeBankMode.GLOBAL_RESERVE -> stringResource(R.string.omni_cfg_bank_shared)
                         }
-                        SegmentedButton(
+                        ChoiceSegment(
                             selected = settings.timeBankMode == mode,
                             onClick = { onSettingsChanged(settings.copy(timeBankMode = mode)) },
                             shape = SegmentedButtonDefaults.itemShape(index, TimeBankMode.entries.size),
@@ -900,7 +900,7 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
 
     if (settings.timeBankMode != TimeBankMode.NONE) {
         SettingsSection(stringResource(R.string.omni_cfg_bank_clear)) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            ChoiceRow(Modifier.fillMaxWidth()) {
                 TimeBankScope.entries.forEachIndexed { index, scope ->
                     val label = when(scope) {
                         TimeBankScope.TURN_TO_TURN -> stringResource(R.string.omni_cfg_turn)
@@ -908,7 +908,7 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
                         TimeBankScope.GAME_TO_GAME -> stringResource(R.string.omni_cfg_game)
                         TimeBankScope.SESSION_WIDE -> stringResource(R.string.omni_cfg_session_timer)
                     }
-                    SegmentedButton(
+                    ChoiceSegment(
                         selected = settings.timeBankScope == scope,
                         onClick = { onSettingsChanged(settings.copy(timeBankScope = scope)) },
                         shape = SegmentedButtonDefaults.itemShape(index, TimeBankScope.entries.size),
@@ -936,12 +936,12 @@ fun StepFinalReview(settings: OmniSettings, onSettingsChanged: (OmniSettings) ->
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             val options = listOf(0L, 10_000L, 30_000L, 60_000L, 120_000L, 300_000L)
             val currentMs = settings.launchCountdownMs
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            ChoiceRow(Modifier.fillMaxWidth()) {
                 options.forEachIndexed { index, ms ->
                     val label = when(ms) {
                         0L -> stringResource(R.string.common_off); 10_000L -> stringResource(R.string.dur_10s); 30_000L -> stringResource(R.string.dur_30s); 60_000L -> stringResource(R.string.dur_1m); 120_000L -> stringResource(R.string.dur_2m); 300_000L -> stringResource(R.string.dur_5m); else -> ""
                     }
-                    SegmentedButton(
+                    ChoiceSegment(
                         selected = currentMs == ms,
                         onClick = { onSettingsChanged(settings.copy(launchCountdownMs = ms)) },
                         shape = SegmentedButtonDefaults.itemShape(index, options.size),

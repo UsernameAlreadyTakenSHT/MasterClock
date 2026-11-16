@@ -82,10 +82,10 @@ fun AudioSettingsPage(
                         modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         val options = listOf(BeepCountdownThreshold.THREE_SEC, BeepCountdownThreshold.TEN_SEC)
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        ChoiceRow(Modifier.fillMaxWidth()) {
                             options.forEachIndexed { i, t ->
                                 val label = if (t == BeepCountdownThreshold.THREE_SEC) "3s" else "10s"
-                                SegmentedButton(
+                                ChoiceSegment(
                                     selected = currentSettings.beepThreshold == t,
                                     onClick = { onSettingsChanged(currentSettings.copy(beepThreshold = t)) },
                                     shape = SegmentedButtonDefaults.itemShape(i, options.size),
@@ -117,10 +117,10 @@ fun AudioSettingsPage(
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         val options = listOf(BeepCountdownThreshold.THREE_SEC, BeepCountdownThreshold.TEN_SEC)
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        ChoiceRow(Modifier.fillMaxWidth()) {
                             options.forEachIndexed { i, t ->
                                 val label = if (t == BeepCountdownThreshold.THREE_SEC) "3s" else "10s"
-                                SegmentedButton(
+                                ChoiceSegment(
                                     selected = currentSettings.hapticCountdownThreshold == t,
                                     onClick = { onSettingsChanged(currentSettings.copy(hapticCountdownThreshold = t)) },
                                     shape = SegmentedButtonDefaults.itemShape(i, options.size),

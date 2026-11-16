@@ -30,9 +30,9 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
         Spacer(Modifier.height(8.dp))
 
         SettingsSection(stringResource(R.string.settings_flag_behavior)) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            ChoiceRow(Modifier.fillMaxWidth()) {
                 FlagBehavior.entries.forEachIndexed { i, b ->
-                    SegmentedButton(
+                    ChoiceSegment(
                         selected = currentSettings.flagBehavior == b,
                         onClick = { onSettingsChanged(currentSettings.copy(flagBehavior = b)) },
                         shape = SegmentedButtonDefaults.itemShape(i, FlagBehavior.entries.size),
@@ -158,9 +158,9 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.settings_players), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                            SingleChoiceSegmentedButtonRow {
+                            ChoiceRow {
                                 listOf(3, 4).forEachIndexed { i, n ->
-                                    SegmentedButton(
+                                    ChoiceSegment(
                                         selected = currentSettings.numberOfPlayers == n,
                                         onClick = { onSettingsChanged(currentSettings.copy(numberOfPlayers = n)) },
                                         shape = SegmentedButtonDefaults.itemShape(i, 2),

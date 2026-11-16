@@ -43,9 +43,9 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                             fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(8.dp))
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        ChoiceRow(Modifier.fillMaxWidth()) {
                             TimePadding.entries.forEachIndexed { i, p ->
-                                SegmentedButton(
+                                ChoiceSegment(
                                     selected = currentSettings.timePadding == p,
                                     onClick = { onSettingsChanged(currentSettings.copy(timePadding = p)) },
                                     shape = SegmentedButtonDefaults.itemShape(i, TimePadding.entries.size),
@@ -74,10 +74,10 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                         val options = listOf(10, 20, 30, 60, -1)
                         val currentVal = if (currentSettings.showTenthsThresholdMs == Long.MAX_VALUE) -1 else (currentSettings.showTenthsThresholdMs / 1000).toInt()
 
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        ChoiceRow(Modifier.fillMaxWidth()) {
                             options.forEachIndexed { i, s ->
                                 val label = if (s == -1) stringResource(R.string.settings_all) else "${s}s"
-                                SegmentedButton(
+                                ChoiceSegment(
                                     selected = currentVal == s,
                                     onClick = {
                                         val threshold = if (s == -1) Long.MAX_VALUE else s * 1000L
@@ -107,14 +107,14 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                         // and "Como las décimas" wrapped under its check mark.
                         Column {
                             Text(stringResource(R.string.settings_threshold), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(bottom = 6.dp))
-                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                SegmentedButton(
+                            ChoiceRow(modifier = Modifier.fillMaxWidth()) {
+                                ChoiceSegment(
                                     selected = !currentSettings.showHundredthsOnlyUnder10s,
                                     onClick = { onSettingsChanged(currentSettings.copy(showHundredthsOnlyUnder10s = false)) },
                                     shape = SegmentedButtonDefaults.itemShape(0, 2),
                                     label = { Text(stringResource(R.string.settings_like_tenths), style = MaterialTheme.typography.labelSmall) }
                                 )
-                                SegmentedButton(
+                                ChoiceSegment(
                                     selected = currentSettings.showHundredthsOnlyUnder10s,
                                     onClick = { onSettingsChanged(currentSettings.copy(showHundredthsOnlyUnder10s = true)) },
                                     shape = SegmentedButtonDefaults.itemShape(1, 2),
@@ -143,14 +143,14 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
                     modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     Text(stringResource(R.string.settings_orientation), modifier = Modifier.padding(bottom = 8.dp), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    ChoiceRow(Modifier.fillMaxWidth()) {
                         ClockOrientation.entries.forEachIndexed { i, o ->
                             val label = when(o) {
                                 ClockOrientation.VERTICAL -> stringResource(R.string.settings_vert)
                                 ClockOrientation.HORIZONTAL_LEFT -> stringResource(R.string.settings_horiz_left)
                                 ClockOrientation.HORIZONTAL_RIGHT -> stringResource(R.string.settings_horiz_right)
                             }
-                            SegmentedButton(
+                            ChoiceSegment(
                                 selected = currentSettings.clockOrientation == o,
                                 onClick = { onSettingsChanged(currentSettings.copy(clockOrientation = o)) },
                                 shape = SegmentedButtonDefaults.itemShape(i, ClockOrientation.entries.size),
@@ -167,9 +167,9 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
         }
 
         SettingsSection(stringResource(R.string.settings_theme)) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            ChoiceRow(Modifier.fillMaxWidth()) {
                 AppThemeMode.entries.forEachIndexed { i, t ->
-                    SegmentedButton(
+                    ChoiceSegment(
                         selected = currentSettings.themeMode == t,
                         onClick = { onSettingsChanged(currentSettings.copy(themeMode = t)) },
                         shape = SegmentedButtonDefaults.itemShape(i, AppThemeMode.entries.size),

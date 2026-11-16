@@ -182,9 +182,9 @@ fun MoreSettingsPage(
                     // anyone who had already chosen it, who would otherwise be left on a setting
                     // they can neither see nor leave.
                     val games = GameType.entries.filter { it.isOfferable(currentSettings.gameType) }
-                    SingleChoiceSegmentedButtonRow {
+                    ChoiceRow {
                         games.forEachIndexed { i, gt ->
-                            SegmentedButton(
+                            ChoiceSegment(
                                 selected = currentSettings.gameType == gt,
                                 onClick = { onSettingsChanged(currentSettings.copy(gameType = gt)) },
                                 shape = SegmentedButtonDefaults.itemShape(i, games.size),
@@ -232,10 +232,10 @@ fun MoreSettingsPage(
                         modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         val countOptions = listOf(10, 100, 1000, 10000)
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        ChoiceRow(Modifier.fillMaxWidth()) {
                             countOptions.forEachIndexed { i, limit ->
                                 val text = if (limit >= 1000) "${limit/1000}k" else limit.toString()
-                                SegmentedButton(
+                                ChoiceSegment(
                                     selected = currentSettings.logHistoryLimit == limit,
                                     onClick = { onSettingsChanged(currentSettings.copy(logHistoryLimit = limit)) },
                                     shape = SegmentedButtonDefaults.itemShape(i, countOptions.size),
@@ -261,7 +261,7 @@ fun MoreSettingsPage(
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)).padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         val durationOptions = LogDurationLimit.entries.filter { it != LogDurationLimit.INFINITE }
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        ChoiceRow(Modifier.fillMaxWidth()) {
                             durationOptions.forEachIndexed { i, d ->
                                 val text = when(d) {
                                     LogDurationLimit.ONE_DAY -> stringResource(R.string.age_one_day)
@@ -271,7 +271,7 @@ fun MoreSettingsPage(
                                     LogDurationLimit.ONE_YEAR -> stringResource(R.string.age_one_year)
                                     else -> ""
                                 }
-                                SegmentedButton(
+                                ChoiceSegment(
                                     selected = currentSettings.logDurationLimit == d,
                                     onClick = { onSettingsChanged(currentSettings.copy(logDurationLimit = d)) },
                                     shape = SegmentedButtonDefaults.itemShape(i, durationOptions.size),

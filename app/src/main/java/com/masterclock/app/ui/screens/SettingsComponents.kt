@@ -221,33 +221,33 @@ fun FidePeriodsPanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit) {
                             }
                         }
 
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                            SegmentedButton(
+                        ChoiceRow(Modifier.fillMaxWidth()) {
+                            ChoiceSegment(
                                 selected = !period.isFischer && !period.hasDelay,
                                 onClick = {
                                     val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = false, hasDelay = false) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(0, 3),
-                                label = { Text("Sudden Death") }
+                                label = { Text("Sudden Death", style = MaterialTheme.typography.labelSmall) }
                             )
-                            SegmentedButton(
+                            ChoiceSegment(
                                 selected = period.isFischer,
                                 onClick = {
                                     val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = true, hasDelay = false) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(1, 3),
-                                label = { Text("Fischer") }
+                                label = { Text("Fischer", style = MaterialTheme.typography.labelSmall) }
                             )
-                            SegmentedButton(
+                            ChoiceSegment(
                                 selected = !period.isFischer && period.hasDelay,
                                 onClick = {
                                     val newList = periods.toMutableList().apply { this[index] = period.copy(isFischer = false, hasDelay = true) }
                                     onUpdate(p.copy(fidePeriods = newList))
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(2, 3),
-                                label = { Text("US Delay") }
+                                label = { Text("US Delay", style = MaterialTheme.typography.labelSmall) }
                             )
                         }
 
