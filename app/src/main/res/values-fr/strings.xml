@@ -227,6 +227,7 @@
     <string name="settings_clear_logs_message">Tout l\'historique enregistré sera définitivement supprimé.</string>
     <string name="settings_reset_title">Réinitialiser tous les réglages\u00A0?</string>
     <string name="settings_reset_message">Cette action est irréversible.</string>
+    <string name="settings_reset_confirm">Réinitialiser</string>
 
     <!-- Enum-backed option labels -->
     <string name="flag_freeze">Gel</string>

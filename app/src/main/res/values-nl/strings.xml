@@ -204,6 +204,7 @@
     <string name="settings_clear_logs_message">Alle opgeslagen geschiedenis wordt definitief verwijderd.</string>
     <string name="settings_reset_title">Alle instellingen resetten?</string>
     <string name="settings_reset_message">Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="settings_reset_confirm">Resetten</string>
 
     <!-- Enum-backed option labels -->
     <string name="flag_freeze">Bevriezen</string>

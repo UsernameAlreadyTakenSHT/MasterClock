@@ -207,8 +207,9 @@
     <string name="settings_tab_omni">Omni</string>
     <string name="settings_clear_logs_title">Cancellare tutta la cronologia delle partite?</string>
     <string name="settings_clear_logs_message">Tutta la cronologia registrata sarà eliminata definitivamente.</string>
-    <string name="settings_reset_title">Azzerare tutte le impostazioni?</string>
+    <string name="settings_reset_title">Ripristinare tutte le impostazioni?</string>
     <string name="settings_reset_message">L\'operazione non può essere annullata.</string>
+    <string name="settings_reset_confirm">Ripristina</string>
 
     <!-- Enum-backed option labels -->
     <string name="flag_freeze">Blocca</string>
@@ -481,7 +482,7 @@
     <string name="settings_more_share_apk_format_text">Un APK si installa direttamente. Alcuni telefoni rifiutano i file APK via Bluetooth: invia allora uno ZIP, da cui il destinatario estrae l\'APK per installarlo.</string>
     <string name="settings_more_danger">Zona a rischio</string>
     <string name="settings_more_clear_logs">Cancella i registri</string>
-    <string name="settings_more_reset_settings">Azzera le impostazioni</string>
+    <string name="settings_more_reset_settings">Ripristina le impostazioni</string>
     <string name="toast_preparing_apk">Preparazione del file dell\'applicazione…</string>
     <string name="toast_apk_error">Errore: impossibile preparare il file</string>
 

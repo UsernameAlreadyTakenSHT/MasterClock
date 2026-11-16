@@ -215,8 +215,9 @@
     <string name="settings_tab_omni">Omni</string>
     <string name="settings_clear_logs_title">¿Borrar todo el historial de partidas?</string>
     <string name="settings_clear_logs_message">Se eliminará definitivamente todo el historial registrado.</string>
-    <string name="settings_reset_title">¿Reiniciar todos los ajustes?</string>
+    <string name="settings_reset_title">¿Restablecer todos los ajustes?</string>
     <string name="settings_reset_message">Esta acción no se puede deshacer.</string>
+    <string name="settings_reset_confirm">Restablecer</string>
 
     <!-- Enum-backed option labels -->
     <string name="flag_freeze">Congelar</string>
@@ -489,7 +490,7 @@
     <string name="settings_more_share_apk_format_text">Un APK se instala directamente. Algunos teléfonos rechazan los archivos APK por Bluetooth: envía entonces un ZIP, del que el destinatario extrae el APK para instalarlo.</string>
     <string name="settings_more_danger">Zona de peligro</string>
     <string name="settings_more_clear_logs">Borrar los registros</string>
-    <string name="settings_more_reset_settings">Reiniciar los ajustes</string>
+    <string name="settings_more_reset_settings">Restablecer los ajustes</string>
     <string name="toast_preparing_apk">Preparando el archivo de la aplicación…</string>
     <string name="toast_apk_error">Error: no se ha podido preparar el archivo</string>
 

@@ -205,6 +205,7 @@
     <string name="settings_clear_logs_message">Der gesamte aufgezeichnete Verlauf wird endgültig gelöscht.</string>
     <string name="settings_reset_title">Alle Einstellungen zurücksetzen?</string>
     <string name="settings_reset_message">Das lässt sich nicht rückgängig machen.</string>
+    <string name="settings_reset_confirm">Zurücksetzen</string>
 
     <!-- Enum-backed option labels -->
     <string name="flag_freeze">Anhalten</string>

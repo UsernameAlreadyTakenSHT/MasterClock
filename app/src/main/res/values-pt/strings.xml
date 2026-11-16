@@ -214,6 +214,7 @@
     <string name="settings_clear_logs_message">Todo o histórico registado será eliminado definitivamente.</string>
     <string name="settings_reset_title">Repor todas as definições?</string>
     <string name="settings_reset_message">Esta ação não pode ser anulada.</string>
+    <string name="settings_reset_confirm">Repor</string>
 
     <!-- Enum-backed option labels -->
     <string name="flag_freeze">Congelar</string>

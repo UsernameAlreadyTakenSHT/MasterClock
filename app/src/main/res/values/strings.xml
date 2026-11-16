@@ -222,6 +222,9 @@
     <string name="settings_clear_logs_message">All recorded history will be permanently deleted.</string>
     <string name="settings_reset_title">Reset all settings?</string>
     <string name="settings_reset_message">This action cannot be undone.</string>
+    <!-- The dialog's confirm button. Its own string, not common_reset: resetting settings and
+         resetting a game are one verb in English and two in Spanish, Italian and Brazilian. -->
+    <string name="settings_reset_confirm">Reset</string>
 
     <!--
       Labels for enum-backed option rows. These were the last hardcoded text in the app and the
