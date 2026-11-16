@@ -12,12 +12,17 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
 <a href="https://gitlab.com/UsernameAlreadyTakenSHT/masterclock/-/releases"><img src="branding/get-it-on-gitlab.png" alt="Get it on GitLab" height="55"></a>
 <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium%3A%2F%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FUsernameAlreadyTakenSHT%2FMasterClock"><img src="branding/get-it-on-obtainium.png" alt="Get it on Obtainium" height="55"></a>
 
+**Contents:** [Features](#features) · [Flavors](#flavors) · [Translations](#translations) · [Privacy](#privacy) · [Building](#building) · [Verifying a release](#verifying-a-release) · [Credits & Licensing](#credits--licensing)
+
 ## Features
 
-- Classic time controls: Sudden Death, Fischer, Bronstein, US Delay, Byoyomi (Japanese/Canadian/Progressive), Hourglass, Gong, Hidden/Random time, move counters, time banking.
-- Omni mode: sequential game lists, custom round behavior, multi-phase turns (Think > Move > Resolve).
-- Notebook, scoreboard, mini-games, game history with PGN/PDN/KIF export.
-- Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink version for Mudita devices, built with Mudita's own [MMD](https://github.com/mudita/MMD) component library.
+- Fourteen timing modes: Sudden Death, Bonus (Fischer, Bronstein, US Delay), Move Timer (six variants, among them Overtime and Save & Cap), Byoyomi (Japanese/Canadian/Progressive), Hourglass, Chronos (countdown or count-up), Move Counts, Gong, FIDE Periods, Phases, Random, Hidden, Fast Move (Accelerate/Transfer) and Staircase (a step off, or on, each move).
+- Omni mode, still marked alpha in the app: sessions of games, rounds, turns and phases, each level with its own clock, with time banks, pauses and cutoffs.
+- Two players, or up to four as an experimental option; presets; and an arbiter's panel to correct a clock or a move count during a game.
+- In Complete: game logs and statistics with PGN/PDN/KIF export, a scoreboard, a notebook (text, drawing, audio, photo, video and board notes), small tools (coin toss, dice, short straw, random card, a chess variants generator, three trainers), rulebooks readable offline, settings shared by QR code or file, a full backup, and an electronic board link over Bluetooth or USB that has not been tested against a real board yet.
+- Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink version designed for Mudita's E Ink devices and built with Mudita's own [MMD](https://github.com/mudita/MMD) component library. MasterClock is an independent project, not affiliated with Mudita.
+
+Requires Android 7.0 (API 24) or later. Every mode, variant and parameter is described in the [reference](docs/reference/README.md).
 
 ## Flavors
 
@@ -52,6 +57,20 @@ Settings, game logs and notebook entries stay on the device. The
 [privacy policy](https://usernamealreadytakensht.github.io/masterclock-website/) says what each
 runtime permission is for and when it is asked for.
 
+## Building
+
+JDK 21 and the Android SDK are all it takes; the Gradle wrapper fetches the rest.
+
+```sh
+./gradlew :app:assembleCompleteRelease   # or Standard, Lite, Mini
+./gradlew :paper:assembleRelease         # the E-Ink app
+./gradlew :core:test                     # the unit tests
+```
+
+Without a signing key the release APKs come out unsigned. [AGENTS.md](AGENTS.md) describes the
+modules, how the flavors differ and the full set of checks a change has to pass, and
+[TRANSLATING.md](TRANSLATING.md) and [RELEASING.md](RELEASING.md) cover those two jobs.
+
 ## Verifying a release
 
 Releases ship a `SHA256SUMS.txt` beside the APKs, and tags from v0.8.24 on are GPG-signed with the
@@ -65,7 +84,7 @@ what each check proves and what it does not.
 - **Chess pieces**: "Cburnett" style, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces), by [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett/GFDL_images/Chess). GFDL and CC BY-SA 3.0.
 - **Draughts stones**: by [Antonsusi](https://commons.wikimedia.org/wiki/User:Antonsusi), from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_Draughts_pieces). Public domain — too simple a shape to carry copyright.
 - **Emojis** (Complete, in text notes and on drawings): [OpenMoji](https://openmoji.org/) 17.0 by the HfG Schwäbisch Gmünd, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The bundled color font is reduced to the Unicode emojis, the OpenMoji-only extras left out. The drawings a sticker is made from are OpenMoji's own SVG files, unchanged but for their names, for the emojis a note offers.
-- **Audio**:
+- **Audio**: four sounds from [Pixabay](https://pixabay.com/), used under the [Pixabay Content License](https://pixabay.com/service/terms/). It allows their use in an app; it is not a free licence, which is why the F-Droid entries carry the `NonFreeAssets` label.
   - Gong: [Zen Gong – Alex_Jauk](https://pixabay.com/sound-effects/film-special-effects-zen-gong-199844/)
   - Beep: [Beep – u_edtmwfwu7c](https://pixabay.com/sound-effects/film-special-effects-beep-329314/)
   - Final beep: [Public Domain Beep Sound – qubodup](https://pixabay.com/sound-effects/public-domain-beep-sound-100267/)
@@ -83,10 +102,6 @@ The Complete build bundles these rulebooks so they can be read offline from the 
 - **Shogi** — FESA Rules, [Federation of European Shogi Associations](https://fesashogi.eu/).
 - **Nine Men's Morris** — the game is in the public domain; the rulebook and "Stacking Morris" are © 2022 Kanare Kato.
 - **Tafl** — Historical Hnefatafl rules, [World Tafl Federation](https://aagenielsen.dk/).
-- **Quoridor** — © & ® 1997 [Gigamic](https://www.gigamic.com/), from a concept by Mirko Marchesi.
-- **Abalone** — © Abalone S.A., France (registered trademark, patent DM/012362), distributed by [FoxMind](https://www.foxmind.com/). All rights reserved.
-- **Hex** — David Beckwith, June 2021.
-- **Santorini** — © 2007 Dr. Gordon Hamilton; the document states it may be reproduced for non-commercial purposes.
 
 ### Open-source licenses
 
