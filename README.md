@@ -16,13 +16,34 @@ A chess clock app for chess, wargames, and tabletop games. Handles classic time 
 
 ## Features
 
-- Fourteen timing modes: Sudden Death, Bonus (Fischer, Bronstein, US Delay), Move Timer (six variants, among them Overtime and Save & Cap), Byoyomi (Japanese/Canadian/Progressive), Hourglass, Chronos (countdown or count-up), Move Counts, Gong, FIDE Periods, Phases, Random, Hidden, Fast Move (Accelerate/Transfer) and Staircase (a step off, or on, each move).
-- Omni mode, still marked alpha in the app: sessions of games, rounds, turns and phases, each level with its own clock, with time banks, pauses and cutoffs.
-- Two players, or up to four as an experimental option; presets; and an arbiter's panel to correct a clock or a move count during a game.
-- In Complete: game logs and statistics with PGN/PDN/KIF export, a scoreboard, a notebook (text, drawing, audio, photo, video and board notes), small tools (coin toss, dice, short straw, random card, a chess variants generator, three trainers), rulebooks readable offline, settings shared by QR code or file, a full backup, and an electronic board link over Bluetooth or USB that has not been tested against a real board yet.
-- Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink version designed for Mudita's E Ink devices and built with Mudita's own [MMD](https://github.com/mudita/MMD) component library. MasterClock is an independent project, not affiliated with Mudita.
+Fourteen timing modes, each described in the [reference](docs/reference/modes.md):
 
-Requires Android 7.0 (API 24) or later. Every mode, variant and parameter is described in the [reference](docs/reference/README.md).
+| Mode | Variants |
+|---|---|
+| Sudden Death | |
+| Bonus | Fischer, Bronstein, US Delay |
+| Move Timer | Standard, Save & Cap, Overtime, Global, Shared (Auto), Global Shared |
+| Byoyomi | Japanese, Canadian, Progressive |
+| Hourglass | |
+| Chronos | Countdown, Countup |
+| Move Counts | Count Up, Count Down |
+| Gong | |
+| FIDE Periods | |
+| Phases | |
+| Random | |
+| Hidden | |
+| Fast Move | Accelerate, Transfer |
+| Staircase | Down, Up |
+
+The Complete build adds a notebook, a scoreboard, game history and statistics, games of chance (coin,
+dice, short straw, card), rulebooks, sharing and backup of settings, and a reset of everything.
+
+Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink version built with
+Mudita's own [MMD](https://github.com/mudita/MMD) component library. MasterClock is an independent
+project, not affiliated with Mudita.
+
+Requires Android 7.0 (API 24) or later. Every screen and option is described in the
+[reference](docs/reference/README.md).
 
 ## Flavors
 
