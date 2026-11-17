@@ -46,6 +46,12 @@ class AliveMarkTest {
     }
 
     @Test
+    fun `the mark keeps the ticker's pace in tenths, and five a second on whole seconds`() {
+        assertEquals(200L, aliveMarkEveryMs(tickerRunsInTenths = false))
+        assertEquals(100L, aliveMarkEveryMs(tickerRunsInTenths = true))
+    }
+
+    @Test
     fun `the clock ran on from its save to its mark, and only by a mark of that save`() {
         val mark = AliveMark.Reading(saveId = 42, aliveAtElapsedMs = 61_800)
         assertEquals(1_800L, aliveGapMs(saveId = 42, savedAtElapsedMs = 60_000, wasRunning = true, mark = mark))

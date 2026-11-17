@@ -4265,12 +4265,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
             moveStartTime = SystemClock.elapsedRealtime(); startClock(nextPlayer)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
-            // A move is written down as it is played: closed a second later, the game came back
-            // with the mover's clock still running and the move missing from it.
-            if (FlavorConfig.savesGameInPlay()) {
-                lastAutoSaveTime = moveStartTime
-                saveClockForLater()
-            }
+            // The move is written down as it is played, by startClock: closed a second later, the
+            // game came back with the mover's clock still running and the move missing from it.
         }
     }
 
@@ -4323,6 +4319,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             state.copy(activePlayer = playerIndex, isPaused = false, players = newPlayers)
         }
         lastTickTime = SystemClock.elapsedRealtime()
+        // Saved as it starts running, whatever started it: a move, Play, Resume. A move was, and a
+        // clock started from a pause was not until the next ten-second save came round -- its
+        // alive mark, which is written for a save of a running clock, had none to be written for,
+        // and a game closed in those seconds came back to the pause.
+        if (FlavorConfig.savesGameInPlay()) {
+            lastAutoSaveTime = lastTickTime
+            saveClockForLater()
+        }
         timerJob = viewModelScope.launch {
             // The alive mark, on its own thread and its own beat: the ticker wakes once a second
             // where the face shows seconds, and a mark that old would give back what the save's
@@ -4331,7 +4335,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 while (isActive) {
                     val id = aliveSaveId
                     if (id != 0L) aliveMark.write(id, SystemClock.elapsedRealtime())
-                    delay(ALIVE_MARK_EVERY_MS)
+                    delay(aliveMarkEveryMs(tickerRunsInTenths()))
                 }
             }
             while (isActive) {
@@ -4345,6 +4349,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 }
             } 
         }
+    }
+
+    /**
+     * Whether the ticker is running in tenths or faster rather than on the second's edge, as
+     * [tickIntervalMs] decides it: what the alive mark keeps pace with.
+     */
+    private fun tickerRunsInTenths(): Boolean {
+        val state = _uiState.value
+        val active = state.activePlayer ?: return false
+        val player = state.players.getOrNull(active - 1) ?: return false
+        val mode = getPlayerSettings(active).mode
+        return !ticksOnTheSecond(mode, player, _settings.value, displayedTimeMs(state, player, mode))
     }
 
     /**
@@ -5335,10 +5351,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // Installed paused, so the wait until Resume is pressed is a pause like any other.
                 pausedAt = now
                 _uiState.value = resumedState.copy(isPaused = true)
-                // Saved again at the first tick once it runs: until then the save on disk is the old
-                // one, whose mark stopped where the app was closed, and a second closing soon after
-                // Resume would bring back the first.
-                lastAutoSaveTime = 0
                 // The roll Reset replays is the resumed game's, as for a game started from Last
                 // Games. It was whatever this launch had drawn on its way up, so Reset after resuming
                 // a 7:00 + 3s Random game started a 4:20 + 1s one.
