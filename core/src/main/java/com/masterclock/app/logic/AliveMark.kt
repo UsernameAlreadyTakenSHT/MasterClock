@@ -68,6 +68,13 @@ class AliveMark(private val file: File) {
     }
 }
 
+/**
+ * The players whose flag fell between [saved] and [back], the clock run on from it: out of time
+ * now and not then. Their flag is the game's to record; see resumeSavedClock.
+ */
+internal fun flaggedWhileRunningOn(saved: ChessClockState, back: ChessClockState): List<Int> =
+    back.players.indices.filter { back.players[it].isOutOfTime && saved.players.getOrNull(it)?.isOutOfTime == false }.map { it + 1 }
+
 /** How often the mark is written while a clock runs on whole seconds: what a game closed by surprise can lose. */
 const val ALIVE_MARK_EVERY_MS = 200L
 

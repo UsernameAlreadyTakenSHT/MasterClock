@@ -135,7 +135,9 @@ pauses. With **Keep running in the background** a notification keeps the clock g
 turn it is.
 
 The clock's time is measured from the device's own clock, so it is right when the app comes back,
-whatever happened meanwhile. A sound due while the screen is off can come late.
+whatever happened meanwhile. With **Keep running in the background** the phone is kept awake until
+the running clock's end, so its flag sounds on time with the screen off; with neither that nor the
+pause, a sound due while the screen is off can come late.
 
 ## Three and four players
 
@@ -164,7 +166,7 @@ Its settings are one page:
 | **Reverse colors** | off | White on black. |
 | **Keep screen awake** | on | |
 | **Fullscreen** | off | Hides the status bar. |
-| **Sound** | off | A sound at each move. |
+| **Sound** | off | A sound at each move, and the triple beep when a clock runs out. |
 | **Haptic feedback** | off | A vibration at each move. |
 
 It has no presets, no arbiter's panel, no history and no autosave.

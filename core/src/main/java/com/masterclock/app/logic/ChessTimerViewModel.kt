@@ -4041,7 +4041,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             _hasSavedClock.value = gameDao.getSavedClock() != null
             // With no arbiter's panel to ask for it, the game Android closed comes back by itself,
             // paused: see FlavorConfig.resumesSavedGameAtLaunch.
-            if (_hasSavedClock.value && FlavorConfig.resumesSavedGameAtLaunch()) resumeSavedClock()
+            // Not under a shortcut waiting to be applied: it asks for its own game, and applied
+            // below it would be over the one just resumed.
+            if (_hasSavedClock.value && FlavorConfig.resumesSavedGameAtLaunch() && pendingShortcutId == null) resumeSavedClock()
             // Sanitised like the settings and the scoreboard above: a restore is what usually wrote
             // them, and a preset is applied to the clock as it stands.
             // Not held to an import's count: saving has no cap, so past 500 presets the newest was
@@ -4078,6 +4080,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun applyShortcutNow(id: String) {
         val target = resolveShortcut(id) ?: return
+        resumeGeneration++
         // A built-in keeps the player's flag behaviour and first-move bonus, as on the presets
         // screen; and a shortcut always starts a game, even one matching the clock's.
         val builtIn = !id.startsWith("preset:") && !id.startsWith("game:")
@@ -4326,6 +4329,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Not the first press of a new game: the game interrupted before it may still be on offer,
         // and stays so until this one's first save, at its first move or ten seconds in; see
         // applyShortcutNow. A game that has not been played has nothing to lose in the meantime.
+        if (newGame) resumeGeneration++
         if (FlavorConfig.savesGameInPlay() && !newGame) {
             lastAutoSaveTime = lastTickTime
             saveClockForLater()
@@ -5282,9 +5286,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         historyWrites.trySend(HistoryWrite.ClearClock)
     }
 
+    /**
+     * Counts what starts a game: a resume, a shortcut, a first press. A resume reads its save off
+     * the main thread and installs it some moments later; a game started in those moments was
+     * replaced by the old one. On Mini, which resumes by itself at launch, a launcher shortcut
+     * gave the shortcut's game or the interrupted one as the timing fell. A resume that finds the
+     * count moved on leaves what started since alone.
+     */
+    private var resumeGeneration = 0
+
     fun resumeSavedClock() {
         pendingBoardNotation = null
         lastBoardNotation = null
+        val asked = ++resumeGeneration
         viewModelScope.launch {
             val saved = gameDao.getSavedClock() ?: return@launch
             try {
@@ -5298,6 +5312,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // Through the whole-table rule, as every other way in is: a clock saved before it
                 // (per-player settings with a shared mode) came back with them on, and was stored so.
                 val resumedSettings = restoreSavedTimeControl(_settings.value, resumed.first).wholeTableSettings().withSeatsForPlayers()
+                // Something else has started a game while this was being read -- a shortcut, a first
+                // press: that game stands, and this one stays on offer; see resumeGeneration.
+                if (asked != resumeGeneration) return@launch
+
+                // How far the clock ran on after its save, by its alive mark. A clock saved paused, or
+                // one whose mark is another save's, ran on nothing; see aliveGapMs.
+                val wasRunning = !resumed.second.isPaused && resumed.second.activePlayer != null
+                val mark = withContext(Dispatchers.IO) { aliveMark.read() }
+                val ranOnMs = aliveGapMs(saved.timestamp, resumed.second.savedAtElapsedMs, wasRunning, mark)
 
                 // The game the clock belongs to, read back from the history it has been written to
                 // as it was played. Resuming used to leave currentLog null, so the next press opened
@@ -5313,13 +5336,18 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                         // toGameLog degrades an unreadable row to an empty log rather than throwing.
                         ?.takeIf { it.events.isNotEmpty() }
                 }?.let { log ->
-                    // Back to the moment of the save, as the clock is: the moves played after it
+                    // Back to the moment the clock comes back to: the moves played after it
                     // stayed in the log, and played again from the restored clock were logged
                     // twice -- four moves in the PGN and the statistics for two played.
-                    val upToSave = log.events.filter { it.timestamp <= saved.timestamp }
+                    // That moment is the save's, and what the clock ran on after it: cut at the
+                    // save alone, a flag that fell or a period that went in between left the log
+                    // while the clock, run on past it, still showed it -- a game overrun with no
+                    // flag in its record, and none to come, since it is logged as it falls.
+                    val upToSave = log.events.filter { it.timestamp <= saved.timestamp + ranOnMs }
                     if (upToSave.size == log.events.size) log
                     else log.copy(events = upToSave).also { historyWrites.trySend(HistoryWrite.Store(it)) }
                 }
+                if (asked != resumeGeneration) return@launch
                 // Whatever was on screen is replaced, so it ends here like any other game -- unless
                 // it is the very game being resumed.
                 if (resumedLog == null || resumedLog.id != currentLog?.id) finishCurrentLog()
@@ -5331,6 +5359,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // wrote this older snapshot back over all of it; and the sounds still playing were
                 // the ones loaded before.
                 settingsRepo.saveSettings(resumedSettings)
+                if (asked != resumeGeneration) return@launch
                 soundManager.loadSounds(resumedSettings)
 
                 // The autosave runs only from tick(), so every snapshot it takes is of a *running*
@@ -5344,18 +5373,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 timerJob = null
                 aliveSaveId = 0L
                 // On from the save to the moment the clock was last known running: the save is up to
-                // ten seconds old, its mark a fifth of a second. A clock saved paused, or one whose
-                // mark is another save's, comes back as saved; see aliveGapMs.
-                val wasRunning = !resumed.second.isPaused && resumed.second.activePlayer != null
-                val mark = withContext(Dispatchers.IO) { aliveMark.read() }
-                val ranOnMs = aliveGapMs(saved.timestamp, resumed.second.savedAtElapsedMs, wasRunning, mark)
-                val resumedState = advanceClock(resumed.second.toState(), ranOnMs, resumedSettings)
+                // ten seconds old, its mark a fifth of a second.
+                val savedState = resumed.second.toState()
+                val resumedState = advanceClock(savedState, ranOnMs, resumedSettings)
                 val now = SystemClock.elapsedRealtime()
                 lastTickTime = now
                 moveStartTime = now - (resumed.second.moveElapsedMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS) + ranOnMs)
                 // Installed paused, so the wait until Resume is pressed is a pause like any other.
                 pausedAt = now
                 _uiState.value = resumedState.copy(isPaused = true)
+                // A flag that fell in the last of it, after the tick that would have logged it: the
+                // clock shows it, so the record has it.
+                for (player in flaggedWhileRunningOn(savedState, resumedState)) {
+                    val logged = currentLog?.events?.any { it.eventType == "FLAG" && it.playerIndex == player && it.timestamp > saved.timestamp } == true
+                    if (!logged) addEvent(GameEvent(eventType = "FLAG", playerIndex = player, detail = "Time Up"))
+                }
                 // The roll Reset replays is the resumed game's, as for a game started from Last
                 // Games. It was whatever this launch had drawn on its way up, so Reset after resuming
                 // a 7:00 + 3s Random game started a 4:20 + 1s one.
@@ -5370,6 +5402,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // within fifteen seconds of it, the game had nothing left to come back to. What may
                 // still be encoding is older than this and is dropped; see savedClockGeneration.
                 savedClockGeneration++
+                // Unless the game ended while it ran on: a flag under Freeze, the last period gone.
+                // It comes back finished, to be seen, and is not kept to come back again -- Mini,
+                // which takes its save up by itself, opened on the same finished game at every launch.
+                val phasesOver = s1.mode == TimerMode.PHASES && resumedState.players.firstOrNull()?.isOutOfTime == true
+                if (phasesOver || isGameOver(resumedState, resumedSettings.flagBehavior, resumedSettings.numberOfPlayers)) clearSavedClock()
             } catch (e: Exception) {
                 Log.w("ChessTimerViewModel", "Failed to resume saved clock, discarding it", e)
                 clearSavedClock()

@@ -12,6 +12,7 @@ install: the clock is silent until it is asked not to be.
 | **Play sound on player switch** | off | A click each time a move ends and the turn passes. |
 | **Voice announcements** | off | The clock speaks, in the app's language, with the device's text-to-speech voice. |
 | **Spoken byoyomi** | off | A Japanese byoyomi period is read aloud as a shogi timekeeper reads it. A switch of its own: it speaks with the announcements off, and then also says "Entering byoyomi" and "Periods left: 2". |
+| **In Japanese (soon)** | — | A place kept for reading that byoyomi in Japanese whatever the app's language. Greyed out: it does nothing yet. |
 
 What the voice says:
 

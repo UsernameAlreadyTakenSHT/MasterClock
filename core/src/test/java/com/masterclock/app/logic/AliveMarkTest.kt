@@ -212,8 +212,15 @@ class AliveMarkTest {
     @Test
     fun `a flag that fell before the app was closed has fallen when the game comes back`() {
         val settings = ChessClockSettings()
-        val ranOn = advanceClock(running(1_000, 60_000), 1_800, settings)
+        val saved = running(1_000, 60_000)
+        val ranOn = advanceClock(saved, 1_800, settings)
         assertEquals(0L, ranOn.players[0].timeRemainingMs)
         assertEquals(true, ranOn.players[0].isOutOfTime)
+        // And is the game's to record: player 1's, not one that had fallen before the save.
+        assertEquals(listOf(1), flaggedWhileRunningOn(saved, ranOn))
+        assertEquals(emptyList<Int>(), flaggedWhileRunningOn(ranOn, ranOn))
+        assertEquals(emptyList<Int>(), flaggedWhileRunningOn(saved, advanceClock(saved, 500, settings)))
+        // Under Freeze that ends the game, which is then not kept to come back a second time.
+        assertEquals(true, isGameOver(ranOn, settings.flagBehavior, settings.numberOfPlayers))
     }
 }
