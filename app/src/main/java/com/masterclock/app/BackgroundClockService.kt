@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -17,6 +18,7 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.masterclock.app.logic.BackgroundClock
 import com.masterclock.app.logic.NotifiedCountdown
+import com.masterclock.app.logic.wakeForMs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,7 +49,9 @@ object BackgroundClockLink {
  * from its last autosave, or not at all. A foreground service and its notification keep the process,
  * and with it the ViewModel and its ticker. The time itself never depended on this -- the clock goes
  * by elapsed real time, which a phone asleep still counts -- but a flag that falls is only sounded by
- * a process still there, and late if the phone was asleep: there is no exact alarm behind it.
+ * a process still there, and by a processor awake to run its tick: with the screen off the phone slept
+ * and the flag sounded when something else woke it. The service holds the processor until the end
+ * the clock counts to; see [keepAwake].
  */
 class BackgroundClockService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -66,11 +70,13 @@ class BackgroundClockService : Service() {
         }
         // Within five seconds of startForegroundService, whatever the clock says, or Android ends the app.
         startInForeground(notification(BackgroundClockLink.clock.value))
+        keepAwake(BackgroundClockLink.clock.value)
         scope.launch {
             // A tick changes the time, not what the notification says: it counts down on its own, and
             // is redrawn only when the end it counts to has moved; see NotifiedCountdown.
             BackgroundClockLink.clock.collect { clock ->
                 if (clock == null) { stopSelf(); return@collect }
+                keepAwake(clock)
                 val now = NotifiedCountdown.of(clock, SystemClock.elapsedRealtime())
                 if (shown?.outOfStepWith(now) != false) manager.notify(NOTIFICATION_ID, notification(clock))
             }
@@ -90,7 +96,32 @@ class BackgroundClockService : Service() {
 
     override fun onDestroy() {
         scope.cancel()
+        wakeLock?.let { if (it.isHeld) it.release() }
         super.onDestroy()
+    }
+
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    /** The end the processor is being kept awake for, to tell when it has moved. */
+    private var awakeFor: NotifiedCountdown? = null
+
+    /**
+     * Holds the processor until [clock] has sounded what it counts to; see wakeForMs. Taken again only
+     * when that end has moved -- a move played, a period begun -- not at every tick, and always with
+     * its own time limit, so a game abandoned lets the phone sleep without anything having to end it.
+     */
+    private fun keepAwake(clock: BackgroundClock?) {
+        val wanted = NotifiedCountdown(null, clock?.soundsInMs?.let { SystemClock.elapsedRealtime() + it })
+        if (awakeFor?.outOfStepWith(wanted) == false) return
+        awakeFor = wanted
+        val lock = wakeLock ?: getSystemService(PowerManager::class.java)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MasterClock:flag")
+            .apply { setReferenceCounted(false) }
+            .also { wakeLock = it }
+        // Released first: a lock taken again keeps the earlier limit's release, which would let go of
+        // it early.
+        if (lock.isHeld) lock.release()
+        wakeForMs(clock)?.let { lock.acquire(it) }
     }
 
     private fun startInForeground(notification: Notification) {

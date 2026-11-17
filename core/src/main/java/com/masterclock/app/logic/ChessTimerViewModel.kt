@@ -373,8 +373,30 @@ fun ChessClockSettings.runsInBackground(): Boolean =
  * down to a flag -- a stopwatch, a move count, an overrun -- or where the time is not to be shown, in
  * Hidden, and the notification then says only that the clock runs. It is the time as it stood when
  * read: the notification counts it down on its own; see [NotifiedCountdown] for when it is read again.
+ *
+ * [soundsInMs] is the time until the clock next has something to sound, which is the same end unless
+ * the time is withheld: Hidden shows nothing and flags all the same. It is what the phone is kept
+ * awake for; see [wakeForMs].
  */
-data class BackgroundClock(val playerIndex: Int?, val countdownMs: Long?)
+data class BackgroundClock(val playerIndex: Int?, val countdownMs: Long?, val soundsInMs: Long? = countdownMs)
+
+/** Past the end it waits for: the tick that finds the flag, and the sound it then plays. */
+const val WAKE_MARGIN_MS = 10_000L
+
+/** A game forgotten with hours on its clock does not hold the processor all night. */
+const val MAX_WAKE_MS = 4 * 3_600_000L
+
+/**
+ * How long the processor is kept awake for [clock] while its screen is off, or null for no need.
+ *
+ * The time was always right -- it is read from a clock a sleeping phone still counts -- but the tick
+ * that finds a flag fallen is the app's own, and a phone asleep does not run it: the flag sounded
+ * when something else next woke the phone, seconds or minutes late. Kept awake to the end the clock
+ * counts to and a moment more, and no longer: a clock with no such end -- a stopwatch, a move count,
+ * an overrun -- has nothing to be late for, and the lock lapses by itself if the game is abandoned.
+ */
+fun wakeForMs(clock: BackgroundClock?): Long? =
+    clock?.soundsInMs?.takeIf { it > 0 }?.let { (it + WAKE_MARGIN_MS).coerceAtMost(MAX_WAKE_MS) }
 
 /**
  * A countdown as a notification shows it: an end, on the elapsed-real-time clock, that it counts to
@@ -410,14 +432,16 @@ fun backgroundClockOf(state: ChessClockState, settings: ChessClockSettings): Bac
     val mode = settings.playerSettings(active).mode
     // Hidden withholds the time, as its beeps and its flash do: on the lock screen to the second, the
     // notification would say it outright.
-    val counts = mode !in setOf(TimerMode.CHRONO_COUNTUP, TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN, TimerMode.HIDDEN) &&
+    val runsOut = mode !in setOf(TimerMode.CHRONO_COUNTUP, TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN) &&
         !player.isOverrun(settings.flagBehavior)
+    val counts = runsOut && mode != TimerMode.HIDDEN
     // A delay runs before the clock does, so the flag is that much further off. Counted down without it,
     // the notification ran a whole delay ahead on every move.
     val shown = countdownTimeMs(state, player, mode) + player.delayRemainingMs.coerceAtLeast(0)
     return BackgroundClock(
         playerIndex = active.takeUnless { mode.isWholeTable },
         countdownMs = shown.takeIf { counts && it > 0 },
+        soundsInMs = shown.takeIf { runsOut && it > 0 },
     )
 }
 

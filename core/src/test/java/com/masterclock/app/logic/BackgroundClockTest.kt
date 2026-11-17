@@ -101,8 +101,21 @@ class BackgroundClockTest {
     fun `Hidden shows no time, and a delay counts towards the flag`() {
         val hidden = asked.copy(main = PlayerSettings(mode = TimerMode.HIDDEN))
         assertNull(backgroundClockOf(game(PlayerState(42_000), PlayerState(42_000)), hidden)!!.countdownMs)
+        // Withheld from the notification, not from the flag: the phone is still kept awake for it.
+        assertEquals(42_000L, backgroundClockOf(game(PlayerState(42_000), PlayerState(42_000)), hidden)!!.soundsInMs)
         val delay = asked.copy(main = PlayerSettings(mode = TimerMode.US_DELAY, incrementMs = 5_000))
         assertEquals(47_000L, backgroundClockOf(game(PlayerState(42_000, delayRemainingMs = 5_000), PlayerState(60_000)), delay)!!.countdownMs)
+    }
+
+    @Test
+    fun `the phone is kept awake to the flag and a moment more, and for nothing without one`() {
+        assertEquals(42_000L + WAKE_MARGIN_MS, wakeForMs(BackgroundClock(1, 42_000)))
+        assertEquals(42_000L + WAKE_MARGIN_MS, wakeForMs(BackgroundClock(1, null, soundsInMs = 42_000)))
+        // A stopwatch, a move count, an overrun: nothing to be late for.
+        assertNull(wakeForMs(BackgroundClock(1, null)))
+        assertNull(wakeForMs(null))
+        // Not all night for a game left behind.
+        assertEquals(MAX_WAKE_MS, wakeForMs(BackgroundClock(1, 20 * 3_600_000L)))
     }
 
     @Test

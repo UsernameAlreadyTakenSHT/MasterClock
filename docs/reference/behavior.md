@@ -40,7 +40,7 @@ Two switches, each for one mode only.
 | **Confirm reset** | on | Reset asks "Reset Game?" before clearing a game. It covers the die of Random and Hidden too, which restarts the game. |
 | **Trigger on Press (else on Release)** | on | On, a move ends when the finger touches the face. Off, when it lifts. |
 | **Pause when in background** | on | Leaving the app, or the screen turning off, pauses the game. |
-| **Keep running in the background** | off | Available once the pause above is off. A notification keeps the clock going while the app is in the background, so that Android does not close it. It shows whose turn it is and their time, with a Pause button. |
+| **Keep running in the background** | off | Available once the pause above is off. A notification keeps the clock going while the app is in the background, so that Android does not close it. It shows whose turn it is and their time, with a Pause button. With the screen off the phone is kept from sleeping until that clock runs out, so that its flag sounds on time; it costs some battery, and only while a game runs this way. |
 
 With both of the last two off, the game goes on in the background without a notification, and
 Android may close the app; the time is still right when it comes back, since it is measured from the

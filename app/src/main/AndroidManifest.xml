@@ -17,6 +17,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Held by that service until the running clock's flag, so its sound is not late with the screen off. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!--
       Removed for every flavour, not only the reduced three.
 
