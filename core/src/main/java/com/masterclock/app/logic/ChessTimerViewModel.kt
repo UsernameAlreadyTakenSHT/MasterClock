@@ -4530,8 +4530,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (readsByoyomi) {
             when (val call = byoyomiCall(player.byoyomiTimeMs, oldState.timeRemainingMs, newState.timeRemainingMs)) {
                 is ByoyomiCall.Seconds -> voiceManager.speak(CoreR.string.voice_byoyomi_seconds, vol, call.elapsed)
-                // A bare number, which the voice reads in its own language.
-                is ByoyomiCall.Count -> voiceManager.speak(call.number.toString(), vol)
+                // A bare number, which the voice reads in its own language. "One" comes a second
+                // after the last of the tens, which takes a little over a second to say: it waits
+                // for it, the only call that does, rather than cut "twenty seconds" short.
+                is ByoyomiCall.Count -> voiceManager.speak(call.number.toString(), vol, afterTheLast = call.number == 1)
                 null -> Unit
             }
         }

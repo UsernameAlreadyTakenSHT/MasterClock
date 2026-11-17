@@ -121,15 +121,19 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
         whenReady { utter(speechResources.getString(text, *args), volume) }
     }
 
-    /** Speaks text as given -- a phase name the user typed, which has no translation. */
-    fun speak(text: String, volume: Float) {
-        whenReady { utter(text, volume) }
+    /**
+     * Speaks text as given -- a phase name the user typed, which has no translation. [afterTheLast]
+     * lets what is being said finish first, where everything else cuts it short: the "one" that
+     * follows "twenty seconds" a second later, which took the end off it.
+     */
+    fun speak(text: String, volume: Float, afterTheLast: Boolean = false) {
+        whenReady { utter(text, volume, afterTheLast) }
     }
 
-    private fun utter(text: String, volume: Float) {
+    private fun utter(text: String, volume: Float, afterTheLast: Boolean = false) {
         val params = Bundle()
         params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume)
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, params, null)
+        tts?.speak(text, if (afterTheLast) TextToSpeech.QUEUE_ADD else TextToSpeech.QUEUE_FLUSH, params, null)
     }
 
     fun release() {
