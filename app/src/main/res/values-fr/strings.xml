@@ -287,7 +287,7 @@
     <!-- Settings: Audio -->
     <string name="settings_sound">Son</string>
     <string name="settings_voice_announcements">Annonces vocales</string>
-    <string name="settings_spoken_byoyomi_soon">Byoyomi parlé (bientôt)</string>
+    <string name="settings_spoken_byoyomi">Byoyomi parlé</string>
     <string name="settings_in_japanese_soon">En japonais (bientôt)</string>
     <string name="settings_timer_alerts">Alertes de la pendule</string>
     <string name="settings_countdown_beep">Bip de décompte</string>

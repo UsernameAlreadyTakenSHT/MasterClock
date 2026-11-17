@@ -276,7 +276,7 @@
     <!-- Settings: Audio -->
     <string name="settings_sound">Sonido</string>
     <string name="settings_voice_announcements">Anuncios de voz</string>
-    <string name="settings_spoken_byoyomi_soon">Byoyomi hablado (pronto)</string>
+    <string name="settings_spoken_byoyomi">Byoyomi hablado</string>
     <string name="settings_in_japanese_soon">En japonés (pronto)</string>
     <string name="settings_timer_alerts">Alertas del reloj</string>
     <string name="settings_countdown_beep">Pitido de cuenta atrás</string>

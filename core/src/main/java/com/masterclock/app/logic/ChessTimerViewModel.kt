@@ -367,6 +367,41 @@ fun countdownTimeMs(state: ChessClockState, player: PlayerState, mode: TimerMode
 fun ChessClockSettings.runsInBackground(): Boolean =
     keepRunningInBackground && !pauseOnBackground && FlavorConfig.hasFullSettingsTabs()
 
+/** Whether anything is to be said aloud, and so whether the speech engine is wanted at all. */
+fun ChessClockSettings.speaks(): Boolean = voiceAnnouncementsEnabled || spokenByoyomi
+
+/** One call of a byoyomi period read aloud: the seconds gone, "thirty seconds", or a bare count. */
+sealed interface ByoyomiCall {
+    data class Seconds(val elapsed: Int) : ByoyomiCall
+    data class Count(val number: Int) : ByoyomiCall
+}
+
+/**
+ * What a shogi timekeeper calls as a byoyomi period of [periodMs] comes down from [previousMs] to
+ * [nowMs], or null for nothing.
+ *
+ * The time gone, not the time left, and then a count: a minute a move is read "thirty seconds,
+ * forty seconds, fifty seconds, one, two ... nine", thirty seconds a move "ten seconds, twenty
+ * seconds, one ... nine". Ten is never called: to hear it is to have lost on time, which here is
+ * the flag or the period going. So the tens of the last half minute, then one to nine over the last
+ * ten seconds -- which is those two readings, and gives a period of any other length its own.
+ * A period under ten seconds is counted from its start.
+ */
+internal fun byoyomiCall(periodMs: Long, previousMs: Long, nowMs: Long): ByoyomiCall? {
+    val period = (periodMs / 1000).toInt()
+    // A clock going up is a new period or a move played, not a second gone.
+    if (period <= 0 || nowMs >= previousMs || nowMs <= 0) return null
+    val was = ((periodMs - previousMs).coerceAtLeast(0) / 1000).toInt()
+    val elapsed = ((periodMs - nowMs).coerceAtLeast(0) / 1000).toInt()
+    if (elapsed == was || elapsed <= 0 || elapsed >= period) return null
+    val left = period - elapsed
+    return when {
+        left <= 9 -> ByoyomiCall.Count(elapsed - (period - 10).coerceAtLeast(0))
+        elapsed % 10 == 0 && left <= 30 -> ByoyomiCall.Seconds(elapsed)
+        else -> null
+    }
+}
+
 /**
  * What the background notification shows: whose turn it is, and the time until their flag.
  * [playerIndex] is null for a clock that is the table's. [countdownMs] is null where nothing counts
@@ -1010,6 +1045,8 @@ data class ChessClockSettings(
     val hapticFeedback: Boolean = false,
     val playSwitchSound: Boolean = false,
     val voiceAnnouncementsEnabled: Boolean = false,
+    /** A Japanese byoyomi period read aloud as a shogi timekeeper reads it; see [byoyomiCall]. */
+    val spokenByoyomi: Boolean = false,
     val beepThreshold: BeepCountdownThreshold = BeepCountdownThreshold.OFF,
     val tripleBeepTimeUp: Boolean = false,
     val hapticCountdownThreshold: BeepCountdownThreshold = BeepCountdownThreshold.OFF,
@@ -3956,7 +3993,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             _settings.value = savedSettings
             soundManager.loadSounds(savedSettings)
             // Ahead of the first announcement, where there will be some; see VoiceManager.
-            if (savedSettings.voiceAnnouncementsEnabled) voiceManager.start()
+            if (savedSettings.speaks()) voiceManager.start()
             _uiState.value = createInitialState(savedSettings)
             // Sanitised like an import: it is the same shape of data, and a backup restore is what
             // usually put it there.
@@ -4481,9 +4518,25 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun handleVoice(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int, timeLeft: Pair<Long, Long>? = null, afterPress: Boolean = false) {
+        val vol = settings.voiceVolume
+        // The byoyomi read aloud, a switch of its own: the count without "one minute remaining".
+        // Japanese byoyomi alone, where each move has its period; a Canadian block is so many moves
+        // in a time, which no timekeeper reads this way. Within a period only: the tick that enters
+        // byoyomi, loses a period or flags is not a second of one.
+        val player = getPlayerSettings(playerIdx)
+        val readsByoyomi = settings.spokenByoyomi && player.mode == TimerMode.BYOYOMI_JAPANESE && !afterPress &&
+            oldState.isInByoyomi && newState.isInByoyomi && !newState.isOutOfTime &&
+            newState.byoyomiPeriodsRemaining == oldState.byoyomiPeriodsRemaining
+        if (readsByoyomi) {
+            when (val call = byoyomiCall(player.byoyomiTimeMs, oldState.timeRemainingMs, newState.timeRemainingMs)) {
+                is ByoyomiCall.Seconds -> voiceManager.speak(CoreR.string.voice_byoyomi_seconds, vol, call.elapsed)
+                // A bare number, which the voice reads in its own language.
+                is ByoyomiCall.Count -> voiceManager.speak(call.number.toString(), vol)
+                null -> Unit
+            }
+        }
         if (!settings.voiceAnnouncementsEnabled) return
 
-        val vol = settings.voiceVolume
         // 1. Time's Up -- or, the table's CHRONO countdown running out, the end of the game.
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
             // PHASES too, a phase that flags on its end: one clock for the table, and "time is up for
@@ -4508,7 +4561,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // to a player a minute past their time.
         val previous = timeLeft?.first ?: oldState.timeRemainingMs
         val time = timeLeft?.second ?: newState.timeRemainingMs
-        val thresholds = if (afterPress || getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN || oldState.isOutOfTime || newState.isOutOfTime) emptyList()
+        // Nor over a byoyomi being read aloud: "thirty seconds remaining" on top of "thirty seconds".
+        val thresholds = if (afterPress || readsByoyomi || getPlayerSettings(playerIdx).mode == TimerMode.HIDDEN || oldState.isOutOfTime || newState.isOutOfTime) emptyList()
             else listOf(60000L to CoreR.string.voice_one_minute_left, 30000L to CoreR.string.voice_thirty_seconds_left, 10000L to CoreR.string.voice_ten_seconds_left)
         for ((t, words) in thresholds) {
             if (previous > t && time <= t) voiceManager.speak(words, vol)
@@ -4844,7 +4898,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             soundManager.setVolume(newSettings.soundsVolume)
         }
 
-        if (newSettings.voiceAnnouncementsEnabled && !oldSettings.voiceAnnouncementsEnabled) {
+        if (newSettings.speaks() && !oldSettings.speaks()) {
             voiceManager.start()
             // Already known from an earlier start: the engine will not answer a second time.
             if (voiceManager.hasNoVoice) voiceMissing.trySend(Unit)

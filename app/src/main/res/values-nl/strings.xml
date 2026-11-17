@@ -263,7 +263,7 @@
     <!-- Settings: Audio -->
     <string name="settings_sound">Geluid</string>
     <string name="settings_voice_announcements">Gesproken meldingen</string>
-    <string name="settings_spoken_byoyomi_soon">Gesproken byoyomi (binnenkort)</string>
+    <string name="settings_spoken_byoyomi">Gesproken byoyomi</string>
     <string name="settings_in_japanese_soon">In het Japans (binnenkort)</string>
     <string name="settings_timer_alerts">Klokwaarschuwingen</string>
     <string name="settings_countdown_beep">Aftelpiep</string>

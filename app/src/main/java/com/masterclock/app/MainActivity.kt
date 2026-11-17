@@ -183,8 +183,8 @@ class MainActivity : ComponentActivity() {
             // The volume keys follow where the sounds go. With "Use media output" off the beeps play
             // as system sounds, and the keys still moved the media volume; the voice stays on media,
             // so the keys do too while it speaks.
-            LaunchedEffect(settings.audioOutputMedia, settings.voiceAnnouncementsEnabled) {
-                volumeControlStream = if (settings.audioOutputMedia || settings.voiceAnnouncementsEnabled) AudioManager.STREAM_MUSIC else AudioManager.STREAM_SYSTEM
+            LaunchedEffect(settings.audioOutputMedia, settings.speaks()) {
+                volumeControlStream = if (settings.audioOutputMedia || settings.speaks()) AudioManager.STREAM_MUSIC else AudioManager.STREAM_SYSTEM
             }
             val json = remember { Json { ignoreUnknownKeys = true } }
             val context = LocalContext.current

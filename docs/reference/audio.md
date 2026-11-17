@@ -11,6 +11,7 @@ install: the clock is silent until it is asked not to be.
 |---|---|---|
 | **Play sound on player switch** | off | A click each time a move ends and the turn passes. |
 | **Voice announcements** | off | The clock speaks, in the app's language, with the device's text-to-speech voice. |
+| **Spoken byoyomi** | off | A Japanese byoyomi period is read aloud as a shogi timekeeper reads it. A switch of its own: it speaks with the announcements off. |
 
 What the voice says:
 
@@ -23,6 +24,20 @@ What the voice says:
 | "Reflect", "Move" | Gong: each phase begins. |
 | "Phase 2" | Phases: a new phase begins. |
 | "Finished" | The game ends without a flag. |
+
+What Spoken byoyomi says, in [Byoyomi](modes.md#byoyomi)'s Japanese type, once main time is spent:
+
+| Period | Read aloud |
+|---|---|
+| 1:00 | "Thirty seconds", "forty seconds", "fifty seconds", then "one, two ... nine". |
+| 0:30 | "Ten seconds", "twenty seconds", then "one, two ... nine". |
+| Any other | The tens of its last half minute, then one to nine over its last ten seconds. Under ten seconds, a count from its start. |
+
+It is the time gone, not the time left, as at a shogi board, and ten is never called: to hear it
+is to have lost on time, which here is the period going or the flag. While it reads a period the
+announcements leave "thirty seconds remaining" and "ten seconds remaining" unsaid. The numbers are
+the voice's own, so they come a moment after the second they belong to, by as much as the device's
+speech engine takes to start.
 
 If the device has no text-to-speech voice in the app's language or in English, the app says so
 instead of staying silent: one has to be installed in the device's settings.

@@ -293,7 +293,7 @@
     <string name="settings_sound">Sound</string>
     <string name="settings_voice_announcements">Voice announcements</string>
     <!-- Two switches that do nothing yet: the byoyomi seconds read aloud, and reading them in Japanese. -->
-    <string name="settings_spoken_byoyomi_soon">Spoken byoyomi (soon)</string>
+    <string name="settings_spoken_byoyomi">Spoken byoyomi</string>
     <string name="settings_in_japanese_soon">In Japanese (soon)</string>
     <string name="settings_timer_alerts">Timer Alerts</string>
     <string name="settings_countdown_beep">Countdown beep</string>
