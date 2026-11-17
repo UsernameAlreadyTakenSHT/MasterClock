@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -131,7 +132,9 @@ internal fun EmojiPicker(onInsert: (String) -> Unit) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(48.dp),
             state = grid,
-            modifier = Modifier.height(200.dp),
+            // Tagged for the tests, which scroll it to an emoji as a finger would: on a short phone
+            // the lower rows are not on screen, and a lazy grid has no node for what is not.
+            modifier = Modifier.height(200.dp).testTag("emoji_grid"),
             contentPadding = PaddingValues(8.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),

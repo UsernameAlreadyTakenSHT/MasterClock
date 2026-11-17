@@ -141,7 +141,14 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     val lastTap = remember { longArrayOf(0L) }
     // The insert panel open, if any: one at a time, the same button closing it.
     var inserting by rememberSaveable { mutableStateOf<InsertKind?>(null) }
-    fun toggleInsert(kind: InsertKind) { inserting = if (inserting == kind) null else kind }
+    // A panel opening puts the keyboard away, as a keyboard's own emoji page takes its place. With
+    // the screen laid out above the keyboard, the two together left a short phone no room for the
+    // note: the panel showed one row and the text none.
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    fun toggleInsert(kind: InsertKind) {
+        inserting = if (inserting == kind) null else kind
+        if (inserting != null) keyboard?.hide()
+    }
 
     PersistDebounced(title to rich) { (newTitle, newRich) -> onUpdate { it.copy(title = newTitle).withRichText(newRich) } }
 

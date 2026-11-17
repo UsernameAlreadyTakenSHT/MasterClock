@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performSemanticsAction
@@ -167,6 +168,12 @@ class TextNoteFlowTest {
         waitForTheNote("the inserts") { it.content == "♔!?±" }
     }
 
+    /** An emoji of the open group, scrolled to first: the grid's lower rows are off a short screen. */
+    private fun pick(emoji: String) {
+        rule.onNode(androidx.compose.ui.test.hasTestTag("emoji_grid")).performScrollToNode(hasText(emoji))
+        rule.onNode(hasText(emoji) and hasClickAction()).performClick()
+    }
+
     @Test
     fun emojisGoInFromTheirTabWhole() {
         openTheNotebook()
@@ -176,11 +183,11 @@ class TextNoteFlowTest {
         await(hasSetTextAction())
         content().performTextInput("Won ")
         press("tools_insert_emojis")
-        for (emoji in listOf("🏆", "⏱️", "🧠")) rule.onNode(hasText(emoji) and hasClickAction()).performClick()
+        for (emoji in listOf("🏆", "⏱️", "🧠")) pick(emoji)
         waitForTheNote("the emojis") { it.content == "Won 🏆⏱️🧠" }
         // Another group, named for TalkBack, and its emojis in place of the game's.
         rule.onNode(hasContentDescription(complete("tools_emoji_food")) and hasClickAction()).performClick()
-        rule.onNode(hasText("🍇") and hasClickAction()).performClick()
+        pick("🍇")
         waitForTheNote("the grapes") { it.content == "Won 🏆⏱️🧠🍇" }
         // One from the keyboard, which the panel leaves to it: a skin tone.
         content().performTextInput(" 👍🏽")
