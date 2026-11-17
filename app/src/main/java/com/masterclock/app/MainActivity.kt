@@ -485,7 +485,17 @@ class MainActivity : ComponentActivity() {
                 darkTheme = isDarkTheme,
                 eInkDarkMode = settings.eInkDarkMode
             ) {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                // The keyboard takes its room from the bottom of every screen, which is then laid out in
+                // what is left. Nothing said so, and Android slid the whole window up to keep the cursor
+                // in view: on a short phone a text note's title bar was drawn over the status bar and
+                // its first row of buttons left the screen, where the notebook's own tests could not
+                // find them. The whole of the keyboard's height, navigation bar included: taking it here
+                // uses up the bar's own inset for the screens below, which would else keep clear of it
+                // a second time -- and taken less the bar, they kept clear of nothing and ran under.
+                Surface(
+                    modifier = Modifier.fillMaxSize().imePadding(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
                     val entryProvider = entryProvider<NavKey> {
                         entry<Route.Timer> { _ ->
                             TimerScreen(

@@ -219,7 +219,9 @@ class DrawingShapeFlowTest {
         rule.onNode(hasText("🏆") and hasClickAction()).performClick()
         waitForTheNote("the trophy") { it.drawingPaths.size == 2 && it.drawingPaths[1].isEmoji && it.drawingPaths[1].label == "🏆" }
         val placed = note().drawingPaths[1].points
-        val trophy = rule.onAllNodes(hasText("🏆"))[0].fetchSemanticsNode().boundsInRoot.center
+        // By its description: on the drawing the emoji is a picture, no longer a text, and the emoji
+        // itself is what it is described by.
+        val trophy = rule.onAllNodes(hasContentDescription("🏆"))[0].fetchSemanticsNode().boundsInRoot.center
         rule.onRoot().performTouchInput { swipe(trophy, trophy + Offset(150f, 250f), 300) }
         waitForTheNote("the trophy's move") { it.drawingPaths[1].points != placed }
         shot("drawing_emoji")
