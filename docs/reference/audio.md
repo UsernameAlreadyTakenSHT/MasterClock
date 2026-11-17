@@ -71,6 +71,7 @@ Each of the four sounds can be replaced by a file from the device:
 Each line says **Using default sound** or **Custom sound selected**, with a button to choose a
 file, change it, or clear it and go back to the default. The file has to be one the app can keep
 access to after a restart; one it cannot is refused, with a message, rather than accepted and lost
-the next day.
+the next day. A file the device cannot play as a sound is not silent: the default sound
+plays in its place, while the line goes on reading **Custom sound selected**.
 
 The gong of Gong mode is the mode itself, so it sounds whatever the switches above say.
