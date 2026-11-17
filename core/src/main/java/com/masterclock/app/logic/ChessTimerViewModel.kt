@@ -4237,7 +4237,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val nextPlayer = nextPlayerInTurn(playerIndex, currentState.players, playerCount, settings.value.flagBehavior)
         
         if (currentState.activePlayer == null) {
-            moveStartTime = SystemClock.elapsedRealtime(); pausedAt = null; startClock(nextPlayer)
+            moveStartTime = SystemClock.elapsedRealtime(); pausedAt = null; startClock(nextPlayer, newGame = true)
             if (settings.value.playSwitchSound) soundManager.playSwitch()
             addEvent(GameEvent(eventType = "INITIAL_PRESS", playerIndex = playerIndex, detail = "P$nextPlayer clock started"))
         } else {
@@ -4307,7 +4307,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * did the same. Only a real turn change arms it now; resume() puts the clock back exactly as it
      * was found.
      */
-    private fun startClock(playerIndex: Int, armDelay: Boolean = true) {
+    private fun startClock(playerIndex: Int, armDelay: Boolean = true, newGame: Boolean = false) {
         timerJob?.cancel()
         timerJob = null
         lastBeepSecond = -1
@@ -4319,11 +4319,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             state.copy(activePlayer = playerIndex, isPaused = false, players = newPlayers)
         }
         lastTickTime = SystemClock.elapsedRealtime()
-        // Saved as it starts running, whatever started it: a move, Play, Resume. A move was, and a
-        // clock started from a pause was not until the next ten-second save came round -- its
-        // alive mark, which is written for a save of a running clock, had none to be written for,
-        // and a game closed in those seconds came back to the pause.
-        if (FlavorConfig.savesGameInPlay()) {
+        // Saved as it starts running, whatever started it: a move, Play after a pause, Resume. A
+        // move was, and a clock started from a pause was not until the next ten-second save came
+        // round -- its alive mark, which is written for a save of a running clock, had none to be
+        // written for, and a game closed in those seconds came back to the pause.
+        // Not the first press of a new game: the game interrupted before it may still be on offer,
+        // and stays so until this one's first save, at its first move or ten seconds in; see
+        // applyShortcutNow. A game that has not been played has nothing to lose in the meantime.
+        if (FlavorConfig.savesGameInPlay() && !newGame) {
             lastAutoSaveTime = lastTickTime
             saveClockForLater()
         }
@@ -4782,7 +4785,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val s = _settings.value
         val mode = getPlayerSettings(active).mode
         if (mode == TimerMode.PHASES) {
-            startClock(active, armDelay = false)
+            startClock(active, armDelay = false, newGame = freshStart)
             // The first phase is named as it starts, as every later one is; the game used to begin
             // in silence. Only a game that has never run: a resume mid-phase says nothing.
             if (starting.activePlayer == null) {
@@ -4794,14 +4797,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Past the flag check like every other mode: a CHRONO countdown that had run out under FREEZE
         // was started again, logged a RESUME and lit up, until the next tick stopped it.
         if (mode == TimerMode.MOVE_TIMER_SHARED || (mode.name.startsWith("CHRONO") && s.isOneForAll)) {
-            if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = false)
+            if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = false, newGame = freshStart)
             return
         }
         // The same rule a press goes by. This used to refuse to restart while anyone at all was out
         // of time, so under NEGATIVE -- or FLAG with three or four players, where play goes on
         // after a flag -- a single pause stopped the game for good: Resume did nothing, and the
         // active player's button, which resumes a paused clock, did nothing either.
-        if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = freshStart)
+        if (!flagsEndGame(_uiState.value.players, s.flagBehavior, s.numberOfPlayers.coerceAtLeast(1))) startClock(active, armDelay = freshStart, newGame = freshStart)
     }
     fun reset() {
         timerJob?.cancel()
@@ -5274,6 +5277,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun clearSavedClock() {
         savedClockGeneration++
+        // No save, so nothing for a mark to be written for.
+        aliveSaveId = 0L
         historyWrites.trySend(HistoryWrite.ClearClock)
     }
 
