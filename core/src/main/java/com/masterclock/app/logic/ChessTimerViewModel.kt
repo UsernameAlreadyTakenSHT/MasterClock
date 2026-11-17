@@ -376,6 +376,24 @@ sealed interface ByoyomiCall {
     data class Count(val number: Int) : ByoyomiCall
 }
 
+/** A byoyomi beginning, or a period of it lost with [ByoyomiPassage.PeriodsLeft.left] still to go. */
+sealed interface ByoyomiPassage {
+    data object Entered : ByoyomiPassage
+    data class PeriodsLeft(val left: Int) : ByoyomiPassage
+}
+
+/**
+ * What there is to announce of a byoyomi between two states of a player's clock: main time spent
+ * and byoyomi begun, as the timekeeper says it, or a period gone. Not the last period going, which
+ * is the flag and is announced as one.
+ */
+internal fun byoyomiPassage(old: PlayerState, new: PlayerState): ByoyomiPassage? = when {
+    new.isInByoyomi && !old.isInByoyomi -> ByoyomiPassage.Entered
+    new.isInByoyomi && new.byoyomiPeriodsRemaining < old.byoyomiPeriodsRemaining && !new.isOutOfTime ->
+        ByoyomiPassage.PeriodsLeft(new.byoyomiPeriodsRemaining)
+    else -> null
+}
+
 /**
  * What a shogi timekeeper calls as a byoyomi period of [periodMs] comes down from [previousMs] to
  * [nowMs], or null for nothing.
@@ -4517,6 +4535,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         else voiceManager.speak(CoreR.string.voice_phase, settings.voiceVolume, index + 1)
     }
 
+    private fun speakByoyomiPassage(oldState: PlayerState, newState: PlayerState, vol: Float) {
+        when (val passage = byoyomiPassage(oldState, newState)) {
+            ByoyomiPassage.Entered -> voiceManager.speak(CoreR.string.voice_byoyomi, vol)
+            is ByoyomiPassage.PeriodsLeft -> voiceManager.speak(CoreR.string.voice_byoyomi_periods_left, vol, passage.left)
+            null -> Unit
+        }
+    }
+
     private fun handleVoice(oldState: PlayerState, newState: PlayerState, settings: ChessClockSettings, playerIdx: Int, timeLeft: Pair<Long, Long>? = null, afterPress: Boolean = false) {
         val vol = settings.voiceVolume
         // The byoyomi read aloud, a switch of its own: the count without "one minute remaining".
@@ -4537,7 +4563,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 null -> Unit
             }
         }
-        if (!settings.voiceAnnouncementsEnabled) return
+        if (!settings.voiceAnnouncementsEnabled) {
+            // Its own switch says where the byoyomi stands as well as reading it: that it has begun,
+            // and how many periods are left when one goes. Both were the announcements' alone, and
+            // the count came out of nowhere, with nothing to say a period had just been lost.
+            if (settings.spokenByoyomi && player.mode == TimerMode.BYOYOMI_JAPANESE) speakByoyomiPassage(oldState, newState, vol)
+            return
+        }
 
         // 1. Time's Up -- or, the table's CHRONO countdown running out, the end of the game.
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
@@ -4575,13 +4607,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             voiceManager.speak(CoreR.string.voice_period, vol, newState.currentPeriodIndex + 1)
         }
 
-        // 4. Byoyomi Entry
-        if (newState.isInByoyomi && !oldState.isInByoyomi) {
-            voiceManager.speak(CoreR.string.voice_byoyomi, vol)
-        } else if (newState.isInByoyomi && newState.byoyomiPeriodsRemaining < oldState.byoyomiPeriodsRemaining && !newState.isOutOfTime) {
-            // A period lost; see handleAudio.
-            voiceManager.speak(CoreR.string.voice_byoyomi_periods_left, vol, newState.byoyomiPeriodsRemaining)
-        }
+        // 4. Byoyomi entry, or a period lost; see handleAudio.
+        speakByoyomiPassage(oldState, newState, vol)
 
         // Phase names are announced by onPhaseTransition: this function is only ever handed two
         // states of the same phase, and the check that stood here could never fire.

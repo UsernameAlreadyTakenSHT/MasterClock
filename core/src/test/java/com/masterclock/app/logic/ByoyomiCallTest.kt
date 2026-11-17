@@ -66,6 +66,19 @@ class ByoyomiCallTest {
     }
 
     @Test
+    fun `a byoyomi beginning and a period lost are announced, the last period going is the flag`() {
+        val main = PlayerState(5_000)
+        val entered = PlayerState(30_000, isInByoyomi = true, byoyomiPeriodsRemaining = 5)
+        assertEquals(ByoyomiPassage.Entered, byoyomiPassage(main, entered))
+        assertEquals(ByoyomiPassage.PeriodsLeft(4), byoyomiPassage(entered.copy(timeRemainingMs = 100), entered.copy(byoyomiPeriodsRemaining = 4)))
+        // A second of a period, and a move played in one: nothing to say.
+        assertNull(byoyomiPassage(entered, entered.copy(timeRemainingMs = 29_000)))
+        assertNull(byoyomiPassage(main, main.copy(timeRemainingMs = 4_000)))
+        // The last one gone is time up, said as that.
+        assertNull(byoyomiPassage(entered.copy(byoyomiPeriodsRemaining = 1), entered.copy(timeRemainingMs = 0, byoyomiPeriodsRemaining = 0, isOutOfTime = true)))
+    }
+
+    @Test
     fun `a clock going up, a period over and a period of nothing say nothing`() {
         // A move played or a period lost: the clock is back at the top.
         assertNull(byoyomiCall(30_000, 4_000, 30_000))

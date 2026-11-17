@@ -11,7 +11,7 @@ install: the clock is silent until it is asked not to be.
 |---|---|---|
 | **Play sound on player switch** | off | A click each time a move ends and the turn passes. |
 | **Voice announcements** | off | The clock speaks, in the app's language, with the device's text-to-speech voice. |
-| **Spoken byoyomi** | off | A Japanese byoyomi period is read aloud as a shogi timekeeper reads it. A switch of its own: it speaks with the announcements off. |
+| **Spoken byoyomi** | off | A Japanese byoyomi period is read aloud as a shogi timekeeper reads it. A switch of its own: it speaks with the announcements off, and then also says "Entering byoyomi" and "Periods left: 2". |
 
 What the voice says:
 
@@ -25,7 +25,8 @@ What the voice says:
 | "Phase 2" | Phases: a new phase begins. |
 | "Finished" | The game ends without a flag. |
 
-What Spoken byoyomi says, in [Byoyomi](modes.md#byoyomi)'s Japanese type, once main time is spent:
+What Spoken byoyomi says, in [Byoyomi](modes.md#byoyomi)'s Japanese type. "Entering byoyomi" as main time
+is spent and "Periods left: 2" as a period goes, then each period:
 
 | Period | Read aloud |
 |---|---|
