@@ -140,6 +140,64 @@ class AliveMarkTest {
         assertEquals(false, ranOn.players[0].isOutOfTime)
     }
 
+    /** A game of [settings] under way: [active] on the move, the clocks as the game starts them. */
+    private fun underWay(settings: ChessClockSettings, active: Int) =
+        initialClockState(settings, 0L to 0L).copy(activePlayer = active, isPaused = false)
+
+    @Test
+    fun `with three or four at the table, the one on the move runs on and the others wait`() {
+        for (players in listOf(3, 4)) {
+            val settings = ChessClockSettings(numberOfPlayers = players).withSeatsForPlayers()
+            for (active in 1..players) {
+                val saved = underWay(settings, active)
+                val (ranOn, ticked) = bothWays(saved, 3_500, settings)
+                assertEquals("$players players, $active on the move", ticked, ranOn)
+                assertEquals(players, ranOn.players.size)
+                for (i in 0 until players) {
+                    val spent = saved.players[i].timeRemainingMs - ranOn.players[i].timeRemainingMs
+                    assertEquals("$players players, player ${i + 1}", if (i == active - 1) 3_500L else 0L, spent)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `an hourglass runs on with both its clocks, what leaves one filling the other`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.HOURGLASS, initialTimeMs = 60_000))
+        val saved = underWay(settings, 1)
+        val (ranOn, ticked) = bothWays(saved, 3_500, settings)
+        assertEquals(ticked, ranOn)
+        assertEquals(60_000L - 3_500, ranOn.players[0].timeRemainingMs)
+        assertEquals(60_000L + 3_500, ranOn.players[1].timeRemainingMs)
+    }
+
+    @Test
+    fun `the clocks that pass the turn by themselves run on through the turns that went by`() {
+        // Gong, each in turn and all together, and the shared move timer: the turn changes in the
+        // tick, with no press and so no save, and a save ten seconds old is several turns behind.
+        val tables = listOf(
+            "gong, in turn" to ChessClockSettings(main = PlayerSettings(mode = TimerMode.GONG, gongSimultaneous = false)),
+            "gong, together" to ChessClockSettings(main = PlayerSettings(mode = TimerMode.GONG, gongSimultaneous = true)),
+            "shared move timer" to ChessClockSettings(main = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 2_000)),
+        )
+        for ((name, settings) in tables) {
+            val saved = underWay(settings, 1)
+            val (ranOn, ticked) = bothWays(saved, 9_000, settings)
+            // The same turn, the same lap, and the clocks within a tick of each other: ticked a
+            // tenth at a time, each turn's end is found up to a tenth late.
+            assertEquals("$name: who is on the move", ticked.activePlayer, ranOn.activePlayer)
+            assertEquals("$name: the lap", ticked.cycleCount, ranOn.cycleCount)
+            assertEquals("$name: paused", ticked.isPaused, ranOn.isPaused)
+            for (i in ranOn.players.indices) {
+                val apart = kotlin.math.abs(ticked.players[i].timeRemainingMs - ranOn.players[i].timeRemainingMs)
+                assertEquals("$name: player ${i + 1} is $apart ms apart", true, apart <= 500)
+                assertEquals("$name: player ${i + 1} moves", ticked.players[i].moveCount, ranOn.players[i].moveCount)
+            }
+            // And it did go somewhere: nine seconds is more than one turn of any of them.
+            assertEquals("$name: turns went by", true, ranOn != saved)
+        }
+    }
+
     @Test
     fun `nothing to run on leaves the clock as saved`() {
         val settings = ChessClockSettings()
