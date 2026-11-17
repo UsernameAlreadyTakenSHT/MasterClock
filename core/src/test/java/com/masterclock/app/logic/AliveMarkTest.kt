@@ -75,6 +75,65 @@ class AliveMarkTest {
         assertEquals(60_000L, ranOn.players[1].timeRemainingMs)
     }
 
+    /** [saved] run on by [gapMs] at once, as coming back does, and a tenth at a time, as the ticker would have. */
+    private fun bothWays(saved: ChessClockState, gapMs: Long, settings: ChessClockSettings): Pair<ChessClockState, ChessClockState> {
+        var ticked = saved
+        repeat((gapMs / 100).toInt()) { ticked = tickClock(ticked, 100, settings).state }
+        return advanceClock(saved, gapMs, settings) to ticked
+    }
+
+    @Test
+    fun `closed as main time ran out, the game comes back in byoyomi with what the period had left`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, initialTimeMs = 600_000, byoyomiPeriods = 5, byoyomiTimeMs = 30_000))
+        val saved = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 500, byoyomiPeriodsRemaining = 5), PlayerState(timeRemainingMs = 600_000, byoyomiPeriodsRemaining = 5)),
+            activePlayer = 1, isPaused = false,
+        )
+        val (ranOn, ticked) = bothWays(saved, 1_800, settings)
+        assertEquals(ticked, ranOn)
+        assertEquals(true, ranOn.players[0].isInByoyomi)
+        assertEquals(5, ranOn.players[0].byoyomiPeriodsRemaining)
+        assertEquals(30_000L - 1_300, ranOn.players[0].timeRemainingMs)
+    }
+
+    @Test
+    fun `closed across the end of a byoyomi period, or two, the periods gone are gone`() {
+        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, initialTimeMs = 600_000, byoyomiPeriods = 5, byoyomiTimeMs = 5_000))
+        val saved = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 500, isInByoyomi = true, byoyomiPeriodsRemaining = 4), PlayerState(timeRemainingMs = 600_000, byoyomiPeriodsRemaining = 5)),
+            activePlayer = 1, isPaused = false,
+        )
+        // One period's end.
+        val (ranOn, ticked) = bothWays(saved, 1_800, settings)
+        assertEquals(ticked, ranOn)
+        assertEquals(3, ranOn.players[0].byoyomiPeriodsRemaining)
+        assertEquals(5_000L - 1_300, ranOn.players[0].timeRemainingMs)
+        // Two: nine seconds, about the longest a save may be behind its mark.
+        val (further, tickedFurther) = bothWays(saved, 9_000, settings)
+        assertEquals(tickedFurther, further)
+        assertEquals(2, further.players[0].byoyomiPeriodsRemaining)
+        assertEquals(1_500L, further.players[0].timeRemainingMs)
+    }
+
+    @Test
+    fun `closed as a FIDE period ended on its time, the game comes back in the next one`() {
+        val settings = ChessClockSettings(
+            main = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = listOf(
+                FidePeriod(timeMs = 10_000, incrementMs = 5_000, movesToNext = 0),
+                FidePeriod(timeMs = 30_000, incrementMs = 5_000, movesToNext = 0),
+            )),
+        )
+        val saved = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 500), PlayerState(timeRemainingMs = 10_000)),
+            activePlayer = 1, isPaused = false,
+        )
+        val (ranOn, ticked) = bothWays(saved, 1_800, settings)
+        assertEquals(ticked, ranOn)
+        assertEquals(1, ranOn.players[0].currentPeriodIndex)
+        assertEquals(30_000L - 1_300, ranOn.players[0].timeRemainingMs)
+        assertEquals(false, ranOn.players[0].isOutOfTime)
+    }
+
     @Test
     fun `nothing to run on leaves the clock as saved`() {
         val settings = ChessClockSettings()
