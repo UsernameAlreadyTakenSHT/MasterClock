@@ -1,0 +1,2 @@
+A game in play survives the app being closed: it comes back by itself at the next launch, paused.
+The clock ticks once a second while it shows whole seconds alone: a quarter of the processor time of a running game.

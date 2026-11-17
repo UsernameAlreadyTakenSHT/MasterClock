@@ -1,0 +1,2 @@
+A move is saved as it is played, and a running game every two seconds rather than fifteen.
+The clock ticks once a second while it shows whole seconds alone: a quarter of the processor time of a running game.

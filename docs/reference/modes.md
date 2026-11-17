@@ -297,7 +297,7 @@ Every move starts with its own time whole; nothing is carried over.
 
 ## Omni-Timer
 
-The fifteenth card of the mode grid, marked **alpha**: it works and is tested, and its screens are
+The fifteenth card of the mode grid, marked **beta**: it works and is tested, and its screens are
 still being finished. In Complete, Standard and Lite.
 
 It is not a variant of the chess clock but a clock of its own, for games with a structure: a

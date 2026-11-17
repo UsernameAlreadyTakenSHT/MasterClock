@@ -1,0 +1,3 @@
+Flag Cap: how far a clock may run past zero under Negative and Reverse. The Scrabble preset sets it to 10:00.
+Save game every: 10s, 5s, 2s or 1s, in Behavior's Advanced section. A move is saved as it is played.
+The clock ticks once a second while it shows whole seconds alone: a quarter of the processor time of a running game.

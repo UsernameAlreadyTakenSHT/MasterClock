@@ -129,7 +129,7 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, co
         selected = selected,
         onClick = onClick,
         // At least its usual height, and more when the title needs it. The height was fixed: a
-        // title on two lines -- "Omni-Timer (alpha)" at a large font -- was cut top and bottom.
+        // title on two lines -- "Omni-Timer (beta)" at a large font -- was cut top and bottom.
         modifier = modifier.heightIn(min = if (compact) 40.dp else 48.dp).fillMaxHeight().fillMaxWidth(),
         color = bgColor, 
         contentColor = contentColor, 
@@ -991,7 +991,7 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                 }
                 if (FlavorConfig.hasOmni()) {
                     ModeCardRow(6.dp) {
-                        ModeCard("Omni-Timer (alpha)", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
+                        ModeCard("Omni-Timer (beta)", false, Modifier.weight(1f), compact = false, onClick = onOmniClick)
                         Spacer(Modifier.weight(1f))
                     }
                 }

@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-16"
+    const val BUILD_DATE = "2026-11-17"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,21 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.42",
+            date = "2026-11-17",
+            notes = listOf(
+                Note("Flag Cap, under Flag Behavior: how far a clock may run past zero under Negative and Reverse. It stops there and play goes on. The Scrabble preset sets it to 10:00.", BEHAVIOUR_TAB),
+                Note("Save game every, in Behavior's Advanced section: 10s, 5s, 2s or 1s, two seconds unless set. It was fifteen.", BEHAVIOUR_TAB),
+                Note("A game in play survives the app being closed: it comes back by itself at the next launch, paused.", setOf(AppFlavor.MINI)),
+                Note("A move is saved as it is played.", PHONE),
+                Note("The clock ticks once a second while it shows whole seconds alone: about a quarter of the processor time of a running game.", PHONE),
+                Note("Audio keeps a place for a spoken byoyomi, and for reading it in Japanese. They do nothing yet.", BEHAVIOUR_TAB),
+                Note("Omni-Timer is marked \"(beta)\" in the mode picker, no longer \"(alpha)\".", FULL_MODES),
+                Note("Under Flag with US Delay, a player already flagged was still given a delay at each of their turns.", BEHAVIOUR_TAB),
+                Note("Nothing changes in this build. This release is about the phone app: a cap on overruns, and a game in play that survives the app being closed.", E_INK_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.41",
             date = "2026-11-16",

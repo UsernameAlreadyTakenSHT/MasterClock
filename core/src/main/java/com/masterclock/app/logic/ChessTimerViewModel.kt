@@ -2384,6 +2384,14 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
  * under another name. It marks who lost -- see [isFlagged] -- and the game goes on as it would at
  * a chess clock: turns still alternate, and only the flagged player's clock no longer runs.
  */
+/**
+ * Whether a turn beginning under [mode] opens on a delay. US Delay's does, except for a clock that
+ * FLAG holds at zero: its press only passes the turn on, it gets no increment and no move time,
+ * and a delay counting down on a face that reads 0:00 was the one thing it still received.
+ */
+internal fun turnStartsWithDelay(mode: TimerMode, player: PlayerState, flagBehavior: FlagBehavior): Boolean =
+    mode == TimerMode.US_DELAY && !(flagBehavior == FlagBehavior.FLAG && player.isOutOfTime)
+
 internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior, numberOfPlayers: Int): Boolean {
     val out = players.count { it.isOutOfTime }
     return when (flagBehavior) {
@@ -4202,7 +4210,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.update { state ->
             val s = getPlayerSettings(playerIndex)
             val newPlayers = state.players.mapIndexed { idx, p ->
-                if (armDelay && idx + 1 == playerIndex && s.mode == TimerMode.US_DELAY) p.copy(delayRemainingMs = s.incrementMs) else p
+                if (armDelay && idx + 1 == playerIndex && turnStartsWithDelay(s.mode, p, _settings.value.flagBehavior)) p.copy(delayRemainingMs = s.incrementMs) else p
             }
             state.copy(activePlayer = playerIndex, isPaused = false, players = newPlayers)
         }

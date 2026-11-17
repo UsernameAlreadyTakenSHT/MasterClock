@@ -75,4 +75,16 @@ class GameOverTest {
         assertEquals(2, nextPlayerInTurn(1, state(true, false).players, 2, FlagBehavior.FLAG))
         assertEquals(2, nextPlayerInTurn(1, state(false, true, false).players, 3, FlagBehavior.FLAG))
     }
+
+    @Test
+    fun `a clock FLAG holds at zero is given no delay at its turn`() {
+        val out = PlayerState(timeRemainingMs = 0, isOutOfTime = true)
+        val live = PlayerState(timeRemainingMs = 60_000)
+        assertFalse(turnStartsWithDelay(TimerMode.US_DELAY, out, FlagBehavior.FLAG))
+        assertTrue(turnStartsWithDelay(TimerMode.US_DELAY, live, FlagBehavior.FLAG))
+        // An overrun is still a clock in play, and keeps its delay as before.
+        assertTrue(turnStartsWithDelay(TimerMode.US_DELAY, out, FlagBehavior.NEGATIVE))
+        assertTrue(turnStartsWithDelay(TimerMode.US_DELAY, out, FlagBehavior.REVERSE))
+        assertFalse(turnStartsWithDelay(TimerMode.FISCHER, live, FlagBehavior.FLAG))
+    }
 }

@@ -32,7 +32,7 @@ instead of staying silent: one has to be installed in the device's settings.
 | Setting | Default | |
 |---|---|---|
 | **Countdown beep** | off | A beep each second at the end of the clock, over the last **3s** or **10s**. |
-| **Triple beep when times up** | off | Three beeps when a clock reaches zero. |
+| **Triple beep when times up** | off | Three beeps when a clock reaches zero, and once more when an overrun reaches its [Flag Cap](behavior.md). |
 
 In the modes with two clocks — Overtime, Global, Global Shared — the countdown follows whichever
 runs out first.

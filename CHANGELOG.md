@@ -1,3 +1,23 @@
+## v0.8.42 — 2026-11-17
+
+A cap on how far a clock runs past zero, a game in play that survives the app being closed on
+every phone build, and a clock that wakes once a second when seconds are all it shows.
+
+### Added
+- **Flag Cap** (Complete, Standard): under Flag Behavior, for Negative and Reverse, how far a clock may run past zero. At 10:00 it stops at -10:00 or at 10:00, the flag's sound is heard once, and play goes on, the player keeping their turn on a clock that no longer moves. Empty, there is no limit. An arbiter's penalty stops at the cap too, and the Scrabble preset sets it to 10:00.
+- **Save game every** (Complete, Standard), in Behavior's Advanced section: 10s, 5s, 2s or 1s, two seconds unless set. It was fifteen, fixed. It is what a game loses at most if the app is closed by surprise; the clock itself is exact whatever it is set to.
+- **Mini keeps the game in play.** Closed by Android, it comes back by itself at the next launch, paused. It was lost.
+
+### Changed
+- **A move is saved as it is played**, on every phone build, besides each pause.
+- **The clock ticks once a second while it shows whole seconds alone**, instead of ten times: about a quarter of the processor time of a running game. The last ten seconds, a delay, an overrun and the modes that move two clocks tick as before.
+- Audio shows two switches marked "soon", a spoken byoyomi and reading it in Japanese. They do nothing yet.
+- Omni-Timer is marked "(beta)" in the mode picker, no longer "(alpha)".
+
+### Fixed
+- A game closed with a clock running came back a tick earlier than its save.
+- Under Flag with US Delay, a player already flagged was still given a delay at each of their turns.
+
 ## v0.8.41 — 2026-11-16
 
 Flag plays on past the first flag as a chess clock does, the screens keep their words whole at a
