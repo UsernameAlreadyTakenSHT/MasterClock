@@ -1,0 +1,3 @@
+The keyboard no longer slides the screen under the status bar: each screen is laid out above it.
+The flag's sound is on time with the screen off, under Keep running in the background. One more permission for it, granted without a prompt.
+A custom sound that cannot be played is no longer silent, and the app says when the device has no text-to-speech voice.

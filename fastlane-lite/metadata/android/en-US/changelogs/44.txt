@@ -1,0 +1,1 @@
+The keyboard no longer slides the screen under the status bar: each screen is laid out above it.

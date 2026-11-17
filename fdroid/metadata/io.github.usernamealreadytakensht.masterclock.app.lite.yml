@@ -45,14 +45,14 @@ RepoType: git
 Repo: https://github.com/UsernameAlreadyTakenSHT/MasterClock.git
 
 Builds:
-  - versionName: 0.8.42-lite
-    versionCode: 43
-    commit: v0.8.42
+  - versionName: 0.8.43-lite
+    versionCode: 44
+    commit: v0.8.43
     subdir: app
     gradle:
       - lite
 
 AutoUpdateMode: None
 UpdateCheckMode: Tags
-CurrentVersion: 0.8.42-lite
-CurrentVersionCode: 43
+CurrentVersion: 0.8.43-lite
+CurrentVersionCode: 44

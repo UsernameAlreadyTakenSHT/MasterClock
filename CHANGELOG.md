@@ -1,3 +1,19 @@
+## v0.8.43 — 2026-11-17
+
+Fixes found by going over the whole app before it: the screen under the keyboard, and three
+sounds that were late, silent or never explained.
+
+### Changed
+- **Each screen is laid out above the keyboard.** In the settings the tab bar sits above it while a field is being typed in.
+- A text note's insert panels -- pieces, annotations, emojis -- put the keyboard away as they open (Complete).
+- Complete and Standard ask for one more permission, to keep the phone from sleeping. Android grants it without a prompt; it is used only while a game is kept running in the background, see below.
+
+### Fixed
+- **The keyboard no longer slides the screen under the status bar.** On a narrow phone a text note's title bar was drawn over the clock and the icons, and the first row of its toolbar left the screen while typing.
+- **The flag's sound is on time with the screen off** (Complete, Standard). With Keep running in the background, the phone slept and the beep waited for whatever next woke it. It is now kept awake until the running clock's end, and no longer.
+- **A custom sound that cannot be played is no longer silent** (Complete, Standard): the default sound plays in its place. A file that opened but would not decode left its sound mute for good.
+- **The app says when there is no text-to-speech voice** (Complete, Standard), as soon as the announcements are turned on or the app is opened with them on. Only the volume test said so.
+
 ## v0.8.42 — 2026-11-17
 
 A cap on how far a clock runs past zero, a game in play that survives the app being closed on

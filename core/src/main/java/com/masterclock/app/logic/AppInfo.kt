@@ -50,6 +50,18 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.43",
+            date = "2026-11-17",
+            notes = listOf(
+                Note("The keyboard no longer slides the screen under the status bar: each screen is laid out above it.", PHONE),
+                Note("The flag's sound is on time with the screen off, under Keep running in the background: the phone is kept awake until the running clock's end. One more permission for it, which Android grants without a prompt.", BEHAVIOUR_TAB),
+                Note("A custom sound that cannot be played is no longer silent: the default sound plays in its place.", BEHAVIOUR_TAB),
+                Note("The app says when the device has no text-to-speech voice, as soon as the announcements are on.", BEHAVIOUR_TAB),
+                Note("A text note's insert panels put the keyboard away as they open.", COMPLETE_ONLY),
+                Note("Nothing changes in this build. This release fixes the phone app: the screen under the keyboard, and sounds that were late or silent.", E_INK_ONLY),
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.42",
             date = "2026-11-17",
             notes = listOf(
