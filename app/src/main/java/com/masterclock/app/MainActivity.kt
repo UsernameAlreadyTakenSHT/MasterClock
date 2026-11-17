@@ -188,6 +188,12 @@ class MainActivity : ComponentActivity() {
             }
             val json = remember { Json { ignoreUnknownKeys = true } }
             val context = LocalContext.current
+            // Said wherever the user is when the engine answers: on the clock at launch, or in the
+            // settings as the switch is turned on. See voiceUnavailable.
+            val noVoiceText = stringResource(R.string.toast_no_voice)
+            LaunchedEffect(Unit) {
+                timerViewModel.voiceUnavailable.collect { Toast.makeText(context, noVoiceText, Toast.LENGTH_LONG).show() }
+            }
             // Hoisted: these fire from document-picker callbacks, outside composable scope.
             val backupOkText = stringResource(R.string.toast_backup_ok)
             val importOkText = stringResource(R.string.toast_import_ok)

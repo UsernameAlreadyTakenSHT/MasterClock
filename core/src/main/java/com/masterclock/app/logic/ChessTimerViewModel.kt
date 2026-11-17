@@ -3693,7 +3693,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     /** The last notation a board reported, for a castle's king to rename; see recordBoardMove. */
     private var lastBoardNotation: String? = null
     private val soundManager = SoundManager(application)
-    private val voiceManager = VoiceManager(application)
+    // The device turned out to have no voice to speak with. The message for it stood on the volume
+    // test alone, and only when the engine had already answered: announcements switched on, or on
+    // since a launch before, were simply never heard, and nothing said why. Conflated and kept until
+    // read, since the engine can answer before a screen is there to show it.
+    private val voiceMissing = Channel<Unit>(Channel.CONFLATED)
+    /** Emits when the announcements are wanted and there is no text-to-speech voice to say them. */
+    val voiceUnavailable: Flow<Unit> = voiceMissing.receiveAsFlow()
+    private val voiceManager = VoiceManager(application) { voiceMissing.trySend(Unit) }
     // Built on first use, not on construction.
     //
     // Every consumer of this ViewModel creates it on first composition -- all four app flavours and
@@ -4813,7 +4820,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             soundManager.setVolume(newSettings.soundsVolume)
         }
 
-        if (newSettings.voiceAnnouncementsEnabled && !oldSettings.voiceAnnouncementsEnabled) voiceManager.start()
+        if (newSettings.voiceAnnouncementsEnabled && !oldSettings.voiceAnnouncementsEnabled) {
+            voiceManager.start()
+            // Already known from an earlier start: the engine will not answer a second time.
+            if (voiceManager.hasNoVoice) voiceMissing.trySend(Unit)
+        }
 
         val coreChanged = settingsEndTheGame(oldSettings, newSettings) || initialStates != null || newGame
 

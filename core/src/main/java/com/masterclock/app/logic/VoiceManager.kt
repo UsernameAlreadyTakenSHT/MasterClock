@@ -37,13 +37,14 @@ private const val TAG = "VoiceManager"
  * The voice is now the device's language when the engine has it, English otherwise, then whatever
  * the engine offers, and the sentences are read from resources in whichever language that turned
  * out to be, so the words always match the voice saying them. [hasNoVoice] says when there is no
- * voice at all.
+ * voice at all, and [onNoVoice] is told the moment the engine answers so: the answer comes after
+ * whatever asked for the voice has returned, and nothing was there to hear it.
  *
  * The engine is started when it is first needed, by [start] or by something to say. It was started
  * with the clock, at every launch of every build: a service bound for announcements that are off by
  * default, and for good in the builds whose settings cannot turn them on.
  */
-class VoiceManager(private val context: Context) : TextToSpeech.OnInitListener {
+class VoiceManager(private val context: Context, private val onNoVoice: () -> Unit = {}) : TextToSpeech.OnInitListener {
     private var tts: TextToSpeech? = null
     private var started = false
     private var speechResources: Resources = context.resources
@@ -97,6 +98,7 @@ class VoiceManager(private val context: Context) : TextToSpeech.OnInitListener {
     private fun noVoice() {
         hasNoVoice = true
         waiting = null
+        onNoVoice()
     }
 
     private fun resourcesFor(locale: Locale): Resources {
