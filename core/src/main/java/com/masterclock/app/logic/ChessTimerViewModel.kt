@@ -4254,18 +4254,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun tick() {
         val now = SystemClock.elapsedRealtime(); val delta = now - lastTickTime; lastTickTime = now
-        
-        // Saved so a game survives the app being killed: here at the interval the player chose,
-        // two seconds unless they did, and at each move, each pause and each correction where they
-        // happen. It was every five seconds, then every fifteen, when a save serialised the whole
-        // notebook on the thread that draws the clock; it now encodes the time control alone, on
-        // its own thread, and fifteen seconds of one player's clock was more than a crash should cost.
-        // Not where nothing can bring a save back: the E-Ink build wrote one every fifteen seconds
-        // all the same. Mini did too, and was then cut off with it; it takes its save up at launch.
-        if (FlavorConfig.savesGameInPlay() && now - lastAutoSaveTime >= _settings.value.autoSaveEveryMs()) {
-            lastAutoSaveTime = now
-            saveClockForLater()
-        }
 
         _uiState.update { state ->
             if (state.isPaused) return@update state
@@ -4306,6 +4294,21 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             sounds.distinct().forEach(::play)
             current
         }
+        // Saved so a game survives the app being killed: here at the interval the player chose,
+        // two seconds unless they did, and at each move, each pause and each correction where they
+        // happen. It was every five seconds, then every fifteen, when a save serialised the whole
+        // notebook on the thread that draws the clock; it now encodes the time control alone, on
+        // its own thread, and fifteen seconds of one player's clock was more than a crash should cost.
+        // Not where nothing can bring a save back: the E-Ink build wrote one every fifteen seconds
+        // all the same. Mini did too, and was then cut off with it; it takes its save up at launch.
+        if (FlavorConfig.savesGameInPlay() && now - lastAutoSaveTime >= _settings.value.autoSaveEveryMs()) {
+            lastAutoSaveTime = now
+            saveClockForLater()
+        }
+        // After the tick, not before it: taken first, the save held the clock as the tick before had
+        // left it, a tenth of a second old when the clock ticked ten times a second and a whole
+        // second old once it ticked on the second -- a game killed came back that much earlier.
+        // Before the game is found over, which clears the save this would otherwise leave behind.
         stopIfGameOver(now)
     }
 
