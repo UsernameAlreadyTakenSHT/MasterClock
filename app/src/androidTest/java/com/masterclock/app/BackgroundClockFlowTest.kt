@@ -119,6 +119,39 @@ class BackgroundClockFlowTest {
         comeBack()
     }
 
+    /**
+     * Whether the service holds the processor awake, as the system reports the wake locks held now.
+     * That list alone, down to the blank line that ends it: further on the same report keeps a log of
+     * every lock taken and let go, where the name stays long after the lock has gone.
+     */
+    private fun heldAwake(): Boolean =
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("dumpsys power")
+        ).bufferedReader().use { it.readLines() }
+            .dropWhile { !it.startsWith("Wake Locks:") }.drop(1)
+            .takeWhile { it.isNotBlank() }
+            .any { "MasterClock:flag" in it }
+
+    /**
+     * With the screen off the phone slept and the flag sounded late. The service keeps it awake
+     * while a clock runs towards an end, and lets it sleep once the game is paused.
+     */
+    @Test
+    fun aGameLeftRunningKeepsThePhoneAwakeUntilItIsPaused() {
+        keepRunning()
+        startTheClock()
+        leave()
+        waitFor("the notification") { notificationShown() }
+        waitFor("the phone to be kept awake") { heldAwake() }
+
+        val shown = context.getSystemService(NotificationManager::class.java).activeNotifications
+            .single { it.id == BackgroundClockService.NOTIFICATION_ID }.notification
+        shown.actions.single().actionIntent.send()
+        waitFor("the pause") { viewModel.uiState.value.isPaused }
+        waitFor("the phone to be let sleep") { !heldAwake() }
+        comeBack()
+    }
+
     private fun shownEnd(): Long? = context.getSystemService(NotificationManager::class.java).activeNotifications
         .singleOrNull { it.id == BackgroundClockService.NOTIFICATION_ID }?.notification?.`when`
 

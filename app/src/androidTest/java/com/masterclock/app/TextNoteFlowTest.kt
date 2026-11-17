@@ -168,6 +168,37 @@ class TextNoteFlowTest {
         waitForTheNote("the inserts") { it.content == "♔!?±" }
     }
 
+    /** Whether the keyboard is on screen, as the window's insets have it. */
+    private fun keyboardUp(): Boolean {
+        var up = false
+        rule.runOnUiThread {
+            up = androidx.core.view.ViewCompat.getRootWindowInsets(rule.activity.window.decorView)
+                ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+        }
+        return up
+    }
+
+    /**
+     * An insert panel open, and the note tapped to place the cursor: the keyboard comes up and the
+     * panel goes. Left open beside it, the two took the screen between them and the note had none.
+     */
+    @Test
+    fun anInsertPanelGivesWayToTheKeyboard() {
+        openTheNotebook()
+        rule.onNode(hasContentDescription(complete("tools_new_note")) and hasClickAction()).performClick()
+        await(hasText(complete("tools_text")))
+        rule.onNode(hasText(complete("tools_text")) and hasClickAction()).performClick()
+        await(hasSetTextAction())
+        press("tools_insert_emojis")
+        val panel = androidx.compose.ui.test.hasTestTag("emoji_grid")
+        await(panel)
+        content().performClick()
+        // A device with a hardware keyboard shows none, and has nothing to give way to.
+        val shown = runCatching { rule.waitUntil(3_000) { keyboardUp() } }.isSuccess
+        org.junit.Assume.assumeTrue("no on-screen keyboard here", shown)
+        rule.waitUntil(TIMEOUT_MS) { rule.onAllNodes(panel).fetchSemanticsNodes().isEmpty() }
+    }
+
     /** An emoji of the open group, scrolled to first: the grid's lower rows are off a short screen. */
     private fun pick(emoji: String) {
         rule.onNode(androidx.compose.ui.test.hasTestTag("emoji_grid")).performScrollToNode(hasText(emoji))

@@ -5115,6 +5115,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun toggleArbitreMode() { if (_uiState.value.isPaused) _uiState.update { it.copy(isArbitreMode = !it.isArbitreMode) } }
     
+    /** For a test to hear the game by; see VoiceManager.heard. */
+    fun listenToTheVoice(listener: ((what: String, with: List<Any>, afterTheLast: Boolean) -> Unit)?) {
+        voiceManager.heard = listener
+    }
+
     fun previewSwitchSound() = soundManager.playSwitch()
     fun previewBeep() = soundManager.playShortBeep()
     fun previewFinalBeep() = soundManager.playTripleBeep()

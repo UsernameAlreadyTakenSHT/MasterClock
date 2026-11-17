@@ -130,6 +130,17 @@ class SoundManager(private val context: Context) {
         return pool.load(context, defaultResId, 1)
     }
 
+    /**
+     * The sounds that have loaded and will play, by name. For a test: a custom sound that would not
+     * decode left its place silent for good, and nothing but an ear could tell.
+     */
+    fun readySounds(): Set<String> = buildSet {
+        if (beepId in loadedIds) add("beep")
+        if (gongId in loadedIds) add("gong")
+        if (finalBeepId in loadedIds) add("final")
+        if (switchId in loadedIds) add("switch")
+    }
+
     fun playShortBeep() = play(beepId)
     fun playLongBeep() = play(finalBeepId)
     fun playTripleBeep() = play(finalBeepId)

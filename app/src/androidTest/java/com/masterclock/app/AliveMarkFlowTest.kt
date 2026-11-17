@@ -1,6 +1,17 @@
 package com.masterclock.app
 
 import android.os.SystemClock
+import androidx.test.platform.app.InstrumentationRegistry
+import com.masterclock.app.data.GameDatabase
+import com.masterclock.app.data.SavedClockEntity
+import com.masterclock.app.logic.AliveMark
+import com.masterclock.app.logic.ChessClockState
+import com.masterclock.app.logic.ChessClockStateProxy
+import com.masterclock.app.logic.PlayerState
+import com.masterclock.app.logic.toProxy
+import kotlinx.serialization.json.Json
+import com.masterclock.app.logic.FlagBehavior
+import kotlinx.coroutines.runBlocking
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
@@ -34,6 +45,8 @@ class AliveMarkFlowTest {
     @get:Rule
     val rule = createEmptyComposeRule()
 
+    private val app get() = InstrumentationRegistry.getInstrumentation().targetContext
+
     private fun viewModelOf(scenario: ActivityScenario<MainActivity>): ChessTimerViewModel {
         lateinit var found: ChessTimerViewModel
         scenario.onActivity { found = ViewModelProvider(it)[ChessTimerViewModel::class.java] }
@@ -41,7 +54,12 @@ class AliveMarkFlowTest {
     }
 
     /** A game of [settings] with one move played and a clock left running, then closed and brought back. */
-    private fun closedAndBack(settings: ChessClockSettings.() -> ChessClockSettings, check: (atTheMove: List<Long>, back: List<Long>, active: Int, ran: LongRange) -> Unit) {
+    private fun closedAndBack(
+        settings: ChessClockSettings.() -> ChessClockSettings,
+        sinceTheSaveMs: Long = SINCE_THE_SAVE_MS,
+        alsoOf: (ChessTimerViewModel) -> Unit = {},
+        check: (atTheMove: List<Long>, back: List<Long>, active: Int, ran: LongRange) -> Unit,
+    ) {
         assumeTrue(FlavorConfig.savesGameInPlay())
         val first = ActivityScenario.launch(MainActivity::class.java)
         val before = viewModelOf(first)
@@ -61,7 +79,7 @@ class AliveMarkFlowTest {
         val movedAt = SystemClock.elapsedRealtime()
         val active = before.uiState.value.activePlayer!!
         val atTheMove = before.uiState.value.players.map { it.timeRemainingMs }
-        Thread.sleep(SINCE_THE_SAVE_MS)
+        Thread.sleep(sinceTheSaveMs)
         val closing = SystemClock.elapsedRealtime()
         first.close()
         val closed = SystemClock.elapsedRealtime()
@@ -77,6 +95,7 @@ class AliveMarkFlowTest {
         rule.waitUntil(TIMEOUT_MS) { after.uiState.value.activePlayer == active }
         assertTrue("it comes back paused", after.uiState.value.isPaused)
         check(atTheMove, after.uiState.value.players.map { it.timeRemainingMs }, active, ran)
+        alsoOf(after)
         second.close()
     }
 
@@ -111,7 +130,112 @@ class AliveMarkFlowTest {
         assertEquals("the sand between them", atTheMove.sum(), back.sum())
     }
 
+    /**
+     * A flag that falls after the save and before the app is closed is in the game's record when it
+     * comes back, as it is on its clock. The record was cut at the save while the clock was run on
+     * past the flag: an overrun with no flag logged, and none to come.
+     */
+    @Test
+    fun aFlagFallenSinceTheSaveIsStillInTheRecord() {
+        assumeTrue(FlavorConfig.keepsGameHistory())
+        closedAndBack(
+            // Play goes on past the flag, so the clock is still running when the screen closes.
+            settings = { copy(flagBehavior = FlagBehavior.NEGATIVE, main = PlayerSettings(initialTimeMs = FLAGS_AFTER_MS)) },
+            sinceTheSaveMs = FLAGS_AFTER_MS + 1_500,
+            alsoOf = { after ->
+                val active = after.uiState.value.activePlayer!!
+                assertTrue("player $active is past their time", after.uiState.value.players[active - 1].isOutOfTime)
+                // The record as it reached the database, once the resume's own write has landed.
+                Thread.sleep(1_500)
+                val events = runBlocking { GameDatabase.getDatabase(app).gameLogDao().getRecentLogs(1) }.single().eventsJson
+                assertTrue("no flag in the record: $events", events.contains("\"FLAG\""))
+            },
+        ) { _, _, _, _ -> }
+    }
+
+    /** As for a flag: a byoyomi period that went after the save is still in the record. */
+    @Test
+    fun aPeriodLostSinceTheSaveIsStillInTheRecord() {
+        assumeTrue(FlavorConfig.keepsGameHistory())
+        closedAndBack(
+            // Three seconds of main time, then periods of two: one is gone five seconds in.
+            settings = { copy(main = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, initialTimeMs = 3_000, byoyomiPeriods = 5, byoyomiTimeMs = 2_000)) },
+            sinceTheSaveMs = 6_500,
+            alsoOf = { after ->
+                val player = after.uiState.value.players[after.uiState.value.activePlayer!! - 1]
+                assertTrue("in byoyomi", player.isInByoyomi)
+                assertTrue("a period gone, ${player.byoyomiPeriodsRemaining} left", player.byoyomiPeriodsRemaining < 5)
+                Thread.sleep(1_500)
+                val events = runBlocking { GameDatabase.getDatabase(app).gameLogDao().getRecentLogs(1) }.single().eventsJson
+                assertTrue("no period lost in the record: $events", events.contains("Byoyomi period lost"))
+            },
+        ) { _, _, _, _ -> }
+    }
+
+    /**
+     * A game whose flag fell while it ran on -- after its last save, and after the last tick that
+     * would have ended it -- comes back finished, to be seen, and is not kept to come back again.
+     * The save and its mark are put there by hand: the moment is too narrow to play into.
+     */
+    @Test
+    fun aGameThatEndedWhileItRanOnIsNotKept() {
+        val first = ActivityScenario.launch(MainActivity::class.java)
+        assumeTrue(FlavorConfig.savesGameInPlay())
+        val before = viewModelOf(first)
+        rule.waitUntil(TIMEOUT_MS) { before.isReady.value }
+        first.onActivity {
+            before.resetAllSettings()
+            before.reset()
+        }
+        first.close()
+        // What the screen queued as it closed, the reset's clearing among it.
+        Thread.sleep(1_000)
+
+        // A running clock with a second left, saved, and marked alive three seconds later: under
+        // Freeze, which the defaults are, the flag in between ends the game.
+        val dao = GameDatabase.getDatabase(app).gameLogDao()
+        val savedAt = System.currentTimeMillis()
+        val elapsed = SystemClock.elapsedRealtime()
+        val settings = ChessClockSettings(main = PlayerSettings(initialTimeMs = 60_000))
+        val state = ChessClockState(
+            players = listOf(PlayerState(timeRemainingMs = 1_000), PlayerState(timeRemainingMs = 60_000)),
+            activePlayer = 1, isPaused = false,
+        )
+        runBlocking {
+            dao.saveClock(SavedClockEntity(
+                timestamp = savedAt,
+                settingsJson = Json.encodeToString(ChessClockSettings.serializer(), settings),
+                stateJson = Json.encodeToString(ChessClockStateProxy.serializer(), state.toProxy().copy(savedAtElapsedMs = elapsed)),
+            ))
+        }
+        AliveMark(java.io.File(app.filesDir, "alive_mark")).apply { write(savedAt, elapsed + 3_000); close() }
+
+        val second = ActivityScenario.launch(MainActivity::class.java)
+        val after = viewModelOf(second)
+        rule.waitUntil(TIMEOUT_MS) { after.isReady.value }
+        // Mini has taken it up by itself by now, and let it go: there the save is not waited for.
+        if (!FlavorConfig.resumesSavedGameAtLaunch()) {
+            rule.waitUntil(TIMEOUT_MS) { after.hasSavedClock.value }
+            second.onActivity { after.resumeSavedClock() }
+        }
+        rule.waitUntil(TIMEOUT_MS) { after.uiState.value.players.firstOrNull()?.isOutOfTime == true }
+        assertTrue("it comes back stopped", after.uiState.value.isPaused)
+        rule.waitUntil(TIMEOUT_MS) { runBlocking { dao.getSavedClock() } == null }
+        second.close()
+
+        // And the next launch has nothing to take up.
+        val third = ActivityScenario.launch(MainActivity::class.java)
+        val then = viewModelOf(third)
+        rule.waitUntil(TIMEOUT_MS) { then.isReady.value }
+        Thread.sleep(1_000)
+        assertTrue("nothing kept", !then.hasSavedClock.value)
+        assertEquals("a clock that has not started", null, then.uiState.value.activePlayer)
+        third.close()
+    }
+
     private companion object {
+        /** A clock short enough to flag inside the test, and long enough to play the move on. */
+        const val FLAGS_AFTER_MS = 4_000L
         const val TIMEOUT_MS = 10_000L
         /** Long enough that the save is plainly not where the game comes back, and short of the ten-second one. */
         const val SINCE_THE_SAVE_MS = 3_500L

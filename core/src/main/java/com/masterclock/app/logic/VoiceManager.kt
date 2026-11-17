@@ -56,6 +56,15 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
     var hasNoVoice = false
         private set
 
+    /**
+     * Told of everything the clock asks to have said, as it is asked: the announcement's name and
+     * what it is filled with, or the words themselves, and whether it waits for the one before.
+     * Before the engine, so with no voice on the device and none yet started. Nothing in the app
+     * listens; it is how a test hears a game, which no test could -- "twenty seconds" cut short by
+     * "one" was found by a probe put in by hand.
+     */
+    var heard: ((what: String, with: List<Any>, afterTheLast: Boolean) -> Unit)? = null
+
     /** What was to be said while the engine was starting; the latest only, as the queue flushes. */
     private var waiting: (() -> Unit)? = null
 
@@ -117,6 +126,7 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
 
     /** Speaks one of the announcement strings, in the voice's own language. */
     fun speak(@StringRes text: Int, volume: Float, vararg args: Any) {
+        heard?.invoke(context.resources.getResourceEntryName(text), args.toList(), false)
         // The words are read once the voice is known: its language decides them.
         whenReady { utter(speechResources.getString(text, *args), volume) }
     }
@@ -127,6 +137,7 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
      * follows "twenty seconds" a second later, which took the end off it.
      */
     fun speak(text: String, volume: Float, afterTheLast: Boolean = false) {
+        heard?.invoke(text, emptyList(), afterTheLast)
         whenReady { utter(text, volume, afterTheLast) }
     }
 

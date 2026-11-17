@@ -58,6 +58,37 @@ The same tests run on `Standard`, `Lite` and `Mini`, and skip themselves where a
 screen, so a skip there is not a failure. The system file picker is another app and out of their
 reach: `ExportImportFlowTest` covers everything on either side of it.
 
+**Run them at 360 dp wide as well as at the emulator's own width.** A Pixel AVD is 411 dp, and
+360 dp is both a common width and where a wider phone lands once Display size is raised:
+
+```sh
+adb shell wm density 480      # 360 dp on a 1080-pixel-wide AVD; `wm density reset` puts it back
+```
+
+The notebook's tests passed at 411 dp while, at 360, the keyboard slid a text note's title bar
+under the status bar and its first row of buttons off the screen. Four of them fail there, and
+that is how it was found.
+
+**They are the bar for anything that touches saving or resuming a game.** The unit tests in `core`
+pin the rules; these are what found that a clock started from a pause had no save for ten seconds,
+and that a new game's first press overwrote the game still on offer -- both merged on the strength
+of the unit tests and a manual trial. `AliveMarkFlowTest` and `ResumeFlowTest` first, then the lot.
+
+On a machine short of memory, Gradle and the emulator do not fit together. Build the APKs with the
+emulator off, then run them with `adb` alone:
+
+```sh
+./gradlew :app:assembleCompleteDebug :app:assembleCompleteDebugAndroidTest
+adb install -r -t app/build/outputs/apk/complete/debug/app-complete-debug.apk
+adb install -r -t app/build/outputs/apk/androidTest/complete/debug/app-complete-debug-androidTest.apk
+adb shell am instrument -w <applicationId>.debug.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Two things a test can now hear that only an ear could: `ChessTimerViewModel.listenToTheVoice`
+reports everything the clock asks its voice to say, as it is asked (`SpokenByoyomiFlowTest`), and
+`SoundManager.readySounds` which sounds have loaded (`SoundFallbackFlowTest`). Neither is used by
+the app.
+
 To watch TalkBack itself on an emulator, keep `uiautomator` away from it: a UiAutomation session
 suspends other accessibility services, without a word. `adb shell input` skips touch exploration
 altogether; `adb emu event send` gives a real finger.
