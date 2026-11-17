@@ -56,6 +56,30 @@ class BackgroundClockTest {
         for (odd in listOf(0L, 1L, 999L, 3_000L, -5L, Long.MAX_VALUE)) assertEquals(2_000L, ChessClockSettings(autoSaveIntervalMs = odd).autoSaveEveryMs())
     }
 
+    @Test
+    fun `the clock ticks on the second only where the face shows whole seconds alone`() {
+        // Tenths under ten seconds, as the settings come.
+        val s = ChessClockSettings()
+        val plain = PlayerState(120_000)
+        for (mode in listOf(TimerMode.SUDDEN_DEATH, TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY, TimerMode.MOVE_TIMER_STANDARD,
+            TimerMode.BYOYOMI_JAPANESE, TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE, TimerMode.FIDE_PERIODS)) {
+            assertTrue(mode.name, ticksOnTheSecond(mode, plain, s, 120_000))
+        }
+        // Two clocks moving, a rate of its own, or the table's clock: ten times a second, as before.
+        for (mode in listOf(TimerMode.HOURGLASS, TimerMode.GONG, TimerMode.MOVE_TIMER_GLOBAL, TimerMode.MOVE_TIMER_OVERTIME, TimerMode.MOVE_TIMER_SAVE_CAP,
+            TimerMode.MOVE_TIMER_SHARED, TimerMode.MOVE_TIMER_GLOBAL_SHARED, TimerMode.FAST_MOVE, TimerMode.CHRONO_COUNTDOWN, TimerMode.CHRONO_COUNTUP,
+            TimerMode.PHASES, TimerMode.HIDDEN, TimerMode.RANDOM, TimerMode.MOVE_COUNTS_UP, TimerMode.MOVE_COUNTS_DOWN)) {
+            assertFalse(mode.name, ticksOnTheSecond(mode, plain, s, 120_000))
+        }
+        // The last ten seconds show tenths; so does a face set to show them always.
+        assertFalse(ticksOnTheSecond(TimerMode.SUDDEN_DEATH, PlayerState(9_500), s, 9_500))
+        assertTrue(ticksOnTheSecond(TimerMode.SUDDEN_DEATH, PlayerState(10_000), s, 10_000))
+        assertFalse(ticksOnTheSecond(TimerMode.SUDDEN_DEATH, plain, s.copy(showTenthsThresholdMs = Long.MAX_VALUE), 120_000))
+        // A delay is counted to a tenth, and an overrun counts the other way.
+        assertFalse(ticksOnTheSecond(TimerMode.US_DELAY, PlayerState(120_000, delayRemainingMs = 3_000), s, 120_000))
+        assertFalse(ticksOnTheSecond(TimerMode.SUDDEN_DEATH, PlayerState(45_000, isOutOfTime = true), s.copy(flagBehavior = FlagBehavior.REVERSE), 45_000))
+    }
+
     private fun game(vararg players: PlayerState, active: Int? = 1, paused: Boolean = false) =
         ChessClockState(players = players.toList(), activePlayer = active, isPaused = paused)
 

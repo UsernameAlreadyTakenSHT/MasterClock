@@ -3578,6 +3578,36 @@ internal fun wholeSecondTickMs(remainingMs: Long): Long {
 
 private const val MIN_WHOLE_SECOND_TICK_MS = 20L
 
+/**
+ * Whether the phone's face, with [player] on the move in [mode] and reading [displayedMs], shows
+ * nothing that changes more often than once a second -- so that the clock may tick on the second's
+ * edge, as the E Ink build's does, rather than ten times a second.
+ *
+ * Ten ticks a second recomposed the whole clock screen ten times to redraw it once: measured, 3 to
+ * 4 % of a core for the length of a game, against next to nothing. The time itself is taken from
+ * the difference between two readings, so it is as exact at either rate.
+ *
+ * Only where one clock counts down in whole seconds and nothing else moves:
+ * - not while tenths are on screen, which [ChessClockSettings.showsTenthsAt] decides -- under ten
+ *   seconds by default, so the last seconds tick as they always did;
+ * - not during a delay, which the face counts to a tenth;
+ * - not past zero, where an overrun counts the other way;
+ * - and only in the modes below. The others move two clocks at once (Hourglass, Gong, the shared
+ *   and global move timers, whose second clock would lag), run at a rate of their own (Fast Move),
+ *   or show the table's clock (Chronos, Phases).
+ */
+internal fun ticksOnTheSecond(mode: TimerMode, player: PlayerState, settings: ChessClockSettings, displayedMs: Long): Boolean {
+    if (player.isOutOfTime || player.delayRemainingMs > 0) return false
+    if (settings.showsTenthsAt(kotlin.math.abs(displayedMs))) return false
+    return when (mode) {
+        TimerMode.SUDDEN_DEATH, TimerMode.FISCHER, TimerMode.BRONSTEIN, TimerMode.US_DELAY,
+        TimerMode.MOVE_TIMER_STANDARD,
+        TimerMode.BYOYOMI_JAPANESE, TimerMode.BYOYOMI_CANADIAN, TimerMode.BYOYOMI_PROGRESSIVE,
+        TimerMode.FIDE_PERIODS -> true
+        else -> false
+    }
+}
+
 private const val FAST_TICK_MS = 10L
 
 /** Tick rate the rest of the time: enough for tenths, and ten times cheaper. */
@@ -4200,7 +4230,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * coarser tick is just as accurate, only later.
      *
      * The display does care, but only when it shows hundredths. Tenths change every 100ms and
-     * seconds every 1000, so 100ms keeps both exact.
+     * seconds every 1000, so 100ms keeps both exact -- and where the face shows whole seconds
+     * alone, the second's edge is enough: see [ticksOnTheSecond].
      *
      * Whether hundredths are on screen is [showsHundredthsAt]'s question, and asking it there is
      * what keeps this from being a second copy of the display's condition.
@@ -4213,12 +4244,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             val player = state.players.getOrNull(active - 1) ?: return SLOW_TICK_MS
             return wholeSecondTickMs(displayedTimeMs(state, player, getPlayerSettings(active).mode))
         }
-        if (!settings.showHundredths) return SLOW_TICK_MS
-
         val active = state.activePlayer ?: return SLOW_TICK_MS
         val player = state.players.getOrNull(active - 1) ?: return SLOW_TICK_MS
-        val remaining = displayedTimeMs(state, player, getPlayerSettings(active).mode)
-        return if (settings.showsHundredthsAt(kotlin.math.abs(remaining))) FAST_TICK_MS else SLOW_TICK_MS
+        val mode = getPlayerSettings(active).mode
+        val remaining = displayedTimeMs(state, player, mode)
+        if (settings.showHundredths && settings.showsHundredthsAt(kotlin.math.abs(remaining))) return FAST_TICK_MS
+        return if (ticksOnTheSecond(mode, player, settings, remaining)) wholeSecondTickMs(remaining) else SLOW_TICK_MS
     }
 
     private fun tick() {
