@@ -329,8 +329,6 @@
     <string name="settings_keep_running_desc">Avec la pause ci-dessus désactivée, une notification garde la pendule en marche quand l\'appli est en arrière-plan, pour qu\'Android ne la ferme pas. Elle indique qui a le trait et son temps, avec un bouton Pause.</string>
     <string name="notif_channel_clock">Partie en cours</string>
     <string name="settings_advanced">Avancé</string>
-    <string name="settings_save_every">Enregistrer la partie toutes les</string>
-    <string name="settings_save_every_desc">Pendant qu\'une pendule tourne, en plus de chaque coup et de chaque pause. Plus c\'est court, moins on perd si l\'appli se ferme par surprise.</string>
     <string name="settings_different_per_player">Réglages différents par joueur</string>
     <string name="settings_more_players">Activer plus de joueurs (expérimental)</string>
     <string name="settings_players">Joueurs</string>
@@ -466,9 +464,6 @@
     <string name="omni_cfg_final_beep">Bip final</string>
     <string name="omni_cfg_round_gong">Gong de manche</string>
 
-    <string name="dur_1s">1 s</string>
-    <string name="dur_2s">2 s</string>
-    <string name="dur_5s">5 s</string>
     <string name="dur_10s">10 s</string>
     <string name="dur_30s">30 s</string>
     <string name="dur_1m">1 min</string>

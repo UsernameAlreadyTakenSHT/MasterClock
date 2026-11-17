@@ -336,8 +336,6 @@
     <string name="settings_keep_running_desc">With the pause above off, a notification keeps the clock going while the app is in the background, so that Android does not close it. It shows whose turn it is and their time, with a Pause button.</string>
     <string name="notif_channel_clock">Game in progress</string>
     <string name="settings_advanced">Advanced</string>
-    <string name="settings_save_every">Save game every</string>
-    <string name="settings_save_every_desc">While a clock runs, besides each move and each pause. Shorter loses less if the app is closed by surprise.</string>
     <string name="settings_different_per_player">Different settings per player</string>
     <string name="settings_more_players">Enable more players (experimental)</string>
     <string name="settings_players">Players</string>
@@ -472,9 +470,6 @@
     <string name="omni_cfg_round_gong">Round Gong</string>
 
     <string name="common_off">Off</string>
-    <string name="dur_1s">1s</string>
-    <string name="dur_2s">2s</string>
-    <string name="dur_5s">5s</string>
     <string name="dur_10s">10s</string>
     <string name="dur_30s">30s</string>
     <string name="dur_1m">1m</string>

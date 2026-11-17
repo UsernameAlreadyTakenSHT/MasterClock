@@ -49,14 +49,6 @@ class BackgroundClockTest {
     }
 
     @Test
-    fun `the save interval is one of the choices, two seconds unless set`() {
-        assertEquals(2_000L, ChessClockSettings().autoSaveEveryMs())
-        for (choice in AUTO_SAVE_CHOICES_MS) assertEquals(choice, ChessClockSettings(autoSaveIntervalMs = choice).autoSaveEveryMs())
-        // Anything else, from an import or an older file, is the default: never a save every millisecond.
-        for (odd in listOf(0L, 1L, 999L, 3_000L, -5L, Long.MAX_VALUE)) assertEquals(2_000L, ChessClockSettings(autoSaveIntervalMs = odd).autoSaveEveryMs())
-    }
-
-    @Test
     fun `the clock ticks on the second only where the face shows whole seconds alone`() {
         // Tenths under ten seconds, as the settings come.
         val s = ChessClockSettings()

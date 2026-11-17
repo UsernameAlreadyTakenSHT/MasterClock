@@ -203,6 +203,4 @@
     <string name="settings_haptic_feedback">Feedback tátil</string>
     <string name="settings_sound_previews">Prévia dos sons</string>
     <string name="settings_threshold">Limite</string>
-    <string name="settings_save_every">Salvar a partida a cada</string>
-    <string name="settings_save_every_desc">Enquanto um relógio corre, além de cada lance e de cada pausa. Quanto mais curto, menos se perde se o app fechar de surpresa.</string>
 </resources>

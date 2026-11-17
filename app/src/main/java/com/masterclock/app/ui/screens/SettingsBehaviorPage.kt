@@ -196,31 +196,6 @@ fun BehaviorSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged:
                     }
                 }
             }
-            // How often a running game is written down. Left alone it is two seconds; see autoSaveEveryMs.
-            Spacer(Modifier.height(16.dp))
-            Text(stringResource(R.string.settings_save_every), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
-            ChoiceRow(Modifier.fillMaxWidth()) {
-                AUTO_SAVE_CHOICES_MS.forEachIndexed { i, ms ->
-                    val label = when (ms) {
-                        10_000L -> stringResource(R.string.dur_10s)
-                        5_000L -> stringResource(R.string.dur_5s)
-                        2_000L -> stringResource(R.string.dur_2s)
-                        else -> stringResource(R.string.dur_1s)
-                    }
-                    ChoiceSegment(
-                        selected = currentSettings.autoSaveEveryMs() == ms,
-                        onClick = { onSettingsChanged(currentSettings.copy(autoSaveIntervalMs = ms)) },
-                        shape = SegmentedButtonDefaults.itemShape(i, AUTO_SAVE_CHOICES_MS.size),
-                        label = { Text(label, style = MaterialTheme.typography.labelSmall) }
-                    )
-                }
-            }
-            Text(
-                stringResource(R.string.settings_save_every_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, top = 6.dp)
-            )
         }
 
         if (currentSettings.numberOfPlayers > 2) {

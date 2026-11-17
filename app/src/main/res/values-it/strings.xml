@@ -310,8 +310,6 @@
     <string name="settings_keep_running_desc">Con la pausa qui sopra disattivata, una notifica tiene l\'orologio in funzione mentre l\'app è in secondo piano, così Android non la chiude. Mostra a chi tocca e il suo tempo, con un pulsante Pausa.</string>
     <string name="notif_channel_clock">Partita in corso</string>
     <string name="settings_advanced">Avanzate</string>
-    <string name="settings_save_every">Salva la partita ogni</string>
-    <string name="settings_save_every_desc">Mentre un orologio corre, oltre a ogni mossa e a ogni pausa. Più è breve, meno si perde se l\'app si chiude all\'improvviso.</string>
     <string name="settings_different_per_player">Impostazioni diverse per giocatore</string>
     <string name="settings_more_players">Attiva più giocatori (sperimentale)</string>
     <string name="settings_players">Giocatori</string>
@@ -447,9 +445,6 @@
     <string name="omni_cfg_final_beep">Bip finale</string>
     <string name="omni_cfg_round_gong">Gong di manche</string>
 
-    <string name="dur_1s">1 s</string>
-    <string name="dur_2s">2 s</string>
-    <string name="dur_5s">5 s</string>
     <string name="dur_10s">10 s</string>
     <string name="dur_30s">30 s</string>
     <string name="dur_1m">1 min</string>

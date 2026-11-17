@@ -62,6 +62,10 @@ data class ChessClockStateProxy(
     // zero, so Bronstein credited only what was spent after the interruption -- and the logged
     // time for that move lost everything before it.
     val moveElapsedMs: Long = 0,
+    // When the save was taken, on the elapsed-time clock: what its alive mark is measured from, to
+    // run the clock on to the moment it was last known running. See AliveMark. Zero in saves older
+    // than the field, which come back as they were saved.
+    val savedAtElapsedMs: Long = 0,
     // See ChessClockState.phasesFinished. False in snapshots older than the field: a finished
     // PHASES game saved by them comes back reading as flagged, as it did when it was saved.
     val phasesFinished: Boolean = false,
@@ -1035,12 +1039,6 @@ data class ChessClockSettings(
     val pauseOnBackground: Boolean = true,
     /** With [pauseOnBackground] off, a foreground service keeps the game alive; see [runsInBackground]. */
     val keepRunningInBackground: Boolean = false,
-    /**
-     * How often a running game is written down besides at each move and each pause, which is all a
-     * game closed by surprise loses; see [autoSaveEveryMs]. The player's to set where the Behavior
-     * tab is, since what it costs is theirs: a write a second on an old phone is not nothing.
-     */
-    val autoSaveIntervalMs: Long = DEFAULT_AUTO_SAVE_INTERVAL_MS,
 
     val alwaysShowHours: Boolean = false,
     val alwaysShowMinutes: Boolean = true,
@@ -1680,8 +1678,6 @@ private fun sanitizeSettingsRest(
         customSwitchUri = sanitizeImportedContentUri(grants, settings.customSwitchUri),
         numberOfPlayers = sanitizedNumberOfPlayers,
         flagCapMs = settings.flagCapMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
-        // One of the choices or the default: an import cannot set a save every millisecond.
-        autoSaveIntervalMs = settings.autoSaveEveryMs(),
         // Volumes are fractions the sliders keep between 0 and 1, and the pause between phases a
         // duration like the others; none of the three was bounded.
         soundsVolume = settings.soundsVolume.coerceIn(0f, 1f),
@@ -3360,6 +3356,25 @@ internal fun catchUpStepMs(state: ChessClockState, delta: Long, settings: ChessC
 /** More turns than any sleep is worth following one by one; past it the rest is taken at once. */
 private const val MAX_CATCH_UP_STEPS = 500
 
+/**
+ * [state] as its clock stands [delta] later, with nothing sounded and nothing logged: the clock a
+ * saved game is brought back to, run on from its save to the moment it was last alive. The engine's
+ * own tick in the steps the ticker takes, so that it is the clock play would have shown.
+ */
+internal fun advanceClock(state: ChessClockState, delta: Long, settings: ChessClockSettings): ChessClockState {
+    if (delta <= 0 || state.isPaused || state.activePlayer == null) return state
+    var current = state
+    var left = delta
+    var steps = 0
+    while (true) {
+        val step = if (steps++ < MAX_CATCH_UP_STEPS) catchUpStepMs(current, left, settings) else left
+        current = tickClock(current, step, settings).state
+        left -= step
+        if (left <= 0 || current.isPaused) break
+    }
+    return current
+}
+
 internal class ClockTick(
     val state: ChessClockState,
     val cue: TickCue? = null,
@@ -3700,13 +3715,13 @@ private const val FAST_TICK_MS = 10L
 /** Tick rate the rest of the time: enough for tenths, and ten times cheaper. */
 private const val SLOW_TICK_MS = 100L
 
-/** How long a crash may cost a running game. */
-/** What [ChessClockSettings.autoSaveIntervalMs] may be, as the Behavior page offers them. */
-val AUTO_SAVE_CHOICES_MS = listOf(10_000L, 5_000L, 2_000L, 1_000L)
-const val DEFAULT_AUTO_SAVE_INTERVAL_MS = 2_000L
-
-/** The interval in force: the stored one if it is one of the choices, the default if it is anything else. */
-fun ChessClockSettings.autoSaveEveryMs(): Long = autoSaveIntervalMs.takeIf { it in AUTO_SAVE_CHOICES_MS } ?: DEFAULT_AUTO_SAVE_INTERVAL_MS
+/**
+ * How often a running game is saved whole, besides at each move and each pause. It was the
+ * player's to set, from ten seconds down to one, when it was all a game closed by surprise could
+ * come back from; the alive mark now carries the clock on from the save to within a fifth of a
+ * second, so this is only what backs the mark up -- what is lost should the mark not be there.
+ */
+const val SAFETY_SAVE_EVERY_MS = 10_000L
 
 /**
  * What "unlimited" history actually means when reading it back.
@@ -3772,6 +3787,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     /** The last notation a board reported, for a castle's king to rename; see recordBoardMove. */
     private var lastBoardNotation: String? = null
     private val soundManager = SoundManager(application)
+    private val aliveMark = AliveMark(java.io.File(application.filesDir, "alive_mark"))
+
+    /**
+     * The save a running clock's alive mark is written for, by its timestamp; zero for none, a
+     * clock saved paused or not saved yet. Set where the save is taken and read by the marker.
+     */
+    @Volatile private var aliveSaveId = 0L
     // The device turned out to have no voice to speak with. The message for it stood on the volume
     // test alone, and only when the engine had already answered: announcements switched on, or on
     // since a launch before, were simply never heard, and nothing said why. Conflated and kept until
@@ -4302,6 +4324,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
         lastTickTime = SystemClock.elapsedRealtime()
         timerJob = viewModelScope.launch {
+            // The alive mark, on its own thread and its own beat: the ticker wakes once a second
+            // where the face shows seconds, and a mark that old would give back what the save's
+            // interval did. A child of the ticker, so it stops wherever the clock does.
+            if (FlavorConfig.savesGameInPlay()) launch(Dispatchers.IO) {
+                while (isActive) {
+                    val id = aliveSaveId
+                    if (id != 0L) aliveMark.write(id, SystemClock.elapsedRealtime())
+                    delay(ALIVE_MARK_EVERY_MS)
+                }
+            }
             while (isActive) {
                 try {
                     delay(tickIntervalMs().milliseconds)
@@ -4388,14 +4420,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             sounds.distinct().forEach(::play)
             current
         }
-        // Saved so a game survives the app being killed: here at the interval the player chose,
-        // two seconds unless they did, and at each move, each pause and each correction where they
-        // happen. It was every five seconds, then every fifteen, when a save serialised the whole
-        // notebook on the thread that draws the clock; it now encodes the time control alone, on
-        // its own thread, and fifteen seconds of one player's clock was more than a crash should cost.
+        // Saved so a game survives the app being killed: here every ten seconds, and at each move,
+        // each pause and each correction where they happen. Between saves the alive mark says how
+        // far the clock went on, so the interval is no longer what a crash costs; see AliveMark.
         // Not where nothing can bring a save back: the E-Ink build wrote one every fifteen seconds
         // all the same. Mini did too, and was then cut off with it; it takes its save up at launch.
-        if (FlavorConfig.savesGameInPlay() && now - lastAutoSaveTime >= _settings.value.autoSaveEveryMs()) {
+        if (FlavorConfig.savesGameInPlay() && now - lastAutoSaveTime >= SAFETY_SAVE_EVERY_MS) {
             lastAutoSaveTime = now
             saveClockForLater()
         }
@@ -4626,6 +4656,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     override fun onCleared() {
         soundManager.release()
         voiceManager.release()
+        aliveMark.close()
         // Asked through the delegates, so shutting down does not construct the very transports this
         // build went out of its way never to build.
         if (bluetoothManagerDelegate.isInitialized()) bluetoothManager.disconnect()
@@ -5197,10 +5228,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settingsSnapshot = settings.value.copy(notebookNotes = emptyList())
         // Up to the pause, if paused: the Save button is pressed on a paused clock.
         val moveElapsed = if (uiState.value.activePlayer != null) ((pausedAt ?: SystemClock.elapsedRealtime()) - moveStartTime).coerceAtLeast(0) else 0L
-        val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed)
+        val savedAtElapsed = SystemClock.elapsedRealtime()
+        val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed, savedAtElapsedMs = savedAtElapsed)
         // Now, with the clock: resuming keeps the moves logged up to this time. Taken when the
         // encode finished, a move played meanwhile stayed in the log and was played again.
         val savedAt = System.currentTimeMillis()
+        // A running clock is marked alive from here on, against this save; a paused one has nothing
+        // to run on to.
+        aliveSaveId = if (stateSnapshot.isPaused || stateSnapshot.activePlayer == null) 0L else savedAt
 
         val generation = savedClockGeneration
         // Written in the order taken: each encodes on its own thread and was sent as it finished, so
@@ -5286,12 +5321,24 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // set, i.e. the device's uptime.
                 timerJob?.cancel()
                 timerJob = null
+                aliveSaveId = 0L
+                // On from the save to the moment the clock was last known running: the save is up to
+                // ten seconds old, its mark a fifth of a second. A clock saved paused, or one whose
+                // mark is another save's, comes back as saved; see aliveGapMs.
+                val wasRunning = !resumed.second.isPaused && resumed.second.activePlayer != null
+                val mark = withContext(Dispatchers.IO) { aliveMark.read() }
+                val ranOnMs = aliveGapMs(saved.timestamp, resumed.second.savedAtElapsedMs, wasRunning, mark)
+                val resumedState = advanceClock(resumed.second.toState(), ranOnMs, resumedSettings)
                 val now = SystemClock.elapsedRealtime()
                 lastTickTime = now
-                moveStartTime = now - resumed.second.moveElapsedMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS)
+                moveStartTime = now - (resumed.second.moveElapsedMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS) + ranOnMs)
                 // Installed paused, so the wait until Resume is pressed is a pause like any other.
                 pausedAt = now
-                _uiState.value = resumed.second.toState().copy(isPaused = true)
+                _uiState.value = resumedState.copy(isPaused = true)
+                // Saved again at the first tick once it runs: until then the save on disk is the old
+                // one, whose mark stopped where the app was closed, and a second closing soon after
+                // Resume would bring back the first.
+                lastAutoSaveTime = 0
                 // The roll Reset replays is the resumed game's, as for a game started from Last
                 // Games. It was whatever this launch had drawn on its way up, so Reset after resuming
                 // a 7:00 + 3s Random game started a 4:20 + 1s one.

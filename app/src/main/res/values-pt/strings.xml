@@ -315,8 +315,6 @@
     <string name="settings_keep_running_desc">Com a pausa acima desligada, uma notificação mantém o relógio a contar enquanto a app está em segundo plano, para que o Android não a feche. Mostra de quem é a vez e o seu tempo, com um botão de pausa.</string>
     <string name="notif_channel_clock">Partida em curso</string>
     <string name="settings_advanced">Avançado</string>
-    <string name="settings_save_every">Guardar a partida a cada</string>
-    <string name="settings_save_every_desc">Enquanto um relógio corre, além de cada lance e de cada pausa. Quanto mais curto, menos se perde se a app fechar de surpresa.</string>
     <string name="settings_different_per_player">Definições diferentes por jogador</string>
     <string name="settings_more_players">Ativar mais jogadores (experimental)</string>
     <string name="settings_players">Jogadores</string>
@@ -452,9 +450,6 @@
     <string name="omni_cfg_final_beep">Bip final</string>
     <string name="omni_cfg_round_gong">Gong de ronda</string>
 
-    <string name="dur_1s">1 s</string>
-    <string name="dur_2s">2 s</string>
-    <string name="dur_5s">5 s</string>
     <string name="dur_10s">10 s</string>
     <string name="dur_30s">30 s</string>
     <string name="dur_1m">1 min</string>
