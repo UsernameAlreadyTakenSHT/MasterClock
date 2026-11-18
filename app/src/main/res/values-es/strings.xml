@@ -27,7 +27,7 @@
     <string name="common_remove">Quitar</string>
     <string name="common_select">Seleccionar</string>
     <string name="common_optional">Opcional</string>
-    <string name="common_off">No</string>
+    <string name="common_off">Sin</string>
 
     <!-- Presets -->
     <string name="preset_title">Preajustes</string>

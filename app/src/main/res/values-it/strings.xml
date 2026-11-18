@@ -26,6 +26,8 @@
     <string name="common_remove">Rimuovi</string>
     <string name="common_select">Seleziona</string>
     <string name="common_optional">Facoltativo</string>
+    <!-- "No", and not "Senza" as the French has "Sans": five letters put the six choices of the launch
+         countdown on two lines at 360 dp, where German, French, Spanish and Portuguese keep one. -->
     <string name="common_off">No</string>
 
     <!-- Presets -->
