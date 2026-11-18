@@ -444,6 +444,14 @@ const val WAKE_MARGIN_MS = 10_000L
 const val MAX_WAKE_MS = 4 * 3_600_000L
 
 /**
+ * How soon after a board's move a second one starting from where it ended is the same piece still
+ * moving; see [BoardDiffer.slideOf]. A slide is a fraction of a second. Past this it is somebody
+ * putting a piece right, or taking a move back and playing another, and that is a move of its own:
+ * joined to the one before, the clock stayed with a player who had moved.
+ */
+const val SLIDE_WINDOW_MS = 1_000L
+
+/**
  * How long the processor is kept awake for [clock] while its screen is off, or null for no need.
  *
  * The time was always right -- it is read from a clock a sleeping phone still counts -- but the tick
@@ -3817,6 +3825,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
 
     /** The last notation a board reported, for a castle's king to rename; see recordBoardMove. */
     private var lastBoardNotation: String? = null
+
+    /** When it was reported, by [SystemClock.elapsedRealtime]; see [SLIDE_WINDOW_MS]. */
+    private var lastBoardMoveAt = 0L
     private val soundManager = SoundManager(application)
     private val aliveMark = AliveMark(java.io.File(application.filesDir, "alive_mark"))
 
@@ -5482,6 +5493,19 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // The king of a castle whose rook went first: the rook's move, already noted and maybe
         // already pressed for, is renamed after the king, and nothing else happens.
         val rookHalf = lastBoardNotation
+        val now = SystemClock.elapsedRealtime()
+        // A piece slid across a square on its way: the board read two moves, the first has been
+        // noted and maybe pressed for, and this is the rest of it. It is renamed as the castle is,
+        // and nothing else happens -- it passed the turn a second time, back to whoever had just
+        // moved. Only while it is still the same gesture; see SLIDE_WINDOW_MS.
+        val slide = BoardDiffer.slideOf(rookHalf, notation)?.takeIf { now - lastBoardMoveAt <= SLIDE_WINDOW_MS }
+        lastBoardMoveAt = now
+        if (slide != null && rookHalf != null) {
+            lastBoardNotation = slide
+            if (pendingBoardNotation == rookHalf) pendingBoardNotation = slide
+            renameLastBoardMove(rookHalf, slide)
+            return
+        }
         lastBoardNotation = notation
         if (BoardDiffer.completesCastle(rookHalf, notation) && rookHalf != null) {
             if (pendingBoardNotation == rookHalf) pendingBoardNotation = notation

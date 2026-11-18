@@ -262,6 +262,25 @@ object BoardDiffer {
      */
     fun completesCastle(previous: String?, move: String): Boolean = previous != null && CASTLES[move] == previous
 
+    /**
+     * The one move that [previous] and [move] are when the second starts on the square the first
+     * ended on: a piece slid along the board, resting on a square on its way. A board that reads
+     * its squares many times a second sees e2 to e3 and then e3 to e4, and each is a whole move to
+     * anything that compares two positions. Null when they are two moves.
+     *
+     * No reply starts from the square the mover just landed on -- it is theirs -- so in the
+     * notation of squares this is the same piece going on, whoever's turn the clock says it is. Not
+     * when it goes back where it came from, which is a move taken back and stays its own; and not
+     * outside that notation, where a board names its moves itself and has already said what one is.
+     */
+    fun slideOf(previous: String?, move: String): String? {
+        if (previous == null || !SQUARES.matches(previous) || !SQUARES.matches(move)) return null
+        if (move.substring(0, 2) != previous.substring(2, 4) || move.substring(2, 4) == previous.substring(0, 2)) return null
+        return previous.substring(0, 2) + move.substring(2)
+    }
+
+    private val SQUARES = Regex("[a-h][1-8][a-h][1-8][qrbn]?")
+
     /** Each castle's king move, and the rook move that can come before it. */
     private val CASTLES = mapOf("e1g1" to "h1f1", "e1c1" to "a1d1", "e8g8" to "h8f8", "e8c8" to "a8d8")
 }

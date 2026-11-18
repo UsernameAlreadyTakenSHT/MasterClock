@@ -90,13 +90,23 @@ class BoardRoughHandlingTest {
 
     @Test
     fun `a piece slid across a square is read as two moves`() {
-        // Known, and not a rule to keep: e2 to e4 with the pawn resting on e3 is e2e3 and then
-        // e3e4, and the turn passes twice. Nothing in two positions tells it from two moves; only
-        // how long the pawn stayed on e3 does, and the tracker has no clock. Pinned so that the day
-        // it is given one, this is the test that changes.
+        // To the tracker, which compares positions and has no clock: e2 to e4 with the pawn resting
+        // on e3 is e2e3 and then e3e4. They are joined where there is one, in recordBoardMove, by
+        // BoardDiffer.slideOf -- the turn passed twice.
         assertEquals(
             listOf("e2e3", "e3e4"),
             seen(start, start.with("e2."), start.with("e2.", "e3P"), start.with("e2."), e4),
+        )
+    }
+
+    @Test
+    fun `a move taken back is heard as the move back, and the one played instead after it`() {
+        // In the middle of a game; at its first move the board is the starting position again, and
+        // that is a new game. The clock goes back to whoever takes their move back, which is theirs.
+        val d4 = e4e5.with("d2.", "d4P")
+        assertEquals(
+            listOf("e7e5", "d2d4", "d4d2", "g1f3"),
+            seen(e4, e4.with("e7."), e4e5, e4e5.with("d2."), d4, d4.with("d4."), e4e5, e4e5.with("g1."), e4e5.with("g1.", "f3N")),
         )
     }
 

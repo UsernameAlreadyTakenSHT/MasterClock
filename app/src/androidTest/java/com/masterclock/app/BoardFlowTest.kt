@@ -100,6 +100,41 @@ class BoardFlowTest {
     }
 
     @Test
+    fun aPieceSlidAcrossASquarePassesTheTurnOnceAndIsLoggedAsOneMove() {
+        settings { it.copy(autoSwitchOnBoardMove = true) }
+        startTheClock()
+        val mover = viewModel.uiState.value.activePlayer
+
+        // As a board that reads its squares many times a second reports a pawn resting on e3.
+        board("e2e3")
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != mover }
+        val next = viewModel.uiState.value.activePlayer
+        board("e3e4")
+        rule.waitForIdle()
+        assertEquals("the rest of the slide passed the turn back", next, viewModel.uiState.value.activePlayer)
+
+        endTheGameAndWaitFor { movesNoted("e2e4").isNotEmpty() }
+        assertTrue("the half of the slide is still in the log", events().none { it.moveNotation == "e2e3" || it.moveNotation == "e3e4" })
+    }
+
+    @Test
+    fun aMoveFromWhereTheLastEndedLongAfterItIsAMoveOfItsOwn() {
+        settings { it.copy(autoSwitchOnBoardMove = true) }
+        startTheClock()
+        val mover = viewModel.uiState.value.activePlayer
+
+        board("e2e3")
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != mover }
+        // Longer than any slide: a piece put right, or a move taken back and another played.
+        Thread.sleep(com.masterclock.app.logic.SLIDE_WINDOW_MS + 300)
+        board("e3e4")
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer == mover }
+
+        endTheGameAndWaitFor { movesNoted("e3e4").isNotEmpty() }
+        assertTrue(movesNoted("e2e3").isNotEmpty())
+    }
+
+    @Test
     fun withoutAutoSwitchACastleRookFirstIsHeldAsTheKingsMove() {
         settings { it.copy(autoSwitchOnBoardMove = false) }
         startTheClock()

@@ -92,6 +92,16 @@ port, **Paired** for boards already paired in the system's Bluetooth settings, a
 Devices**, filled by the refresh button. While a board occupies the USB port, the phone does not
 charge.
 
+Once a board has said anything, a **share** button appears in the screen's bar. It hands another
+app a text file, `masterclock_board_log.txt`, of what the board and the app said to each other in
+the last minutes: when, which way, over which link, under which protocol, and the bytes. It names
+the app's version, Android's and the phone's model, and neither the board nor its address. It is
+what to send when a board does not work, or for a make the app does not know. It is kept in memory
+only, and is gone when the app closes.
+
+A piece slid from one square to another that rests on a square on its way is one move: the turn
+passes when it first comes to rest, and the record names the square it ended on.
+
 | Setting | Default | |
 |---|---|---|
 | **Auto switch turn on move** | off | A move made on the linked board presses the clock, so that nobody has to. Not in the modes where nobody presses. |

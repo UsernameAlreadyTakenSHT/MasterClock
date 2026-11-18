@@ -2,6 +2,7 @@ package com.masterclock.app.logic
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -46,6 +47,22 @@ class BoardNotationTest {
         assertEquals("e5d6", BoardDiffer.moveBetween(before, position(*kings, "d6" to 'P')))
         val draughts = position("c3" to 'm', "d4" to 'M')
         assertEquals("c3e5", BoardDiffer.moveBetween(draughts, position("e5" to 'm')))
+    }
+
+    @Test
+    fun `a move that starts where the last one ended is the rest of it`() {
+        // A pawn slid from e2 to e4 that rested on e3, and a rook along a rank through two squares.
+        assertEquals("e2e4", BoardDiffer.slideOf("e2e3", "e3e4"))
+        assertEquals("a1d1", BoardDiffer.slideOf(BoardDiffer.slideOf("a1b1", "b1c1"), "c1d1"))
+        // What the pawn became rides with the square it became it on.
+        assertEquals("e6e8q", BoardDiffer.slideOf("e6e7", "e7e8q"))
+        // A reply starts elsewhere, and a move taken back is its own.
+        assertNull(BoardDiffer.slideOf("e2e4", "e7e5"))
+        assertNull(BoardDiffer.slideOf("e2e4", "e4e2"))
+        assertNull(BoardDiffer.slideOf(null, "e2e4"))
+        // A board that names its own moves has said what a move is: draughts squares, or anything else.
+        assertNull(BoardDiffer.slideOf("3228", "2819"))
+        assertNull(BoardDiffer.slideOf("Nf3", "f3e5"))
     }
 
     @Test
