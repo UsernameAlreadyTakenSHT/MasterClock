@@ -254,7 +254,7 @@
     <string name="settings_active_text">Texto del reloj activo</string>
     <string name="settings_inactive_text">Texto del reloj inactivo</string>
     <string name="settings_secondary_info">Información secundaria</string>
-    <string name="settings_label_text_color">Color de las etiquetas (jugadas, periodos, demora)</string>
+    <string name="settings_label_text_color">Color de las etiquetas (jugadas, periodos, retardo)</string>
     <string name="settings_alert_text_color">Color de las alertas (CAÍDA, ¡JUEGA!)</string>
     <string name="settings_special_states">Estados especiales</string>
     <string name="settings_loss_bg">Fondo en caso de derrota</string>
@@ -623,7 +623,7 @@
     <string name="preset_desc_us_5_2s">Sudden Death 5:00, retardo 2 s</string>
     <string name="preset_desc_us_25_5s">Sudden Death 25:00, retardo 5 s</string>
     <string name="preset_desc_us_80_40_30_30s">80 min/40 + 30 min (retardo 30 s)</string>
-    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, demora 5 s</string>
+    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, retardo 5 s</string>
     <string name="preset_desc_jap_byo_20">Byoyomi Japanese: 20 min + 1×30 s</string>
     <string name="preset_desc_jap_byo_60">Byoyomi Japanese: 60 min + 3×20 s</string>
     <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 min + 5 min/20 jugadas</string>

@@ -81,7 +81,7 @@
     <string name="guide_section_advanced">Motores avançados e experimentais</string>
     <string name="guide_section_bonus">Motores com bónus</string>
     <string name="guide_section_specialty">Motores especiais</string>
-    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeira.</string>
+    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeirinha.</string>
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmara</string>
@@ -259,7 +259,7 @@
     <string name="tools_new_draw_note">Nova nota desenhada</string>
     <string name="tools_new_image_note">Nova nota de imagem</string>
     <string name="tools_new_note">Nova nota</string>
-    <string name="tools_notebook_full">O caderno está cheio. Apague uma nota para adicionar outra.</string>
+    <string name="tools_notebook_full">O caderno está cheio. Elimine uma nota para adicionar outra.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Nova nota de vídeo</string>
     <string name="tools_no_games">Ainda não há partidas registadas.</string>
     <string name="tools_no_notes">Ainda não há notas. Toque em + para criar uma.</string>

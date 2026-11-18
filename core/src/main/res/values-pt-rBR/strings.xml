@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="voice_move">Jogue</string>
     <string name="board_error_connect_permission">A permissão de Bluetooth para conectar é necessária</string>
     <string name="board_error_scan_permission">A permissão de Bluetooth para buscar é necessária</string>
     <string name="board_error_no_connection">Não foi possível conectar ao tabuleiro</string>

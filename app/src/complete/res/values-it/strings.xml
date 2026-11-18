@@ -158,9 +158,9 @@
     <string name="tools_sym_counterplay">controgioco</string>
     <string name="tools_sym_zugzwang">zugzwang</string>
     <string name="tools_sym_time_trouble">zeitnot</string>
-    <string name="tools_sym_white_won">vince il Bianco</string>
+    <string name="tools_sym_white_won">ha vinto il Bianco</string>
     <string name="tools_sym_draw">patta</string>
-    <string name="tools_sym_black_won">vince il Nero</string>
+    <string name="tools_sym_black_won">ha vinto il Nero</string>
     <string name="tools_piece_white_king">re bianco</string>
     <string name="tools_piece_white_queen">donna bianca</string>
     <string name="tools_piece_white_rook">torre bianca</string>

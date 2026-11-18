@@ -390,7 +390,7 @@
     <string name="omni_cfg_phase_n">Fase %d</string>
     <string name="omni_cfg_game_short">P%d</string>
     <string name="omni_cfg_round_short">R%d</string>
-    <string name="omni_cfg_turn_short">V%d</string>
+    <string name="omni_cfg_turn_short">T%d</string>
     <string name="omni_cfg_delete_game">Eliminar a partida %d</string>
     <string name="omni_cfg_delete_round">Eliminar a ronda %d</string>
     <string name="omni_cfg_delete_turn">Eliminar o turno %d</string>
