@@ -1642,7 +1642,13 @@ internal fun sanitizeNote(filesDir: java.io.File, note: NotebookNote, freshId: B
                 val emoji = stroke.shape == DrawingShape.EMOJI && isOneEmoji(stroke.label)
                 val sticker = piece || emoji
                 stroke.copy(
-                    points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS),
+                    // Each point within what a drawing can be, and a width a pen can have: a sticker
+                    // sized from two points a million pixels apart is laid out at that size.
+                    points = stroke.points.take(MAX_IMPORTED_DRAWING_POINTS).map { (x, y) ->
+                        (x.takeIf { it.isFinite() } ?: 0f).coerceIn(-MAX_DRAWING_SIDE_PX, 2 * MAX_DRAWING_SIDE_PX) to
+                            (y.takeIf { it.isFinite() } ?: 0f).coerceIn(-MAX_DRAWING_SIDE_PX, 2 * MAX_DRAWING_SIDE_PX)
+                    },
+                    strokeWidth = (stroke.strokeWidth.takeIf { it.isFinite() } ?: 5f).coerceIn(0.5f, 200f),
                     shape = stroke.shape.takeIf { it in DrawingShape.KNOWN && (it !in STICKER_SHAPES || sticker) } ?: DrawingShape.FREE,
                     label = if (sticker) stroke.label else "",
                 )
@@ -2053,6 +2059,15 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
                 delayRemainingMs = state.delayRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
                 pauseTimeRemainingMs = state.pauseTimeRemainingMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
                 initialTotalTimeMs = state.initialTotalTimeMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+                // The clocks a game starts with are not out, flagged, overrun or in byoyomi: Last
+                // Games starts from these as they are, and a file that said otherwise opened a game
+                // already lost.
+                isOutOfTime = false,
+                isNegative = false,
+                hasFlagged = false,
+                isInByoyomi = false,
+                revealTimeUntilMs = state.revealTimeUntilMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS),
+                lastRevealPercentage = state.lastRevealPercentage.coerceIn(0, 101),
                 currentPhaseIndex = state.currentPhaseIndex.coerceIn(0, (own.phases.size.coerceAtMost(MAX_IMPORTED_PERIODS) - 1).coerceAtLeast(0)),
                 currentPeriodIndex = state.currentPeriodIndex.coerceIn(0, (own.fidePeriods.size.coerceAtMost(MAX_IMPORTED_PERIODS) - 1).coerceAtLeast(0)),
                 byoyomiPeriodsRemaining = state.byoyomiPeriodsRemaining.coerceIn(0, MAX_BYOYOMI_COUNT),
@@ -2339,7 +2354,11 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             val newSec = (p.secondaryTimeMs - delta).coerceAtLeast(0)
             val fromZero = !moveOut && totalGoneIntoOverrun(p.secondaryTimeMs, newSec, settings.flagBehavior)
             val overrunSign = settings.flagBehavior == FlagBehavior.NEGATIVE
-            p.copy(timeRemainingMs = if (fromZero) 0 else moveTime, isNegative = if (fromZero) overrunSign else moveNeg, secondaryTimeMs = newSec, isOutOfTime = moveOut || newSec <= 0)
+            // Under FLAG a clock that is out stays at 0:00. The total gone with move time in hand
+            // flagged the player and left that move time on the face, counting down under FLAGGED on
+            // this turn and on later ones.
+            val heldAtZero = settings.flagBehavior == FlagBehavior.FLAG && newSec <= 0
+            p.copy(timeRemainingMs = if (fromZero || heldAtZero) 0 else moveTime, isNegative = if (fromZero) overrunSign else moveNeg, secondaryTimeMs = newSec, isOutOfTime = moveOut || newSec <= 0)
         }
         TimerMode.BYOYOMI_JAPANESE -> {
             val newTime = p.timeRemainingMs - delta
@@ -3199,7 +3218,9 @@ internal fun arbiterAdjustMoveCount(state: ChessClockState, playerIndex: Int, de
     val adjusted = state.copy(players = state.players.toMutableList().apply { this[playerIndex - 1] = after })
     // As after the arbiter's time: nobody out any more, no flag stands first, and a period undone
     // past zero is a flag like one on the clock.
-    return if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted.withFirstFlag(state, playerIndex)
+    // Held to the Flag Cap, as the arbiter's time is: a period undone past zero went beyond it, shown
+    // and saved so until the next tick brought it back.
+    return (if (adjusted.players.none { it.isOutOfTime }) adjusted.copy(firstToFlag = null) else adjusted.withFirstFlag(state, playerIndex)).capOverrun(settings)
 }
 
 /**
@@ -3654,9 +3675,16 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     // A move count has no overrun to play on into, which is all NEGATIVE and REVERSE keep a flag from
     // ending the game for. So it never ended: the counter stayed at 0, "out of time", and the clocks
     // went on being passed. Over for the table, as [isGameOver] takes it for a run of phases.
-    val outOfMoves = s.mode == TimerMode.MOVE_COUNTS_DOWN && newP.isOutOfTime &&
-        (settings.flagBehavior == FlagBehavior.NEGATIVE || settings.flagBehavior == FlagBehavior.REVERSE)
-    return state.copy(players = newList, phasesFinished = state.phasesFinished || outOfMoves)
+    //
+    // Over once every player has played their moves, and not before: ended as the first reached
+    // zero, the others were a move short -- the one who moves second never played their last. Only
+    // FLAG waited for them. FREEZE ends a game at the first clock out, so there a player at zero is
+    // not marked out until the last move is played, and then all are together.
+    if (s.mode != TimerMode.MOVE_COUNTS_DOWN) return state.copy(players = newList)
+    val seats = settings.numberOfPlayers.coerceIn(1, newList.size)
+    val allPlayed = newList.take(seats).all { it.moveCount <= 0 }
+    val players = if (settings.flagBehavior == FlagBehavior.FREEZE) newList.mapIndexed { i, q -> if (i < seats) q.copy(isOutOfTime = allPlayed) else q } else newList
+    return state.copy(players = players, phasesFinished = state.phasesFinished || allPlayed)
 }
 
 /** Tick rate while the smallest digit on screen is hundredths of a second. */
@@ -3722,6 +3750,9 @@ private const val SLOW_TICK_MS = 100L
  * second, so this is only what backs the mark up -- what is lost should the mark not be there.
  */
 const val SAFETY_SAVE_EVERY_MS = 10_000L
+
+/** How long a new game runs before its first save, when no move comes sooner; see startClock. */
+const val NEW_GAME_FIRST_SAVE_MS = 2_000L
 
 /**
  * What "unlimited" history actually means when reading it back.
@@ -4327,9 +4358,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // round -- its alive mark, which is written for a save of a running clock, had none to be
         // written for, and a game closed in those seconds came back to the pause.
         // Not the first press of a new game: the game interrupted before it may still be on offer,
-        // and stays so until this one's first save, at its first move or ten seconds in; see
-        // applyShortcutNow. A game that has not been played has nothing to lose in the meantime.
-        if (newGame) resumeGeneration++
+        // and stays so until this one's first save, at its first move or two seconds in; see
+        // applyShortcutNow. Two seconds, as it was before the save went to every ten: left to that
+        // interval, a game closed in its first ten seconds before any move did not come back. And
+        // set here for every build -- it was set where the game's log opens, which Mini has none
+        // of, so there the first tick saved at once.
+        if (newGame) {
+            resumeGeneration++
+            lastAutoSaveTime = lastTickTime - (SAFETY_SAVE_EVERY_MS - NEW_GAME_FIRST_SAVE_MS)
+        }
         if (FlavorConfig.savesGameInPlay() && !newGame) {
             lastAutoSaveTime = lastTickTime
             saveClockForLater()
@@ -4940,6 +4977,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         /** Leaves the autosave alone when this starts a new game; see applyShortcutNow. */
         keepSavedClock: Boolean = false,
     ) {
+        // A game started by a preset or from Last Games while a resume is being read stands, as
+        // one started by a press does; see resumeGeneration.
+        if (newGame) resumeGeneration++
         val oldSettings = _settings.value
         // Shadow the parameter so every use below this line sees the sanitized value; the named
         // argument at call sites still binds by the original parameter name, so this is transparent
@@ -5358,13 +5398,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 if (resumedLog == null || resumedLog.id != currentLog?.id) finishCurrentLog()
                 currentLog = resumedLog
 
+                // From here to the clock being in place nothing waits, so nothing can start a game in
+                // between. The settings were written to disk at this point and the resume given up
+                // after it if a game had started meanwhile: the settings were then the saved game's
+                // and the clock still the old one's -- a press in that moment ran a game on a state
+                // built for other settings, with another count of players if they differed. They are
+                // written at the end, once the game is whole.
                 _settings.value = resumedSettings
-                // Persisted, not merely held. Restoring into memory alone left DataStore holding
-                // whatever the user had configured since the autosave, so the next settings edit
-                // wrote this older snapshot back over all of it; and the sounds still playing were
-                // the ones loaded before.
-                settingsRepo.saveSettings(resumedSettings)
-                if (asked != resumeGeneration) return@launch
                 soundManager.loadSounds(resumedSettings)
 
                 // The autosave runs only from tick(), so every snapshot it takes is of a *running*
@@ -5389,7 +5429,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 _uiState.value = resumedState.copy(isPaused = true)
                 // A flag that fell in the last of it, after the tick that would have logged it: the
                 // clock shows it, so the record has it.
-                for (player in flaggedWhileRunningOn(savedState, resumedState)) {
+                // The one on the move's alone: a table's clock running out puts every player out at
+                // once, and each was given a flag of their own where play records one.
+                for (player in flaggedWhileRunningOn(savedState, resumedState).filter { it == resumedState.activePlayer }) {
                     val logged = currentLog?.events?.any { it.eventType == "FLAG" && it.playerIndex == player && it.timestamp > saved.timestamp } == true
                     if (!logged) addEvent(GameEvent(eventType = "FLAG", playerIndex = player, detail = "Time Up"))
                 }
@@ -5412,7 +5454,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 // which takes its save up by itself, opened on the same finished game at every launch.
                 val phasesOver = s1.mode == TimerMode.PHASES && resumedState.players.firstOrNull()?.isOutOfTime == true
                 if (phasesOver || isGameOver(resumedState, resumedSettings.flagBehavior, resumedSettings.numberOfPlayers)) clearSavedClock()
+                // Persisted, not merely held. Restoring into memory alone left DataStore holding
+                // whatever the user had configured since the autosave, so the next settings edit
+                // wrote this older snapshot back over all of it.
+                settingsRepo.saveSettings(resumedSettings)
             } catch (e: Exception) {
+                // The screen closing while this read is not a save that cannot be read: it was
+                // discarded all the same.
+                if (e is CancellationException) throw e
                 Log.w("ChessTimerViewModel", "Failed to resume saved clock, discarding it", e)
                 clearSavedClock()
             }

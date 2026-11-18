@@ -41,6 +41,9 @@ settings and the dialogs; the clock's own colours are below.
 
 ## Colours
 
+On the screen they come under three headings: **Primary Colors**, **Secondary Information** and
+**Special States**.
+
 Each is one of eight ready colours — green, blue, red, yellow, orange, black, grey, white — or a
 custom one, set by its red, green and blue values.
 

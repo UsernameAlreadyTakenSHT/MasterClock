@@ -15,7 +15,9 @@ internal fun bankKeyFor(settings: OmniSettings, playerIndex: Int): Int =
     if (settings.timeBankMode == TimeBankMode.GLOBAL_RESERVE) OMNI_GLOBAL_TIME_BANK_KEY else playerIndex
 
 internal fun applyOmniTimeBanking(state: OmniState, settings: OmniSettings, playerIndex: Int, timeRemainingInTurn: Long): Map<Int, Long> {
-    if (settings.timeBankMode == TimeBankMode.NONE || timeRemainingInTurn <= 0) return state.playerTimeBanks
+    // Nor from a turn that has no clock: its time is never spent, so every Next banked the whole of
+    // it, and the reserve grew by a turn at each press with no turn clock on screen to draw it into.
+    if (settings.timeBankMode == TimeBankMode.NONE || !settings.useTurnClock || timeRemainingInTurn <= 0) return state.playerTimeBanks
     val key = bankKeyFor(settings, playerIndex)
     val currentBanks = state.playerTimeBanks.toMutableMap()
     currentBanks[key] = (currentBanks[key] ?: 0L) + timeRemainingInTurn
@@ -416,15 +418,25 @@ internal fun omniSessionToRestore(saved: OmniState?, settings: OmniSettings): Om
  * can stop. Between turns, during the launch countdown and with the turn clock off, it says only that
  * the clock runs: no turn is counting down to anything.
  *
+ * What it sounds at, and so what the phone is kept awake for, is wider: the pause between turns and
+ * the launch countdown end on a sound and on the next turn starting, and with the screen off the
+ * phone slept through them -- a session came back from a ten-second pause minutes late.
+ *
  * The service kept the chess clock alone, so a session left running in the background was the first
  * thing Android closed.
  */
 fun omniBackgroundClockOf(state: OmniState, settings: OmniSettings): BackgroundClock? {
     if (!state.isRunning || !state.hasStarted) return null
     val counting = settings.useTurnClock && !state.isInTransition && !state.isLaunching && state.currentTurnTimeMs > 0
+    val countdown = state.currentTurnTimeMs.takeIf { counting }
     return BackgroundClock(
         playerIndex = state.currentPlayerIndex % settings.numberOfPlayers.coerceAtLeast(1) + 1,
-        countdownMs = state.currentTurnTimeMs.takeIf { counting },
+        countdownMs = countdown,
+        soundsInMs = when {
+            state.isLaunching -> state.launchTimeRemainingMs.takeIf { it > 0 }
+            state.isInTransition -> state.transitionTimeRemainingMs.takeIf { it > 0 }
+            else -> countdown
+        },
     )
 }
 
@@ -735,6 +747,7 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun tickOmni(delta: Long) {
+        var moved = false
         _omniState.update { state ->
             if (!state.isRunning) return@update state
             val tick = computeOmniTick(state, delta, _omniSettings.value)
@@ -745,8 +758,14 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
                     OmniSound.TURN_END -> soundManager.playShortBeep()
                 }
             }
+            // The turn, the round or the pause between them changed, by the clock and not by a press.
+            moved = tick.sounds.isNotEmpty() || tick.state.isInTransition != state.isInTransition ||
+                tick.state.currentPlayerIndex != state.currentPlayerIndex || tick.state.turnCounterInRound != state.turnCounterInRound
             tick.state
         }
+        // Saved as a turn ended by Next is. Only the press saved, so a session running on its
+        // cutoffs came back up to fifteen seconds and a turn behind.
+        if (moved) saveSession()
     }
 
     override fun onCleared() {

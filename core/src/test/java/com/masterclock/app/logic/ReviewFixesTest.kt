@@ -2,123 +2,76 @@ package com.masterclock.app.logic
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The scoreboard's cap and the log's, as a launch and a long game meet them. */
+/** What three reviews of the whole app found before 0.8.44, each held here so that it stays found. */
 class ReviewFixesTest {
 
+    private fun table(vararg players: PlayerState, active: Int = 1) =
+        ChessClockState(players = players.toList(), activePlayer = active, isPaused = false)
+
     @Test
-    fun `the scoreboard keeps its newest games past the cap`() {
-        val games = (1..MAX_SCOREBOARD_GAMES + 3).map { ScoreboardGame(result = "game $it", timestamp = it.toLong()) }
-        val kept = sanitizeImportedScoreboard(ScoreboardSession(games = games)).games
-        assertEquals(MAX_SCOREBOARD_GAMES, kept.size)
-        assertEquals("game ${MAX_SCOREBOARD_GAMES + 3}", kept.last().result)
-        assertEquals("game 4", kept.first().result)
+    fun `under FLAG a Global clock whose total is gone stays at zero`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_TIMER_GLOBAL, moveTimeMs = 30_000)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.FLAG)
+        // Twenty seconds of the move left, one of the total: the total goes first.
+        val out = tickPlayer(PlayerState(timeRemainingMs = 20_000, secondaryTimeMs = 1_000), 2_000, s, settings)
+        assertTrue(out.isOutOfTime)
+        assertEquals(0L, out.timeRemainingMs)
+        assertEquals(0L, tickPlayer(out, 5_000, s, settings).timeRemainingMs)
     }
 
-    /** One long tick taken as the clock takes it, step by step. */
-    private fun asleepFor(state: ChessClockState, delta: Long, settings: ChessClockSettings): ChessClockState {
-        var current = state
-        var left = delta
-        while (left > 0) {
-            val step = catchUpStepMs(current, left, settings)
-            current = tickClock(current, step, settings).state
-            left -= step
+    @Test
+    fun `the arbiter's move stops at the Flag Cap`() {
+        val minute = 60_000L
+        val periods = listOf(
+            FidePeriod(timeMs = 90 * minute, incrementMs = 30_000, movesToNext = 40),
+            FidePeriod(timeMs = 30 * minute, incrementMs = 30_000, movesToNext = 0),
+        )
+        val p = PlayerSettings(mode = TimerMode.FIDE_PERIODS, fidePeriods = periods)
+        val s = ChessClockSettings(main = p, flagBehavior = FlagBehavior.NEGATIVE, flagCapMs = 10 * minute)
+        val at40 = PlayerState(timeRemainingMs = 15 * minute + 30_000, moveCount = 40, currentPeriodIndex = 1)
+        // The second period undone leaves the clock 14:30 over; the cap is ten minutes.
+        val undone = arbiterAdjustMoveCount(table(at40, PlayerState(minute)), 1, -1, s).players[0]
+        assertTrue(undone.isOutOfTime && undone.isNegative)
+        assertEquals(10 * minute, undone.timeRemainingMs)
+    }
+
+    @Test
+    fun `a turn with no clock banks nothing`() {
+        val banked = OmniSettings(timeBankMode = TimeBankMode.GLOBAL_RESERVE, useTurnClock = true)
+        val state = OmniState()
+        assertEquals(600_000L, applyOmniTimeBanking(state, banked, 0, 600_000).values.sum())
+        // The turn's time was never spent: banked, it grew by a whole turn at every Next.
+        assertTrue(applyOmniTimeBanking(state, banked.copy(useTurnClock = false), 0, 600_000).isEmpty())
+    }
+
+    @Test
+    fun `an Omni session keeps the phone awake through its pauses, and shows a countdown only for a turn`() {
+        val settings = OmniSettings(useTurnClock = true)
+        val turn = OmniState(isRunning = true, hasStarted = true, currentTurnTimeMs = 30_000)
+        assertEquals(30_000L, omniBackgroundClockOf(turn, settings)!!.soundsInMs)
+        val between = turn.copy(isInTransition = true, transitionTimeRemainingMs = 8_000)
+        assertNull(omniBackgroundClockOf(between, settings)!!.countdownMs)
+        assertEquals(8_000L, omniBackgroundClockOf(between, settings)!!.soundsInMs)
+        val launching = turn.copy(isLaunching = true, launchTimeRemainingMs = 4_000)
+        assertNull(omniBackgroundClockOf(launching, settings)!!.countdownMs)
+        assertEquals(4_000L, omniBackgroundClockOf(launching, settings)!!.soundsInMs)
+        assertEquals(8_000L + WAKE_MARGIN_MS, wakeForMs(omniBackgroundClockOf(between, settings)))
+    }
+
+    @Test
+    fun `an imported game starts as a game starts, whatever its file says`() {
+        val lost = PlayerStateProxy(timeRemainingMs = 0, isOutOfTime = true, isNegative = true, hasFlagged = true, isInByoyomi = true)
+        val log = sanitizeImportedLog(GameLog(settings = ChessClockSettings(), initialPlayerStates = listOf(lost, lost)))
+        assertEquals(2, log.initialPlayerStates.size)
+        for (state in log.initialPlayerStates) {
+            assertFalse(state.isOutOfTime)
+            assertFalse(state.isNegative)
+            assertFalse(state.hasFlagged)
+            assertFalse(state.isInByoyomi)
         }
-        return current
-    }
-
-    @Test
-    fun `Shared (Auto) passes every turn a sleep ran through`() {
-        val settings = ChessClockSettings(numberOfPlayers = 3, main = PlayerSettings(mode = TimerMode.MOVE_TIMER_SHARED, moveTimeMs = 30_000))
-        val start = initialClockState(settings, 0L to 0L).copy(activePlayer = 1, isPaused = false)
-        // Ninety-five seconds: three whole turns, and five seconds into the fourth, player 1's again.
-        val after = asleepFor(start, 95_000, settings)
-        assertEquals(1, after.activePlayer)
-        assertEquals(2, after.cycleCount)
-        assertEquals(listOf(1, 1, 1), after.players.map { it.moveCount })
-        assertEquals(25_000L, after.players[0].timeRemainingMs)
-        // In one tick it passed a single turn and lost the rest.
-        assertEquals(2, tickClock(start, 95_000, settings).state.activePlayer)
-    }
-
-    @Test
-    fun `Gong keeps its place through a sleep`() {
-        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.GONG, gongReflectionMs = 10_000, gongMoveMs = 2_000))
-        val start = initialClockState(settings, 0L to 0L).copy(activePlayer = 1, isPaused = false)
-        // Twenty-seven seconds: two whole turns of twelve, and three seconds into player 1's reflection.
-        val after = asleepFor(start, 27_000, settings)
-        assertEquals(1, after.activePlayer)
-        assertEquals(listOf(1, 1), after.players.map { it.moveCount })
-        assertTrue(after.players[0].isGongReflectionPhase)
-        assertEquals(7_000L, after.players[0].timeRemainingMs)
-    }
-
-    @Test
-    fun `a player's own clock takes a sleep whole`() {
-        val settings = ChessClockSettings(main = PlayerSettings(mode = TimerMode.FISCHER))
-        val state = initialClockState(settings, 0L to 0L).copy(activePlayer = 1, isPaused = false)
-        assertEquals(95_000L, catchUpStepMs(state, 95_000, settings))
-    }
-
-    @Test
-    fun `a face of whole seconds ticks to its next reading`() {
-        // Rounded down: 4.500 reads 0:04 until 3.999.
-        assertEquals(501L, wholeSecondTickMs(4_500))
-        assertEquals(1_000L, wholeSecondTickMs(3_999))
-        // On the edge, and just short of it, the next reading is at hand: not zero, not a busy loop.
-        assertEquals(20L, wholeSecondTickMs(5_000))
-        assertEquals(20L, wholeSecondTickMs(5_003))
-        // The last second ends on the flag.
-        assertEquals(401L, wholeSecondTickMs(400))
-        // An overrun counts up.
-        assertEquals(700L, wholeSecondTickMs(-300))
-        var remaining = 10_000L
-        var ticks = 0
-        while (remaining > 0) { remaining -= wholeSecondTickMs(remaining); ticks++ }
-        assertTrue("ten seconds took $ticks ticks", ticks in 10..12)
-    }
-
-    @Test
-    fun `a restore keeps the newest presets that fit`() {
-        val local = List(495) { SavedPreset(name = "L$it", settings = ChessClockSettings()) }
-        val imported = List(10) { SavedPreset(name = "I$it", settings = ChessClockSettings()) }
-        val merged = mergeImportedPresets(local, imported)
-        assertEquals(500, merged.size) // MAX_IMPORTED_PRESETS, private to its file
-        assertEquals(local, merged.take(495))
-        assertEquals(listOf("I5", "I6", "I7", "I8", "I9"), merged.drop(495).map { it.name })
-    }
-
-    @Test
-    fun `an imported scoreboard adds its newest games that fit`() {
-        val local = ScoreboardSession(games = (1..MAX_SCOREBOARD_GAMES - 3).map { ScoreboardGame(result = "L$it", timestamp = it.toLong()) })
-        val imported = ScoreboardSession(games = (1..10).map { ScoreboardGame(result = "I$it", timestamp = 100_000L + it) })
-        val merged = mergeImportedScoreboard(local, imported).games
-        assertEquals(MAX_SCOREBOARD_GAMES, merged.size)
-        assertEquals(listOf("I8", "I9", "I10"), merged.takeLast(3).map { it.result })
-    }
-
-    @Test
-    fun `an Omni order drawn for more players never names one who is gone`() {
-        val settings = OmniSettings(numberOfPlayers = 3, playerOrderType = PlayerOrderType.RANDOM)
-        // Drawn for six, the count since lowered to three.
-        val stale = listOf(5, 1, 4, 0, 3, 2)
-        for (turn in stale.indices) {
-            val player = omniPlayerForTurn(stale, turn, 0, settings)
-            assertTrue("turn $turn went to player $player", player in 0 until 3)
-        }
-        assertEquals(1, omniPlayerForTurn(stale, 1, 0, settings))
-    }
-
-    @Test
-    fun `a full log still takes what ends the game`() {
-        val nearlyFull = MAX_IMPORTED_EVENTS_PER_LOG - ENDING_EVENTS_HEADROOM
-        assertFalse(eventFitsLog(nearlyFull, GameEvent(eventType = "MOVE")))
-        assertFalse(eventFitsLog(nearlyFull, GameEvent(eventType = "PHASE", detail = "Phase 3")))
-        assertTrue(eventFitsLog(nearlyFull, GameEvent(eventType = "FLAG")))
-        assertTrue(eventFitsLog(nearlyFull, GameEvent(eventType = "RESET")))
-        assertTrue(eventFitsLog(nearlyFull, GameEvent(eventType = "PHASE", detail = "Finished")))
-        assertFalse("the cap itself stands", eventFitsLog(MAX_IMPORTED_EVENTS_PER_LOG, GameEvent(eventType = "FLAG")))
     }
 }

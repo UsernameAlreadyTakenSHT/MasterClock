@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-17"
+    const val BUILD_DATE = "2026-11-18"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,21 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.44",
+            date = "2026-11-18",
+            notes = listOf(
+                Note("Spoken byoyomi, in Audio: a Japanese byoyomi period is read aloud as a shogi timekeeper reads it -- ten seconds, twenty seconds, one, two ... nine. It also says that the byoyomi has begun and how many periods are left.", BEHAVIOUR_TAB),
+                Note("A game closed by surprise comes back where it stopped, to within a fifth of a second, rather than at its last save.", PHONE),
+                Note("Save game every is gone: it set how much a game closed by surprise could lose, and that is now a fifth of a second, whatever it was set to.", BEHAVIOUR_TAB),
+                Note("A text note's insert panel gives way to the keyboard when it comes back.", COMPLETE_ONLY),
+                Note("Move Counts, Count Down: the game ends once every player has played their moves. It ended as the first reached zero, a move short for whoever moves second.", FULL_MODES),
+                Note("Move Timer Global under Flag: a clock whose total is gone stays at 0:00. And the arbiter's correction of a move count stops at the Flag Cap.", BEHAVIOUR_TAB),
+                Note("Omni-Timer: the phone is kept awake through the pause between turns, a time bank no longer fills from turns with no clock, and a turn the clock ended is saved.", FULL_MODES),
+                Note("A game imported from a file starts as a game starts, not already flagged.", COMPLETE_ONLY),
+                Note("Nothing changes in this build. This release is about the phone app: a byoyomi read aloud, and a game that comes back where it stopped.", E_INK_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.43",
             date = "2026-11-17",

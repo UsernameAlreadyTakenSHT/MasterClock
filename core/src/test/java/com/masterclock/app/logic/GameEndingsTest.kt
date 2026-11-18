@@ -58,17 +58,31 @@ class GameEndingsTest {
     }
 
     @Test
-    fun `running out of moves ends the game under every flag behaviour`() {
+    fun `running out of moves ends the game once every player has played theirs, under every flag behaviour`() {
         val s = PlayerSettings(mode = TimerMode.MOVE_COUNTS_DOWN, maxMoves = 1)
         for (fb in FlagBehavior.entries) {
             val settings = ChessClockSettings(main = s, flagBehavior = fb)
             val state = ChessClockState(listOf(PlayerState(0, moveCount = 1), PlayerState(0, moveCount = 1)), activePlayer = 1)
             val afterFirst = computePostMoveState(state, 1, 1_000, settings, s)
-            // Under FLAG the other player still has their move to play: over once they have.
-            if (fb == FlagBehavior.FLAG) {
-                assertFalse(fb.name, isGameOver(afterFirst, fb, 2))
-                assertTrue(fb.name, isGameOver(computePostMoveState(afterFirst.copy(activePlayer = 2), 2, 1_000, settings, s), fb, 2))
-            } else assertTrue(fb.name, isGameOver(afterFirst, fb, 2))
+            // The other player still has their move to play: ended here, they were a move short.
+            assertFalse(fb.name, isGameOver(afterFirst, fb, 2))
+            assertEquals(fb.name, 0, afterFirst.players[0].moveCount)
+            val afterBoth = computePostMoveState(afterFirst.copy(activePlayer = 2), 2, 1_000, settings, s)
+            assertTrue(fb.name, isGameOver(afterBoth, fb, 2))
+        }
+    }
+
+    @Test
+    fun `three players each play their last move before a count of moves ends`() {
+        val s = PlayerSettings(mode = TimerMode.MOVE_COUNTS_DOWN, maxMoves = 1)
+        for (fb in FlagBehavior.entries) {
+            val settings = ChessClockSettings(main = s, flagBehavior = fb, numberOfPlayers = 3).withSeatsForPlayers()
+            var state = ChessClockState(List(3) { PlayerState(0, moveCount = 1) }, activePlayer = 1)
+            for (mover in 1..2) {
+                state = computePostMoveState(state.copy(activePlayer = mover), mover, 1_000, settings, s)
+                assertFalse("${fb.name} after player $mover", isGameOver(state, fb, 3))
+            }
+            assertTrue(fb.name, isGameOver(computePostMoveState(state.copy(activePlayer = 3), 3, 1_000, settings, s), fb, 3))
         }
     }
 

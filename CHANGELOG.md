@@ -1,3 +1,24 @@
+## v0.8.44 — 2026-11-18
+
+A byoyomi read aloud as at a shogi board, and a game closed by surprise that comes back where it
+stopped rather than at its last save.
+
+### Added
+- **Spoken byoyomi** (Complete, Standard), in Audio. In Japanese byoyomi the voice reads each period as a shogi timekeeper does: the time gone, then a count. A minute a move is "thirty seconds, forty seconds, fifty seconds, one, two ... nine"; thirty seconds a move, "ten seconds, twenty seconds, one ... nine". Ten is never called: it is the period going, or the flag. It also says that the byoyomi has begun and how many periods are left, and works with Voice announcements off.
+
+### Changed
+- **A game closed by surprise comes back where it stopped**, on every phone build. It came back from its last save, up to two seconds earlier -- two seconds given back to whoever was on the move. A running clock now notes that it is still running five times a second, ten where the face shows tenths, and a game brought back is run on from its save to that moment: to within a fifth of a second, a tenth in the last ten seconds.
+- **Save game every is gone** (Complete, Standard). It set how much a game closed by surprise could lose; that is now a fifth of a second, whatever it was set to.
+- A text note's insert panel gives way to the keyboard when it comes back, as the keyboard does to the panel (Complete).
+
+### Fixed
+Found by going over the whole app before this release.
+- **Move Counts, Count Down**: the game ended as the first player reached zero, a move short for whoever moves second. It ends once every player has played their moves. Only Flag waited for them.
+- **Move Timer Global under Flag**: a clock whose total was gone kept counting its move time down under FLAGGED. It stays at 0:00.
+- The arbiter's correction of a move count stops at the Flag Cap, as their correction of a time does.
+- **Omni-Timer**: with the screen off, a session came back late from the pause between two turns and from the launch countdown, the phone having slept through them; it is kept awake for both. A time bank no longer fills from turns that have no clock. A turn the clock ended is saved as one ended by Next is.
+- A game imported from a file and started again from Last Games could open already flagged or in byoyomi. It starts as a game starts.
+
 ## v0.8.43 — 2026-11-17
 
 Fixes found by going over the whole app before it: the screen under the keyboard, and three

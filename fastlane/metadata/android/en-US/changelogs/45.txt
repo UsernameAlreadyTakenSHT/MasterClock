@@ -1,0 +1,4 @@
+Spoken byoyomi, in Audio: a Japanese byoyomi period read aloud as a shogi timekeeper reads it.
+A game closed by surprise comes back where it stopped, to within a fifth of a second. Save game every is gone with what it was for.
+A text note's insert panel gives way to the keyboard.
+Fixes in Move Counts (every player plays their last move), Move Timer Global under Flag, Omni-Timer and imported games.

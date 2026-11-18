@@ -20,6 +20,7 @@ import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
 import com.masterclock.app.logic.PlayerSettings
 import com.masterclock.app.logic.TimerMode
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -47,6 +48,23 @@ class AliveMarkFlowTest {
 
     private val app get() = InstrumentationRegistry.getInstrumentation().targetContext
 
+    /**
+     * The settings back to their defaults and no game waiting, passed or failed: these tests turn the
+     * pause-on-leaving off, seat three and four players and leave a saved game behind, which the next
+     * suite would otherwise start from.
+     */
+    @After
+    fun leaveNothingBehind() {
+        val last = ActivityScenario.launch(MainActivity::class.java)
+        val viewModel = viewModelOf(last)
+        runCatching { rule.waitUntil(TIMEOUT_MS) { viewModel.isReady.value } }
+        last.onActivity {
+            viewModel.resetAllSettings()
+            viewModel.reset()
+        }
+        last.close()
+    }
+
     private fun viewModelOf(scenario: ActivityScenario<MainActivity>): ChessTimerViewModel {
         lateinit var found: ChessTimerViewModel
         scenario.onActivity { found = ViewModelProvider(it)[ChessTimerViewModel::class.java] }
@@ -57,11 +75,17 @@ class AliveMarkFlowTest {
     private fun closedAndBack(
         settings: ChessClockSettings.() -> ChessClockSettings,
         sinceTheSaveMs: Long = SINCE_THE_SAVE_MS,
+        needsHistory: Boolean = false,
         alsoOf: (ChessTimerViewModel) -> Unit = {},
         check: (atTheMove: List<Long>, back: List<Long>, active: Int, ran: LongRange) -> Unit,
     ) {
-        assumeTrue(FlavorConfig.savesGameInPlay())
         val first = ActivityScenario.launch(MainActivity::class.java)
+        // Asked with the activity up: it is the activity that says which build this is. Asked before
+        // it, the answer was Complete's, and a test run by itself on Mini went on to read a history
+        // Mini does not keep.
+        val runsHere = FlavorConfig.savesGameInPlay() && (!needsHistory || FlavorConfig.keepsGameHistory())
+        if (!runsHere) first.close()
+        assumeTrue(runsHere)
         val before = viewModelOf(first)
         rule.waitUntil(TIMEOUT_MS) { before.isReady.value }
         first.onActivity {
@@ -137,8 +161,8 @@ class AliveMarkFlowTest {
      */
     @Test
     fun aFlagFallenSinceTheSaveIsStillInTheRecord() {
-        assumeTrue(FlavorConfig.keepsGameHistory())
         closedAndBack(
+            needsHistory = true,
             // Play goes on past the flag, so the clock is still running when the screen closes.
             settings = { copy(flagBehavior = FlagBehavior.NEGATIVE, main = PlayerSettings(initialTimeMs = FLAGS_AFTER_MS)) },
             sinceTheSaveMs = FLAGS_AFTER_MS + 1_500,
@@ -156,8 +180,8 @@ class AliveMarkFlowTest {
     /** As for a flag: a byoyomi period that went after the save is still in the record. */
     @Test
     fun aPeriodLostSinceTheSaveIsStillInTheRecord() {
-        assumeTrue(FlavorConfig.keepsGameHistory())
         closedAndBack(
+            needsHistory = true,
             // Three seconds of main time, then periods of two: one is gone five seconds in.
             settings = { copy(main = PlayerSettings(mode = TimerMode.BYOYOMI_JAPANESE, initialTimeMs = 3_000, byoyomiPeriods = 5, byoyomiTimeMs = 2_000)) },
             sinceTheSaveMs = 6_500,

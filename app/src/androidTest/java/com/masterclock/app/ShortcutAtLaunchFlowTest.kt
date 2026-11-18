@@ -68,6 +68,11 @@ class ShortcutAtLaunchFlowTest {
         assertEquals("the shortcut's increment", shortcut.settings.main.incrementMs, after.settings.value.main.incrementMs)
         assertNull("a new game, nobody on the move yet", after.uiState.value.activePlayer)
         assertEquals(shortcut.settings.main.initialTimeMs, after.uiState.value.players[0].timeRemainingMs)
+        // The game left waiting goes with the test: Mini would take it up at the next launch.
+        second.onActivity {
+            after.resetAllSettings()
+            after.reset()
+        }
         second.close()
     }
 

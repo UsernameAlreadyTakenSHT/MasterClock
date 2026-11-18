@@ -141,8 +141,9 @@ press still passes the turn and counts a move, while the one clock keeps running
 A count of moves instead of a time. **Move Counts Type**:
 
 - **Count Up** — shows how many moves the player has made.
-- **Count Down (Max)** — starts at **Max Moves** (default 20) and counts down. Reaching zero ends
-  the game under every Flag Behavior.
+- **Count Down (Max)** — starts at **Max Moves** (default 20) and counts down. The game ends once
+  every player has played their moves, under every Flag Behavior: a player at zero waits for the
+  others' last moves.
 
 ## Gong
 
@@ -280,7 +281,9 @@ A move time; what one player spends goes to the next.
   they had left, and you keep what you had: 8 s left, a 30 s move time and 3 s spent make 41 s. The
   reserve grows over the game by design; Hourglass is the mode for a fixed total.
 
-With more than two players, the time goes to the next player still in the game.
+With more than two players, the time goes to the player who moves next. Under Flag a player who
+has flagged keeps their turn and is given nothing; their own press passes on a move's time and the
+time their turn took, as anyone's does.
 
 ## Staircase
 
