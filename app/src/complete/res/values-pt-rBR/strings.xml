@@ -16,7 +16,6 @@
     <string name="board_looking">Procurando tabuleiros…</string>
     <string name="board_scanning">Procurando tabuleiros…</string>
     <string name="board_title">Conexão com o tabuleiro</string>
-    <string name="board_none_found">Nenhum dispositivo encontrado. Toque em atualizar para procurar.</string>
     <string name="board_needs_calibration">Coloque as peças na posição inicial. Este tabuleiro lê um chip debaixo de cada peça, então precisa aprender qual é qual antes de poder acompanhar uma partida.</string>
     <string name="board_paired_none">Nenhum tabuleiro pareado. Pareie-o primeiro nas configurações de Bluetooth do sistema.</string>
     <string name="board_paired_section">Pareado</string>
@@ -34,11 +33,9 @@
     <string name="qr_too_large">Não foi possível gerar o código QR: essas configurações são grandes demais para um só código. Compartilhe-as como arquivo.</string>
 
     <!-- Tools -->
-    <string name="tools_checkbox">Caixa de seleção</string>
     <string name="tools_delete_recording">Excluir a gravação</string>
     <string name="tools_delete_photo">Excluir a foto</string>
     <string name="tools_delete_video">Excluir o vídeo</string>
-    <string name="tools_record_again">Gravar novamente</string>
     <string name="tools_delete_media_message">Esta ação não pode ser desfeita.</string>
     <string name="tools_game_logs">Registros de partidas</string>
     <string name="tools_log_details">Detalhes do registro</string>
@@ -64,16 +61,16 @@
     <string name="rules_intro">Documentos de referência, consultáveis offline.</string>
     <string name="board_connected">Pronto para receber lances</string>
     <string name="guide_omni_desc">Estação de vários níveis para estruturas de jogo complexas: sessão &gt; partidas &gt; rodadas &gt; turnos &gt; fases, cada nível com seu próprio relógio, ativado ou não. Cada jogador joga cada um dos turnos previstos para uma rodada. Bancos de tempo, cortes e pausas entre turnos, rodadas e partidas; uma sessão deixada pode ser retomada, mesmo depois que o app foi fechado.</string>
-    <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou por turnos).</string>
     <string name="guide_section_bonus">Motores com bônus</string>
     <string name="guide_chrono_countup_desc">Modo cronômetro que mede o tempo total decorrido.</string>
     <string name="guide_chrono_countdown_desc">Relógio principal em contagem regressiva durante toda a partida.</string>
     <string name="guide_move_global_shared_desc">Todos os jogadores compartilham uma reserva global e têm ainda um relógio de lance próprio.</string>
     <string name="guide_chrono_one_for_all_desc">Não é um modo à parte: é uma opção de Countdown e Countup. Ativada, um só relógio corre para toda a mesa, e pressioná-lo não muda de jogador.</string>
     <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total se mantém constante.</string>
-    <string name="guide_fast_move_desc">Premia os lances rápidos. Accelerate: quanto mais você pensa, mais rápido corre seu relógio. Transfer: o próximo lance do adversário recebe o tempo por lance mais o tempo que você acabou de gastar, e o seu recomeça no tempo por lance; com Cumulative Transfer ele se soma ao que resta a ele, e você fica com o que tinha.</string>
+    <string name="guide_fast_move_desc">Premia os lances rápidos. Accelerate: quanto mais você pensa, mais rápido corre seu relógio. Transfer: o próximo lance do adversário recebe o tempo por lance mais o tempo que você acabou de gastar, e o seu recomeça no tempo por lance; com Transfer cumulativo ele se soma ao que resta a ele, e você fica com o que tinha.</string>
     <string name="guide_staircase_desc">O tempo de cada lance muda em um passo fixo. Down: cada lance tem menos tempo, até um mínimo. Up: cada lance tem mais, até um máximo.</string>
-    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeira.</string>
     <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as porcentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
     <string name="permission_open_settings">Abrir configurações</string>
+    <!-- "até a h", where Portugal has "até à h". Read aloud by TalkBack. -->
+    <string name="a11y_board_back_ranks">Brancas, da coluna a até a h: %1$s. Pretas: %2$s.</string>
 </resources>

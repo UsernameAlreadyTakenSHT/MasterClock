@@ -49,9 +49,9 @@
 
     <!-- Mode guide: names stay English, descriptions are translated -->
     <string name="guide_intro">Documentación de los modos de tiempo de MasterClock y sus variantes, en el orden de la interfaz.</string>
-    <string name="guide_bonus_bronstein_desc">Devuelve el tiempo empleado en la jugada, sin superar nunca la demora configurada. No es acumulativo.</string>
+    <string name="guide_bonus_bronstein_desc">Devuelve el tiempo empleado en la jugada, sin superar nunca el retardo configurado. No es acumulativo.</string>
     <string name="guide_bonus_fischer_desc">Añade una cantidad fija de tiempo (incremento) DESPUÉS de cada jugada.</string>
-    <string name="guide_bonus_us_delay_desc">Una demora previa al descuento. El reloj espera la duración de la demora antes de empezar a correr.</string>
+    <string name="guide_bonus_us_delay_desc">Un retardo previo al descuento. El reloj espera la duración del retardo antes de empezar a correr.</string>
     <string name="guide_byoyomi_canadian_desc">Los jugadores deben completar un número concreto de jugadas dentro de un único periodo más largo.</string>
     <string name="guide_byoyomi_japanese_desc">Tras el tiempo principal, los jugadores disponen de una serie de periodos cortos, que se reinician con cada jugada.</string>
     <string name="guide_byoyomi_progressive_desc">El número de jugadas exigidas aumenta cada vez que se completa un periodo.</string>
@@ -60,7 +60,7 @@
     <string name="guide_chrono_one_for_all_desc">No es un modo aparte: es una opción de Countdown y Countup. Activada, un solo reloj corre para toda la mesa, y pulsarlo no cambia de jugador.</string>
     <string name="guide_counts_down_desc">Parte de un límite y descuenta hasta cero jugadas restantes.</string>
     <string name="guide_counts_up_desc">Muestra el número total de jugadas realizadas desde el inicio.</string>
-    <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Transfer: la próxima jugada del rival recibe el tiempo por jugada más el que acabas de gastar, y la tuya vuelve a empezar desde el tiempo por jugada; con Cumulative Transfer se suma a lo que le queda, y tú conservas lo que tenías.</string>
+    <string name="guide_fast_move_desc">Premia las jugadas rápidas. Accelerate: cuanto más piensas, más rápido corre tu reloj. Transfer: la próxima jugada del rival recibe el tiempo por jugada más el que acabas de gastar, y la tuya vuelve a empezar desde el tiempo por jugada; con Transfer acumulativo se suma a lo que le queda, y tú conservas lo que tenías.</string>
     <string name="guide_staircase_desc">El tiempo de cada jugada cambia en un paso fijo. Down: cada jugada tiene menos tiempo, hasta un mínimo. Up: cada jugada tiene más, hasta un máximo.</string>
     <string name="guide_fide_desc">Ritmo de torneo por periodos: por ejemplo, 90 min para 40 jugadas, luego 30 min para el resto, con 30 s añadidos por jugada.</string>
     <string name="guide_gong_desc">Jugadas forzadas a intervalos fijos (simultáneas o por turnos).</string>
@@ -158,9 +158,9 @@
     <string name="tools_sym_counterplay">contrajuego</string>
     <string name="tools_sym_zugzwang">zugzwang</string>
     <string name="tools_sym_time_trouble">apuro de tiempo</string>
-    <string name="tools_sym_white_won">ganan las blancas</string>
+    <string name="tools_sym_white_won">victoria de las blancas</string>
     <string name="tools_sym_draw">tablas</string>
-    <string name="tools_sym_black_won">ganan las negras</string>
+    <string name="tools_sym_black_won">victoria de las negras</string>
     <string name="tools_piece_white_king">rey blanco</string>
     <string name="tools_piece_white_queen">dama blanca</string>
     <string name="tools_piece_white_rook">torre blanca</string>
@@ -286,7 +286,7 @@
     <string name="tools_shred">Destruir</string>
     <string name="tools_spent">Empleado</string>
     <string name="tools_start">EMPEZAR</string>
-    <string name="tools_start_trial">EMPEZAR</string>
+    <string name="tools_start_trial">EMPEZAR PRUEBA</string>
     <string name="tools_stop">PARAR</string>
     <string name="tools_stop_precision">Precisión al parar</string>
     <string name="tools_take_photo">Hacer una foto</string>

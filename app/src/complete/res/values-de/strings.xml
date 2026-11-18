@@ -60,7 +60,7 @@
     <string name="guide_chrono_one_for_all_desc">Kein eigener Modus, sondern ein Schalter von Countdown und Countup. Eingeschaltet läuft eine einzige Uhr für den ganzen Tisch, und ein Tippen wechselt nicht den Spieler.</string>
     <string name="guide_counts_down_desc">Beginnt bei einer Grenze und zählt bis null verbleibende Züge herunter.</string>
     <string name="guide_counts_up_desc">Zeigt die Gesamtzahl der seit Beginn gespielten Züge.</string>
-    <string name="guide_fast_move_desc">Belohnt schnelle Züge. Accelerate: Je länger du nachdenkst, desto schneller läuft deine Uhr. Transfer: Der nächste Zug des Gegners bekommt die Zugzeit plus die Zeit, die du gerade gebraucht hast, und deiner beginnt wieder bei der Zugzeit; mit Cumulative Transfer kommt sie zu seiner Restzeit hinzu, und du behältst deine.</string>
+    <string name="guide_fast_move_desc">Belohnt schnelle Züge. Accelerate: Je länger du nachdenkst, desto schneller läuft deine Uhr. Transfer: Der nächste Zug des Gegners bekommt die Zugzeit plus die Zeit, die du gerade gebraucht hast, und deiner beginnt wieder bei der Zugzeit; mit Kumulativem Transfer kommt sie zu seiner Restzeit hinzu, und du behältst deine.</string>
     <string name="guide_staircase_desc">Die Zeit jedes Zuges ändert sich um einen festen Schritt. Down: Jeder Zug bekommt weniger Zeit, bis zu einer Untergrenze. Up: Jeder Zug bekommt mehr, bis zu einer Obergrenze.</string>
     <string name="guide_fide_desc">Turnierbedenkzeit in Perioden: zum Beispiel 90 Min für 40 Züge, dann 30 Min für den Rest, mit 30 s Zuschlag pro Zug.</string>
     <string name="guide_gong_desc">Erzwungene Züge in festen Abständen (gleichzeitig oder reihum).</string>
@@ -173,9 +173,9 @@
     <string name="tools_piece_black_bishop">schwarzer Läufer</string>
     <string name="tools_piece_black_knight">schwarzer Springer</string>
     <string name="tools_piece_black_pawn">schwarzer Bauer</string>
-    <string name="tools_piece_white_man">weißer Stein (Dame)</string>
+    <string name="tools_piece_white_man">weißer Stein (Damespiel)</string>
     <string name="tools_piece_white_dame">weiße Dame (Damespiel)</string>
-    <string name="tools_piece_black_man">schwarzer Stein (Dame)</string>
+    <string name="tools_piece_black_man">schwarzer Stein (Damespiel)</string>
     <string name="tools_piece_black_dame">schwarze Dame (Damespiel)</string>
     <string name="tools_emoji_game">Für eine Partie</string>
     <string name="tools_emoji_smileys">Smileys und Emotionen</string>

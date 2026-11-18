@@ -470,6 +470,10 @@
     <string name="omni_cfg_final_beep">Final Beep</string>
     <string name="omni_cfg_round_gong">Round Gong</string>
 
+    <!-- The first choice of two rows in the Omni settings, and nowhere else: "no countdown"
+         beside 10 s, 30 s, 1 min, 2 min, 5 min, and "no time bank" beside Per player and Shared.
+         A state, not an answer: "without", not "no". Six segments share the first row, so it is
+         no longer than "1 min". -->
     <string name="common_off">Off</string>
     <string name="dur_10s">10s</string>
     <string name="dur_30s">30s</string>

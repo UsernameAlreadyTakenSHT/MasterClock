@@ -60,7 +60,7 @@
     <string name="guide_chrono_one_for_all_desc">Geen eigen modus, maar een schakelaar van Countdown en Countup. Aan loopt er één klok voor de hele tafel, en erop drukken wisselt niet van speler.</string>
     <string name="guide_counts_down_desc">Begint bij een limiet en telt af tot nul resterende zetten.</string>
     <string name="guide_counts_up_desc">Toont het totale aantal zetten sinds het begin.</string>
-    <string name="guide_fast_move_desc">Beloont snelle zetten. Accelerate: hoe langer je nadenkt, hoe sneller je klok loopt. Transfer: de volgende zet van je tegenstander krijgt de zettijd plus de tijd die jij net gebruikte, en de jouwe begint weer bij de zettijd; met Cumulative Transfer komt die bij wat hij nog had, en houd jij wat je had.</string>
+    <string name="guide_fast_move_desc">Beloont snelle zetten. Accelerate: hoe langer je nadenkt, hoe sneller je klok loopt. Transfer: de volgende zet van je tegenstander krijgt de zettijd plus de tijd die jij net gebruikte, en de jouwe begint weer bij de zettijd; met Cumulatieve Transfer komt die bij wat hij nog had, en houd jij wat je had.</string>
     <string name="guide_staircase_desc">De tijd van elke zet verandert met een vaste stap. Down: elke zet krijgt minder tijd, tot een ondergrens. Up: elke zet krijgt meer, tot een bovengrens.</string>
     <string name="guide_fide_desc">Toernooitempo in periodes: bijvoorbeeld 90 min voor 40 zetten, daarna 30 min voor de rest, met 30 s erbij per zet.</string>
     <string name="guide_gong_desc">Verplichte zetten op vaste intervallen (gelijktijdig of om beurten).</string>

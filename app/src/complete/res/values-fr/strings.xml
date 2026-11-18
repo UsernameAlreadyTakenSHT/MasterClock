@@ -58,7 +58,7 @@
     <string name="guide_chrono_one_for_all_desc">Pas un mode à part\u00A0: une option de Countdown et de Countup. Activée, une seule horloge tourne pour toute la table, et appuyer dessus ne change pas de joueur.</string>
     <string name="guide_counts_down_desc">Part d\'une limite et décompte jusqu\'à zéro coup restant.</string>
     <string name="guide_counts_up_desc">Affiche le nombre total de coups joués depuis le début.</string>
-    <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate\u00A0: plus vous réfléchissez, plus votre pendule va vite. Transfer\u00A0: le prochain coup de l\'adversaire reçoit le temps par coup plus le temps que vous venez de passer, et le vôtre repart du temps par coup\u00A0; avec Cumulative Transfer, il s\'ajoute à ce qui lui reste, et vous gardez ce que vous aviez.</string>
+    <string name="guide_fast_move_desc">Récompense les coups rapides. Accelerate\u00A0: plus vous réfléchissez, plus votre pendule va vite. Transfer\u00A0: le prochain coup de l\'adversaire reçoit le temps par coup plus le temps que vous venez de passer, et le vôtre repart du temps par coup\u00A0; avec Transfer cumulatif, il s\'ajoute à ce qui lui reste, et vous gardez ce que vous aviez.</string>
     <string name="guide_staircase_desc">Le temps de chaque coup change d\'un pas fixe. Down\u00A0: chaque coup a moins de temps, jusqu\'à un plancher. Up\u00A0: chaque coup en a plus, jusqu\'à un plafond.</string>
     <string name="guide_fide_desc">Cadence de tournoi par périodes\u00A0: par exemple 90 min pour 40 coups, puis 30 min pour la fin, avec 30 s ajoutées par coup.</string>
     <string name="guide_gong_desc">Coups imposés à intervalles fixes (simultanés ou à tour de rôle).</string>
@@ -222,7 +222,7 @@
     <string name="tools_custom_colours">Vos couleurs</string>
     <string name="tools_background">Fond</string>
     <string name="tools_background_none">Aucun fond</string>
-    <string name="tools_background_empty">Aucune note photo ou plateau sur laquelle dessiner</string>
+    <string name="tools_background_empty">Aucune note photo ou échiquier sur laquelle dessiner</string>
     <string name="tools_final_score">Score final\u00A0: %d</string>
     <string name="tools_format_hint">Sélectionnez du texte et utilisez la barre d\'outils pour le mettre en forme…</string>
     <string name="tools_game_logs">Journaux de parties</string>
