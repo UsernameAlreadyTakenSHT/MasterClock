@@ -3,6 +3,7 @@ package com.masterclock.app
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.performClick
@@ -72,6 +73,9 @@ class OmniFlowTest {
     /** From the clock through the wizard's defaults to a running session. */
     private fun launchASession() {
         control(R.string.timer_settings).performClick()
+        // The modes less played are folded under one line; see ModeSelectionPanel.
+        await(hasTestTag("more_modes"))
+        rule.onNode(hasTestTag("more_modes")).performScrollTo().performClick()
         await(hasText("Omni-Timer", substring = true))
         rule.onNode(hasText("Omni-Timer", substring = true) and hasClickAction()).performScrollTo().performClick()
 

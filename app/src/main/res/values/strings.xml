@@ -45,6 +45,7 @@
       literals: they are fixed vocabulary, so there is nothing for a translator to do with them.
     -->
     <string name="settings_select_mode">Select Game Mode</string>
+    <string name="settings_more_modes">More modes</string>
     <string name="settings_bonus_type">Bonus Type</string>
     <string name="settings_move_timer_type">Move Timer Type</string>
     <string name="settings_byoyomi_type">Byoyomi Type</string>

@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.performClick
@@ -98,6 +99,9 @@ class OmniSessionFlowTest {
     /** From the clock through the wizard to a running session; see OmniFlowTest. */
     private fun launchASession() {
         control(R.string.timer_settings).performClick()
+        // The modes less played are folded under one line; see ModeSelectionPanel.
+        await(hasTestTag("more_modes"))
+        rule.onNode(hasTestTag("more_modes")).performScrollTo().performClick()
         await(hasText("Omni-Timer", substring = true))
         rule.onNode(hasText("Omni-Timer", substring = true) and hasClickAction()).performScrollTo().performClick()
         val next = hasText(say(R.string.omni_cfg_next_step)) and hasClickAction()

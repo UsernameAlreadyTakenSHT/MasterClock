@@ -47,6 +47,7 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Spelmodus kiezen</string>
+    <string name="settings_more_modes">Meer modi</string>
     <string name="settings_bonus_type">Type Bonus</string>
     <string name="settings_move_timer_type">Type Move Timer</string>
     <string name="settings_byoyomi_type">Type byoyomi</string>
