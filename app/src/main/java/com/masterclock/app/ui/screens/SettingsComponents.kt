@@ -914,8 +914,8 @@ fun CustomSoundItem(
     }
 }
 
-/** The mode cards that stay in sight, by the number [ModeSelectionPanel] gives each: Sudden Death, Bonus, Move Timer, Byoyomi, Gong, FIDE Periods. */
-private val COMMON_MODE_CARDS = setOf(0, 1, 2, 4, 8, 9)
+/** The mode cards that stay in sight, by the number [ModeSelectionPanel] gives each: Sudden Death, Bonus, Move Timer, Hourglass, Byoyomi, FIDE Periods. */
+private val COMMON_MODE_CARDS = setOf(0, 1, 2, 3, 4, 9)
 
 @Composable
 fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (PlayerSettings) -> Unit, onUpdateOneForAll: (Boolean) -> Unit, onOmniClick: () -> Unit) {
@@ -974,12 +974,11 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                         ModeCard("Byoyomi", mainMode == 4, Modifier.weight(1f)) { if (mainMode != 4) onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
                     }
                 }
-                // A time for each move, by the clock or by the gong.
                 ModeCardRow(6.dp) {
                     if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_STANDARD)) {
                         ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { if (mainMode != 2) onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
                     }
-                    ModeCard("Gong", mainMode == 8, Modifier.weight(1f)) { if (mainMode != 8) onUpdateP(p.copy(mode = TimerMode.GONG)) }
+                    ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { if (mainMode != 3) onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
                 }
             }
             if (FlavorConfig.currentFlavor != AppFlavor.MINI) {
@@ -1008,9 +1007,10 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                 }
             }
             if (FlavorConfig.currentFlavor != AppFlavor.MINI && moreModes) {
+                // By the move rather than by the clock: so many of them, or each at the gong.
                 ModeCardRow(6.dp) {
                     ModeCard("Move Counts", mainMode == 6, Modifier.weight(1f)) { if (mainMode != 6) onUpdateP(p.copy(mode = TimerMode.MOVE_COUNTS_UP)) }
-                    ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { if (mainMode != 3) onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
+                    ModeCard("Gong", mainMode == 8, Modifier.weight(1f)) { if (mainMode != 8) onUpdateP(p.copy(mode = TimerMode.GONG)) }
                 }
                 // One clock for the table.
                 ModeCardRow(6.dp) {
