@@ -48,6 +48,7 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Spielmodus wählen</string>
+    <string name="settings_more_modes">Weitere Modi</string>
     <string name="settings_bonus_type">Bonus-Typ</string>
     <string name="settings_move_timer_type">Move-Timer-Typ</string>
     <string name="settings_byoyomi_type">Byoyomi-Typ</string>

@@ -28,7 +28,7 @@
     <string name="common_remove">Retirer</string>
     <string name="common_select">Sélectionner</string>
     <string name="common_optional">Facultatif</string>
-    <string name="common_off">Non</string>
+    <string name="common_off">Sans</string>
 
     <!-- Presets -->
     <string name="preset_title">Préréglages</string>
@@ -53,6 +53,7 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Choisir le mode de jeu</string>
+    <string name="settings_more_modes">Plus de modes</string>
     <string name="settings_bonus_type">Type de Bonus</string>
     <string name="settings_move_timer_type">Type de Move Timer</string>
     <string name="settings_byoyomi_type">Type de byoyomi</string>
@@ -326,7 +327,7 @@
     <string name="settings_trigger_on_press">Déclencher à l\'appui (sinon au relâchement)</string>
     <string name="settings_pause_background">Mettre en pause en arrière-plan</string>
     <string name="settings_keep_running">Continuer en arrière-plan</string>
-    <string name="settings_keep_running_desc">Avec la pause ci-dessus désactivée, une notification garde la pendule en marche quand l\'appli est en arrière-plan, pour qu\'Android ne la ferme pas. Elle indique qui a le trait et son temps, avec un bouton Pause.</string>
+    <string name="settings_keep_running_desc">Avec la pause ci-dessus désactivée, une notification garde la pendule en marche quand l\'app est en arrière-plan, pour qu\'Android ne la ferme pas. Elle indique qui a le trait et son temps, avec un bouton Pause.</string>
     <string name="notif_channel_clock">Partie en cours</string>
     <string name="settings_advanced">Avancé</string>
     <string name="settings_different_per_player">Réglages différents par joueur</string>

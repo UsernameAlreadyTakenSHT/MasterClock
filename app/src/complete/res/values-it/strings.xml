@@ -61,7 +61,7 @@
     <string name="guide_chrono_one_for_all_desc">Non è una modalità a sé: è un\'opzione di Countdown e Countup. Attiva, un solo orologio corre per tutto il tavolo, e premerlo non cambia giocatore.</string>
     <string name="guide_counts_down_desc">Parte da un limite e scende fino a zero mosse rimaste.</string>
     <string name="guide_counts_up_desc">Mostra il numero totale di mosse giocate dall\'inizio.</string>
-    <string name="guide_fast_move_desc">Premia le mosse rapide. Accelerate: più pensi, più veloce corre il tuo orologio. Transfer: la prossima mossa dell\'avversario riceve il tempo per mossa più quello che hai appena usato, e la tua riparte dal tempo per mossa; con Cumulative Transfer si aggiunge a quello che gli resta, e tu tieni quello che avevi.</string>
+    <string name="guide_fast_move_desc">Premia le mosse rapide. Accelerate: più pensi, più veloce corre il tuo orologio. Transfer: la prossima mossa dell\'avversario riceve il tempo per mossa più quello che hai appena usato, e la tua riparte dal tempo per mossa; con Transfer cumulativo si aggiunge a quello che gli resta, e tu tieni quello che avevi.</string>
     <string name="guide_staircase_desc">Il tempo di ogni mossa cambia di un passo fisso. Down: ogni mossa ha meno tempo, fino a un minimo. Up: ogni mossa ne ha di più, fino a un massimo.</string>
     <string name="guide_fide_desc">Cadenza da torneo a periodi: per esempio 90 min per 40 mosse, poi 30 min per il resto, con 30 s aggiunti per mossa.</string>
     <string name="guide_gong_desc">Mosse imposte a intervalli fissi (simultanee o a turno).</string>
@@ -159,9 +159,9 @@
     <string name="tools_sym_counterplay">controgioco</string>
     <string name="tools_sym_zugzwang">zugzwang</string>
     <string name="tools_sym_time_trouble">zeitnot</string>
-    <string name="tools_sym_white_won">vince il Bianco</string>
+    <string name="tools_sym_white_won">ha vinto il Bianco</string>
     <string name="tools_sym_draw">patta</string>
-    <string name="tools_sym_black_won">vince il Nero</string>
+    <string name="tools_sym_black_won">ha vinto il Nero</string>
     <string name="tools_piece_white_king">re bianco</string>
     <string name="tools_piece_white_queen">donna bianca</string>
     <string name="tools_piece_white_rook">torre bianca</string>

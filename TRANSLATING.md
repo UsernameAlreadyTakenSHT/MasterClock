@@ -117,6 +117,23 @@ written in federation rulebooks. Their *descriptions* are translated; their name
 *Preset names* — `Fisch. 3 + 2s`, `Jap. Byo 20'`, `Armag. 5 / 4`. Same reasoning, and they are
 mostly numbers and abbreviations anyway.
 
+**A mode's name is never translated, and neither is the name of one of its variants** —
+`Accelerate` and `Transfer` under Fast Move, `Down` and `Up` under Staircase, `Countdown` and
+`Countup` under Chronos, and so on. They stay English inside a translated sentence, as the manual
+writes them: "Transfer : le prochain coup de l'adversaire reçoit…".
+
+A setting that only *contains* such a name is not a name itself. It keeps the name and translates
+the rest: `Cumulative Transfer` is the switch "Transfer cumulatif" in French, "Kumulativer
+Transfer" in German, "Transfer acumulativo" in Spanish. "Transfer" there is not a misspelling of
+*transfert* or an English word left behind — it is the variant's name, and a reviewer who
+"corrects" it breaks the link between the switch and the variant it belongs to.
+
+And wherever the manual speaks of a setting, it names it **as the settings screen shows it in that
+language**. It said "Cumulative Transfer" in every language, a label no translated screen has. The
+two live in different files — the switch in `app/src/main`, the manual in `app/src/complete` — and
+nothing checks one against the other, so when you change a label, search the other three files of
+your language for it.
+
 **Counted things are `<plurals>`, not `<string>`.** Anything that varies with a number lives in a
 `<plurals>` block, and you add or remove `<item>` elements to match your own language — English
 needs two, Russian and Polish need three or four.
@@ -174,8 +191,8 @@ language.
 Portuguese is the one place where it did. `values-pt` holds the full European translation and
 `values-pt-rBR` holds **only the words Brazil says differently** — tela for ecrã, configurações for
 definições, compartilhar for partilhar, and so on. Android resolves a pt-BR device as
-`values-pt-rBR`, then `values-pt`, then English, string by string, so the override is about 130
-lines rather than a second full translation.
+`values-pt-rBR`, then `values-pt`, then English, string by string, so the override is some 250
+strings over the four files rather than a second full translation.
 
 Two things to get right, both of which fail silently:
 

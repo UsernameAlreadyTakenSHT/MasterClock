@@ -3,9 +3,13 @@
 Set under **Settings › Modes**. Fourteen modes, several with variants chosen just below the mode
 grid, and Omni-Timer, a clock of its own. Mode names are in English in every language.
 
+The six most played are always in sight: Sudden Death, Bonus, FIDE Periods, Byoyomi, Move Timer and
+Hourglass. **More modes** opens the others, and stays open while one of them is the mode in use.
+Mini has three modes and no such line. This page follows the order of the grid.
+
 - [Before the modes: presses, players, and what happens at zero](#before-the-modes)
-- [Sudden Death](#sudden-death) · [Bonus](#bonus) · [Move Timer](#move-timer) · [Byoyomi](#byoyomi) · [Hourglass](#hourglass) · [Chronos](#chronos) · [Move Counts](#move-counts)
-- [Gong](#gong) · [FIDE Periods](#fide-periods) · [Phases](#phases) · [Random](#random) · [Hidden](#hidden) · [Fast Move](#fast-move) · [Staircase](#staircase)
+- [Sudden Death](#sudden-death) · [Bonus](#bonus) · [FIDE Periods](#fide-periods) · [Byoyomi](#byoyomi) · [Move Timer](#move-timer) · [Hourglass](#hourglass)
+- [Move Counts](#move-counts) · [Gong](#gong) · [Chronos](#chronos) · [Phases](#phases) · [Fast Move](#fast-move) · [Staircase](#staircase) · [Random](#random) · [Hidden](#hidden)
 - [Omni-Timer](#omni-timer): [the seven steps](#step-1--players--order) · [the Omni clock](#the-omni-clock) · [at zero](#what-happens-at-zero) · [leaving and coming back](#leaving-and-coming-back)
 
 ## Before the modes
@@ -76,88 +80,6 @@ A main time, and time given back at each move. **Bonus Type** picks how.
 - **US Delay** — the clock waits for the delay before it starts counting down. The face shows
   `DELAY` while it runs. A move made inside the delay costs nothing.
 
-## Move Timer
-
-A time for each move rather than for the game. **Move Timer Type** picks one of six.
-
-| Variant | Parameters (default) | How it works |
-|---|---|---|
-| **Standard** | **Move Time** (0:30) | Every move starts with the full move time. Nothing is kept from a quick move. Running out is a flag. |
-| **Save & Cap** | **Move Time** (0:30), **Time Cap** (2:00) | What a move does not use is carried to the next, so the clock grows over a run of quick moves — up to the cap, which limits the whole clock and not only the saved part. A turn that ran out saves nothing. A cap below the move time saves nothing rather than shortening the move. |
-| **Overtime** | **Move Time** (0:30), a reserve set as **Initial Time** (10:00) | The move clock runs first. Once it is spent, the reserve is burned instead; the face shows it as `OT`. Each move gets a fresh move clock, and the reserve carries over. The flag is the reserve running out, not the move clock. |
-| **Global** | **Move Time** (0:30), a total set as **Initial Time** (10:00) | The move clock and the player's total run down together. Either reaching zero is a flag. |
-| **Shared (Auto)** | **Move Time** (0:30) | One clock for the table. Nobody presses: when the move time runs out the turn passes by itself and the clock starts again. It ends a move rather than flagging. |
-| **Global Shared** | **Move Time** (0:30), a shared reserve set as **Initial Time** (10:00) | Each player has their own move clock; one reserve is shared by all and drained by whoever is on the move. Running out of move time puts that player out; the shared reserve reaching zero puts everyone out at once. |
-
-## Byoyomi
-
-A main time, then extra time in periods, as in go and shogi. **Byoyomi Type** picks one of three.
-
-| Parameter | Default | |
-|---|---|---|
-| **Initial Time** | 10:00 | Main time. Byoyomi begins when it is spent. |
-| **Byoyomi Time** | 0:30 | The length of one period (Japanese) or of one block (Canadian, Progressive). |
-| **Periods / Moves Goal** | 5 | Japanese: how many periods. Canadian and Progressive: how many moves the block must cover. |
-| **Progression (moves)** | 5 | Progressive only: how many moves are added to the goal after each block. |
-
-- **Japanese** — a number of periods. A move made inside a period gives the period back whole. A
-  period that runs out is lost, and the next one starts; losing the last one is a flag. The face
-  shows the period being played (`PERIOD: 2/5`), or with **Show period** off in Display, the periods
-  left (`PERIODS: 4`).
-- **Canadian** — one block of time for a number of moves. Each move counts off the goal without
-  refilling the clock; the last move of the goal refills the block and the count starts again.
-  Running out before the goal is met is a flag.
-- **Progressive** — Canadian, with the goal growing by the progression each time a block is
-  completed: 5 moves, then 10, then 15, in the same block of time.
-
-Zero periods is no byoyomi at all: main time running out is the flag. A goal of zero moves is read
-as one.
-
-## Hourglass
-
-What one player's clock loses, the others gain. No variant.
-
-| Parameter | Default | |
-|---|---|---|
-| **Initial Time** | 10:00 | Each player's starting time. |
-
-With two players the time moves across exactly, so the total on the table never changes. With three
-or four, the active player's loss is shared out among the others. A player who is out gives and
-receives nothing more. Under Negative and Reverse, time received pays a player's overrun off first.
-
-## Chronos
-
-One clock for the table, not one per player. **Chronos Type**:
-
-- **Countdown** — counts down from **Initial Time** (default 10:00). Reaching zero ends the game for
-  everyone; it is nobody's flag.
-- **Countup** — a stopwatch, counting up from zero. It never ends by itself.
-
-**One for All (no clicks)**, on by default: nobody is on the move and presses do nothing. Off, a
-press still passes the turn and counts a move, while the one clock keeps running.
-
-## Move Counts
-
-A count of moves instead of a time. **Move Counts Type**:
-
-- **Count Up** — shows how many moves the player has made.
-- **Count Down (Max)** — starts at **Max Moves** (default 20) and counts down. The game ends once
-  every player has played their moves, under every Flag Behavior: a player at zero waits for the
-  others' last moves.
-
-## Gong
-
-Forced moves at a fixed rhythm: a time to think, then a short time to move, announced by a gong.
-
-| Parameter | Default | |
-|---|---|---|
-| **Reflection Time** | 0:10 | Thinking time. The face shows `REFLECT`. |
-| **Time to Move** | 0:02 | The window in which the move must be played. |
-| **Simultaneous Play** | off | Off: players take turns, each going through reflection then move. On: every player goes through both at the same moment. |
-
-Nobody presses: the phases follow each other by themselves. A phase set to nothing still lasts one
-second. The gong is the mode itself, so it sounds whatever the sound settings say.
-
 ## FIDE Periods
 
 Tournament time controls made of periods, such as 90 minutes for 40 moves, then 30 minutes for the
@@ -194,6 +116,88 @@ Above the clock, the face counts down the moves left to the next period (`MOVES:
 is running, and shows the period (`PERIOD: 2/3`) when none is: in the last period, or with the
 counter off. The **Show period** switch of Display is for byoyomi, not for these periods.
 
+## Byoyomi
+
+A main time, then extra time in periods, as in go and shogi. **Byoyomi Type** picks one of three.
+
+| Parameter | Default | |
+|---|---|---|
+| **Initial Time** | 10:00 | Main time. Byoyomi begins when it is spent. |
+| **Byoyomi Time** | 0:30 | The length of one period (Japanese) or of one block (Canadian, Progressive). |
+| **Periods / Moves Goal** | 5 | Japanese: how many periods. Canadian and Progressive: how many moves the block must cover. |
+| **Progression (moves)** | 5 | Progressive only: how many moves are added to the goal after each block. |
+
+- **Japanese** — a number of periods. A move made inside a period gives the period back whole. A
+  period that runs out is lost, and the next one starts; losing the last one is a flag. The face
+  shows the period being played (`PERIOD: 2/5`), or with **Show period** off in Display, the periods
+  left (`PERIODS: 4`).
+- **Canadian** — one block of time for a number of moves. Each move counts off the goal without
+  refilling the clock; the last move of the goal refills the block and the count starts again.
+  Running out before the goal is met is a flag.
+- **Progressive** — Canadian, with the goal growing by the progression each time a block is
+  completed: 5 moves, then 10, then 15, in the same block of time.
+
+Zero periods is no byoyomi at all: main time running out is the flag. A goal of zero moves is read
+as one.
+
+## Move Timer
+
+A time for each move rather than for the game. **Move Timer Type** picks one of six.
+
+| Variant | Parameters (default) | How it works |
+|---|---|---|
+| **Standard** | **Move Time** (0:30) | Every move starts with the full move time. Nothing is kept from a quick move. Running out is a flag. |
+| **Save & Cap** | **Move Time** (0:30), **Time Cap** (2:00) | What a move does not use is carried to the next, so the clock grows over a run of quick moves — up to the cap, which limits the whole clock and not only the saved part. A turn that ran out saves nothing. A cap below the move time saves nothing rather than shortening the move. |
+| **Overtime** | **Move Time** (0:30), a reserve set as **Initial Time** (10:00) | The move clock runs first. Once it is spent, the reserve is burned instead; the face shows it as `OT`. Each move gets a fresh move clock, and the reserve carries over. The flag is the reserve running out, not the move clock. |
+| **Global** | **Move Time** (0:30), a total set as **Initial Time** (10:00) | The move clock and the player's total run down together. Either reaching zero is a flag. |
+| **Shared (Auto)** | **Move Time** (0:30) | One clock for the table. Nobody presses: when the move time runs out the turn passes by itself and the clock starts again. It ends a move rather than flagging. |
+| **Global Shared** | **Move Time** (0:30), a shared reserve set as **Initial Time** (10:00) | Each player has their own move clock; one reserve is shared by all and drained by whoever is on the move. Running out of move time puts that player out; the shared reserve reaching zero puts everyone out at once. |
+
+## Hourglass
+
+What one player's clock loses, the others gain. No variant.
+
+| Parameter | Default | |
+|---|---|---|
+| **Initial Time** | 10:00 | Each player's starting time. |
+
+With two players the time moves across exactly, so the total on the table never changes. With three
+or four, the active player's loss is shared out among the others. A player who is out gives and
+receives nothing more. Under Negative and Reverse, time received pays a player's overrun off first.
+
+## Move Counts
+
+A count of moves instead of a time. **Move Counts Type**:
+
+- **Count Up** — shows how many moves the player has made.
+- **Count Down (Max)** — starts at **Max Moves** (default 20) and counts down. The game ends once
+  every player has played their moves, under every Flag Behavior: a player at zero waits for the
+  others' last moves.
+
+## Gong
+
+Forced moves at a fixed rhythm: a time to think, then a short time to move, announced by a gong.
+
+| Parameter | Default | |
+|---|---|---|
+| **Reflection Time** | 0:10 | Thinking time. The face shows `REFLECT`. |
+| **Time to Move** | 0:02 | The window in which the move must be played. |
+| **Simultaneous Play** | off | Off: players take turns, each going through reflection then move. On: every player goes through both at the same moment. |
+
+Nobody presses: the phases follow each other by themselves. A phase set to nothing still lasts one
+second. The gong is the mode itself, so it sounds whatever the sound settings say.
+
+## Chronos
+
+One clock for the table, not one per player. **Chronos Type**:
+
+- **Countdown** — counts down from **Initial Time** (default 10:00). Reaching zero ends the game for
+  everyone; it is nobody's flag.
+- **Countup** — a stopwatch, counting up from zero. It never ends by itself.
+
+**One for All (no clicks)**, on by default: nobody is on the move and presses do nothing. Off, a
+press still passes the turn and counts a move, while the one clock keeps running.
+
 ## Phases
 
 A sequence of timers for the whole table, each with its own length: preparation 5 minutes, game 20
@@ -219,34 +223,6 @@ And for the sequence:
 
 Running through the last phase finishes the game without a flag. What a tick ran past the end of a
 phase comes off the next, so a sequence keeps its total length.
-
-## Random
-
-The time is drawn at random within a range, and shown.
-
-| Parameter | Default | |
-|---|---|---|
-| **Minimum Duration** / **Maximum Duration** | 1:00 / 10:00 | The range of the main time. |
-| **Minimum Increment** / **Maximum Increment** | 0:00 / 0:10 | The range of the Fischer increment drawn with it. |
-| **Rounded Time (minutes/seconds)** | on | Draws round values: ten-second steps where the range holds one, whole seconds otherwise. |
-
-Both players get the same draw, set from player 1's ranges. The drawn increment is added after each
-move, as in Fischer. A range starting at zero never draws a clock of zero.
-
-The die on the clock draws a new time. It restarts the game, so with **Confirm reset** on it asks
-first.
-
-## Hidden
-
-Random, with the time kept from the players: the face shows `??:??`.
-
-| Parameter | Default | |
-|---|---|---|
-| The four ranges and **Rounded Time** | as Random | |
-| **Show Percentage Alerts** | on | The share of time left shows for five seconds as it passes 50, 25, 10, 5, 2 and 1 %. |
-
-The low-time flash is off in this mode, since it would give the time away. Once a player is out the
-face shows the time again. The arbiter's panel keeps it hidden too.
 
 ## Fast Move
 
@@ -297,6 +273,34 @@ Each move's time changes by a fixed step. **Staircase Type**:
 Every move starts with its own time whole; nothing is carried over.
 
 ---
+
+## Random
+
+The time is drawn at random within a range, and shown.
+
+| Parameter | Default | |
+|---|---|---|
+| **Minimum Duration** / **Maximum Duration** | 1:00 / 10:00 | The range of the main time. |
+| **Minimum Increment** / **Maximum Increment** | 0:00 / 0:10 | The range of the Fischer increment drawn with it. |
+| **Rounded Time (minutes/seconds)** | on | Draws round values: ten-second steps where the range holds one, whole seconds otherwise. |
+
+Both players get the same draw, set from player 1's ranges. The drawn increment is added after each
+move, as in Fischer. A range starting at zero never draws a clock of zero.
+
+The die on the clock draws a new time. It restarts the game, so with **Confirm reset** on it asks
+first.
+
+## Hidden
+
+Random, with the time kept from the players: the face shows `??:??`.
+
+| Parameter | Default | |
+|---|---|---|
+| The four ranges and **Rounded Time** | as Random | |
+| **Show Percentage Alerts** | on | The share of time left shows for five seconds as it passes 50, 25, 10, 5, 2 and 1 %. |
+
+The low-time flash is off in this mode, since it would give the time away. Once a player is out the
+face shows the time again. The arbiter's panel keeps it hidden too.
 
 ## Omni-Timer
 

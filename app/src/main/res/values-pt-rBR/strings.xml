@@ -28,7 +28,6 @@
 
     <!-- Spellings: -ônico rather than -ónico -->
     <string name="settings_bonus_type">Tipo de bônus</string>
-    <string name="settings_chrono_type">Tipo de Chronos</string>
     <string name="settings_increment_bonus">Incremento / bônus</string>
     <string name="settings_fischer_fide">Fischer FIDE (bônus a partir do lance 0)</string>
     <string name="settings_show_percentage">Mostrar os alertas de porcentagem</string>
@@ -86,36 +85,22 @@
 
     <!-- Omni: rodada rather than ronda, turno rather than vez -->
     <string name="omni_cfg_enable_round_timer">Ativar o relógio de rodada</string>
-    <string name="omni_cfg_enable_turn_timer">Ativar o relógio de turno</string>
     <string name="omni_cfg_round_timer">Relógio de rodada</string>
-    <string name="omni_cfg_turn_timer">Relógio de turno</string>
     <string name="omni_cfg_cutoff_round">Interromper ao esgotar o tempo de rodada</string>
-    <string name="omni_cfg_cutoff_turn">Interromper ao esgotar o tempo de turno</string>
-    <string name="omni_cfg_turn_disabled">Relógio de turno desativado.</string>
     <string name="omni_cfg_round">Rodada</string>
     <string name="omni_cfg_rounds">Rodadas</string>
-    <string name="omni_cfg_turn">Turno</string>
-    <string name="omni_cfg_turn_n">Turno %d</string>
     <string name="omni_cfg_round_n">Rodada %d</string>
-    <string name="omni_cfg_turn_short">T%d</string>
     <string name="omni_cfg_delete_round">Excluir a rodada %d</string>
     <string name="omni_cfg_delete_turn">Excluir o turno %d</string>
     <string name="omni_cfg_delete_game">Excluir a partida %d</string>
     <string name="omni_cfg_delete_phase">Excluir a fase %d</string>
     <string name="omni_cfg_summary_rounds_varied">• Rodadas por partida: %s</string>
     <string name="omni_cfg_phases_exceed">Partida “%1$s”, rodada “%2$s”, %3$s: as fases excedem o tempo de turno!</string>
-    <string name="omni_cfg_turns">Turnos</string>
     <string name="omni_cfg_round_name">Nome da rodada</string>
     <string name="omni_cfg_add_round">Adicionar uma rodada</string>
-    <string name="omni_cfg_add_turn">Adicionar um turno</string>
-    <string name="omni_cfg_loop_turns">Repetir os turnos</string>
     <string name="omni_cfg_end_round">Fim de rodada</string>
-    <string name="omni_cfg_turn_order">Ordem dos turnos</string>
     <string name="omni_cfg_pattern_random_round">Padrão (3 jogadores): 231, 312, 123 — cada um joga uma vez por rodada</string>
     <string name="omni_cfg_shuffle_per_round">Embaralhar em cada rodada</string>
-    <string name="omni_cfg_draw_per_turn">Sorteio em cada turno</string>
-    <string name="omni_cfg_balance_explain">Quem está atrasado nos turnos tem mais probabilidade de sair, para que as diferenças se fechem em vez de se acumularem.</string>
-    <string name="omni_cfg_turn_pause">Pausa de turno</string>
     <string name="omni_cfg_round_pause">Pausa de rodada</string>
     <string name="omni_cfg_pause_deducts_round">A pausa desconta da rodada</string>
     <string name="omni_cfg_turn_beep">Bipe de turno</string>
@@ -123,7 +108,6 @@
     <string name="omni_progress_round">Rodada %1$d/%2$d</string>
     <string name="omni_running">EM ANDAMENTO</string>
     <string name="omni_round_finished">RODADA TERMINADA</string>
-    <string name="omni_turn_finished">TURNO TERMINADO</string>
     <string name="omni_prepare_round">Preparem-se para a rodada %d</string>
 
     <plurals name="omni_cfg_summary_rounds_uniform">
@@ -134,7 +118,6 @@
 
     <!-- Timer screen -->
     <string name="timer_switch_turn">Trocar o turno</string>
-    <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 min + 5 min/20 lances</string>
     <string name="preset_shortcut_deleted">Esta predefinição foi excluída</string>
     <string name="omni_cfg_unbalanced_explain">Todos os jogadores têm a mesma probabilidade a cada turno: um deles pode realmente ficar com a maior parte de uma rodada.</string>
     <string name="import_confirm_message">Este arquivo substitui suas configurações atuais. As partidas, predefinições, notas e resultados do placar dele são adicionados aos seus: nada seu é apagado.</string>
@@ -179,9 +162,6 @@
     <string name="omni_cfg_final_beep">Bipe final</string>
     <string name="omni_cfg_launch_countdown">Contagem regressiva de início</string>
     <string name="settings_cumulative_explain">Cada lance recebe o tempo por lance mais o tempo que o adversário gastou no último lance dele. Ligado, o que sobrou dos lances anteriores também é mantido; desligado, é perdido. Para um tempo total fixo, em que o que um jogador gasta o outro ganha, veja Hourglass.</string>
-    <string name="omni_cfg_cutoff_session">Interromper ao esgotar o tempo de sessão</string>
-    <string name="omni_cfg_cutoff_game">Interromper ao esgotar o tempo de partida</string>
-    <string name="omni_cfg_cutoff_phase">Interromper ao esgotar o tempo de fase</string>
     <string name="arbiter_remove_move">Remover um lance de %1$s</string>
     <string name="arbiter_add_move">Adicionar um lance a %1$s</string>
     <string name="settings_tournament_rules_explain">O primeiro vale só para o Fischer: o bônus vem antes do lance 1. O segundo só para FIDE Periods: ligado, um período termina ao atingir seu número de lances; desligado, quando seu tempo se esgota.</string>
@@ -203,4 +183,6 @@
     <string name="settings_haptic_feedback">Feedback tátil</string>
     <string name="settings_sound_previews">Prévia dos sons</string>
     <string name="settings_threshold">Limite</string>
+    <!-- "até o", where Portugal has "até ao". -->
+    <string name="settings_moves_until_period">Lances no total até o período %d</string>
 </resources>

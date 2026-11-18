@@ -3,6 +3,7 @@ package com.masterclock.app
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.performClick
@@ -56,6 +57,9 @@ class StaircaseFlowTest {
     @Test
     fun staircaseIsAModeOfItsOwnWithDownAndUp() {
         rule.onNode(hasContentDescription(say(R.string.timer_settings)) and hasClickAction()).performClick()
+        // The modes less played are folded under one line; see ModeSelectionPanel.
+        await(hasTestTag("more_modes"))
+        rule.onNode(hasTestTag("more_modes")).performScrollTo().performClick()
         await(hasText("Staircase"))
         rule.onNode(hasText("Staircase") and hasClickAction()).performScrollTo().performClick()
         rule.waitUntil(TIMEOUT_MS) { main().isStaircase && !main().fastMoveShrinkGrows }

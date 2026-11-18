@@ -64,7 +64,7 @@
     <string name="guide_chrono_one_for_all_desc">Não é um modo à parte: é uma opção de Countdown e Countup. Ativada, um só relógio corre para toda a mesa, e premi-lo não muda de jogador.</string>
     <string name="guide_counts_down_desc">Parte de um limite e desce até zero lances restantes.</string>
     <string name="guide_counts_up_desc">Mostra o número total de lances jogados desde o início.</string>
-    <string name="guide_fast_move_desc">Premeia os lances rápidos. Accelerate: quanto mais pensa, mais depressa corre o seu relógio. Transfer: o próximo lance do adversário recebe o tempo por lance mais o tempo que acabou de gastar, e o seu recomeça no tempo por lance; com Cumulative Transfer soma-se ao que lhe resta, e fica com o que tinha.</string>
+    <string name="guide_fast_move_desc">Premeia os lances rápidos. Accelerate: quanto mais pensa, mais depressa corre o seu relógio. Transfer: o próximo lance do adversário recebe o tempo por lance mais o tempo que acabou de gastar, e o seu recomeça no tempo por lance; com Transfer cumulativo soma-se ao que lhe resta, e fica com o que tinha.</string>
     <string name="guide_staircase_desc">O tempo de cada lance muda num passo fixo. Down: cada lance tem menos tempo, até um mínimo. Up: cada lance tem mais, até um máximo.</string>
     <string name="guide_fide_desc">Ritmo de torneio por períodos: por exemplo, 90 min para 40 lances, depois 30 min para o resto, com 30 s adicionados por lance.</string>
     <string name="guide_gong_desc">Lances impostos a intervalos fixos (simultâneos ou por turnos).</string>
@@ -82,7 +82,7 @@
     <string name="guide_section_advanced">Motores avançados e experimentais</string>
     <string name="guide_section_bonus">Motores com bónus</string>
     <string name="guide_section_specialty">Motores especiais</string>
-    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeira.</string>
+    <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeirinha.</string>
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmara</string>
@@ -260,7 +260,7 @@
     <string name="tools_new_draw_note">Nova nota desenhada</string>
     <string name="tools_new_image_note">Nova nota de imagem</string>
     <string name="tools_new_note">Nova nota</string>
-    <string name="tools_notebook_full">O caderno está cheio. Apague uma nota para adicionar outra.</string>
+    <string name="tools_notebook_full">O caderno está cheio. Elimine uma nota para adicionar outra.</string>
     <string name="tools_new_video_note" tools:ignore="Typos">Nova nota de vídeo</string>
     <string name="tools_no_games">Ainda não há partidas registadas.</string>
     <string name="tools_no_notes">Ainda não há notas. Toque em + para criar uma.</string>

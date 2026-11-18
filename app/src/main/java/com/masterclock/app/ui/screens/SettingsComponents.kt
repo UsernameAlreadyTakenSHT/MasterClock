@@ -18,7 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -912,6 +914,9 @@ fun CustomSoundItem(
     }
 }
 
+/** The mode cards that stay in sight, by the number [ModeSelectionPanel] gives each: Sudden Death, Bonus, Move Timer, Hourglass, Byoyomi, FIDE Periods. */
+private val COMMON_MODE_CARDS = setOf(0, 1, 2, 3, 4, 9)
+
 @Composable
 fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (PlayerSettings) -> Unit, onUpdateOneForAll: (Boolean) -> Unit, onOmniClick: () -> Unit) {
     val mainMode = when { 
@@ -933,6 +938,14 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
         else -> 0 
     }
 
+    // The grid of fifteen took two thirds of a phone's screen, and what a mode is set with starts
+    // under it: every visit began with a scroll. The six most played stay in sight and the rest
+    // fold away under one line, open whenever the mode in use is one of them -- a mode chosen is
+    // never out of sight.
+    val foldedMode = mainMode !in COMMON_MODE_CARDS
+    var moreModes by rememberSaveable { mutableStateOf(foldedMode) }
+    LaunchedEffect(foldedMode) { if (foldedMode) moreModes = true }
+
     SettingsSection(stringResource(R.string.settings_select_mode)) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (FlavorConfig.currentFlavor == AppFlavor.MINI) {
@@ -953,31 +966,56 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                         ModeCard("Bonus", mainMode == 1, Modifier.weight(1f)) { if (mainMode != 1) onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
                     }
                 }
+                // The tournament control and the one of go and shogi, straight after the two everyone
+                // plays; FIDE Periods was ninth.
                 ModeCardRow(6.dp) {
-                    if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_STANDARD)) {
-                        ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { if (mainMode != 2) onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
-                    }
+                    ModeCard("FIDE Periods", mainMode == 9, Modifier.weight(1f)) { if (mainMode != 9) onUpdateP(p.copy(mode = TimerMode.FIDE_PERIODS)) }
                     if (FlavorConfig.isModeAllowed(TimerMode.BYOYOMI_JAPANESE)) {
                         ModeCard("Byoyomi", mainMode == 4, Modifier.weight(1f)) { if (mainMode != 4) onUpdateP(p.copy(mode = TimerMode.BYOYOMI_JAPANESE)) }
                     }
                 }
+                ModeCardRow(6.dp) {
+                    if (FlavorConfig.isModeAllowed(TimerMode.MOVE_TIMER_STANDARD)) {
+                        ModeCard("Move Timer", mainMode == 2, Modifier.weight(1f)) { if (mainMode != 2) onUpdateP(p.copy(mode = TimerMode.MOVE_TIMER_STANDARD)) }
+                    }
+                    ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { if (mainMode != 3) onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
+                }
             }
             if (FlavorConfig.currentFlavor != AppFlavor.MINI) {
-                ModeCardRow(6.dp) {
-                    ModeCard("Hourglass", mainMode == 3, Modifier.weight(1f)) { if (mainMode != 3) onUpdateP(p.copy(mode = TimerMode.HOURGLASS)) }
-                    ModeCard("Chronos", mainMode == 5, Modifier.weight(1f)) { if (mainMode != 5) onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }
+                Surface(
+                    onClick = { moreModes = !moreModes },
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth().testTag("more_modes"),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 44.dp).padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            stringResource(R.string.settings_more_modes),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Icon(
+                            if (moreModes) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
+            }
+            if (FlavorConfig.currentFlavor != AppFlavor.MINI && moreModes) {
+                // By the move rather than by the clock: so many of them, or each at the gong.
                 ModeCardRow(6.dp) {
                     ModeCard("Move Counts", mainMode == 6, Modifier.weight(1f)) { if (mainMode != 6) onUpdateP(p.copy(mode = TimerMode.MOVE_COUNTS_UP)) }
                     ModeCard("Gong", mainMode == 8, Modifier.weight(1f)) { if (mainMode != 8) onUpdateP(p.copy(mode = TimerMode.GONG)) }
                 }
+                // One clock for the table.
                 ModeCardRow(6.dp) {
-                    ModeCard("FIDE Periods", mainMode == 9, Modifier.weight(1f)) { if (mainMode != 9) onUpdateP(p.copy(mode = TimerMode.FIDE_PERIODS)) }
+                    ModeCard("Chronos", mainMode == 5, Modifier.weight(1f)) { if (mainMode != 5) onUpdateP(p.copy(mode = TimerMode.CHRONO_COUNTDOWN)) }
                     ModeCard("Phases", mainMode == 10, Modifier.weight(1f)) { if (mainMode != 10) onUpdateP(p.copy(mode = TimerMode.PHASES)) }
-                }
-                ModeCardRow(6.dp) {
-                    ModeCard("Random", mainMode == 11, Modifier.weight(1f)) { if (mainMode != 11) onUpdateP(p.copy(mode = TimerMode.RANDOM)) }
-                    ModeCard("Hidden", mainMode == 12, Modifier.weight(1f)) { if (mainMode != 12) onUpdateP(p.copy(mode = TimerMode.HIDDEN)) }
                 }
                 ModeCardRow(6.dp) {
                     // Fast Move's variants are the ones that go by how fast a move is played; Staircase,
@@ -988,6 +1026,10 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     ModeCard("Staircase", mainMode == 14, Modifier.weight(1f)) {
                         if (mainMode != 14) onUpdateP(p.copy(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.SHRINK, fastMoveShrinkGrows = false))
                     }
+                }
+                ModeCardRow(6.dp) {
+                    ModeCard("Random", mainMode == 11, Modifier.weight(1f)) { if (mainMode != 11) onUpdateP(p.copy(mode = TimerMode.RANDOM)) }
+                    ModeCard("Hidden", mainMode == 12, Modifier.weight(1f)) { if (mainMode != 12) onUpdateP(p.copy(mode = TimerMode.HIDDEN)) }
                 }
                 if (FlavorConfig.hasOmni()) {
                     ModeCardRow(6.dp) {

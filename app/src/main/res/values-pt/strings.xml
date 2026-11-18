@@ -31,7 +31,7 @@
     <string name="common_remove">Remover</string>
     <string name="common_select">Selecionar</string>
     <string name="common_optional">Opcional</string>
-    <string name="common_off">Não</string>
+    <string name="common_off">Sem</string>
 
     <!-- Presets -->
     <string name="preset_title">Predefinições</string>
@@ -52,6 +52,7 @@
 
     <!-- Mode settings -->
     <string name="settings_select_mode">Escolher o modo de jogo</string>
+    <string name="settings_more_modes">Mais modos</string>
     <string name="settings_bonus_type">Tipo de bónus</string>
     <string name="settings_move_timer_type">Tipo de Move Timer</string>
     <string name="settings_byoyomi_type">Tipo de byoyomi</string>
@@ -390,7 +391,7 @@
     <string name="omni_cfg_phase_n">Fase %d</string>
     <string name="omni_cfg_game_short">P%d</string>
     <string name="omni_cfg_round_short">R%d</string>
-    <string name="omni_cfg_turn_short">V%d</string>
+    <string name="omni_cfg_turn_short">T%d</string>
     <string name="omni_cfg_delete_game">Eliminar a partida %d</string>
     <string name="omni_cfg_delete_round">Eliminar a ronda %d</string>
     <string name="omni_cfg_delete_turn">Eliminar o turno %d</string>
