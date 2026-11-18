@@ -37,6 +37,13 @@ object MillenniumProtocol : BoardProtocol {
     /** Ask for the current position. The board reports changes unprompted afterwards. */
     override val initCommand = command("S")
 
+    /**
+     * 38400, as the board's protocol note has it ("38400 baud, odd parity, 7 bit"); the parity bit is
+     * the top bit of each byte and is handled here, so the line itself is opened plain. Left at the
+     * default it was opened at DGT's 9600.
+     */
+    override val usbBaudRate = 38400
+
     override fun matchesDeviceName(deviceName: String?): Boolean {
         val name = deviceName ?: return false
         return name.contains("MILLENNIUM", ignoreCase = true) || name.contains("ChessLink", ignoreCase = true)

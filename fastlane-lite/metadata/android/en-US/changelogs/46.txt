@@ -1,3 +1,2 @@
 Modes: the six most played stay in sight, More modes opens the others, and what a mode is set with shows without scrolling.
-Omni-Timer, screen off: the phone is kept awake for whichever clock ends first, not for the turn's alone.
 Translations: words that disagreed between screens agree, in six languages.

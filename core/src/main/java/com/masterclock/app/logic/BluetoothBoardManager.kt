@@ -301,11 +301,14 @@ class BluetoothBoardManager(private val context: Context) {
         override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
             // Failures are not fatal in raw-capture mode: a board may expose characteristics it will
             // not actually let us subscribe to, and the others still work.
-            mainHandler.post { operationFinished() }
+            // The connection in hand alone: a completion arriving late from one let go ended the
+            // operation in flight on the next, and two went out together -- what the queue is for.
+            mainHandler.post { if (gatt === activeGatt) operationFinished() }
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-            mainHandler.post { operationFinished() }
+            if (status != BluetoothGatt.GATT_SUCCESS) Log.w("BluetoothBoardManager", "The board refused a write, status $status")
+            mainHandler.post { if (gatt === activeGatt) operationFinished() }
         }
 
         @Deprecated("Deprecated in Java")
@@ -370,6 +373,8 @@ class BluetoothBoardManager(private val context: Context) {
     }
 
     private fun mtuChanged(gatt: BluetoothGatt, newMtu: Int, status: Int) {
+        // The answer of a connection let go says nothing of the one in hand.
+        if (gatt !== activeGatt) return
         if (status == BluetoothGatt.GATT_SUCCESS) mtu = newMtu
         mainHandler.removeCallbacks(mtuFallback)
         discoverServices(gatt)
@@ -395,6 +400,9 @@ class BluetoothBoardManager(private val context: Context) {
     }
 
     private fun servicesDiscovered(gatt: BluetoothGatt, status: Int) {
+        // Board A's services, arriving once board B has been tapped, queued A's characteristics and
+        // B's opening against B's connection.
+        if (gatt !== activeGatt) return
         if (!hasConnectPermission()) return
         if (status != BluetoothGatt.GATT_SUCCESS) {
             failConnected(BoardError.NO_SERVICES)
@@ -436,6 +444,10 @@ class BluetoothBoardManager(private val context: Context) {
      * Short messages -- every acknowledgement, every vendor make's command -- stay one write.
      */
     private fun writesOf(bytes: ByteArray): List<GattOperation.Write> {
+        // Whole, where a write is a command: longer than the link carries in one, it goes as a long
+        // write, which some small modules refuse -- and cut to fit it was three commands, none of
+        // them the one meant, on every board. See the MTU asked for on connecting.
+        if (protocol.writesAreCommands) return listOf(GattOperation.Write(bytes))
         val size = (mtu - ATT_HEADER_BYTES).coerceAtLeast(1)
         return (bytes.indices step size).map { GattOperation.Write(bytes.copyOfRange(it, minOf(it + size, bytes.size))) }
     }
@@ -562,15 +574,20 @@ class BluetoothBoardManager(private val context: Context) {
         val uuid = protocol.ble?.writeCharacteristicUuid ?: return@runCatching false
         val characteristic = gatt.services.flatMap { it.characteristics }
             .firstOrNull { it.uuid == uuid } ?: return@runCatching false
-        frameLog?.record(BoardFrameLog.Direction.TO_BOARD, "BLE", protocol.name, bytes)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            gatt.writeCharacteristic(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) ==
-                BluetoothStatusCodes.SUCCESS
+        val accepted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // The characteristic's own way of being written, as the older call below uses: forced to
+            // a write with response, a board that takes writes without one refused every command on
+            // Android 13 and after, and took them on Android 12.
+            gatt.writeCharacteristic(characteristic, bytes, characteristic.writeType) == BluetoothStatusCodes.SUCCESS
         } else {
             @Suppress("DEPRECATION")
             run { characteristic.value = bytes; gatt.writeCharacteristic(characteristic) }
         }
+        frameLog?.record(
+            if (accepted) BoardFrameLog.Direction.TO_BOARD else BoardFrameLog.Direction.NOT_SENT, "BLE", protocol.name, bytes
+        )
+        accepted
     }.getOrElse {
         Log.w("BluetoothBoardManager", "Could not write to the board", it)
         false
@@ -644,7 +661,11 @@ class BluetoothBoardManager(private val context: Context) {
         _connectionState.value = ConnectionState.Connecting
         _onMoveReceivedCallback = onMoveReceived
         // By name for now; the services found on connecting can still overrule it.
-        protocol = BoardProtocols.forDeviceName(device.name)
+        // A make that has no address on this link is not that make here: a DGT or a Certabo is a
+        // serial board, and a device of that name met over Bluetooth LE -- a Pegasus -- was given
+        // their serial protocol, connected, never written to, and showed nothing, not even the raw
+        // bytes an unknown board shows.
+        protocol = BoardProtocols.forDeviceName(device.name).takeIf { it.ble != null } ?: RawCaptureProtocol
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
         clearGattQueue()

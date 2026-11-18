@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +56,8 @@ fun BluetoothBoardScreen(
     val context = LocalContext.current
     val framesLogged by viewModel.boardFrameLog.count.collectAsState()
     val shareLogLabel = stringResource(R.string.board_share_log)
+    val shareFailed = stringResource(R.string.toast_export_failed)
+    val shareScope = rememberCoroutineScope()
 
     // Which game this is decides what the board is told to set up, so it is read at the moment of
     // connecting rather than assumed to be chess.
@@ -123,7 +126,7 @@ fun BluetoothBoardScreen(
             // What the board has said, for whoever is to make sense of it: a board that connects
             // and gives no moves, or a make the app does not know. Offered once there is something.
             if (framesLogged > 0) {
-                IconButton(onClick = { shareBoardFrameLog(context, viewModel.boardFrameLog, shareLogLabel) }) {
+                IconButton(onClick = { shareScope.launch { shareBoardFrameLog(context, viewModel.boardFrameLog, shareLogLabel, shareFailed) } }) {
                     Icon(Icons.Default.Share, contentDescription = shareLogLabel)
                 }
             }
@@ -158,7 +161,9 @@ fun BluetoothBoardScreen(
             }
         }
     ) { pad ->
-        Column(Modifier.fillMaxSize().padding(pad).padding(16.dp)) {
+        // The page scrolls. It did not, and gave the boards found nearby whatever height the rest
+        // left: with a board on the cable and a few paired devices on a small screen, that was none.
+        Column(Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(16.dp)) {
             // Status Header
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -294,7 +299,7 @@ fun BluetoothBoardScreen(
             Spacer(Modifier.height(8.dp))
 
             if (scannedDevices.isEmpty() && connectionState is ConnectionState.Scanning) {
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth().heightIn(min = NEARBY_MIN_HEIGHT), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(Modifier.height(16.dp))
@@ -302,11 +307,12 @@ fun BluetoothBoardScreen(
                     }
                 }
             } else if (scannedDevices.isEmpty()) {
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth().heightIn(min = NEARBY_MIN_HEIGHT), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.board_none_found), style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
-                LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // A height of its own, as the paired list has: a list inside a page that scrolls.
+                LazyColumn(Modifier.heightIn(max = NEARBY_MAX_HEIGHT), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(scannedDevices) { device ->
                         Surface(
                             onClick = { dropAll(); manager.connect(device.device, gameType) { viewModel.recordBoardMove(it) } },
@@ -336,20 +342,40 @@ fun BluetoothBoardScreen(
  * long session is several hundred kilobytes, more than an intent carries. Under the cache's
  * `shares/`, which the file provider serves, and the ones shared before go as this one is written.
  */
-private fun shareBoardFrameLog(context: android.content.Context, log: com.masterclock.app.logic.BoardFrameLog, title: String) {
+private suspend fun shareBoardFrameLog(
+    context: android.content.Context,
+    log: com.masterclock.app.logic.BoardFrameLog,
+    title: String,
+    failed: String,
+) {
     runCatching {
-        val shares = java.io.File(context.cacheDir, "shares")
-        shares.listFiles()?.filter { it.isDirectory && it.name.startsWith("board-log-") }?.forEach { it.deleteRecursively() }
-        val dir = java.io.File(shares, "board-log-${java.util.UUID.randomUUID()}").apply { mkdirs() }
-        val file = java.io.File(dir, "masterclock_board_log.txt")
-        val about = "MasterClock ${com.masterclock.app.logic.AppInfo.CHANGELOG.first().version}, Android ${Build.VERSION.RELEASE}, ${Build.MANUFACTURER} ${Build.MODEL}"
-        file.writeText(log.text(about))
-        val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        // Off the main thread: a full log is some two megabytes, and while it is written the link's
+        // reader waits on the same lock -- on a board that talks a hundred times a second, the
+        // screen stood still for the length of it.
+        val uri = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val shares = java.io.File(context.cacheDir, "shares")
+            shares.listFiles()?.filter { it.isDirectory && it.name.startsWith("board-log-") }?.forEach { it.deleteRecursively() }
+            val dir = java.io.File(shares, "board-log-${java.util.UUID.randomUUID()}").apply { mkdirs() }
+            val file = java.io.File(dir, "masterclock_board_log.txt")
+            val about = "MasterClock ${com.masterclock.app.logic.AppInfo.CHANGELOG.first().version}, Android ${Build.VERSION.RELEASE}, ${Build.MANUFACTURER} ${Build.MODEL}"
+            file.writeText(log.text(about))
+            androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        }
         val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(android.content.Intent.EXTRA_STREAM, uri)
             addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         context.startActivity(android.content.Intent.createChooser(send, title))
-    }.onFailure { android.util.Log.w("BluetoothBoardScreen", "Could not share the board's log", it) }
+    }.onFailure {
+        // Said, as a failed export is: the button did nothing and said nothing, the cache full or
+        // no app there to take a text file.
+        if (it is kotlinx.coroutines.CancellationException) throw it
+        android.util.Log.w("BluetoothBoardScreen", "Could not share the board's log", it)
+        android.widget.Toast.makeText(context, failed, android.widget.Toast.LENGTH_LONG).show()
+    }
 }
+
+/** The room the boards found nearby are given in a page that scrolls. */
+private val NEARBY_MIN_HEIGHT = 120.dp
+private val NEARBY_MAX_HEIGHT = 360.dp

@@ -1,6 +1,8 @@
 package com.masterclock.app.logic
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -101,13 +103,73 @@ class BoardRoughHandlingTest {
 
     @Test
     fun `a move taken back is heard as the move back, and the one played instead after it`() {
-        // In the middle of a game; at its first move the board is the starting position again, and
-        // that is a new game. The clock goes back to whoever takes their move back, which is theirs.
+        // In the middle of a game, and at its first move too; see the test after this one. The clock
+        // goes back to whoever takes their move back, which is theirs.
         val d4 = e4e5.with("d2.", "d4P")
         assertEquals(
             listOf("e7e5", "d2d4", "d4d2", "g1f3"),
             seen(e4, e4.with("e7."), e4e5, e4e5.with("d2."), d4, d4.with("d4."), e4e5, e4e5.with("g1."), e4e5.with("g1.", "f3N")),
         )
+    }
+
+    @Test
+    fun `a first move taken back is a move, and so is a knight gone home`() {
+        // The pieces back on their squares from one move away are that move undone. Read as a new
+        // game and said nothing of, the clock stayed with Black, and d2d4 was charged to Black.
+        val d4 = start.with("d2.", "d4P")
+        assertEquals(listOf("e2e4", "e4e2", "d2d4"), seen(start, start.with("e2."), e4, e4.with("e4."), start, start.with("d2."), d4))
+        // 1.Nf3 Nf6 2.Ng1 Ng8: the last of them brings the starting position back, and is a move.
+        val nf3 = start.with("g1.", "f3N")
+        val nf6 = nf3.with("g8.", "f6n")
+        val ng1 = start.with("g8.", "f6n")
+        assertEquals(
+            listOf("g1f3", "g8f6", "f3g1", "f6g8"),
+            seen(start, start.with("g1."), nf3, nf3.with("g8."), nf6, nf6.with("f3."), ng1, ng1.with("f6."), start),
+        )
+    }
+
+    @Test
+    fun `the pieces set up again from further away are a new game, and its first move is heard`() {
+        assertEquals(listOf("e7e5", "e2e4"), seen(e4, e4.with("e7."), e4e5, start, start.with("e2."), e4))
+    }
+
+    private val castling = BoardPosition("r...k..r" + "........".repeat(6) + "R...K..R")
+
+    @Test
+    fun `a king slid to its castling square castles, and its rook is not the other player's move`() {
+        // e1, f1, g1: two stretches to anything that compares positions, and a castle all the same.
+        // Neither stretch said so, and the rook that followed was reported as a move.
+        val kingOnF = castling.with("e1.", "f1K")
+        val kingOnG = castling.with("e1.", "g1K")
+        val castled = kingOnG.with("h1.", "f1R")
+        assertEquals(
+            listOf("e1f1", "f1g1", "e8d8"),
+            seen(
+                castling, castling.with("e1."), kingOnF, castling.with("e1."), kingOnG,
+                kingOnG.with("h1."), castled, castled.with("e8."), castled.with("e8.", "d8k"),
+            ),
+        )
+        // The two stretches are one move to the clock; see recordBoardMove.
+        assertEquals("e1g1", BoardDiffer.slideOf("e1f1", "f1g1"))
+    }
+
+    @Test
+    fun `a castling rook that rests on a square on its way is still the castle's`() {
+        // Long: the king in one go, then the rook a1, b1, d1. Its first stretch was a move.
+        val kingOnC = castling.with("e1.", "c1K")
+        val rookOnB = kingOnC.with("a1.", "b1R")
+        val castled = kingOnC.with("a1.", "d1R")
+        assertEquals(
+            listOf("e1c1", "e8d8"),
+            seen(
+                castling, castling.with("e1."), kingOnC, kingOnC.with("a1."), rookOnB, kingOnC.with("a1."), castled,
+                castled.with("e8."), castled.with("e8.", "d8k"),
+            ),
+        )
+        assertTrue(BoardDiffer.isOnTheWay("a1b1", "a1d1"))
+        assertFalse(BoardDiffer.isOnTheWay("a1d1", "a1d1"))
+        assertFalse(BoardDiffer.isOnTheWay("a1e1", "a1d1"))
+        assertFalse(BoardDiffer.isOnTheWay("h1g1", "a1d1"))
     }
 
     @Test
@@ -138,6 +200,29 @@ class BoardRoughHandlingTest {
         assertEquals(
             listOf("e2e4", "e7e5"),
             dgt(dump, u("e4P"), SimulatedBoard.frameOf(DgtProtocol, e4), u("e7."), u("e5p")),
+        )
+    }
+
+    @Test
+    fun `a DGT played from the other side is read the right way round`() {
+        // Every square on the far side: the dump is the starting position turned, and each change
+        // after it names a square in the board's numbering, not the players'.
+        fun turnedSquare(edit: String) = SimulatedBoard.dgtSquare(BoardPosition.SQUARE_COUNT - 1 - sq(edit.substring(0, 2)), edit[2])
+        assertEquals(
+            listOf("e2e4", "e7e5"),
+            dgt(
+                SimulatedBoard.frameOf(DgtProtocol, start.turned()),
+                turnedSquare("e2."), turnedSquare("e4P"), turnedSquare("e7."), turnedSquare("e5p"),
+            ),
+        )
+        // And one that reached its starting position a square at a time, with no dump to say so.
+        assertEquals(
+            listOf("g1f3", "f3g1", "e2e4"),
+            dgt(
+                SimulatedBoard.frameOf(DgtProtocol, start.turned()),
+                turnedSquare("g1."), turnedSquare("f3N"), turnedSquare("f3."), turnedSquare("g1N"),
+                turnedSquare("e2."), turnedSquare("e4P"),
+            ),
         )
     }
 

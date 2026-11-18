@@ -55,9 +55,18 @@ class UsbBoardManager(private val context: Context) {
         const val READ_TIMEOUT_MS = 500
 
         const val ACTION_USB_PERMISSION = "com.masterclock.app.USB_PERMISSION"
+
+        /** The makers of the serial bridges boards are built around: FTDI, Silicon Labs (CP210x), WCH (CH340), Prolific. */
+        private val SERIAL_BRIDGE_VENDORS = setOf(0x0403, 0x10C4, 0x1A86, 0x067B)
     }
 
-    private val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+    /**
+     * Null on a device whose system starts no USB service -- some television boxes, watches, car
+     * units -- where the app still installs, usb.host not being required. A hard cast threw there,
+     * and this manager is built as the ViewModel starts: Complete closed at every launch. The
+     * Bluetooth manager guards the same lookup for the same reason.
+     */
+    private val usbManager = context.getSystemService(Context.USB_SERVICE) as? UsbManager
 
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Idle)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
@@ -179,13 +188,14 @@ class UsbBoardManager(private val context: Context) {
 
     /** USB needs no scanning: what is plugged in is already known. */
     fun refreshDevices() {
-        _attachedDevices.value = usbManager.deviceList.values.map { it.toCandidate() }
+        _attachedDevices.value = usbManager?.deviceList?.values.orEmpty().map { it.toCandidate() }
     }
 
     fun connect(candidateId: String, gameType: GameType, onMoveReceived: (String) -> Unit) {
         this.gameType = gameType
-        val device = usbManager.deviceList.values.firstOrNull { it.deviceName == candidateId }
-        if (device == null) {
+        val usb = usbManager
+        val device = usb?.deviceList?.values?.firstOrNull { it.deviceName == candidateId }
+        if (usb == null || device == null) {
             _connectionState.value = ConnectionState.Error(BoardError.UNPLUGGED)
             return
         }
@@ -208,14 +218,14 @@ class UsbBoardManager(private val context: Context) {
         // Known from here on, so that unplugging it during the attempt is noticed.
         connectedDevice = device
 
-        if (usbManager.hasPermission(device)) {
+        if (usb.hasPermission(device)) {
             openDevice(device)
         } else {
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
             val intent = PendingIntent.getBroadcast(
                 context, 0, Intent(ACTION_USB_PERMISSION).setPackage(context.packageName), flags
             )
-            usbManager.requestPermission(device, intent)
+            usb.requestPermission(device, intent)
         }
     }
 
@@ -242,12 +252,18 @@ class UsbBoardManager(private val context: Context) {
             }
         }
         val serialInterface = device.findCdcDataInterface()
-        if (serialInterface == null) {
+        // A serial bridge -- FTDI, Silicon Labs, WCH, Prolific -- shows a vendor's interface with an
+        // endpoint to read, and was opened as if that were enough: its line never set, its own
+        // requests never made, the screen said Connected and the board said nothing, for ever. It
+        // needs a driver this app does not have, and the error for that says so.
+        if (serialInterface == null ||
+            (serialInterface.interfaceClass == UsbConstants.USB_CLASS_VENDOR_SPEC && device.vendorId in SERIAL_BRIDGE_VENDORS)
+        ) {
             failed(BoardError.NEEDS_DRIVER)
             return
         }
 
-        val opened = usbManager.openDevice(device)
+        val opened = usbManager?.openDevice(device)
         if (opened == null) {
             failed(BoardError.CANNOT_OPEN)
             return
@@ -272,10 +288,12 @@ class UsbBoardManager(private val context: Context) {
             opened.configureCdcLine(device.cdcControlInterfaceId() ?: serialInterface.id, protocol.usbBaudRate)
         }
         // Several makes report nothing until asked; Chessnut is one of them.
-        protocol.initCommandFor(gameType)?.let { command ->
+        protocol.initCommandsFor(gameType).forEach { command ->
             serialInterface.findEndpoint(UsbConstants.USB_DIR_OUT)?.let { endpointOut ->
-                frameLog?.record(BoardFrameLog.Direction.TO_BOARD, "USB", protocol.name, command)
-                opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS)
+                val sent = opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS) >= 0
+                frameLog?.record(
+                    if (sent) BoardFrameLog.Direction.TO_BOARD else BoardFrameLog.Direction.NOT_SENT, "USB", protocol.name, command
+                )
             }
         }
 

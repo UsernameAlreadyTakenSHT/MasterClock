@@ -96,8 +96,9 @@ Once a board has said anything, a **share** button appears in the screen's bar. 
 app a text file, `masterclock_board_log.txt`, of what the board and the app said to each other in
 the last minutes: when, which way, over which link, under which protocol, and the bytes. It names
 the app's version, Android's and the phone's model, and neither the board nor its address. It is
-what to send when a board does not work, or for a make the app does not know. It is kept in memory
-only, and is gone when the app closes.
+what to send when a board does not work, or for a make the app does not know. The log itself is
+kept in memory only and is gone when the app closes; a file you have shared stays in the app's
+private cache until the next one replaces it, or until the app's cache is cleared.
 
 A piece slid from one square to another that rests on a square on its way is one move: the turn
 passes when it first comes to rest, and the record names the square it ended on.

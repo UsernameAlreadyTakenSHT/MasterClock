@@ -64,6 +64,27 @@ class BoardFrameLogTest {
     }
 
     @Test
+    fun `a write the link refused is marked as not sent, and the seconds are in plain digits`() {
+        val before = java.util.Locale.getDefault()
+        try {
+            // A phone set to Arabic: its own digits, in a file meant for a maintainer or a script.
+            java.util.Locale.setDefault(java.util.Locale.forLanguageTag("ar-EG"))
+            val log = log()
+            clock += 12_345
+            log.record(Direction.NOT_SENT, "BLE", "Open BLE board", "begin".toByteArray())
+            val text = log.text("test")
+            assertTrue(text, text.contains("0.000 ! BLE Open_BLE_board 62 65 67 69 6E"))
+            assertTrue(text.contains("! meant for it and not sent"))
+            assertEquals(Direction.NOT_SENT, BoardFrameLog.parse(text).single().direction)
+            clock += 1_500
+            log.record(Direction.FROM_BOARD, "BLE", "Open BLE board", byteArrayOf(0x0A))
+            assertTrue(log.text("test").contains("1.500 < BLE Open_BLE_board 0A"))
+        } finally {
+            java.util.Locale.setDefault(before)
+        }
+    }
+
+    @Test
     fun `a frame longer than is kept is cut, and says so`() {
         val log = log()
         log.record(Direction.FROM_BOARD, "USB", "Raw", ByteArray(BoardFrameLog.MAX_FRAME_BYTES + 20) { 0x55 })

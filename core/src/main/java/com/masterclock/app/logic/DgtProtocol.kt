@@ -79,7 +79,10 @@ object DgtProtocol : BoardProtocol {
         for (square in 0 until BoardPosition.SQUARE_COUNT) {
             squares[square] = pieceOf(payload[HEADER_SIZE + square]) ?: return BoardReport.Ignored
         }
-        return BoardReport.Position(BoardPosition(String(squares)))
+        // It may be turned: an e-Board has no side it must be played from, and one played from the
+        // other sends the same bytes with every square on the far side. The tracker tells which from
+        // the pieces set up, as it does for a ChessLink.
+        return BoardReport.Position(BoardPosition(String(squares)), mayBeTurned = true)
     }
 
     private fun decodeFieldUpdate(payload: ByteArray): BoardReport {

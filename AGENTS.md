@@ -191,6 +191,23 @@ Two source sets matter:
 Keeping the stubs in step is the point: adding a Complete-only screen means adding its stub, or the
 three reduced flavors stop compiling. That is deliberate — it fails loudly instead of at runtime.
 
+A second pair works the same way, by **build type** rather than by flavor: the simulated boards,
+which only the debug build has.
+
+- `core/src/debug/` — `SimulatedBoard`, `BoardListener` and `SimulatedBoardManager`. In `core`'s
+  debug variant alone; no release holds them.
+- `core/src/testDebug/` — the unit tests that play through them. They cannot live in
+  `core/src/test`: that set compiles for the release variant too, where the simulator is not.
+- `app/src/simulatedBoard/` — the `SimulatedBoardSlot` that draws the boards, compiled by `debug`.
+- `app/src/noSimulatedBoard/` — the `SimulatedBoardSlot` that is nothing, compiled by `release` and
+  `debugOptimized`. Wired in `app/build.gradle.kts`.
+
+The two `SimulatedBoardSlot` objects must keep the same members, as the stubs must. **A new build
+type needs one of the two directories added for it**, or it fails on `Unresolved reference
+SimulatedBoardSlot`. And the bar above builds releases only: `app/src/simulatedBoard` is compiled
+by nothing in it, nor by either CI, so a change there is checked with
+`./gradlew :app:compileCompleteDebugKotlin` or by building the connected tests.
+
 ## Traps that have actually cost time here
 
 - **`kotlin.directories.add("src/reduced/java")`, never `java.srcDir`.** These sources are `.kt`;

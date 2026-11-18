@@ -201,9 +201,11 @@ class BluetoothSerialBoardManager(private val context: Context) {
 
 
         // Several makes report nothing until asked; DGT wants a dump before update mode.
-        protocol.initCommandFor(gameType)?.let { command ->
-            frameLog?.record(BoardFrameLog.Direction.TO_BOARD, "BT-serial", protocol.name, command)
-            runCatching { opened.outputStream.write(command); opened.outputStream.flush() }
+        protocol.initCommandsFor(gameType).forEach { command ->
+            val sent = runCatching { opened.outputStream.write(command); opened.outputStream.flush() }.isSuccess
+            frameLog?.record(
+                if (sent) BoardFrameLog.Direction.TO_BOARD else BoardFrameLog.Direction.NOT_SENT, "BT-serial", protocol.name, command
+            )
         }
 
         val input = opened.inputStream

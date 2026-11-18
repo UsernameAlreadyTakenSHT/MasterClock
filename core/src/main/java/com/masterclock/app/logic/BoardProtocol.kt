@@ -57,6 +57,13 @@ interface BoardProtocol {
      */
     fun initCommandsFor(gameType: GameType): List<ByteArray> = listOfNotNull(initCommandFor(gameType))
 
+    /**
+     * Whether the board takes each write for a whole command, as the open protocol's do. A link then
+     * never cuts a command to fit: cut in three, `begin` and its position were one command with half
+     * a position and two the board does not know.
+     */
+    val writesAreCommands: Boolean get() = false
+
     /** Whether an advertised Bluetooth name looks like this make. */
     fun matchesDeviceName(deviceName: String?): Boolean = false
 
@@ -183,25 +190,44 @@ class BoardMoveTracker {
     /** Whether this board stands turned half way round; see [BoardReport.Position.mayBeTurned]. */
     private var turned = false
 
+    /**
+     * The board as it last reported itself, before any turning, and whether it may be turned. A make
+     * that names one square at a time names it in the board's own numbering, so its changes are
+     * applied here and the result read as a whole position would be: applied to the position already
+     * turned, a turned board's squares landed on the wrong side, and the pieces set up again were
+     * never seen as a start, a whole position being the only thing that asked.
+     */
+    private var seen: BoardPosition? = null
+    private var seenMayBeTurned = false
+
+    /** The position before [previousMove], for a piece that goes on from where that move ended. */
+    private var beforePrevious: BoardPosition? = null
+
     /** Whether a tag-reading board still needs the pieces set up before it can be understood. */
     val needsCalibration: Boolean get() = !calibration.isCalibrated
 
     fun onReport(report: BoardReport): List<String> = when (report) {
         is BoardReport.Moves -> report.moves
         is BoardReport.Raw, is BoardReport.Ignored -> emptyList()
-        is BoardReport.Position -> applyPosition(upright(report))
+        is BoardReport.Position -> {
+            seen = report.position
+            seenMayBeTurned = report.mayBeTurned
+            applyPosition(upright(report))
+        }
         is BoardReport.TaggedSquares ->
             calibration.identify(report.tags)?.let { applyPosition(it) } ?: emptyList()
         is BoardReport.SquareChanged -> {
             // Without a full dump first there is nothing to apply this to: a single square says
             // where one piece is, not where the other thirty-one are.
-            val base = current
+            val base = seen
             if (base == null) {
                 emptyList()
             } else {
                 val squares = base.squares.toCharArray()
                 squares[report.squareIndex] = report.piece
-                applyPosition(BoardPosition(String(squares)))
+                val next = BoardPosition(String(squares))
+                seen = next
+                applyPosition(upright(BoardReport.Position(next, seenMayBeTurned)))
             }
         }
     }
@@ -256,11 +282,16 @@ class BoardMoveTracker {
         // game's final position, every report differed from it by more than one move, and no move was
         // recognised again until the board was reconnected, with nothing on screen to say so. The
         // same for a board connected empty, or half set up.
-        if (position == BoardPosition.STARTING && from != position) {
+        // From further than one move away, that is. One move from the start, the pieces back on
+        // their squares are that move taken back, or a knight gone home, and both are moves: said
+        // nothing of, a first move taken back left the clock with the other player and every move
+        // after it was charged to the wrong one, and 1.Nf3 Nf6 2.Ng1 Ng8 lost its last move.
+        if (position == BoardPosition.STARTING && from != position && BoardDiffer.moveBetween(from, position) == null) {
             settled = position
             secondHalf = null
             captureToClear = null
             previousMove = null
+            beforePrevious = null
             return emptyList()
         }
         val ghost = captureToClear
@@ -285,8 +316,28 @@ class BoardMoveTracker {
             // BoardDiffer.completesCastle. The rook after its king is the castle already reported.
             return if (BoardDiffer.completesCastle(previousMove, move)) listOf(move) else emptyList()
         }
-        previousMove = move
-        secondHalf = BoardDiffer.secondHalfOf(move, from)
+        // The rook of a castle resting on a square on its way to its own: still the castle's, and
+        // the rest of its way is what is waited for now. It was a move of its own, and passed the turn.
+        val awaited = secondHalf
+        if (awaited != null && BoardDiffer.isOnTheWay(move, awaited)) {
+            secondHalf = move.substring(2, 4) + awaited.substring(2, 4)
+            return emptyList()
+        }
+        // A piece going on from where its last move ended is the same move, slid across a square;
+        // see BoardDiffer.slideOf. Both stretches are still reported -- the clock joins them, having
+        // the time to tell a slide by -- but what the move is, is asked of the whole: a king slid from
+        // e1 through f1 to g1 castles, and neither e1f1 nor f1g1 said so, so the rook that followed
+        // was a move, the other player's.
+        val slidFrom = beforePrevious
+        val whole = BoardDiffer.slideOf(previousMove, move)
+        if (whole != null && slidFrom != null) {
+            previousMove = whole
+            secondHalf = BoardDiffer.secondHalfOf(whole, slidFrom)
+        } else {
+            beforePrevious = from
+            previousMove = move
+            secondHalf = BoardDiffer.secondHalfOf(move, from)
+        }
         captureToClear = BoardDiffer.capturedEnPassantBy(move, from)
         return listOf(move)
     }
@@ -307,9 +358,12 @@ class BoardMoveTracker {
         settled = null
         current = null
         turned = false
+        seen = null
+        seenMayBeTurned = false
         secondHalf = null
         captureToClear = null
         previousMove = null
+        beforePrevious = null
         // A different set of pieces may be on the next board, so the learned tags go too.
         calibration.reset()
     }

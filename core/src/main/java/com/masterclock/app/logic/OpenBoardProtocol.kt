@@ -71,6 +71,8 @@ object OpenBoardProtocol : BoardProtocol {
      * and `set_variant` and `begin` sent as two lines of one write were a variant of that name. Both
      * were sent so, from a reading of the protocol and never against a board or its library.
      */
+    override val writesAreCommands = true
+
     override fun initCommandsFor(gameType: GameType): List<ByteArray> = when (gameType) {
         GameType.DRAUGHTS -> listOf("$SET_VARIANT $DRAUGHTS_VARIANT", "$BEGIN $DRAUGHTS_FEN w")
         else -> listOf("$BEGIN $CHESS_FEN w")

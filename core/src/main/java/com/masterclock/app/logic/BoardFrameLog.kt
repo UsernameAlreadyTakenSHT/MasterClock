@@ -26,7 +26,12 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val now: () -> Long = System::currentTimeMillis) {
 
-    enum class Direction(val mark: Char) { FROM_BOARD('<'), TO_BOARD('>') }
+    /**
+     * [NOT_SENT] is a write the link refused: the bytes the app meant for the board, and did not
+     * get to it. Written down as sent, they told whoever read the log that the board had been asked
+     * and had not answered, when it had never been asked.
+     */
+    enum class Direction(val mark: Char) { FROM_BOARD('<'), TO_BOARD('>'), NOT_SENT('!') }
 
     /** One frame; [atMs] is counted from the first frame of the log. */
     data class Frame(val atMs: Long, val direction: Direction, val link: String, val protocol: String, val hex: String)
@@ -77,7 +82,7 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
         append("# ").append(frames.size).append(" frames")
         if (dropped > 0) append(", ").append(dropped).append(" earlier ones not kept")
         append('\n')
-        append("# seconds  < from the board, > to it  link  protocol  bytes\n")
+        append("# seconds  < from the board, > to it, ! meant for it and not sent  link  protocol  bytes\n")
         frames.forEach { append(it.line()).append('\n') }
     }
 
@@ -93,7 +98,7 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
         const val HEADER = "MasterClock board frame log, version 1"
 
         private fun ByteArray.toHex(): String =
-            take(MAX_FRAME_BYTES).joinToString(" ") { "%02X".format(it.toInt() and 0xFF) } + if (size > MAX_FRAME_BYTES) " ..." else ""
+            take(MAX_FRAME_BYTES).joinToString(" ") { "%02X".format(java.util.Locale.ROOT, it.toInt() and 0xFF) } + if (size > MAX_FRAME_BYTES) " ..." else ""
 
         /** One word, so that a line splits on spaces whatever a protocol or a link is called. */
         private fun String.clean(): String = trim().replace(Regex("\\s+"), "_").ifEmpty { "-" }
@@ -102,7 +107,9 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
         fun nameInLog(name: String): String = name.clean()
 
         private fun Frame.line(): String =
-            "%d.%03d %c %s %s %s".format(atMs / 1000, atMs % 1000, direction.mark, link, protocol, hex)
+            // Locale.ROOT: a phone set to Arabic or Persian wrote the seconds in its own digits, in a
+            // file meant for whoever maintains the app, or for a script.
+            "%d.%03d %c %s %s %s".format(java.util.Locale.ROOT, atMs / 1000, atMs % 1000, direction.mark, link, protocol, hex)
 
         /**
          * The frames of a log written by [text], for playing it back. A line that is not a frame --

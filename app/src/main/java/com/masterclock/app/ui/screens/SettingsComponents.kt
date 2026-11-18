@@ -1,6 +1,8 @@
 package com.masterclock.app.ui.screens
 
+import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.animation.core.tween
@@ -983,10 +985,16 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
             }
             if (FlavorConfig.currentFlavor != AppFlavor.MINI) {
                 Surface(
-                    onClick = { moreModes = !moreModes },
+                    // Not over the mode in use. It opened itself for such a mode and then closed on
+                    // a tap like any other time: the nine cards went, the chosen one with them, and
+                    // no card in the grid was lit -- what the notes of 0.8.45 said could not happen.
+                    onClick = { if (!foldedMode) moreModes = !moreModes },
                     shape = RoundedCornerShape(12.dp),
                     color = Color.Transparent,
-                    modifier = Modifier.fillMaxWidth().testTag("more_modes"),
+                    // Open or closed, in the system's own words: the row read "More modes" either way.
+                    modifier = Modifier.fillMaxWidth().testTag("more_modes").semantics {
+                        if (moreModes) collapse { if (!foldedMode) moreModes = false; !foldedMode } else expand { moreModes = true; true }
+                    },
                 ) {
                     Row(
                         Modifier.fillMaxWidth().heightIn(min = 44.dp).padding(horizontal = 8.dp),

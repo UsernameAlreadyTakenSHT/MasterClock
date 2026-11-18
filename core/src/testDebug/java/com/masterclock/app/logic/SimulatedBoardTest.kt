@@ -54,7 +54,10 @@ class SimulatedBoardTest {
             MillenniumProtocol.decode(SimulatedBoard.framesOf(MillenniumProtocol).first()),
         )
         assertEquals(BoardReport.Position(BoardPosition.STARTING), ChessnutProtocol.decode(SimulatedBoard.framesOf(ChessnutProtocol).first()))
-        assertEquals(BoardReport.Position(BoardPosition.STARTING), DgtProtocol.decode(SimulatedBoard.framesOf(DgtProtocol).first()))
+        assertEquals(
+            BoardReport.Position(BoardPosition.STARTING, mayBeTurned = true),
+            DgtProtocol.decode(SimulatedBoard.framesOf(DgtProtocol).first()),
+        )
         // DGT then names one square at a time: e2 empties, before e4 fills.
         assertEquals(BoardReport.SquareChanged(52, BoardPosition.EMPTY), DgtProtocol.decode(SimulatedBoard.framesOf(DgtProtocol)[1]))
         assertEquals(BoardReport.SquareChanged(36, 'P'), DgtProtocol.decode(SimulatedBoard.framesOf(DgtProtocol)[2]))

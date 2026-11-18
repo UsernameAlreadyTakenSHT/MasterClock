@@ -56,7 +56,9 @@ object AppInfo {
                 Note("Modes: the six most played stay in sight, and More modes opens the others. What a mode is set with shows without scrolling. FIDE Periods is third, not ninth.", FULL_MODES),
                 Note("A connected board's screen keeps what the board said in the last minutes, and shares it as a text file: what to send when a board does not work.", COMPLETE_ONLY),
                 Note("Connected board, still not tried on a real one: a piece slid across a square is one move, not two; a Certabo's lines are read; a Millennium that lost a notification is heard again; a pawn changed for a queen no longer ends the reading of moves.", COMPLETE_ONLY),
-                Note("Omni-Timer, screen off: the phone is kept awake for whichever of its clocks ends first, not for the turn's alone.", FULL_MODES),
+                // Complete and Standard: the builds that keep a clock running in the background. Lite
+                // has Omni and neither the service nor the wake lock, and was told of this all the same.
+                Note("Omni-Timer, screen off: the phone is kept awake for whichever of its clocks ends first, not for the turn's alone.", BEHAVIOUR_TAB),
                 Note("Translations: words that disagreed between two screens agree, in Spanish, Portuguese, Brazilian, French, German and Italian. Off, in the Omni settings, is Sans, Sin, Sem.", FULL_MODES),
                 Note("Nothing changes in this build. This release is about the modes screen, Omni-Timer and the connected board, which this build does not have.", setOf(AppFlavor.MINI, AppFlavor.E_INK)),
             ),
@@ -71,7 +73,8 @@ object AppInfo {
                 Note("A text note's insert panel gives way to the keyboard when it comes back.", COMPLETE_ONLY),
                 Note("Move Counts, Count Down: the game ends once every player has played their moves. It ended as the first reached zero, a move short for whoever moves second.", FULL_MODES),
                 Note("Move Timer Global under Flag: a clock whose total is gone stays at 0:00. And the arbiter's correction of a move count stops at the Flag Cap.", BEHAVIOUR_TAB),
-                Note("Omni-Timer: the phone is kept awake through the pause between turns, a time bank no longer fills from turns with no clock, and a turn the clock ended is saved.", FULL_MODES),
+                Note("Omni-Timer: a time bank no longer fills from turns with no clock, and a turn the clock ended is saved.", FULL_MODES),
+                Note("Omni-Timer, screen off: the phone is kept awake through the pause between turns.", BEHAVIOUR_TAB),
                 Note("A game imported from a file starts as a game starts, not already flagged.", COMPLETE_ONLY),
                 Note("Nothing changes in this build. This release is about the phone app: a byoyomi read aloud, and a game that comes back where it stopped.", E_INK_ONLY),
             ),

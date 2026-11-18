@@ -279,6 +279,19 @@ object BoardDiffer {
         return previous.substring(0, 2) + move.substring(2)
     }
 
+    /**
+     * Whether [move] is the first stretch of [whole]: the same piece leaving the same square along
+     * the same rank, and resting short of where [whole] ends. A castling rook slid from a1 to d1
+     * that rests on b1 is "a1b1" before it is "b1d1".
+     */
+    fun isOnTheWay(move: String, whole: String): Boolean {
+        if (!SQUARES.matches(move) || !SQUARES.matches(whole)) return false
+        if (move.substring(0, 2) != whole.substring(0, 2) || move[1] != move[3] || whole[1] != whole[3]) return false
+        val low = minOf(whole[0], whole[2])
+        val high = maxOf(whole[0], whole[2])
+        return move[2] > low && move[2] < high
+    }
+
     private val SQUARES = Regex("[a-h][1-8][a-h][1-8][qrbn]?")
 
     /** Each castle's king move, and the rook move that can come before it. */

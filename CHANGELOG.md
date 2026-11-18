@@ -11,7 +11,7 @@ translations stop contradicting themselves from one screen to the next.
 - **Translations.** Eighteen read-throughs of the seven languages found no broken text and a number of words that disagreed between two screens. Spanish says *retardo* for the delay everywhere, and no longer has two buttons reading EMPEZAR; Portuguese abbreviates a turn T, for Turno; French, German and Italian lose a stray word each; Brazilian loses two European turns of phrase. Off, in the Omni settings, is *Sans*, *Sin*, *Sem* rather than "no". The manual names Cumulative Transfer as each language's screen shows it.
 
 ### Fixed
-- **Omni-Timer, screen off**: the phone was kept awake for the turn's clock alone. A round's, a game's or the session's limit ending first was slept through, and with the turn clock off nothing kept it awake at all. It is kept awake for whichever clock ends first.
+- **Omni-Timer, screen off** (Complete, Standard): the phone was kept awake for the turn's clock alone. A round's, a game's or the session's limit ending first was slept through, and with the turn clock off nothing kept it awake at all. It is kept awake for whichever clock ends first.
 - **Connected board** (Complete; still not tried on a real board, and read against other people's drivers instead):
   - A piece slid from one square to another that rests on a square on its way is one move. It was two, and passed the turn twice.
   - A Certabo's lines carry a mark before their numbers, and every one of them was set aside: connected, and no move ever.

@@ -37,7 +37,7 @@ class DgtProtocolTest {
     @Test
     fun `a board dump decodes to the position`() {
         val report = DgtProtocol.decode(boardDump(BoardPosition.STARTING))
-        assertEquals(BoardReport.Position(BoardPosition.STARTING), report)
+        assertEquals(BoardReport.Position(BoardPosition.STARTING, mayBeTurned = true), report)
     }
 
     @Test

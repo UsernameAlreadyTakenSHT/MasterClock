@@ -183,10 +183,14 @@ class BackgroundClockService : Service() {
 
         /** Back in front, or the game no longer running: the notification goes. */
         fun stop(context: Context) {
+            // By emptying what the service watches, and by that alone: it stops itself on seeing it
+            // (see onCreate), which it can only do once it has gone to the foreground. stopService
+            // from here could reach Android before that, when the app was left and come back to
+            // within a few tens of milliseconds, and a service started for the foreground and
+            // stopped before saying so closes the app.
             BackgroundClockLink.clock.value = null
             BackgroundClockLink.pause = null
             BackgroundClockLink.owner = null
-            context.stopService(Intent(context, BackgroundClockService::class.java))
         }
 
         /**
