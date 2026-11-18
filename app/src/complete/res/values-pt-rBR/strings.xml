@@ -71,7 +71,7 @@
     <string name="guide_move_global_shared_desc">Todos os jogadores compartilham uma reserva global e têm ainda um relógio de lance próprio.</string>
     <string name="guide_chrono_one_for_all_desc">Não é um modo à parte: é uma opção de Countdown e Countup. Ativada, um só relógio corre para toda a mesa, e pressioná-lo não muda de jogador.</string>
     <string name="guide_hourglass_desc">O tempo que um jogador perde é somado ao adversário. O tempo total se mantém constante.</string>
-    <string name="guide_fast_move_desc">Premia os lances rápidos. Accelerate: quanto mais você pensa, mais rápido corre seu relógio. Transfer: o próximo lance do adversário recebe o tempo por lance mais o tempo que você acabou de gastar, e o seu recomeça no tempo por lance; com Cumulative Transfer ele se soma ao que resta a ele, e você fica com o que tinha.</string>
+    <string name="guide_fast_move_desc">Premia os lances rápidos. Accelerate: quanto mais você pensa, mais rápido corre seu relógio. Transfer: o próximo lance do adversário recebe o tempo por lance mais o tempo que você acabou de gastar, e o seu recomeça no tempo por lance; com Transfer cumulativo ele se soma ao que resta a ele, e você fica com o que tinha.</string>
     <string name="guide_staircase_desc">O tempo de cada lance muda em um passo fixo. Down: cada lance tem menos tempo, até um mínimo. Up: cada lance tem mais, até um máximo.</string>
     <string name="guide_sudden_death_standard_desc">Contagem pura. O primeiro jogador a chegar a 0:00 perde ou deixa cair a bandeira.</string>
     <string name="guide_hidden_desc">Um tempo sorteado ao acaso e escondido. Com as porcentagens ativas, aparece por um instante ao passar por 50, 25, 10, 5, 2 e 1 %.</string>
