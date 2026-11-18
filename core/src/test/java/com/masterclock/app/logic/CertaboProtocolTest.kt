@@ -24,7 +24,7 @@ class CertaboProtocolTest {
         val tags = arrayOfNulls<String>(BoardPosition.SQUARE_COUNT)
         var chip = 1
         for (index in 0 until BoardPosition.SQUARE_COUNT) {
-            if (BoardPosition.STARTING[index] != BoardPosition.EMPTY) tags[index] = "0-0-0-0-${chip++}"
+            if (BoardPosition.STARTING[index] != BoardPosition.EMPTY) tags[index] = "21-34-56-78-${chip++}"
         }
         return tags.toList()
     }
@@ -65,9 +65,31 @@ class CertaboProtocolTest {
     }
 
     @Test
-    fun `a frame with something that is not a number is ignored`() {
-        val text = String(frame(startingTags()), Charsets.US_ASCII).replaceFirst("0", "x")
+    fun `a frame with something that is not a number in place of one is ignored`() {
+        val text = String(frame(startingTags()), Charsets.US_ASCII).replaceFirst("21", "x")
         assertEquals(BoardReport.Ignored, CertaboProtocol.decode(text.toByteArray(Charsets.US_ASCII)))
+    }
+
+    @Test
+    fun `a line is read with a mark in front of its numbers and whatever follows them`() {
+        // As certabo-lichess takes a line: its first character and its last three are not numbers.
+        val plain = CertaboProtocol.decode(frame(startingTags()))
+        val numbers = String(frame(startingTags()), Charsets.US_ASCII).trim()
+        listOf(":$numbers \r\n", ":$numbers\r\n", "L$numbers L\r\n", " $numbers\n").forEach { line ->
+            assertEquals(line.take(1), plain, CertaboProtocol.decode(line.toByteArray(Charsets.US_ASCII)))
+        }
+    }
+
+    @Test
+    fun `a stray byte on an empty square is still an empty square`() {
+        // Three zeroes of the five, as the driver counts it; a chip's five bytes are never that bare.
+        val text = String(frame(List<String?>(BoardPosition.SQUARE_COUNT) { null }), Charsets.US_ASCII)
+            .replaceFirst("0 0 0 0 0", "0 0 7 0 0").replaceFirst("0 0 0 0 0 0 0 0 0 0", "0 0 0 0 0 9 0 0 0 4")
+        val report = CertaboProtocol.decode(text.toByteArray(Charsets.US_ASCII)) as BoardReport.TaggedSquares
+        assertTrue(report.tags.all { it == null })
+        // And three bytes of a chip are a piece.
+        val piece = text.replaceFirst("0 0 7 0 0", "5 0 7 0 3")
+        assertEquals("5-0-7-0-3", (CertaboProtocol.decode(piece.toByteArray(Charsets.US_ASCII)) as BoardReport.TaggedSquares).tags[0])
     }
 
     @Test
@@ -86,7 +108,7 @@ class CertaboProtocolTest {
         val calibration = PieceTagCalibration()
         // A position that is not the starting one teaches nothing, so it cannot be read either.
         val tags = arrayOfNulls<String>(BoardPosition.SQUARE_COUNT)
-        tags[indexOf("e4")] = "0-0-0-0-1"
+        tags[indexOf("e4")] = "21-34-56-78-1"
         assertNull(calibration.identify(tags.toList()))
         assertFalse(calibration.isCalibrated)
     }

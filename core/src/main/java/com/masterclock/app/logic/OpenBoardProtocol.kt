@@ -43,7 +43,7 @@ object OpenBoardProtocol : BoardProtocol {
      * `begin` is not optional and it is not `get_state`: that one is a feature a board may or may
      * not implement, and a conformant board sent it instead of `begin` simply waits, saying nothing.
      */
-    override val initCommand = "$BEGIN $CHESS_FEN w\n".toByteArray(Charsets.US_ASCII)
+    override val initCommand = "$BEGIN $CHESS_FEN w".toByteArray(Charsets.US_ASCII)
 
     /**
      * The opening for a given game.
@@ -62,11 +62,19 @@ object OpenBoardProtocol : BoardProtocol {
      * plays it, and the protocol has no variant for it either. It falls back to chess rather than
      * inventing something.
      */
-    override fun initCommandFor(gameType: GameType): ByteArray = when (gameType) {
-        GameType.DRAUGHTS ->
-            "$SET_VARIANT $DRAUGHTS_VARIANT\n$BEGIN $DRAUGHTS_FEN w\n".toByteArray(Charsets.US_ASCII)
-        else -> initCommand
-    }
+    override fun initCommandFor(gameType: GameType): ByteArray = initCommandsFor(gameType).last()
+
+    /**
+     * A command is one write and nothing ends it. ArduinoBleChess, the board's side of this
+     * protocol, takes the whole of a write as one command, the first space parting its name from
+     * its argument, and knows no newline: one after `begin` was the last character of the position,
+     * and `set_variant` and `begin` sent as two lines of one write were a variant of that name. Both
+     * were sent so, from a reading of the protocol and never against a board or its library.
+     */
+    override fun initCommandsFor(gameType: GameType): List<ByteArray> = when (gameType) {
+        GameType.DRAUGHTS -> listOf("$SET_VARIANT $DRAUGHTS_VARIANT", "$BEGIN $DRAUGHTS_FEN w")
+        else -> listOf("$BEGIN $CHESS_FEN w")
+    }.map { it.toByteArray(Charsets.US_ASCII) }
 
     /**
      * The commands in [payload], one per line.
@@ -123,8 +131,11 @@ object OpenBoardProtocol : BoardProtocol {
      */
     override fun replyTo(payload: ByteArray): ByteArray? {
         // One "ok" per move, however many arrived together; see commandsIn.
-        val moves = commandsIn(payload).count { (command, _) -> command == MOVE }
-        return if (moves == 0) null else "$OK\n".repeat(moves).toByteArray(Charsets.US_ASCII)
+        // One, and bare: the board holds one move waiting for its answer, and takes a write for a
+        // command whole. What is read stays lenient about lines; what is written is as the board
+        // reads it.
+        val moved = commandsIn(payload).any { (command, _) -> command == MOVE }
+        return if (moved) OK.toByteArray(Charsets.US_ASCII) else null
     }
 
     private const val MOVE = "move"

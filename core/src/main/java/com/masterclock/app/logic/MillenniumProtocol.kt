@@ -47,7 +47,20 @@ object MillenniumProtocol : BoardProtocol {
      * a guess. A byte that is not a reply this app knows is dropped and the search resumes.
      */
     override val framing = StreamFraming { buffer ->
-        REPLY_LENGTHS[stripParity(buffer[0])] ?: StreamFraming.RESYNC
+        val length = REPLY_LENGTHS[stripParity(buffer[0])]
+        when {
+            length == null -> StreamFraming.RESYNC
+            // Not all here yet; the assembler waits on a length longer than what it holds.
+            buffer.size < length -> length
+            // A reply that does not check is not where a reply starts. One notification lost -- they
+            // are sent unacknowledged, and this board sends its position some twenty-five times a
+            // second -- left the stream cut 67 bytes at a time from the middle of one reply to the
+            // middle of the next, each failing its checksum and none read, for as long as the board
+            // stayed connected: it went silent and nothing said why. One byte is dropped instead
+            // and the search resumes, which finds the next real reply within one reply's length.
+            hasValidChecksum(String(CharArray(length) { stripParity(buffer[it]) })) -> length
+            else -> StreamFraming.RESYNC
+        }
     }
 
     override fun decode(payload: ByteArray): BoardReport {

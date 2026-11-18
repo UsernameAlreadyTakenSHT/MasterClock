@@ -112,6 +112,28 @@ object SimulatedBoard {
     }
 
     /**
+     * One position as a make that sends its whole board writes it -- DGT's is its dump -- for what a
+     * game played cleanly never shows: a piece put back, slid, knocked over, a pawn become a queen.
+     * Not for Certabo, whose frame names pieces of wood and not kinds, nor for the open protocol,
+     * which names moves.
+     */
+    fun frameOf(protocol: BoardProtocol, position: BoardPosition): ByteArray {
+        val board = List(BoardPosition.SQUARE_COUNT) { index ->
+            position[index].takeIf { it != BoardPosition.EMPTY }?.let { Piece(index + 1, it) }
+        }
+        return when (protocol) {
+            MillenniumProtocol -> millennium(board)
+            ChessnutProtocol -> chessnut(board)
+            DgtProtocol -> dgtDump(board)
+            else -> throw IllegalArgumentException("${protocol.name} does not send a position")
+        }
+    }
+
+    /** DGT's message for one square changing, [piece] being what stands there now. */
+    fun dgtSquare(squareIndex: Int, piece: Char): ByteArray =
+        dgtUpdate(squareIndex, piece.takeIf { it != BoardPosition.EMPTY }?.let { Piece(0, it) })
+
+    /**
      * A message as the link delivers it. A serial link hands over a stream in slices that fall
      * anywhere, and a make that says how its messages are delimited is given them so: that is the
      * half of the work a whole message at a time would never try.

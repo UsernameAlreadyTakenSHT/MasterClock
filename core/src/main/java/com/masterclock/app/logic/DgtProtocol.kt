@@ -47,6 +47,10 @@ object DgtProtocol : BoardProtocol {
         when {
             buffer[0].toInt() and MESSAGE_BIT == 0 -> StreamFraming.RESYNC
             buffer.size < HEADER_SIZE -> null
+            // The two halves of a length are seven bits each: a top bit in either is the id of the
+            // next message, and this one lost its end. Read as a length, it took the messages that
+            // followed for its own body, a dozen at a time.
+            (buffer[1].toInt() or buffer[2].toInt()) and MESSAGE_BIT != 0 -> StreamFraming.RESYNC
             else -> {
                 val length = ((buffer[1].toInt() and 0x7F) shl 7) or (buffer[2].toInt() and 0x7F)
                 // A message is at least its own header; anything shorter is noise that happened to

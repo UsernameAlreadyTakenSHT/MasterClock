@@ -158,7 +158,13 @@ object BoardDiffer {
         return when {
             // A quiet move: one square emptied, one filled by the same piece -- or by a different
             // one, which is a pawn that promoted.
-            vacated.size == 1 && appeared.size == 1 && replaced.isEmpty() ->
+            // What lands is what left, or what a pawn became on its last rank, or a chip the board
+            // could not name. Anything else is two things that happened and one of them missed -- a
+            // square a serial board named and the link lost -- and was named as a move all the
+            // same: a black pawn from e7 "to" e4, where a white one had appeared.
+            vacated.size == 1 && appeared.size == 1 && replaced.isEmpty() &&
+                (sameOrUnknown(before[vacated.single()], after[appeared.single()]) ||
+                    promotes(vacated.single(), appeared.single(), before)) ->
                 move(vacated.single(), appeared.single(), before, after)
 
             // A capture: the destination was already occupied, so it changes rather than fills. The
@@ -181,10 +187,19 @@ object BoardDiffer {
             // squares empty and only one fills. Never a king's or a rook's: that shape is also a
             // castle with both pieces in hand, the king put down first, and read as a king's move it
             // left a position with no rook in it as the baseline, which no later move matched.
+            // Two squares emptied and one filled is a capture that lands beside what it takes: an
+            // en passant, or a draughts jump over the man between. It was any piece landing while
+            // any other was off the board -- a knight picked up to be straightened as a pawn was
+            // played, two pawns in the hand at once -- and the move named came from whichever
+            // square was looked at first, on a position the board never returned to.
             vacated.size == 2 && appeared.size == 1 && replaced.isEmpty() -> {
                 val landed = appeared.single()
-                val from = vacated.firstOrNull { before[it] == after[landed] }
-                if (from != null && !before[from].isKingOrRook()) move(from, landed, before, after) else null
+                val from = vacated.firstOrNull { mover ->
+                    val taken = vacated.first { it != mover }
+                    sameOrUnknown(before[mover], after[landed]) && opposed(before[mover], before[taken]) &&
+                        (isEnPassant(mover, landed, taken, before) || liesBetween(taken, mover, landed))
+                }
+                if (from != null) move(from, landed, before, after) else null
             }
 
             else -> null
@@ -207,7 +222,35 @@ object BoardDiffer {
         }
     }
 
-    private fun Char.isKingOrRook() = equals('k', ignoreCase = true) || equals('r', ignoreCase = true)
+    private fun Char.isPawn() = equals('p', ignoreCase = true)
+
+    /** A pawn reaching its last rank: what stands there afterwards need not be a pawn. */
+    private fun promotes(from: Int, to: Int, before: BoardPosition): Boolean =
+        before[from].isPawn() && (to < 8 || to >= BoardPosition.SQUARE_COUNT - 8)
+
+    private fun sameOrUnknown(left: Char, landed: Char): Boolean =
+        left == landed || left == BoardPosition.UNKNOWN_PIECE || landed == BoardPosition.UNKNOWN_PIECE
+
+    /** Of the two sides, as far as case tells; a piece nobody can name may be either. */
+    private fun opposed(a: Char, b: Char): Boolean =
+        a == BoardPosition.UNKNOWN_PIECE || b == BoardPosition.UNKNOWN_PIECE || a.isUpperCase() != b.isUpperCase()
+
+    /** A pawn one square forward and across, and [taken] the square beside where it stood. */
+    private fun isEnPassant(from: Int, to: Int, taken: Int, before: BoardPosition): Boolean {
+        val mover = before[from]
+        if (!mover.isPawn()) return false
+        val forward = if (mover.isUpperCase()) -1 else 1
+        return to / 8 == from / 8 + forward && kotlin.math.abs(to % 8 - from % 8) == 1 && taken == from / 8 * 8 + to % 8
+    }
+
+    /** [square] on the diagonal from [from] to [to], strictly between them: what a draughts jump passes over. */
+    private fun liesBetween(square: Int, from: Int, to: Int): Boolean {
+        val rows = to / 8 - from / 8
+        val files = to % 8 - from % 8
+        if (kotlin.math.abs(rows) != kotlin.math.abs(files) || kotlin.math.abs(rows) < 2) return false
+        val steps = kotlin.math.abs(rows)
+        return (1 until steps).any { from / 8 + rows / steps * it == square / 8 && from % 8 + files / steps * it == square % 8 }
+    }
 
     /**
      * Whether [move] is the king's half of a castle whose rook went first as [previous].

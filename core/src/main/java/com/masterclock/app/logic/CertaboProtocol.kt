@@ -40,15 +40,23 @@ object CertaboProtocol : BoardProtocol {
     }
 
     override fun decode(payload: ByteArray): BoardReport {
-        val values = String(payload, Charsets.US_ASCII).trim().split(" ").filter { it.isNotEmpty() }
+        // The numbers, wherever they stand in the line. certabo-lichess drops the line's first
+        // character and its last three before it counts 320 of them, so a line carries a mark in
+        // front and something behind that are not numbers. Split on spaces and asked to be all
+        // numbers, the first one came with the mark on it and every frame of a real board would
+        // have been set aside: connected, talking, and no move ever.
+        val values = NUMBER.findAll(String(payload, Charsets.US_ASCII)).map { it.value }.toList()
         if (values.size != BoardPosition.SQUARE_COUNT * BYTES_PER_SQUARE) return BoardReport.Ignored
 
         val tags = ArrayList<String?>(BoardPosition.SQUARE_COUNT)
         for (square in 0 until BoardPosition.SQUARE_COUNT) {
             val chunk = values.subList(square * BYTES_PER_SQUARE, (square + 1) * BYTES_PER_SQUARE)
             if (chunk.any { it.toIntOrNull() == null }) return BoardReport.Ignored
-            // All zeroes is how the board says "nothing here", not a chip whose id happens to be 0.
-            tags += if (chunk.all { it.toInt() == 0 }) null else chunk.joinToString("-")
+            // Mostly zeroes is how the board says "nothing here", not a chip whose id happens to
+            // be 0 -- and mostly, not all, as certabo-lichess counts it: three zeroes of the five.
+            // A reader beside a chip picks up a stray byte, and all five asked for put a piece
+            // nobody knows on an empty square.
+            tags += if (chunk.count { it.toInt() == 0 } >= EMPTY_ZEROES) null else chunk.joinToString("-")
         }
         // In this app's order as they come: a frame starts at a8 and reads along each rank, rank by
         // rank down to h1, as certabodriver names its squares and cer2nut lays them out. It was read
@@ -60,5 +68,7 @@ object CertaboProtocol : BoardProtocol {
 
 
     private const val BYTES_PER_SQUARE = 5
+    private const val EMPTY_ZEROES = 3
+    private val NUMBER = Regex("\\d{1,3}")
     private const val NEWLINE: Byte = 0x0A
 }

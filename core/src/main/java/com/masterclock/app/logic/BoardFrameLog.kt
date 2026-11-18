@@ -17,8 +17,11 @@ import kotlinx.coroutines.flow.asStateFlow
  * cut is the thing to see. No device name and no address, which say who owns the board and nothing
  * about what it said.
  *
- * Kept in memory, the last [capacity] frames, and gone with the app: a board talks for as long as
- * it is connected, several times a second on some makes.
+ * Kept in memory, the last [capacity] frames and no more than [MAX_LOG_CHARS] of them, and gone
+ * with the app. A board talks for as long as it is connected, and some never stop: a ChessLink
+ * sends its whole position at every scan, some twenty-five times a second and four slices each
+ * over Bluetooth. So the log is the last few minutes, not the game -- what a player does after
+ * "it does not work" is connect, move a piece and share, and that fits.
  */
 class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val now: () -> Long = System::currentTimeMillis) {
 
@@ -28,6 +31,7 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
     data class Frame(val atMs: Long, val direction: Direction, val link: String, val protocol: String, val hex: String)
 
     private val frames = ArrayDeque<Frame>()
+    private var chars = 0L
     private var startedAt = 0L
     private var dropped = 0L
 
@@ -40,11 +44,13 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
         if (bytes.isEmpty()) return
         val at = now()
         if (frames.isEmpty() && dropped == 0L) startedAt = at
-        if (frames.size >= capacity) {
-            frames.removeFirst()
+        val frame = Frame((at - startedAt).coerceAtLeast(0), direction, link.clean(), protocol.clean(), bytes.toHex())
+        frames.addLast(frame)
+        chars += frame.hex.length
+        while (frames.size > capacity || (chars > MAX_LOG_CHARS && frames.size > 1)) {
+            chars -= frames.removeFirst().hex.length
             dropped++
         }
-        frames.addLast(Frame((at - startedAt).coerceAtLeast(0), direction, link.clean(), protocol.clean(), bytes.toHex()))
         _count.value = frames.size
     }
 
@@ -54,6 +60,7 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
     @Synchronized
     fun clear() {
         frames.clear()
+        chars = 0
         dropped = 0
         _count.value = 0
     }
@@ -74,9 +81,14 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
     }
 
     companion object {
-        const val DEFAULT_CAPACITY = 2_000
-        /** As much of one frame as is kept: a board dump is under a hundred bytes on every make known. */
-        const val MAX_FRAME_BYTES = 512
+        const val DEFAULT_CAPACITY = 20_000
+        /** What the frames held may weigh as text, whatever their number: the file shared is about this size. */
+        const val MAX_LOG_CHARS = 2_000_000L
+        /**
+         * As much of one frame as is kept. A Certabo line is 320 numbers, over a thousand bytes when
+         * a serial link hands it over whole; nothing any make sends is longer.
+         */
+        const val MAX_FRAME_BYTES = 2_048
         const val HEADER = "MasterClock board frame log, version 1"
 
         private fun ByteArray.toHex(): String =

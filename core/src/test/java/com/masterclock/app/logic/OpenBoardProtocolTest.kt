@@ -103,18 +103,20 @@ class OpenBoardProtocolTest {
     fun `a draughts round announces its variant before it begins`() {
         // Order is the whole point: the spec says set_variant may only come before begin, and a
         // board told nothing plays chess -- then disagrees with every move that follows.
-        val lines = OpenBoardProtocol.initCommandFor(GameType.DRAUGHTS)
-            .toString(Charsets.US_ASCII).trim().lines()
+        // And each its own write, with nothing after it: the board's library takes a write for one
+        // command and has no notion of a line.
+        val lines = OpenBoardProtocol.initCommandsFor(GameType.DRAUGHTS).map { it.toString(Charsets.US_ASCII) }
 
         assertEquals(2, lines.size)
         assertEquals("set_variant draughts_standard", lines[0])
         assertTrue(lines[1].startsWith("begin "))
+        assertTrue(lines.none { it.contains('\n') || it.contains('\r') })
     }
 
     @Test
     fun `the draughts position is ten by ten with the middle clear`() {
         val fen = OpenBoardProtocol.initCommandFor(GameType.DRAUGHTS)
-            .toString(Charsets.US_ASCII).trim().lines()[1].removePrefix("begin ").removeSuffix(" w")
+            .toString(Charsets.US_ASCII).removePrefix("begin ").removeSuffix(" w")
         val ranks = fen.split("/")
 
         assertEquals(10, ranks.size)
@@ -129,7 +131,10 @@ class OpenBoardProtocolTest {
         // A board assumes standard when never told, so naming it would be a round trip for nothing.
         val chess = OpenBoardProtocol.initCommandFor(GameType.CHESS).toString(Charsets.US_ASCII)
         assertFalse(chess.contains("set_variant"))
-        assertTrue(chess.trim().startsWith("begin "))
+        assertTrue(chess.startsWith("begin "))
+        assertEquals(1, OpenBoardProtocol.initCommandsFor(GameType.CHESS).size)
+        // The position ends the command: a newline after it was part of the position to the board.
+        assertTrue(chess.endsWith(" w"))
     }
 
     @Test
@@ -170,7 +175,7 @@ class OpenBoardProtocolTest {
     @Test
     fun `every move is acknowledged, and nothing else is`() {
         // A board that gets no answer stops sending, so this is what keeps the game flowing.
-        assertEquals("ok\n", OpenBoardProtocol.replyTo(message("move e2e4"))?.toString(Charsets.US_ASCII))
+        assertEquals("ok", OpenBoardProtocol.replyTo(message("move e2e4"))?.toString(Charsets.US_ASCII))
         assertNull(OpenBoardProtocol.replyTo(message("state rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")))
         assertNull(OpenBoardProtocol.replyTo(message("ok")))
     }
@@ -179,7 +184,8 @@ class OpenBoardProtocolTest {
     fun `commands sent together are read one by one, and each move answered`() {
         val both = message("move e2e4\nstate rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR\nmove e7e5\n")
         assertEquals(BoardReport.Moves(listOf("e2e4", "e7e5")), OpenBoardProtocol.decode(both))
-        assertEquals("ok\nok\n", OpenBoardProtocol.replyTo(both)?.toString(Charsets.US_ASCII))
+        // One answer: the board holds one move waiting, and a write is one command to it.
+        assertEquals("ok", OpenBoardProtocol.replyTo(both)?.toString(Charsets.US_ASCII))
     }
 
     @Test

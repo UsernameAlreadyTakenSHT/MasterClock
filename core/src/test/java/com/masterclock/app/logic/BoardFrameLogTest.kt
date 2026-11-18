@@ -73,6 +73,19 @@ class BoardFrameLogTest {
     }
 
     @Test
+    fun `a board that never stops talking is kept by weight, the latest of it`() {
+        val log = BoardFrameLog(capacity = 1_000_000) { clock }
+        val chunk = ByteArray(1_000) { 0x11 }
+        // Each frame is three thousand characters of text less one; seven hundred fit, a thousand do not.
+        repeat(1_000) { log.record(Direction.FROM_BOARD, "BLE", "Millennium", chunk); clock += 10 }
+        val kept = log.count.value
+        assertTrue("$kept", kept in 600..700)
+        assertTrue(log.frames().sumOf { it.hex.length } <= BoardFrameLog.MAX_LOG_CHARS)
+        assertEquals((1_000 - kept) * 10L, log.frames().first().atMs)
+        assertTrue(log.text("test").contains("$kept frames, ${1_000 - kept} earlier ones not kept"))
+    }
+
+    @Test
     fun `a file from outside is read as far as it can be`() {
         val text = """
             ${BoardFrameLog.HEADER}

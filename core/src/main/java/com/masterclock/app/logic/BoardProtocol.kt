@@ -50,6 +50,13 @@ interface BoardProtocol {
      */
     fun initCommandFor(gameType: GameType): ByteArray? = initCommand
 
+    /**
+     * The same, as the writes it takes: one array a write. One for every make but the open
+     * protocol, where a command is a write and two of them in one are a single command the board
+     * does not know.
+     */
+    fun initCommandsFor(gameType: GameType): List<ByteArray> = listOfNotNull(initCommandFor(gameType))
+
     /** Whether an advertised Bluetooth name looks like this make. */
     fun matchesDeviceName(deviceName: String?): Boolean = false
 
@@ -262,6 +269,14 @@ class BoardMoveTracker {
             captureToClear = null
             return emptyList()
         }
+        // A pawn put down on its last rank and then changed for the piece it became: the move is
+        // already told, as the pawn's, and this is the same square holding something else. It was
+        // nothing the differ could name, the baseline stayed on a pawn that was no longer there,
+        // and no move after a promotion made that way was read until the pieces were set up again.
+        if (isPromotionCompleted(from, position)) {
+            settled = position
+            return emptyList()
+        }
         val move = BoardDiffer.moveBetween(from, position) ?: return emptyList()
         settled = position
         if (move == secondHalf) {
@@ -274,6 +289,15 @@ class BoardMoveTracker {
         secondHalf = BoardDiffer.secondHalfOf(move, from)
         captureToClear = BoardDiffer.capturedEnPassantBy(move, from)
         return listOf(move)
+    }
+
+    private fun isPromotionCompleted(before: BoardPosition, after: BoardPosition): Boolean {
+        val square = (0 until BoardPosition.SQUARE_COUNT).singleOrNull { before[it] != after[it] } ?: return false
+        val pawn = before[square]
+        val piece = after[square]
+        val lastRank = if (pawn == 'P') square < 8 else if (pawn == 'p') square >= BoardPosition.SQUARE_COUNT - 8 else false
+        if (!lastRank || piece == BoardPosition.EMPTY || piece.equals('p', ignoreCase = true) || piece.equals('k', ignoreCase = true)) return false
+        return piece == BoardPosition.UNKNOWN_PIECE || piece.isUpperCase() == pawn.isUpperCase()
     }
 
     private fun onlyDiffersAt(a: BoardPosition, b: BoardPosition, square: Int): Boolean =

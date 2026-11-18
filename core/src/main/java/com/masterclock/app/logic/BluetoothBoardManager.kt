@@ -427,7 +427,7 @@ class BluetoothBoardManager(private val context: Context) {
         characteristics.forEach { gattQueue += GattOperation.Subscribe(it) }
         // Queued behind the subscriptions on purpose: a board asked to report before it has
         // been subscribed to would answer into a void.
-        protocol.initCommandFor(gameType)?.let { gattQueue += writesOf(it) }
+        protocol.initCommandsFor(gameType).forEach { gattQueue += writesOf(it) }
         runNextOperation()
     }
 
