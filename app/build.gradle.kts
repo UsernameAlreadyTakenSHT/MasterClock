@@ -135,6 +135,14 @@ android {
     // unresolved R field in three flavors at once, at the first reference. Registering the
     // directories costs nothing while they are empty and removes that trap.
     sourceSets {
+        // The simulated boards of the board's screen are in the debug build and in no other: one
+        // directory holds them, the other holds the nothing that stands in their place, and each
+        // build type compiles one. debugOptimized is not debuggable and is shrunk as a release is,
+        // so it goes without, as a release does. See SimulatedBoardSlot, in both.
+        getByName("debug") { kotlin.directories.add("src/simulatedBoard/java") }
+        listOf("release", "debugOptimized").forEach { type ->
+            getByName(type) { kotlin.directories.add("src/noSimulatedBoard/java") }
+        }
         listOf("standard", "lite", "mini").forEach { flavor ->
             getByName(flavor) {
                 kotlin.directories.add("src/reduced/java")

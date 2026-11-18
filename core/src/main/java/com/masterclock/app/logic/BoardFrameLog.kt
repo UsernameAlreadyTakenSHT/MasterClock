@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * A board that does not work could only be described -- "it connects and nothing happens" -- and a
  * make this app has never met could not be added without having one in hand: the raw-capture mode
  * showed the last payload on screen and kept nothing. The log is what a player sends instead, and
- * what a protocol is worked out from. It is also what [SimulatedBoardManager] plays back.
+ * what a protocol is worked out from. It is also what the debug build's simulated board plays
+ * back; see `SimulatedBoard`, in this module's debug sources and in no build anyone installs.
  *
  * Bytes as the transport delivered them, before any framing: where a message is cut wrongly, the
  * cut is the thing to see. No device name and no address, which say who owns the board and nothing

@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.items
@@ -24,7 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -40,9 +38,9 @@ fun BluetoothBoardScreen(
     val manager = viewModel.bluetoothManager
     val usbManager = viewModel.usbBoardManager
     val serialManager = viewModel.bluetoothSerialBoardManager
-    val simulatedManager = viewModel.simulatedBoardManager
-    val simulatedState by simulatedManager.connectionState.collectAsState()
-    val simulatedMove by simulatedManager.lastMove.collectAsState()
+    // The debug build's simulated boards, and in every other build nothing; see SimulatedBoardSlot.
+    val simulatedState by SimulatedBoardSlot.connectionState.collectAsState()
+    val simulatedMove by SimulatedBoardSlot.lastMove.collectAsState()
     val bluetoothState by manager.connectionState.collectAsState()
     val usbState by usbManager.connectionState.collectAsState()
     val serialState by serialManager.connectionState.collectAsState()
@@ -70,7 +68,7 @@ fun BluetoothBoardScreen(
         manager.disconnect()
         usbManager.disconnect()
         serialManager.disconnect()
-        simulatedManager.disconnect()
+        SimulatedBoardSlot.disconnect()
     }
 
     // Whichever transport is not idle is the one this screen is talking about.
@@ -223,11 +221,7 @@ fun BluetoothBoardScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            SimulatedBoards(
-                enabled = connectionState !is ConnectionState.Connecting,
-                onMake = { make -> dropAll(); simulatedManager.connect(make) { viewModel.recordBoardMove(it) } },
-                onLog = { frames -> dropAll(); simulatedManager.replay(frames) { viewModel.recordBoardMove(it) } },
-            )
+            SimulatedBoardSlot.Chips(viewModel, enabled = connectionState !is ConnectionState.Connecting, beforeConnect = dropAll)
 
             Text(stringResource(R.string.board_usb_section), style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
@@ -358,55 +352,4 @@ private fun shareBoardFrameLog(context: android.content.Context, log: com.master
         }
         context.startActivity(android.content.Intent.createChooser(send, title))
     }.onFailure { android.util.Log.w("BluetoothBoardScreen", "Could not share the board's log", it) }
-}
-
-/** As much of a log file as is read: a full log is a few hundred kilobytes. */
-private const val MAX_LOG_FILE_BYTES = 2 * 1024 * 1024
-
-/**
- * The boards that are not there: one of each make, playing a short game, and a log of a real board
- * played back. A test build's alone -- a player's list of boards holds boards. In English whatever
- * the language, as nothing a player reads.
- */
-@Composable
-private fun SimulatedBoards(
-    enabled: Boolean,
-    onMake: (com.masterclock.app.logic.BoardProtocol) -> Unit,
-    onLog: (List<com.masterclock.app.logic.BoardFrameLog.Frame>) -> Boolean,
-) {
-    val context = LocalContext.current
-    val debuggable = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
-    if (!debuggable) return
-
-    val pickLog = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        // A file from anywhere: read to a bound, and parse() takes of it only what is a frame.
-        val text = runCatching {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                val bytes = ByteArray(MAX_LOG_FILE_BYTES)
-                var size = 0
-                while (size < bytes.size) {
-                    val read = input.read(bytes, size, bytes.size - size)
-                    if (read <= 0) break
-                    size += read
-                }
-                String(bytes, 0, size, Charsets.UTF_8)
-            }
-        }.getOrNull().orEmpty()
-        if (!onLog(com.masterclock.app.logic.BoardFrameLog.parse(text))) {
-            android.widget.Toast.makeText(context, "Nothing in this file from a board the app decodes", android.widget.Toast.LENGTH_LONG).show()
-        }
-    }
-
-    Text("Simulated boards (test builds only)", style = MaterialTheme.typography.titleSmall)
-    Row(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).testTag("simulated_boards"),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        com.masterclock.app.logic.SimulatedBoard.makes.forEach { make ->
-            AssistChip(onClick = { onMake(make) }, enabled = enabled, label = { Text(make.name) })
-        }
-        AssistChip(onClick = { pickLog.launch(arrayOf("text/*", "application/octet-stream")) }, enabled = enabled, label = { Text("Replay a log") })
-    }
-    Spacer(Modifier.height(16.dp))
 }

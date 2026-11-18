@@ -8,6 +8,7 @@ import com.masterclock.app.logic.BoardProtocol
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.FlavorConfig
 import com.masterclock.app.logic.SimulatedBoard
+import com.masterclock.app.ui.screens.SimulatedBoardSlot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -29,12 +30,15 @@ class SimulatedBoardFlowTest {
 
     private val viewModel get() = ViewModelProvider(rule.activity)[ChessTimerViewModel::class.java]
 
+    /** The debug build's simulated board, writing to the game's log as the screen has it do. */
+    private val board get() = SimulatedBoardSlot.manager.also { it.frameLog = viewModel.boardFrameLog }
+
     private fun movesLogged(): List<String> =
         viewModel.gameHistory.value.flatMap { it.events }.filter { it.eventType == "MOVE" }.mapNotNull { it.moveNotation }
 
     private fun startAfresh() {
         rule.runOnUiThread {
-            viewModel.simulatedBoardManager.disconnect()
+            board.disconnect()
             viewModel.resetAllSettings()
             viewModel.reset()
             viewModel.clearAllLogs()
@@ -49,7 +53,7 @@ class SimulatedBoardFlowTest {
 
     /** Waits for the game's last move to come out of the board, then ends the game so that it is in Last Games. */
     private fun playedOut() {
-        rule.waitUntil(GAME_TIMEOUT_MS) { viewModel.simulatedBoardManager.lastMove.value == SimulatedBoard.DEMO_GAME.last() }
+        rule.waitUntil(GAME_TIMEOUT_MS) { board.lastMove.value == SimulatedBoard.DEMO_GAME.last() }
         rule.waitForIdle()
         rule.runOnUiThread { viewModel.reset() }
         rule.waitUntil(TIMEOUT_MS) { movesLogged().size >= SimulatedBoard.DEMO_GAME.size }
@@ -59,9 +63,9 @@ class SimulatedBoardFlowTest {
         startAfresh()
         val starter = viewModel.uiState.value.activePlayer
         rule.runOnUiThread {
-            viewModel.simulatedBoardManager.connect(make, FRAME_EVERY_MS) { viewModel.recordBoardMove(it) }
+            board.connect(make, FRAME_EVERY_MS) { viewModel.recordBoardMove(it) }
         }
-        rule.waitUntil(GAME_TIMEOUT_MS) { viewModel.simulatedBoardManager.lastMove.value == SimulatedBoard.DEMO_GAME.last() }
+        rule.waitUntil(GAME_TIMEOUT_MS) { board.lastMove.value == SimulatedBoard.DEMO_GAME.last() }
         rule.waitForIdle()
         // Sixteen moves, sixteen turns passed: the clock is back with whoever it started with.
         assertEquals(make.name, starter, viewModel.uiState.value.activePlayer)
@@ -86,7 +90,7 @@ class SimulatedBoardFlowTest {
     fun whatASimulatedBoardSaidIsInTheLogAndPlaysBackAsTheSameGame() {
         startAfresh()
         rule.runOnUiThread {
-            viewModel.simulatedBoardManager.connect(SimulatedBoard.makes.first(), FRAME_EVERY_MS) { viewModel.recordBoardMove(it) }
+            board.connect(SimulatedBoard.makes.first(), FRAME_EVERY_MS) { viewModel.recordBoardMove(it) }
         }
         playedOut()
         val file = viewModel.boardFrameLog.text("test")
@@ -96,7 +100,7 @@ class SimulatedBoardFlowTest {
         startAfresh()
         var accepted = false
         rule.runOnUiThread {
-            accepted = viewModel.simulatedBoardManager.replay(BoardFrameLog.parse(file)) { viewModel.recordBoardMove(it) }
+            accepted = board.replay(BoardFrameLog.parse(file)) { viewModel.recordBoardMove(it) }
         }
         assertTrue(accepted)
         playedOut()
