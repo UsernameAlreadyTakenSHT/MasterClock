@@ -73,6 +73,9 @@ class UsbBoardManager(private val context: Context) {
     val needsCalibration: StateFlow<Boolean> = _needsCalibration.asStateFlow()
 
     private var protocol: BoardProtocol = RawCaptureProtocol
+    /** Where every frame crossing this link is written down, when the app keeps such a log; see [BoardFrameLog]. */
+    var frameLog: BoardFrameLog? = null
+
 
     /** The game this round is, for makes that have to be told before play starts. */
     private var gameType: GameType = GameType.CHESS
@@ -271,6 +274,7 @@ class UsbBoardManager(private val context: Context) {
         // Several makes report nothing until asked; Chessnut is one of them.
         protocol.initCommandFor(gameType)?.let { command ->
             serialInterface.findEndpoint(UsbConstants.USB_DIR_OUT)?.let { endpointOut ->
+                frameLog?.record(BoardFrameLog.Direction.TO_BOARD, "USB", protocol.name, command)
                 opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS)
             }
         }
@@ -307,6 +311,7 @@ class UsbBoardManager(private val context: Context) {
                 if (read <= 0) continue
 
                 val chunk = buffer.copyOf(minOf(read, MAX_PAYLOAD_BYTES))
+                frameLog?.record(BoardFrameLog.Direction.FROM_BOARD, "USB", protocol.name, chunk)
                 // A serial read is a slice of a byte stream, not a message. Where the make says how
                 // its messages are delimited, put them back together first.
                 val payloads = assembler?.offer(chunk) ?: listOf(chunk)

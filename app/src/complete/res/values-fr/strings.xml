@@ -27,6 +27,7 @@
     <string name="board_connected_to">Connecté\u00A0: %s</string>
     <string name="board_connecting">Connexion…</string>
     <string name="board_disconnect">Déconnecter</string>
+    <string name="board_share_log">Partager le journal de l\'échiquier</string>
     <string name="board_disconnected">Déconnecté</string>
     <string name="board_error">Erreur\u00A0: %s</string>
     <string name="board_last_move">Dernier coup\u00A0: %s</string>

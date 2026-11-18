@@ -29,6 +29,7 @@
     <string name="board_connected_to">Connesso: %s</string>
     <string name="board_connecting">Connessione…</string>
     <string name="board_disconnect">Disconnetti</string>
+    <string name="board_share_log">Condividi il registro della scacchiera</string>
     <string name="board_disconnected">Disconnesso</string>
     <string name="board_error">Errore: %s</string>
     <string name="board_last_move">Ultima mossa: %s</string>

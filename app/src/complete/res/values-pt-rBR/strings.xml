@@ -12,6 +12,7 @@
     <string name="board_connected_to">Conectado: %s</string>
     <string name="board_connecting">Conectando…</string>
     <string name="board_disconnect">Desconectar</string>
+    <string name="board_share_log">Compartilhar o registro do tabuleiro</string>
     <string name="board_disconnected">Desconectado</string>
     <string name="board_looking">Procurando tabuleiros…</string>
     <string name="board_scanning">Procurando tabuleiros…</string>

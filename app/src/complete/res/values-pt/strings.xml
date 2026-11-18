@@ -32,6 +32,7 @@
     <string name="board_connected_to">Ligado: %s</string>
     <string name="board_connecting">A ligar…</string>
     <string name="board_disconnect">Desligar</string>
+    <string name="board_share_log">Partilhar o registo do tabuleiro</string>
     <string name="board_disconnected">Desligado</string>
     <string name="board_error">Erro: %s</string>
     <string name="board_last_move">Último lance: %s</string>

@@ -129,6 +129,9 @@ class BluetoothBoardManager(private val context: Context) {
 
     /** Which make the connected board speaks. See [BoardProtocol]. */
     private var protocol: BoardProtocol = RawCaptureProtocol
+    /** Where every frame crossing this link is written down, when the app keeps such a log; see [BoardFrameLog]. */
+    var frameLog: BoardFrameLog? = null
+
 
     /** The game this round is, for makes that have to be told before play starts. */
     private var gameType: GameType = GameType.CHESS
@@ -443,6 +446,7 @@ class BluetoothBoardManager(private val context: Context) {
         // board's, into the new board's position.
         if (gatt !== activeGatt) return
         val bytes = payload?.take(MAX_CHARACTERISTIC_BYTES)?.toByteArray() ?: return
+        frameLog?.record(BoardFrameLog.Direction.FROM_BOARD, "BLE", protocol.name, bytes)
         val payloads = assembler?.offer(bytes) ?: listOf(bytes)
         payloads.forEach { message ->
             // Answer before acting on it: a board waiting for an acknowledgement sends nothing more
@@ -558,6 +562,7 @@ class BluetoothBoardManager(private val context: Context) {
         val uuid = protocol.ble?.writeCharacteristicUuid ?: return@runCatching false
         val characteristic = gatt.services.flatMap { it.characteristics }
             .firstOrNull { it.uuid == uuid } ?: return@runCatching false
+        frameLog?.record(BoardFrameLog.Direction.TO_BOARD, "BLE", protocol.name, bytes)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             gatt.writeCharacteristic(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) ==

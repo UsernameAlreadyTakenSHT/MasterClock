@@ -3844,9 +3844,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     //
     // The delegates are kept so onCleared can ask whether there is anything to release rather than
     // constructing all three in order to shut them down.
-    private val bluetoothManagerDelegate = lazy { BluetoothBoardManager(application) }
-    private val usbBoardManagerDelegate = lazy { UsbBoardManager(application) }
-    private val bluetoothSerialBoardManagerDelegate = lazy { BluetoothSerialBoardManager(application) }
+    /**
+     * What the connected board and the app have said to each other, to be shared from the board's
+     * screen; see [BoardFrameLog]. One log for the three links, since only one board is connected
+     * at a time.
+     */
+    val boardFrameLog = BoardFrameLog()
+    private val bluetoothManagerDelegate = lazy { BluetoothBoardManager(application).also { it.frameLog = boardFrameLog } }
+    private val usbBoardManagerDelegate = lazy { UsbBoardManager(application).also { it.frameLog = boardFrameLog } }
+    private val bluetoothSerialBoardManagerDelegate = lazy { BluetoothSerialBoardManager(application).also { it.frameLog = boardFrameLog } }
     val bluetoothManager: BluetoothBoardManager by bluetoothManagerDelegate
     val usbBoardManager: UsbBoardManager by usbBoardManagerDelegate
     val bluetoothSerialBoardManager: BluetoothSerialBoardManager by bluetoothSerialBoardManagerDelegate

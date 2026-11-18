@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,6 +50,8 @@ fun BluetoothBoardScreen(
     val usbNeedsCalibration by usbManager.needsCalibration.collectAsState()
     val serialNeedsCalibration by serialManager.needsCalibration.collectAsState()
     val context = LocalContext.current
+    val framesLogged by viewModel.boardFrameLog.count.collectAsState()
+    val shareLogLabel = stringResource(R.string.board_share_log)
 
     // Which game this is decides what the board is told to set up, so it is read at the moment of
     // connecting rather than assumed to be chess.
@@ -111,6 +114,13 @@ fun BluetoothBoardScreen(
         title = stringResource(R.string.board_title),
         onBack = onBack,
         actions = {
+            // What the board has said, for whoever is to make sense of it: a board that connects
+            // and gives no moves, or a make the app does not know. Offered once there is something.
+            if (framesLogged > 0) {
+                IconButton(onClick = { shareBoardFrameLog(context, viewModel.boardFrameLog, shareLogLabel) }) {
+                    Icon(Icons.Default.Share, contentDescription = shareLogLabel)
+                }
+            }
             if (connectionState is ConnectionState.Scanning) {
                 IconButton(onClick = { manager.stopScan() }) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
@@ -309,4 +319,27 @@ fun BluetoothBoardScreen(
             }
         }
     }
+}
+
+/**
+ * Hands the board's frame log to another app as a text file. A file and not the text itself: a
+ * long session is several hundred kilobytes, more than an intent carries. Under the cache's
+ * `shares/`, which the file provider serves, and the ones shared before go as this one is written.
+ */
+private fun shareBoardFrameLog(context: android.content.Context, log: com.masterclock.app.logic.BoardFrameLog, title: String) {
+    runCatching {
+        val shares = java.io.File(context.cacheDir, "shares")
+        shares.listFiles()?.filter { it.isDirectory && it.name.startsWith("board-log-") }?.forEach { it.deleteRecursively() }
+        val dir = java.io.File(shares, "board-log-${java.util.UUID.randomUUID()}").apply { mkdirs() }
+        val file = java.io.File(dir, "masterclock_board_log.txt")
+        val about = "MasterClock ${com.masterclock.app.logic.AppInfo.CHANGELOG.first().version}, Android ${Build.VERSION.RELEASE}, ${Build.MANUFACTURER} ${Build.MODEL}"
+        file.writeText(log.text(about))
+        val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(android.content.Intent.createChooser(send, title))
+    }.onFailure { android.util.Log.w("BluetoothBoardScreen", "Could not share the board's log", it) }
 }

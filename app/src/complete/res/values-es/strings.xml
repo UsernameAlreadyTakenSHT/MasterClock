@@ -29,6 +29,7 @@
     <string name="board_connected_to">Conectado: %s</string>
     <string name="board_connecting">Conectando…</string>
     <string name="board_disconnect">Desconectar</string>
+    <string name="board_share_log">Compartir el registro del tablero</string>
     <string name="board_disconnected">Desconectado</string>
     <string name="board_error">Error: %s</string>
     <string name="board_last_move">Última jugada: %s</string>

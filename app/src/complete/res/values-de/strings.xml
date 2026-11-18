@@ -29,6 +29,7 @@
     <string name="board_connected_to">Verbunden: %s</string>
     <string name="board_connecting">Verbinden…</string>
     <string name="board_disconnect">Trennen</string>
+    <string name="board_share_log">Protokoll des Bretts teilen</string>
     <string name="board_disconnected">Getrennt</string>
     <string name="board_error">Fehler: %s</string>
     <string name="board_last_move">Letzter Zug: %s</string>

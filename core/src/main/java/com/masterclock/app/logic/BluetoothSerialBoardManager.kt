@@ -71,6 +71,9 @@ class BluetoothSerialBoardManager(private val context: Context) {
     val needsCalibration: StateFlow<Boolean> = _needsCalibration.asStateFlow()
 
     private var protocol: BoardProtocol = RawCaptureProtocol
+    /** Where every frame crossing this link is written down, when the app keeps such a log; see [BoardFrameLog]. */
+    var frameLog: BoardFrameLog? = null
+
 
     /** The game this round is, for makes that have to be told before play starts. */
     private var gameType: GameType = GameType.CHESS
@@ -199,6 +202,7 @@ class BluetoothSerialBoardManager(private val context: Context) {
 
         // Several makes report nothing until asked; DGT wants a dump before update mode.
         protocol.initCommandFor(gameType)?.let { command ->
+            frameLog?.record(BoardFrameLog.Direction.TO_BOARD, "BT-serial", protocol.name, command)
             runCatching { opened.outputStream.write(command); opened.outputStream.flush() }
         }
 
@@ -219,6 +223,7 @@ class BluetoothSerialBoardManager(private val context: Context) {
             if (read <= 0) break
 
             val chunk = buffer.copyOf(read)
+            frameLog?.record(BoardFrameLog.Direction.FROM_BOARD, "BT-serial", protocol.name, chunk)
             val payloads = session.assembler?.offer(chunk) ?: listOf(chunk)
             val reports = payloads.map { protocol.decode(it) }
             reports.filterIsInstance<BoardReport.Raw>().lastOrNull()?.let { _lastMove.value = it.hex }

@@ -30,6 +30,7 @@
     <string name="board_connected_to">Connected: %s</string>
     <string name="board_connecting">Connecting…</string>
     <string name="board_disconnect">Disconnect</string>
+    <string name="board_share_log">Share the board\'s log</string>
     <string name="board_disconnected">Disconnected</string>
     <string name="board_error">Error: %s</string>
     <string name="board_last_move">Last Move: %s</string>
