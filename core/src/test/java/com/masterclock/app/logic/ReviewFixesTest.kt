@@ -63,6 +63,40 @@ class ReviewFixesTest {
     }
 
     @Test
+    fun `an Omni session is kept awake for whichever of its clocks ends first`() {
+        val running = OmniState(
+            isRunning = true, hasStarted = true,
+            currentGlobalTimeMs = 600_000, currentGameTimeMs = 300_000, currentRoundTimeMs = 20_000,
+            currentTurnTimeMs = 30_000, currentPhaseTimeMs = 5_000,
+        )
+        // No turn clock and a round's limit: nothing kept the phone awake, and nothing counts down
+        // in the notification, which shows a turn's time or none.
+        val noTurn = OmniSettings(useTurnClock = false, useRoundClock = true, useGameClock = true)
+        assertEquals(20_000L, omniNextDueMs(running, noTurn))
+        assertNull(omniBackgroundClockOf(running, noTurn)!!.countdownMs)
+        assertEquals(20_000L + WAKE_MARGIN_MS, wakeForMs(omniBackgroundClockOf(running, noTurn)))
+        // With the turn clock on, a round that ends before the turn does.
+        val both = OmniSettings(useTurnClock = true, useRoundClock = true)
+        assertEquals(20_000L, omniBackgroundClockOf(running, both)!!.soundsInMs)
+        assertEquals(30_000L, omniBackgroundClockOf(running, both)!!.countdownMs)
+        // Each clock counts only when it is in use, and one at zero has nothing left to say.
+        assertEquals(5_000L, omniNextDueMs(running, both.copy(usePhaseClock = true)))
+        assertEquals(300_000L, omniNextDueMs(running, OmniSettings(useTurnClock = false, useRoundClock = false, useGameClock = true)))
+        assertEquals(600_000L, omniNextDueMs(running, OmniSettings(useTurnClock = false, useRoundClock = false, useGameClock = false, useGlobalClock = true)))
+        assertNull(omniNextDueMs(running, OmniSettings(useTurnClock = false, useRoundClock = false, useGameClock = false)))
+        assertEquals(30_000L, omniNextDueMs(running.copy(currentRoundTimeMs = 0), both))
+        // In a pause, the pause -- and a clock only if it is told to run through pauses.
+        val paused = running.copy(isInTransition = true, transitionTimeRemainingMs = 25_000)
+        assertEquals(25_000L, omniNextDueMs(paused, both))
+        assertEquals(20_000L, omniNextDueMs(paused, both.copy(pauseDeductsFromRound = true)))
+        // A pause that waits for a hand, with a round still running through it.
+        assertEquals(20_000L, omniNextDueMs(paused.copy(transitionTimeRemainingMs = 0), both.copy(pauseDeductsFromRound = true)))
+        assertNull(omniNextDueMs(paused.copy(transitionTimeRemainingMs = 0), both))
+        // The launch countdown holds everything else.
+        assertEquals(4_000L, omniNextDueMs(running.copy(isLaunching = true, launchTimeRemainingMs = 4_000), both))
+    }
+
+    @Test
     fun `an imported game starts as a game starts, whatever its file says`() {
         val lost = PlayerStateProxy(timeRemainingMs = 0, isOutOfTime = true, isNegative = true, hasFlagged = true, isInByoyomi = true)
         val log = sanitizeImportedLog(GameLog(settings = ChessClockSettings(), initialPlayerStates = listOf(lost, lost)))

@@ -418,9 +418,7 @@ internal fun omniSessionToRestore(saved: OmniState?, settings: OmniSettings): Om
  * can stop. Between turns, during the launch countdown and with the turn clock off, it says only that
  * the clock runs: no turn is counting down to anything.
  *
- * What it sounds at, and so what the phone is kept awake for, is wider: the pause between turns and
- * the launch countdown end on a sound and on the next turn starting, and with the screen off the
- * phone slept through them -- a session came back from a ten-second pause minutes late.
+ * What it sounds at, and so what the phone is kept awake for, is wider; see [omniNextDueMs].
  *
  * The service kept the chess clock alone, so a session left running in the background was the first
  * thing Android closed.
@@ -432,12 +430,38 @@ fun omniBackgroundClockOf(state: OmniState, settings: OmniSettings): BackgroundC
     return BackgroundClock(
         playerIndex = state.currentPlayerIndex % settings.numberOfPlayers.coerceAtLeast(1) + 1,
         countdownMs = countdown,
-        soundsInMs = when {
-            state.isLaunching -> state.launchTimeRemainingMs.takeIf { it > 0 }
-            state.isInTransition -> state.transitionTimeRemainingMs.takeIf { it > 0 }
-            else -> countdown
-        },
+        soundsInMs = omniNextDueMs(state, settings),
     )
+}
+
+/**
+ * How long until a running session next does something by itself: the soonest of every clock that
+ * is counting. Null when none is, and the session waits for a hand.
+ *
+ * The turn's clock is one of five, and the one a session may well not use. A round's limit, a
+ * game's or the session's ends on a sound and on what comes next just as a turn does, and with the
+ * screen off the phone slept through all three: with the turn clock off nothing kept it awake at
+ * all, and with it on, a round that ended before the turn did was still slept through. The pause
+ * between turns and the launch countdown were, too -- a session came back from a ten-second pause
+ * minutes late -- and during a pause only the clocks told to run through it count.
+ */
+internal fun omniNextDueMs(state: OmniState, settings: OmniSettings): Long? {
+    if (state.isLaunching) return state.launchTimeRemainingMs.takeIf { it > 0 }
+    val counting = if (state.isInTransition) listOf(
+        state.transitionTimeRemainingMs,
+        state.currentGlobalTimeMs.takeIf { settings.pauseDeductsFromGlobal && settings.useGlobalClock },
+        state.currentGameTimeMs.takeIf { settings.pauseDeductsFromGame && settings.useGameClock },
+        state.currentRoundTimeMs.takeIf { settings.pauseDeductsFromRound && settings.useRoundClock },
+    ) else listOf(
+        state.currentGlobalTimeMs.takeIf { settings.useGlobalClock },
+        state.currentGameTimeMs.takeIf { settings.useGameClock },
+        state.currentRoundTimeMs.takeIf { settings.useRoundClock },
+        state.currentTurnTimeMs.takeIf { settings.useTurnClock },
+        state.currentPhaseTimeMs.takeIf { settings.usePhaseClock },
+    )
+    // A clock at zero has already said what it had to say; see computeOmniTick, which sounds a
+    // clock only as it crosses.
+    return counting.filterNotNull().filter { it > 0 }.minOrNull()
 }
 
 /** What of [state] is worth storing: a session under way, or nothing; see [omniSessionToRestore]. */
