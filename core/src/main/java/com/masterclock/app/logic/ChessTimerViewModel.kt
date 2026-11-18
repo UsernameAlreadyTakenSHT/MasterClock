@@ -3853,6 +3853,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val bluetoothManagerDelegate = lazy { BluetoothBoardManager(application).also { it.frameLog = boardFrameLog } }
     private val usbBoardManagerDelegate = lazy { UsbBoardManager(application).also { it.frameLog = boardFrameLog } }
     private val bluetoothSerialBoardManagerDelegate = lazy { BluetoothSerialBoardManager(application).also { it.frameLog = boardFrameLog } }
+    /** A board of any make without the board, for trying the rest of the chain; see [SimulatedBoard]. */
+    private val simulatedBoardManagerDelegate = lazy { SimulatedBoardManager().also { it.frameLog = boardFrameLog } }
+    val simulatedBoardManager: SimulatedBoardManager by simulatedBoardManagerDelegate
     val bluetoothManager: BluetoothBoardManager by bluetoothManagerDelegate
     val usbBoardManager: UsbBoardManager by usbBoardManagerDelegate
     val bluetoothSerialBoardManager: BluetoothSerialBoardManager by bluetoothSerialBoardManagerDelegate
@@ -4730,6 +4733,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // and both it and the serial one own a coroutine scope.
         if (usbBoardManagerDelegate.isInitialized()) usbBoardManager.release()
         if (bluetoothSerialBoardManagerDelegate.isInitialized()) bluetoothSerialBoardManager.release()
+        if (simulatedBoardManagerDelegate.isInitialized()) simulatedBoardManager.release()
         // After the autosave in progress, which still has to queue its write.
         val encoding = autosaveEncoding
         writerScope.launch {

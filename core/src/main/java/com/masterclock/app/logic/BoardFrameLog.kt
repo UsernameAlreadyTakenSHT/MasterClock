@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * A board that does not work could only be described -- "it connects and nothing happens" -- and a
  * make this app has never met could not be added without having one in hand: the raw-capture mode
  * showed the last payload on screen and kept nothing. The log is what a player sends instead, and
- * what a protocol is worked out from. It is also what a simulated board can play back.
+ * what a protocol is worked out from. It is also what [SimulatedBoardManager] plays back.
  *
  * Bytes as the transport delivered them, before any framing: where a message is cut wrongly, the
  * cut is the thing to see. No device name and no address, which say who owns the board and nothing
@@ -84,6 +84,9 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
 
         /** One word, so that a line splits on spaces whatever a protocol or a link is called. */
         private fun String.clean(): String = trim().replace(Regex("\\s+"), "_").ifEmpty { "-" }
+
+        /** A protocol's or a link's name as a frame carries it, for finding in a log the make that wrote it. */
+        fun nameInLog(name: String): String = name.clean()
 
         private fun Frame.line(): String =
             "%d.%03d %c %s %s %s".format(atMs / 1000, atMs % 1000, direction.mark, link, protocol, hex)
