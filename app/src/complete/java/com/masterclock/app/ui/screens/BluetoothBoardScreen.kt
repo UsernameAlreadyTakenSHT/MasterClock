@@ -178,7 +178,10 @@ fun BluetoothBoardScreen(
                         contentDescription = null
                     )
                     Spacer(Modifier.width(16.dp))
-                    Column {
+                    // The weight is the name's, not a spacer's after it: a board with a long name
+                    // took the whole row, and Disconnect, left no width, stood a letter a line down
+                    // a card as tall as the screen allowed.
+                    Column(Modifier.weight(1f)) {
                         val statusText = when (val s = connectionState) {
                             ConnectionState.Idle -> stringResource(R.string.board_disconnected)
                             ConnectionState.Scanning -> stringResource(R.string.board_scanning)
@@ -194,7 +197,6 @@ fun BluetoothBoardScreen(
                     // While connecting too: the boards are out of reach until an attempt ends, which
                     // is half a minute for one that does not answer.
                     if (connectionState is ConnectionState.Connected || connectionState is ConnectionState.Connecting) {
-                        Spacer(Modifier.weight(1f))
                         TextButton(onClick = { dropAll() }) {
                             Text(stringResource(R.string.board_disconnect))
                         }
