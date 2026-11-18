@@ -50,6 +50,18 @@ object AppInfo {
 
     val CHANGELOG = listOf(
         ChangelogEntry(
+            version = "0.8.45",
+            date = "2026-11-18",
+            notes = listOf(
+                Note("Modes: the six most played stay in sight, and More modes opens the others. What a mode is set with shows without scrolling. FIDE Periods is third, not ninth.", FULL_MODES),
+                Note("A connected board's screen keeps what the board said in the last minutes, and shares it as a text file: what to send when a board does not work.", COMPLETE_ONLY),
+                Note("Connected board, still not tried on a real one: a piece slid across a square is one move, not two; a Certabo's lines are read; a Millennium that lost a notification is heard again; a pawn changed for a queen no longer ends the reading of moves.", COMPLETE_ONLY),
+                Note("Omni-Timer, screen off: the phone is kept awake for whichever of its clocks ends first, not for the turn's alone.", FULL_MODES),
+                Note("Translations: words that disagreed between two screens agree, in Spanish, Portuguese, Brazilian, French, German and Italian. Off, in the Omni settings, is Sans, Sin, Sem.", FULL_MODES),
+                Note("Nothing changes in this build. This release is about the modes screen, Omni-Timer and the connected board, which this build does not have.", setOf(AppFlavor.MINI, AppFlavor.E_INK)),
+            ),
+        ),
+        ChangelogEntry(
             version = "0.8.44",
             date = "2026-11-18",
             notes = listOf(

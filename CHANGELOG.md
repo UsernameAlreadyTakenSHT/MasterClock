@@ -1,3 +1,27 @@
+## v0.8.45 — 2026-11-18
+
+The modes screen shows what it is set with, a connected board can say what it said, and the
+translations stop contradicting themselves from one screen to the next.
+
+### Added
+- **A board's log, to share** (Complete). The board's screen keeps what the board and the app said to each other in the last minutes, and a share button in its bar hands it over as a text file: what to send when a board does not work, or for a make the app does not know. It names the app's version and the phone's model, and neither the board nor its address.
+
+### Changed
+- **Modes** (Complete, Standard, Lite). The six most played stay in sight -- Sudden Death, Bonus, FIDE Periods, Byoyomi, Move Timer, Hourglass -- and **More modes** opens the nine others, staying open while one of them is in use. What a mode is set with now shows without scrolling. FIDE Periods was ninth and is third.
+- **Translations.** Eighteen read-throughs of the seven languages found no broken text and a number of words that disagreed between two screens. Spanish says *retardo* for the delay everywhere, and no longer has two buttons reading EMPEZAR; Portuguese abbreviates a turn T, for Turno; French, German and Italian lose a stray word each; Brazilian loses two European turns of phrase. Off, in the Omni settings, is *Sans*, *Sin*, *Sem* rather than "no". The manual names Cumulative Transfer as each language's screen shows it.
+
+### Fixed
+- **Omni-Timer, screen off**: the phone was kept awake for the turn's clock alone. A round's, a game's or the session's limit ending first was slept through, and with the turn clock off nothing kept it awake at all. It is kept awake for whichever clock ends first.
+- **Connected board** (Complete; still not tried on a real board, and read against other people's drivers instead):
+  - A piece slid from one square to another that rests on a square on its way is one move. It was two, and passed the turn twice.
+  - A Certabo's lines carry a mark before their numbers, and every one of them was set aside: connected, and no move ever.
+  - A Millennium that lost one Bluetooth notification said nothing more until it was reconnected.
+  - A pawn put on its last rank and then changed for a queen: no move was read after it.
+  - A piece picked up while another was played named the wrong move.
+  - A DGT that lost a message named moves nobody played.
+  - The open protocol's commands were sent with a newline its boards do not expect, and two at once for draughts.
+  - A board with a long name pushed Disconnect off its card.
+
 ## v0.8.44 — 2026-11-18
 
 A byoyomi read aloud as at a shogi board, and a game closed by surprise that comes back where it
