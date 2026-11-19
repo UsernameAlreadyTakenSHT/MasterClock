@@ -325,7 +325,14 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                 }
             }
             val handleColor = MaterialTheme.colorScheme.primary
-            Box(modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).onSizeChanged { canvas = if (it.width == canvas.width) androidx.compose.ui.unit.IntSize(it.width, maxOf(it.height, canvas.height)) else it }
+            Box(modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).onSizeChanged { canvas = if (it.width == canvas.width) androidx.compose.ui.unit.IntSize(it.width, maxOf(it.height, canvas.height)) else it }) {
+                // The page itself: as tall as the box has been, and held to its bottom edge. A panel
+                // opening above takes height from the box, not from the page -- it covers the top of
+                // the drawing and moves nothing. Sized by the box as it stood, the whole drawing shrank;
+                // held to its top, it slid down by the panel's height, and a finger put back where a
+                // shape had just been drawn found the paper beside it.
+                val pageHeight = with(androidx.compose.ui.platform.LocalDensity.current) { canvas.height.toDp() }
+                Box(modifier = (if (canvas.height > 0) Modifier.fillMaxWidth().wrapContentHeight(Alignment.Bottom, unbounded = true).height(pageHeight) else Modifier.fillMaxSize())
                 // A tap selects the shape under it, or lets go of the one selected.
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { offset: Offset -> selected = shapeAt(edit.paths, offset.x / liveScale, offset.y / liveScale, SHAPE_REACH.toPx() / liveScale) })
@@ -429,6 +436,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                             }
                         }
                     }
+                }
                 }
             }
         }

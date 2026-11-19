@@ -309,7 +309,9 @@ fun TimerScreen(
             ArbitreOverlay(
                 numberOfPlayers = settings.numberOfPlayers,
                 tableClock = viewModel.isTableClock(),
-                hasSavedClock = viewModel.hasKeptClocks.collectAsState().value,
+                // Two things come back by this button: the clocks the arbiter's Save kept, and the game
+                // the app was closed on, which this build does not take up by itself at launch.
+                hasSavedClock = viewModel.hasKeptClocks.collectAsState().value || viewModel.hasSavedClock.collectAsState().value,
                 contentRotation = iconRotation,
                 onAdjust = { idx, amt -> viewModel.adjustTime(idx, amt) },
                 canAdjust = { viewModel.isTimeAdjustable(it) },
@@ -320,8 +322,11 @@ fun TimerScreen(
                 // face shows it; the moves too, where no row of their own already counts them.
                 readingOf = { idx -> ArbitreReading(state, idx, viewModel.playerMode(idx), settings, showMoves = !viewModel.isTableClock() && !viewModel.isMoveCountAdjustable(idx)) },
                 onSave = { viewModel.keepClocks() },
-                // Asked first, as Reset is: it replaces the clocks in play and every move since.
-                onResume = { showRestoreDialog = true },
+                // What Save kept, asked first as Reset is: it replaces the clocks in play and every
+                // move since. With nothing kept, the game left when the app closed, as it always was:
+                // kept clocks alone took that way back out, and a game interrupted stayed stored with
+                // nothing on screen to bring it back.
+                onResume = { if (viewModel.hasKeptClocks.value) showRestoreDialog = true else viewModel.resumeSavedClock() },
                 onClose = { viewModel.toggleArbitreMode() }
             ) 
         }
