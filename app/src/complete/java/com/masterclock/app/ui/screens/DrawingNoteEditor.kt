@@ -168,12 +168,17 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     }
     fun photoBackground(source: NotebookNote) {
         val from = source.imagePath ?: return
+        val before = note.imagePath
         noteTheCanvas()
         scope.launch {
             // Off the main thread: a photo is megabytes.
             val copied = withContext(Dispatchers.IO) { copyBackgroundPhoto(context, note.id, from) } ?: return@launch
             backgroundCount++
             onUpdate { it.copy(imagePath = copied.absolutePath, drawingBoard = false) }
+            // The photo it replaces, where that is another file: a drawing restored from a backup
+            // keeps its photo under the id it had then, which no later sweep goes by, so it stayed
+            // on the disk for good, unshredded.
+            shredReplacedMedia(context, before, copied)
         }
     }
     fun boardBackground(source: NotebookNote) {

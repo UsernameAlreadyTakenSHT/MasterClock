@@ -259,12 +259,22 @@ fun RichText.headingToggled(start: Int, end: Int, bit: Int): RichText {
     val lines = linesAround(start, end)
     if (lines.isEmpty()) return this
     val c = charStylesOf(this)
-    val on = !allHave(lines.first, lines.last + 1, bit)
+    // Line by line, as centring is: the breaks between the lines never carry the heading, so the
+    // range never all had it, and a heading set on two lines at once could not be taken off them.
+    val on = !lines.all { text[it] == '\n' || c.styles[it] and bit != 0 }
     for (i in lines) {
         if (text[i] == '\n') continue
         c.styles[i] = (c.styles[i] and NoteStyle.HEADINGS.inv()) or (if (on) bit else 0)
     }
     return RichText(text, spansOf(c.styles, c.colors))
+}
+
+/** Whether every character of the lines touched by [start]..[end] has [bit], their line breaks aside. */
+fun RichText.linesAllHave(start: Int, end: Int, bit: Int): Boolean {
+    val lines = linesAround(start, end)
+    if (lines.isEmpty()) return false
+    val styles = charStylesOf(this).styles
+    return lines.any { text[it] != '\n' } && lines.all { text[it] == '\n' || styles[it] and bit != 0 }
 }
 
 /** The lines touched by the selection centred, or put back to the left if they all were. */

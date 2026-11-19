@@ -146,9 +146,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            var pendingChange by remember { mutableStateOf<(() -> Unit)?>(null) }
+            // The settings asked for, not a function that applies them, so that it can be saved: a font
+            // size or a language changed while the question stood recreated the screen, the question
+            // went, and the change with it, nothing said. The clock's own question is saved the same.
+            var pendingChange by androidx.compose.runtime.saveable.rememberSaveable(stateSaver = PendingSettingsSaver) {
+                mutableStateOf<com.masterclock.app.logic.ChessClockSettings?>(null)
+            }
             MasterClockTheme(eInkDarkMode = reversed) {
-                pendingChange?.let { apply ->
+                pendingChange?.let { wanted ->
+                    val apply = { timerViewModel.updateSettings(wanted) }
                     MMDAlertDialog(
                         onDismissRequest = { pendingChange = null },
                         title = stringResource(R.string.timer_reset_title),
@@ -176,7 +182,7 @@ class MainActivity : ComponentActivity() {
                                 onSettingsChanged = { new ->
                                     val current = timerViewModel.settings.value
                                     if (current.confirmReset && timerViewModel.uiState.value.activePlayer != null && settingsEndTheGame(current, new)) {
-                                        pendingChange = { timerViewModel.updateSettings(new) }
+                                        pendingChange = new
                                     } else timerViewModel.updateSettings(new)
                                 },
                                 onBackClick = {
@@ -211,3 +217,14 @@ private const val KEY_REVERSED = "reversed"
 
 /** How soon a second Back on the clock must follow the first to leave the app. */
 private const val DOUBLE_BACK_WINDOW_MS = 2_000L
+
+/** A settings change waiting on its question, kept across a recreation as text; none is the empty string. */
+private val PendingSettingsSaver = androidx.compose.runtime.saveable.Saver<com.masterclock.app.logic.ChessClockSettings?, String>(
+    save = { it?.let { s -> PendingSettingsJson.encodeToString(com.masterclock.app.logic.ChessClockSettings.serializer(), s) } ?: "" },
+    restore = { text ->
+        if (text.isEmpty()) null
+        else runCatching { PendingSettingsJson.decodeFromString(com.masterclock.app.logic.ChessClockSettings.serializer(), text) }.getOrNull()
+    },
+)
+
+private val PendingSettingsJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }

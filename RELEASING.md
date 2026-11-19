@@ -1,6 +1,6 @@
 # Releasing MasterClock
 
-A release touches **nine files across four places**, and nothing warns you when one is missed:
+A release touches **fourteen files across five places**, and nothing warns you when one is missed:
 the build still succeeds, the tests still pass, and the wrong thing ships. v0.8.13 was tagged with
 `CHANGELOG.md` left untouched, so the GitHub Release published the previous version's notes.
 
@@ -56,7 +56,8 @@ The same notes have to be written seven times, in three different shapes.
   `ChangelogEntry`. This is what the in-app changelog dialog shows, each build reading its own:
   `notes` are every build's, and `perFlavor` gives a build its own list instead -- the same choice
   of notes as its fastlane file below. An empty list is a release with nothing for that build, which
-  its dialog still lists, as a shared update.
+  its dialog still lists, as a shared update -- in an older entry. The newest entry needs a line
+  for every build, be it "Nothing changes in this build": `ChangelogTest` fails without one.
   `ChangelogTest` checks that the entry is the version being built and that the five fastlane files
   exist for its `versionCode`.
 - **`fastlane*/metadata/android/en-US/changelogs/<versionCode>.txt`** — five files, one per

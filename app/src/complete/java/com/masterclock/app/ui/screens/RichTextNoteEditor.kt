@@ -109,6 +109,7 @@ import com.masterclock.app.logic.runs
 import com.masterclock.app.logic.edited
 import com.masterclock.app.logic.centeredLineStarts
 import com.masterclock.app.logic.isCenteredLine
+import com.masterclock.app.logic.linesAllHave
 import com.masterclock.app.logic.emojiRanges
 import com.masterclock.app.logic.headingToggled
 import com.masterclock.app.logic.isTickedLine
@@ -178,6 +179,8 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     fun isOn(bit: Int): Boolean {
         val selection = field.selection
         return if (selection.collapsed) ((typing ?: rich.styleAt(selection.start)).first and bit) != 0
+        // A heading is its lines', and the line breaks between them carry none; see headingToggled.
+        else if (bit and NoteStyle.HEADINGS != 0) rich.linesAllHave(selection.min, selection.max, bit)
         else rich.allHave(selection.min, selection.max, bit)
     }
 
@@ -253,9 +256,11 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     /** [text] where the cursor is, over the selection if there is one, in the style typed there. */
     fun insert(text: String) {
         val selection = field.selection
-        record(false)
         val newText = rich.text.replaceRange(selection.min, selection.max, text)
+        // Before the history is touched: an insert refused for want of room emptied Redo and added
+        // an Undo step that undid nothing.
         if (newText.length > MAX_NOTE_CONTENT_CHARS) return
+        record(false)
         val cursor = selection.min + text.length
         val next = rich.edited(newText, typing, cursor = cursor)
         rich = next

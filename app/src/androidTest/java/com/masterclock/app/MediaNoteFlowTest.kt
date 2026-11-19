@@ -134,16 +134,26 @@ class MediaNoteFlowTest {
         val note = NotebookNote(title = "Zoomed", type = NotebookNoteType.IMAGE)
         open(note.copy(imagePath = aPhoto(note.id).absolutePath))
         val photo = rule.onNode(hasContentDescription(complete("tools_note_image")))
+        // By its name: the key is Complete's, and this file compiles for every build.
+        fun zoom() = photo.fetchSemanticsNode().config.first { it.key.name == "PhotoZoomScale" }.value as Float
         rule.waitForIdle()
         shot("zoom_whole")
+        org.junit.Assert.assertEquals(1f, zoom(), 0.001f)
         photo.performTouchInput { doubleClick(Offset(width * 0.2f, height * 0.4f)) }
+        rule.waitForIdle()
         shot("zoom_double_tap")
+        val tapped = zoom()
+        org.junit.Assert.assertTrue("double tap: $tapped", tapped > 1.2f)
         photo.performTouchInput {
             pinch(center - Offset(60f, 0f), center + Offset(60f, 0f), center - Offset(200f, 0f), center + Offset(200f, 0f), durationMillis = 400)
         }
+        rule.waitForIdle()
         shot("zoom_pinched")
+        org.junit.Assert.assertTrue("pinch: ${zoom()} after $tapped", zoom() > tapped)
         photo.performTouchInput { doubleClick(center) }
+        rule.waitForIdle()
         shot("zoom_whole_again")
+        org.junit.Assert.assertEquals(1f, zoom(), 0.001f)
     }
 
     @Test

@@ -148,6 +148,12 @@ def main():
             sys.exit(f"{path} already exists: this versionCode has been started. Nothing was written.")
         changes[path] = MARK + "\n"
 
+    # Every file's directory, before the first is written: a listing with no changelogs/ stopped
+    # the script on its notes, the last to be written, with every other file already bumped.
+    for path in changes:
+        if not os.path.isdir(os.path.dirname(os.path.join(ROOT, path))):
+            sys.exit(f"{os.path.dirname(path)}/ does not exist, for {path}. Nothing was written.")
+
     verb = "Would write" if args.dry_run else "Wrote"
     for path, text in changes.items():
         if not args.dry_run:

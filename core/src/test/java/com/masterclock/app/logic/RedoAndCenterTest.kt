@@ -97,4 +97,19 @@ class RedoAndCenterTest {
         assertEquals(starts.filter { rich.isCenteredLine(it) }.toSet(), rich.centeredLineStarts())
         assertEquals(setOf(4, 9), rich.centeredLineStarts())
     }
+
+    @Test
+    fun `a heading set on several lines at once comes off them at once`() {
+        val plain = RichText("one\ntwo")
+        val headed = plain.headingToggled(0, 7, NoteStyle.LARGE)
+        assertTrue(headed.linesAllHave(0, 7, NoteStyle.LARGE))
+        assertFalse(plain.linesAllHave(0, 7, NoteStyle.LARGE))
+        val back = headed.headingToggled(0, 7, NoteStyle.LARGE)
+        assertFalse(back.linesAllHave(0, 7, NoteStyle.LARGE))
+        assertEquals(emptyList<NoteSpan>(), back.spans)
+        // One of two: the button is off, and pressing it makes both.
+        val half = plain.headingToggled(0, 0, NoteStyle.LARGE)
+        assertFalse(half.linesAllHave(0, 7, NoteStyle.LARGE))
+        assertTrue(half.headingToggled(0, 7, NoteStyle.LARGE).linesAllHave(0, 7, NoteStyle.LARGE))
+    }
 }

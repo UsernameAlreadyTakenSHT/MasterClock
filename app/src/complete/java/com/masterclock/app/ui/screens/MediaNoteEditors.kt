@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
@@ -249,6 +250,9 @@ fun ImageNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                             zoom = zoom.transformed(pinch, centroid.x, centroid.y, pan.x, pan.y, size.width.toFloat(), size.height.toFloat())
                         }
                     }
+                    // For the tests alone, which had nothing to read: the one that double-tapped and
+                    // pinched passed whether or not either did anything. A key TalkBack does not speak.
+                    .semantics { this[PhotoZoomScale] = zoom.scale }
                     .graphicsLayer { scaleX = zoom.scale; scaleY = zoom.scale; translationX = zoom.x; translationY = zoom.y },
             )
         }
@@ -519,6 +523,9 @@ internal fun commitTake(context: android.content.Context, pending: File, target:
  * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
  * of it. Off the main thread, since it may be exactly that video.
  */
+/** How far the photo is enlarged, 1 being whole; see its use. */
+internal val PhotoZoomScale = androidx.compose.ui.semantics.SemanticsPropertyKey<Float>("PhotoZoomScale")
+
 internal fun shredReplacedMedia(context: android.content.Context, oldPath: String?, newFile: File) {
     if (oldPath == null) return
     val old = File(oldPath)

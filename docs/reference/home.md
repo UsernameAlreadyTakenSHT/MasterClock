@@ -165,7 +165,7 @@ Its settings are one page:
 | **Move time** | 0:30 | Move. |
 | **Reverse colors** | off | White on black. |
 | **Keep screen awake** | on | |
-| **Fullscreen** | off | Hides the status bar. |
+| **Fullscreen** | off | Hides the status bar and the navigation bar. |
 | **Sound** | off | A sound at each move, and the triple beep when a clock runs out. |
 | **Haptic feedback** | off | A vibration at each move. |
 

@@ -249,7 +249,7 @@ New import surface needs the same treatment, and `core/src/test` has the tests t
 
 ## Releases and CI
 
-Follow [RELEASING.md](RELEASING.md) — a version bump touches nine files, and missing one produces a
+Follow [RELEASING.md](RELEASING.md) — a version bump touches fourteen files, and missing one produces a
 build that looks fine and reports the wrong version. CI publishes the **first** `## ` section of
 `CHANGELOG.md` as the release body.
 
