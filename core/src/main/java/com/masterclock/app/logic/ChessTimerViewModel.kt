@@ -2461,22 +2461,10 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
             val effectiveDelta = if (s.fastMoveMode == FastMoveType.ACCELERATE && !p.isOutOfTime) {
                 // The clock runs for the whole game, and initialTotalTimeMs is where it stood when
                 // this move began: the acceleration starts again with every move.
-                val timeSpent = p.initialTotalTimeMs - p.timeRemainingMs
-                val accel = when {
-                    // Not before the grace period, whatever is set: a full speed that began below it
-                    // left the grace period no grace at all.
-                    timeSpent >= maxOf(s.fastMoveFastPeriodMs, s.fastMoveGracePeriodMs) -> s.fastMoveFullAccelRate
-                    timeSpent >= s.fastMoveGracePeriodMs -> s.fastMoveAccelRate
-                    else -> 0f
-                }
-                val exact = delta * (1.0 + accel) + carry
+                val exact = acceleratedMs(p.initialTotalTimeMs - p.timeRemainingMs, delta, p.initialTotalTimeMs, s) + carry
                 val accelerated = exact.toLong()
                 carry = exact - accelerated
-                // The acceleration is on the time left, not on an overrun. The tick that empties
-                // the clock counted the rest of itself accelerated too, so a 10s tick at double
-                // speed with 7s left read 13s over rather than the 6.5s that had passed since zero.
-                if (accelerated > p.timeRemainingMs && accel > 0f) p.timeRemainingMs + (delta - (p.timeRemainingMs / (1f + accel)).toLong()).coerceAtLeast(0)
-                else accelerated
+                accelerated
             } else delta
             // Through FlagBehavior like every other clock. It was clamped at 0:00 whatever the setting:
             // under NEGATIVE and REVERSE no overrun was counted, so the move had no limit at all, and
@@ -3395,6 +3383,53 @@ internal fun catchUpStepMs(state: ChessClockState, delta: Long, settings: ChessC
     } ?: return delta
     return minOf(delta, untilEdge.coerceAtLeast(1))
 }
+
+/**
+ * What [delta] of real time takes off an Accelerate clock that has already spent [spentMs] of its
+ * move, the speed changing where the settings say it does: at the grace period's end, and where the
+ * full rate begins.
+ *
+ * The speed was chosen once a tick, from where the tick began. A tenth of a second at a time that is
+ * right to within a tick; a clock run on after the app was closed, or back from five minutes out of
+ * sight, took the whole of it at the first speed -- five minutes left during the grace period cost
+ * five, where play would have cost fourteen at the default rates.
+ *
+ * And at [emptyAtMs] spent, the clock is empty: the acceleration is on the time left, not on an
+ * overrun, which counts at the speed of time. The tick that empties the clock counted the rest of
+ * itself accelerated too, so a 10s tick at double speed with 7s left read 13s over rather than the
+ * 6.5s that had passed since zero.
+ */
+internal fun acceleratedMs(spentMs: Long, delta: Long, emptyAtMs: Long, s: PlayerSettings): Double {
+    val grace = s.fastMoveGracePeriodMs.toDouble()
+    // Not before the grace period, whatever is set: a full speed that began below it left the
+    // grace period no grace at all.
+    val full = maxOf(s.fastMoveFastPeriodMs, s.fastMoveGracePeriodMs).toDouble()
+    val empty = emptyAtMs.toDouble()
+    var spent = spentMs.toDouble()
+    var left = delta.toDouble()
+    var taken = 0.0
+    // Four stretches at most: grace, the first rate, the full rate, the overrun.
+    repeat(4) {
+        if (left <= 0.0) return taken
+        val rate = when {
+            spent >= empty -> 0f
+            spent >= full -> s.fastMoveFullAccelRate
+            spent >= grace -> s.fastMoveAccelRate
+            else -> 0f
+        }
+        val speed = (1.0 + rate).coerceAtLeast(MIN_ACCELERATED_SPEED)
+        val edge = listOf(grace, full, empty).filter { it > spent }.minOrNull()
+        val real = if (edge == null) left else minOf(left, (edge - spent) / speed)
+        taken += real * speed
+        // Onto the edge itself where it is reached, so that rounding cannot leave the clock a hair short of it.
+        spent = if (edge != null && real < left) edge else spent + real * speed
+        left -= real
+    }
+    return taken + left
+}
+
+/** A rate of -1 or less would stop the clock or run it backwards; no setting offers one. */
+private const val MIN_ACCELERATED_SPEED = 0.01
 
 /** More turns than any sleep is worth following one by one; past it the rest is taken at once. */
 private const val MAX_CATCH_UP_STEPS = 500
@@ -5275,7 +5310,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val state = _uiState.value
         if (!FlavorConfig.hasArbitre() || state.activePlayer == null) return
         if (isGameOver(state, _settings.value.flagBehavior, _settings.value.numberOfPlayers)) {
+            // What the arbiter kept stays: a penalty given to the wrong player that flagged them is
+            // the very thing Save is pressed against.
+            val kept = keptClocks
             clearSavedClock()
+            keptClocks = kept
+            _hasKeptClocks.value = kept != null
             return
         }
         lastAutoSaveTime = SystemClock.elapsedRealtime()
@@ -5355,7 +5395,67 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    /** What the arbiter's Save kept: the clocks, how far into the move, the game they are of, and when. */
+    private class KeptClocks(val state: ChessClockState, val moveElapsedMs: Long, val logId: String?, val at: Long)
+
+    /**
+     * The arbiter's own save, apart from the one a game is resumed from after the app closed. Save
+     * wrote that one, which every move, pause, correction and ten seconds write again: Resume, pressed
+     * to take a correction back, read the save the correction itself had just written, and nothing
+     * came back. Held for the game in play and in memory alone -- it is a way back within a sitting,
+     * and the game that survives the app is the other save's.
+     */
+    private var keptClocks: KeptClocks? = null
+    private val _hasKeptClocks = MutableStateFlow(false)
+    val hasKeptClocks: StateFlow<Boolean> = _hasKeptClocks.asStateFlow()
+
+    /** The arbiter's Save: the clocks as they stand, to come back to with [restoreKeptClocks]. */
+    fun keepClocks() {
+        val state = _uiState.value
+        if (state.activePlayer == null) return
+        val moveElapsed = ((pausedAt ?: SystemClock.elapsedRealtime()) - moveStartTime).coerceAtLeast(0)
+        keptClocks = KeptClocks(state, moveElapsed, currentLog?.id, System.currentTimeMillis())
+        _hasKeptClocks.value = true
+        // And the save a closed app comes back to, as it stood: Save has always written it.
+        saveClockForLater()
+    }
+
+    /** The arbiter's Resume: the clocks [keepClocks] kept, paused, and the log cut back to them. */
+    fun restoreKeptClocks() {
+        val kept = keptClocks ?: return
+        // Another game's: there is nothing of this one to go back to.
+        if (kept.logId != currentLog?.id) {
+            dropKeptClocks()
+            return
+        }
+        timerJob?.cancel()
+        timerJob = null
+        aliveSaveId = 0L
+        val now = SystemClock.elapsedRealtime()
+        lastTickTime = now
+        moveStartTime = now - kept.moveElapsedMs
+        pausedAt = now
+        _uiState.value = kept.state.copy(isPaused = true, isArbitreMode = _uiState.value.isArbitreMode)
+        // The moves played since go from the log with the clocks they were played on, as they do
+        // when a game is resumed: left there, played again they were logged twice.
+        currentLog?.let { log ->
+            val upToThen = log.events.filter { it.timestamp <= kept.at }
+            if (upToThen.size != log.events.size) currentLog = log.copy(events = upToThen).also { historyWrites.trySend(HistoryWrite.Store(it)) }
+        }
+        pendingBoardNotation = null
+        lastBoardNotation = null
+        lastAutoSaveTime = now
+        saveClockForLater()
+    }
+
+    private fun dropKeptClocks() {
+        keptClocks = null
+        _hasKeptClocks.value = false
+    }
+
     private fun clearSavedClock() {
+        // A game ended, reset or replaced: what the arbiter kept of it goes with it.
+        dropKeptClocks()
         savedClockGeneration++
         // No save, so nothing for a mark to be written for.
         aliveSaveId = 0L

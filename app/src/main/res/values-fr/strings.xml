@@ -610,6 +610,8 @@
     <string name="timer_arbitre">Arbitre</string>
     <string name="timer_save_clock">Enregistrer</string>
     <string name="timer_resume">Reprendre</string>
+    <string name="timer_restore_message">Tout ce qui s\'est passé depuis sera perdu.</string>
+    <string name="timer_restore_title">Revenir aux pendules gardées ?</string>
     <string name="timer_start">Démarrer</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CYCLE\u00A0: %d</string>

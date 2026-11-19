@@ -84,6 +84,32 @@ class ArbiterFlowTest {
         rule.waitUntil(TIMEOUT_MS) { !viewModel.hasSavedClock.value }
     }
 
+    @Test
+    fun whatSaveKeptComesBackAfterACorrection() {
+        // Save wrote the save every correction writes again, so Resume brought back the clocks the
+        // correction had just left: a minute taken from the wrong player stayed taken.
+        underArbiter(PlayerSettings(mode = TimerMode.SUDDEN_DEATH, initialTimeMs = 300_000))
+        fun times() = viewModel.uiState.value.players.map { it.timeRemainingMs }
+        org.junit.Assert.assertFalse(viewModel.hasKeptClocks.value)
+        val kept = times()
+        rule.runOnUiThread { viewModel.keepClocks() }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.hasKeptClocks.value }
+
+        rule.runOnUiThread { viewModel.adjustTime(1, -60_000) }
+        rule.waitUntil(TIMEOUT_MS) { times() != kept }
+        rule.runOnUiThread { viewModel.restoreKeptClocks() }
+        rule.waitUntil(TIMEOUT_MS) { times() == kept }
+        org.junit.Assert.assertTrue(viewModel.uiState.value.isPaused)
+        org.junit.Assert.assertTrue(viewModel.uiState.value.isArbitreMode)
+
+        // And a game ended takes what was kept of it along.
+        rule.runOnUiThread {
+            viewModel.toggleArbitreMode()
+            viewModel.reset()
+        }
+        rule.waitUntil(TIMEOUT_MS) { !viewModel.hasKeptClocks.value }
+    }
+
     private companion object {
         const val TIMEOUT_MS = 10_000L
     }

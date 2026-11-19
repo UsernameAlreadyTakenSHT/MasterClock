@@ -15,8 +15,7 @@ Changelog: https://github.com/UsernameAlreadyTakenSHT/MasterClock/blob/HEAD/CHAN
 Name: MasterClock Paper
 Summary: A high-contrast chess clock for E-Ink devices
 Description: |-
-  MasterClock Paper is a chess clock built specifically for E-Ink devices (such as Mudita
-  Pure/Kompakt-style hardware), using a pure black-and-white interface designed for E-Ink
+  MasterClock Paper is a chess clock built specifically for E-Ink devices, using a pure black-and-white interface designed for E-Ink
   screens: high contrast, no gradients, minimal redraws.
 
   It covers three timing modes: Timer (Sudden Death), Fischer, and Move Timer, plus a

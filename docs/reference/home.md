@@ -118,8 +118,8 @@ move count. Under them:
 | **1 min**, with − and + | Takes a minute from that player's clock, or adds one. |
 | **1 s**, with − and + | The same, by a second. |
 | **Moves**, with − and + | FIDE Periods with the move counter on: corrects the move count. A move that reaches a period's count starts the next period, with its time; a move taken back undoes it. |
-| **Save** | Keeps the clocks as they stand, to come back to. |
-| **Resume** | Brings the saved clocks back. Shown when there are some. |
+| **Save** | Keeps the clocks as they stand, to come back to: before a correction, say. Kept for the game in play, until it ends or the app closes. |
+| **Resume** | Brings the clocks Save kept back, after asking, and takes the moves played since out of the game's log. Shown once Save has been pressed. |
 | **Back to Game** | Closes the panel. The game stays paused: it is for the players to resume. |
 
 In the modes with one clock for the table there is one set of buttons, named **Clock**. In Move

@@ -69,6 +69,7 @@ fun TimerScreen(
     // changing -- which closed them as if Cancel had been pressed.
     var showResetDialog by rememberSaveable { mutableStateOf(value = false) }
     var showRerollDialog by rememberSaveable { mutableStateOf(value = false) }
+    var showRestoreDialog by rememberSaveable { mutableStateOf(value = false) }
     // Berserk halves a clock and cannot be taken back, and its button sits on the face its player
     // presses to move: a press meant for the clock, a little off, cost half the game's time.
     // Who asked, and which way their face is turned: the question is theirs, and in the default layout
@@ -149,7 +150,7 @@ fun TimerScreen(
     }
 
     // Out of a screen reader's reach under a question, as it is out of a finger's.
-    val askingFirst = showResetDialog || showRerollDialog || berserkAsked != null
+    val askingFirst = showResetDialog || showRestoreDialog || showRerollDialog || berserkAsked != null
     Box(modifier = Modifier.fillMaxSize().then(if (askingFirst) Modifier.clearAndSetSemantics {} else Modifier)) {
         ClockAnnouncer(
             state,
@@ -308,7 +309,7 @@ fun TimerScreen(
             ArbitreOverlay(
                 numberOfPlayers = settings.numberOfPlayers,
                 tableClock = viewModel.isTableClock(),
-                hasSavedClock = viewModel.hasSavedClock.collectAsState().value,
+                hasSavedClock = viewModel.hasKeptClocks.collectAsState().value,
                 contentRotation = iconRotation,
                 onAdjust = { idx, amt -> viewModel.adjustTime(idx, amt) },
                 canAdjust = { viewModel.isTimeAdjustable(it) },
@@ -318,13 +319,25 @@ fun TimerScreen(
                 // a correction had done. Each player's reading stands over their buttons, as their
                 // face shows it; the moves too, where no row of their own already counts them.
                 readingOf = { idx -> ArbitreReading(state, idx, viewModel.playerMode(idx), settings, showMoves = !viewModel.isTableClock() && !viewModel.isMoveCountAdjustable(idx)) },
-                onSave = { viewModel.saveClockForLater() },
-                onResume = { viewModel.resumeSavedClock() },
+                onSave = { viewModel.keepClocks() },
+                // Asked first, as Reset is: it replaces the clocks in play and every move since.
+                onResume = { showRestoreDialog = true },
                 onClose = { viewModel.toggleArbitreMode() }
             ) 
         }
     }
     
+    if (showRestoreDialog) {
+        TimerConfirmDialog(
+            title = stringResource(R.string.timer_restore_title),
+            message = stringResource(R.string.timer_restore_message),
+            confirm = stringResource(R.string.timer_resume),
+            rotation = iconRotation,
+            onDismiss = { showRestoreDialog = false },
+            onConfirm = { viewModel.restoreKeptClocks(); showRestoreDialog = false },
+        )
+    }
+
     if (showResetDialog) {
         TimerConfirmDialog(
             title = stringResource(R.string.timer_reset_title),

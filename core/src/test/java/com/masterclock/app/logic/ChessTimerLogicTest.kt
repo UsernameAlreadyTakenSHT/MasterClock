@@ -162,6 +162,34 @@ class ChessTimerLogicTest {
     }
 
     @Test
+    fun `FAST_MOVE ACCELERATE charges one long tick what the same time in small ticks costs`() {
+        // The default rates: 5 s of grace, half as fast again to 20 s, three times as fast after.
+        val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.ACCELERATE)
+        val settings = ChessClockSettings(main = s, flagBehavior = FlagBehavior.NEGATIVE)
+        val start = PlayerState(timeRemainingMs = 3_600_000, initialTotalTimeMs = 3_600_000)
+        // 5 s at 1, then 15 s of clock at 1.5 (10 s of time), then 285 s at 3.
+        assertEquals(3_600_000 - (5_000 + 15_000 + 855_000), tickPlayer(start, 300_000, s, settings).timeRemainingMs)
+        // A save taken as the move began, the app closed 9.8 s later: 5 s, then 4.8 s at 1.5.
+        assertEquals(3_600_000 - 12_200, tickPlayer(start, 9_800, s, settings).timeRemainingMs)
+        for (whole in listOf(4_000L, 9_800L, 30_000L, 300_000L)) {
+            var stepped = start
+            repeat((whole / 100).toInt()) { stepped = tickPlayer(stepped, 100, s, settings) }
+            val atOnce = tickPlayer(start, whole, s, settings).timeRemainingMs
+            assertTrue("$whole ms: $atOnce at once, ${stepped.timeRemainingMs} stepped", kotlin.math.abs(atOnce - stepped.timeRemainingMs) <= 2)
+        }
+        // Other settings than the defaults: the edges are the game's own.
+        val own = s.copy(fastMoveGracePeriodMs = 10_000, fastMoveFastPeriodMs = 60_000, fastMoveAccelRate = 1f, fastMoveFullAccelRate = 4f)
+        // 10 s at 1, 50 s of clock at 2 (25 s of time), then 25 s at 5.
+        assertEquals(3_600_000 - (10_000 + 50_000 + 125_000), tickPlayer(start, 60_000, own, ChessClockSettings(main = own)).timeRemainingMs)
+        // And past zero the overrun counts at the speed of time: 7 s left at three times the speed
+        // are gone in 2.333 s, and the rest of a 10 s tick is 7.667 s over.
+        val low = PlayerState(timeRemainingMs = 7_000, initialTotalTimeMs = 100_000)
+        val over = tickPlayer(low, 10_000, s, settings)
+        assertTrue(over.isOutOfTime)
+        assertTrue("${over.timeRemainingMs}", kotlin.math.abs(over.timeRemainingMs - 7_667) <= 1)
+    }
+
+    @Test
     fun `FAST_MOVE ACCELERATE keeps one clock for the game and restarts the acceleration each move`() {
         val s = PlayerSettings(mode = TimerMode.FAST_MOVE, fastMoveMode = FastMoveType.ACCELERATE, initialTimeMs = 100_000, fastMoveGracePeriodMs = 5000, fastMoveAccelRate = 1f)
         val settings = ChessClockSettings(main = s)

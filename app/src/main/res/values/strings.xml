@@ -642,6 +642,8 @@
     <string name="timer_arbitre">Arbiter</string>
     <string name="timer_save_clock">Save</string>
     <string name="timer_resume">Resume</string>
+    <string name="timer_restore_message">Everything since then will be lost.</string>
+    <string name="timer_restore_title">Go back to the saved clocks?</string>
     <string name="timer_start">Start</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CYCLE: %d</string>

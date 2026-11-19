@@ -599,6 +599,8 @@
     <string name="timer_arbitre">Árbitro</string>
     <string name="timer_save_clock">Guardar</string>
     <string name="timer_resume">Reanudar</string>
+    <string name="timer_restore_message">Se perderá todo lo ocurrido desde entonces.</string>
+    <string name="timer_restore_title">¿Volver a los relojes guardados?</string>
     <string name="timer_start">Iniciar</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">CICLO: %d</string>
