@@ -1,0 +1,1 @@
+A screen tapped twice opens once. The rest of this release is about features this build does not have.

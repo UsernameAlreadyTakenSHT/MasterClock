@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-18"
+    const val BUILD_DATE = "2026-11-19"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,22 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.46",
+            date = "2026-11-19",
+            notes = listOf(
+                Note("Arbiter: Save keeps the clocks as they stand and Resume brings them back, after asking. Resume used to bring back the clocks a correction had just left. And every correction is in the game's log.", FULL_MODES),
+                Note("Fast Move, Accelerate: a game closed by surprise, or left out of sight, is charged its absence at the speeds play would have counted, not all of it at the first.", FULL_MODES),
+                Note("Move Counts, Count Down: a player's last move is no longer said and logged as a flag. Random and Hidden: retyping a range's maximum no longer empties its minimum.", FULL_MODES),
+                Note("Flag behavior changed with a game in play ends that game, after asking. A voice installed after the app said it had none is found without restarting.", BEHAVIOUR_TAB),
+                Note("Notebook: a drawing no longer shrinks when the toolbar opens a row, nor loses every other shape; a long text note no longer slows at each keystroke; a heading set on several lines comes off them at once.", COMPLETE_ONLY),
+                Note("Tools: the variants generator's buttons and ten straws fit a narrow screen. A configuration shared with someone else no longer carries the location of your custom sounds.", COMPLETE_ONLY),
+                Note("Connected board, still not tried on a real one: a slid castle is a castle; a first move taken back is a move; a DGT played from the other side is read the right way; a USB bridge says it needs a driver.", COMPLETE_ONLY),
+                Note("The questions before an import, Reset settings, Clear logs and an Omni session no longer close when the theme changes or a tablet turns.", FULL_MODES),
+                Note("A screen tapped twice opens once.", setOf(AppFlavor.MINI)),
+                Note("The question before a settings change that ends the game stays on screen when the font size or the language changes.", E_INK_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.45",
             date = "2026-11-18",

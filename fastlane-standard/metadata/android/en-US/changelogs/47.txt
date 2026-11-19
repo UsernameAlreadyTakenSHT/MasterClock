@@ -1,0 +1,4 @@
+Arbiter: Save keeps the clocks and Resume brings them back, after asking; every correction is in the log.
+Fast Move, Accelerate: a long absence is charged at the speeds play would have counted.
+Flag behavior changed in play ends the game, after asking.
+Many small fixes from two read-throughs of the whole app.

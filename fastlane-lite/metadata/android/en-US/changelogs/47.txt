@@ -1,0 +1,3 @@
+Arbiter: Save keeps the clocks and Resume brings them back, after asking; every correction is in the log.
+Fast Move, Accelerate: a long absence is charged at the speeds play would have counted.
+Random and Hidden: retyping a range's maximum no longer empties its minimum.

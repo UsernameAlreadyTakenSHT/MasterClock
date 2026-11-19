@@ -1,0 +1,1 @@
+The question before a settings change that ends the game stays on screen when the font size or the language changes.

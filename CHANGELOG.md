@@ -1,3 +1,38 @@
+## v0.8.46 — 2026-11-19
+
+What two read-throughs of the whole app found, corrected: nothing serious, and a good many small
+things. The arbiter's Save and Resume do what they say, and a clock that speeds up counts a long
+absence as it would have counted it in play.
+
+### Changed
+- **Arbiter, Save and Resume** (Complete, Standard, Lite). **Save** keeps the clocks as they stand, apart from the save a closed app comes back to, and **Resume** brings them back after asking, taking the moves played since out of the game's log. Save used to write the save every move, pause and correction writes again, so Resume brought back the clocks the correction had just left. With nothing kept, Resume still brings back the game the app was closed on.
+- **Arbiter** (Complete, Standard, Lite): every correction is in the game's log, as the manual said. Only one that cost a period or a flag left a trace.
+- **Flag behavior** (Complete, Standard): changed with a game in play, it ends that game, after asking, as a change of mode does. An overrun begun under one rule was wrongly shown and counted under another.
+- **Move Counts, Count Down** (Complete, Standard, Lite): a player's last move is no longer sounded, said and logged as a flag, and marks nobody the loser. *Finished* is said once the table's moves are played.
+- **Sharing a configuration** (Complete): a file or a QR code made for someone else no longer carries the location of your custom sounds. An export kept for yourself and the full backup still do.
+- The E-Ink listing no longer names a make of device.
+
+### Fixed
+- **Fast Move, Accelerate** (Complete, Standard, Lite): a game closed by surprise, or left out of sight with no notification, was charged its whole absence at the speed it had when it began. Five minutes away during the grace period cost five, where play would have cost about fourteen at the default rates. The time is now split where the game's own settings change the speed.
+- **Random and Hidden** (Complete, Standard, Lite): retyping the maximum of a range emptied its minimum. Each field keeps what is typed in it, and a range typed the wrong way round is the same range.
+- **Notebook** (Complete):
+  - A drawing shrank each time the toolbar opened a row, and every other shape drawn in a row was lost.
+  - A long text note cost more at every keystroke the longer it grew.
+  - A heading set on several lines at once comes off them at once; an insert refused for want of room leaves Undo and Redo alone; a drawing's replaced background photo is removed from the disk.
+- **Tools** (Complete): the variants generator's two buttons are on a 360 dp screen; ten straws fit, and say to TalkBack which was drawn; *Name the square* and the Omni face scroll where they do not fit; the precision reading and Omni's turn clock stay on one line; sharing a very large game says so rather than closing the app.
+- **Connected board** (Complete; still not tried on a real board):
+  - A king slid to its castling square castles, and a castling rook that rests on its way is still the castle's.
+  - A first move taken back, or a knight gone home, is a move, not a new game.
+  - A DGT board played from the other side is read the right way round.
+  - The open protocol's commands are no longer cut to fit the link.
+  - A USB serial bridge says it needs a driver, rather than *Connected* and silence.
+  - A device with no USB service no longer closes the app at launch.
+  - The board's screen scrolls, and its log marks what could not be sent.
+- **Questions that vanished**: the questions before an import, a scanned code, Reset settings, Clear logs and an Omni session close no more when the theme changes or a tablet turns. On E-Ink, the question before a settings change that ends the game stays when the font size or the language changes.
+- **Voice** (Complete, Standard): a voice installed after the app said it had none is found without restarting the app.
+- A slider no longer shows a value the settings refused; a screen tapped twice opens once; *More modes* tells TalkBack whether it is open, and is no button over a mode in use.
+- The notes of 0.8.44 and 0.8.45 told Lite of an Omni-Timer fix it does not have.
+
 ## v0.8.45 — 2026-11-18
 
 The modes screen shows what it is set with, a connected board can say what it said, and the

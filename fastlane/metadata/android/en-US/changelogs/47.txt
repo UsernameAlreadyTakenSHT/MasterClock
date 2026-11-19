@@ -1,0 +1,5 @@
+Arbiter: Save keeps the clocks and Resume brings them back, after asking; every correction is in the log.
+Fast Move, Accelerate: a long absence is charged at the speeds play would have counted.
+Notebook: a drawing no longer shrinks or loses shapes; a long note no longer slows.
+Connected board: a slid castle, a first move taken back, a DGT turned round. Still not tried on a real board.
+Many small fixes from two read-throughs of the whole app.
