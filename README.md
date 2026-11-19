@@ -101,7 +101,7 @@ what each check proves and what it does not.
 
 ## Credits & Licensing
 
-- **Logo icon**: clock icon by [Paweł Kuna](https://opensvg.dev/icons) (v3.44.0), MIT License.
+- **Logo icon**: clock icon from [Tabler Icons](https://tabler.io/icons) by Paweł Kuna (v3.44.0), MIT License.
 - **Chess pieces**: "Cburnett" style, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces), by [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett/GFDL_images/Chess). GFDL and CC BY-SA 3.0.
 - **Draughts stones**: by [Antonsusi](https://commons.wikimedia.org/wiki/User:Antonsusi), from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_Draughts_pieces). Public domain — too simple a shape to carry copyright.
 - **Emojis** (Complete, in text notes and on drawings): [OpenMoji](https://openmoji.org/) 17.0 by the HfG Schwäbisch Gmünd, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The bundled color font is reduced to the Unicode emojis, the OpenMoji-only extras left out. The drawings a sticker is made from are OpenMoji's own SVG files, unchanged but for their names, for the emojis a note offers.
