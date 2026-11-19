@@ -107,6 +107,7 @@ import com.masterclock.app.logic.highlighterOf
 import com.masterclock.app.logic.withHighlighter
 import com.masterclock.app.logic.runs
 import com.masterclock.app.logic.edited
+import com.masterclock.app.logic.centeredLineStarts
 import com.masterclock.app.logic.isCenteredLine
 import com.masterclock.app.logic.emojiRanges
 import com.masterclock.app.logic.headingToggled
@@ -513,7 +514,9 @@ private val NOTE_COLORS = listOf(0xFF000000, 0xFF2196F3, 0xFFF44336, 0xFF4CAF50)
 private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
     val text = rich.text
     val lineStarts = generateSequence(0) { at -> text.indexOf('\n', at).takeIf { it >= 0 }?.plus(1) }.toList()
-    val centring = lineStarts.any { rich.isCenteredLine(it) }
+    // Once for the note, not once a line: see centeredLineStarts.
+    val centred = rich.centeredLineStarts()
+    val centring = centred.isNotEmpty()
     append(if (!centring) text else String(CharArray(text.length) { i -> if (text[i] == '\n' && i < text.length - 1) '​' else text[i] }))
     for (run in rich.runs()) {
         val s = run.styles
@@ -552,7 +555,7 @@ private fun annotated(rich: RichText): AnnotatedString = buildAnnotatedString {
         // The paragraph takes the line's new line with it, so that the paragraphs cover the text.
         val paragraphEnd = minOf(lineEnd + 1, text.length)
         if (centring && paragraphEnd > lineStart) {
-            addStyle(ParagraphStyle(textAlign = if (rich.isCenteredLine(lineStart)) TextAlign.Center else TextAlign.Start), lineStart, paragraphEnd)
+            addStyle(ParagraphStyle(textAlign = if (lineStart in centred) TextAlign.Center else TextAlign.Start), lineStart, paragraphEnd)
         }
     }
 }

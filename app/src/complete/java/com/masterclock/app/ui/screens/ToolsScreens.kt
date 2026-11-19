@@ -10,6 +10,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -844,6 +846,10 @@ fun Chess960Screen(onBack: () -> Unit) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                // It scrolls: the cards, the board and the buttons are some 740 dp tall at 360 dp
+                // wide, a 360 x 800 screen leaves about 650, and the two buttons, measured last,
+                // were given what was left -- nothing.
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -885,9 +891,10 @@ fun Chess960Screen(onBack: () -> Unit) {
                 ) { variant = ChessVariant.SHUFFLE; refresh() }
             }
 
-            // Fixed Height Container for Description to prevent UI jumping
+            // At least two lines' height, so the board does not jump between variants; more where a
+            // large font needs it, which a fixed height cut.
             Box(
-                modifier = Modifier.fillMaxWidth().height(40.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -909,7 +916,6 @@ fun Chess960Screen(onBack: () -> Unit) {
             FullChessBoardDisplay(whitePos, blackPos)
             
             // Removed Piece Code Display (letters) but kept logic for FEN
-            Spacer(Modifier.weight(1f))
 
             // Action Buttons
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {

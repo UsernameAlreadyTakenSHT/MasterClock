@@ -108,4 +108,15 @@ class ReviewFixesTest {
             assertFalse(state.isInByoyomi)
         }
     }
+
+    @Test
+    fun `a random range typed the wrong way round is the same range`() {
+        assertEquals(60_000L to 600_000L, randomRangeOf(600_000L, 60_000L))
+        val inverted = PlayerSettings(randomMinTimeMs = 600_000, randomMaxTimeMs = 60_000, randomMinIncMs = 5_000, randomMaxIncMs = 1_000)
+        repeat(200) {
+            val (base, inc) = drawRandomTimeControl(inverted, kotlin.random.Random(it))
+            assertTrue("base $base", base in 60_000L..600_000L)
+            assertTrue("inc $inc", inc in 1_000L..5_000L)
+        }
+    }
 }

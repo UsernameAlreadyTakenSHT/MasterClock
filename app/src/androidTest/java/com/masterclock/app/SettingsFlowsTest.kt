@@ -90,6 +90,32 @@ class SettingsFlowsTest {
         assertEquals(null, viewModel.uiState.value.activePlayer)
     }
 
+    @Test
+    fun aModeChosenWithAGameInPlayAsksBeforeEndingIt() {
+        tap(R.string.timer_start)
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.activePlayer != null }
+        rule.runOnUiThread { viewModel.pause() }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.uiState.value.isPaused }
+
+        tap(R.string.timer_settings)
+        await(hasText("Bonus"))
+        rule.onNode(hasText("Bonus") and hasClickAction()).performClick()
+
+        // The question, and nothing changed behind it: applied as the card was tapped, the game in
+        // play was gone before anyone had answered.
+        await(hasText(say(R.string.preset_end_game_title)))
+        assertEquals(TimerMode.SUDDEN_DEATH, viewModel.settings.value.main.mode)
+        rule.onNode(hasText(say(R.string.common_cancel)) and hasClickAction()).performClick()
+        rule.waitUntil(TIMEOUT_MS) { !exists(hasText(say(R.string.preset_end_game_title))) }
+        assertEquals(TimerMode.SUDDEN_DEATH, viewModel.settings.value.main.mode)
+        assertEquals(true, viewModel.uiState.value.activePlayer != null)
+
+        rule.onNode(hasText("Bonus") and hasClickAction()).performClick()
+        await(hasText(say(R.string.preset_end_game_title)))
+        rule.onNode(hasText(say(R.string.preset_end_game_confirm)) and hasClickAction()).performClick()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.mode == TimerMode.FISCHER }
+    }
+
     private companion object {
         const val TIMEOUT_MS = 10_000L
     }

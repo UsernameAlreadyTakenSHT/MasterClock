@@ -293,6 +293,22 @@ fun RichText.isCenteredLine(lineStart: Int): Boolean {
     return (lineStart until end.coerceAtMost(styles.size)).any { styles[it] and NoteStyle.CENTER != 0 }
 }
 
+/**
+ * The start of every centred line, by the rule of [isCenteredLine], in one pass over the text. The
+ * editor asked [isCenteredLine] of each line at every keystroke, and each answer builds the table of
+ * every character's style again: lines times length, which on a long note was a freeze a keystroke.
+ */
+fun RichText.centeredLineStarts(): Set<Int> {
+    if (spans.none { it.styles and NoteStyle.CENTER != 0 }) return emptySet()
+    val styles = charStylesOf(this).styles
+    val starts = mutableSetOf<Int>()
+    var lineStart = 0
+    for (i in 0 until minOf(text.length, styles.size)) {
+        if (text[i] == '\n') lineStart = i + 1 else if (styles[i] and NoteStyle.CENTER != 0) starts += lineStart
+    }
+    return starts
+}
+
 /** The start of each line touched by [start]..[end]. */
 private fun RichText.lineStarts(start: Int, end: Int): List<Int> {
     val lines = linesAround(start, end)

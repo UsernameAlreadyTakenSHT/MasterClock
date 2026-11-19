@@ -552,22 +552,22 @@ fun RandomModePanel(p: PlayerSettings, onUpdate: (PlayerSettings) -> Unit, drawn
 
             if (drawnByPlayerOne) return@Column
 
-            // Each bound drags the other along rather than letting the range invert. An inverted
-            // range played the 10:00 fallback for the session, and at the next launch the stored-
-            // settings sanitiser raised the maximum to the minimum -- so the game silently became a
-            // fixed time and the maximum the user had typed was gone.
+            // Each field keeps what is typed in it. One bound used to drag the other along so that
+            // the range could not invert, at every keystroke -- and a field being retyped is emptied
+            // on the way, which took the other bound to zero. An inverted range is read as the same
+            // range the right way round, where it is drawn and where it is stored; see randomRangeOf.
             Text(stringResource(R.string.settings_base_duration_range), style = MaterialTheme.typography.labelLarge)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                HMSInput(stringResource(R.string.settings_min_duration), p.randomMinTimeMs) { onUpdate(p.copy(randomMinTimeMs = it, randomMaxTimeMs = maxOf(p.randomMaxTimeMs, it))) }
-                HMSInput(stringResource(R.string.settings_max_duration), p.randomMaxTimeMs) { onUpdate(p.copy(randomMaxTimeMs = it, randomMinTimeMs = minOf(p.randomMinTimeMs, it))) }
+                HMSInput(stringResource(R.string.settings_min_duration), p.randomMinTimeMs) { onUpdate(p.copy(randomMinTimeMs = it)) }
+                HMSInput(stringResource(R.string.settings_max_duration), p.randomMaxTimeMs) { onUpdate(p.copy(randomMaxTimeMs = it)) }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             Text(stringResource(R.string.settings_increment_range), style = MaterialTheme.typography.labelLarge)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                HMSInput(stringResource(R.string.settings_min_increment), p.randomMinIncMs) { onUpdate(p.copy(randomMinIncMs = it, randomMaxIncMs = maxOf(p.randomMaxIncMs, it))) }
-                HMSInput(stringResource(R.string.settings_max_increment), p.randomMaxIncMs) { onUpdate(p.copy(randomMaxIncMs = it, randomMinIncMs = minOf(p.randomMinIncMs, it))) }
+                HMSInput(stringResource(R.string.settings_min_increment), p.randomMinIncMs) { onUpdate(p.copy(randomMinIncMs = it)) }
+                HMSInput(stringResource(R.string.settings_max_increment), p.randomMaxIncMs) { onUpdate(p.copy(randomMaxIncMs = it)) }
             }
         }
     }

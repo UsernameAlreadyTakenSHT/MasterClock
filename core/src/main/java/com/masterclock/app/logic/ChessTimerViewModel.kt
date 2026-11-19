@@ -272,18 +272,29 @@ internal fun drawInRange(
  */
 internal fun drawRandomTimeControl(s: PlayerSettings, random: kotlin.random.Random = kotlin.random.Random): Pair<Long, Long> {
     val base = try {
-        val min = s.randomMinTimeMs.coerceAtLeast(MIN_RANDOM_BASE_MS)
-        val max = s.randomMaxTimeMs.coerceAtLeast(min)
+        // The two bounds in either order: see randomRangeOf.
+        val (low, high) = randomRangeOf(s.randomMinTimeMs, s.randomMaxTimeMs)
+        val min = low.coerceAtLeast(MIN_RANDOM_BASE_MS)
+        val max = high.coerceAtLeast(min)
         if (s.roundedTime) drawInRange(min, max, 10_000L, 1000L, random) else drawInRange(min, max, 1000L, 1000L, random)
     } catch (_: Exception) { 600_000L }
     val inc = try {
-        if (s.roundedTime) drawInRange(s.randomMinIncMs, s.randomMaxIncMs, 1000L, 100L, random)
-        else drawInRange(s.randomMinIncMs, s.randomMaxIncMs, 100L, 100L, random)
+        val (low, high) = randomRangeOf(s.randomMinIncMs, s.randomMaxIncMs)
+        if (s.roundedTime) drawInRange(low, high, 1000L, 100L, random) else drawInRange(low, high, 100L, 100L, random)
     } catch (_: Exception) { 0L }
     return base to inc
 }
 
 private const val MIN_RANDOM_BASE_MS = 1000L
+
+/**
+ * A drawn range's two bounds, the lower first, whichever field holds which. The settings screen
+ * kept them in order by dragging one bound along with the other at every keystroke, and a field
+ * being retyped passes through one digit and through none: making a maximum of 10 minutes 20 took
+ * the minimum down to 1:00 and then to 0:00, and left it there. Now each field keeps what was typed
+ * in it, and a range typed the wrong way round is the same range.
+ */
+internal fun randomRangeOf(a: Long, b: Long): Pair<Long, Long> = minOf(a, b) to maxOf(a, b)
 
 /**
  * What the live region says for [state]. [flagBehavior] is the game's: it alone says whether a player
@@ -1262,8 +1273,7 @@ private fun shortcutLabelFor(settings: ChessClockSettings, words: TimeControlWor
     // promise a number the player will not actually see.
     if (s.mode == TimerMode.RANDOM || s.mode == TimerMode.HIDDEN) {
         val name = if (s.mode == TimerMode.RANDOM) "Random" else "Hidden"
-        val low = s.randomMinTimeMs
-        val high = s.randomMaxTimeMs
+        val (low, high) = randomRangeOf(s.randomMinTimeMs, s.randomMaxTimeMs)
         // In seconds unless both are whole minutes: 30 to 90 seconds read "0-1 min".
         val range = if (low % 60_000 == 0L && high % 60_000 == 0L) "${low / 60_000}-${high / 60_000} min" else "${low / 1000}-${high / 1000}s"
         return if (high > 0) "$name $range" else name
@@ -1764,10 +1774,14 @@ private fun validateImportedPlayerSettings(settings: PlayerSettings): PlayerSett
     // Bounded above too, as every duration below is: FIDE and byoyomi were, and nothing else. An
     // initial time near Long.MAX_VALUE overflowed as the first increment was added, into a negative
     // clock that flagged on the next tick, and a random range there overflowed the draw.
-    val randomMinTimeMs = settings.randomMinTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS)
-    val randomMaxTimeMs = settings.randomMaxTimeMs.coerceIn(randomMinTimeMs, MAX_IMPORTED_DURATION_MS)
-    val randomMinIncMs = settings.randomMinIncMs.coerceIn(0, MAX_IMPORTED_DURATION_MS)
-    val randomMaxIncMs = settings.randomMaxIncMs.coerceIn(randomMinIncMs, MAX_IMPORTED_DURATION_MS)
+    // Put in order rather than the maximum raised to the minimum: that made a range typed the wrong
+    // way round a fixed time, and lost the bound the user had typed.
+    val (lowTime, highTime) = randomRangeOf(settings.randomMinTimeMs, settings.randomMaxTimeMs)
+    val randomMinTimeMs = lowTime.coerceIn(0, MAX_IMPORTED_DURATION_MS)
+    val randomMaxTimeMs = highTime.coerceIn(randomMinTimeMs, MAX_IMPORTED_DURATION_MS)
+    val (lowInc, highInc) = randomRangeOf(settings.randomMinIncMs, settings.randomMaxIncMs)
+    val randomMinIncMs = lowInc.coerceIn(0, MAX_IMPORTED_DURATION_MS)
+    val randomMaxIncMs = highInc.coerceIn(randomMinIncMs, MAX_IMPORTED_DURATION_MS)
     return settings.copy(
         initialTimeMs = settings.initialTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),
         moveTimeMs = settings.moveTimeMs.coerceIn(0, MAX_IMPORTED_DURATION_MS),

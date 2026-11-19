@@ -87,4 +87,14 @@ class RedoAndCenterTest {
         // A bullet put in front of a centred line leaves it centred.
         assertTrue(centred.listToggled(0, 0, ListKind.BULLET).rich.isCenteredLine(0))
     }
+
+    @Test
+    fun `the centred lines found in one pass are the ones asked for line by line`() {
+        val plain = RichText("one\ntwo\n\nfour")
+        assertEquals(emptySet<Int>(), plain.centeredLineStarts())
+        val rich = plain.centerToggled(4, 4).centerToggled(9, 9)
+        val starts = listOf(0, 4, 8, 9)
+        assertEquals(starts.filter { rich.isCenteredLine(it) }.toSet(), rich.centeredLineStarts())
+        assertEquals(setOf(4, 9), rich.centeredLineStarts())
+    }
 }

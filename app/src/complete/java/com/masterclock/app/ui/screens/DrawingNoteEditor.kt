@@ -122,8 +122,15 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     // The canvas the strokes belong to, and the one on screen: on another, they are drawn to its scale
     // and new ones are taken back to theirs. A drawing from before its canvas was kept takes this one's.
     var drawnOn by remember { mutableStateOf(if (note.drawingWidth > 0f && note.drawingHeight > 0f) androidx.compose.ui.geometry.Size(note.drawingWidth, note.drawingHeight) else null) }
+    // The page, that is: the tallest this box has been at its width. The box itself loses height to
+    // whatever the toolbar opens -- a selected shape's row, the pieces, the emoji, the keyboard under
+    // the title -- and measured as it stood, the whole drawing shrank each time one opened, and a
+    // first sticker was sized from the strip its own picker had left. What a panel covers is covered.
     var canvas by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     val scale = drawnOn?.let { drawingScale(it.width, it.height, canvas.width.toFloat(), canvas.height.toFloat()) } ?: 1f
+    // Read by the gestures as it stands, and not a key of theirs: a key that changes restarts the
+    // gesture in hand, with neither its end nor its cancellation called, and the stroke was lost.
+    val liveScale by rememberUpdatedState(scale)
     PersistDebounced(Triple(title, currentPaths, drawnOn)) { (newTitle, paths, size) -> onUpdate { it.copy(title = newTitle, drawingPaths = paths, drawingWidth = size?.width ?: it.drawingWidth, drawingHeight = size?.height ?: it.drawingHeight) } }
 
     fun selectedShape(): DrawingPath? = selected?.let { edit.paths.getOrNull(it) }?.takeIf { it.isSelectable }
@@ -310,28 +317,28 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                 }
             }
             val handleColor = MaterialTheme.colorScheme.primary
-            Box(modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).onSizeChanged { canvas = it }
+            Box(modifier = Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).onSizeChanged { canvas = if (it.width == canvas.width) androidx.compose.ui.unit.IntSize(it.width, maxOf(it.height, canvas.height)) else it }
                 // A tap selects the shape under it, or lets go of the one selected.
-                .pointerInput(scale) {
-                    detectTapGestures(onTap = { offset: Offset -> selected = shapeAt(edit.paths, offset.x / scale, offset.y / scale, SHAPE_REACH.toPx() / scale) })
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = { offset: Offset -> selected = shapeAt(edit.paths, offset.x / liveScale, offset.y / liveScale, SHAPE_REACH.toPx() / liveScale) })
                 }
-                .pointerInput(tool, currentColor, currentWidth, scale) {
+                .pointerInput(tool, currentColor, currentWidth) {
                     var grip: ShapeGrip? = null
                     var origin = 0f to 0f
                     var drawingShape = false
                     fun reset() { grip = null; drawingShape = false; preview = null; activePoints.clear() }
                     detectDragGestures(
                         onDragStart = { offset ->
-                            val at = offset.x / scale to offset.y / scale
+                            val at = offset.x / liveScale to offset.y / liveScale
                             origin = at
                             // On the shape selected, or on one of its handles: that shape is what moves.
-                            grip = selectedShape()?.let { gripAt(it, at.first, at.second, SHAPE_HANDLE.toPx() / scale, SHAPE_REACH.toPx() / scale) }
+                            grip = selectedShape()?.let { gripAt(it, at.first, at.second, SHAPE_HANDLE.toPx() / liveScale, SHAPE_REACH.toPx() / liveScale) }
                             when {
                                 grip != null -> preview = selectedShape()
                                 tool.shape in DrawingShape.SHAPES -> {
                                     selected = null
                                     drawingShape = true
-                                    preview = shapePath(tool.shape, at, at, currentColor, currentWidth / scale)
+                                    preview = shapePath(tool.shape, at, at, currentColor, currentWidth / liveScale)
                                 }
                                 else -> {
                                     selected = null
@@ -341,7 +348,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                             }
                         },
                         onDrag = { change, _ ->
-                            val at = change.position.x / scale to change.position.y / scale
+                            val at = change.position.x / liveScale to change.position.y / liveScale
                             val held = grip
                             when {
                                 held != null -> preview = selectedShape()?.gripped(held, at.first - origin.first, at.second - origin.second)
@@ -356,7 +363,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                                 grip != null -> if (shown != null && index != null) edit = edit.replace(index, shown)
                                 drawingShape -> {
                                     // A shape too small to see is a slip of the finger.
-                                    val big = shown != null && kotlin.math.hypot(shown.shapeEnd.first - shown.shapeStart.first, shown.shapeEnd.second - shown.shapeStart.second) * scale > SHAPE_REACH.toPx() / 2
+                                    val big = shown != null && kotlin.math.hypot(shown.shapeEnd.first - shown.shapeStart.first, shown.shapeEnd.second - shown.shapeStart.second) * liveScale > SHAPE_REACH.toPx() / 2
                                     if (shown != null && big && edit.paths.size < MAX_DRAWING_PATHS) {
                                         noteTheCanvas()
                                         edit = edit.addStroke(shown)
@@ -365,7 +372,7 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
                                 }
                                 activePoints.isNotEmpty() && edit.paths.size < MAX_DRAWING_PATHS -> {
                                     noteTheCanvas()
-                                    edit = edit.addStroke(DrawingPath(points = activePoints.toList(), color = currentColor, strokeWidth = currentWidth / scale, isEraser = tool == DrawTool.ERASER))
+                                    edit = edit.addStroke(DrawingPath(points = activePoints.toList(), color = currentColor, strokeWidth = currentWidth / liveScale, isEraser = tool == DrawTool.ERASER))
                                 }
                             }
                             reset()
