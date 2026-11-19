@@ -109,7 +109,7 @@ what each check proves and what it does not.
   - Gong: [Zen Gong – Alex_Jauk](https://pixabay.com/sound-effects/film-special-effects-zen-gong-199844/)
   - Beep: [Beep – u_edtmwfwu7c](https://pixabay.com/sound-effects/film-special-effects-beep-329314/)
   - Final beep: [Public Domain Beep Sound – qubodup](https://pixabay.com/sound-effects/public-domain-beep-sound-100267/)
-  - Switch: [Light Switch – Pixabay](https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/)
+  - Switch: [Light Switch – RutgerMuller (Freesound)](https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/)
 - **Font**: [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, [SIL Open Font License 1.1](https://openfontlicense.org/). Bundled by the E-Ink build, through MMD.
 - **E-Ink interface**: built with [Mudita Mindful Design (MMD)](https://github.com/mudita/MMD), Mudita's component library for its E Ink devices.
 

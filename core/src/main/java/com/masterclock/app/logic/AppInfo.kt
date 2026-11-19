@@ -660,7 +660,7 @@ object AppInfo {
         ),
         CreditEntry(
             title = "Audio — Switch",
-            detail = "Light Switch (Pixabay)",
+            detail = "Light Switch, RutgerMuller (Freesound, on Pixabay)",
             url = "https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/",
         ),
         CreditEntry(
