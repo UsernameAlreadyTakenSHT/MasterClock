@@ -537,9 +537,11 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                             Box(
                                 modifier = Modifier
                                     // As wide as before where there is room, narrower where ten of them have none: 320 dp of straws in 312.
+                                    // A width asked for, which the share it is given holds down: at most
+                                    // 32 dp was no width at all, a straw having nothing in it to be as wide as.
                                     .weight(1f, fill = false)
                                     .padding(horizontal = 2.dp)
-                                    .widthIn(max = 32.dp)
+                                    .width(32.dp)
                                     .height(height)
                                     // Short or long, said as it is drawn: the coin, the die and the card speak, and a straw only changed height.
                                     .announcesResult(if (isRevealed) (if (isShort) strawShort else strawLong) else "")
@@ -862,9 +864,11 @@ fun Chess960Screen(onBack: () -> Unit) {
                 // wide, a 360 x 800 screen leaves about 650, and the two buttons, measured last,
                 // were given what was left -- nothing.
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            // Closer together than they were, so that the two buttons are on the screen at 360 dp
+            // without scrolling for them; the scroll is for a shorter screen or a larger font.
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Layout Row 1: Chess960 (Increased Height)
             VariantCard(
