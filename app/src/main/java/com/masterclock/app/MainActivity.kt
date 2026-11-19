@@ -61,7 +61,19 @@ import kotlin.time.Duration.Companion.milliseconds
  * A picked file that has been read and accepted, waiting for the user to confirm the import.
  * [archive] reopens a backup for its media pass, and is null for a settings file.
  */
-private class PendingFileImport(val pkg: SharePackage, val archive: (() -> InputStream)?)
+internal class PendingFileImport(val pkg: SharePackage, val archive: (() -> InputStream)?)
+
+/**
+ * The imports read and accepted, each waiting on its question. In a ViewModel, which a recreation
+ * keeps: held by the composition they went with it, so a theme changing or a tablet turning while
+ * "Import this file?" stood closed the question with nothing said, and the file had to be picked
+ * again. Not in the saved state: a file with its games is megabytes, more than that carries. And it
+ * is where a test can put one, the system's file picker and a camera being out of its reach.
+ */
+internal class PendingImports : androidx.lifecycle.ViewModel() {
+    var scan by mutableStateOf<SharePackage?>(null)
+    var file by mutableStateOf<PendingFileImport?>(null)
+}
 
 class MainActivity : ComponentActivity() {
     /**
@@ -208,11 +220,12 @@ class MainActivity : ComponentActivity() {
             // Held between the scan and the user's decision. A QR code is the one import that needs
             // no file and no picker -- framing it is the whole of the interaction -- so it is the
             // one that must not apply itself.
-            var pendingScan by remember { mutableStateOf<SharePackage?>(null) }
+            val pendingImports: PendingImports = viewModel()
+            var pendingScan by pendingImports::scan
             // The same for a picked file. JSON and ZIP imports used to apply the moment the picker
             // closed, so a mis-tap on a stale export replaced the settings and scoreboard with no
             // way back; only the QR code asked first.
-            var pendingFileImport by remember { mutableStateOf<PendingFileImport?>(null) }
+            var pendingFileImport by pendingImports::file
             // A preset picked during a game, waiting for the same confirmation Reset asks for.
             var pendingPreset by remember { mutableStateOf<(() -> Unit)?>(null) }
 
@@ -362,7 +375,9 @@ class MainActivity : ComponentActivity() {
                             // with the notebook's videos in it, a copy could cost gigabytes of disk.
                             // Both passes bound what they decompress, and the second writes only the
                             // media the first pass's notes name.
-                            val open = { context.contentResolver.openInputStream(it) ?: error("No input stream for $it") }
+                            // The application's resolver: this is kept past the activity that picked the file.
+                            val resolver = context.applicationContext.contentResolver
+                            val open = { resolver.openInputStream(it) ?: error("No input stream for $it") }
                             val pkg = ZipBackupManager.extractBackup(open)
                             // Validated, not applied: the media pass and the import itself wait for
                             // the confirmation below.

@@ -2,6 +2,7 @@ package com.masterclock.app
 
 import android.net.Uri
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.performClick
 import androidx.lifecycle.ViewModelProvider
 import com.masterclock.app.logic.ChessTimerViewModel
 import com.masterclock.app.logic.encodeSharePackage
@@ -99,6 +100,46 @@ class ExportImportFlowTest {
         if (keepsGames) rule.waitUntil(TIMEOUT_MS) { viewModel.gameHistory.value.map { it.id } == played }
         file.delete()
     }
+
+    private fun shown(id: Int) =
+        rule.onAllNodes(androidx.compose.ui.test.hasText(rule.activity.getString(id))).fetchSemanticsNodes().isNotEmpty()
+
+    private fun press(id: Int) {
+        rule.onNode(androidx.compose.ui.test.hasText(rule.activity.getString(id)) and androidx.compose.ui.test.hasClickAction()).performClick()
+    }
+
+    /** A file picked, or a code scanned, as MainActivity holds it once read: [put] sets it waiting. */
+    private fun anImportAsksFirst(title: Int, confirm: Int, put: (PendingImports, com.masterclock.app.logic.SharePackage) -> Unit) {
+        assumeTrue(com.masterclock.app.logic.FlavorConfig.isModeAllowed(TimerMode.FISCHER))
+        val before = viewModel.settings.value
+        assertNotEquals(TimerMode.FISCHER, before.main.mode)
+        val pkg = com.masterclock.app.logic.SharePackage(
+            settings = before.copy(main = before.main.copy(mode = TimerMode.FISCHER)), logs = null, scoreboard = null,
+        )
+        val pending = ViewModelProvider(rule.activity)[PendingImports::class.java]
+
+        // The question, and nothing applied behind it: an import that applied itself as the picker
+        // closed replaced the settings on a mis-tap, with no way back.
+        rule.runOnUiThread { put(pending, pkg) }
+        rule.waitUntil(TIMEOUT_MS) { shown(title) }
+        assertEquals(before.main.mode, viewModel.settings.value.main.mode)
+        press(R.string.common_cancel)
+        rule.waitUntil(TIMEOUT_MS) { !shown(title) }
+        assertEquals(before.main.mode, viewModel.settings.value.main.mode)
+
+        rule.runOnUiThread { put(pending, pkg) }
+        rule.waitUntil(TIMEOUT_MS) { shown(title) }
+        press(confirm)
+        rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.mode == TimerMode.FISCHER }
+    }
+
+    @Test
+    fun aPickedFileAsksBeforeItIsImported() =
+        anImportAsksFirst(R.string.import_confirm_title, R.string.import_confirm_action) { pending, pkg -> pending.file = PendingFileImport(pkg, archive = null) }
+
+    @Test
+    fun aScannedCodeAsksBeforeItIsApplied() =
+        anImportAsksFirst(R.string.qr_confirm_title, R.string.qr_confirm_apply) { pending, pkg -> pending.scan = pkg }
 
     private companion object {
         const val TIMEOUT_MS = 10_000L
