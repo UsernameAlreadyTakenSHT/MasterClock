@@ -7,7 +7,7 @@ How the game itself behaves, whatever the mode. In Complete and Standard.
 ## Flag Behavior
 
 What a clock reaching zero means. One choice of four; *Freeze* by default. It is the game's rule:
-changed with a game in play, it ends that game, after asking.
+changed with a game in play, it ends that game -- after asking, when **Confirm reset** is on.
 
 | Setting | At zero | The game |
 |---|---|---|
@@ -62,8 +62,7 @@ win is then worth one extra point, from 7 moves on. The clock asks first, and sa
 
 - It costs the player who chose it only; the other keeps their time and increment.
 - It is refused unless the clock can pay it: no clock starts at zero.
-- At 1+2, where halving would leave nothing to play with, it keeps the minute and takes the
-  increment.
+- At 1+2, as on Lichess, it keeps the minute and takes the increment alone.
 - With **Fischer FIDE** on, the bonus given before the first move goes with the increment.
 - The second player can still go Berserk once the first has moved. It cannot be done after one's own
   first move, nor twice.

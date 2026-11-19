@@ -25,7 +25,7 @@ A face is a button: pressing it ends that player's move. What it shows:
 | `REFLECT`, then `MOVE!` | Gong. |
 | `PERIOD FLAG` | FIDE Periods: a period ended on its time and play went on into the next. |
 | `FLAGGED` | The player is out of time. |
-| `FINISHED` | The game ended without a flag: Phases ran through, or Chronos reached zero. |
+| `FINISHED` | The game ended without a flag: Phases ran through, Chronos reached zero, or every player played their moves in Move Counts, Count Down. |
 | A Berserk mark | The player went Berserk; see [Behavior](behavior.md#berserk). |
 
 The colours say whose turn it is: the active side in one colour, the waiting side in another, a side
@@ -47,7 +47,7 @@ Five round buttons across the middle. It turns with the clock when the orientati
 | **Arbiter** | Opens the arbiter's panel. It opens only while the game is paused. Complete, Standard, Lite. |
 | **Settings** | Opens the settings, on the Modes tab. |
 
-In Random and Hidden a sixth button, a die, draws a new time. It restarts the game, so it asks first
+In Random and Hidden a die under the bar, shown while the clock is stopped, draws a new time. It restarts the game, so it asks first
 when Confirm reset is on.
 
 Back, pressed once, says **Press Back again to exit**; the second press leaves the app.
@@ -79,11 +79,13 @@ A list of ready-made time controls, on three tabs.
   app asks whether to end it.
 - **My Presets** — your own. **Save current time control** stores the clock as it is set now, under
   a name. Long-press one to rename or delete it.
-- **Last Games** — the time controls of the games most recently played, with their date. **View
+- **Last Games** — the time controls of the games most recently played, with their date. In Complete, **View
   statistics** opens the statistics of the whole history.
 
-Applying a preset changes the time control only. Appearance, sounds, behavior and the notebook are
-left as they are.
+Applying a preset changes the time control and the rules that belong to it. Appearance, sounds and
+the notebook are left as they are. A built-in preset keeps your flag behavior, except Scrabble 25',
+which sets its own; one of your own, or a game from Last Games, brings back the flag behavior,
+first-move bonus and table it was saved with.
 
 | Preset | Time control |
 |---|---|
@@ -110,7 +112,7 @@ games first, then your own presets, then a few built-in blitz controls. One open
 For corrections during a game: a penalty, time given back, a move miscounted. It opens from the
 control bar while the game is paused, over the clock.
 
-For each player it shows the player's name, their clock exactly as their face shows it, and their
+For each player it shows Player 1, Player 2 and so on, their clock exactly as their face shows it, and their
 move count. Under them:
 
 | Control | What it does |

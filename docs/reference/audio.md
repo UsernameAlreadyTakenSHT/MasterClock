@@ -41,8 +41,9 @@ announcements leave "thirty seconds remaining" and "ten seconds remaining" unsai
 the voice's own, so they come a moment after the second they belong to, by as much as the device's
 speech engine takes to start.
 
-If the device has no text-to-speech voice in the app's language or in English, the app says so
-instead of staying silent: one has to be installed in the device's settings.
+With no text-to-speech voice in the app's language or in English, the clock speaks with whatever
+voice the device has. With none at all, the app says so instead of staying silent: one has to be
+installed in the device's settings, and the app finds it without being restarted.
 
 ## Timer Alerts
 
@@ -51,8 +52,8 @@ instead of staying silent: one has to be installed in the device's settings.
 | **Countdown beep** | off | A beep each second at the end of the clock, over the last **3s** or **10s**. |
 | **Triple beep when times up** | off | Three beeps when a clock reaches zero, and once more when an overrun reaches its [Flag Cap](behavior.md). |
 
-In the modes with two clocks — Overtime, Global, Global Shared — the countdown follows whichever
-runs out first.
+In Global and Global Shared, which run two clocks, the countdown follows whichever runs out first.
+In Overtime it follows the move's clock, then the reserve once the move's time is spent.
 
 ## Haptics
 

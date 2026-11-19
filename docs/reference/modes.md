@@ -70,7 +70,7 @@ A main time, and time given back at each move. **Bonus Type** picks how.
 | Parameter | Default | |
 |---|---|---|
 | **Initial Time** | 10:00 | |
-| **Increment / Bonus**, or **Delay** | 0:10 | The amount per move. |
+| **Increment / Bonus** | 0:10 | The amount per move: the increment under Fischer, the delay under Bronstein and US Delay. |
 
 - **Fischer** — the increment is added after every move, whatever the move took. With **Fischer
   FIDE (Bonus on move 0)** on (Settings › Behavior › Tournament Rules), the increment is also on
@@ -92,7 +92,7 @@ Each period has:
 | Kind | Fischer | **Sudden Death** (no bonus), **Fischer** (an increment after each move) or **US Delay** (a delay before each move). |
 | **Duration** | 1:30:00 | Time added when the period begins. |
 | **Increment** or **Delay** | 0:30 | For Fischer and US Delay periods. |
-| **Moves to unlock next** | 0 | The move count that ends the period. 0 marks the last period, which has none. |
+| **Total moves before period N**; on the last period, **Moves to unlock next (0 = Final)** | 40; 0 on the last | The move count that ends the period. 0 marks the last period, which has none; the one period a new setup starts with is the last. |
 
 **Add Period** adds one. Move counts are totals from the start of the game: 40, then 60, for
 "40 moves, then 20 more". A count typed per period instead -- 20 after 40 -- is understood as 60.

@@ -35,7 +35,7 @@ Fourteen timing modes, each described in the [reference](docs/reference/modes.md
 | Fast Move | Accelerate, Transfer |
 | Staircase | Down, Up |
 
-The Complete build adds a notebook, a scoreboard, game history and statistics, games of chance (coin,
+The Complete build adds a notebook, a scoreboard, the game logs and statistics, games of chance (coin,
 dice, short straw, card), rulebooks, sharing and backup of settings, and a reset of everything.
 
 Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink version built with
@@ -53,7 +53,7 @@ Requires Android 7.0 (API 24) or later. Every screen and option is described in 
 | Behavior / Display / Audio settings | ✅ | ✅ | ❌ | ❌ | ❌ |
 | More (tools, backup, notebook…) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Presets | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Arbitre mode | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Arbiter's panel | ✅ | ✅ | ✅ | ❌ | ❌ |
 
 "3 modes" means Sudden Death, Fischer, and Move Timer Standard only — everything else supports the full set of timing modes.
 

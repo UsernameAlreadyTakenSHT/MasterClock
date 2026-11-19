@@ -112,7 +112,7 @@ passes when it first comes to rest, and the record names the square it ended on.
 **Games logs & history** — the games played, most recent first, each with its date and its number
 of moves. A game opens on its details: every move with the time spent on it and the time left, and
 the events of the game — pauses, flags, period changes, the arbiter's corrections. With moves
-recorded from a board, the game can be copied as PGN for chess, PDN for draughts or KIF for shogi.
+recorded from a board, the game can be copied as PGN for chess or PDN for draughts. A shogi game is copied as a plain list of its moves.
 
 A game is written to the history when it is reset.
 
@@ -134,8 +134,8 @@ One switch, **Include history & text notes**, then four ways out:
 | Action | What leaves |
 |---|---|
 | **Share as QR Code** | The settings only, as a code another device scans. Settings too large for a code are refused, with a message: share them as a file. |
-| **Share File** | A `.json` file, through the system's share sheet. |
-| **Export to Storage** | The same `.json` file, saved to the device. |
+| **Share File** | A `.json` file, through the system's share sheet. Made for someone else: like the QR code, it leaves out where your custom sounds are stored. |
+| **Export to Storage** | The settings as a `.json` file saved to the device, your custom sounds' locations included. |
 | **Export All (Full Backup)** | A `.zip` archive: every setting, the history, the presets, and the notebook with its photos, recordings and videos. |
 
 A history too long for a settings file is refused with a message pointing to the full backup.
