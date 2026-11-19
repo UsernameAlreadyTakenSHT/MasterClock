@@ -16,11 +16,13 @@ A face is a button: pressing it ends that player's move. What it shows:
 | On the face | When |
 |---|---|
 | The time | Always, except in Move Counts (a number of moves) and Hidden (`??:??`). Tenths and hundredths appear as [Display](display.md) sets them. A minus sign in front means an overrun under the Negative flag behavior. |
-| `MOVES: 12` | FIDE Periods: the moves left to the next period. Move Counts, and Canadian and Progressive byoyomi, where it is the moves left in the block. With **Always show moves** on, each player's count is under the clock as `P1 MOVES: 12`. |
+| `MOVES: 12` | FIDE Periods: the moves left to the next period. Move Counts, and Canadian and Progressive byoyomi, where it is the moves left in the block. Chronos with One for All off: each player's moves. With **Always show moves** on, each player's count is under the clock as `P1 MOVES: 12`. |
 | `PERIOD: 1/3` | Japanese byoyomi: the period being played, with **Show period** on. FIDE Periods: the period, when no move count is running. |
 | `PERIODS: 3` | Japanese byoyomi with **Show period** off: the periods left. |
 | `DELAY: 5.0` | US Delay, and FIDE periods with a delay: the seconds of delay left, on the face of the player on the move. |
-| `OT: 9:40`, `CAP: 2:00` | Move Timer Overtime: the reserve. Save & Cap: the ceiling. |
+| `OT: 9:40`, `TOTAL: 9:40`, `GLOBAL: 9:40`, `CAP: 2:00` | Move Timer Overtime: the reserve. Global: the player's total. Global Shared: the table's reserve. Save & Cap: the ceiling. |
+| `CYCLE: 3` | Shared (Auto): the turns played. |
+| `BYOYOMI` | Under the clock, once the main time is spent. |
 | The phase's name | Phases. |
 | `REFLECT`, then `MOVE!` | Gong. |
 | `PERIOD FLAG` | FIDE Periods: a period ended on its time and play went on into the next. |
@@ -42,7 +44,7 @@ Five round buttons across the middle. It turns with the clock when the orientati
 | Button | What it does |
 |---|---|
 | **Presets** | Opens the list of time controls; see [Presets](#presets). Complete, Standard, Lite. |
-| **Reset** | Ends the game and puts the clocks back to the start. With **Confirm reset** on it asks first. A game is written to the history when it is reset. |
+| **Reset** | Ends the game and puts the clocks back to the start. With **Confirm reset** on it asks first, once the game has started. Where there is a history (Complete, Standard, Lite), the game is written to it when it is reset. |
 | **Start** / **Pause** / **Resume** | The large button. Start begins the game and starts player 1's clock. |
 | **Arbiter** | Opens the arbiter's panel. It opens only while the game is paused. Complete, Standard, Lite. |
 | **Settings** | Opens the settings, on the Modes tab. |
@@ -56,7 +58,7 @@ Back, pressed once, says **Press Back again to exit**; the second press leaves t
 
 1. **Start** starts player 1's clock.
 2. Each player ends their move by pressing their own face, which starts the next clock. In the modes that run one clock for the table
-   — Gong, Shared (Auto), Phases, Chronos with One for All — nobody presses.
+   — Gong, Shared (Auto), Phases, Chronos with One for All — nobody passes the turn: a press does nothing there or, in Phases, answers a phase or a pause that waits for a tap.
 3. **Pause** stops every clock; **Resume** starts the same one again.
 4. The game ends when a clock runs out, as [Flag Behavior](modes.md#when-a-clock-reaches-zero-flag-behavior)
    decides, or when the mode itself ends it. The face says `FLAGGED` or `FINISHED`.
@@ -120,20 +122,21 @@ move count. Under them:
 | **1 min**, with − and + | Takes a minute from that player's clock, or adds one. |
 | **1 s**, with − and + | The same, by a second. |
 | **Moves**, with − and + | FIDE Periods with the move counter on: corrects the move count. A move that reaches a period's count starts the next period, with its time; a move taken back undoes it. |
-| **Save** | Keeps the clocks as they stand, to come back to: before a correction, say. Kept for the game in play, until it ends or the app closes. |
-| **Resume** | Brings the clocks Save kept back, after asking, and takes the moves played since out of the game's log. With nothing kept by Save, it brings back the game the app was closed on. |
+| **Save** | Once the game has started, keeps the clocks as they stand, to come back to: before a correction, say. Kept for the game in play, until it ends or the app closes. |
+| **Resume** | Brings the clocks Save kept back, after asking, and takes the moves played since out of the game's log. With nothing kept by Save, it brings back the game the app was closed on. Shown once there is something to bring back. |
 | **Back to Game** | Closes the panel. The game stays paused: it is for the players to resume. |
 
 In the modes with one clock for the table there is one set of buttons, named **Clock**. In Move
 Counts the time buttons are off: a move count is not a time. In Hidden the reading stays `??:??`.
 
-Time given to a flagged player puts them back in play, and time taken past zero is a flag, or an
-overrun under Negative and Reverse. Every correction is written to the game's log.
+Time given to a flagged player puts them back in play, and time taken past zero goes where time
+running out would: into byoyomi, into the next FIDE period, or a flag -- an overrun under Negative
+and Reverse. Every correction is written to the game's log.
 
 ## In the background
 
 What happens when the app is left is set in [Behavior](behavior.md#interaction): by default the game
-pauses. With **Keep running in the background** a notification keeps the clock going and shows whose
+pauses. With **Pause when in background** off and **Keep running in the background** on (Complete, Standard), a notification keeps the clock going and shows whose
 turn it is.
 
 The clock's time is measured from the device's own clock, so it is right when the app comes back,

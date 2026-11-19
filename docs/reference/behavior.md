@@ -7,7 +7,8 @@ How the game itself behaves, whatever the mode. In Complete and Standard.
 ## Flag Behavior
 
 What a clock reaching zero means. One choice of four; *Freeze* by default. It is the game's rule:
-changed with a game in play, it ends that game -- after asking, when **Confirm reset** is on.
+changed with a game in play, it ends that game -- after asking, when **Confirm reset** is on. The two switches of Tournament
+Rules do the same, each during a game of its own mode.
 
 | Setting | At zero | The game |
 |---|---|---|
@@ -23,7 +24,8 @@ each one counts an overrun.
 zero. Empty, the default, there is no limit. Set to 10:00, a clock stops at -10:00 under Negative
 and at 10:00 under Reverse; the flag's sound is heard once more, the player keeps their turn on a
 clock that no longer moves, and play goes on. An arbiter's penalty stops at the cap too. A preset
-or a saved game brings its cap with its flag behavior.
+of your own, or a saved game, brings its cap with its flag behavior; a built-in preset leaves both as
+you set them, Scrabble 25' aside.
 
 ## Tournament Rules
 
@@ -38,7 +40,7 @@ Two switches, each for one mode only.
 
 | Setting | Default | |
 |---|---|---|
-| **Confirm reset** | on | Reset asks "Reset Game?" before clearing a game. It covers the die of Random and Hidden too, which restarts the game. |
+| **Confirm reset** | on | Reset asks "Reset Game?" before clearing a game. It covers the die of Random and Hidden too, which restarts the game, a preset picked during a game, and any setting changed that ends the game in play. |
 | **Trigger on Press (else on Release)** | on | On, a move ends when the finger touches the face. Off, when it lifts. |
 | **Pause when in background** | on | Leaving the app, or the screen turning off, pauses the game. |
 | **Keep running in the background** | off | Available once the pause above is off. A notification keeps the clock going while the app is in the background, so that Android does not close it. It shows whose turn it is and their time, with a Pause button. With the screen off the phone is kept from sleeping until that clock runs out, so that its flag sounds on time; it costs some battery, and only while a game runs this way. |
@@ -53,7 +55,7 @@ notification is hidden.
 
 ## Berserk
 
-**Allow Berserk**, off by default. An option of the game, not a timing mode. It is offered in Sudden
+**Allow Berserk**, the last switch under Interaction, off by default. An option of the game, not a timing mode. It is offered in Sudden
 Death and in Fischer only.
 
 Before their first move, a player can give up half their time and their increment for the game. A

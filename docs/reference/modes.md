@@ -219,7 +219,7 @@ And for the sequence:
 | **Repeat Phases (Loop)** | off | After the last phase, start again at the first. |
 | **Pause between phases** | 0:00 | A countdown between two phases. |
 | **Pause between phases until a tap** | off | The pause lasts until someone taps, for a break whose length nobody knows beforehand. |
-| **Allow manual skip** | off | A tap ends the current phase early. |
+| **Allow manual skip (tap to advance early)** | off | A tap ends the current phase early. |
 
 Running through the last phase finishes the game without a flag. What a tick ran past the end of a
 phase comes off the next, so a sequence keeps its total length.
@@ -236,7 +236,7 @@ One clock per player for the whole game; the longer a move takes, the faster the
 |---|---|---|
 | **Initial Time** | 10:00 | |
 | **Grace Period (Standard speed)** | 0:05 | At the start of each move the clock runs at normal speed. |
-| **Fast Acceleration Rate** | +0.5 sec/sec | After the grace period, each second costs this much more: 1.5 seconds per second. |
+| **Fast Acceleration Rate (+0.5 sec/sec)** | +0.5 sec/sec | After the grace period, each second costs this much more: 1.5 seconds per second. |
 | **Full Fast Period starts at** | 0:20 | Once the move has taken this much off the clock, the full rate applies. It is measured on the clock, which is already running fast by then, so it comes sooner than that in real time. Never before the grace period ends. |
 | **Full Fast Accel Rate** | +2.0 sec/sec | 3 seconds per second. |
 

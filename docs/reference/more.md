@@ -57,9 +57,9 @@ Notes kept with the app. **New Note** offers six kinds:
 |---|---|
 | **Text** | Written text with a toolbar: bold, italic, underline, strikethrough; highlight in five colours; a heading; a checkbox; centred lines; bulleted and numbered lists; text colour; chess pieces; annotations (move quality such as `!?`, evaluations, and other symbols); every emoji. Undo, redo and clear are at the top. |
 | **Draw** | A drawing: a pen, shapes (line, arrow, rectangle, ellipse), chess and draughts pieces and emojis that can be moved and resized, an eraser, colours, a width, and a background — none, a photo, or one of the board notes. |
-| **Audio** | A voice recording. Asks for the microphone the first time. |
+| **Audio** | A voice recording of at most a minute, with a caption. Asks for the microphone the first time. |
 | **Image** | A photo, with a caption. Asks for the camera the first time. |
-| **Video** | A video of at most one minute. |
+| **Video** | A video of at most one minute, with a caption. Asks for the camera the first time. |
 | **Board** | A position set up by hand, on a chess board, a 10×10 draughts board or an 8×8 one. |
 
 Every note has a title and the date it was made. The bin beside a note deletes it, after asking. The
@@ -91,9 +91,10 @@ port, **Paired** for boards already paired in the system's Bluetooth settings, a
 Devices**, filled by the refresh button. While a board occupies the USB port, the phone does not
 charge.
 
-Once a board has said anything, a **share** button appears in the screen's bar. It hands another
+Once anything has passed over the link, either way, a **share** button appears in the screen's bar. It hands another
 app a text file, `masterclock_board_log.txt`, of what the board and the app said to each other in
-the last minutes: when, which way, over which link, under which protocol, and the bytes. It names
+the last minutes: when, which way (`<` from the board, `>` to it, `!` meant for it and not sent), over which link,
+under which protocol, and the bytes. It names
 the app's version, Android's and the phone's model, and neither the board nor its address. It is
 what to send when a board does not work, or for a make the app does not know. The log itself is
 kept in memory only and is gone when the app closes; a file you have shared stays in the app's
@@ -136,7 +137,7 @@ One switch, **Include history & text notes**, then four ways out:
 | **Share as QR Code** | The settings only, as a code another device scans. Settings too large for a code are refused, with a message: share them as a file. |
 | **Share File** | A `.json` file, through the system's share sheet. Made for someone else: like the QR code, it leaves out where your custom sounds are stored. |
 | **Export to Storage** | The settings as a `.json` file saved to the device, your custom sounds' locations included. |
-| **Export All (Full Backup)** | A `.zip` archive: every setting, the history, the presets, and the notebook with its photos, recordings and videos. |
+| **Export All (Full Backup)** | A `.zip` archive: every setting, the history, the presets, the scoreboard, the Omni-Timer setup, and the notebook with its photos, recordings and videos. |
 
 A history too long for a settings file is refused with a message pointing to the full backup.
 
@@ -146,10 +147,11 @@ A history too long for a settings file is refused with a message pointing to the
 |---|---|
 | **Scan QR Code** | The settings of another device, by pointing the camera at its code. |
 | **Import JSON File** | A `.json` file exported earlier. |
-| **Import Full Backup** | A `.zip` backup: settings and media. |
+| **Import Full Backup** | A `.zip` backup: settings, history, presets, scoreboard, and the notebook with its media. |
 
-Every import asks first. A file replaces the current settings; its games, presets, notes and
-scoreboard results are added to those already there, and nothing is deleted. A scanned code
+Every import asks first. A file replaces the current settings; its games, notes and
+scoreboard results -- and a full backup's presets, which a `.json` file does not carry -- are added
+to those already there, and nothing is deleted. A scanned code
 replaces the settings and can add games and a scoreboard: accept one only from someone you trust.
 What comes in is checked and bounded before it is used, whatever its source.
 

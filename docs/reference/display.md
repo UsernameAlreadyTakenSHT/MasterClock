@@ -21,7 +21,7 @@ The clock updates as often as the smallest digit on show needs, and no more ofte
 | Setting | Default | |
 |---|---|---|
 | **Show period (1/3)** | on | Japanese byoyomi: on, the face shows the period being played and how many there are (`PERIOD: 2/5`); off, the periods left (`PERIODS: 4`). It does not change FIDE Periods. |
-| **Always show moves** | off | The number of moves each player has made, on the face, where nothing else stands in its place: a player in byoyomi, FIDE's moves to go, Phases and a table's Chrono show their own line. |
+| **Always show moves** | off | The number of moves each player has made, on the face, where nothing else stands in its place: a player in byoyomi, FIDE's moves to go, Phases and a table's Chrono show their own line, and Move Counts' large number is the count already. |
 
 ## Layout & Scale
 

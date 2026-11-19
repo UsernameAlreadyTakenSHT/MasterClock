@@ -1,7 +1,7 @@
 # Settings › Audio
 
-What the clock sounds and feels like. In Complete and Standard. Everything is off on a fresh
-install: the clock is silent until it is asked not to be.
+What the clock sounds and feels like. In Complete and Standard. Every sound, voice and
+vibration is off on a fresh install: the clock is silent until it is asked not to be.
 
 - [Sound](#sound) · [Timer Alerts](#timer-alerts) · [Haptics](#haptics) · [Output & Volume](#output--volume) · [Sound Previews](#sound-previews) · [Custom Sounds](#custom-sounds)
 
@@ -18,7 +18,7 @@ What the voice says:
 
 | Announcement | When |
 |---|---|
-| "One minute remaining", "Thirty seconds remaining", "Ten seconds remaining" | The clock of the player on the move passes those marks. |
+| "One minute remaining", "Thirty seconds remaining", "Ten seconds remaining" | The clock of the player on the move passes those marks. Never in Hidden. |
 | "Time is up for player 2" | A player runs out of time. |
 | "Period 2" | FIDE Periods: a new period begins. |
 | "Entering byoyomi", "Periods left: 2" | Byoyomi: main time is spent; a period is lost. |
@@ -37,7 +37,7 @@ is spent and "Periods left: 2" as a period goes, then each period:
 
 It is the time gone, not the time left, as at a shogi board, and ten is never called: to hear it
 is to have lost on time, which here is the period going or the flag. While it reads a period the
-announcements leave "thirty seconds remaining" and "ten seconds remaining" unsaid. The numbers are
+announcements leave the time remaining unsaid. The numbers are
 the voice's own, so they come a moment after the second they belong to, by as much as the device's
 speech engine takes to start.
 
