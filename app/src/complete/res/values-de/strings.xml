@@ -283,6 +283,8 @@
     <string name="tools_select_text_color">Textfarbe wählen</string>
     <string name="tools_share_log">Protokoll teilen</string>
     <string name="tools_short_straw">Kurzer Halm</string>
+    <string name="tools_straw_long">Lang</string>
+    <string name="tools_straw_short">Kurz</string>
     <string name="tools_shred">Vernichten</string>
     <string name="tools_spent">Verbraucht</string>
     <string name="tools_start">START</string>

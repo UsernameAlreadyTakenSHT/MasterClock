@@ -531,7 +531,7 @@ class MainActivity : ComponentActivity() {
                                 onImportMedia = { mediaImportLauncher.launch(arrayOf("application/zip")) },
                                 onShareSettings = { includeLogs, useQr ->
                                     if (useQr) {
-                                        val pkg = SharePackage(settings = settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null)
+                                        val pkg = SharePackage(settings = settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null).forSomeoneElse()
                                         val shareJson = json.encodeToString(pkg)
                                         navigator.navigate(Route.QRShare(shareJson))
                                     } else {
@@ -543,7 +543,7 @@ class MainActivity : ComponentActivity() {
                                         scope.launch(Dispatchers.IO) {
                                             val shared = runCatching {
                                                 // Refused past what the import reads; see encodeSharePackage.
-                                                val bytes = encodeSharePackage(sharePackageOf(timerViewModel.exportSnapshot(), includeLogs))
+                                                val bytes = encodeSharePackage(sharePackageOf(timerViewModel.exportSnapshot(), includeLogs).forSomeoneElse())
                                                 val chooser = shareChooser(context, bytes)
                                                 withContext(Dispatchers.Main) { context.startActivity(chooser) }
                                             }

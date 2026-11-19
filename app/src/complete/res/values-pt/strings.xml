@@ -287,6 +287,8 @@
     <string name="tools_select_text_color">Escolher a cor do texto</string>
     <string name="tools_share_log">Partilhar o registo</string>
     <string name="tools_short_straw">Palhinha curta</string>
+    <string name="tools_straw_long">Comprida</string>
+    <string name="tools_straw_short">Curta</string>
     <string name="tools_shred">Destruir</string>
     <string name="tools_spent">Gasto</string>
     <string name="tools_start">INICIAR</string>

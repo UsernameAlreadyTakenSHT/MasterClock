@@ -163,7 +163,13 @@ sealed interface BoardReport {
  * One per connection, and deliberately not inside [BoardProtocol]: the protocols are stateless
  * decoders, and every make would otherwise carry its own copy of this.
  */
-class BoardMoveTracker {
+class BoardMoveTracker(
+    /** Milliseconds from any fixed point; a test's own clock, to tell a slide from two moves. */
+    private val now: () -> Long = { System.nanoTime() / 1_000_000 },
+) {
+    /** When [previousMove] was reported, by [now]. */
+    private var previousMoveAt = 0L
+
     /** The last position a move was recognised from. Only advances when one is. */
     private var settled: BoardPosition? = null
 
@@ -328,8 +334,12 @@ class BoardMoveTracker {
         // the time to tell a slide by -- but what the move is, is asked of the whole: a king slid from
         // e1 through f1 to g1 castles, and neither e1f1 nor f1g1 said so, so the rook that followed
         // was a move, the other player's.
+        // Within the time the clock itself joins them in, and no later: see SLIDE_WINDOW_MS. Joined
+        // here without that limit, a king that rested a second on f1 was two moves to the clock and
+        // a castle here -- the rook was swallowed, and the clock left with the player who castled.
         val slidFrom = beforePrevious
-        val whole = BoardDiffer.slideOf(previousMove, move)
+        val at = now()
+        val whole = BoardDiffer.slideOf(previousMove, move).takeIf { at - previousMoveAt <= SLIDE_WINDOW_MS }
         if (whole != null && slidFrom != null) {
             previousMove = whole
             secondHalf = BoardDiffer.secondHalfOf(whole, slidFrom)
@@ -338,6 +348,7 @@ class BoardMoveTracker {
             previousMove = move
             secondHalf = BoardDiffer.secondHalfOf(move, from)
         }
+        previousMoveAt = at
         captureToClear = BoardDiffer.capturedEnPassantBy(move, from)
         return listOf(move)
     }

@@ -72,7 +72,7 @@ fun QRShareScreen(
                         modifier = Modifier.fillMaxSize().padding(12.dp)
                     )
                 } ?: Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
-                    // generateQRCode() runs synchronously in remember(), so a null result here isn't
+                    // Shown once generateQRCode() has answered, so a null result here isn't
                     // "still loading" -- it's a permanent failure (most commonly: the payload is too
                     // large to fit in a QR code's capacity). Previously this showed an infinite,
                     // misleading spinner.

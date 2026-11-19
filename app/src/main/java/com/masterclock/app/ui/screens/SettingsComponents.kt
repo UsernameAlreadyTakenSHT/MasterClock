@@ -988,12 +988,14 @@ fun ModeSelectionPanel(p: PlayerSettings, isOneForAll: Boolean, onUpdateP: (Play
                     // Not over the mode in use. It opened itself for such a mode and then closed on
                     // a tap like any other time: the nine cards went, the chosen one with them, and
                     // no card in the grid was lit -- what the notes of 0.8.45 said could not happen.
-                    onClick = { if (!foldedMode) moreModes = !moreModes },
+                    onClick = { moreModes = !moreModes },
+                    // Not a button at all then, rather than one that takes the tap and does nothing.
+                    enabled = !foldedMode,
                     shape = RoundedCornerShape(12.dp),
                     color = Color.Transparent,
                     // Open or closed, in the system's own words: the row read "More modes" either way.
                     modifier = Modifier.fillMaxWidth().testTag("more_modes").semantics {
-                        if (moreModes) collapse { if (!foldedMode) moreModes = false; !foldedMode } else expand { moreModes = true; true }
+                        if (!moreModes) expand { moreModes = true; true } else if (!foldedMode) collapse { moreModes = false; true }
                     },
                 ) {
                     Row(
@@ -1293,18 +1295,31 @@ fun SettledSlider(
     // Let go of once the settings have caught up: cleared as the finger lifted, the thumb went back
     // to the old value for a frame.
     LaunchedEffect(value) { dragged = null }
+    // And of one the settings never took: a change that would end the game in play waits on a
+    // question, and answered Cancel the value never moves -- the thumb and its label went on showing
+    // what had been refused, for as long as the page stayed open.
+    var settled by remember { mutableIntStateOf(0) }
+    LaunchedEffect(settled) {
+        if (settled > 0) {
+            kotlinx.coroutines.delay(SLIDER_REFUSED_AFTER_MS)
+            dragged = null
+        }
+    }
     val shown = dragged ?: value
     Column {
         label(shown)
         Slider(
             value = shown,
             onValueChange = { dragged = it },
-            onValueChangeFinished = { dragged?.let(onValueSettled) },
+            onValueChangeFinished = { dragged?.let(onValueSettled); settled++ },
             valueRange = valueRange,
             steps = steps,
         )
     }
 }
+
+/** How long a slider shows what was let go of before taking the settings' word for it. */
+private const val SLIDER_REFUSED_AFTER_MS = 1_000L
 
 @Composable
 fun NumericInput(label: String, value: Int, onValueChange: (Int) -> Unit) {

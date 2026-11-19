@@ -126,7 +126,10 @@ fun DrawingNoteEditor(note: NotebookNote, notes: List<NotebookNote>, onUpdate: N
     // whatever the toolbar opens -- a selected shape's row, the pieces, the emoji, the keyboard under
     // the title -- and measured as it stood, the whole drawing shrank each time one opened, and a
     // first sticker was sized from the strip its own picker had left. What a panel covers is covered.
-    var canvas by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    // For the window as it is: split in two or resized, the page is measured afresh, or its lower
+    // half stayed out of reach under a height the window no longer had.
+    val window = androidx.compose.ui.platform.LocalConfiguration.current
+    var canvas by remember(window.screenWidthDp, window.screenHeightDp) { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     val scale = drawnOn?.let { drawingScale(it.width, it.height, canvas.width.toFloat(), canvas.height.toFloat()) } ?: 1f
     // Read by the gestures as it stands, and not a key of theirs: a key that changes restarts the
     // gesture in hand, with neither its end nor its cancellation called, and the stroke was lost.

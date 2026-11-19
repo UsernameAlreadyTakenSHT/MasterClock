@@ -116,6 +116,30 @@ class SettingsFlowsTest {
         rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.mode == TimerMode.FISCHER }
     }
 
+    @Test
+    fun resetSettingsAsksAndCancelLeavesThemAlone() {
+        assumeTrue(FlavorConfig.hasMoreTab())
+        rule.runOnUiThread { viewModel.updateSettings(viewModel.settings.value.copy(main = viewModel.settings.value.main.copy(mode = TimerMode.FISCHER))) }
+        rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.mode == TimerMode.FISCHER }
+        tap(R.string.timer_settings)
+        await(hasText(say(R.string.settings_tab_more)))
+        rule.onAllNodes(hasText(say(R.string.settings_tab_more)))[0].performClick()
+        await(hasText(say(R.string.settings_more_reset_settings)))
+        val reset = rule.onNode(hasText(say(R.string.settings_more_reset_settings)) and hasClickAction())
+
+        reset.performScrollTo().performClick()
+        await(hasText(say(R.string.settings_reset_title)))
+        assertEquals(TimerMode.FISCHER, viewModel.settings.value.main.mode)
+        rule.onNode(hasText(say(R.string.common_cancel)) and hasClickAction()).performClick()
+        rule.waitUntil(TIMEOUT_MS) { !exists(hasText(say(R.string.settings_reset_title))) }
+        assertEquals(TimerMode.FISCHER, viewModel.settings.value.main.mode)
+
+        reset.performScrollTo().performClick()
+        await(hasText(say(R.string.settings_reset_title)))
+        rule.onNode(hasText(say(R.string.settings_reset_confirm)) and hasClickAction()).performClick()
+        rule.waitUntil(TIMEOUT_MS) { viewModel.settings.value.main.mode == TimerMode.SUDDEN_DEATH }
+    }
+
     private companion object {
         const val TIMEOUT_MS = 10_000L
     }

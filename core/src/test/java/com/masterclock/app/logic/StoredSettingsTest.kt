@@ -32,6 +32,8 @@ class StoredSettingsTest {
         val base = ChessClockSettings()
         assertEquals(true, settingsEndTheGame(base, base.copy(main = base.main.copy(initialTimeMs = 1))))
         assertEquals(false, settingsEndTheGame(base, base.copy(confirmReset = false)))
+        // What a clock at zero does is the game's rule: another one is another game.
+        assertEquals(true, settingsEndTheGame(base, base.copy(flagBehavior = FlagBehavior.NEGATIVE)))
     }
 
     @Test

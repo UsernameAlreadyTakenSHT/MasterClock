@@ -137,6 +137,16 @@ fun decodeSharePackage(content: String): SharePackage {
  * It lived in MainActivity, out of reach of any test: the interface test built its own package, and
  * a change to what an export holds passed it unseen.
  */
+/**
+ * [this] for someone else's device: without the custom sounds. Each is a document URI, which
+ * commonly spells out the folder and the file's name on the sender's storage, and the receiver can
+ * do nothing with it, having no grant -- its import drops them. An export kept for oneself, and the
+ * full backup, go on carrying them.
+ */
+fun SharePackage.forSomeoneElse(): SharePackage = copy(
+    settings = settings.copy(customGongUri = null, customBeepUri = null, customFinalBeepUri = null, customSwitchUri = null)
+)
+
 fun sharePackageOf(snapshot: ExportSnapshot, includeLogs: Boolean): SharePackage =
     if (includeLogs) {
         SharePackage(

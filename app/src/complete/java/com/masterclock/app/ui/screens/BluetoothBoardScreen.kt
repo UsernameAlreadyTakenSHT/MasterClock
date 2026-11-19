@@ -58,6 +58,7 @@ fun BluetoothBoardScreen(
     val shareLogLabel = stringResource(R.string.board_share_log)
     val shareFailed = stringResource(R.string.toast_export_failed)
     val shareScope = rememberCoroutineScope()
+    var sharing by remember { mutableStateOf(false) }
 
     // Which game this is decides what the board is told to set up, so it is read at the moment of
     // connecting rather than assumed to be chess.
@@ -126,7 +127,12 @@ fun BluetoothBoardScreen(
             // What the board has said, for whoever is to make sense of it: a board that connects
             // and gives no moves, or a make the app does not know. Offered once there is something.
             if (framesLogged > 0) {
-                IconButton(onClick = { shareScope.launch { shareBoardFrameLog(context, viewModel.boardFrameLog, shareLogLabel, shareFailed) } }) {
+                // One at a time: each begins by removing the files shared before, and a second tap
+                // took the first one's from under it while it was being written.
+                IconButton(enabled = !sharing, onClick = {
+                    sharing = true
+                    shareScope.launch { try { shareBoardFrameLog(context, viewModel.boardFrameLog, shareLogLabel, shareFailed) } finally { sharing = false } }
+                }) {
                     Icon(Icons.Default.Share, contentDescription = shareLogLabel)
                 }
             }

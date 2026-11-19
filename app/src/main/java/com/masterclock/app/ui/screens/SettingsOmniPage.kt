@@ -399,7 +399,7 @@ fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings
                         value = game.name,
                         onValueChange = { onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply { this[index] = game.copy(name = it) })) },
                         placeholder = { Text(stringResource(R.string.omni_cfg_game_name)) },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         shape = RoundedCornerShape(8.dp),
                         textStyle = MaterialTheme.typography.bodySmall
                     )
@@ -482,7 +482,7 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                             this[selectedGameIdx] = currentGame.copy(rounds = currentGame.rounds.toMutableList().apply { this[index] = round.copy(name = it) })
                         })) },
                         placeholder = { Text(stringResource(R.string.omni_cfg_round_name)) },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         shape = RoundedCornerShape(8.dp),
                         textStyle = MaterialTheme.typography.bodySmall
                     )
@@ -745,7 +745,7 @@ fun StepPhases(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                                     updateReplicatedPhases(settings, selectedGameIdx, selectedRoundIdx, selectedTurnIdx, newPhases, onSettingsChanged)
                                 },
                                 placeholder = { Text(stringResource(R.string.omni_cfg_phase_name)) },
-                                modifier = Modifier.weight(1f).height(48.dp),
+                                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                                 shape = RoundedCornerShape(8.dp),
                                 textStyle = MaterialTheme.typography.bodySmall
                             )

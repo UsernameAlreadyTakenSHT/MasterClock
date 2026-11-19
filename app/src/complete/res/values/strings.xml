@@ -307,6 +307,8 @@
     <string name="tools_select_text_color">Select Text Color</string>
     <string name="tools_share_log">Share Log</string>
     <string name="tools_short_straw">Short Straw</string>
+    <string name="tools_straw_long">Long</string>
+    <string name="tools_straw_short">Short</string>
     <string name="tools_shred">Shred</string>
     <string name="tools_spent">Spent</string>
     <string name="tools_start">START</string>

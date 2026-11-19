@@ -8,8 +8,7 @@ the history, export and import. In Complete only.
 
 ## Help and Support
 
-**Timing Engines Manual** — the short description of every mode and variant, in the order of the
-Modes screen, readable offline. This reference is its long version.
+**Timing Engines Manual** — the short description of every mode and variant, readable offline. This reference is its long version.
 
 ## Game Tools
 
@@ -164,7 +163,7 @@ phones that refuse APK files over Bluetooth; the recipient extracts the APK from
 | Action | |
 |---|---|
 | **Clear logs** | Deletes the whole game history, after asking: "All recorded history will be permanently deleted." |
-| **Reset settings** | Puts every setting back to its default, after asking: "This action cannot be undone." |
+| **Reset settings** | Puts every setting back to its default, the two history limits aside, after asking: "This action cannot be undone." |
 
 ## Version, credits and licences
 

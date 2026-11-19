@@ -405,17 +405,28 @@ class ChessTimerLogicTest {
     }
 
     @Test
-    fun `per-player settings pick each player's own mode independently`() {
+    fun `per-player settings give each player their own time in the game's one mode`() {
+        // One mode for the table, which the settings enforce; the times are each player's.
         val settings = ChessClockSettings(
             differentSettingsPerPlayer = true,
             p1Custom = PlayerSettings(mode = TimerMode.FISCHER, initialTimeMs = 10_000, incrementMs = 2000),
-            p2Custom = PlayerSettings(mode = TimerMode.MOVE_COUNTS_UP)
+            p2Custom = PlayerSettings(mode = TimerMode.FISCHER, initialTimeMs = 30_000, incrementMs = 5000)
         )
-        var state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 10_000), PlayerState(timeRemainingMs = 0)), activePlayer = 1)
+        var state = ChessClockState(players = listOf(PlayerState(timeRemainingMs = 10_000), PlayerState(timeRemainingMs = 30_000)), activePlayer = 1)
         state = computePostMoveState(state, 1, 0, settings, settings.p1Custom)
         assertEquals(12_000, state.players[0].timeRemainingMs)
         state = computePostMoveState(state, 2, 0, settings, settings.p2Custom)
-        assertEquals(1, state.players[1].moveCount)
+        assertEquals(35_000, state.players[1].timeRemainingMs)
+    }
+
+    @Test
+    fun `the whole-second tick reaches the next reading, counting down and counting up`() {
+        assertEquals(501, wholeSecondTickMs(4_500))
+        assertEquals(1000, wholeSecondTickMs(4_999))
+        assertEquals(20, wholeSecondTickMs(4_001))
+        // An overrun counts up, and is stored as a positive time: 4.5 s over reads 0:05 in half a second.
+        assertEquals(500, wholeSecondTickMs(4_500, countsUp = true))
+        assertEquals(500, wholeSecondTickMs(-4_500))
     }
 
     // --- NEGATIVE: an overrun is stored as a positive number with isNegative beside it ---

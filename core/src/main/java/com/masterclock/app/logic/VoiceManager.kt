@@ -104,8 +104,12 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
         noVoice()
     }
 
+    /** When the engine last answered that it had no voice; see [whenReady]. */
+    private var gaveUpAtNs = 0L
+
     private fun noVoice() {
         hasNoVoice = true
+        gaveUpAtNs = System.nanoTime()
         waiting = null
         onNoVoice()
     }
@@ -117,6 +121,15 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
 
     /** Says it now, or as soon as the engine is up if this is what started it. */
     private fun whenReady(say: () -> Unit) {
+        // Asked again, some time after it said it had none: the message sends the user to install a
+        // voice in the device's settings, and back from there nothing was ever asked again -- the
+        // test button and every announcement stayed silent until the app was killed.
+        if (hasNoVoice && System.nanoTime() - gaveUpAtNs >= RETRY_AFTER_NS) {
+            runCatching { tts?.shutdown() }
+            tts = null
+            started = false
+            hasNoVoice = false
+        }
         start()
         when {
             isAvailable -> say()
@@ -154,3 +167,6 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
         tts = null
     }
 }
+
+/** How long after "no voice" the engine is asked again: long enough not to start one at every announcement. */
+private const val RETRY_AFTER_NS = 15_000_000_000L

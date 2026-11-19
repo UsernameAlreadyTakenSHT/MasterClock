@@ -570,27 +570,38 @@ class BluetoothBoardManager(private val context: Context) {
     }
 
     /** Returns whether the operation was accepted and a callback should be expected. */
-    private fun write(gatt: BluetoothGatt, bytes: ByteArray): Boolean = runCatching {
-        val uuid = protocol.ble?.writeCharacteristicUuid ?: return@runCatching false
-        val characteristic = gatt.services.flatMap { it.characteristics }
-            .firstOrNull { it.uuid == uuid } ?: return@runCatching false
-
-        val accepted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // The characteristic's own way of being written, as the older call below uses: forced to
-            // a write with response, a board that takes writes without one refused every command on
-            // Android 13 and after, and took them on Android 12.
-            gatt.writeCharacteristic(characteristic, bytes, characteristic.writeType) == BluetoothStatusCodes.SUCCESS
-        } else {
-            @Suppress("DEPRECATION")
-            run { characteristic.value = bytes; gatt.writeCharacteristic(characteristic) }
+    private fun write(gatt: BluetoothGatt, bytes: ByteArray): Boolean {
+        // Written down whichever way it ends: a write given up before it was made -- no such
+        // characteristic, a permission taken back -- left no line at all, and the log read as if
+        // the board had never been asked.
+        val accepted = runCatching { writeNow(gatt, bytes) }.getOrElse {
+            Log.w("BluetoothBoardManager", "Could not write to the board", it)
+            false
         }
         frameLog?.record(
             if (accepted) BoardFrameLog.Direction.TO_BOARD else BoardFrameLog.Direction.NOT_SENT, "BLE", protocol.name, bytes
         )
-        accepted
-    }.getOrElse {
-        Log.w("BluetoothBoardManager", "Could not write to the board", it)
-        false
+        return accepted
+    }
+
+    private fun writeNow(gatt: BluetoothGatt, bytes: ByteArray): Boolean {
+        val uuid = protocol.ble?.writeCharacteristicUuid ?: return false
+        val characteristic = gatt.services.flatMap { it.characteristics }.firstOrNull { it.uuid == uuid } ?: return false
+        // The characteristic's own way of being written: forced to a write with response, a board
+        // that takes writes without one refused every command on Android 13 and after, and took
+        // them on Android 12. Except for what does not fit one write: without a response Android
+        // cuts it to the link's size and says nothing, so it goes with one where the board takes
+        // that -- a long write -- and is not sent at all where it does not.
+        val fits = bytes.size <= mtu - ATT_HEADER_BYTES
+        val takesResponse = characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0
+        if (!fits && !takesResponse) return false
+        val type = if (fits) characteristic.writeType else BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            gatt.writeCharacteristic(characteristic, bytes, type) == BluetoothStatusCodes.SUCCESS
+        } else {
+            @Suppress("DEPRECATION")
+            run { characteristic.writeType = type; characteristic.value = bytes; gatt.writeCharacteristic(characteristic) }
+        }
     }
 
     fun startScan() {

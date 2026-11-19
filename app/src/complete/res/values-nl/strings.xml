@@ -283,6 +283,8 @@
     <string name="tools_select_text_color">Tekstkleur kiezen</string>
     <string name="tools_share_log">Logboek delen</string>
     <string name="tools_short_straw">Kortste strootje</string>
+    <string name="tools_straw_long">Lang</string>
+    <string name="tools_straw_short">Kort</string>
     <string name="tools_shred">Vernietigen</string>
     <string name="tools_spent">Gebruikt</string>
     <string name="tools_start">STARTEN</string>

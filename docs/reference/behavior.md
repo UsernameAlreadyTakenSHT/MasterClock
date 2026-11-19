@@ -6,7 +6,8 @@ How the game itself behaves, whatever the mode. In Complete and Standard.
 
 ## Flag Behavior
 
-What a clock reaching zero means. One choice of four; *Freeze* by default.
+What a clock reaching zero means. One choice of four; *Freeze* by default. It is the game's rule:
+changed with a game in play, it ends that game, after asking.
 
 | Setting | At zero | The game |
 |---|---|---|
@@ -31,7 +32,7 @@ Two switches, each for one mode only.
 | Setting | Default | Applies to | |
 |---|---|---|---|
 | **Fischer FIDE (Bonus on move 0)** | off | Bonus › Fischer | On, the increment is on the clock before the first move, as FIDE counts it: 3+2 starts at 3:02. Off, it is first added after move 1. |
-| **Forced move counter** | on | FIDE Periods | On, a period ends when its move count is reached, and its time running out first is a flag. Off, a period ends when its time runs out and no moves are counted. |
+| **Forced move counter** | on | FIDE Periods | On, a period ends when its move count is reached, and its time running out first is a flag. Off, a period ends when its time runs out; moves are still counted, but they end nothing. |
 
 ## Interaction
 
@@ -68,7 +69,7 @@ win is then worth one extra point, from 7 moves on. The clock asks first, and sa
   first move, nor twice.
 - A clock with no time of its player's own — a shared one — has none to give.
 
-A saved game remembers it, and replaying a game starts from the clock Berserk left.
+A saved game remembers it; a game replayed from Last Games starts from the clocks as they stood before any Berserk, which is each player's to choose again.
 
 ## Advanced
 

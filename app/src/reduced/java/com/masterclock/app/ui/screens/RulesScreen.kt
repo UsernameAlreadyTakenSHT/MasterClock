@@ -6,7 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 /**
  * Stand-in for the rules screen in the builds that do not ship it.
  *
- * The real one lives in `src/complete` and is the only thing in the project that references the ten
+ * The real one lives in `src/complete` and is the only thing in the project that references the
  * bundled rulebook PDFs. Those PDFs are 9.3 MB of a 13.7 MB APK, and the resource shrinker keeps
  * them for as long as *something* compiled into the build points at them -- which, while
  * RulesScreen sat in `src/main`, meant all four flavors. Moving it here lets Standard, Lite and

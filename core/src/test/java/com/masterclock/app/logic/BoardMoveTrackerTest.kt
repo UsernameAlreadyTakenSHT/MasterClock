@@ -93,4 +93,31 @@ class BoardMoveTrackerTest {
         assertEquals(listOf("e2e4"), tracker.onReport(BoardReport.Moves(listOf("e2e4"))))
         assertEquals(emptyList<String>(), tracker.onReport(BoardReport.Ignored))
     }
+
+    @Test
+    fun `a king that rests on its way is two moves, and its rook a third, as the clock counts them`() {
+        fun at(vararg edits: Pair<Int, Char>): BoardPosition {
+            val squares = ("r...k..r" + "........".repeat(6) + "R...K..R").toCharArray()
+            for ((square, piece) in edits) squares[square] = piece
+            return BoardPosition(String(squares))
+        }
+        val e1 = 60; val f1 = 61; val g1 = 62; val h1 = 63
+        fun play(pause: Long): List<String> {
+            var time = 0L
+            val tracker = BoardMoveTracker(now = { time })
+            val heard = mutableListOf<String>()
+            fun show(position: BoardPosition) { heard += tracker.onReport(BoardReport.Position(position)) }
+            show(at())
+            show(at(e1 to '.', f1 to 'K'))
+            time += pause
+            show(at(e1 to '.', g1 to 'K'))
+            time += 100
+            show(at(e1 to '.', g1 to 'K', h1 to '.', f1 to 'R'))
+            return heard
+        }
+        // In one gesture the two stretches are the castle, and the rook is its other half.
+        assertEquals(listOf("e1f1", "f1g1"), play(pause = 300))
+        // Rested longer than the clock joins them in, they are two moves there, so three here.
+        assertEquals(listOf("e1f1", "f1g1", "h1f1"), play(pause = SLIDE_WINDOW_MS + 500))
+    }
 }

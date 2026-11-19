@@ -80,8 +80,9 @@ fun SettingsScreen(
     onToolClick: (Route) -> Unit,
     onCategoryChanged: (SettingsCategory) -> Unit
 ) {
-    var showResetSettingsDialog by remember { mutableStateOf(false) }
-    var showClearLogsDialog by remember { mutableStateOf(false) }
+    // Saved, as the clock's questions are: a theme or a fold changing closed them as if Cancel had been pressed.
+    var showResetSettingsDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var showClearLogsDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     // Omni is opened from the Modes page and replaces it, having no tab of its own: Back left
     // Settings altogether, and with no tab lit there was no telling how to get back to Modes.
@@ -148,7 +149,7 @@ fun SettingsScreen(
                     // it and the setup just edited was silently not played: 2 players chosen, the old
                     // 4-player session carried on. Asked rather than assumed, since leaving the
                     // screen is all it takes to pause one.
-                    var askResumeOrNew by remember { mutableStateOf(false) }
+                    var askResumeOrNew by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
                     SettingsOmniPage(
                         viewModel = omniViewModel,
                         onPlay = {

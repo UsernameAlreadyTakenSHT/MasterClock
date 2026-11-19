@@ -693,6 +693,11 @@ fun settingsEndTheGame(old: ChessClockSettings, new: ChessClockSettings): Boolea
         old.numberOfPlayers != new.numberOfPlayers ||
         old.differentSettingsPerPlayer != new.differentSettingsPerPlayer ||
         old.gameType != new.gameType ||
+        // What a clock at zero does is the game's rule, and a player out of time is stored as that
+        // rule has them: changed in play, an overrun begun under Freeze counted up with no minus
+        // sign, took no increment, and grew when the arbiter gave time back. A new rule is a new
+        // game, asked for like any other; the options are looked at before one starts.
+        old.flagBehavior != new.flagBehavior ||
         // It changes the clock a game starts from -- the first-move bonus -- and a fresh clock
         // kept showing 3:02 for a 3+2 after it was turned off.
         // Each of these two applies to one mode, and starts a new game only when it is that
@@ -3756,10 +3761,12 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
  * reads 0:04, and 0:03 only from 3.999. Never less than [MIN_WHOLE_SECOND_TICK_MS], so a tick that
  * lands just short of an edge does not ask for it again at once.
  */
-internal fun wholeSecondTickMs(remainingMs: Long): Long {
+internal fun wholeSecondTickMs(remainingMs: Long, countsUp: Boolean = remainingMs <= 0): Long {
     val intoSecond = kotlin.math.abs(remainingMs) % 1000
     // Counting down, the next reading is just under this second's start; an overrun counts up.
-    val toNextReading = if (remainingMs > 0) intoSecond + 1 else 1000 - intoSecond
+    // Told, and not read off the sign: an overrun is stored as a positive time, so the sign never
+    // said so. Nothing asks for an overrun's tick today; the default is what a negative reading meant.
+    val toNextReading = if (!countsUp) intoSecond + 1 else 1000 - intoSecond
     return toNextReading.coerceIn(MIN_WHOLE_SECOND_TICK_MS, 1000L)
 }
 
@@ -4590,6 +4597,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (sound) play(cueSound(oldState, newState, settings, getPlayerSettings(playerIdx).mode, lastBeepSecond))
         if (newState.isOutOfTime && !oldState.isOutOfTime) {
             // Nobody's, when it is the table's clock that ran out; it went down as "P1 FLAG".
+            // Out of moves is not out of time: the last move allowed went down as "FLAG Time Up",
+            // on a player who had lost nothing.
+            if (settings.playerSettings(playerIdx).mode == TimerMode.MOVE_COUNTS_DOWN) {
+                addEvent(GameEvent(eventType = "LIMIT", playerIndex = playerIdx, detail = "Moves done"))
+                return
+            }
             val flagged = playerIdx.takeUnless { settings.playerSettings(it).mode == TimerMode.CHRONO_COUNTDOWN }
             addEvent(GameEvent(eventType = "FLAG", playerIndex = flagged, detail = "Time Up"))
             return
@@ -4732,6 +4745,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             // PHASES too, a phase that flags on its end: one clock for the table, and "time is up for
             // player 1" named a player nobody is.
             val mode = getPlayerSettings(playerIdx).mode
+            // A count of moves used up is no flag either, and nothing is said of one player's: the
+            // game is finished when the table's are, and "Finished" is said then.
+            if (mode == TimerMode.MOVE_COUNTS_DOWN) {
+                if (isGameOver(_uiState.value, settings.flagBehavior, settings.numberOfPlayers)) voiceManager.speak(CoreR.string.voice_finished, vol)
+                return
+            }
             if (mode == TimerMode.CHRONO_COUNTDOWN || mode == TimerMode.PHASES) voiceManager.speak(CoreR.string.voice_finished, vol)
             else voiceManager.speak(CoreR.string.voice_time_up, vol, playerIdx)
             return
@@ -4822,7 +4841,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
         handleAudio(before, after, _settings.value, playerIndex)
         handleVoice(before, after, _settings.value, playerIndex)
-        _uiState.update { if (it.firstToFlag == null) it.copy(firstToFlag = playerIndex) else it }
+        // Nobody is first to flag where nobody flagged: it marked as the loser whoever played their
+        // last move first, the other still having one to play.
+        if (getPlayerSettings(playerIndex).mode != TimerMode.MOVE_COUNTS_DOWN) {
+            _uiState.update { if (it.firstToFlag == null) it.copy(firstToFlag = playerIndex) else it }
+        }
         return true
     }
 
@@ -5275,6 +5298,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         val before = _uiState.value.players.getOrNull(playerIndex - 1)
         _uiState.update { state -> arbiterAdjustTime(state, playerIndex, amountMs, settings) }
+        // Every correction, as the manual says: only one that cost a period or a flag left a trace,
+        // and two minutes given back after a dispute left none in the record an arbiter is asked for.
+        val sign = if (amountMs < 0) "-" else "+"
+        addEvent(GameEvent(eventType = "ARBITER", playerIndex = playerIndex, timeRemainingMs = _uiState.value.players.getOrNull(playerIndex - 1)?.timeRemainingMs, detail = "$sign${kotlin.math.abs(amountMs) / 1000}s"))
         logPenalty(before, playerIndex, settings)
         // After what it logged: a save taken first had a time before the PERIOD or the FLAG, and
         // resuming keeps only the events up to the save's time -- the penalty stood, its trace went.
@@ -5333,6 +5360,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val before = _uiState.value.players.getOrNull(playerIndex - 1) ?: return
         _uiState.update { state -> arbiterAdjustMoveCount(state, playerIndex, delta, settings) }
         val after = _uiState.value.players.getOrNull(playerIndex - 1)
+        if (after != null && after.moveCount != before.moveCount) {
+            addEvent(GameEvent(eventType = "ARBITER", playerIndex = playerIndex, moveCount = after.moveCount, detail = "moves ${if (delta < 0) "" else "+"}$delta"))
+        }
         // A period the arbiter starts or undoes is in the log and announced, as one a press reaches.
         if (after != null && after.currentPeriodIndex != before.currentPeriodIndex) {
             addEvent(GameEvent(eventType = "PERIOD", playerIndex = playerIndex, moveCount = after.moveCount, detail = "Arbiter: period ${after.currentPeriodIndex + 1} at move ${after.moveCount}"))
@@ -5423,8 +5453,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     /** The arbiter's Resume: the clocks [keepClocks] kept, paused, and the log cut back to them. */
     fun restoreKeptClocks() {
         val kept = keptClocks ?: return
-        // Another game's: there is nothing of this one to go back to.
-        if (kept.logId != currentLog?.id) {
+        // Another game's: there is nothing of this one to go back to. A game with no log yet when
+        // Save was pressed -- resumed from a save whose log was gone -- is the one that has since
+        // been given one, and was refused here after the question had been answered.
+        if (kept.logId != null && kept.logId != currentLog?.id) {
             dropKeptClocks()
             return
         }
@@ -5472,6 +5504,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var resumeGeneration = 0
 
     fun resumeSavedClock() {
+        // The game on the clock is about to be replaced, and what the arbiter kept was of it.
+        dropKeptClocks()
         pendingBoardNotation = null
         lastBoardNotation = null
         val asked = ++resumeGeneration

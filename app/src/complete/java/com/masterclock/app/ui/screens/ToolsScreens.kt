@@ -69,6 +69,7 @@ import android.content.ClipboardManager
 fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () -> Unit) {
     // Hoisted: used from the share button callback, outside composable scope.
     val shareLogTitle = stringResource(R.string.tools_share_log)
+    val shareFailedText = stringResource(R.string.toast_export_failed)
     val context = LocalContext.current
     val clipboardManager = remember { context.getSystemService(AndroidContext.CLIPBOARD_SERVICE) as ClipboardManager }
     // By id, so it survives a recreation; and Back closes the detail first. The detail was local
@@ -128,7 +129,10 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, shareText)
                     }
-                    context.startActivity(Intent.createChooser(intent, shareLogTitle))
+                    // Caught: a game from an import can hold more text than an intent carries, and
+                    // the refusal closed the app. A game played here is some fifty kilobytes.
+                    runCatching { context.startActivity(Intent.createChooser(intent, shareLogTitle)) }
+                        .onFailure { android.widget.Toast.makeText(context, shareFailedText, android.widget.Toast.LENGTH_LONG).show() }
                 }) { Icon(Icons.Default.Share, stringResource(R.string.common_share)) }
             }
         ) { padding ->
@@ -515,6 +519,8 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.Bottom
                     ) {
+                        val strawShort = stringResource(R.string.tools_straw_short)
+                        val strawLong = stringResource(R.string.tools_straw_long)
                         repeat(strawCount) { i ->
                             val isRevealed = revealedIndices.contains(i)
                             val isShort = i == shortStrawIndex
@@ -530,8 +536,13 @@ fun ShortStrawScreen(onBack: () -> Unit) {
                             )
                             Box(
                                 modifier = Modifier
-                                    .width(32.dp)
+                                    // As wide as before where there is room, narrower where ten of them have none: 320 dp of straws in 312.
+                                    .weight(1f, fill = false)
+                                    .padding(horizontal = 2.dp)
+                                    .widthIn(max = 32.dp)
                                     .height(height)
+                                    // Short or long, said as it is drawn: the coin, the die and the card speak, and a straw only changed height.
+                                    .announcesResult(if (isRevealed) (if (isShort) strawShort else strawLong) else "")
                                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                                     .background(color)
                                     .clickable(
@@ -781,7 +792,7 @@ fun StopPrecisionScreen(onBack: () -> Unit) {
             Text(stringResource(R.string.tools_target_time), modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.Center) { if (!isRunning && displayTime > 0) { val diff = Math.abs(displayTime - 5000L); val color = when { diff <= 10 -> Color(0xFF2196F3); diff <= 20 -> Color(0xFF4CAF50); diff <= 50 -> Color(0xFFFFEB3B); diff <= 100 -> Color(0xFFFF9800); else -> MaterialTheme.colorScheme.error }; Text(text = stringResource(R.string.tools_offset, if (displayTime > 5000) "+" else "-", diff), color = color, fontWeight = FontWeight.Black, style = MaterialTheme.typography.headlineSmall) } }
-                Text(text = String.format(locale, "%.3fs", displayTime / 1000f), style = MaterialTheme.typography.displayLarge.copy(fontSize = 90.sp), fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)
+                OneLineText(text = String.format(locale, "%.3fs", displayTime / 1000f), modifier = Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.displayLarge.copy(fontSize = 90.sp, fontFamily = FontFamily.Monospace), minSize = 40.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(72.dp)); Surface(onClick = { if (isRunning) { displayTime = SystemClock.elapsedRealtime() - startTime; isRunning = false } else { displayTime = 0; isRunning = true } }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(if (isRunning) stringResource(R.string.tools_stop) else stringResource(R.string.tools_start), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                 Spacer(Modifier.height(48.dp))
             }
@@ -796,7 +807,8 @@ fun NameSquareScreen(onBack: () -> Unit) {
     LaunchedEffect(isPlaying) { if (isPlaying) { timeLeft = 30; while (timeLeft > 0) { delay(1000); timeLeft-- }; isPlaying = false } }
     ToolScaffold(title = stringResource(R.string.tools_name_square_title), onBack = onBack) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
-            Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
+            // It scrolls: on a short screen or at a large font the board's last ranks were off it, and a square asked for there could not be tapped.
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceBetween) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(stringResource(R.string.tools_score, score), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black); Text("${timeLeft}s", color = if (timeLeft < 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black) }
                 if (!isPlaying) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

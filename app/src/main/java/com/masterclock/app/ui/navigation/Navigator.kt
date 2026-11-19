@@ -14,7 +14,9 @@ class Navigator(val state: NavigationState) {
         } else {
             val stack = state.backStacks[state.topLevelRoute] ?: return
             if (replace) stack.removeLastOrNull()
-            stack.add(route)
+            // Not onto itself: two taps landing before the screen changed opened it twice, and
+            // Back had to be pressed twice to leave it.
+            if (stack.lastOrNull() != route) stack.add(route)
         }
     }
 

@@ -1,6 +1,8 @@
 package com.masterclock.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,9 +31,10 @@ fun OmniTimerScreen(
 ) {
     val state by viewModel.omniState.collectAsState()
     val settings by viewModel.omniSettings.collectAsState()
-    var showResetDialog by remember { mutableStateOf(false) }
+    // Saved, as the clock's questions are: a theme or a fold changing closed them as if Cancel had been pressed.
+    var showResetDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     // The same question for Stop and Reset, each in its own words: Stop asked "Reset Session?".
-    var stopping by remember { mutableStateOf(false) }
+    var stopping by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     // Leaving the screen pauses the session. It ran on behind the rest of the app -- the clocks
     // counting down and the cues sounding from the timer or the settings -- with nothing on screen to
     // stop it. A recreation (rotation, theme) is not leaving.
@@ -185,7 +188,9 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
     val playerNumber = pIdx + 1
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        // It scrolls where it does not fit -- a short screen, a large font, the three bars on --
+        // rather than cut the Next button off at the bottom; centred as before where it does.
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -212,7 +217,15 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
         }
 
         if (settings.useTurnClock) {
-            Text(formatTime(state.currentTurnTimeMs), fontSize = 84.sp, fontWeight = FontWeight.Black, letterSpacing = (-2).sp)
+            // On one line, smaller where it must be: from an hour up the reading is wider than a
+            // 360 dp screen at this size, and broke in two.
+            OneLineText(
+                formatTime(state.currentTurnTimeMs),
+                style = LocalTextStyle.current.copy(fontSize = 84.sp),
+                minSize = 36.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = (-2).sp,
+            )
         }
 
         if (settings.timeBankMode != TimeBankMode.NONE) {

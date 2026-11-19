@@ -34,10 +34,19 @@ internal class ClockSim(val settings: ChessClockSettings) {
         lastTick = null
         if (!running) return
         moveElapsedMs += delta
-        val result = tickClock(state, delta, settings)
-        lastTick = result
-        state = result.state
-        result.coupled?.let { if (it.handedOverBy != null || it.gongMoves.isNotEmpty()) moveElapsedMs = 0 }
+        // In steps, as the ViewModel's tick takes it: see catchUpStepMs. One tickClock for the whole
+        // of it was a path the app never takes for the clocks that pass the turn by themselves.
+        var left = delta
+        var steps = 0
+        while (true) {
+            val step = if (steps++ < 500) catchUpStepMs(state, left, settings) else left
+            val result = tickClock(state, step, settings)
+            lastTick = result
+            state = result.state
+            result.coupled?.let { if (it.handedOverBy != null || it.gongMoves.isNotEmpty()) moveElapsedMs = 0 }
+            left -= step
+            if (left <= 0 || state.isPaused) break
+        }
         // stopIfGameOver
         if (state.activePlayer != null && (phasesOver || isGameOver(state, fb, players))) state = state.copy(isPaused = true)
     }
@@ -111,7 +120,7 @@ internal class ClockSim(val settings: ChessClockSettings) {
             activePlayer = playerIndex,
             isPaused = false,
             players = state.players.mapIndexed { idx, p ->
-                if (armDelay && idx + 1 == playerIndex && s.mode == TimerMode.US_DELAY) p.copy(delayRemainingMs = s.incrementMs) else p
+                if (armDelay && idx + 1 == playerIndex && turnStartsWithDelay(s.mode, p, fb)) p.copy(delayRemainingMs = s.incrementMs) else p
             },
         )
     }

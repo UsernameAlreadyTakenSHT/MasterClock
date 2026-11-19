@@ -284,6 +284,8 @@
     <string name="tools_select_text_color">Elegir el color del texto</string>
     <string name="tools_share_log">Compartir el registro</string>
     <string name="tools_short_straw">Pajita corta</string>
+    <string name="tools_straw_long">Larga</string>
+    <string name="tools_straw_short">Corta</string>
     <string name="tools_shred">Destruir</string>
     <string name="tools_spent">Empleado</string>
     <string name="tools_start">EMPEZAR</string>

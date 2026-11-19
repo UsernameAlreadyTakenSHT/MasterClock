@@ -64,6 +64,9 @@ object OpenBoardProtocol : BoardProtocol {
      */
     override fun initCommandFor(gameType: GameType): ByteArray = initCommandsFor(gameType).last()
 
+    /** See [initCommandsFor]: the board takes each write for a command, so none is cut to fit a link. */
+    override val writesAreCommands = true
+
     /**
      * A command is one write and nothing ends it. ArduinoBleChess, the board's side of this
      * protocol, takes the whole of a write as one command, the first space parting its name from
@@ -71,8 +74,6 @@ object OpenBoardProtocol : BoardProtocol {
      * and `set_variant` and `begin` sent as two lines of one write were a variant of that name. Both
      * were sent so, from a reading of the protocol and never against a board or its library.
      */
-    override val writesAreCommands = true
-
     override fun initCommandsFor(gameType: GameType): List<ByteArray> = when (gameType) {
         GameType.DRAUGHTS -> listOf("$SET_VARIANT $DRAUGHTS_VARIANT", "$BEGIN $DRAUGHTS_FEN w")
         else -> listOf("$BEGIN $CHESS_FEN w")

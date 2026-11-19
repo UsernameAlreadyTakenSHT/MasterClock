@@ -501,6 +501,9 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
         val newLaunchRem = (state.launchTimeRemainingMs - delta).coerceAtLeast(0)
         newState = newState.copy(launchTimeRemainingMs = newLaunchRem, isLaunching = newLaunchRem > 0)
         if (newLaunchRem > 0) return OmniTick(newState, sounds)
+        // The tick that ends the countdown counts whole for the clocks, the part of it before the
+        // launch included: a tenth of a second at most, and what OmniSimulationTest's rule that each
+        // clock loses the time that passed is written against.
     }
 
     if (state.isInTransition) {
