@@ -21,6 +21,7 @@ bug: please open an issue.
 
 | | Complete | Standard | Lite | Mini | E-Ink |
 |---|---|---|---|---|---|
+| Icon | <img src="../../branding/icon-complete.svg" alt="Complete icon" width="56"> | <img src="../../branding/icon-standard.svg" alt="Standard icon" width="56"> | <img src="../../branding/icon-lite.svg" alt="Lite icon" width="56"> | <img src="../../branding/icon-mini.svg" alt="Mini icon" width="56"> | <img src="../../branding/icon-paper.svg" alt="E-Ink icon" width="56"> |
 | Home | ✅ | ✅ | ✅ | ✅ | ✅ (its own) |
 | Presets, arbiter's panel | ✅ | ✅ | ✅ | — | — |
 | Modes | ✅ all | ✅ all | ✅ all | 3 modes | 3 modes |

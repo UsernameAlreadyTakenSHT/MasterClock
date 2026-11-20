@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The same figure in one colour, for the themed icons of Android 13 and after, which tint it
+     themselves: the two halves are a matter of two colours, and here there is one. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="4.68"
+        android:pathData="M28.08,54a25.92,25.92 0 1,0 51.84,0a25.92,25.92 0 1,0 -51.84,0" />
+    <group
+        android:translateX="36.288"
+        android:translateY="36.288"
+        android:scaleX="1.476"
+        android:scaleY="1.476">
+        <path
+            android:fillColor="#000000"
+            android:pathData="M8.959 1.99l-0.147 0.028l-0.115 0.029a1 1 0 0 0 -0.646 1.27l0.749 2.245l-2.815 1.735a2 2 0 0 0 -0.655 2.751l0.089 0.133a2 2 0 0 0 1.614 0.819l1.563 -0.001l-1.614 4.674a1 1 0 0 0 0.945 1.327h7.961a1 1 0 0 0 1 -0.978l0.112 -5c0 -3.827 -1.555 -6.878 -4.67 -7.966l-2.399 -0.83l-0.375 -0.121l-0.258 -0.074l-0.135 -0.031l-0.101 -0.013l-0.055 -0.001l-0.048 0.003z M18 18h-12a1 1 0 0 0 -1 1a2 2 0 0 0 2 2h10a2 2 0 0 0 1.987 -1.768l0.011 -0.174a1 1 0 0 0 -0.998 -1.058z" />
+    </group>
+</vector>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher icon's two colours. The dark is every build's; the other is the build's own, as
+     medals are told apart, and each of the other builds gives its own in a file of this name.
+     Complete: gold. -->
+<resources>
+    <color name="launcher_dark">#1D2028</color>
+    <color name="launcher_accent">#F0B81F</color>
+</resources>

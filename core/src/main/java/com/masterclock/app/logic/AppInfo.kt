@@ -621,7 +621,7 @@ object AppInfo {
     val CREDITS = listOf(
         CreditEntry(
             title = "Logo icon",
-            detail = "Tabler Icons, Paweł Kuna (v3.44.0) — MIT License",
+            detail = "Knight: Tabler Icons, Paweł Kuna — MIT License",
             url = "https://tabler.io/icons",
         ),
         CreditEntry(

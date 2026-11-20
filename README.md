@@ -49,11 +49,16 @@ Requires Android 7.0 (API 24) or later. Every screen and option is described in 
 
 | | Complete | Standard | Lite | Mini | E-Ink |
 |---|---|---|---|---|---|
+| Icon | <img src="branding/icon-complete.svg" alt="Complete icon" width="56"> | <img src="branding/icon-standard.svg" alt="Standard icon" width="56"> | <img src="branding/icon-lite.svg" alt="Lite icon" width="56"> | <img src="branding/icon-mini.svg" alt="Mini icon" width="56"> | <img src="branding/icon-paper.svg" alt="E-Ink icon" width="56"> |
+| Presets | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Arbiter's panel | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Modes settings | ✅ | ✅ | ✅ | ✅ (3 modes) | ✅ (3 modes) |
 | Behavior / Display / Audio settings | ✅ | ✅ | ❌ | ❌ | ❌ |
 | More (tools, backup, notebook…) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Presets | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Arbiter's panel | ✅ | ✅ | ✅ | ❌ | ❌ |
+
+The icon is the same in every build, a knight in a clock's ring across the clock's two halves, and
+its colour tells the build as a medal would: gold, silver, bronze, iron. The E-Ink build has it in
+black, in the frame the icons of Mudita's own apps have.
 
 "3 modes" means Sudden Death, Fischer, and Move Timer Standard only — everything else supports the full set of timing modes.
 
@@ -101,7 +106,7 @@ what each check proves and what it does not.
 
 ## Credits & Licensing
 
-- **Logo icon**: clock icon from [Tabler Icons](https://tabler.io/icons) by Paweł Kuna (v3.44.0), MIT License.
+- **Logo icon**: the knight is `chess-knight` from [Tabler Icons](https://tabler.io/icons) by Paweł Kuna, MIT License. The ring, the two halves and the colours are this project's.
 - **Chess pieces**: "Cburnett" style, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces), by [Cburnett](https://en.wikipedia.org/wiki/User:Cburnett/GFDL_images/Chess). GFDL and CC BY-SA 3.0.
 - **Draughts stones**: by [Antonsusi](https://commons.wikimedia.org/wiki/User:Antonsusi), from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_Draughts_pieces). Public domain — too simple a shape to carry copyright.
 - **Emojis** (Complete, in text notes and on drawings): [OpenMoji](https://openmoji.org/) 17.0 by the HfG Schwäbisch Gmünd, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The bundled color font is reduced to the Unicode emojis, the OpenMoji-only extras left out. The drawings a sticker is made from are OpenMoji's own SVG files, unchanged but for their names, for the emojis a note offers.

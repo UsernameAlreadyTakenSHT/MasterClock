@@ -1,35 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The launcher icon, drawn as Mudita draws its own for the Kompakt: Chess and Calculator, whose
-     sources are public, are each one 81-unit vector named straight from the manifest: a rounded
-     square in a 2.5 line against the edges, corners of about 19, and a figure in the same line some
-     four tenths as wide as the square. Not an adaptive icon: that launcher adds no frame of its
-     own, and the white background of one is not seen on a white screen, so the clock stood bare
-     beside framed neighbours.
+     sources are public, are each one 81-unit vector named straight from the manifest, a rounded
+     square in a 2.5 line against the edges with corners of about 19. Not an adaptive icon: that
+     launcher adds no frame of its own, and the white background of one is not seen on a white
+     screen, so the figure stood bare beside framed neighbours.
 
-     The square is filled white, which theirs is not. On the Kompakt it changes nothing; on a
-     launcher with a dark wallpaper, a black line with nothing behind it is not seen at all. -->
+     Inside it, the figure of the phone builds, a knight in a clock's ring, in black alone: their
+     two halves are told by two colours, and an E-Ink screen has one.
+
+     The square is filled white, which Mudita's is not. On the Kompakt it changes nothing; on a
+     launcher with a dark wallpaper, a black figure with nothing behind it is not seen at all. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="81dp"
     android:height="81dp"
     android:viewportWidth="81"
     android:viewportHeight="81">
-    <!-- The frame: its line's middle 1.25 in from the edge, so the line itself reaches it. -->
     <path
         android:fillColor="#FFFFFF"
         android:strokeColor="#000000"
         android:strokeWidth="2.5"
         android:pathData="M19.25,1.25H61.75A18,18 0 0 1 79.75,19.25V61.75A18,18 0 0 1 61.75,79.75H19.25A18,18 0 0 1 1.25,61.75V19.25A18,18 0 0 1 19.25,1.25Z" />
-    <!-- The clock, 33 wide over all: the logo's own circle and hands, at 15.25 / 9 of their size. -->
     <path
         android:strokeColor="#000000"
-        android:strokeWidth="2.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M25.25,40.5a15.25,15.25 0 1,0 30.5,0a15.25,15.25 0 0,0 -30.5,0" />
-    <path
-        android:strokeColor="#000000"
-        android:strokeWidth="2.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M40.5,32.03V40.5L45.58,45.58" />
+        android:strokeWidth="4.107"
+        android:pathData="M17.755,40.5a22.745,22.745 0 1,0 45.490,0a22.745,22.745 0 1,0 -45.490,0" />
+    <group
+        android:translateX="24.958"
+        android:translateY="24.958"
+        android:scaleX="1.2952"
+        android:scaleY="1.2952">
+        <path
+            android:fillColor="#000000"
+            android:pathData="M8.959 1.99l-0.147 0.028l-0.115 0.029a1 1 0 0 0 -0.646 1.27l0.749 2.245l-2.815 1.735a2 2 0 0 0 -0.655 2.751l0.089 0.133a2 2 0 0 0 1.614 0.819l1.563 -0.001l-1.614 4.674a1 1 0 0 0 0.945 1.327h7.961a1 1 0 0 0 1 -0.978l0.112 -5c0 -3.827 -1.555 -6.878 -4.67 -7.966l-2.399 -0.83l-0.375 -0.121l-0.258 -0.074l-0.135 -0.031l-0.101 -0.013l-0.055 -0.001l-0.048 0.003z M18 18h-12a1 1 0 0 0 -1 1a2 2 0 0 0 2 2h10a2 2 0 0 0 1.987 -1.768l0.011 -0.174a1 1 0 0 0 -0.998 -1.058z" />
+    </group>
 </vector>

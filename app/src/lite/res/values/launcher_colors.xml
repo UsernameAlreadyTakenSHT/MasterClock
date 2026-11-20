@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lite: bronze. See the file of this name in src/main. -->
+<resources>
+    <color name="launcher_accent">#B0622D</color>
+</resources>

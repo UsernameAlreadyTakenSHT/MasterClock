@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mini: iron. See the file of this name in src/main. -->
+<resources>
+    <color name="launcher_accent">#8D96A3</color>
+</resources>
