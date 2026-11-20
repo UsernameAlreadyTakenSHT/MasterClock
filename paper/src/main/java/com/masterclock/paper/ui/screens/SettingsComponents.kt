@@ -13,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -211,9 +210,8 @@ fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
 
 /** One credit/licence row. Flat e-ink styling: no dimmed variant, everything on onSurface. */
 @Composable
-internal fun CreditRow(entry: AppInfo.CreditEntry) {
+internal fun CreditRow(entry: AppInfo.CreditEntry, onMessage: (String) -> Unit) {
     val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
     // Hoisted: shown from the link's handler, not composable scope.
     val noBrowserText = stringResource(R.string.toast_no_browser)
     Column {
@@ -238,7 +236,7 @@ internal fun CreditRow(entry: AppInfo.CreditEntry) {
                         ) {
                             // A Kompakt has no browser, and the tap did nothing at all; it says why.
                             runCatching { uriHandler.openUri(url) }
-                                .onFailure { android.widget.Toast.makeText(context, noBrowserText, android.widget.Toast.LENGTH_SHORT).show() }
+                                .onFailure { onMessage(noBrowserText) }
                         }
                     ) { append(url) }
                 },

@@ -21,6 +21,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -122,9 +124,10 @@ object ScrollbarMMDDefaults {
  * ends of the list, because greying one out would dither on E Ink. Dashing the stroke is the same
  * idea and keeps every pixel pure black.
  *
- * One more deliberate deviation: the content keeps ordinary drag scrolling. MMD's lists turn the
- * native one off and move themselves, by a count of items or, since 1.0.2, by the finger's own
- * distance; neither is there for a Column whose children are not a list.
+ * One more deliberate deviation: the content is dragged by Compose's own scrolling, held to the
+ * finger; see [verticalScrollMMD]. MMD's lists turn the native one off and move themselves, by a
+ * count of items or, since 1.0.2, by the finger's own distance; neither is there for a Column whose
+ * children are not a list.
  */
 @Composable
 fun ScrollbarMMD(
@@ -273,14 +276,34 @@ private fun ChevronMMD(
 // --- DIALOGS ---
 
 /**
- * Keeps the screen behind a dialog as it is. A Compose dialog dims its window by default, which E
- * Ink renders as a grey dither over the whole screen, reversed colours or not. The dialog's hard
- * border already sets it apart.
+ * Keeps the screen behind a dialog as it is, and has the dialog there at once. A Compose dialog dims
+ * its window by default, which E Ink renders as a grey dither over the whole screen, reversed
+ * colours or not; the dialog's hard border already sets it apart. And its window comes and goes by
+ * the system's fade, every step of which E Ink draws: Mudita's guide has what opens over a screen
+ * shown instantly.
  */
 @Composable
 fun NoDialogDim() {
     val window = (LocalView.current.parent as? DialogWindowProvider)?.window
-    SideEffect { window?.setDimAmount(0f) }
+    SideEffect {
+        window?.setDimAmount(0f)
+        window?.setWindowAnimations(0)
+    }
+}
+
+// --- SCROLLING ---
+
+/**
+ * Scrolls a Column as MMD's own lists move: by the finger and no further. Compose carries a list
+ * on after the finger lifts and stretches it at its ends, two animations among the ones MMD turns
+ * off in its lists and its guide asks an E Ink screen to be spared; every frame of them is a
+ * partial refresh that leaves its ghost. The scrollbar beside the content says where it ends.
+ */
+fun Modifier.verticalScrollMMD(state: ScrollState): Modifier =
+    verticalScroll(state, overscrollEffect = null, flingBehavior = NoFling)
+
+private object NoFling : FlingBehavior {
+    override suspend fun ScrollScope.performFling(initialVelocity: Float): Float = 0f
 }
 
 @Composable
@@ -317,7 +340,7 @@ fun MMDAlertDialog(
                 // it: the failure the version dialog had and fixed, while there was one. Today's one message
                 // fits with room to spare.
                 Column(
-                    modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                    modifier = Modifier.weight(1f, fill = false).verticalScrollMMD(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {

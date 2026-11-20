@@ -22,6 +22,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +40,9 @@ import com.masterclock.paper.ui.navigation.rememberNavigationState
 import com.masterclock.paper.ui.navigation.toEntries
 import com.masterclock.paper.ui.screens.*
 import com.masterclock.paper.ui.theme.MasterClockTheme
+import com.mudita.mmd.components.snackbar.SnackbarHostMMD
+import com.mudita.mmd.components.snackbar.SnackbarHostStateMMD
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,6 +135,13 @@ class MainActivity : ComponentActivity() {
             // often it was pressed. Two presses, because the clock is held in the hands during a game
             // and one stray press must not take the players out of it. The app goes to the
             // background, as Android sends a root activity there itself, so the game is kept.
+            // What the app has to say in passing, by MMD's own message: a rule and a line of text at
+            // the foot of the screen, there and then gone. They were the system's toasts, which fade
+            // in and out and are drawn outside the app, in the system's colours whatever these are.
+            val messages = remember { SnackbarHostStateMMD() }
+            val messageScope = rememberCoroutineScope()
+            val say: (String) -> Unit = { text -> messageScope.launch { messages.showSnackbar(text) } }
+
             var lastRootBackAt by remember { mutableLongStateOf(0L) }
             val pressBackAgainText = stringResource(R.string.back_press_again_to_exit)
             BackHandler {
@@ -141,7 +152,7 @@ class MainActivity : ComponentActivity() {
                         moveTaskToBack(true)
                     } else {
                         lastRootBackAt = now
-                        android.widget.Toast.makeText(context, pressBackAgainText, android.widget.Toast.LENGTH_SHORT).show()
+                        say(pressBackAgainText)
                     }
                 }
             }
@@ -192,7 +203,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         entry<Route.About> { _ ->
-                            AboutScreen(onBackClick = { navigator.goBack() })
+                            AboutScreen(onBackClick = { navigator.goBack() }, onMessage = say)
                         }
                     }
 
@@ -209,6 +220,10 @@ class MainActivity : ComponentActivity() {
                             predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
                         )
                     }
+                }
+                // Over whichever screen is up, and clear of the system's bars. It takes no touch.
+                Box(Modifier.fillMaxSize().safeDrawingPadding(), contentAlignment = Alignment.BottomCenter) {
+                    SnackbarHostMMD(messages)
                 }
             }
         }

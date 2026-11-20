@@ -1,9 +1,7 @@
 package com.masterclock.paper.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -14,8 +12,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.ScrollbarMMD
+import com.masterclock.paper.ui.components.outlinedButtonBorderMMD
+import com.masterclock.paper.ui.components.verticalScrollMMD
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
+import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import com.mudita.mmd.components.divider.HorizontalDividerMMD
 import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
 import com.mudita.mmd.components.tabs.TabMMD
@@ -57,7 +58,7 @@ fun ModesSettingsPage(
                 // Above the keyboard: the window does not resize edge-to-edge, and the time fields
                 // sit where the keyboard rises on a 533dp screen.
                 .imePadding()
-                .verticalScroll(scrollState)
+                .verticalScrollMMD(scrollState)
         ) {
             if (currentSettings.differentSettingsPerPlayer) {
                 PrimaryTabRowMMD(
@@ -155,18 +156,18 @@ fun ModesSettingsPage(
             }
 
             if (!FlavorConfig.hasMoreTab()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onAboutClick() }
-                        .padding(vertical = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                // A button, drawn as one. It was two lines of small print that took a tap with
+                // nothing to say so, and the only way to the changelog, the credits and the licences:
+                // on a screen with no ripple and no pressed state, what can be pressed has to show it.
+                OutlinedButtonMMD(
+                    onClick = onAboutClick,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    border = outlinedButtonBorderMMD(),
                 ) {
-                    // Full ink, like everything else on this screen: the dimmed footer was grey,
-                    // which E Ink renders as a dither rather than a lighter shade.
-                    Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelLarge)
+                        Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }

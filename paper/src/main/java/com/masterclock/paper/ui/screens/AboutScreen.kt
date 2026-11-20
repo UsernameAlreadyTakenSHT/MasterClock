@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +27,7 @@ import com.masterclock.app.logic.AppInfo
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
 import com.masterclock.paper.ui.components.ScrollbarMMD
+import com.masterclock.paper.ui.components.verticalScrollMMD
 import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
 import com.mudita.mmd.components.tabs.TabMMD
 import com.mudita.mmd.components.top_app_bar.TopAppBarMMD
@@ -44,7 +44,7 @@ import com.mudita.mmd.components.top_app_bar.TopAppBarMMD
 // PrimaryTabRowMMD carries Material's experimental marker, inherited from the tab row it wraps.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(onBackClick: () -> Unit) {
+fun AboutScreen(onBackClick: () -> Unit, onMessage: (String) -> Unit) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(stringResource(R.string.credits_tab_changes), stringResource(R.string.credits_tab_credits), stringResource(R.string.credits_tab_licenses))
 
@@ -115,7 +115,7 @@ fun AboutScreen(onBackClick: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .verticalScroll(entriesScroll)
+                        .verticalScrollMMD(entriesScroll)
                         .padding(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -133,7 +133,7 @@ fun AboutScreen(onBackClick: () -> Unit) {
                             }
                         }
                         1 -> {
-                            AppInfo.credits().forEach { CreditRow(it) }
+                            AppInfo.credits().forEach { CreditRow(it, onMessage) }
                             // Always empty here -- paper ships no rulebook and no screen to open
                             // one -- so the heading has to go with the list.
                             val rulesCredits = AppInfo.rulesCredits()
@@ -143,7 +143,7 @@ fun AboutScreen(onBackClick: () -> Unit) {
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                rulesCredits.forEach { CreditRow(it) }
+                                rulesCredits.forEach { CreditRow(it, onMessage) }
                             }
                         }
                         else -> {
@@ -158,7 +158,8 @@ fun AboutScreen(onBackClick: () -> Unit) {
                                         title = lib.name,
                                         detail = "${lib.copyright} — ${lib.license}",
                                         url = lib.url,
-                                    )
+                                    ),
+                                    onMessage,
                                 )
                             }
                         }
