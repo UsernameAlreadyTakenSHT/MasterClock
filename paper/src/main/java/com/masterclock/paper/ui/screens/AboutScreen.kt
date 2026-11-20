@@ -66,7 +66,9 @@ fun AboutScreen(onBackClick: () -> Unit, onMessage: (String) -> Unit) {
         },
     ) { innerPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
+            // A margin below as well: the text ran down to the system's bar, its last line cut
+            // against it.
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(

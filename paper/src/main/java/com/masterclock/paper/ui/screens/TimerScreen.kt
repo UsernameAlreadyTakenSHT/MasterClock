@@ -93,6 +93,11 @@ fun TimerScreen(
             // Kompakt's width: "Hervatten", "Reprendre" broke over two lines and the row grew. The
             // labels get the width, on one line.
             val controlPadding = PaddingValues(horizontal = 4.dp, vertical = ButtonDefaultsMMD.buttonVerticalPadding)
+            // 48dp, the smallest target Android recommends, as the mode cards have. They stood at
+            // some 36, the height of their label and MMD's padding: above the 32 MMD asks of a
+            // button, and small for the three most pressed in the app, on a screen that shows no
+            // press.
+            val controlSize = Modifier.heightIn(min = 48.dp)
             // One size for the three, the largest at which the longest fits: "Démarrer" filled its
             // button from edge to edge at a large font. Every label the middle button can show is
             // measured, so that the row does not change size when the game starts or pauses.
@@ -106,7 +111,7 @@ fun TimerScreen(
                 ) {
                     OutlinedButtonMMD(
                         onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).then(controlSize),
                         border = outlinedButtonBorderMMD(),
                         contentPadding = controlPadding,
                     ) {
@@ -123,7 +128,7 @@ fun TimerScreen(
     
                     OutlinedButtonMMD(
                         onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).then(controlSize),
                         border = outlinedButtonBorderMMD(),
                         contentPadding = controlPadding,
                     ) {
@@ -148,7 +153,7 @@ fun TimerScreen(
                         // Paused first, as on the phone: a game went on running behind a page with no way
                         // to press it, and a flag could fall there unseen.
                         onClick = { if (!state.isPaused) viewModel.pause(); onSettingsClick() },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).then(controlSize),
                         border = outlinedButtonBorderMMD(),
                         contentPadding = controlPadding,
                     ) {
