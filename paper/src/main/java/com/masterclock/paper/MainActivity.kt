@@ -188,7 +188,11 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = {
                                     navigator.goBack()
                                 },
+                                onAboutClick = { navigator.navigate(Route.About) },
                             )
+                        }
+                        entry<Route.About> { _ ->
+                            AboutScreen(onBackClick = { navigator.goBack() })
                         }
                     }
 

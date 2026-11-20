@@ -25,13 +25,12 @@ import com.mudita.mmd.components.tabs.TabMMD
 @Composable
 fun ModesSettingsPage(
     currentSettings: ChessClockSettings,
-    onSettingsChanged: (ChessClockSettings) -> Unit
+    onSettingsChanged: (ChessClockSettings) -> Unit,
+    onAboutClick: () -> Unit,
 ) {
     // Saveable, as on the phone app: a recreation -- the colours reversed, a font size changed --
     // put the page back on Player 1's tab, and the next edit meant for Player 2 went to Player 1.
     var selectedPlayerTab by rememberSaveable { mutableIntStateOf(0) }
-    // Saveable, like the tab: a recreation closed the version dialog.
-    var showChangelog by rememberSaveable { mutableStateOf(false) }
     
     // One scrolling column for the whole page, deliberately.
     //
@@ -159,7 +158,7 @@ fun ModesSettingsPage(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { showChangelog = true }
+                        .clickable { onAboutClick() }
                         .padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -173,9 +172,5 @@ fun ModesSettingsPage(
         }
 
         ScrollbarMMD(scrollState)
-    }
-
-    if (showChangelog) {
-        ChangelogCreditsDialog(onDismiss = { showChangelog = false })
     }
 }

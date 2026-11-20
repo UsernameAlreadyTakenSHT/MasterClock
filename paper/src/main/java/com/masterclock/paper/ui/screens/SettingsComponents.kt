@@ -5,11 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
@@ -18,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -28,24 +24,21 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.*
-import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
 import androidx.compose.ui.text.TextStyle
 import com.mudita.mmd.components.buttons.ButtonDefaultsMMD
 import com.mudita.mmd.components.buttons.ButtonMMD
 import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import com.mudita.mmd.components.switcher.SwitchMMD
-import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
-import com.mudita.mmd.components.tabs.TabMMD
 import com.mudita.mmd.components.text_field.TextFieldMMD
 
 @Composable
@@ -82,7 +75,7 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, st
             modifier = modifier.heightIn(min = 48.dp).then(chosen),
             contentPadding = cardPadding,
         ) {
-            Text(text = title, style = style, maxLines = 1, softWrap = false)
+            Text(text = title, style = style, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
         }
     } else {
         OutlinedButtonMMD(
@@ -91,7 +84,7 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, st
             border = outlinedButtonBorderMMD(),
             contentPadding = cardPadding,
         ) {
-            Text(text = title, style = style, maxLines = 1, softWrap = false)
+            Text(text = title, style = style, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -100,7 +93,6 @@ fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, st
 fun BehaviorSwitch(
     label: String,
     checked: Boolean,
-    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
     // One switch for TalkBack: the row, with its label, its state and the role. The row was a bare
@@ -111,7 +103,6 @@ fun BehaviorSwitch(
             .fillMaxWidth()
             .toggleable(
                 value = checked,
-                enabled = enabled,
                 role = Role.Switch,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -126,12 +117,13 @@ fun BehaviorSwitch(
             modifier = Modifier.weight(1f).padding(end = 12.dp),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = if (enabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+            // Full ink, with no dimmed form for a switch out of use: there is none here, and half
+            // ink is a grey.
+            color = MaterialTheme.colorScheme.onBackground
         )
         SwitchMMD(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            enabled = enabled,
             modifier = Modifier.clearAndSetSemantics {},
         )
     }
@@ -219,7 +211,7 @@ fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
 
 /** One credit/licence row. Flat e-ink styling: no dimmed variant, everything on onSurface. */
 @Composable
-private fun CreditRow(entry: AppInfo.CreditEntry) {
+internal fun CreditRow(entry: AppInfo.CreditEntry) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     // Hoisted: shown from the link's handler, not composable scope.
@@ -252,158 +244,6 @@ private fun CreditRow(entry: AppInfo.CreditEntry) {
                 },
                 style = MaterialTheme.typography.bodySmall,
             )
-        }
-    }
-}
-
-// PrimaryTabRowMMD carries Material's experimental marker, inherited from the tab row it wraps.
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ChangelogCreditsDialog(onDismiss: () -> Unit) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-    val tabs = listOf(stringResource(R.string.credits_tab_changes), stringResource(R.string.credits_tab_credits), stringResource(R.string.credits_tab_licenses))
-
-    Dialog(onDismissRequest = onDismiss) {
-        NoDialogDim()
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    MMDDefaults.BorderWidth,
-                    MaterialTheme.colorScheme.onSurface,
-                    RoundedCornerShape(MMDDefaults.CornerRadius)
-                ),
-            shape = RoundedCornerShape(MMDDefaults.CornerRadius),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        AppInfo.BUILD_DATE,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                PrimaryTabRowMMD(
-                    selectedTabIndex = selectedTab,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ) {
-                    tabs.forEachIndexed { index, label ->
-                        TabMMD(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
-                            // A third tab leaves each one about a third of the dialog, where the
-                            // default label size wrapped "Changelog" onto a second line.
-                            text = {
-                                Text(
-                                    label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    maxLines = 1,
-                                    // See the app module: clipping mid-glyph is how "Changelog"
-                                    // lost its tail; an ellipsis degrades readably instead.
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        )
-                    }
-                }
-
-                // The changelog runs well past the 320dp cap, and inside a dialog there is even
-                // less to hint at it than on a full page. Same scrollbar as the settings page.
-                // A scroll state per tab visit, so every tab starts at its own beginning: one shared
-                // state landed you halfway down Licenses because you had scrolled Changes. It was
-                // reset by a LaunchedEffect, which runs after the frame it is in, so the new tab was
-                // drawn once at the old offset and then again at the top -- two refreshes on E Ink.
-                // A fresh state is at the top from its first frame.
-                // Saveable, as rememberScrollState was: a recreation kept the place in the tab.
-                val entriesScroll = rememberSaveable(selectedTab, saver = ScrollState.Saver) { ScrollState(0) }
-
-                // weight, not a bare height cap. Without it the entries take their 320dp off the
-                // top and Close, measured last with nothing left, comes out zero-high: on a real
-                // Kompakt screen (480x800 at 240dpi, so 320x533dp) the button was not merely
-                // cramped, it was absent from the layout altogether and the dialog could only be
-                // dismissed by tapping outside it.
-                //
-                // fill = false so the entries still stop at 320dp on a screen with room to spare;
-                // the weight only ever takes space away, never adds it. Close is unweighted and so
-                // is measured first, at its full height -- the scrolling half is the half that can
-                // afford to shrink.
-                Row(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .heightIn(max = 320.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .verticalScroll(entriesScroll),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        when (selectedTab) {
-                            0 -> AppInfo.changelogFor().forEach { entry ->
-                                Column {
-                                    Text(
-                                        "${entry.version} — ${entry.date}",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    entry.notes.forEach { note ->
-                                        Text("• $note", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
-                                    }
-                                }
-                            }
-                            1 -> {
-                                AppInfo.credits().forEach { CreditRow(it) }
-                                // Always empty here -- paper ships no rulebook and no screen to
-                                // open one -- so the heading has to go with the list.
-                                val rulesCredits = AppInfo.rulesCredits()
-                                if (rulesCredits.isNotEmpty()) {
-                                    Text(
-                                        stringResource(R.string.credits_rules_documents),
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    rulesCredits.forEach { CreditRow(it) }
-                                }
-                            }
-                            else -> {
-                                Text(
-                                    stringResource(R.string.credits_libraries),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                AppInfo.ossLicenses().forEach { lib ->
-                                    CreditRow(
-                                        AppInfo.CreditEntry(
-                                            title = lib.name,
-                                            detail = "${lib.copyright} — ${lib.license}",
-                                            url = lib.url,
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    ScrollbarMMD(entriesScroll)
-                }
-
-                ButtonMMD(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.common_close), style = MaterialTheme.typography.labelLarge)
-                }
-            }
         }
     }
 }

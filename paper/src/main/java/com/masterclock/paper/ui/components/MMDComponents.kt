@@ -6,10 +6,11 @@
  * MMD has no counterpart for what is left here:
  * - an alert dialog. It has bottom sheets and menus, but no dialog, so MMDAlertDialog draws one in
  *   its manner -- no elevation, a hard border -- around MMD's own buttons.
- * - a scrollbar for a plain scrolling Column. MMD's scrollbar lives inside LazyColumnMMD, which
- *   turns drag scrolling off and steps a fixed number of items at a time. That suits a list of
- *   like rows; the settings page is a few panels of very different heights, where one step would
- *   skip most of it. ScrollbarMMD follows MMD's scrollbar, for a ScrollState instead.
+ * - a scrollbar for a plain scrolling Column. MMD's scrollbar is private to its lazy lists, and
+ *   made for a list of like rows: its thumb is sized by the count of items and its chevrons move
+ *   by a number of them, where the settings page is a few panels of very different heights. Since
+ *   1.0.2 such a list can follow the finger rather than step, but the scrollbar is the same.
+ *   ScrollbarMMD follows MMD's scrollbar, for a ScrollState instead.
  *
  * Neither is copied from MMD's source: both were written from how the interface behaves, before the
  * library was published. The library itself is credited where the E-Ink build lists its licences.
@@ -77,13 +78,10 @@ object MMDDefaults {
  * colour MMD fills its other buttons with, which the reversed scheme does flip.
  */
 @Composable
-fun outlinedButtonBorderMMD(enabled: Boolean = true): BorderStroke {
-    val color = MaterialTheme.colorScheme.primaryContainer
-    return BorderStroke(
-        ButtonDefaultsMMD.borderWidth,
-        if (enabled) color else color.copy(alpha = 0.75f),
-    )
-}
+fun outlinedButtonBorderMMD(): BorderStroke =
+    // One ink, with no fainter one for a button out of use: nothing here is ever out of use, and a
+    // border at three quarters is a grey, which E Ink dithers and Mudita's guide asks to avoid.
+    BorderStroke(ButtonDefaultsMMD.borderWidth, MaterialTheme.colorScheme.primaryContainer)
 
 // --- SCROLLBAR ---
 
@@ -124,9 +122,9 @@ object ScrollbarMMDDefaults {
  * ends of the list, because greying one out would dither on E Ink. Dashing the stroke is the same
  * idea and keeps every pixel pure black.
  *
- * One more deliberate deviation: the content keeps ordinary drag scrolling. MMD sets
- * `userScrollEnabled = false` and snaps by a fixed item count, which has no meaning for a Column
- * whose children are not a list.
+ * One more deliberate deviation: the content keeps ordinary drag scrolling. MMD's lists turn the
+ * native one off and move themselves, by a count of items or, since 1.0.2, by the finger's own
+ * distance; neither is there for a Column whose children are not a list.
  */
 @Composable
 fun ScrollbarMMD(
@@ -316,7 +314,7 @@ fun MMDAlertDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Scrolls if it ever outgrows the screen, before the buttons below are squeezed out of
-                // it: the failure ChangelogCreditsDialog already had and fixed. Today's one message
+                // it: the failure the version dialog had and fixed, while there was one. Today's one message
                 // fits with room to spare.
                 Column(
                     modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
@@ -381,6 +379,10 @@ fun MMDAlertDialog(
  * large font the label ran from edge to edge of its button, or was cut: "Fisch" for "Fischer".
  * A row of buttons reads as one thing, so it shrinks as one; the floor is a size on the screen,
  * because one in sp grows with the very font scale that made the label too wide.
+ *
+ * The floor is 14dp, the size of the smallest style MMD has, and was 9: a label is not made
+ * smaller than anything else the library would set on this screen. One still too wide there goes
+ * onto a second line, which the buttons that use this allow.
  */
 @Composable
 fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp): TextStyle {
@@ -388,7 +390,7 @@ fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp): Tex
     val density = LocalDensity.current
     return remember(labels, style, cellWidth, density.density, density.fontScale) {
         val room = with(density) { cellWidth.toPx() }
-        val floor = with(density) { 9.dp.toSp() }
+        val floor = with(density) { 14.dp.toSp() }
         val widest = labels.maxOfOrNull { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width } ?: 0
         if (!style.fontSize.isSpecified || room <= 0f || widest <= room) style
         // A little under the ratio: letter spacing does not shrink with the size.

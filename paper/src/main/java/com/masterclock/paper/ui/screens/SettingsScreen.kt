@@ -25,6 +25,7 @@ fun SettingsScreen(
     currentSettings: ChessClockSettings,
     onSettingsChanged: (ChessClockSettings) -> Unit,
     onBackClick: () -> Unit,
+    onAboutClick: () -> Unit,
 ) {
     Scaffold(
         // MMD's bars bring their own rule against the content, so the dividers that used to be
@@ -39,7 +40,7 @@ fun SettingsScreen(
         },
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp)) {
-            ModesSettingsPage(currentSettings = currentSettings, onSettingsChanged = onSettingsChanged)
+            ModesSettingsPage(currentSettings = currentSettings, onSettingsChanged = onSettingsChanged, onAboutClick = onAboutClick)
         }
     }
 }

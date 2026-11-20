@@ -28,6 +28,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -112,8 +113,11 @@ fun TimerScreen(
                         Text(
                             text = stringResource(R.string.common_reset),
                             style = controlStyle,
-                            maxLines = 1,
-                            softWrap = false,
+                            // One line at the size the row shares; a second where the label is
+                            // still too wide at that size's floor. See sharedLabelStyle.
+                            maxLines = 2,
+                            textAlign = TextAlign.Center,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
     
@@ -132,8 +136,11 @@ fun TimerScreen(
                         Text(
                             text = label,
                             style = controlStyle,
-                            maxLines = 1,
-                            softWrap = false,
+                            // One line at the size the row shares; a second where the label is
+                            // still too wide at that size's floor. See sharedLabelStyle.
+                            maxLines = 2,
+                            textAlign = TextAlign.Center,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
     
@@ -148,8 +155,11 @@ fun TimerScreen(
                         Text(
                             text = stringResource(R.string.timer_settings),
                             style = controlStyle,
-                            maxLines = 1,
-                            softWrap = false,
+                            // One line at the size the row shares; a second where the label is
+                            // still too wide at that size's floor. See sharedLabelStyle.
+                            maxLines = 2,
+                            textAlign = TextAlign.Center,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
