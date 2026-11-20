@@ -1,3 +1,19 @@
+## v0.8.47 — 2026-11-20
+
+A new icon for the five apps, and the E-Ink app brought into line with Mudita's design guide before
+it is offered to Mudita's store.
+
+### Changed
+- **A new icon.** A knight in a clock's ring, across the clock's two halves: the plain clock said neither chess nor which build. The colour tells the build as a medal would -- gold for Complete, silver for Standard, bronze for Lite, iron for Mini -- and replaces the small word each icon carried. The E-Ink app has the same figure in black, in the frame the icons of Mudita's own apps have.
+- **E-Ink, version and credits.** The version, the changelog, the credits and the licences are a screen of their own, with a back arrow, opened by a button at the foot of the settings. They were a dialog, reached by two lines of small print that nothing showed could be pressed.
+- **E-Ink, buttons.** Reset, Start and Settings are 48dp tall, and a button's label is never set smaller than the smallest size the design system has; one too long takes a second line.
+- **E-Ink, messages.** *Press Back again to exit* is said at the foot of the screen in the app's own style, not in the system's bubble, which fades in and out and ignores reversed colours.
+
+### Fixed
+- **E-Ink, motion.** A page that scrolls stops where the finger lifts and does not stretch at its ends, and a dialog appears at once, without the system's fade: on E Ink every frame of an animation leaves a trace.
+- **Credits**, in every build: the logo is credited to Tabler Icons, where it is from, and the switch sound to its author, RutgerMuller.
+- **Documentation.** Thirty-five sentences of the online reference that said what the app does not do, or left something out, are corrected.
+
 ## v0.8.46 — 2026-11-19
 
 What two read-throughs of the whole app found, corrected: nothing serious, and a good many small

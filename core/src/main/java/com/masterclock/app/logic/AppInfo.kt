@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-19"
+    const val BUILD_DATE = "2026-11-20"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,18 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.47",
+            date = "2026-11-20",
+            notes = listOf(
+                Note("A new icon: a knight in a clock's ring, in this build's own colour. Gold is Complete, silver Standard, bronze Lite, iron Mini.", PHONE),
+                Note("Credits: the logo is credited to Tabler Icons and the switch sound to its author.", PHONE),
+                Note("A new icon: a knight in a clock's ring, in the frame Mudita's own apps have.", E_INK_ONLY),
+                Note("The version, the changelog and the credits are a screen of their own, opened by a button at the foot of the settings.", E_INK_ONLY),
+                Note("Reset, Start and Settings are taller. Press Back again to exit is said at the foot of the screen, in the app's own style.", E_INK_ONLY),
+                Note("A page that scrolls stops where the finger lifts, and a dialog appears at once: no animation is left to trace on the screen.", E_INK_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.46",
             date = "2026-11-19",

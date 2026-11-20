@@ -1,0 +1,4 @@
+A new icon: a knight in a clock's ring, in the frame Mudita's own apps have.
+The version, changelog and credits are a screen of their own, opened by a button at the foot of the settings.
+Reset, Start and Settings are taller.
+No animation left: scrolling stops with the finger, dialogs and messages appear at once.
