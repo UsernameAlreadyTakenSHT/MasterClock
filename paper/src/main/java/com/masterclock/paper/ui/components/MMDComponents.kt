@@ -388,9 +388,12 @@ fun MMDAlertDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Both at the 48dp every other button of the app is held to: left at the library's
+                    // own height they stood a fifth lower than the three under the clock, on the one
+                    // question where a press beside the mark resets a game.
                     ButtonMMD(
                         onClick = onConfirm,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     ) {
                         Text(
                             text = confirmButtonText,
@@ -402,7 +405,7 @@ fun MMDAlertDialog(
                     if (dismissButtonText != null && onDismiss != null) {
                         OutlinedButtonMMD(
                             onClick = onDismiss,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                             border = outlinedButtonBorderMMD()
                         ) {
                             Text(
