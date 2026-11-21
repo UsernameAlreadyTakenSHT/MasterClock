@@ -369,7 +369,10 @@ class MainActivity : ComponentActivity() {
 
             val mediaImportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                 uri?.let {
-                    scope.launch(Dispatchers.IO) {
+                    // On the scope of what holds the import, not the screen's: the screen recreated
+                    // while a large archive was read -- a tablet turned, the theme changing -- ended
+                    // the read, and the import was gone with no question and no message.
+                    pendingImports.viewModelScope.launch(Dispatchers.IO) {
                         try {
                             // Read from the picked file twice rather than copied to the cache first:
                             // with the notebook's videos in it, a copy could cost gigabytes of disk.
@@ -382,10 +385,13 @@ class MainActivity : ComponentActivity() {
                             // Validated, not applied: the media pass and the import itself wait for
                             // the confirmation below.
                             withContext(Dispatchers.Main) { pendingFileImport = PendingFileImport(pkg, archive = open) }
+                        } catch (e: CancellationException) {
+                            // The activity gone for good: not a file that failed.
+                            throw e
                         } catch (e: Exception) {
                             Log.w("MainActivity", "Failed to import backup archive", e)
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(context, importFailedText, Toast.LENGTH_LONG).show()
+                                Toast.makeText(context.applicationContext, importFailedText, Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -400,12 +406,13 @@ class MainActivity : ComponentActivity() {
                     // with no way to tell a refused file from one that imported settings identical
                     // to the current ones. Success said nothing either, which the backup import
                     // three lambdas up has always done.
-                    scope.launch(Dispatchers.IO) {
+                    // On the import's own scope, as the archive is read; see there.
+                    pendingImports.viewModelScope.launch(Dispatchers.IO) {
                         // Reading and parsing happen here rather than on the main thread. The size is
                         // bounded, but the stream can belong to a cloud provider, which makes the
                         // read as slow as the network behind it.
                         val parsed = runCatching {
-                            val content = context.contentResolver.openInputStream(it)?.use { stream ->
+                            val content = context.applicationContext.contentResolver.openInputStream(it)?.use { stream ->
                                 // Bounded: readText() would pull a file of any size straight into the heap.
                                 readImportText(stream)
                             } ?: error("No input stream for $it")
@@ -418,7 +425,7 @@ class MainActivity : ComponentActivity() {
                             // A readable file waits for the confirmation; only a refusal is reported
                             // straight away.
                             parsed.getOrNull()?.let { pkg -> pendingFileImport = PendingFileImport(pkg, archive = null) }
-                            if (parsed.isFailure) Toast.makeText(context, importFailedText, Toast.LENGTH_SHORT).show()
+                            if (parsed.isFailure) Toast.makeText(context.applicationContext, importFailedText, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
