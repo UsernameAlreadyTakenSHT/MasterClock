@@ -180,4 +180,15 @@ class RichTextTest {
         val two = RichText("one\ntwo\n").headingToggled(0, 7, NoteStyle.TITLE)
         assertEquals(listOf(NoteSpan(0, 3, NoteStyle.TITLE), NoteSpan(4, 7, NoteStyle.TITLE)), two.spans)
     }
+
+    @Test
+    fun `centring is taken off lines that all had it, and put on when one had not`() {
+        val both = RichText("one\ntwo").centerToggled(0, 7)
+        assertTrue(both.isCenteredLine(0) && both.isCenteredLine(4))
+        val off = both.centerToggled(0, 7)
+        assertFalse(off.isCenteredLine(0) || off.isCenteredLine(4))
+        // One of the two centred: the press centres both, it does not undo the one.
+        val mixed = RichText("one\ntwo").centerToggled(0, 0).centerToggled(0, 7)
+        assertTrue(mixed.isCenteredLine(0) && mixed.isCenteredLine(4))
+    }
 }

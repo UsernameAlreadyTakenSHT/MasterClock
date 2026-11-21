@@ -291,7 +291,12 @@ fun RichText.centerToggled(start: Int, end: Int): RichText {
     val c = charStylesOf(this)
     // Line by line: the new lines between them never carry the style, so all of the range never has
     // it; and an empty line, which has nothing to carry it, does not count.
-    val on = !lineStarts(start, end).filter { it < text.length && text[it] != '\n' }.all { isCenteredLine(it) }
+    // By the rule of isCenteredLine, read from the table built above: asked of isCenteredLine, each
+    // line built that table again, and a long selection in a long note stopped the app for seconds.
+    val on = !lineStarts(start, end).filter { it < text.length && text[it] != '\n' }.all { lineStart ->
+        val lineEnd = text.indexOf('\n', lineStart).let { if (it < 0) text.length else it }
+        (lineStart until lineEnd.coerceAtMost(c.styles.size)).any { c.styles[it] and NoteStyle.CENTER != 0 }
+    }
     for (i in lines) {
         if (text[i] == '\n') continue
         c.styles[i] = if (on) c.styles[i] or NoteStyle.CENTER else c.styles[i] and NoteStyle.CENTER.inv()
