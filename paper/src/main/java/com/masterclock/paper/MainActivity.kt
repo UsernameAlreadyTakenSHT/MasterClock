@@ -139,17 +139,24 @@ class MainActivity : ComponentActivity() {
             // often it was pressed. Two presses, because the clock is held in the hands during a game
             // and one stray press must not take the players out of it. The app goes to the
             // background, as Android sends a root activity there itself, so the game is kept.
+            //
             // What the app has to say in passing, by MMD's own message: a rule and a line of text at
             // the foot of the screen, there and then gone. They were the system's toasts, which fade
             // in and out and are drawn outside the app, in the system's colours whatever these are.
             val messages = remember { SnackbarHostStateMMD() }
             val messageScope = rememberCoroutineScope()
-            val say: (String) -> Unit = { text -> messageScope.launch { messages.showSnackbar(text) } }
-            // The message that asks for a second Back, held apart: it stands for as long as that
-            // second press is taken, and no longer. Left to the snackbar's own four seconds it went
-            // on asking for two seconds after a press had stopped counting, and a press then asked
-            // again behind the first, eight seconds in all.
-            var backMessage by remember { mutableStateOf<Job?>(null) }
+            // One at a time, the newest. Each waited its turn behind the one showing: three presses
+            // on a link, on a device with no browser, held "No browser" for twelve seconds, and a
+            // "Press Back again" waiting behind it was shown late or not at all, its two seconds
+            // counted from the press.
+            var standing by remember { mutableStateOf<Job?>(null) }
+            val say: (String) -> Unit = { text ->
+                standing?.cancel()
+                standing = messageScope.launch { messages.showSnackbar(text) }
+            }
+            // The message that asks for a second Back stands for as long as that second press is
+            // taken, and no longer: left to the snackbar's own four seconds it went on asking for two
+            // seconds after a press had stopped counting.
 
             var lastRootBackAt by remember { mutableLongStateOf(0L) }
             val pressBackAgainText = stringResource(R.string.back_press_again_to_exit)
@@ -158,12 +165,12 @@ class MainActivity : ComponentActivity() {
                     val now = android.os.SystemClock.elapsedRealtime()
                     if (now - lastRootBackAt < DOUBLE_BACK_WINDOW_MS) {
                         lastRootBackAt = 0L
-                        backMessage?.cancel()
+                        standing?.cancel()
                         moveTaskToBack(true)
                     } else {
                         lastRootBackAt = now
-                        backMessage?.cancel()
-                        backMessage = messageScope.launch {
+                        standing?.cancel()
+                        standing = messageScope.launch {
                             withTimeoutOrNull(DOUBLE_BACK_WINDOW_MS) {
                                 messages.showSnackbar(pressBackAgainText, duration = SnackbarDurationMMD.Indefinite)
                             }
