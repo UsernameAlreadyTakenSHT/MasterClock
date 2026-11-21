@@ -59,8 +59,11 @@ fun AboutScreen(onBackClick: () -> Unit, onMessage: (String) -> Unit) {
         topBar = {
             TopAppBarMMD(
                 title = {
+                    // The app's name, and the version below where it can take a second line: the
+                    // two together are some 270dp at this size against the 220 the bar leaves
+                    // beside its arrow, and it was the version's end that went.
                     Text(
-                        stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
+                        stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -78,12 +81,18 @@ fun AboutScreen(onBackClick: () -> Unit, onMessage: (String) -> Unit) {
             modifier = Modifier.fillMaxSize().padding(innerPadding).padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                AppInfo.BUILD_DATE,
-                modifier = Modifier.padding(top = 12.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Column(Modifier.padding(top = 12.dp)) {
+                Text(
+                    stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    AppInfo.BUILD_DATE,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
 
             // Three tabs leave each one a third of the width, some 85dp on a Kompakt, and MMD's
             // tab pads its text by 16dp a side: about 53dp were left, where "Nouveautés",
