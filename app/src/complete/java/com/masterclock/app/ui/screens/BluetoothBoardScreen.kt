@@ -274,9 +274,9 @@ fun BluetoothBoardScreen(
             if (pairedDevices.isEmpty()) {
                 Text(stringResource(R.string.board_paired_none), style = MaterialTheme.typography.bodyMedium)
             } else {
-                // Every device paired with the phone is listed -- headphones, a car, a watch -- and the
-                // screen does not scroll, so a long list pushed the nearby boards below off the screen.
-                // The list scrolls within a bounded height instead.
+                // Every device paired with the phone is listed -- headphones, a car, a watch -- and a
+                // long list pushed the nearby boards far down the page. The list scrolls within a
+                // bounded height of its own, inside a page that scrolls too.
                 Column(Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
                 pairedDevices.forEach { candidate ->
                     Surface(

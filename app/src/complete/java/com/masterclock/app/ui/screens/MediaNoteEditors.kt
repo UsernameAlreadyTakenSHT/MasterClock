@@ -515,6 +515,9 @@ internal fun commitTake(context: android.content.Context, pending: File, target:
     }
 }
 
+/** How far the photo is enlarged, 1 being whole; see its use. */
+internal val PhotoZoomScale = androidx.compose.ui.semantics.SemanticsPropertyKey<Float>("PhotoZoomScale")
+
 /**
  * Shreds the media a note pointed at before a retake, when the retake wrote somewhere else.
  *
@@ -523,9 +526,6 @@ internal fun commitTake(context: android.content.Context, pending: File, target:
  * and the old was referenced by nothing again -- left on disk for good, which for a video is a lot
  * of it. Off the main thread, since it may be exactly that video.
  */
-/** How far the photo is enlarged, 1 being whole; see its use. */
-internal val PhotoZoomScale = androidx.compose.ui.semantics.SemanticsPropertyKey<Float>("PhotoZoomScale")
-
 internal fun shredReplacedMedia(context: android.content.Context, oldPath: String?, newFile: File) {
     if (oldPath == null) return
     val old = File(oldPath)

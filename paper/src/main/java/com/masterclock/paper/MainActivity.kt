@@ -221,7 +221,8 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-                // Over whichever screen is up, and clear of the system's bars. It takes no touch.
+                // Over whichever screen is up, and clear of the system's bars. The box takes no touch;
+                // a message, while it shows, takes those that fall on it, being MMD's snackbar.
                 Box(Modifier.fillMaxSize().safeDrawingPadding(), contentAlignment = Alignment.BottomCenter) {
                     SnackbarHostMMD(messages)
                 }

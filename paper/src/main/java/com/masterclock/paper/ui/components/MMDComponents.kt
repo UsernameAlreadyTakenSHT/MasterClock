@@ -396,10 +396,10 @@ fun MMDAlertDialog(
 
 /**
  * The style at which every one of [labels] fits [cellWidth] on one line: [style] itself, or the
- * same style smaller -- one size for the whole group, down to nine dp on the screen.
+ * same style smaller -- one size for the whole group, down to a floor on the screen.
  *
- * The three buttons under the clock and the three mode cards hold their label to one line. At a
- * large font the label ran from edge to edge of its button, or was cut: "Fisch" for "Fischer".
+ * The three buttons under the clock and the three mode cards share it. At a large font the label
+ * ran from edge to edge of its button, or was cut: "Fisch" for "Fischer".
  * A row of buttons reads as one thing, so it shrinks as one; the floor is a size on the screen,
  * because one in sp grows with the very font scale that made the label too wide.
  *

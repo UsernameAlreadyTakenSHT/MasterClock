@@ -259,8 +259,10 @@ fun RichText.headingToggled(start: Int, end: Int, bit: Int): RichText {
     val lines = linesAround(start, end)
     if (lines.isEmpty()) return this
     val c = charStylesOf(this)
-    // Line by line, as centring is: the breaks between the lines never carry the heading, so the
-    // range never all had it, and a heading set on two lines at once could not be taken off them.
+    // Line by line, as centring is: this never sets the heading on the breaks between the lines,
+    // so the range never all had it, and a heading set on two lines at once could not be taken
+    // off them. (A break typed at the end of a heading does carry it, from the character before;
+    // that one is left as it is here.)
     val on = !lines.all { text[it] == '\n' || c.styles[it] and bit != 0 }
     for (i in lines) {
         if (text[i] == '\n') continue
