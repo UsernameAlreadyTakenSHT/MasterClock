@@ -190,4 +190,17 @@ class CertaboProtocolTest {
         )
         assertSame(RawCaptureProtocol, BoardProtocols.forUsbDevice(0x0403, 0x6001))
     }
+
+    @Test
+    fun `over Bluetooth LE a board that talks unasked keeps its protocol, and one that must be asked is read raw`() {
+        // Certabo has no address on that link and needs none: it sends from the moment it is on.
+        assertSame(CertaboProtocol, BoardProtocols.forBleDeviceName("Certabo Chessboard", GameType.CHESS))
+        // A DGT is a serial board that says nothing until written to; by its name alone over
+        // Bluetooth LE it would be connected and never heard.
+        assertSame(RawCaptureProtocol, BoardProtocols.forBleDeviceName("DGT Pegasus", GameType.CHESS))
+        // A make with an address on the link is itself, and an unknown one is raw, as before.
+        assertSame(MillenniumProtocol, BoardProtocols.forBleDeviceName("ChessLink", GameType.CHESS))
+        assertSame(ChessnutProtocol, BoardProtocols.forBleDeviceName("Chessnut Air", GameType.CHESS))
+        assertSame(RawCaptureProtocol, BoardProtocols.forBleDeviceName("Some Board 42", GameType.CHESS))
+    }
 }

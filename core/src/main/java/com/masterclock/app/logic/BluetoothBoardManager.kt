@@ -672,11 +672,7 @@ class BluetoothBoardManager(private val context: Context) {
         _connectionState.value = ConnectionState.Connecting
         _onMoveReceivedCallback = onMoveReceived
         // By name for now; the services found on connecting can still overrule it.
-        // A make that has no address on this link is not that make here: a DGT or a Certabo is a
-        // serial board, and a device of that name met over Bluetooth LE -- a Pegasus -- was given
-        // their serial protocol, connected, never written to, and showed nothing, not even the raw
-        // bytes an unknown board shows.
-        protocol = BoardProtocols.forDeviceName(device.name).takeIf { it.ble != null } ?: RawCaptureProtocol
+        protocol = BoardProtocols.forBleDeviceName(device.name, gameType)
         assembler = protocol.framing?.let { StreamAssembler(it) }
         moveTracker.reset()
         clearGattQueue()

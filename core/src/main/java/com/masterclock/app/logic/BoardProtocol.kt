@@ -429,6 +429,21 @@ object BoardProtocols {
         known.firstOrNull { it !== RawCaptureProtocol && it.matchesDeviceName(deviceName) }
             ?: RawCaptureProtocol
 
+    /**
+     * The protocol for a board met over Bluetooth LE under [deviceName], to play [gameType].
+     *
+     * A make with no address on this link, which must be written to before it says anything, is
+     * not that make here: a DGT is a serial board, and a device of its name met over Bluetooth LE
+     * -- a Pegasus -- was given the serial protocol, connected, never written to, and showed
+     * nothing, not even the raw bytes an unknown board shows. It is read raw.
+     *
+     * One that talks unasked keeps its protocol: a Certabo sends its lines from the moment it is
+     * powered, and whatever notifies is listened to. The rule above took it for a DGT's case and
+     * sent it to raw capture too, for a reason that is not its own.
+     */
+    fun forBleDeviceName(deviceName: String?, gameType: GameType): BoardProtocol =
+        forDeviceName(deviceName).takeIf { it.ble != null || it.initCommandsFor(gameType).isEmpty() } ?: RawCaptureProtocol
+
     /** The protocol for a USB board with these ids, or [RawCaptureProtocol] when none claims it. */
     fun forUsbIds(vendorId: Int, productId: Int): BoardProtocol =
         known.firstOrNull { it !== RawCaptureProtocol && it.matchesUsbIds(vendorId, productId) }
