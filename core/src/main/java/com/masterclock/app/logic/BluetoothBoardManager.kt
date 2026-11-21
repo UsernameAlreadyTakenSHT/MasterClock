@@ -335,6 +335,15 @@ class BluetoothBoardManager(private val context: Context) {
 
     private fun connectionStateChanged(gatt: BluetoothGatt, status: Int, newState: Int) {
         if (newState == BluetoothProfile.STATE_CONNECTED) {
+            // One let go before it had connected, and connecting all the same: closed, and nothing
+            // said of it. Every later step has this guard; without it here the screen read
+            // "Connected" under the first board's name while the second was being reached, and a
+            // second that then failed went back to idle with no error, the state no longer being
+            // "connecting".
+            if (gatt !== activeGatt) {
+                closeGattQuietly(gatt)
+                return
+            }
             if (!hasConnectPermission()) {
                 // Bailing out used to leave this client open with nothing holding a reference
                 // that could ever close it.
