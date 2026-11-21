@@ -531,7 +531,7 @@ class MainActivity : ComponentActivity() {
                                 // A game in play asks first, as a preset does.
                                 onSettingsChanged = { new ->
                                     val current = timerViewModel.settings.value
-                                    if (current.confirmReset && timerViewModel.uiState.value.activePlayer != null && settingsEndTheGame(current, new)) {
+                                    if (current.confirmReset && timerViewModel.hasGameAtStake() && settingsEndTheGame(current, new)) {
                                         pendingPreset = { timerViewModel.updateSettings(new) }
                                     } else timerViewModel.updateSettings(new)
                                 },

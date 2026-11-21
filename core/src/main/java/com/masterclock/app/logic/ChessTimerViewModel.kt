@@ -3984,6 +3984,13 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private val _hasSavedClock = MutableStateFlow(false)
     val hasSavedClock: StateFlow<Boolean> = _hasSavedClock.asStateFlow()
 
+    /**
+     * Whether a change that ends the game has one to end: the game in play, or the one the app was
+     * closed on, which waits behind the arbiter's Resume with no player's clock running. Only the
+     * first was asked about, and a setting changed before resuming deleted the second in silence.
+     */
+    fun hasGameAtStake(): Boolean = _uiState.value.activePlayer != null || _hasSavedClock.value
+
     private val _scoreboard = MutableStateFlow(ScoreboardSession())
     val scoreboard: StateFlow<ScoreboardSession> = _scoreboard.asStateFlow()
 
