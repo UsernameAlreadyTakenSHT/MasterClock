@@ -332,7 +332,9 @@ fun TimerScreen(
         }
     }
     
-    if (showRestoreDialog) {
+    // Only while there is something kept: the question is saved across the app being killed and
+    // the clocks are not, so it came back over nothing, and confirming it did nothing.
+    if (showRestoreDialog && viewModel.hasKeptClocks.collectAsState().value) {
         TimerConfirmDialog(
             title = stringResource(R.string.timer_restore_title),
             message = stringResource(R.string.timer_restore_message),
