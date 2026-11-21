@@ -308,7 +308,16 @@ class BluetoothBoardManager(private val context: Context) {
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             if (status != BluetoothGatt.GATT_SUCCESS) Log.w("BluetoothBoardManager", "The board refused a write, status $status")
-            mainHandler.post { if (gatt === activeGatt) operationFinished() }
+            mainHandler.post {
+                if (gatt !== activeGatt) return@post
+                // Taken by the phone, refused by the board: the log had it down as sent and nothing
+                // after, which reads as a board that was asked and kept silent. The same bytes
+                // again, marked as not having got there.
+                val refused = writeInFlight.takeIf { status != BluetoothGatt.GATT_SUCCESS }
+                writeInFlight = null
+                refused?.let { frameLog?.record(BoardFrameLog.Direction.NOT_SENT, "BLE", protocol.name, it) }
+                operationFinished()
+            }
         }
 
         @Deprecated("Deprecated in Java")
@@ -581,8 +590,12 @@ class BluetoothBoardManager(private val context: Context) {
         frameLog?.record(
             if (accepted) BoardFrameLog.Direction.TO_BOARD else BoardFrameLog.Direction.NOT_SENT, "BLE", protocol.name, bytes
         )
+        writeInFlight = bytes.takeIf { accepted }
         return accepted
     }
+
+    /** The write the board has yet to answer, for the log should it refuse; see onCharacteristicWrite. */
+    private var writeInFlight: ByteArray? = null
 
     private fun writeNow(gatt: BluetoothGatt, bytes: ByteArray): Boolean {
         val uuid = protocol.ble?.writeCharacteristicUuid ?: return false

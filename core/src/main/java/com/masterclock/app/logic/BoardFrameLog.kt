@@ -29,7 +29,8 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
     /**
      * [NOT_SENT] is a write the link refused: the bytes the app meant for the board, and did not
      * get to it. Written down as sent, they told whoever read the log that the board had been asked
-     * and had not answered, when it had never been asked.
+     * and had not answered, when it had never been asked. Over Bluetooth LE the board itself may
+     * refuse a write the phone took: the same bytes then stand twice, sent and then not sent.
      */
     enum class Direction(val mark: Char) { FROM_BOARD('<'), TO_BOARD('>'), NOT_SENT('!') }
 
