@@ -217,8 +217,12 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
 
     fun list(kind: ListKind) {
         val selection = field.selection
-        record(false)
         val edit = rich.listToggled(selection.min, selection.max, kind)
+        // The note's limit, as insert keeps it: a mark put before every line of a note at the limit
+        // took it past, where the field then refused every edit, Backspace included, and the next
+        // launch cut the end off.
+        if (edit.rich.text.length > MAX_NOTE_CONTENT_CHARS) return
+        record(false)
         show(edit.rich, edit.selectionStart, edit.selectionEnd)
     }
 
@@ -415,7 +419,8 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
                         var shown = value
                         // Enter on a list line: the next item, or the end of the list.
                         if (value.text.length == rich.text.length + 1 && value.selection.collapsed && value.text.getOrNull(value.selection.start - 1) == '\n') {
-                            next.listContinued(value.selection.start)?.let { edit ->
+                            // Unless the next mark would not fit: the new line stays, without one.
+                            next.listContinued(value.selection.start)?.takeIf { it.rich.text.length <= MAX_NOTE_CONTENT_CHARS }?.let { edit ->
                                 next = edit.rich
                                 shown = TextFieldValue(edit.rich.text, TextRange(edit.selectionStart))
                             }
