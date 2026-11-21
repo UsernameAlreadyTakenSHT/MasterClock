@@ -1310,7 +1310,9 @@ fun SettledSlider(
         label(shown)
         Slider(
             value = shown,
-            onValueChange = { dragged = it },
+            // Taken up again, the wait started at the last release is off: it ran on, cleared the
+            // value under a finger held still, and the lift then had nothing to hand over.
+            onValueChange = { dragged = it; settled = 0 },
             onValueChangeFinished = { dragged?.let(onValueSettled); settled++ },
             valueRange = valueRange,
             steps = steps,
