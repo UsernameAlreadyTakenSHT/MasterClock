@@ -25,6 +25,7 @@
     <string name="timer_start">Iniciar</string>
     <!-- "Configurações" at 13 characters does not fit beside Repor and Retomar. -->
     <string name="timer_settings">Opções</string>
+    <string name="timer_time_up">TEMPO</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Tempo inicial</string>

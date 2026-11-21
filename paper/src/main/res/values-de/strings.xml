@@ -26,6 +26,7 @@
     <string name="timer_start">Starten</string>
     <!-- "Einstellungen" at 13 characters does not fit the button beside Reset and Fortsetzen. -->
     <string name="timer_settings">Optionen</string>
+    <string name="timer_time_up">ZEIT</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Startzeit</string>

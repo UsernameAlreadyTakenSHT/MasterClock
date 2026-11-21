@@ -18,6 +18,8 @@
     <string name="timer_resume">Resume</string>
     <string name="timer_start">Start</string>
     <string name="timer_settings">Settings</string>
+    <!-- Beside the clock that ran out, in capitals; one short word. -->
+    <string name="timer_time_up">TIME</string>
 
     <!--
       Settings. Mode names (Timer, Fischer, Move) stay as Kotlin literals, matching the app module:

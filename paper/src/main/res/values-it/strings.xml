@@ -24,6 +24,7 @@
     <string name="timer_start">Avvia</string>
     <!-- "Impostazioni" at 12 characters does not fit beside Azzera and Riprendi. -->
     <string name="timer_settings">Opzioni</string>
+    <string name="timer_time_up">TEMPO</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Tempo iniziale</string>

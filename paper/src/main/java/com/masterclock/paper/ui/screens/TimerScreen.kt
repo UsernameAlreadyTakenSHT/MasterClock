@@ -289,16 +289,22 @@ fun EInkPlayerArea(
     ) {
         // Minimal Active Indicator (Dot or Slash)
         Box(
-            modifier = Modifier.size(32.dp),
+            // As wide as the word needs: at the 32dp square the dot has, it would be cut.
+            modifier = Modifier.heightIn(min = 32.dp),
             contentAlignment = Alignment.Center
         ) {
             // The mark of a flag, so not for a clock that ran out under FLAG after another had: see isFlagged.
             if (flagged) {
+                // A word, where a slash stood: the slash said nothing to a player who had not
+                // been told what it meant. "Time", and not the phone's "Flagged", for those who
+                // have never heard of a flag; here a clock at zero always ends the game.
                 Text(
-                    text = "/",
+                    text = stringResource(R.string.timer_time_up),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    softWrap = false,
                 )
             } else if (isActive) {
                 Box(

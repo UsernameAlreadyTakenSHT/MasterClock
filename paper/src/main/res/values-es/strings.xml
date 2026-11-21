@@ -21,6 +21,7 @@
     <string name="timer_resume">Reanudar</string>
     <string name="timer_start">Iniciar</string>
     <string name="timer_settings">Ajustes</string>
+    <string name="timer_time_up">TIEMPO</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Tiempo inicial</string>
