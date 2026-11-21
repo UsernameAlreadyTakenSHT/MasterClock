@@ -178,9 +178,13 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
     // place the first had taken.
     fun isOn(bit: Int): Boolean {
         val selection = field.selection
-        return if (selection.collapsed) ((typing ?: rich.styleAt(selection.start)).first and bit) != 0
         // A heading is its lines', and the line breaks between them carry none; see headingToggled.
-        else if (bit and NoteStyle.HEADINGS != 0) rich.linesAllHave(selection.min, selection.max, bit)
+        // With a cursor as with a selection: asked of the character before the cursor, the start
+        // of a heading had none, its button showed off, and pressing it took the heading away.
+        if (bit and NoteStyle.HEADINGS != 0) {
+            return rich.linesAllHave(selection.min, selection.max, bit) || (selection.collapsed && ((typing?.first ?: 0) and bit) != 0)
+        }
+        return if (selection.collapsed) ((typing ?: rich.styleAt(selection.start)).first and bit) != 0
         else rich.allHave(selection.min, selection.max, bit)
     }
 

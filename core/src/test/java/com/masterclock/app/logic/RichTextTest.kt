@@ -159,4 +159,13 @@ class RichTextTest {
         val spans = listOf(NoteSpan(-5, 3, NoteStyle.BOLD), NoteSpan(2, 99, NoteStyle.ITALIC), NoteSpan(4, 2, NoteStyle.BOLD), NoteSpan(0, 1, 0))
         assertEquals(listOf(NoteSpan(0, 3, NoteStyle.BOLD), NoteSpan(2, 5, NoteStyle.ITALIC)), cleanSpans(spans, 5))
     }
+
+    @Test
+    fun `a heading is its line's wherever the cursor stands on it, its start included`() {
+        val rich = RichText("title\nbody").headingToggled(2, 2, NoteStyle.LARGE)
+        // The start of the line, where no character stands before the cursor to ask.
+        assertTrue(rich.linesAllHave(0, 0, NoteStyle.LARGE))
+        assertTrue(rich.linesAllHave(5, 5, NoteStyle.LARGE))
+        assertFalse(rich.linesAllHave(6, 6, NoteStyle.LARGE))
+    }
 }
