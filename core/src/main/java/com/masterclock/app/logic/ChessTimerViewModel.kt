@@ -5287,6 +5287,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      */
     fun clearAllLogs() {
         currentLog = null
+        // What the arbiter kept is this game's still, whichever log it is given next: tied to the
+        // log just deleted, Resume asked its question and then did nothing, and its button went.
+        keptClocks = keptClocks?.let { KeptClocks(it.state, it.moveElapsedMs, logId = null, at = it.at) }
         historyWrites.trySend(HistoryWrite.ClearAll)
     }
 
