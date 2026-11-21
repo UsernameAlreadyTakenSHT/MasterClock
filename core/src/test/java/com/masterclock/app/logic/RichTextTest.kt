@@ -168,4 +168,16 @@ class RichTextTest {
         assertTrue(rich.linesAllHave(5, 5, NoteStyle.LARGE))
         assertFalse(rich.linesAllHave(6, 6, NoteStyle.LARGE))
     }
+
+    @Test
+    fun `a heading taken off leaves none on the break typed after it`() {
+        val typed = RichText("title").headingToggled(0, 0, NoteStyle.LARGE).edited("title\n", cursor = 6)
+        // The break takes the style of the character before it, the heading with the rest.
+        assertTrue(typed.spans.any { it.end == 6 && it.styles and NoteStyle.LARGE != 0 })
+        val plain = typed.headingToggled(2, 2, NoteStyle.LARGE)
+        assertTrue(plain.spans.none { it.styles and NoteStyle.HEADINGS != 0 })
+        // Nor does setting one put it on a break, between two lines or after the last.
+        val two = RichText("one\ntwo\n").headingToggled(0, 7, NoteStyle.TITLE)
+        assertEquals(listOf(NoteSpan(0, 3, NoteStyle.TITLE), NoteSpan(4, 7, NoteStyle.TITLE)), two.spans)
+    }
 }

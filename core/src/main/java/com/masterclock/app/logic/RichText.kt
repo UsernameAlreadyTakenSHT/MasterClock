@@ -261,13 +261,18 @@ fun RichText.headingToggled(start: Int, end: Int, bit: Int): RichText {
     val c = charStylesOf(this)
     // Line by line, as centring is: this never sets the heading on the breaks between the lines,
     // so the range never all had it, and a heading set on two lines at once could not be taken
-    // off them. (A break typed at the end of a heading does carry it, from the character before;
-    // that one is left as it is here.)
+    // off them. (A break typed at the end of a heading does carry it, from the character before:
+    // it is taken off below.)
     val on = !lines.all { text[it] == '\n' || c.styles[it] and bit != 0 }
     for (i in lines) {
-        if (text[i] == '\n') continue
-        c.styles[i] = (c.styles[i] and NoteStyle.HEADINGS.inv()) or (if (on) bit else 0)
+        // A break is given no heading and keeps none: one typed at the end of a heading had its
+        // size, and went on having it once the heading was taken off the line.
+        c.styles[i] = if (text[i] == '\n') c.styles[i] and NoteStyle.HEADINGS.inv()
+        else (c.styles[i] and NoteStyle.HEADINGS.inv()) or (if (on) bit else 0)
     }
+    // And the break that ends the last of the lines, which the range stops short of.
+    val closing = lines.last + 1
+    if (closing < text.length) c.styles[closing] = c.styles[closing] and NoteStyle.HEADINGS.inv()
     return RichText(text, spansOf(c.styles, c.colors))
 }
 
