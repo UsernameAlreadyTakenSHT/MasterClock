@@ -17,7 +17,6 @@
     <string name="timer_reset_title">Partij resetten?</string>
     <string name="timer_reset_message">De huidige stand gaat verloren.</string>
     <string name="common_back">Terug</string>
-    <string name="common_close">Sluiten</string>
     <string name="common_player_n">Speler %d</string>
 
     <!-- Timer -->

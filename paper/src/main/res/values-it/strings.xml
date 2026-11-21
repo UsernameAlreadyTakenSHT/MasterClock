@@ -16,7 +16,6 @@
     <string name="timer_reset_title">Azzerare la partita?</string>
     <string name="timer_reset_message">Lo stato attuale andrà perso.</string>
     <string name="common_back">Indietro</string>
-    <string name="common_close">Chiudi</string>
     <string name="common_player_n">Giocatore %d</string>
 
     <!-- Timer -->

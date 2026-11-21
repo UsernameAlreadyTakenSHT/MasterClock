@@ -261,8 +261,8 @@ fun EInkPlayerArea(
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 
-    // Arrangement.SpaceEvenly pushes elements apart and centers them relative to empty space.
-    // Placing Indicator FIRST in both areas:
+    // The reading is centred by its weight between two boxes of one height, the indicator's and
+    // an empty one. The indicator comes first in both areas:
     // P1 (rotated): Indicator ends up at screen bottom of area (near center).
     // P2 (unrotated): Indicator stays at screen top of area (near center).
     Column(

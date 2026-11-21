@@ -11,7 +11,6 @@
     <string name="timer_reset_title">Reset game?</string>
     <string name="timer_reset_message">The current state will be lost.</string>
     <string name="common_back">Back</string>
-    <string name="common_close">Close</string>
     <string name="common_player_n">Player %d</string>
 
     <!-- Timer -->
@@ -35,14 +34,13 @@
     <string name="settings_fullscreen">Fullscreen</string>
     <string name="settings_reverse_colors">Reverse colors</string>
 
-    <!-- Credits dialog -->
+    <!-- About screen -->
     <string name="credits_tab_credits">Credits</string>
     <string name="credits_tab_changes">Changes</string>
     <string name="credits_tab_licenses">Licenses</string>
     <string name="credits_rules_documents">Rules documents</string>
     <string name="credits_libraries">MasterClock is built with these open-source libraries.</string>
 
-    <!-- Sharing -->
     <!-- Screen-reader wording; core reports the state as data, the sentence is built here. -->
     <string name="a11y_player_clock">Player %1$d, %2$s</string>
     <string name="a11y_player_clock_active">Player %1$d, %2$s, your turn</string>

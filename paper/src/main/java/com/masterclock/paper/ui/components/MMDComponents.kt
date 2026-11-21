@@ -105,8 +105,6 @@ object ScrollbarMMDDefaults {
      * padding is inside the target now, so the bar is barely wider than it was.
      */
     val ChevronTapSize = 48.dp
-    val ChevronOuterPadding = 0.dp
-    val HorizontalPadding = 0.dp
     val MinThumbHeight = 24.dp
 }
 
@@ -143,9 +141,7 @@ fun ScrollbarMMD(
     val color = MaterialTheme.colorScheme.onBackground
 
     Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .padding(horizontal = ScrollbarMMDDefaults.HorizontalPadding),
+        modifier = modifier.fillMaxHeight(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ChevronMMD(
@@ -235,7 +231,6 @@ private fun ChevronMMD(
     val currentOnLongPress by rememberUpdatedState(onLongPress)
     Canvas(
         modifier = Modifier
-            .padding(vertical = ScrollbarMMDDefaults.ChevronOuterPadding)
             .size(ScrollbarMMDDefaults.ChevronTapSize)
             // detectTapGestures rather than clickable: no ripple to leave behind on E Ink.
             .pointerInput(scrollState) {
