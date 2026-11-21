@@ -2,9 +2,13 @@ package com.masterclock.paper.ui.screens
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,14 +23,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.AppInfo
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
 import com.masterclock.paper.ui.components.ScrollbarMMD
+import com.masterclock.paper.ui.components.sharedLabelStyle
 import com.masterclock.paper.ui.components.verticalScrollMMD
 import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
 import com.mudita.mmd.components.tabs.TabMMD
@@ -78,28 +85,33 @@ fun AboutScreen(onBackClick: () -> Unit, onMessage: (String) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
 
-            PrimaryTabRowMMD(
-                selectedTabIndex = selectedTab,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ) {
-                tabs.forEachIndexed { index, label ->
-                    TabMMD(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        // Three tabs leave each one a third of the width, where the default label
-                        // size wrapped "Changelog" onto a second line.
-                        text = {
-                            Text(
-                                label,
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1,
-                                // See the app module: clipping mid-glyph is how "Changelog" lost its
-                                // tail; an ellipsis degrades readably instead.
-                                overflow = TextOverflow.Ellipsis
-                            )
+            // Three tabs leave each one a third of the width, some 85dp on a Kompakt, and MMD's
+            // tab pads its text by 16dp a side: about 53dp were left, where "Nouveautés",
+            // "Novedades" and "Licenties" need 60 to 80 and were cut to "Nouve…". The label is
+            // given the tab less 4dp a side, and the three share one size, the largest at which
+            // the longest fits, as the buttons under the clock do.
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val tabStyle = sharedLabelStyle(tabs, MaterialTheme.typography.labelMedium, maxWidth / 3 - 8.dp)
+                PrimaryTabRowMMD(
+                    selectedTabIndex = selectedTab,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ) {
+                    tabs.forEachIndexed { index, label ->
+                        TabMMD(selected = selectedTab == index, onClick = { selectedTab = index }) {
+                            Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 4.dp), contentAlignment = Alignment.Center) {
+                                Text(
+                                    label,
+                                    style = tabStyle,
+                                    // A second line where a label is still too wide at the size's
+                                    // floor, and an ellipsis past that rather than a cut glyph.
+                                    maxLines = 2,
+                                    textAlign = TextAlign.Center,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                         }
-                    )
+                    }
                 }
             }
 
