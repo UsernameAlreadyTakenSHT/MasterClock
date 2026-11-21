@@ -25,7 +25,6 @@
       Settings. Mode names (Timer, Fischer, Move) stay as Kotlin literals, matching the app module:
       they are fixed clock vocabulary rather than something to translate.
     -->
-    <string name="settings_tab_modes">Modes</string>
     <string name="settings_initial_time">Initial time</string>
     <string name="settings_increment">Increment</string>
     <string name="settings_move_time">Move time</string>

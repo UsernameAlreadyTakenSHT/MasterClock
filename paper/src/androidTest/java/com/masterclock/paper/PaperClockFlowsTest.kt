@@ -124,7 +124,7 @@ class PaperClockFlowsTest {
     @Test
     fun theModesPageChangesTheModeAndComesBack() {
         rule.onNode(button(R.string.timer_settings)).performClick()
-        await(hasText(say(R.string.settings_tab_modes).uppercase()))
+        await(hasText(say(R.string.timer_settings).uppercase()))
 
         // The page itself, not only its heading: a mode chosen there reaches the clock.
         assertEquals(TimerMode.SUDDEN_DEATH, viewModel.settings.value.main.mode)
@@ -134,7 +134,7 @@ class PaperClockFlowsTest {
         rule.onNode(hasContentDescription(say(R.string.common_back)) and hasClickAction()).performClick()
 
         await(button(R.string.timer_start))
-        assertFalse(exists(hasText(say(R.string.settings_tab_modes).uppercase())))
+        assertFalse(exists(hasText(say(R.string.timer_settings).uppercase())))
         assertEquals(TimerMode.FISCHER, viewModel.settings.value.main.mode)
     }
 

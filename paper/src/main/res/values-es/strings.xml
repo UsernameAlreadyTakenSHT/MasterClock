@@ -25,7 +25,6 @@
     <string name="timer_settings">Ajustes</string>
 
     <!-- Settings -->
-    <string name="settings_tab_modes">Modos</string>
     <string name="settings_initial_time">Tiempo inicial</string>
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tiempo por jugada</string>

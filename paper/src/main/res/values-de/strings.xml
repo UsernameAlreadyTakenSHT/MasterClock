@@ -30,7 +30,6 @@
     <string name="timer_settings">Optionen</string>
 
     <!-- Settings -->
-    <string name="settings_tab_modes">Modi</string>
     <string name="settings_initial_time">Startzeit</string>
     <string name="settings_increment">Inkrement</string>
     <string name="settings_move_time">Zeit pro Zug</string>

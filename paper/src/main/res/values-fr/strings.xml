@@ -31,7 +31,6 @@
     <string name="timer_settings">Réglages</string>
 
     <!-- Settings -->
-    <string name="settings_tab_modes">Modes</string>
     <string name="settings_initial_time">Temps initial</string>
     <string name="settings_increment">Incrément</string>
     <string name="settings_move_time">Temps par coup</string>

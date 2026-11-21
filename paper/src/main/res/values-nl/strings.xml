@@ -29,7 +29,6 @@
     <string name="timer_settings">Opties</string>
 
     <!-- Settings -->
-    <string name="settings_tab_modes">Modi</string>
     <string name="settings_initial_time">Starttijd</string>
     <string name="settings_increment">Increment</string>
     <string name="settings_move_time">Tijd per zet</string>

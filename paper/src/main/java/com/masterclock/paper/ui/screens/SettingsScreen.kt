@@ -32,7 +32,7 @@ fun SettingsScreen(
         // drawn beside them are gone.
         topBar = {
             TopAppBarMMD(
-                title = { Text(stringResource(R.string.settings_tab_modes).uppercase(), style = MaterialTheme.typography.titleLarge) },
+                title = { Text(stringResource(R.string.timer_settings).uppercase(), style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 }

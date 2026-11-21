@@ -29,7 +29,6 @@
     <string name="timer_settings">Opções</string>
 
     <!-- Settings -->
-    <string name="settings_tab_modes">Modos</string>
     <string name="settings_initial_time">Tempo inicial</string>
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tempo por lance</string>

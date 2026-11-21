@@ -28,7 +28,6 @@
     <string name="timer_settings">Opzioni</string>
 
     <!-- Settings -->
-    <string name="settings_tab_modes">Modi</string>
     <string name="settings_initial_time">Tempo iniziale</string>
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tempo per mossa</string>
