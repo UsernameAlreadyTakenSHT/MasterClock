@@ -127,8 +127,11 @@ fun TimerScreen(
                         )
                     }
     
+                    // A finished game has nothing to resume: the button read "Resume", and pressed did
+                    // nothing, on a screen that shows no press. It clears the clock for the next game.
+                    val over = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)
                     OutlinedButtonMMD(
-                        onClick = { if (state.isPaused) viewModel.resume() else viewModel.pause() },
+                        onClick = { if (over) viewModel.reset() else if (state.isPaused) viewModel.resume() else viewModel.pause() },
                         modifier = Modifier.weight(1f).then(controlSize),
                         border = outlinedButtonBorderMMD(),
                         contentPadding = controlPadding,
@@ -136,6 +139,7 @@ fun TimerScreen(
                         // Before the first press there is nothing to resume: the button starts P1's clock.
                         val label = when {
                             state.activePlayer == null -> stringResource(R.string.timer_start)
+                            over -> stringResource(R.string.common_reset)
                             state.isPaused -> stringResource(R.string.timer_resume)
                             else -> stringResource(R.string.timer_pause)
                         }
