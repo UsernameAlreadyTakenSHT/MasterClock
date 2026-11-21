@@ -40,9 +40,13 @@ import com.masterclock.paper.ui.navigation.rememberNavigationState
 import com.masterclock.paper.ui.navigation.toEntries
 import com.masterclock.paper.ui.screens.*
 import com.masterclock.paper.ui.theme.MasterClockTheme
+import com.masterclock.paper.ui.components.MessageMMD
+import com.mudita.mmd.components.snackbar.SnackbarDurationMMD
 import com.mudita.mmd.components.snackbar.SnackbarHostMMD
 import com.mudita.mmd.components.snackbar.SnackbarHostStateMMD
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,6 +145,11 @@ class MainActivity : ComponentActivity() {
             val messages = remember { SnackbarHostStateMMD() }
             val messageScope = rememberCoroutineScope()
             val say: (String) -> Unit = { text -> messageScope.launch { messages.showSnackbar(text) } }
+            // The message that asks for a second Back, held apart: it stands for as long as that
+            // second press is taken, and no longer. Left to the snackbar's own four seconds it went
+            // on asking for two seconds after a press had stopped counting, and a press then asked
+            // again behind the first, eight seconds in all.
+            var backMessage by remember { mutableStateOf<Job?>(null) }
 
             var lastRootBackAt by remember { mutableLongStateOf(0L) }
             val pressBackAgainText = stringResource(R.string.back_press_again_to_exit)
@@ -149,10 +158,16 @@ class MainActivity : ComponentActivity() {
                     val now = android.os.SystemClock.elapsedRealtime()
                     if (now - lastRootBackAt < DOUBLE_BACK_WINDOW_MS) {
                         lastRootBackAt = 0L
+                        backMessage?.cancel()
                         moveTaskToBack(true)
                     } else {
                         lastRootBackAt = now
-                        say(pressBackAgainText)
+                        backMessage?.cancel()
+                        backMessage = messageScope.launch {
+                            withTimeoutOrNull(DOUBLE_BACK_WINDOW_MS) {
+                                messages.showSnackbar(pressBackAgainText, duration = SnackbarDurationMMD.Indefinite)
+                            }
+                        }
                     }
                 }
             }
@@ -221,10 +236,10 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-                // Over whichever screen is up, and clear of the system's bars. The box takes no touch;
-                // a message, while it shows, takes those that fall on it, being MMD's snackbar.
+                // Over whichever screen is up, and clear of the system's bars. It takes no touch:
+                // see MessageMMD, which is drawn in place of MMD's snackbar for that.
                 Box(Modifier.fillMaxSize().safeDrawingPadding(), contentAlignment = Alignment.BottomCenter) {
-                    SnackbarHostMMD(messages)
+                    SnackbarHostMMD(messages) { MessageMMD(it.visuals.message) }
                 }
             }
         }

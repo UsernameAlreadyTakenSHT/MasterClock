@@ -20,6 +20,7 @@ package com.masterclock.paper.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.ScrollScope
@@ -63,6 +64,7 @@ import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mudita.mmd.components.buttons.ButtonDefaultsMMD
+import com.mudita.mmd.components.divider.HorizontalDividerMMD
 import com.mudita.mmd.components.buttons.ButtonMMD
 import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import kotlinx.coroutines.launch
@@ -288,6 +290,28 @@ fun NoDialogDim() {
     SideEffect {
         window?.setDimAmount(0f)
         window?.setWindowAnimations(0)
+    }
+}
+
+// --- MESSAGE ---
+
+/**
+ * What the app says in passing, drawn as MMD's snackbar is -- a rule and a line of text -- and
+ * taking no touch. MMD's own sits on a Material surface, and a surface takes every touch on it
+ * so that none reaches what lies beneath: at the foot of the clock that is the lower player's
+ * side, and their press was lost while a message stood there. This one is a background and a
+ * text, which a touch goes through.
+ */
+@Composable
+fun MessageMMD(text: String) {
+    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)) {
+        HorizontalDividerMMD()
+        Text(
+            text,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
 }
 
