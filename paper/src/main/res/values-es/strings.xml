@@ -14,7 +14,6 @@
     <string name="timer_reset_title">¿Reiniciar la partida?</string>
     <string name="timer_reset_message">Se perderá el estado actual.</string>
     <string name="common_back">Atrás</string>
-    <string name="common_player_n">Jugador %d</string>
 
     <!-- Timer -->
     <string name="timer_switch_turn">Cambiar de turno</string>

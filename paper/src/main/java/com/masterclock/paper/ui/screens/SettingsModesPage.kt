@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.ScrollbarMMD
@@ -18,21 +16,13 @@ import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
 import com.mudita.mmd.components.buttons.OutlinedButtonMMD
 import com.mudita.mmd.components.divider.HorizontalDividerMMD
-import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
-import com.mudita.mmd.components.tabs.TabMMD
 
-// PrimaryTabRowMMD carries Material's experimental marker, inherited from the tab row it wraps.
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModesSettingsPage(
     currentSettings: ChessClockSettings,
     onSettingsChanged: (ChessClockSettings) -> Unit,
     onAboutClick: () -> Unit,
 ) {
-    // Saveable, as on the phone app: a recreation -- the colours reversed, a font size changed --
-    // put the page back on Player 1's tab, and the next edit meant for Player 2 went to Player 1.
-    var selectedPlayerTab by rememberSaveable { mutableIntStateOf(0) }
-    
     // One scrolling column for the whole page, deliberately.
     //
     // The system-behaviour block and the version footer used to sit outside the scroll area, so
@@ -60,114 +50,70 @@ fun ModesSettingsPage(
                 .imePadding()
                 .verticalScrollMMD(scrollState)
         ) {
-            if (currentSettings.differentSettingsPerPlayer) {
-                PrimaryTabRowMMD(
-                    selectedTabIndex = selectedPlayerTab,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    containerColor = MaterialTheme.colorScheme.background,
-                    contentColor = MaterialTheme.colorScheme.onBackground
-                ) {
-                    TabMMD(
-                        selected = selectedPlayerTab == 0,
-                        onClick = { selectedPlayerTab = 0 },
-                        text = { Text(stringResource(R.string.common_player_n, 1), fontWeight = FontWeight.Bold) }
-                    )
-                    TabMMD(
-                        selected = selectedPlayerTab == 1,
-                        onClick = { selectedPlayerTab = 1 },
-                        text = { Text(stringResource(R.string.common_player_n, 2), fontWeight = FontWeight.Bold) }
-                    )
-                }
-            }
-
-            val targetP = if (!currentSettings.differentSettingsPerPlayer) {
-                currentSettings.main
-            } else {
-                if (selectedPlayerTab == 0) currentSettings.p1Custom else currentSettings.p2Custom.followingModeOf(currentSettings.p1Custom)
-            }
-
-            fun updateTarget(newP: PlayerSettings) {
-                val newSettings = if (!currentSettings.differentSettingsPerPlayer) {
-                    currentSettings.copy(main = newP, p1Custom = newP, p2Custom = newP)
-                } else {
-                    if (selectedPlayerTab == 0) {
-                        currentSettings.copy(
-                            p1Custom = newP,
-                            p2Custom = currentSettings.p2Custom.followingModeOf(newP)
-                        )
-                    } else {
-                        currentSettings.copy(p2Custom = newP)
-                    }
-                }
-                onSettingsChanged(newSettings)
-            }
-
+            // One set of times for both players: this app has no switch for a set each, and no
+            // import that could bring one in.
             Spacer(Modifier.height(8.dp))
             ModeSelectionPanel(
-                p = targetP,
-                onUpdateP = { p: PlayerSettings -> updateTarget(p) }
+                p = currentSettings.main,
+                onUpdateP = { p: PlayerSettings -> onSettingsChanged(currentSettings.copy(main = p, p1Custom = p, p2Custom = p)) }
             )
 
             Spacer(Modifier.height(32.dp))
 
-            if (FlavorConfig.isEInk()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                ) {
-                    // Solid and thin rather than MMD's 3dp default: this only separates two groups
-                    // on one page. The 20% grey it replaced was a dither pattern on E Ink.
-                    HorizontalDividerMMD(thickness = 1.dp)
-                
-                    SettingsSection(stringResource(R.string.settings_system_behavior)) {
-                        BehaviorSwitch(
-                            label = stringResource(R.string.settings_reverse_colors),
-                            checked = currentSettings.eInkDarkMode
-                        ) {
-                            onSettingsChanged(currentSettings.copy(eInkDarkMode = it))
-                        }
-                        BehaviorSwitch(
-                            label = stringResource(R.string.settings_keep_awake),
-                            checked = currentSettings.forceScreenOn
-                        ) {
-                            onSettingsChanged(currentSettings.copy(forceScreenOn = it))
-                        }
-                        BehaviorSwitch(
-                            label = stringResource(R.string.settings_fullscreen),
-                            checked = currentSettings.fullscreenMode
-                        ) {
-                            onSettingsChanged(currentSettings.copy(fullscreenMode = it))
-                        }
-                        BehaviorSwitch(
-                            label = stringResource(R.string.settings_sound),
-                            checked = currentSettings.playSwitchSound
-                        ) {
-                            onSettingsChanged(currentSettings.copy(playSwitchSound = it, tripleBeepTimeUp = it))
-                        }
-                        BehaviorSwitch(
-                            label = stringResource(R.string.settings_haptic_feedback),
-                            checked = currentSettings.hapticFeedback
-                        ) {
-                            onSettingsChanged(currentSettings.copy(hapticFeedback = it))
-                        }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                // Solid and thin rather than MMD's 3dp default: this only separates two groups
+                // on one page. The 20% grey it replaced was a dither pattern on E Ink.
+                HorizontalDividerMMD(thickness = 1.dp)
+
+                SettingsSection(stringResource(R.string.settings_system_behavior)) {
+                    BehaviorSwitch(
+                        label = stringResource(R.string.settings_reverse_colors),
+                        checked = currentSettings.eInkDarkMode
+                    ) {
+                        onSettingsChanged(currentSettings.copy(eInkDarkMode = it))
+                    }
+                    BehaviorSwitch(
+                        label = stringResource(R.string.settings_keep_awake),
+                        checked = currentSettings.forceScreenOn
+                    ) {
+                        onSettingsChanged(currentSettings.copy(forceScreenOn = it))
+                    }
+                    BehaviorSwitch(
+                        label = stringResource(R.string.settings_fullscreen),
+                        checked = currentSettings.fullscreenMode
+                    ) {
+                        onSettingsChanged(currentSettings.copy(fullscreenMode = it))
+                    }
+                    BehaviorSwitch(
+                        label = stringResource(R.string.settings_sound),
+                        checked = currentSettings.playSwitchSound
+                    ) {
+                        onSettingsChanged(currentSettings.copy(playSwitchSound = it, tripleBeepTimeUp = it))
+                    }
+                    BehaviorSwitch(
+                        label = stringResource(R.string.settings_haptic_feedback),
+                        checked = currentSettings.hapticFeedback
+                    ) {
+                        onSettingsChanged(currentSettings.copy(hapticFeedback = it))
                     }
                 }
             }
 
-            if (!FlavorConfig.hasMoreTab()) {
-                // A button, drawn as one. It was two lines of small print that took a tap with
-                // nothing to say so, and the only way to the changelog, the credits and the licences:
-                // on a screen with no ripple and no pressed state, what can be pressed has to show it.
-                OutlinedButtonMMD(
-                    onClick = onAboutClick,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    border = outlinedButtonBorderMMD(),
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelLarge)
-                        Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall)
-                    }
+            // A button, drawn as one. It was two lines of small print that took a tap with
+            // nothing to say so, and the only way to the changelog, the credits and the licences:
+            // on a screen with no ripple and no pressed state, what can be pressed has to show it.
+            OutlinedButtonMMD(
+                onClick = onAboutClick,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                border = outlinedButtonBorderMMD(),
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.labelLarge)
+                    Text(AppInfo.BUILD_DATE, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }

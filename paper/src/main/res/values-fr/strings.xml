@@ -20,7 +20,6 @@
     <string name="timer_reset_title">Réinitialiser la partie\u00A0?</string>
     <string name="timer_reset_message">L\'état actuel sera perdu.</string>
     <string name="common_back">Retour</string>
-    <string name="common_player_n">Joueur %d</string>
 
     <!-- Timer -->
     <string name="timer_switch_turn">Changer de tour</string>

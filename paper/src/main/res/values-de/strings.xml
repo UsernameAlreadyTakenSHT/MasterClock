@@ -18,7 +18,6 @@
     <string name="timer_reset_title">Partie zurücksetzen?</string>
     <string name="timer_reset_message">Der aktuelle Stand geht verloren.</string>
     <string name="common_back">Zurück</string>
-    <string name="common_player_n">Spieler %d</string>
 
     <!-- Timer -->
     <string name="timer_switch_turn">Zug wechseln</string>
