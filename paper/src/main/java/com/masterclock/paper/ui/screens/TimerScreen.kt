@@ -303,10 +303,15 @@ fun EInkPlayerArea(
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Minimal Active Indicator (Dot or Slash)
+        // The mark of the area: a dot, a ring, or the word of a clock that ran out.
+        // The word is sized in dp, as the digits are: it is a mark on a clock, not body text. In sp
+        // it grew with the system's font size, and the box with it, on the flagged side alone and
+        // only once the flag fell -- which moved that side's reading off centre and, where height is
+        // short, redrew its 00:00 smaller than the reading across the table.
+        val markSize = with(LocalDensity.current) { 22.dp.toSp() }
         Box(
             // As wide as the word needs: at the 32dp square the dot has, it would be cut.
-            modifier = Modifier.heightIn(min = 32.dp),
+            modifier = Modifier.height(32.dp),
             contentAlignment = Alignment.Center
         ) {
             // The mark of a flag, so not for a clock that ran out under FLAG after another had: see isFlagged.
@@ -316,7 +321,7 @@ fun EInkPlayerArea(
                 // have never heard of a flag; here a clock at zero always ends the game.
                 Text(
                     text = stringResource(R.string.timer_time_up),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleLarge.copy(fontSize = markSize, lineHeight = markSize * 1.2f),
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
