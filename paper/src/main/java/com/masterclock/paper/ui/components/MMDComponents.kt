@@ -56,6 +56,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -304,7 +307,14 @@ fun NoDialogDim() {
  */
 @Composable
 fun MessageMMD(text: String) {
-    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            // Said by TalkBack as it appears, which the system's toasts were and a text drawn in
+            // the app is not: "Press Back again" went unheard, and the second press left the app.
+            .semantics { liveRegion = LiveRegionMode.Polite }
+    ) {
         HorizontalDividerMMD()
         Text(
             text,
