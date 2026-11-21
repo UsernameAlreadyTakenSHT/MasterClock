@@ -54,7 +54,9 @@ object AppInfo {
             date = "2026-11-20",
             notes = listOf(
                 Note("A new icon: a knight in a clock's ring, in this build's own colour. Gold is Complete, silver Standard, bronze Lite, iron Mini.", PHONE),
-                Note("Credits: the logo is credited to Tabler Icons and the switch sound to its author.", PHONE),
+                // Every build: the two credits are shown by all five, the E-Ink one included, which
+                // was not told.
+                Note("Credits: the logo is credited to Tabler Icons and the switch sound to its author.", ALL),
                 Note("A new icon: a knight in a clock's ring, in the frame Mudita's own apps have.", E_INK_ONLY),
                 Note("The version, the changelog and the credits are a screen of their own, opened by a button at the foot of the settings.", E_INK_ONLY),
                 Note("Reset, Start and Settings are taller. Press Back again to exit is said at the foot of the screen, in the app's own style.", E_INK_ONLY),
