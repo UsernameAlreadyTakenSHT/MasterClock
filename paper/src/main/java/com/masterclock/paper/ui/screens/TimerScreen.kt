@@ -1,6 +1,7 @@
 package com.masterclock.paper.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -240,6 +241,10 @@ fun EInkPlayerArea(
     val currentOnClick by rememberUpdatedState(onClick)
     val playerState = state.players.getOrNull(playerIndex - 1) ?: PlayerState(0)
     val isActive = state.activePlayer == playerIndex && !state.isPaused
+    // Whose move it is, their clock running or not. A pause took the mark away -- the Pause button,
+    // the settings opened, the app left -- and the two sides then looked the same, while only this
+    // one's press takes the game up again: the other's does nothing, on a screen that shows no press.
+    val onTheMove = state.activePlayer == playerIndex && !gameOver
     val isOutOfTime = playerState.isOutOfTime
 
     // Hoisted: the semantics lambda is not composable scope.
@@ -248,7 +253,7 @@ fun EInkPlayerArea(
         stringResource(R.string.a11y_out_of_time)
     } else spokenDurationText(if (isActive) steppedForSpeech(playerState.timeRemainingMs) else playerState.timeRemainingMs)
     // Nobody's turn once the game is over, though the last player to move is still the active one.
-    val a11yLabel = if (isActive && !gameOver) {
+    val a11yLabel = if (onTheMove) {
         stringResource(R.string.a11y_player_clock_active, playerIndex, spokenTime)
     } else stringResource(R.string.a11y_player_clock, playerIndex, spokenTime)
 
@@ -298,6 +303,9 @@ fun EInkPlayerArea(
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.onBackground)
                 )
+            } else if (onTheMove) {
+                // Paused: the dot's outline, black on white like the rest.
+                Box(Modifier.size(12.dp).border(2.dp, MaterialTheme.colorScheme.onBackground, CircleShape))
             }
         }
 
