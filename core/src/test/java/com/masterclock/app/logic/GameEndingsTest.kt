@@ -67,6 +67,10 @@ class GameEndingsTest {
             // The other player still has their move to play: ended here, they were a move short.
             assertFalse(fb.name, isGameOver(afterFirst, fb, 2))
             assertEquals(fb.name, 0, afterFirst.players[0].moveCount)
+            // And the one who has played theirs is not out of time for it, nor shown as flagged:
+            // under FLAG, NEGATIVE and REVERSE their face took the loss colour until the other moved.
+            assertFalse(fb.name, afterFirst.players[0].isOutOfTime)
+            assertFalse(fb.name, isFlagged(afterFirst, 1, fb))
             val afterBoth = computePostMoveState(afterFirst.copy(activePlayer = 2), 2, 1_000, settings, s)
             assertTrue(fb.name, isGameOver(afterBoth, fb, 2))
         }

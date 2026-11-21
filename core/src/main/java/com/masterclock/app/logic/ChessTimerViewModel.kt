@@ -3740,12 +3740,17 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     //
     // Over once every player has played their moves, and not before: ended as the first reached
     // zero, the others were a move short -- the one who moves second never played their last. Only
-    // FLAG waited for them. FREEZE ends a game at the first clock out, so there a player at zero is
-    // not marked out until the last move is played, and then all are together.
+    // FLAG waited for them.
+    //
+    // And nobody is marked out before that, under any flag behaviour: all are, together, with the
+    // last move. Only FREEZE held the mark back -- it ends a game at the first clock out -- and under
+    // the three others the first to finish stood out of time while the rest played on: with no
+    // first flag on record that reads as flagged, so their face took the loss colour and FLAGGED,
+    // and TalkBack said out of time, for having played their moves.
     if (s.mode != TimerMode.MOVE_COUNTS_DOWN) return state.copy(players = newList)
     val seats = settings.numberOfPlayers.coerceIn(1, newList.size)
     val allPlayed = newList.take(seats).all { it.moveCount <= 0 }
-    val players = if (settings.flagBehavior == FlagBehavior.FREEZE) newList.mapIndexed { i, q -> if (i < seats) q.copy(isOutOfTime = allPlayed) else q } else newList
+    val players = newList.mapIndexed { i, q -> if (i < seats) q.copy(isOutOfTime = allPlayed) else q }
     return state.copy(players = players, phasesFinished = state.phasesFinished || allPlayed)
 }
 
