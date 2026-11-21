@@ -3989,7 +3989,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * closed on, which waits behind the arbiter's Resume with no player's clock running. Only the
      * first was asked about, and a setting changed before resuming deleted the second in silence.
      */
-    fun hasGameAtStake(): Boolean = _uiState.value.activePlayer != null || _hasSavedClock.value
+    fun hasGameAtStake(): Boolean = _uiState.value.activePlayer != null ||
+        // Only where a game is saved to be taken up again. The E-Ink app saves none and offers
+        // none, but one left by a version that still saved is read at every launch: the first
+        // change of mode asked about a game nobody could see or resume.
+        (FlavorConfig.savesGameInPlay() && _hasSavedClock.value)
 
     private val _scoreboard = MutableStateFlow(ScoreboardSession())
     val scoreboard: StateFlow<ScoreboardSession> = _scoreboard.asStateFlow()
