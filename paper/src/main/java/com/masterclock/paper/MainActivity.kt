@@ -25,6 +25,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -158,12 +159,17 @@ class MainActivity : ComponentActivity() {
             // taken, and no longer: left to the snackbar's own four seconds it went on asking for two
             // seconds after a press had stopped counting.
 
+            // Two seconds, or as long as the system says a message with text needs: with TalkBack the
+            // message asking for the second press takes most of two seconds to be spoken, and the
+            // press that followed came late, counted as a first, and was asked for again.
+            val backWindowMs = LocalAccessibilityManager.current
+                ?.calculateRecommendedTimeoutMillis(DOUBLE_BACK_WINDOW_MS, containsText = true) ?: DOUBLE_BACK_WINDOW_MS
             var lastRootBackAt by remember { mutableLongStateOf(0L) }
             val pressBackAgainText = stringResource(R.string.back_press_again_to_exit)
             BackHandler {
                 if (!navigator.goBack()) {
                     val now = android.os.SystemClock.elapsedRealtime()
-                    if (now - lastRootBackAt < DOUBLE_BACK_WINDOW_MS) {
+                    if (now - lastRootBackAt < backWindowMs) {
                         lastRootBackAt = 0L
                         standing?.cancel()
                         moveTaskToBack(true)
@@ -171,7 +177,7 @@ class MainActivity : ComponentActivity() {
                         lastRootBackAt = now
                         standing?.cancel()
                         standing = messageScope.launch {
-                            withTimeoutOrNull(DOUBLE_BACK_WINDOW_MS) {
+                            withTimeoutOrNull(backWindowMs) {
                                 messages.showSnackbar(pressBackAgainText, duration = SnackbarDurationMMD.Indefinite)
                             }
                         }
