@@ -429,6 +429,23 @@ class ChessTimerLogicTest {
         assertEquals(500, wholeSecondTickMs(-4_500))
     }
 
+    @Test
+    fun `a face that rounds its seconds up shows zero only at zero, and is ticked on the second's edge`() {
+        assertEquals(600, wholeSecondsShown(600_000))
+        assertEquals(600, wholeSecondsShown(599_980))
+        assertEquals(599, wholeSecondsShown(599_000))
+        // The last second of a running clock reads 0:01, not 0:00.
+        assertEquals(1, wholeSecondsShown(999))
+        assertEquals(1, wholeSecondsShown(1))
+        assertEquals(0, wholeSecondsShown(0))
+        assertEquals(0, wholeSecondsShown(-250))
+        // The next reading is at the edge itself, and the last tick lands on zero, where the flag falls.
+        assertEquals(500, wholeSecondTickMs(4_500, roundsUp = true))
+        assertEquals(1000, wholeSecondTickMs(4_000, roundsUp = true))
+        assertEquals(999, wholeSecondTickMs(999, roundsUp = true))
+        assertEquals(20, wholeSecondTickMs(4_001, roundsUp = true))
+    }
+
     // --- NEGATIVE: an overrun is stored as a positive number with isNegative beside it ---
 
     private fun negativeMove(s: PlayerSettings, p: PlayerState, spent: Long = 0): PlayerState {

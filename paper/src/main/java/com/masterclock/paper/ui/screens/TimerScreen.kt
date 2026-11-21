@@ -367,7 +367,8 @@ fun EInkPlayerArea(
 @Composable
 fun TimerDisplay(timeMs: Long, style: TextStyle, width: Dp, height: Dp, padding: TimePadding = TimePadding.FULL, isNegative: Boolean = false) {
     val absTimeMs = kotlin.math.abs(timeMs)
-    val totalSeconds = absTimeMs / 1000
+    // Rounded up while there is time left, see wholeSecondsShown; an overrun counts up from zero.
+    val totalSeconds = if (isNegative) absTimeMs / 1000 else wholeSecondsShown(timeMs)
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
 

@@ -3762,12 +3762,16 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
  * taken from the difference between two readings, so a slower tick counts the same; and the flag
  * falls on a second's edge, so it is not late for it.
  *
- * A millisecond past the edge, since the face shows whole seconds rounded down: at 4.000 it still
+ * A millisecond past the edge, where the face shows whole seconds rounded down: at 4.000 it still
  * reads 0:04, and 0:03 only from 3.999. Never less than [MIN_WHOLE_SECOND_TICK_MS], so a tick that
  * lands just short of an edge does not ask for it again at once.
+ *
+ * On the edge itself where the face rounds up ([roundsUp], see [wholeSecondsShown]): 0:04 from
+ * 4.000 down to 3.001, and 0:03 at 3.000.
  */
-internal fun wholeSecondTickMs(remainingMs: Long, countsUp: Boolean = remainingMs <= 0): Long {
+internal fun wholeSecondTickMs(remainingMs: Long, countsUp: Boolean = remainingMs <= 0, roundsUp: Boolean = false): Long {
     val intoSecond = kotlin.math.abs(remainingMs) % 1000
+    if (roundsUp && !countsUp) return (if (intoSecond == 0L) 1000L else intoSecond).coerceIn(MIN_WHOLE_SECOND_TICK_MS, 1000L)
     // Counting down, the next reading is just under this second's start; an overrun counts up.
     // Told, and not read off the sign: an overrun is stored as a positive time, so the sign never
     // said so. Nothing asks for an overrun's tick today; the default is what a negative reading meant.
@@ -3776,6 +3780,15 @@ internal fun wholeSecondTickMs(remainingMs: Long, countsUp: Boolean = remainingM
 }
 
 private const val MIN_WHOLE_SECOND_TICK_MS = 20L
+
+/**
+ * The seconds a face with nothing finer shows for [remainingMs]: rounded up, as a clock on a table
+ * reads. Rounded down, the E Ink face showed 9:59 twenty milliseconds into a ten-minute game, and
+ * 0:00 for the whole last second of a clock that was still running -- a press in that second is a
+ * move, and in Fischer took the reading from 0:00 to 0:10 -- with the flag's mark a second behind
+ * the zeros. The phone shows tenths under ten seconds and has no such second.
+ */
+fun wholeSecondsShown(remainingMs: Long): Long = if (remainingMs <= 0) 0 else (remainingMs + 999) / 1000
 
 /**
  * Whether the phone's face, with [player] on the move in [mode] and reading [displayedMs], shows
@@ -4517,7 +4530,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (FlavorConfig.isEInk()) {
             val active = state.activePlayer ?: return SLOW_TICK_MS
             val player = state.players.getOrNull(active - 1) ?: return SLOW_TICK_MS
-            return wholeSecondTickMs(displayedTimeMs(state, player, getPlayerSettings(active).mode))
+            return wholeSecondTickMs(displayedTimeMs(state, player, getPlayerSettings(active).mode), roundsUp = true)
         }
         val active = state.activePlayer ?: return SLOW_TICK_MS
         val player = state.players.getOrNull(active - 1) ?: return SLOW_TICK_MS
