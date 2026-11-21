@@ -65,7 +65,7 @@ black, in the frame the icons of Mudita's own apps have.
 ## Translations
 
 The app is in **English, French, Spanish, German, Italian, Portuguese** — in both its European and
-Brazilian forms — **and Dutch**. All but the French are unreviewed by a native speaker, so
+Brazilian forms — **and Dutch**. None of the translations has been reviewed by a native speaker, so
 corrections are especially welcome, and are the easiest contribution to make: the files are plain
 XML and you do not need to build the app. See **[TRANSLATING.md](TRANSLATING.md)**, which also
 covers adding a language that is not listed yet.

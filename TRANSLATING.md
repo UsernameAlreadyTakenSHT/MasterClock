@@ -13,11 +13,10 @@ on, in the same order as the English source. The German one is the most useful t
 because German is the longest language here and its file shows which labels had to be shortened to
 fit — see below.
 
-> **Everything except the French is unreviewed.** The Spanish, German, Italian, Portuguese and
-> Dutch were translated without a native speaker, and checked only by lint, by a mechanical
-> comparison of the format placeholders, and on screen for layout. The wording is what to look at
-> first — corrections are very welcome, and are the cheapest kind of contribution to make. The
-> French was reviewed by a native speaker.
+> **None of the translations has been reviewed.** They were translated without a native speaker,
+> and checked only by lint, by a mechanical comparison of the format placeholders, and on screen
+> for layout. The wording is what to look at first — corrections are very welcome, and are the
+> cheapest kind of contribution to make.
 
 ### Three labels that have to stay short
 
