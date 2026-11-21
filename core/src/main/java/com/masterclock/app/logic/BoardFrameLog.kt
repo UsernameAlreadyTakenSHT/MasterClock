@@ -76,15 +76,20 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
      * The log as a text file: a header saying what wrote it, then a line a frame. [about] is the
      * app's version and the device, which whoever reads the log needs and the log cannot know.
      */
-    @Synchronized
-    fun text(about: String): String = buildString {
-        append(HEADER).append('\n')
-        append("# ").append(about.clean()).append('\n')
-        append("# ").append(frames.size).append(" frames")
-        if (dropped > 0) append(", ").append(dropped).append(" earlier ones not kept")
-        append('\n')
-        append("# seconds  < from the board, > to it, ! meant for it and not sent  link  protocol  bytes\n")
-        frames.forEach { append(it.line()).append('\n') }
+    fun text(about: String): String {
+        // The frames are taken under the lock and written out of it. Twenty thousand lines take a
+        // moment to format, and every frame that arrives meanwhile waits on the lock: over
+        // Bluetooth LE that is the main thread, and the screen stood still for the length of it.
+        val (held, lost) = synchronized(this) { frames.toList() to dropped }
+        return buildString {
+            append(HEADER).append('\n')
+            append("# ").append(about.clean()).append('\n')
+            append("# ").append(held.size).append(" frames")
+            if (lost > 0) append(", ").append(lost).append(" earlier ones not kept")
+            append('\n')
+            append("# seconds  < from the board, > to it, ! meant for it and not sent  link  protocol  bytes\n")
+            held.forEach { append(it.line()).append('\n') }
+        }
     }
 
     companion object {

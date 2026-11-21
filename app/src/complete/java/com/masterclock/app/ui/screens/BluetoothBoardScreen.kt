@@ -355,9 +355,9 @@ private suspend fun shareBoardFrameLog(
     failed: String,
 ) {
     runCatching {
-        // Off the main thread: a full log is some two megabytes, and while it is written the link's
-        // reader waits on the same lock -- on a board that talks a hundred times a second, the
-        // screen stood still for the length of it.
+        // Off the main thread: a full log is some two megabytes to format and to write, and the
+        // screen stood still for the length of it. BoardFrameLog.text holds the log's lock only to
+        // copy the frames, so nothing that arrives meanwhile waits on it either.
         val uri = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val shares = java.io.File(context.cacheDir, "shares")
             shares.listFiles()?.filter { it.isDirectory && it.name.startsWith("board-log-") }?.forEach { it.deleteRecursively() }
