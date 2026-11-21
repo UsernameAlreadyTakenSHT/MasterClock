@@ -168,7 +168,15 @@ fun encodeSharePackage(pkg: SharePackage): ByteArray {
  * commonly spells out the folder and the file's name on the sender's storage, and the receiver can
  * do nothing with it, having no grant -- its import drops them. An export kept for oneself, and the
  * full backup, go on carrying them.
+ *
+ * In the games too. Each game keeps the settings it was played with, sounds included, and only the
+ * package's own settings were cleared: a share with its games sent the locations all the same, once
+ * a game, while the notes of 0.8.46 said no shared file carried them.
  */
 fun SharePackage.forSomeoneElse(): SharePackage = copy(
-    settings = settings.copy(customGongUri = null, customBeepUri = null, customFinalBeepUri = null, customSwitchUri = null)
+    settings = settings.withoutCustomSounds(),
+    logs = logs?.map { it.copy(settings = it.settings.withoutCustomSounds()) },
 )
+
+private fun ChessClockSettings.withoutCustomSounds(): ChessClockSettings =
+    copy(customGongUri = null, customBeepUri = null, customFinalBeepUri = null, customSwitchUri = null)

@@ -42,4 +42,28 @@ class SharePackageTest {
         assertEquals(TimerMode.FISCHER, back.settings.main.mode)
         assertEquals(pkg.logs!!.single().events.single().moveNotation, back.logs!!.single().events.single().moveNotation)
     }
+
+    @Test
+    fun `what is shared with someone else names no custom sound, in its games either`() {
+        val mine = ChessClockSettings(
+            customGongUri = "content://docs/document/primary%3AMusic%2Fgong.mp3",
+            customBeepUri = "content://docs/document/primary%3AMusic%2Fbeep.mp3",
+            customFinalBeepUri = "content://docs/document/primary%3AMusic%2Flast.mp3",
+            customSwitchUri = "content://docs/document/primary%3AMusic%2Fswitch.mp3",
+        )
+        val played = ExportSnapshot(
+            settings = mine,
+            // A game keeps the settings it was played with: the same four, a second time.
+            logs = listOf(GameLog(id = "g", settings = mine, events = listOf(GameEvent(eventType = "MOVE", playerIndex = 1, moveNotation = "e2e4")))),
+            scoreboard = ScoreboardSession(),
+            presets = emptyList(),
+        )
+        for (withGames in listOf(true, false)) {
+            val sent = String(encodeSharePackage(sharePackageOf(played, includeLogs = withGames).forSomeoneElse()))
+            assertTrue("with games: $withGames", !sent.contains("Music") && !sent.contains("content://"))
+        }
+        // An export kept for oneself still has them, in the settings and in the games.
+        val kept = String(encodeSharePackage(sharePackageOf(played, includeLogs = true)))
+        assertEquals(8, Regex("primary%3AMusic").findAll(kept).count())
+    }
 }
