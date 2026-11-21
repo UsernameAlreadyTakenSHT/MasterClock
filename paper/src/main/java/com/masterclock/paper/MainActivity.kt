@@ -186,7 +186,18 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf<com.masterclock.app.logic.ChessClockSettings?>(null)
             }
             MasterClockTheme(eInkDarkMode = reversed) {
-                pendingChange?.let { wanted ->
+                // Asked once the stored state is in, and only over a game. The question is saved
+                // across the app being killed and the game is not: it came back at once, before the
+                // settings had loaded -- confirmed then, the change was written over defaults -- and
+                // over a clock with no game on it. With nothing at stake the change is simply made.
+                LaunchedEffect(isReady, pendingChange) {
+                    val wanted = pendingChange
+                    if (isReady && wanted != null && !timerViewModel.hasGameAtStake()) {
+                        pendingChange = null
+                        timerViewModel.updateSettings(wanted)
+                    }
+                }
+                pendingChange?.takeIf { isReady && timerViewModel.hasGameAtStake() }?.let { wanted ->
                     val apply = { timerViewModel.updateSettings(wanted) }
                     MMDAlertDialog(
                         onDismissRequest = { pendingChange = null },

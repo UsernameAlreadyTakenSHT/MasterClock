@@ -205,7 +205,13 @@ fun TimerScreen(
         }
     }
 
-    if (showResetDialog) {
+    // Only over a game. The question is saved across the app being killed and the game is not: it
+    // came back over a fresh clock, asking about a game that was gone. Dropped then, and not only
+    // hidden, or it would stand again over the next game's first move.
+    LaunchedEffect(showResetDialog, state.activePlayer) {
+        if (showResetDialog && state.activePlayer == null) showResetDialog = false
+    }
+    if (showResetDialog && state.activePlayer != null) {
         MMDAlertDialog(
             onDismissRequest = { showResetDialog = false },
             title = stringResource(R.string.timer_reset_title),
