@@ -344,7 +344,9 @@ fun listPrefixOf(line: String): String? = when {
     line.startsWith("$BULLET ") -> "$BULLET "
     line.startsWith("$CHECKBOX_OPEN ") -> "$CHECKBOX_OPEN "
     line.startsWith("$CHECKBOX_DONE ") -> "$CHECKBOX_DONE "
-    else -> Regex("""^(\d{1,4})\. """).find(line)?.value
+    // Nine digits, which a number still holds with one added: at four the list stopped being one
+    // at its ten-thousandth line.
+    else -> Regex("""^(\d{1,9})\. """).find(line)?.value
 }
 
 /** The kinds of list a line can be. */

@@ -191,4 +191,11 @@ class RichTextTest {
         val mixed = RichText("one\ntwo").centerToggled(0, 0).centerToggled(0, 7)
         assertTrue(mixed.isCenteredLine(0) && mixed.isCenteredLine(4))
     }
+
+    @Test
+    fun `a numbered list goes on past its ten-thousandth line`() {
+        val next = RichText("9999. x\n").listContinued(8)!!
+        assertEquals("9999. x\n10000. ", next.rich.text)
+        assertEquals("10000. ", listPrefixOf("10000. y"))
+    }
 }
