@@ -308,7 +308,8 @@ fun MessageMMD(text: String) {
             .background(MaterialTheme.colorScheme.background)
             // Said by TalkBack as it appears, which the system's toasts were and a text drawn in
             // the app is not: "Press Back again" went unheard, and the second press left the app.
-            .semantics { liveRegion = LiveRegionMode.Polite }
+            // Merged, so that the node that is live is the one that holds the text.
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }
     ) {
         HorizontalDividerMMD()
         Text(
