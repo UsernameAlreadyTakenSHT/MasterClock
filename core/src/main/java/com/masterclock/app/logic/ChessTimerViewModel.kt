@@ -5315,6 +5315,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val settings = _settings.value
         val before = _uiState.value.players.getOrNull(playerIndex - 1)
         _uiState.update { state -> arbiterAdjustTime(state, playerIndex, amountMs, settings) }
+        // One that changed nothing is not one: a clock that cannot go lower, a correction refused.
+        // It was written down all the same, as time taken that was not.
+        if (_uiState.value.players.getOrNull(playerIndex - 1) == before) return
         // Every correction, as the manual says: only one that cost a period or a flag left a trace,
         // and two minutes given back after a dispute left none in the record an arbiter is asked for.
         val sign = if (amountMs < 0) "-" else "+"
