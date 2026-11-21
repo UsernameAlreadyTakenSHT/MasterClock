@@ -50,6 +50,8 @@ fun TimerScreen(
     val settings by viewModel.settings.collectAsState()
     // Saveable: a font-size or language change recreated the screen and closed the confirmation.
     var showResetDialog by rememberSaveable { mutableStateOf(false) }
+    // Whether the question was asked by Start on a finished game, which goes on to start the next.
+    var startAfterReset by rememberSaveable { mutableStateOf(false) }
     // The "Haptic feedback" switch of the settings was read nowhere in this build: it did nothing.
     // A press now vibrates when it is on, as on the phone app.
     val haptic = LocalHapticFeedback.current
@@ -111,7 +113,10 @@ fun TimerScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButtonMMD(
-                        onClick = { if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset() },
+                        onClick = {
+                            startAfterReset = false
+                            if (settings.confirmReset && state.activePlayer != null) showResetDialog = true else viewModel.reset()
+                        },
                         modifier = Modifier.weight(1f).then(controlSize),
                         border = outlinedButtonBorderMMD(),
                         contentPadding = controlPadding,
@@ -128,18 +133,28 @@ fun TimerScreen(
                     }
     
                     // A finished game has nothing to resume: the button read "Resume", and pressed did
-                    // nothing, on a screen that shows no press. It clears the clock for the next game.
+                    // nothing, on a screen that shows no press. It starts the next game, as "Start" does
+                    // on a clock that has not run -- Reset, beside it, is what only clears the clock.
+                    //
+                    // After the question Reset asks. The button turns from Pause to this the moment a
+                    // flag falls, in a scramble where both players are still hitting the glass: taken
+                    // at once, a press that landed on it wiped who had lost and by how much, the only
+                    // record there is, and set a new game running.
                     val over = isGameOver(state, settings.flagBehavior, settings.numberOfPlayers)
                     OutlinedButtonMMD(
-                        onClick = { if (over) viewModel.reset() else if (state.isPaused) viewModel.resume() else viewModel.pause() },
+                        onClick = {
+                            if (over) {
+                                if (settings.confirmReset) { startAfterReset = true; showResetDialog = true }
+                                else { viewModel.reset(); viewModel.resume() }
+                            } else if (state.isPaused) viewModel.resume() else viewModel.pause()
+                        },
                         modifier = Modifier.weight(1f).then(controlSize),
                         border = outlinedButtonBorderMMD(),
                         contentPadding = controlPadding,
                     ) {
                         // Before the first press there is nothing to resume: the button starts P1's clock.
                         val label = when {
-                            state.activePlayer == null -> stringResource(R.string.timer_start)
-                            over -> stringResource(R.string.common_reset)
+                            state.activePlayer == null || over -> stringResource(R.string.timer_start)
                             state.isPaused -> stringResource(R.string.timer_resume)
                             else -> stringResource(R.string.timer_pause)
                         }
@@ -196,9 +211,10 @@ fun TimerScreen(
             title = stringResource(R.string.timer_reset_title),
             text = stringResource(R.string.timer_reset_message),
             confirmButtonText = stringResource(R.string.common_reset),
-            onConfirm = { 
+            onConfirm = {
                 viewModel.reset()
-                showResetDialog = false 
+                if (startAfterReset) viewModel.resume()
+                showResetDialog = false
             },
             dismissButtonText = stringResource(R.string.common_cancel),
             onDismiss = { showResetDialog = false }
