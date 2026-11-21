@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.masterclock.app.logic.AppInfo
 import com.masterclock.paper.BuildConfig
@@ -37,6 +38,7 @@ import com.masterclock.paper.ui.components.sharedLabelStyle
 import com.masterclock.paper.ui.components.verticalScrollMMD
 import com.mudita.mmd.components.tabs.PrimaryTabRowMMD
 import com.mudita.mmd.components.tabs.TabMMD
+import com.mudita.mmd.components.tabs.TabRowDefaultsMMD
 import com.mudita.mmd.components.top_app_bar.TopAppBarMMD
 
 /**
@@ -104,7 +106,16 @@ fun AboutScreen(onBackClick: () -> Unit, onMessage: (String) -> Unit) {
                 PrimaryTabRowMMD(
                     selectedTabIndex = selectedTab,
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    // The whole tab's width. MMD's own bar is the tab's content less the 16dp a side
+                    // its tab pads its text by; these tabs pad by 4, and the bar came out 24dp
+                    // narrower than the label, a stub under the short ones.
+                    indicator = {
+                        TabRowDefaultsMMD.PrimaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(selectedTab, matchContentSize = false),
+                            width = Dp.Unspecified,
+                        )
+                    },
                 ) {
                     tabs.forEachIndexed { index, label ->
                         TabMMD(selected = selectedTab == index, onClick = { selectedTab = index }) {
