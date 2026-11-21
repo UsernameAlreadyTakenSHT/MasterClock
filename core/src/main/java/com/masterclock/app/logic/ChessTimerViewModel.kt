@@ -5116,9 +5116,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         if (newSettings.speaks() && !oldSettings.speaks()) {
-            voiceManager.start()
-            // Already known from an earlier start: the engine will not answer a second time.
-            if (voiceManager.hasNoVoice) voiceMissing.trySend(Unit)
+            // Asked afresh, the switch being the user's own doing: a voice installed since the
+            // engine last said it had none is found, and one still missing is said so again.
+            voiceManager.askAgain()
         }
 
         val coreChanged = settingsEndTheGame(oldSettings, newSettings) || initialStates != null || newGame
@@ -5264,6 +5264,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * exactly like a test that worked at zero volume.
      */
     fun previewVoice(): Boolean {
+        // The test button is how a voice just installed is tried: the engine is asked again.
+        voiceManager.askAgain()
         voiceManager.speak(CoreR.string.voice_test, settings.value.voiceVolume)
         // Known to be missing, that is: an engine still starting says the test as soon as it is up.
         return !voiceManager.hasNoVoice

@@ -68,6 +68,25 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
     /** What was to be said while the engine was starting; the latest only, as the queue flushes. */
     private var waiting: (() -> Unit)? = null
 
+    /**
+     * Starts the engine again if it had said it has no voice, as [start] does not. The message that
+     * says so sends the user to install one in the device's settings, and back from there nothing
+     * asked again: the test button and every announcement stayed silent until the app was killed.
+     *
+     * Called where the user asks for the voice -- the test button, the switch turned on -- and not
+     * from what the clock has to say. Asked again by every announcement, a device with no voice
+     * rebuilt its engine and showed "no voice" again every fifteen seconds of a game.
+     */
+    fun askAgain() {
+        if (hasNoVoice) {
+            runCatching { tts?.shutdown() }
+            tts = null
+            started = false
+            hasNoVoice = false
+        }
+        start()
+    }
+
     /** Starts the engine, once. Called ahead of the first announcement where one is expected. */
     fun start() {
         if (started) return
@@ -104,12 +123,8 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
         noVoice()
     }
 
-    /** When the engine last answered that it had no voice; see [whenReady]. */
-    private var gaveUpAtNs = 0L
-
     private fun noVoice() {
         hasNoVoice = true
-        gaveUpAtNs = System.nanoTime()
         waiting = null
         onNoVoice()
     }
@@ -121,15 +136,6 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
 
     /** Says it now, or as soon as the engine is up if this is what started it. */
     private fun whenReady(say: () -> Unit) {
-        // Asked again, some time after it said it had none: the message sends the user to install a
-        // voice in the device's settings, and back from there nothing was ever asked again -- the
-        // test button and every announcement stayed silent until the app was killed.
-        if (hasNoVoice && System.nanoTime() - gaveUpAtNs >= RETRY_AFTER_NS) {
-            runCatching { tts?.shutdown() }
-            tts = null
-            started = false
-            hasNoVoice = false
-        }
         start()
         when {
             isAvailable -> say()
@@ -167,6 +173,3 @@ class VoiceManager(private val context: Context, private val onNoVoice: () -> Un
         tts = null
     }
 }
-
-/** How long after "no voice" the engine is asked again: long enough not to start one at every announcement. */
-private const val RETRY_AFTER_NS = 15_000_000_000L
