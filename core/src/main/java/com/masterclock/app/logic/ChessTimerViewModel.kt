@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+
 package com.masterclock.app.logic
 
 import android.app.Application
@@ -15,6 +17,7 @@ import com.masterclock.app.data.SettingsRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -974,7 +977,7 @@ data class NotebookNote(
     val id: String = java.util.UUID.randomUUID().toString(),
     val title: String = "New Note",
     val content: String = "",
-    val timestamp: Long = System.currentTimeMillis(),
+    @EncodeDefault val timestamp: Long = System.currentTimeMillis(),
     val type: NotebookNoteType = NotebookNoteType.TEXT,
     val audioPath: String? = null,
     val audioDurationMs: Long = 0,
@@ -1131,7 +1134,7 @@ data class ChessClockSettings(
 data class SavedPreset(
     val id: String = java.util.UUID.randomUUID().toString(),
     val name: String,
-    val createdAt: Long = System.currentTimeMillis(),
+    @EncodeDefault val createdAt: Long = System.currentTimeMillis(),
     val settings: ChessClockSettings,
 )
 
@@ -1407,7 +1410,13 @@ fun buildShortcutTargets(
 
 @Serializable
 data class GameEvent(
-    val timestamp: Long = System.currentTimeMillis(),
+    // Always written, here and on the four other times that default to "now". A field equal to its
+    // default is left out of what is stored, and for a default that is not a constant "equal" is
+    // worked out again at the moment of writing: an event written in the millisecond it was made
+    // had no time, and read back as the time of reading. That is the last move before the app is
+    // killed -- which a resume then took for one made after the save and cut from the log -- and
+    // a note, a preset or a result whose date moved at each launch and doubled on a re-import.
+    @EncodeDefault val timestamp: Long = System.currentTimeMillis(),
     val eventType: String,
     val playerIndex: Int? = null,
     val timeRemainingMs: Long? = null,
@@ -1482,7 +1491,7 @@ internal fun ChessClockSettings.takesMovePresses(playerIndex: Int): Boolean {
 @Serializable
 data class GameLog(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val startTime: Long = System.currentTimeMillis(),
+    @EncodeDefault val startTime: Long = System.currentTimeMillis(),
     val settings: ChessClockSettings,
     val events: List<GameEvent> = emptyList(),
     val initialPlayerStates: List<PlayerStateProxy> = emptyList(), // Store actual starting times
@@ -1538,7 +1547,7 @@ data class ExportSnapshot(
 data class ScoreboardGame(
     val id: String = java.util.UUID.randomUUID().toString(),
     val result: String = "",
-    val timestamp: Long = System.currentTimeMillis()
+    @EncodeDefault val timestamp: Long = System.currentTimeMillis()
 )
 
 @Serializable

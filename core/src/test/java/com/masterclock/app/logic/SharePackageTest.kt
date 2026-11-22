@@ -66,4 +66,18 @@ class SharePackageTest {
         val kept = String(encodeSharePackage(sharePackageOf(played, includeLogs = true)))
         assertEquals(8, Regex("primary%3AMusic").findAll(kept).count())
     }
+
+    @Test
+    fun `a time taken at the moment of writing is written all the same`() {
+        val json = kotlinx.serialization.json.Json
+        // Made and written in the same millisecond, which a tight loop is: the time equals the
+        // default worked out again while writing, and was left out for it.
+        repeat(2_000) {
+            assertTrue(json.encodeToString(GameEvent.serializer(), GameEvent(eventType = "MOVE")).contains("\"timestamp\""))
+            assertTrue(json.encodeToString(GameLog.serializer(), GameLog(id = "g", settings = ChessClockSettings())).contains("\"startTime\""))
+            assertTrue(json.encodeToString(NotebookNote.serializer(), NotebookNote(id = "n", title = "t", type = NotebookNoteType.TEXT)).contains("\"timestamp\""))
+        }
+        // And what was stored without one still reads, as it did.
+        assertEquals("MOVE", json.decodeFromString(GameEvent.serializer(), """{"eventType":"MOVE"}""").eventType)
+    }
 }
