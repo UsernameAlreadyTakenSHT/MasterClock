@@ -146,6 +146,7 @@
     <string name="import_confirm_title">Importare questo file?</string>
     <string name="import_confirm_message">Questo file sostituisce le tue impostazioni attuali. Le sue partite, i preset, le note e i risultati del tabellone si aggiungono ai tuoi: nulla di tuo viene eliminato.</string>
     <string name="import_confirm_action">Importa</string>
+    <string name="confirm_also_ends_game">Questo termina anche la partita in corso, o quella in attesa di essere ripresa.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Giocatore %1$d, %2$s</string>

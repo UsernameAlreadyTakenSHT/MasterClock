@@ -143,6 +143,7 @@
     <string name="import_confirm_title">Dit bestand importeren?</string>
     <string name="import_confirm_message">Dit bestand vervangt je huidige instellingen. De partijen, presets, notities en scorebordresultaten erin komen bij de jouwe: niets van jou wordt verwijderd.</string>
     <string name="import_confirm_action">Importeren</string>
+    <string name="confirm_also_ends_game">Dit beëindigt ook de lopende partij, of de partij die wacht om hervat te worden.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Speler %1$d, %2$s</string>

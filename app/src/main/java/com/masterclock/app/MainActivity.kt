@@ -738,7 +738,12 @@ class MainActivity : ComponentActivity() {
                         AlertDialog(
                             onDismissRequest = { pendingScan = null },
                             title = { Text(stringResource(R.string.qr_confirm_title)) },
-                            text = { Text(stringResource(R.string.qr_confirm_message)) },
+                            text = {
+                                Text(listOfNotNull(
+                                    stringResource(R.string.qr_confirm_message),
+                                    stringResource(R.string.confirm_also_ends_game).takeIf { timerViewModel.wouldEndAGame(scanned.settings) },
+                                ).joinToString("\n\n"))
+                            },
                             confirmButton = {
                                 TextButton(onClick = {
                                     pendingScan = null
@@ -777,7 +782,12 @@ class MainActivity : ComponentActivity() {
                         AlertDialog(
                             onDismissRequest = { pendingFileImport = null },
                             title = { Text(stringResource(R.string.import_confirm_title)) },
-                            text = { Text(stringResource(R.string.import_confirm_message)) },
+                            text = {
+                                Text(listOfNotNull(
+                                    stringResource(R.string.import_confirm_message),
+                                    stringResource(R.string.confirm_also_ends_game).takeIf { timerViewModel.wouldEndAGame(pending.pkg.settings) },
+                                ).joinToString("\n\n"))
+                            },
                             confirmButton = {
                                 TextButton(onClick = {
                                     pendingFileImport = null

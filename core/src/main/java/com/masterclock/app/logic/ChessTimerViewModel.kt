@@ -4017,6 +4017,17 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // change of mode asked about a game nobody could see or resume.
         (FlavorConfig.savesGameInPlay() && _hasSavedClock.value)
 
+    /**
+     * Whether putting [incoming] in place of the settings would end a game, for the questions that
+     * replace them whole -- a file imported, a code scanned, the settings reset. They asked about
+     * the settings alone, "nothing of yours is deleted", and a game in play or waiting went with
+     * the answer, where the same change made by hand asks "End the current game?".
+     */
+    fun wouldEndAGame(incoming: ChessClockSettings): Boolean = hasGameAtStake() && settingsEndTheGame(_settings.value, incoming)
+
+    /** The same for [resetAllSettings]. */
+    fun resetWouldEndAGame(): Boolean = wouldEndAGame(settingsAfterReset(_settings.value))
+
     private val _scoreboard = MutableStateFlow(ScoreboardSession())
     val scoreboard: StateFlow<ScoreboardSession> = _scoreboard.asStateFlow()
 

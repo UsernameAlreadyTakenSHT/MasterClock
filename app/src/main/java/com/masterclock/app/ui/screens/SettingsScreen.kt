@@ -204,7 +204,12 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showResetSettingsDialog = false },
             title = { Text(stringResource(R.string.settings_reset_title)) },
-            text = { Text(stringResource(R.string.settings_reset_message)) },
+            text = {
+                Text(listOfNotNull(
+                    stringResource(R.string.settings_reset_message),
+                    stringResource(R.string.confirm_also_ends_game).takeIf { viewModel.resetWouldEndAGame() },
+                ).joinToString("\n\n"))
+            },
             confirmButton = {
                 TextButton(onClick = { onResetSettings(); showResetSettingsDialog = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
                     Text(stringResource(R.string.settings_reset_confirm))

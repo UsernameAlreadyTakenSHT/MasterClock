@@ -155,6 +155,9 @@
     <string name="import_confirm_title">Import this file?</string>
     <string name="import_confirm_message">This file replaces your current settings. Its games, presets, notes and scoreboard results are added to yours: nothing of yours is deleted.</string>
     <string name="import_confirm_action">Import</string>
+    <!-- A second paragraph under the three questions above and "Reset all settings?", when
+         accepting would end a game. -->
+    <string name="confirm_also_ends_game">This also ends the game on the clock, or the one waiting to be resumed.</string>
 
     <!--
       Rules screen. The individual documents keep their published names (FIDE Laws, FMJD Annexes,
