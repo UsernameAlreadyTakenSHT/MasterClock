@@ -5330,11 +5330,16 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun adjustTime(playerIndex: Int, amountMs: Long) {
         if (!_uiState.value.isArbitreMode) return
         val settings = _settings.value
-        val before = _uiState.value.players.getOrNull(playerIndex - 1)
+        val stateBefore = _uiState.value
+        val before = stateBefore.players.getOrNull(playerIndex - 1)
         _uiState.update { state -> arbiterAdjustTime(state, playerIndex, amountMs, settings) }
         // One that changed nothing is not one: a clock that cannot go lower, a correction refused.
         // It was written down all the same, as time taken that was not.
-        if (_uiState.value.players.getOrNull(playerIndex - 1) == before) return
+        // The whole state, and not the player's own: a table clock's time is the table's, and a
+        // correction to a Chrono or to a running phase leaves every player as they were. Asked of
+        // the player, it read as nothing changed -- no line in the log, and no save, so that a
+        // minute given under the panel was gone if the app closed before Play.
+        if (_uiState.value == stateBefore) return
         // Every correction, as the manual says: only one that cost a period or a flag left a trace,
         // and two minutes given back after a dispute left none in the record an arbiter is asked for.
         val sign = if (amountMs < 0) "-" else "+"
