@@ -688,8 +688,10 @@ class MainActivity : ComponentActivity() {
                                     }
                                     // A preset ends the game on the clock, as Reset does, and asks
                                     // first when Reset would: one brush of a tile in the grid ended
-                                    // a paused game and its autosave, with no way back.
-                                    if (timerViewModel.settings.value.confirmReset && timerViewModel.uiState.value.activePlayer != null) pendingPreset = apply
+                                    // a paused game and its autosave, with no way back. And when a
+                                    // game waits behind Resume, as a settings change asks: a tile
+                                    // was the one way left to delete that game with nothing said.
+                                    if (timerViewModel.settings.value.confirmReset && timerViewModel.hasGameAtStake()) pendingPreset = apply
                                     else apply()
                                 },
                                 onSavePreset = { timerViewModel.saveCurrentAsPreset(it) },
