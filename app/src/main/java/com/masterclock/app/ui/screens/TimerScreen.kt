@@ -150,7 +150,13 @@ fun TimerScreen(
     }
 
     // Out of a screen reader's reach under a question, as it is out of a finger's.
-    val askingFirst = showResetDialog || showRestoreDialog || showRerollDialog || berserkAsked != null
+    // The question of Resume stands only while there are clocks kept. It is saved across the app
+    // being killed and they are not; hidden then but still counted here, it took the whole clock
+    // away from TalkBack with nothing on screen to dismiss, and stood again by itself at the
+    // arbiter's next Save. Dropped, so that neither happens.
+    val keptToRestore = viewModel.hasKeptClocks.collectAsState().value
+    LaunchedEffect(keptToRestore) { if (!keptToRestore) showRestoreDialog = false }
+    val askingFirst = showResetDialog || (showRestoreDialog && keptToRestore) || showRerollDialog || berserkAsked != null
     Box(modifier = Modifier.fillMaxSize().then(if (askingFirst) Modifier.clearAndSetSemantics {} else Modifier)) {
         ClockAnnouncer(
             state,
@@ -334,7 +340,7 @@ fun TimerScreen(
     
     // Only while there is something kept: the question is saved across the app being killed and
     // the clocks are not, so it came back over nothing, and confirming it did nothing.
-    if (showRestoreDialog && viewModel.hasKeptClocks.collectAsState().value) {
+    if (showRestoreDialog && keptToRestore) {
         TimerConfirmDialog(
             title = stringResource(R.string.timer_restore_title),
             message = stringResource(R.string.timer_restore_message),
