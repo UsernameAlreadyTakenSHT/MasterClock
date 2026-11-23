@@ -103,6 +103,11 @@ fun BluetoothBoardScreen(
         listOf(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
+    // Refused, and said: only a yes was handled. After a second no Android answers by itself with
+    // no prompt, so Scan was a button that did nothing, over a list of paired devices empty for
+    // want of the permission and not of devices. The notebook's dialog, with its way to the app's
+    // settings, where a permission refused twice is given back.
+    var permissionRefused by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
@@ -111,7 +116,10 @@ fun BluetoothBoardScreen(
             // came up empty and stayed so until the scan button was pressed a second time.
             serialManager.refreshPairedDevices()
             manager.startScan()
-        }
+        } else permissionRefused = true
+    }
+    if (permissionRefused) {
+        PermissionRefusedDialog(stringResource(com.masterclock.core.R.string.board_error_connect_permission)) { permissionRefused = false }
     }
 
     DisposableEffect(Unit) {

@@ -448,7 +448,7 @@ private fun rememberCameraTake(file: File, contract: ActivityResultContract<andr
  * no hint of where the setting is.
  */
 @Composable
-private fun PermissionRefusedDialog(message: String, onDismiss: () -> Unit) {
+internal fun PermissionRefusedDialog(message: String, onDismiss: () -> Unit) {
     val context = LocalContext.current
     AlertDialog(
         onDismissRequest = onDismiss,
