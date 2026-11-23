@@ -43,6 +43,10 @@ Four build flavors (Complete, Standard, Lite, Mini), plus a dedicated E-Ink vers
 Mudita's own [MMD](https://github.com/mudita/MMD) component library. MasterClock is an independent
 project, not affiliated with Mudita.
 
+Every build lets you choose its font: the system's own, or Noto Sans or Noto Sans Mono, which ship
+with the app and cover Latin, Greek and Cyrillic. The choice applies to the whole app, the clock
+included.
+
 Requires Android 7.0 (API 24) or later. Every screen and option is described in the
 [reference](docs/reference/README.md).
 
@@ -55,6 +59,7 @@ Requires Android 7.0 (API 24) or later. Every screen and option is described in 
 | Presets | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Arbiter's panel | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Behavior / Display / Audio settings | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Font (System, Noto Sans, Noto Sans Mono) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | More (tools, backup, notebook…) | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 🟡 in part: Mini and E-Ink have three of the modes, Sudden Death, Fischer and Move Timer.
@@ -62,6 +67,9 @@ Requires Android 7.0 (API 24) or later. Every screen and option is described in 
 The icon is the same in every build, a knight in a clock's ring across the clock's two halves, and
 its colour tells the build as a medal would: gold, silver, bronze, iron. The E-Ink build has it in
 black, in the frame the icons of Mudita's own apps have.
+
+The font is chosen in Display on Complete and Standard, and at the foot of the settings on Lite, Mini
+and E-Ink. "System" is the device's own font on the phone, and Lato on E-Ink.
 
 ## Translations
 
@@ -116,7 +124,7 @@ what each check proves and what it does not.
   - Beep: [Beep – u_edtmwfwu7c](https://pixabay.com/sound-effects/film-special-effects-beep-329314/)
   - Final beep: [Public Domain Beep Sound – qubodup](https://pixabay.com/sound-effects/public-domain-beep-sound-100267/)
   - Switch: [Light Switch – RutgerMuller (Freesound)](https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/)
-- **Font**: [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, [SIL Open Font License 1.1](https://openfontlicense.org/). Bundled by the E-Ink build, through MMD.
+- **Fonts**: [Noto Sans and Noto Sans Mono](https://notofonts.github.io/), regular and bold, by the Noto Project Authors, [SIL Open Font License 1.1](https://openfontlicense.org/). Bundled by every build, for the font setting. [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, same licence: the E-Ink build's own font, bundled through MMD.
 - **E-Ink interface**: built with [Mudita Mindful Design (MMD)](https://github.com/mudita/MMD), Mudita's component library for its E Ink devices.
 
 ### Rules documents
@@ -139,6 +147,7 @@ Also listed in-app under the version footer → Licenses tab.
 | [AndroidX / Jetpack Compose](https://developer.android.com/jetpack) | The Android Open Source Project | Apache-2.0 |
 | [Kotlin & kotlinx](https://github.com/JetBrains/kotlin) | JetBrains s.r.o. and Kotlin contributors | Apache-2.0 |
 | [Material Components for Android](https://github.com/material-components/material-components-android) | Google LLC | Apache-2.0 |
+| [Noto Sans, Noto Sans Mono](https://notofonts.github.io/) | The Noto Project Authors | OFL-1.1 |
 | [Mudita Mindful Design (MMD)](https://github.com/mudita/MMD) | Mudita Sp. z o.o., The Android Open Source Project | Apache-2.0 |
 | [Coil](https://github.com/coil-kt/coil) | Coil Contributors | Apache-2.0 |
 | [Accompanist](https://github.com/google/accompanist) (Drawable Painter, Permissions) | Google LLC | Apache-2.0 |
@@ -149,7 +158,7 @@ Also listed in-app under the version footer → Licenses tab.
 | [Dagger](https://github.com/google/dagger) | Google LLC | Apache-2.0 |
 | [javax.inject (JSR-330)](https://github.com/javax-inject/javax-inject) | The JSR-330 Expert Group | Apache-2.0 |
 
-Only the first three ship in every build. MMD ships in the E-Ink build alone, which is the only
+Only the first four ship in every build. MMD ships in the E-Ink build alone, which is the only
 one that links it. Everything below it reaches Complete alone: R8 strips each one from Standard,
 Lite, Mini and E-Ink, none of which ever call it. The last three arrive
 through CameraX and amount to a handful of classes, but they are shipped and so are credited.
