@@ -216,4 +216,17 @@ class RichTextTest {
         // One with a few markers is still converted.
         assertEquals("bold", richTextFromMarkup("**bold**").text)
     }
+
+    @Test
+    fun `a letter typed in front of its like takes the style before it`() {
+        // "a" bold, "b" plain; a second "b" typed between them, the cursor after it.
+        val typed = RichText("ab", listOf(NoteSpan(0, 1, NoteStyle.BOLD))).edited("abb", cursor = 2)
+        assertEquals(listOf(NoteSpan(0, 2, NoteStyle.BOLD)), typed.spans)
+        // And in a style chosen for it: the colour is on the letter typed, not on the one after.
+        val coloured = RichText("ab").edited("abb", typing = NoteStyle.ITALIC to 0L, cursor = 2)
+        assertEquals(listOf(NoteSpan(1, 2, NoteStyle.ITALIC)), coloured.spans)
+        // A deletion is still placed by the cursor: the first of two like letters taken out.
+        val cut = RichText("abb", listOf(NoteSpan(1, 2, NoteStyle.BOLD))).edited("ab", cursor = 1)
+        assertEquals(emptyList<NoteSpan>(), cut.spans)
+    }
 }

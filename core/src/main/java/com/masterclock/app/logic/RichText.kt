@@ -189,7 +189,14 @@ fun RichText.edited(newText: String, typing: Pair<Int, Long>? = null, cursor: In
     val oldText = text
     if (newText == oldText) return this
     var prefix = 0
-    val maxPrefix = minOf(oldText.length, newText.length, cursor ?: Int.MAX_VALUE)
+    // Up to where the edit began, by the cursor: where it stands after a deletion, and before
+    // what went in after an insertion. Held to the cursor alone, the common part ran over a letter
+    // typed in front of its like -- "b" typed before a "b" -- and it was the second that was taken
+    // for the new one: the typed letter came out in the next one's style, and a colour chosen for
+    // it landed a letter further on.
+    val grown = newText.length - oldText.length
+    val editStart = cursor?.let { if (grown > 0) (it - grown).coerceAtLeast(0) else it } ?: Int.MAX_VALUE
+    val maxPrefix = minOf(oldText.length, newText.length, editStart)
     while (prefix < maxPrefix && oldText[prefix] == newText[prefix]) prefix++
     var suffix = 0
     val maxSuffix = minOf(oldText.length, newText.length) - prefix
