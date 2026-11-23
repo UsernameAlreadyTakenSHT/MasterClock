@@ -546,11 +546,11 @@ class MainActivity : ComponentActivity() {
                                 onResetSettings = { timerViewModel.resetAllSettings() },
                                 onExportSettings = { includeLogs -> 
                                     shouldIncludeLogs = includeLogs
-                                    exportLauncher.launch("master_clock_settings.json") 
+                                    exportLauncher.launchOrSay(context, "master_clock_settings.json")
                                 },
-                                onExportMedia = { mediaExportLauncher.launch("master_clock_full_backup.zip") },
-                                onImportSettings = { importLauncher.launch(arrayOf("application/json")) },
-                                onImportMedia = { mediaImportLauncher.launch(arrayOf("application/zip")) },
+                                onExportMedia = { mediaExportLauncher.launchOrSay(context, "master_clock_full_backup.zip") },
+                                onImportSettings = { importLauncher.launchOrSay(context, arrayOf("application/json")) },
+                                onImportMedia = { mediaImportLauncher.launchOrSay(context, arrayOf("application/zip")) },
                                 onShareSettings = { includeLogs, useQr ->
                                     if (useQr) {
                                         val pkg = SharePackage(settings = settings.copy(notebookNotes = emptyList()), logs = null, scoreboard = null).forSomeoneElse()

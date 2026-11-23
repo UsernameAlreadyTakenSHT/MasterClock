@@ -143,6 +143,7 @@
     <string name="toast_backup_too_large">Sauvegarde non enregistrée\u00A0: elle serait trop volumineuse pour être restaurée.</string>
     <string name="toast_export_too_large">Trop de parties pour un fichier de réglages\u00A0: utilisez plutôt la sauvegarde complète.</string>
     <string name="toast_no_voice">Aucune voix de synthèse disponible. Installez-en une dans les réglages de l\'appareil pour entendre les annonces.</string>
+    <string name="toast_no_app_for_this">Aucune application de cet appareil ne peut faire cela.</string>
     <string name="toast_sound_not_kept">L\'app ne peut pas garder l\'accès à ce fichier\u00A0: il ne jouerait plus après un redémarrage. Choisissez plutôt un son dans le stockage de l\'appareil.</string>
     <string name="qr_confirm_title">Appliquer les réglages scannés\u00A0?</string>
     <string name="qr_confirm_message">Ce code remplace vos réglages actuels et peut ajouter des parties et un tableau des scores. N\'acceptez un code que d\'une personne de confiance.</string>

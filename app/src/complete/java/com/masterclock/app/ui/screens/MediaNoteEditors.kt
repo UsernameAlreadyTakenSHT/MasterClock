@@ -438,7 +438,7 @@ private fun rememberCameraTake(file: File, contract: ActivityResultContract<andr
         if (success && commitTake(context, pending, file)) { count++; onTaken(file) }
         else pending.delete()
     }
-    val launch = rememberPermitted(Manifest.permission.CAMERA, R.string.toast_camera_permission) { launcher.launch(uri) }
+    val launch = rememberPermitted(Manifest.permission.CAMERA, R.string.toast_camera_permission) { launcher.launchOrSay(context, uri) }
     return CameraTake(launch, count)
 }
 

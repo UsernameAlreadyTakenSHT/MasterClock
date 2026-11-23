@@ -138,6 +138,7 @@
     <string name="toast_backup_too_large">Copia de seguridad no guardada: sería demasiado grande para restaurarla.</string>
     <string name="toast_export_too_large">Demasiadas partidas para un archivo de ajustes: usa la copia de seguridad completa.</string>
     <string name="toast_no_voice">No hay ninguna voz de síntesis disponible. Instala una en los ajustes del dispositivo para oír los avisos.</string>
+    <string name="toast_no_app_for_this">Ninguna aplicación de este dispositivo puede hacerlo.</string>
     <string name="toast_sound_not_kept">La app no puede conservar el acceso a ese archivo, así que dejaría de sonar tras reiniciar. Elige un sonido del almacenamiento del dispositivo.</string>
     <string name="qr_confirm_title">¿Aplicar los ajustes escaneados?</string>
     <string name="qr_confirm_message">Este código sustituye tus ajustes actuales y puede añadir partidas y un marcador. Acepta códigos solo de alguien de confianza.</string>

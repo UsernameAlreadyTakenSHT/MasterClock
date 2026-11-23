@@ -142,6 +142,7 @@
     <string name="toast_backup_too_large">Cópia de segurança não guardada: seria demasiado grande para restaurar.</string>
     <string name="toast_export_too_large">Demasiadas partidas para um ficheiro de definições: use antes a cópia de segurança completa.</string>
     <string name="toast_no_voice">Não há nenhuma voz de síntese disponível. Instale uma nas definições do dispositivo para ouvir os anúncios.</string>
+    <string name="toast_no_app_for_this">Nenhuma aplicação deste dispositivo consegue fazer isto.</string>
     <string name="toast_sound_not_kept">A app não consegue manter o acesso a esse ficheiro, por isso deixaria de tocar depois de reiniciar. Escolha um som do armazenamento do dispositivo.</string>
     <string name="qr_confirm_title">Aplicar as definições lidas?</string>
     <string name="qr_confirm_message">Este código substitui as suas definições atuais e pode acrescentar partidas e um marcador. Aceite um código apenas de alguém em quem confia.</string>

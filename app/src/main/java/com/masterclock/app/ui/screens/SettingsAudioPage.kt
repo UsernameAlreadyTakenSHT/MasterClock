@@ -214,23 +214,23 @@ fun AudioSettingsPage(
                     uri = currentSettings.customBeepUri,
                     topRounded = true,
                     onClear = { change(currentSettings.customBeepUri, currentSettings.copy(customBeepUri = null)) }
-                ) { beepLauncher.launch(arrayOf("audio/*")) }
+                ) { beepLauncher.launchOrSay(context, arrayOf("audio/*")) }
                 CustomSoundItem(
                     label = stringResource(R.string.settings_gong_mode_sound),
                     uri = currentSettings.customGongUri,
                     onClear = { change(currentSettings.customGongUri, currentSettings.copy(customGongUri = null)) }
-                ) { gongLauncher.launch(arrayOf("audio/*")) }
+                ) { gongLauncher.launchOrSay(context, arrayOf("audio/*")) }
                 CustomSoundItem(
                     label = stringResource(R.string.settings_final_beep_sound),
                     uri = currentSettings.customFinalBeepUri,
                     onClear = { change(currentSettings.customFinalBeepUri, currentSettings.copy(customFinalBeepUri = null)) }
-                ) { finalBeepLauncher.launch(arrayOf("audio/*")) }
+                ) { finalBeepLauncher.launchOrSay(context, arrayOf("audio/*")) }
                 CustomSoundItem(
                     label = stringResource(R.string.settings_switch_sound),
                     uri = currentSettings.customSwitchUri,
                     bottomRounded = true,
                     onClear = { change(currentSettings.customSwitchUri, currentSettings.copy(customSwitchUri = null)) }
-                ) { switchLauncher.launch(arrayOf("audio/*")) }
+                ) { switchLauncher.launchOrSay(context, arrayOf("audio/*")) }
             }
         }
         Spacer(Modifier.height(64.dp))
