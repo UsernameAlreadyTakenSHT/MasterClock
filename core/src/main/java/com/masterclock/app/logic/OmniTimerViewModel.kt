@@ -605,7 +605,11 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     /** [SystemClock.elapsedRealtime]; see the note on the same field in [ChessTimerViewModel]. */
     private var lastTickTime: Long = 0
 
-    private val writerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    // With a handler, as the clock's has: a write that fails is logged, and does not close the app.
+    private val writerScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Main.immediate +
+            kotlinx.coroutines.CoroutineExceptionHandler { _, e -> android.util.Log.e("OmniTimerViewModel", "A write to storage failed", e) }
+    )
 
     /** When the session was last written; see [saveSession]. [SystemClock.elapsedRealtime]. */
     private var lastSessionSave = 0L

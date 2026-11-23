@@ -4000,7 +4000,14 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
      * lets go of the ViewModel. Main, as viewModelScope is: the queue's order is the point of it, and
      * the writes publish to the flows.
      */
-    private val writerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    // With a handler. The history's queue catches what its writes throw; the settings, the presets,
+    // the scoreboard and the saved clock were launched bare, and a full disk -- an IOException out
+    // of the store -- went to the thread's uncaught handler: the app closed, and again at each
+    // change after. The write is lost and said so in the log; what is on screen stays.
+    private val writerScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Main.immediate +
+            kotlinx.coroutines.CoroutineExceptionHandler { _, e -> Log.e("ChessTimerViewModel", "A write to storage failed", e) }
+    )
     private var autosaveEncoding: Job? = null
 
     private val _hasSavedClock = MutableStateFlow(false)
