@@ -137,6 +137,16 @@ fun VoiceNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     // the original, so the recording it replaced was not shredded.
     val stopLatest by rememberUpdatedState({ stopRecording() })
     DisposableEffect(Unit) { onDispose { stopLatest(); session.stopPlayback() } }
+    // And the app left, as leaving the screen: the screen stays composed under another app, and the
+    // recording went on with the microphone open until the note was left, the minute's limit aside.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) { stopLatest(); session.stopPlayback() }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val isRecording = state.recording
     val isPlaying = state.playing
