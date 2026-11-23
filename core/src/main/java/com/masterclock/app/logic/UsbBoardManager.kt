@@ -289,12 +289,13 @@ class UsbBoardManager(private val context: Context) {
         }
         // Several makes report nothing until asked; Chessnut is one of them.
         protocol.initCommandsFor(gameType).forEach { command ->
-            serialInterface.findEndpoint(UsbConstants.USB_DIR_OUT)?.let { endpointOut ->
-                val sent = opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS) >= 0
-                frameLog?.record(
-                    if (sent) BoardFrameLog.Direction.TO_BOARD else BoardFrameLog.Direction.NOT_SENT, "USB", protocol.name, command
-                )
-            }
+            // With no way out of the phone the command is not sent either, and is logged so: it left no
+            // line at all, and the log read as if the board had never been meant to be asked.
+            val endpointOut = serialInterface.findEndpoint(UsbConstants.USB_DIR_OUT)
+            val sent = endpointOut != null && opened.bulkTransfer(endpointOut, command, command.size, CONTROL_TRANSFER_TIMEOUT_MS) >= 0
+            frameLog?.record(
+                if (sent) BoardFrameLog.Direction.TO_BOARD else BoardFrameLog.Direction.NOT_SENT, "USB", protocol.name, command
+            )
         }
 
         // NonCancellable: the connection is open, and has to reach someone who will close it.
