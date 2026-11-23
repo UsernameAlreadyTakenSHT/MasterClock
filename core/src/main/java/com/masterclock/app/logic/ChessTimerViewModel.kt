@@ -5374,7 +5374,12 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Every correction, as the manual says: only one that cost a period or a flag left a trace,
         // and two minutes given back after a dispute left none in the record an arbiter is asked for.
         val sign = if (amountMs < 0) "-" else "+"
-        addEvent(GameEvent(eventType = "ARBITER", playerIndex = playerIndex, timeRemainingMs = _uiState.value.players.getOrNull(playerIndex - 1)?.timeRemainingMs, detail = "$sign${kotlin.math.abs(amountMs) / 1000}s"))
+        // The reading a move is logged with, not the player's own field: that field is the move
+        // clock where the correction went to a reserve, an overrun's length under NEGATIVE -- "+60s
+        // at 01:00" for a clock a minute over -- and never moves at all for a table clock.
+        val after = _uiState.value
+        val corrected = after.players.getOrNull(playerIndex - 1)?.let { loggedMoveTimeMs(after, it, getPlayerSettings(playerIndex).mode, settings.flagBehavior) }
+        addEvent(GameEvent(eventType = "ARBITER", playerIndex = playerIndex, timeRemainingMs = corrected, detail = "$sign${kotlin.math.abs(amountMs) / 1000}s"))
         logPenalty(before, playerIndex, settings)
         // After what it logged: a save taken first had a time before the PERIOD or the FLAG, and
         // resuming keeps only the events up to the save's time -- the penalty stood, its trace went.
