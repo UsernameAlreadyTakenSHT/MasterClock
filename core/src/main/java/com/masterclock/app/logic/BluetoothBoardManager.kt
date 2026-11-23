@@ -183,7 +183,24 @@ class BluetoothBoardManager(private val context: Context) {
      * acknowledgement queues behind it and none is ever sent, which on the open protocol means the
      * board falls silent and the app looks connected.
      */
-    private val operationTimeout = Runnable { operationFinished() }
+    private val operationTimeout = object : Runnable {
+        override fun run() {
+            // Once more before giving up. An answer that came after the first limit came after the
+            // next write had gone, and was taken for that one's: refused, it was logged against the
+            // wrong bytes, and its completion finished the next write early. Waited for once more,
+            // a late answer is still the operation's own; one that never comes is given up as before.
+            if (!timedOutOnce) {
+                timedOutOnce = true
+                mainHandler.postDelayed(this, GATT_OPERATION_TIMEOUT_MS)
+                return
+            }
+            writeInFlight = null
+            operationFinished()
+        }
+    }
+
+    /** Whether the operation in flight has had its first limit; see [operationTimeout]. */
+    private var timedOutOnce = false
 
     /** The negotiated ATT MTU; a write carries this less [ATT_HEADER_BYTES]. */
     private var mtu = DEFAULT_MTU
@@ -511,6 +528,7 @@ class BluetoothBoardManager(private val context: Context) {
 
     private fun operationFinished() {
         mainHandler.removeCallbacks(operationTimeout)
+        timedOutOnce = false
         operationInFlight = false
         runNextOperation()
     }
@@ -523,6 +541,7 @@ class BluetoothBoardManager(private val context: Context) {
      */
     private fun clearGattQueue() {
         mainHandler.removeCallbacks(operationTimeout)
+        timedOutOnce = false
         gattQueue.clear()
         operationInFlight = false
     }
