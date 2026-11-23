@@ -1,25 +1,65 @@
 package com.masterclock.app.ui.theme
 
-import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
+import com.masterclock.app.logic.AppFont
 import com.masterclock.core.R as CoreR
 
+// Set of Material typography styles to start with
+val Typography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    )
+)
+
+val EInkTypography = Typography(
+    headlineLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Black,
+        fontSize = 32.sp,
+    ),
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 24.sp,
+    ),
+    titleMedium = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp,
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp,
+    ),
+    labelLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+    )
+)
+
 /**
- * Noto Sans and Noto Sans Mono, 400 and 700, shipped with the app rather than taken from the
- * device. Noto Sans has the whole of Latin, Greek and Cyrillic: Polish, Turkish, Russian and
- * Ukrainian among the languages being weighed, where the E-Ink build's Lato lacks Turkish's
- * dotted capital I, its g and s with their marks, and Cyrillic altogether -- letters the system
- * then drew in a face of its own, mismatched. Noto Sans Mono gives the clock's digits one width
- * and one look on every device, where "monospace" was whatever the phone had.
+ * Noto Sans and Noto Sans Mono, 400 and 700, shipped with the app, for the font chosen in the
+ * settings ([AppFont]). Noto Sans has the whole of Latin, Greek and Cyrillic: Polish, Turkish,
+ * Russian and Ukrainian among the languages being weighed, where the E-Ink build's Lato lacks
+ * Turkish's dotted capital I, its g and s with their marks, and Cyrillic altogether. Its numerals
+ * are all one width too, so a clock drawn in it does not shift from one second to the next.
  *
  * Two weights each. A weight asked for between them takes the nearer one; a bold faked from the
- * regular, as one weight alone would have meant, smears on an E Ink panel. Writing scripts outside
- * these -- Japanese, Chinese, Arabic, Devanagari -- are not in these files, and the system's own
- * fonts draw them, letter by letter, as before.
+ * regular, as one weight alone would have meant, smears on an E Ink panel. Scripts outside these
+ * files -- Japanese, Chinese, Arabic, Devanagari -- are drawn by the system's own fonts, letter by
+ * letter, whichever is chosen.
  */
 val NotoSans = FontFamily(
     Font(CoreR.font.noto_sans_regular, FontWeight.Normal),
@@ -51,41 +91,22 @@ fun Typography.inFamily(family: FontFamily) = Typography(
     labelSmall = labelSmall.copy(fontFamily = family),
 )
 
-// Set of Material typography styles to start with, every one of them in Noto Sans.
-val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = NotoSans,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-).inFamily(NotoSans)
+/** [base] in the chosen font; [base] itself for [AppFont.SYSTEM]. */
+fun AppFont.typography(base: Typography): Typography = when (this) {
+    AppFont.SYSTEM -> base
+    AppFont.NOTO_SANS -> base.inFamily(NotoSans)
+    AppFont.NOTO_SANS_MONO -> base.inFamily(NotoSansMono)
+}
 
-val EInkTypography = Typography(
-    headlineLarge = TextStyle(
-        fontFamily = NotoSans,
-        fontWeight = FontWeight.Black,
-        fontSize = 32.sp,
-    ),
-    titleLarge = TextStyle(
-        fontFamily = NotoSans,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 24.sp,
-    ),
-    titleMedium = TextStyle(
-        fontFamily = NotoSans,
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = NotoSans,
-        fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-    ),
-    labelLarge = TextStyle(
-        fontFamily = NotoSans,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-    )
-)
+/**
+ * The family a clock's reading is drawn in. Monospace for [AppFont.SYSTEM], as always; the
+ * chosen face otherwise -- Noto Sans's numerals are all one width, as a clock needs.
+ */
+fun AppFont.clockFamily(): FontFamily = when (this) {
+    AppFont.SYSTEM -> FontFamily.Monospace
+    AppFont.NOTO_SANS -> NotoSans
+    AppFont.NOTO_SANS_MONO -> NotoSansMono
+}
+
+/** The family of every clock reading on screen, set by the theme from the chosen font. */
+val LocalClockFontFamily = staticCompositionLocalOf<FontFamily> { FontFamily.Monospace }

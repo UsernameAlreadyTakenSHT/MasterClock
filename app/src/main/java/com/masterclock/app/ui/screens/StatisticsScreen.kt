@@ -1,6 +1,6 @@
 package com.masterclock.app.ui.screens
 
-import com.masterclock.app.ui.theme.NotoSansMono
+import com.masterclock.app.ui.theme.LocalClockFontFamily
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -273,7 +273,7 @@ fun StatisticsScreen(history: List<GameLog>, historyLoaded: Boolean, timePadding
                         Text(
                             "${tally.games}",
                             style = MaterialTheme.typography.labelMedium,
-                            fontFamily = NotoSansMono,
+                            fontFamily = LocalClockFontFamily.current,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }

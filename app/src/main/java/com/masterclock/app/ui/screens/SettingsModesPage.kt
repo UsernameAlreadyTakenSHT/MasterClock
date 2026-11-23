@@ -100,6 +100,9 @@ fun ModesSettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: (C
                     onSettingsChanged(currentSettings.copy(hapticFeedback = it))
                 }
             }
+            // Last, in the builds with this page alone: Complete and Standard have it in Display.
+            Spacer(Modifier.height(24.dp))
+            FontChoice(currentSettings, onSettingsChanged)
         }
 
         if (!FlavorConfig.hasMoreTab()) {

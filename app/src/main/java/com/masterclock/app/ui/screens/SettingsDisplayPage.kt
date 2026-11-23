@@ -179,6 +179,8 @@ fun DisplaySettingsPage(currentSettings: ChessClockSettings, onSettingsChanged: 
             }
         }
 
+        FontChoice(currentSettings, onSettingsChanged)
+
         SettingsSection(stringResource(R.string.settings_primary_colors)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.settings_active_bg), style = MaterialTheme.typography.labelMedium)

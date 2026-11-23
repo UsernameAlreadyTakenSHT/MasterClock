@@ -253,6 +253,8 @@
 
     <!-- Settings: Display -->
     <string name="settings_theme">Thème</string>
+    <string name="settings_font">Police</string>
+    <string name="font_system">Système</string>
     <string name="settings_orientation">Orientation</string>
     <!-- "Vert" would read as the colour green in French, so this one cannot be left as it is. -->
     <string name="settings_vert">Vertical</string>

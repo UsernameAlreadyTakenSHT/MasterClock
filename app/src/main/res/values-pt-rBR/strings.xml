@@ -188,4 +188,5 @@
     <!-- "até o", where Portugal has "até ao". -->
     <string name="settings_moves_until_period">Lances no total até o período %d</string>
     <string name="toast_no_app_for_this">Nenhum app deste aparelho consegue fazer isso.</string>
+    <string name="settings_font">Fonte</string>
 </resources>

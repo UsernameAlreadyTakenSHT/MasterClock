@@ -191,7 +191,7 @@ class MainActivity : ComponentActivity() {
             var pendingChange by androidx.compose.runtime.saveable.rememberSaveable(stateSaver = PendingSettingsSaver) {
                 mutableStateOf<com.masterclock.app.logic.ChessClockSettings?>(null)
             }
-            MasterClockTheme(eInkDarkMode = reversed) {
+            MasterClockTheme(eInkDarkMode = reversed, appFont = if (isReady) settings.appFont else com.masterclock.app.logic.AppFont.SYSTEM) {
                 // Asked once the stored state is in, and only over a game. The question is saved
                 // across the app being killed and the game is not: it came back at once, before the
                 // settings had loaded -- confirmed then, the change was written over defaults -- and

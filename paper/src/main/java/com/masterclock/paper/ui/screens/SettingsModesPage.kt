@@ -12,6 +12,7 @@ import com.masterclock.app.logic.*
 import com.masterclock.paper.ui.components.ScrollbarMMD
 import com.masterclock.paper.ui.components.outlinedButtonBorderMMD
 import com.masterclock.paper.ui.components.verticalScrollMMD
+import com.masterclock.paper.ui.theme.clockFamily
 import com.masterclock.paper.BuildConfig
 import com.masterclock.paper.R
 import com.mudita.mmd.components.buttons.OutlinedButtonMMD
@@ -102,6 +103,29 @@ fun ModesSettingsPage(
                     }
                 }
             }
+
+            // Last of the settings, before the way to the version: one card a face, each name drawn
+            // in its own so that the choice shows what it gives. Full width, one under the other:
+            // "Noto Sans Mono" in a third of 288dp would have taken two lines and a smaller size.
+            SettingsSection(stringResource(R.string.settings_font)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AppFont.entries.forEach { f ->
+                        val name = when (f) {
+                            AppFont.SYSTEM -> stringResource(R.string.font_system)
+                            AppFont.NOTO_SANS -> "Noto Sans"
+                            AppFont.NOTO_SANS_MONO -> "Noto Sans Mono"
+                        }
+                        val face = when (f) {
+                            AppFont.SYSTEM -> com.mudita.mmd.eInkTypography.labelLarge
+                            else -> MaterialTheme.typography.labelLarge.copy(fontFamily = f.clockFamily())
+                        }
+                        ModeCard(name, currentSettings.appFont == f, Modifier.fillMaxWidth(), face) {
+                            onSettingsChanged(currentSettings.copy(appFont = f))
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(16.dp))
 
             // A button, drawn as one. It was two lines of small print that took a tap with
             // nothing to say so, and the only way to the changelog, the credits and the licences:

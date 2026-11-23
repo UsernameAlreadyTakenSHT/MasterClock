@@ -2,6 +2,8 @@ package com.masterclock.paper.ui.theme
 
 import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import com.masterclock.app.logic.AppFont
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.mudita.mmd.ThemeMMD
@@ -16,6 +18,7 @@ import com.mudita.mmd.eInkTypography
 @Composable
 fun MasterClockTheme(
     eInkDarkMode: Boolean = false,
+    appFont: AppFont = AppFont.SYSTEM,
     content: @Composable () -> Unit
 ) {
     val view = LocalView.current
@@ -31,8 +34,9 @@ fun MasterClockTheme(
 
     ThemeMMD(
         colorScheme = if (eInkDarkMode) EInkDarkColorScheme else EInkLightColorScheme,
-        // MMD's type scale, its sizes and weights, in Noto Sans rather than Lato: see NotoSans.
-        typography = eInkTypography.inFamily(NotoSans),
-        content = content,
-    )
+        // MMD's type scale, its sizes and weights; in Lato, its own face, unless another is chosen.
+        typography = appFont.typography(eInkTypography),
+    ) {
+        CompositionLocalProvider(LocalClockFontFamily provides appFont.clockFamily(), content = content)
+    }
 }

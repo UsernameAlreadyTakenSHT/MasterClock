@@ -505,7 +505,8 @@ class MainActivity : ComponentActivity() {
 
             MasterClockTheme(
                 darkTheme = isDarkTheme,
-                eInkDarkMode = settings.eInkDarkMode
+                eInkDarkMode = settings.eInkDarkMode,
+                appFont = settings.appFont,
             ) {
                 // The keyboard takes its room from the bottom of every screen, which is then laid out in
                 // what is left. Nothing said so, and Android slid the whole window up to keep the cursor

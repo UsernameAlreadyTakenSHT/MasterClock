@@ -231,6 +231,8 @@
 
     <!-- Settings: Display -->
     <string name="settings_theme">Design</string>
+    <string name="settings_font">Schriftart</string>
+    <string name="font_system">System</string>
     <string name="settings_orientation">Ausrichtung</string>
     <string name="settings_vert">Vertikal</string>
     <string name="settings_layout_scale">Anordnung und Größe</string>

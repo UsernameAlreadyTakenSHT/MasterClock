@@ -32,6 +32,8 @@
     <string name="settings_increment">Increment</string>
     <string name="settings_move_time">Tijd per zet</string>
     <string name="settings_system_behavior">Systeemgedrag</string>
+    <string name="settings_font">Lettertype</string>
+    <string name="font_system">Systeem</string>
     <string name="settings_sound">Geluid</string>
     <string name="settings_haptic_feedback">Haptische feedback</string>
     <string name="settings_keep_awake">Scherm aan houden</string>

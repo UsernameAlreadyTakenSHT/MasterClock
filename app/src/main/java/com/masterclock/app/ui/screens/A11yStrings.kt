@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.masterclock.app.R
+import com.masterclock.app.logic.AppFont
 import com.masterclock.app.logic.AppThemeMode
 import com.masterclock.app.logic.ClockAnnouncement
 import com.masterclock.app.logic.FlagBehavior
@@ -85,6 +86,14 @@ fun TimePadding.label(): String = when (this) {
     TimePadding.FULL -> stringResource(R.string.padding_full)
     TimePadding.STANDARD -> stringResource(R.string.padding_standard)
     TimePadding.MINIMAL -> stringResource(R.string.padding_minimal)
+}
+
+@Composable
+fun AppFont.label(): String = when (this) {
+    AppFont.SYSTEM -> stringResource(R.string.font_system)
+    // Names, the same in every language.
+    AppFont.NOTO_SANS -> "Noto Sans"
+    AppFont.NOTO_SANS_MONO -> "Noto Sans Mono"
 }
 
 @Composable

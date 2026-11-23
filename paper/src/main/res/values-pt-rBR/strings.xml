@@ -18,4 +18,5 @@
     <string name="common_reset">Zerar</string>
     <string name="timer_reset_title">Zerar a partida?</string>
     <string name="settings_haptic_feedback">Feedback tátil</string>
+    <string name="settings_font">Fonte</string>
 </resources>

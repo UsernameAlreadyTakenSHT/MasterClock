@@ -34,6 +34,8 @@
     <string name="settings_increment">Incrément</string>
     <string name="settings_move_time">Temps par coup</string>
     <string name="settings_system_behavior">Comportement du système</string>
+    <string name="settings_font">Police</string>
+    <string name="font_system">Système</string>
     <string name="settings_sound">Son</string>
     <string name="settings_haptic_feedback">Retour haptique</string>
     <string name="settings_keep_awake">Garder l\'écran allumé</string>

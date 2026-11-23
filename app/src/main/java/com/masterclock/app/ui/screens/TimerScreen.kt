@@ -1,6 +1,6 @@
 package com.masterclock.app.ui.screens
 
-import com.masterclock.app.ui.theme.NotoSansMono
+import com.masterclock.app.ui.theme.LocalClockFontFamily
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -765,14 +765,14 @@ fun PlayerButton(modifier: Modifier = Modifier, state: ChessClockState, playerIn
                 }
                 // Fitted as TimerDisplay fits the clock: at a large font these two wrapped onto a
                 // second line, and "??:??" with it.
-                if (isMoveCounts) { ScaleToFitWidth { Text(text = playerState.moveCount.toString(), softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (settings.numberOfPlayers > 2) 80.sp else 140.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = NotoSansMono)) } }
+                if (isMoveCounts) { ScaleToFitWidth { Text(text = playerState.moveCount.toString(), softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (settings.numberOfPlayers > 2) 80.sp else 140.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = LocalClockFontFamily.current)) } }
                 else if (pSettings.mode == TimerMode.HIDDEN && !playerState.isOutOfTime) {
                     val text = if (playerState.revealTimeUntilMs > 0) "${playerState.lastRevealPercentage}%" else "??:??"
-                    ScaleToFitWidth { Text(text = text, softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (settings.numberOfPlayers > 2) 50.sp else 84.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = NotoSansMono)) }
+                    ScaleToFitWidth { Text(text = text, softWrap = false, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (settings.numberOfPlayers > 2) 50.sp else 84.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = LocalClockFontFamily.current)) }
                 }
                 else {
                     val timeToDisplay = shownTimeMs
-                    TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (pSettings.mode == TimerMode.PHASES) 100.sp else if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono) 100.sp else 64.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = NotoSansMono), settings = settings, isNegative = playerState.isNegative)
+                    TimerDisplay(timeMs = timeToDisplay, style = MaterialTheme.typography.displayLarge.copy(fontSize = (if (pSettings.mode == TimerMode.PHASES) 100.sp else if (settings.numberOfPlayers > 2) 48.sp else if (pSettings.mode == TimerMode.MOVE_TIMER_SHARED || isChrono) 100.sp else 64.sp) * digitScale, fontWeight = FontWeight.Black, fontFamily = LocalClockFontFamily.current), settings = settings, isNegative = playerState.isNegative)
                 }
                 if (state.phasesFinished || tableClockRanOut(state)) {
                     Text(stringResource(R.string.timer_finished), style = if (settings.numberOfPlayers > 2) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge, color = labelColor, fontWeight = FontWeight.ExtraBold)
@@ -998,7 +998,7 @@ fun ArbitreOverlay(numberOfPlayers: Int, tableClock: Boolean, hasSavedClock: Boo
 @Composable
 private fun ArbitreReading(state: ChessClockState, playerIndex: Int, mode: TimerMode, settings: ChessClockSettings, showMoves: Boolean) {
     val player = state.players.getOrNull(playerIndex - 1) ?: return
-    val style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontFamily = NotoSansMono)
+    val style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontFamily = LocalClockFontFamily.current)
     when {
         mode.name.startsWith("MOVE_COUNTS") -> Unit
         mode == TimerMode.HIDDEN && !player.isOutOfTime -> Text("??:??", style = style)

@@ -50,7 +50,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
+import com.masterclock.app.ui.theme.clockFamily
+import com.masterclock.app.ui.theme.typography
 import com.masterclock.app.BuildConfig
+
+@Composable
+fun FontChoice(currentSettings: ChessClockSettings, onSettingsChanged: (ChessClockSettings) -> Unit) {
+    SettingsSection(stringResource(R.string.settings_font)) {
+        ChoiceRow(Modifier.fillMaxWidth()) {
+            AppFont.entries.forEachIndexed { i, f ->
+                ChoiceSegment(
+                    selected = currentSettings.appFont == f,
+                    onClick = { onSettingsChanged(currentSettings.copy(appFont = f)) },
+                    shape = SegmentedButtonDefaults.itemShape(i, AppFont.entries.size),
+                    // Each name in its own face, so that the row shows what each choice gives.
+                    label = { Text(f.label(), style = f.typography(MaterialTheme.typography).labelSmall.copy(fontFamily = if (f == AppFont.SYSTEM) null else f.clockFamily())) },
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun SettingsSection(title: String, content: @Composable () -> Unit) {

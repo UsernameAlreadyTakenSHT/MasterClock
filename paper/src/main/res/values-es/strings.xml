@@ -28,6 +28,8 @@
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tiempo por jugada</string>
     <string name="settings_system_behavior">Comportamiento del sistema</string>
+    <string name="settings_font">Fuente</string>
+    <string name="font_system">Sistema</string>
     <string name="settings_sound">Sonido</string>
     <string name="settings_haptic_feedback">Respuesta háptica</string>
     <string name="settings_keep_awake">Mantener la pantalla encendida</string>

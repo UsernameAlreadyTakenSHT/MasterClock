@@ -1,6 +1,6 @@
 package com.masterclock.paper.ui.screens
 
-import com.masterclock.paper.ui.theme.NotoSansMono
+import com.masterclock.paper.ui.theme.LocalClockFontFamily
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -352,7 +352,7 @@ fun EInkPlayerArea(
                 timeMs = playerState.timeRemainingMs,
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontWeight = FontWeight.Medium,
-                    fontFamily = NotoSansMono,
+                    fontFamily = LocalClockFontFamily.current,
                     color = MaterialTheme.colorScheme.onBackground
                 ),
                 width = maxWidth,

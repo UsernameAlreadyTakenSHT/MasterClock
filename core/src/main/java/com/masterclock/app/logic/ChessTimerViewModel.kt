@@ -764,6 +764,14 @@ enum class FlagBehavior { FREEZE, FLAG, NEGATIVE, REVERSE }
 enum class AppThemeMode { LIGHT, DARK, AUTO }
 
 /**
+ * The font the app is drawn in, text and clock alike. [SYSTEM] is what each build always drew:
+ * the device's own on the phone, with its monospace for the clock; Mudita's Lato on E Ink. The
+ * two Noto faces ship with the app and have the whole of Latin, Greek and Cyrillic.
+ */
+@Serializable
+enum class AppFont { SYSTEM, NOTO_SANS, NOTO_SANS_MONO }
+
+/**
  * How wide each unit of a clock reading is written.
  *
  * Orthogonal to [ChessClockSettings.alwaysShowHours] and [ChessClockSettings.alwaysShowMinutes]:
@@ -1077,6 +1085,7 @@ data class ChessClockSettings(
     val showCurrentPeriod: Boolean = true,
     val alwaysShowMoveCount: Boolean = false,
     val themeMode: AppThemeMode = AppThemeMode.AUTO,
+    val appFont: AppFont = AppFont.SYSTEM,
     val flashOnLowTime: Boolean = false,
     val clockOrientation: ClockOrientation = ClockOrientation.VERTICAL,
     val showHundredths: Boolean = false,

@@ -230,6 +230,8 @@
 
     <!-- Settings: Display -->
     <string name="settings_theme">Thema</string>
+    <string name="settings_font">Lettertype</string>
+    <string name="font_system">Systeem</string>
     <string name="settings_orientation">Oriëntatie</string>
     <string name="settings_vert">Verticaal</string>
     <string name="settings_layout_scale">Indeling en grootte</string>

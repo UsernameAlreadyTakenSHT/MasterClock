@@ -1,5 +1,6 @@
 package com.masterclock.app.ui.theme
 
+import com.masterclock.app.logic.AppFont
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -30,6 +31,7 @@ fun MasterClockTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     eInkDarkMode: Boolean = false,
+    appFont: AppFont = AppFont.SYSTEM,
     content: @Composable () -> Unit
 ) {
     val isEInk = FlavorConfig.isEInk()
@@ -60,7 +62,7 @@ fun MasterClockTheme(
         else -> lightColorScheme()
     }
 
-    val typography = if (isEInk) EInkTypography else Typography
+    val typography = appFont.typography(if (isEInk) EInkTypography else Typography)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -75,7 +77,8 @@ fun MasterClockTheme(
     }
 
     CompositionLocalProvider(
-        LocalIndication provides if (isEInk) NoIndication else LocalIndication.current
+        LocalIndication provides if (isEInk) NoIndication else LocalIndication.current,
+        LocalClockFontFamily provides appFont.clockFamily(),
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

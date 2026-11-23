@@ -29,6 +29,8 @@
     <string name="settings_increment">Increment</string>
     <string name="settings_move_time">Move time</string>
     <string name="settings_system_behavior">System behavior</string>
+    <string name="settings_font">Font</string>
+    <string name="font_system">System</string>
     <string name="settings_sound">Sound</string>
     <string name="settings_haptic_feedback">Haptic feedback</string>
     <string name="settings_keep_awake">Keep screen awake</string>

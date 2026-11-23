@@ -240,6 +240,8 @@
 
     <!-- Settings: Display -->
     <string name="settings_theme">Tema</string>
+    <string name="settings_font">Tipo de letra</string>
+    <string name="font_system">Sistema</string>
     <string name="settings_orientation">Orientação</string>
     <string name="settings_vert">Vertical</string>
     <string name="settings_layout_scale">Disposição e tamanho</string>

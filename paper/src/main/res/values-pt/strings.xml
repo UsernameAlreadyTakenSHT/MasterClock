@@ -32,6 +32,8 @@
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tempo por lance</string>
     <string name="settings_system_behavior">Comportamento do sistema</string>
+    <string name="settings_font">Tipo de letra</string>
+    <string name="font_system">Sistema</string>
     <string name="settings_sound">Som</string>
     <string name="settings_haptic_feedback">Retorno tátil</string>
     <string name="settings_keep_awake">Manter o ecrã ligado</string>

@@ -33,6 +33,8 @@
     <string name="settings_increment">Inkrement</string>
     <string name="settings_move_time">Zeit pro Zug</string>
     <string name="settings_system_behavior">Systemverhalten</string>
+    <string name="settings_font">Schriftart</string>
+    <string name="font_system">System</string>
     <string name="settings_sound">Ton</string>
     <string name="settings_haptic_feedback">Haptisches Feedback</string>
     <string name="settings_keep_awake">Bildschirm anlassen</string>

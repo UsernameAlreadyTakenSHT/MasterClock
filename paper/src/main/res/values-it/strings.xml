@@ -31,6 +31,8 @@
     <string name="settings_increment">Incremento</string>
     <string name="settings_move_time">Tempo per mossa</string>
     <string name="settings_system_behavior">Comportamento del sistema</string>
+    <string name="settings_font">Carattere</string>
+    <string name="font_system">Sistema</string>
     <string name="settings_sound">Suono</string>
     <string name="settings_haptic_feedback">Feedback aptico</string>
     <string name="settings_keep_awake">Mantieni lo schermo acceso</string>
