@@ -223,4 +223,20 @@ class AliveMarkTest {
         // Under Freeze that ends the game, which is then not kept to come back a second time.
         assertEquals(true, isGameOver(ranOn, settings.flagBehavior, settings.numberOfPlayers))
     }
+
+    @Test
+    fun `a resume keeps the moves played before the save, though the phone's time was put back since`() {
+        // Three moves at 14:00, then the phone's time is put back five minutes; the save is stamped
+        // 13:57, earlier than all three.
+        val at14 = 1_700_000_000_000L
+        val moves = List(3) { GameEvent(timestamp = at14 + it * 1_000L, eventType = "MOVE", playerIndex = 1 + it % 2) }
+        val savedAt = at14 - 5 * 60_000L
+        assertEquals(3, eventsUpToSave(moves, eventCount = 3, savedAt = savedAt, ranOnMs = 2_000).size)
+        // A flag that fell in the run-on stays; a move after the save, which the save does not hold, goes.
+        val flag = GameEvent(timestamp = savedAt + 1_500, eventType = "FLAG", playerIndex = 1)
+        val late = GameEvent(timestamp = savedAt + 9_000, eventType = "MOVE", playerIndex = 2)
+        assertEquals(moves + flag, eventsUpToSave(moves + flag + late, eventCount = 3, savedAt = savedAt, ranOnMs = 2_000))
+        // A save older than the count is cut by time, as before.
+        assertEquals(0, eventsUpToSave(moves, eventCount = null, savedAt = savedAt, ranOnMs = 0).size)
+    }
 }

@@ -72,6 +72,9 @@ data class ChessClockStateProxy(
     // See ChessClockState.phasesFinished. False in snapshots older than the field: a finished
     // PHASES game saved by them comes back reading as flagged, as it did when it was saved.
     val phasesFinished: Boolean = false,
+    // How many events the game's log held when this was saved; see eventsUpToSave. Null in saves
+    // older than the field, which are cut by time as they were.
+    val logEventCount: Int? = null,
 )
 
 fun PlayerState.toProxy() = PlayerStateProxy(
@@ -3788,6 +3791,22 @@ internal fun wholeSecondTickMs(remainingMs: Long, countsUp: Boolean = remainingM
 private const val MIN_WHOLE_SECOND_TICK_MS = 20L
 
 /**
+ * The events a game comes back with from a save taken at [savedAt], with [eventCount] events in its
+ * log then, whose clock ran on [ranOnMs] after it: those up to the save, by position, and of those
+ * after it the ones within the run-on -- a flag that fell in it, a period that began.
+ *
+ * By position, because the events' times are the wall clock's and the clock itself is not. A phone
+ * whose time was put back during a game -- the network's correction, or by hand -- stamped the next
+ * save earlier than moves already played, and a resume cut those moves from the log and the PGN
+ * while the clocks kept them. A save older than the count is cut by time, as it was.
+ */
+internal fun eventsUpToSave(events: List<GameEvent>, eventCount: Int?, savedAt: Long, ranOnMs: Long): List<GameEvent> {
+    val inRunOn = { e: GameEvent -> e.timestamp <= savedAt + ranOnMs }
+    if (eventCount == null || eventCount < 0) return events.filter(inRunOn)
+    return events.take(eventCount) + events.drop(eventCount).filter(inRunOn)
+}
+
+/**
  * The seconds a face with nothing finer shows for [remainingMs]: rounded up, as a clock on a table
  * reads. Rounded down, the E Ink face showed 9:59 twenty milliseconds into a ten-minute game, and
  * 0:00 for the whole last second of a clock that was still running -- a press in that second is a
@@ -5335,7 +5354,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         currentLog = null
         // What the arbiter kept is this game's still, whichever log it is given next: tied to the
         // log just deleted, Resume asked its question and then did nothing, and its button went.
-        keptClocks = keptClocks?.let { KeptClocks(it.state, it.moveElapsedMs, logId = null, at = it.at) }
+        keptClocks = keptClocks?.let { KeptClocks(it.state, it.moveElapsedMs, logId = null, at = it.at, eventCount = 0) }
         historyWrites.trySend(HistoryWrite.ClearAll)
     }
 
@@ -5475,7 +5494,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // Up to the pause, if paused: the Save button is pressed on a paused clock.
         val moveElapsed = if (uiState.value.activePlayer != null) ((pausedAt ?: SystemClock.elapsedRealtime()) - moveStartTime).coerceAtLeast(0) else 0L
         val savedAtElapsed = SystemClock.elapsedRealtime()
-        val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed, savedAtElapsedMs = savedAtElapsed)
+        val stateSnapshot = uiState.value.toProxy().copy(gameLogId = currentLog?.id, moveElapsedMs = moveElapsed, savedAtElapsedMs = savedAtElapsed, logEventCount = currentLog?.events?.size)
         // Now, with the clock: resuming keeps the moves logged up to this time. Taken when the
         // encode finished, a move played meanwhile stayed in the log and was played again.
         val savedAt = System.currentTimeMillis()
@@ -5502,8 +5521,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    /** What the arbiter's Save kept: the clocks, how far into the move, the game they are of, and when. */
-    private class KeptClocks(val state: ChessClockState, val moveElapsedMs: Long, val logId: String?, val at: Long)
+    /** What the arbiter's Save kept: the clocks, how far into the move, the game they are of, when, and how much of its log. */
+    private class KeptClocks(val state: ChessClockState, val moveElapsedMs: Long, val logId: String?, val at: Long, val eventCount: Int)
 
     /**
      * The arbiter's own save, apart from the one a game is resumed from after the app closed. Save
@@ -5521,7 +5540,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         val state = _uiState.value
         if (state.activePlayer == null) return
         val moveElapsed = ((pausedAt ?: SystemClock.elapsedRealtime()) - moveStartTime).coerceAtLeast(0)
-        keptClocks = KeptClocks(state, moveElapsed, currentLog?.id, System.currentTimeMillis())
+        keptClocks = KeptClocks(state, moveElapsed, currentLog?.id, System.currentTimeMillis(), currentLog?.events?.size ?: 0)
         _hasKeptClocks.value = true
         // And the save a closed app comes back to, as it stood: Save has always written it.
         saveClockForLater()
@@ -5548,7 +5567,9 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         // The moves played since go from the log with the clocks they were played on, as they do
         // when a game is resumed: left there, played again they were logged twice.
         currentLog?.let { log ->
-            val upToThen = log.events.filter { it.timestamp <= kept.at }
+            // By position: the events logged when Save was pressed. By the wall clock, a phone's time
+            // set back since cut real moves, or left the ones played after Save; see eventsUpToSave.
+            val upToThen = log.events.take(kept.eventCount)
             if (upToThen.size != log.events.size) currentLog = log.copy(events = upToThen).also { historyWrites.trySend(HistoryWrite.Store(it)) }
         }
         pendingBoardNotation = null
@@ -5630,7 +5651,7 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                     // save alone, a flag that fell or a period that went in between left the log
                     // while the clock, run on past it, still showed it -- a game overrun with no
                     // flag in its record, and none to come, since it is logged as it falls.
-                    val upToSave = log.events.filter { it.timestamp <= saved.timestamp + ranOnMs }
+                    val upToSave = eventsUpToSave(log.events, resumed.second.logEventCount, saved.timestamp, ranOnMs)
                     if (upToSave.size == log.events.size) log
                     else log.copy(events = upToSave).also { historyWrites.trySend(HistoryWrite.Store(it)) }
                 }
