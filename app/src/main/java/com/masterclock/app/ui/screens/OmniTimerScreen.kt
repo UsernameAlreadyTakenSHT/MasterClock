@@ -111,7 +111,9 @@ fun OmniTimerScreen(
                 onPauseResume = { if (state.isRunning) viewModel.pauseOmni() else viewModel.startOmni() },
                 // Stop ends the session as Reset does, and sat beside Pause with no question asked.
                 onStop = { if (state.hasStarted) { stopping = true; showResetDialog = true } else viewModel.stopOmni() },
-                onReset = { stopping = false; showResetDialog = true }
+                // Asked once a session has begun, as Stop is: "All progress will be lost" stood
+                // over a session with none.
+                onReset = { stopping = false; if (state.hasStarted) showResetDialog = true else viewModel.resetOmni() }
             )
         }
     }

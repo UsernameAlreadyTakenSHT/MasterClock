@@ -355,6 +355,9 @@ private fun RandomOrderOptions(settings: OmniSettings, onSettingsChanged: (OmniS
 
 @Composable
 fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
+    // Asked first. The bin took a game with every round, turn and phase set in it at one tap, with
+    // no Undo, from a target held to 24dp beside the game's name.
+    var gameToDelete by rememberSaveable { mutableStateOf<Int?>(null) }
     // Default name for a newly created game; hoisted because it is used from an onClick lambda.
     val newGameNameTemplate = stringResource(R.string.omni_cfg_game_n)
     Text(stringResource(R.string.omni_cfg_session_games), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
@@ -388,10 +391,21 @@ fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.omni_cfg_game_n, index + 1), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         if (settings.games.size > 1) {
-                            IconButton(onClick = {
-                                val newList = settings.games.toMutableList().apply { removeAt(index) }
-                                onSettingsChanged(settings.copy(games = newList))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_game, index + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            if (gameToDelete == index) {
+                                AlertDialog(
+                                    onDismissRequest = { gameToDelete = null },
+                                    title = { Text(stringResource(R.string.omni_cfg_delete_game, index + 1)) },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            gameToDelete = null
+                                            val newList = settings.games.toMutableList().apply { removeAt(index) }
+                                            onSettingsChanged(settings.copy(games = newList))
+                                        }) { Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error) }
+                                    },
+                                    dismissButton = { TextButton(onClick = { gameToDelete = null }) { Text(stringResource(R.string.common_cancel)) } },
+                                )
+                            }
+                            IconButton(onClick = { gameToDelete = index }) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_game, index + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
@@ -431,6 +445,8 @@ fun StepSessionAndGames(settings: OmniSettings, onSettingsChanged: (OmniSettings
 
 @Composable
 fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit) {
+    // Asked first, as a game's bin is.
+    var roundToDelete by rememberSaveable { mutableStateOf<Int?>(null) }
     val newRoundNameTemplate = stringResource(R.string.omni_cfg_round_n)
     Text(stringResource(R.string.omni_cfg_rounds), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
 
@@ -467,12 +483,23 @@ fun StepRounds(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.omni_cfg_round_n, index + 1), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         if (currentGame.rounds.size > 1) {
-                            IconButton(onClick = {
-                                val newList = currentGame.rounds.toMutableList().apply { removeAt(index) }
-                                onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
-                                    this[selectedGameIdx] = currentGame.copy(rounds = newList)
-                                }))
-                            }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_round, index + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
+                            if (roundToDelete == index) {
+                                AlertDialog(
+                                    onDismissRequest = { roundToDelete = null },
+                                    title = { Text(stringResource(R.string.omni_cfg_delete_round, index + 1)) },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            roundToDelete = null
+                                            val newList = currentGame.rounds.toMutableList().apply { removeAt(index) }
+                                            onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
+                                                this[selectedGameIdx] = currentGame.copy(rounds = newList)
+                                            }))
+                                        }) { Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error) }
+                                    },
+                                    dismissButton = { TextButton(onClick = { roundToDelete = null }) { Text(stringResource(R.string.common_cancel)) } },
+                                )
+                            }
+                            IconButton(onClick = { roundToDelete = index }) { Icon(Icons.Default.Delete, stringResource(R.string.omni_cfg_delete_round, index + 1), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)) }
                         }
                     }
                     
