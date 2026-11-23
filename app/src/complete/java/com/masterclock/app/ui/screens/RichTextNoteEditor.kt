@@ -199,22 +199,34 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
         }
     }
 
-    fun heading(bit: Int) {
+    /**
+     * A style of the line, put on by [next]. On a line with nothing on it yet there is nothing to
+     * carry it, and [next] is the text as it was: the style is kept for what is typed, as bold is.
+     * It was lost -- H1 pressed on a new line to write a heading did nothing, and neither did
+     * Centre -- while the press still took an Undo step that undid nothing and emptied Redo.
+     */
+    fun lineStyle(next: RichText, bit: Int, group: Int) {
         val selection = field.selection
+        if (next == rich) {
+            if (selection.collapsed) {
+                val current = typing ?: rich.styleAt(selection.start)
+                typing = ((current.first and group.inv()) or (if (current.first and bit != 0) 0 else bit)) to current.second
+            }
+            return
+        }
         record(false)
-        show(rich.headingToggled(selection.min, selection.max, bit), selection.start, selection.end)
+        show(next, selection.start, selection.end)
     }
 
-    fun center() {
-        val selection = field.selection
-        record(false)
-        show(rich.centerToggled(selection.min, selection.max), selection.start, selection.end)
-    }
+    fun heading(bit: Int) = lineStyle(rich.headingToggled(field.selection.min, field.selection.max, bit), bit, NoteStyle.HEADINGS)
+
+    fun center() = lineStyle(rich.centerToggled(field.selection.min, field.selection.max), NoteStyle.CENTER, NoteStyle.CENTER)
 
     /** Whether the line the cursor is on is centred. */
     fun lineCentered(): Boolean {
         val at = field.selection.min.coerceIn(0, rich.text.length)
-        return rich.isCenteredLine(rich.text.lastIndexOf('\n', at - 1) + 1)
+        // Or about to be: chosen on an empty line, for what is typed next.
+        return rich.isCenteredLine(rich.text.lastIndexOf('\n', at - 1) + 1) || ((typing?.first ?: 0) and NoteStyle.CENTER) != 0
     }
 
     fun snapshot() = TextSnapshot(rich.text, field.selection.start, field.selection.end, rich.spans)
