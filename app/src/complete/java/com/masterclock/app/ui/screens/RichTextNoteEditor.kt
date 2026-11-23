@@ -2,6 +2,11 @@ package com.masterclock.app.ui.screens
 
 import android.os.SystemClock
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.focus.onFocusChanged
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -316,168 +321,195 @@ fun RichTextNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> U
             show(RichText(""), 0)
         }, enabled = rich.text.isNotEmpty()) { Icon(Icons.Default.DeleteSweep, stringResource(R.string.common_clear)) }
     }) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) },
-                label = { Text(stringResource(R.string.tools_title)) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            )
-            // As wide as the title and the note above and below it: it stopped where its buttons did.
-            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                // On as many lines as it takes. It scrolled sideways, with nothing to say it did: on a
-                // phone the lists, the box and the colour were past the edge, and looked to be missing.
-                // Each line centred, the space left over shared between its two ends.
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth().padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    StyleButton(Icons.Default.FormatBold, R.string.tools_bold, isOn(NoteStyle.BOLD)) { style(NoteStyle.BOLD) }
-                    StyleButton(Icons.Default.FormatItalic, R.string.tools_italic, isOn(NoteStyle.ITALIC)) { style(NoteStyle.ITALIC) }
-                    StyleButton(Icons.Default.FormatUnderlined, R.string.tools_underline, isOn(NoteStyle.UNDERLINE)) { style(NoteStyle.UNDERLINE) }
-                    StyleButton(Icons.Default.FormatStrikethrough, R.string.tools_strikethrough, isOn(NoteStyle.STRIKE)) { style(NoteStyle.STRIKE) }
-                    // Five highlighters behind it; marked, and in the colour, where the text is highlighted.
-                    val here = highlighterHere()
-                    IconToggleButton(
-                        checked = here != null,
-                        onCheckedChange = { showHighlighters = true },
-                        colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                    ) { Icon(Icons.Default.BorderColor, stringResource(R.string.tools_highlight), tint = here?.let { HIGHLIGHTERS[it].copy(alpha = 1f) } ?: LocalContentColor.current) }
-                    // Named for what it makes: an icon of a T said nothing of a heading. One heading only,
-                    // the user's choice; a small heading (TITLE) from an older note is still drawn.
-                    MarkButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
-                    IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
-                    StyleButton(Icons.Default.FormatAlignCenter, R.string.tools_center, lineCentered()) { center() }
-                    IconButton(onClick = { list(ListKind.BULLET) }) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.tools_bullet_list)) }
-                    IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
-                    IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
-                    MarkButton("♞", R.string.tools_insert_pieces, inserting == InsertKind.PIECES, size = 26.sp) { toggleInsert(InsertKind.PIECES) }
-                    MarkButton("!?", R.string.tools_insert_annotations, inserting == InsertKind.ANNOTATIONS) { toggleInsert(InsertKind.ANNOTATIONS) }
-                    MarkButton("🙂", R.string.tools_insert_emojis, inserting == InsertKind.EMOJIS, font = OpenMoji, size = 24.sp) { toggleInsert(InsertKind.EMOJIS) }
+        // Where the room left is short -- a small phone, a large font, the keyboard up -- the page
+        // scrolls, and the note takes the whole of what is on screen, the title and the formatting
+        // above it, a scroll away. They kept their height and the note had what was left: at 360 by
+        // 640dp at a font of 1.3, with the keyboard open, that was nothing, and what was typed could
+        // not be seen. Taller, the page is laid out as it always was.
+        BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
+            val short = maxHeight < SHORT_NOTE_EDITOR
+            // Read here: inside the column, the box's own height is out of reach.
+            val noteHeight = maxHeight - 32.dp
+            val pageScroll = rememberScrollState()
+            var noteFocused by remember { mutableStateOf(false) }
+            // The note brought whole into view as it is taken up, the keyboard rising: the page stayed
+            // where it was, on the formatting, and typing showed the note's one line under the cursor.
+            LaunchedEffect(short, noteFocused) {
+                if (short && noteFocused) {
+                    androidx.compose.runtime.snapshotFlow { pageScroll.maxValue }.first { it > 0 }
+                    pageScroll.animateScrollTo(pageScroll.maxValue)
                 }
             }
-            inserting?.let { InsertPanel(it, onInsert = ::insert) }
-            if (showHighlighters) {
-                Dialog(onDismissRequest = { showHighlighters = false }) {
-                    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
-                        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(stringResource(R.string.tools_highlight), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(16.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                val noneName = stringResource(R.string.tools_highlight_none)
-                                Surface(modifier = Modifier.size(36.dp).clickable { highlight(null); showHighlighters = false }.semantics { contentDescription = noneName }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, null) }
-                                }
-                                HIGHLIGHTERS.forEachIndexed { i, colour ->
-                                    val name = stringResource(HIGHLIGHTER_NAMES[i])
-                                    Surface(modifier = Modifier.size(36.dp).clickable { highlight(i); showHighlighters = false }.semantics { contentDescription = name }, shape = CircleShape, color = colour, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
-                                }
-                            }
-                            Spacer(Modifier.height(16.dp))
-                            TextButton(onClick = { showHighlighters = false }) { Text(stringResource(R.string.common_cancel)) }
-                        }
+            Column(
+                modifier = Modifier.fillMaxSize().then(if (short) Modifier.verticalScroll(pageScroll) else Modifier).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) },
+                    label = { Text(stringResource(R.string.tools_title)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                )
+                // As wide as the title and the note above and below it: it stopped where its buttons did.
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    // On as many lines as it takes. It scrolled sideways, with nothing to say it did: on a
+                    // phone the lists, the box and the colour were past the edge, and looked to be missing.
+                    // Each line centred, the space left over shared between its two ends.
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        StyleButton(Icons.Default.FormatBold, R.string.tools_bold, isOn(NoteStyle.BOLD)) { style(NoteStyle.BOLD) }
+                        StyleButton(Icons.Default.FormatItalic, R.string.tools_italic, isOn(NoteStyle.ITALIC)) { style(NoteStyle.ITALIC) }
+                        StyleButton(Icons.Default.FormatUnderlined, R.string.tools_underline, isOn(NoteStyle.UNDERLINE)) { style(NoteStyle.UNDERLINE) }
+                        StyleButton(Icons.Default.FormatStrikethrough, R.string.tools_strikethrough, isOn(NoteStyle.STRIKE)) { style(NoteStyle.STRIKE) }
+                        // Five highlighters behind it; marked, and in the colour, where the text is highlighted.
+                        val here = highlighterHere()
+                        IconToggleButton(
+                            checked = here != null,
+                            onCheckedChange = { showHighlighters = true },
+                            colors = IconButtonDefaults.iconToggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                        ) { Icon(Icons.Default.BorderColor, stringResource(R.string.tools_highlight), tint = here?.let { HIGHLIGHTERS[it].copy(alpha = 1f) } ?: LocalContentColor.current) }
+                        // Named for what it makes: an icon of a T said nothing of a heading. One heading only,
+                        // the user's choice; a small heading (TITLE) from an older note is still drawn.
+                        MarkButton("H1", R.string.tools_large, isOn(NoteStyle.LARGE)) { heading(NoteStyle.LARGE) }
+                        IconButton(onClick = { list(ListKind.CHECKBOX) }) { Icon(Icons.Default.CheckBox, stringResource(R.string.tools_checkbox)) }
+                        StyleButton(Icons.Default.FormatAlignCenter, R.string.tools_center, lineCentered()) { center() }
+                        IconButton(onClick = { list(ListKind.BULLET) }) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.tools_bullet_list)) }
+                        IconButton(onClick = { list(ListKind.NUMBERED) }) { Icon(Icons.Default.FormatListNumbered, stringResource(R.string.tools_numbered_list)) }
+                        IconButton(onClick = { showColorPicker = true }) { Icon(Icons.Default.Palette, stringResource(R.string.tools_color), tint = MaterialTheme.colorScheme.primary) }
+                        MarkButton("♞", R.string.tools_insert_pieces, inserting == InsertKind.PIECES, size = 26.sp) { toggleInsert(InsertKind.PIECES) }
+                        MarkButton("!?", R.string.tools_insert_annotations, inserting == InsertKind.ANNOTATIONS) { toggleInsert(InsertKind.ANNOTATIONS) }
+                        MarkButton("🙂", R.string.tools_insert_emojis, inserting == InsertKind.EMOJIS, font = OpenMoji, size = 24.sp) { toggleInsert(InsertKind.EMOJIS) }
                     }
                 }
-            }
-            if (showCustomColor) ColorPickerDialog(initialColor = Color.Black, onDismiss = { showCustomColor = false }) { chosen ->
-                showCustomColor = false
-                color(chosen.toArgb().toLong() and 0xFFFFFFFFL)
-            }
-            if (showColorPicker) {
-                Dialog(onDismissRequest = { showColorPicker = false }) {
-                    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
-                        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(stringResource(R.string.tools_select_text_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(16.dp))
-                            // The custom colours the note already uses, on a line of their own above, as a
-                            // drawing has them; then six on a line on any phone, as the highlighters are.
-                            val mine = customColoursIn(rich.runs().map { it.color }, NOTE_COLORS)
-                            if (mine.isNotEmpty()) {
-                                Text(stringResource(R.string.tools_custom_colours), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Start))
-                                Spacer(Modifier.height(6.dp))
-                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.align(Alignment.Start)) {
-                                    mine.forEach { value ->
-                                        Surface(modifier = Modifier.size(36.dp).clickable { color(value); showColorPicker = false }.testTag("text_color_$value"), shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
+                inserting?.let { InsertPanel(it, onInsert = ::insert) }
+                if (showHighlighters) {
+                    Dialog(onDismissRequest = { showHighlighters = false }) {
+                        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
+                            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(stringResource(R.string.tools_highlight), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(16.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    val noneName = stringResource(R.string.tools_highlight_none)
+                                    Surface(modifier = Modifier.size(36.dp).clickable { highlight(null); showHighlighters = false }.semantics { contentDescription = noneName }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                                        Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, null) }
+                                    }
+                                    HIGHLIGHTERS.forEachIndexed { i, colour ->
+                                        val name = stringResource(HIGHLIGHTER_NAMES[i])
+                                        Surface(modifier = Modifier.size(36.dp).clickable { highlight(i); showHighlighters = false }.semantics { contentDescription = name }, shape = CircleShape, color = colour, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
                                     }
                                 }
-                                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                                Spacer(Modifier.height(16.dp))
+                                TextButton(onClick = { showHighlighters = false }) { Text(stringResource(R.string.common_cancel)) }
                             }
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                // The text's own colour again, which the markers had no way to say.
-                                Surface(modifier = Modifier.size(36.dp).clickable { color(0L); showColorPicker = false }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, stringResource(R.string.tools_color_default)) }
-                                }
-                                NOTE_COLORS.forEach { value ->
-                                    Surface(modifier = Modifier.size(36.dp).clickable { color(value); showColorPicker = false }.testTag("text_color_$value"), shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
-                                }
-                                CustomColourButton(Modifier.testTag("text_color_custom"), size = 36.dp) { showColorPicker = false; showCustomColor = true }
-                            }
-                            Spacer(Modifier.height(16.dp))
-                            TextButton(onClick = { showColorPicker = false }) { Text(stringResource(R.string.common_cancel)) }
                         }
                     }
                 }
-            }
-            OutlinedTextField(
-                value = field,
-                onValueChange = { value ->
-                    if (value.text.length > MAX_NOTE_CONTENT_CHARS) return@OutlinedTextField
-                    if (value.text != rich.text) {
-                        // A space or a new line just typed ends the word, and Undo's step with it.
-                        val endsWord = value.text.length > rich.text.length && value.selection.collapsed &&
-                            value.text.getOrNull(value.selection.start - 1)?.isWhitespace() == true
-                        record(true, endsWord)
-                        var next = rich.edited(value.text, typing, cursor = value.selection.end)
-                        var shown = value
-                        // Enter on a list line: the next item, or the end of the list.
-                        if (value.text.length == rich.text.length + 1 && value.selection.collapsed && value.text.getOrNull(value.selection.start - 1) == '\n') {
-                            // Unless the next mark would not fit: the new line stays, without one.
-                            next.listContinued(value.selection.start)?.takeIf { it.rich.text.length <= MAX_NOTE_CONTENT_CHARS }?.let { edit ->
-                                next = edit.rich
-                                shown = TextFieldValue(edit.rich.text, TextRange(edit.selectionStart))
+                if (showCustomColor) ColorPickerDialog(initialColor = Color.Black, onDismiss = { showCustomColor = false }) { chosen ->
+                    showCustomColor = false
+                    color(chosen.toArgb().toLong() and 0xFFFFFFFFL)
+                }
+                if (showColorPicker) {
+                    Dialog(onDismissRequest = { showColorPicker = false }) {
+                        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.padding(16.dp)) {
+                            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(stringResource(R.string.tools_select_text_color), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(16.dp))
+                                // The custom colours the note already uses, on a line of their own above, as a
+                                // drawing has them; then six on a line on any phone, as the highlighters are.
+                                val mine = customColoursIn(rich.runs().map { it.color }, NOTE_COLORS)
+                                if (mine.isNotEmpty()) {
+                                    Text(stringResource(R.string.tools_custom_colours), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Start))
+                                    Spacer(Modifier.height(6.dp))
+                                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.align(Alignment.Start)) {
+                                        mine.forEach { value ->
+                                            Surface(modifier = Modifier.size(36.dp).clickable { color(value); showColorPicker = false }.testTag("text_color_$value"), shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
+                                        }
+                                    }
+                                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                                }
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    // The text's own colour again, which the markers had no way to say.
+                                    Surface(modifier = Modifier.size(36.dp).clickable { color(0L); showColorPicker = false }, shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                                        Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.FormatColorReset, stringResource(R.string.tools_color_default)) }
+                                    }
+                                    NOTE_COLORS.forEach { value ->
+                                        Surface(modifier = Modifier.size(36.dp).clickable { color(value); showColorPicker = false }.testTag("text_color_$value"), shape = CircleShape, color = Color(value), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {}
+                                    }
+                                    CustomColourButton(Modifier.testTag("text_color_custom"), size = 36.dp) { showColorPicker = false; showCustomColor = true }
+                                }
+                                Spacer(Modifier.height(16.dp))
+                                TextButton(onClick = { showColorPicker = false }) { Text(stringResource(R.string.common_cancel)) }
                             }
                         }
-                        rich = next
-                        field = shown
-                        typing = null
-                    } else {
-                        // A tap on a box ticks it: the cursor lands on one side of the box or the other.
-                        val at = value.selection
-                        val lineStart = if (at.start == 0) 0 else value.text.lastIndexOf('\n', at.start - 1) + 1
-                        // Only after a tap: the cursor brought beside a box by an arrow key, Home or the
-                        // keyboard's own cursor control ticked it too, by accident.
-                        val tapped = SystemClock.uptimeMillis() - lastTap[0] < TAP_TICK_WINDOW_MS
-                        val onBox = tapped && at.collapsed && at != field.selection && at.start - lineStart <= 1 &&
-                            value.text.getOrNull(lineStart).let { it == CHECKBOX_OPEN || it == CHECKBOX_DONE }
-                        val ticked = if (onBox) rich.checkboxToggled(at.start) else null
-                        if (ticked != null) {
-                            record(false)
-                            show(ticked, lineStart + 2)
+                    }
+                }
+                OutlinedTextField(
+                    value = field,
+                    onValueChange = { value ->
+                        if (value.text.length > MAX_NOTE_CONTENT_CHARS) return@OutlinedTextField
+                        if (value.text != rich.text) {
+                            // A space or a new line just typed ends the word, and Undo's step with it.
+                            val endsWord = value.text.length > rich.text.length && value.selection.collapsed &&
+                                value.text.getOrNull(value.selection.start - 1)?.isWhitespace() == true
+                            record(true, endsWord)
+                            var next = rich.edited(value.text, typing, cursor = value.selection.end)
+                            var shown = value
+                            // Enter on a list line: the next item, or the end of the list.
+                            if (value.text.length == rich.text.length + 1 && value.selection.collapsed && value.text.getOrNull(value.selection.start - 1) == '\n') {
+                                // Unless the next mark would not fit: the new line stays, without one.
+                                next.listContinued(value.selection.start)?.takeIf { it.rich.text.length <= MAX_NOTE_CONTENT_CHARS }?.let { edit ->
+                                    next = edit.rich
+                                    shown = TextFieldValue(edit.rich.text, TextRange(edit.selectionStart))
+                                }
+                            }
+                            rich = next
+                            field = shown
+                            typing = null
                         } else {
-                            if (at != field.selection) typing = null
-                            field = value
+                            // A tap on a box ticks it: the cursor lands on one side of the box or the other.
+                            val at = value.selection
+                            val lineStart = if (at.start == 0) 0 else value.text.lastIndexOf('\n', at.start - 1) + 1
+                            // Only after a tap: the cursor brought beside a box by an arrow key, Home or the
+                            // keyboard's own cursor control ticked it too, by accident.
+                            val tapped = SystemClock.uptimeMillis() - lastTap[0] < TAP_TICK_WINDOW_MS
+                            val onBox = tapped && at.collapsed && at != field.selection && at.start - lineStart <= 1 &&
+                                value.text.getOrNull(lineStart).let { it == CHECKBOX_OPEN || it == CHECKBOX_DONE }
+                            val ticked = if (onBox) rich.checkboxToggled(at.start) else null
+                            if (ticked != null) {
+                                record(false)
+                                show(ticked, lineStart + 2)
+                            } else {
+                                if (at != field.selection) typing = null
+                                field = value
+                            }
                         }
-                    }
-                },
-                visualTransformation = transformation,
-                // Taps are noted on their way to the field, which still has them: see onBox.
-                modifier = Modifier.fillMaxWidth().weight(1f).pointerInput(Unit) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                        if (up != null && (up.position - down.position).getDistance() < viewConfiguration.touchSlop) lastTap[0] = SystemClock.uptimeMillis()
-                    }
-                },
-                placeholder = { Text(stringResource(R.string.tools_format_hint)) },
-                shape = RoundedCornerShape(12.dp),
-            )
+                    },
+                    visualTransformation = transformation,
+                    // Taps are noted on their way to the field, which still has them: see onBox.
+                    modifier = Modifier.fillMaxWidth().then(if (short) Modifier.height(noteHeight) else Modifier.weight(1f))
+                        .onFocusChanged { noteFocused = it.isFocused }.pointerInput(Unit) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                            val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                            if (up != null && (up.position - down.position).getDistance() < viewConfiguration.touchSlop) lastTap[0] = SystemClock.uptimeMillis()
+                        }
+                    },
+                    placeholder = { Text(stringResource(R.string.tools_format_hint)) },
+                    shape = RoundedCornerShape(12.dp),
+                )
+            }
         }
     }
 }
+
+/** Below this, a text note's page scrolls rather than squeeze the note; see RichTextNoteEditor. */
+private val SHORT_NOTE_EDITOR = 360.dp
 
 /** A style the selection has or has not, which TalkBack hears as a switch. */
 @Composable
