@@ -5689,7 +5689,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 moveStartTime = now - (resumed.second.moveElapsedMs.coerceIn(0L, MAX_IMPORTED_DURATION_MS) + ranOnMs)
                 // Installed paused, so the wait until Resume is pressed is a pause like any other.
                 pausedAt = now
-                _uiState.value = resumedState.copy(isPaused = true)
+                // The panel as it stands, as restoreKeptClocks keeps it. A save taken under it --
+                // a correction, the arbiter's Save -- stored it open and brought it back open, where
+                // one taken at a pause brought it back closed: the same Resume did either.
+                _uiState.value = resumedState.copy(isPaused = true, isArbitreMode = _uiState.value.isArbitreMode)
                 // A flag that fell in the last of it, after the tick that would have logged it: the
                 // clock shows it, so the record has it.
                 // The one on the move's alone: a table's clock running out puts every player out at
