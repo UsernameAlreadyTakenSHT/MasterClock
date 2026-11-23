@@ -251,6 +251,9 @@ class BluetoothSerialBoardManager(private val context: Context) {
             if (socket === opened) {
                 socket = null
                 _connectionState.value = ConnectionState.Idle
+                // With the board: it stayed up after a Certabo dropped, asking for a calibration
+                // of a board no longer there. disconnect() and the USB manager already cleared it.
+                _needsCalibration.value = false
             }
         }
     }
