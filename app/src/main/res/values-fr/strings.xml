@@ -598,6 +598,8 @@
     <string name="timer_reset_title">Réinitialiser la partie\u00A0?</string>
     <string name="preset_end_game_title">Terminer la partie en cours\u00A0?</string>
     <string name="preset_end_game_confirm">Terminer</string>
+    <string name="preset_end_waiting_game_title">Terminer la partie interrompue\u00A0?</string>
+    <string name="preset_end_waiting_game_message">Une partie attend d\'être reprise. Elle sera perdue.</string>
     <string name="timer_reset_message">L\'état actuel sera perdu.</string>
     <string name="timer_berserk_title">Berserk pour le joueur %1$d\u00A0?</string>
     <string name="timer_berserk_message">La moitié du temps et l\'incrément sont perdus pour cette partie. Impossible d\'annuler.</string>

@@ -765,10 +765,14 @@ class MainActivity : ComponentActivity() {
                     }
 
                     pendingPreset?.let { apply ->
+                        val noGameOnTheClock = timerViewModel.uiState.collectAsState().value.activePlayer == null
                         AlertDialog(
                             onDismissRequest = { pendingPreset = null },
-                            title = { Text(stringResource(R.string.preset_end_game_title)) },
-                            text = { Text(stringResource(R.string.timer_reset_message)) },
+                            // The game it is about. Asked with no clock running, it is the one
+                            // waiting behind Resume: "End the current game? The current state
+                            // will be lost" over a clock with no game on it named nothing.
+                            title = { Text(stringResource(if (noGameOnTheClock) R.string.preset_end_waiting_game_title else R.string.preset_end_game_title)) },
+                            text = { Text(stringResource(if (noGameOnTheClock) R.string.preset_end_waiting_game_message else R.string.timer_reset_message)) },
                             confirmButton = {
                                 TextButton(onClick = { pendingPreset = null; apply() }) { Text(stringResource(R.string.preset_end_game_confirm)) }
                             },

@@ -167,6 +167,8 @@
     <string name="settings_tournament_rules_explain">O primeiro vale só para o Fischer: o bônus vem antes do lance 1. O segundo só para FIDE Periods: ligado, um período termina ao atingir seu número de lances; desligado, quando seu tempo se esgota.</string>
     <string name="preset_end_game_title">Encerrar a partida em andamento?</string>
     <string name="preset_end_game_confirm">Encerrar</string>
+    <string name="preset_end_waiting_game_title">Encerrar a partida interrompida?</string>
+    <string name="preset_end_waiting_game_message">Há uma partida esperando para ser retomada. Ela será perdida.</string>
     <string name="game_shortcut_gone">Esta partida não está mais no histórico</string>
     <string name="color_grey">Cinza</string>
     <string name="common_reset">Zerar</string>
