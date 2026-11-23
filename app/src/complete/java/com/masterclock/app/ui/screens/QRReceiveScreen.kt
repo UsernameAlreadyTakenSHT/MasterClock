@@ -33,6 +33,9 @@ fun QRReceiveScreen(
     onBack: () -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
+    // Set where the camera will not bind: a device with a front camera alone, one held by another
+    // app. The failure went to the log, and the screen stayed blank under "Align the code".
+    var cameraFailed by remember { mutableStateOf(false) }
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
     LaunchedEffect(Unit) {
@@ -152,6 +155,7 @@ fun QRReceiveScreen(
                                 )
                             } catch (e: Exception) {
                                 Log.e("QRReceiveScreen", "Failed to bind camera preview", e)
+                                cameraFailed = true
                             }
                         }, ContextCompat.getMainExecutor(ctx))
                         
@@ -167,7 +171,7 @@ fun QRReceiveScreen(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
                 ) {
                     Text(
-                        stringResource(R.string.qr_align),
+                        stringResource(if (cameraFailed) R.string.qr_no_camera else R.string.qr_align),
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )

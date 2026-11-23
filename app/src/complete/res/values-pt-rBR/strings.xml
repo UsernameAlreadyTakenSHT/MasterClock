@@ -29,6 +29,7 @@
     <string name="qr_scan_title">Escanear um código QR</string>
     <string name="qr_share_hint">Escaneie este código em outro dispositivo para importar a configuração.</string>
     <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmera</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Nenhuma câmera disponível para escanear.</string>
     <string name="qr_camera_permission" tools:ignore="Typos">É necessária a permissão da câmera para escanear códigos.</string>
     <string name="toast_camera_permission" tools:ignore="Typos">É necessária a permissão da câmera</string>
     <string name="qr_too_large">Não foi possível gerar o código QR: essas configurações são grandes demais para um só código. Compartilhe-as como arquivo.</string>

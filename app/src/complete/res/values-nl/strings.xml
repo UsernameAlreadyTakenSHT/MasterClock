@@ -83,6 +83,7 @@
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Lijn de code uit in het camerabeeld</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Er is geen camera beschikbaar om te scannen.</string>
     <string name="qr_camera_permission" tools:ignore="Typos">Toegang tot de camera is nodig om codes te scannen.</string>
     <string name="qr_code">QR-code</string>
     <string name="qr_scan_title">QR-code scannen</string>

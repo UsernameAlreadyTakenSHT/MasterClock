@@ -112,6 +112,7 @@
     <string name="guide_sudden_death_standard" translatable="false">Standard</string>
     <string name="guide_sudden_death_standard_desc">Pure countdown. The first player to reach 0:00 loses or flags.</string>
     <string name="qr_align" tools:ignore="Typos">Align code within the camera view</string>
+    <string name="qr_no_camera" tools:ignore="Typos">No camera can be used to scan.</string>
     <string name="qr_camera_permission" tools:ignore="Typos">Camera permission is required to scan codes.</string>
     <string name="qr_code">QR Code</string>
     <string name="qr_scan_title">Scan QR Code</string>

@@ -81,6 +81,7 @@
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Alignez le code dans le champ de la caméra</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Aucune caméra n\'est utilisable pour scanner.</string>
     <string name="qr_camera_permission" tools:ignore="Typos">L\'autorisation d\'accès à la caméra est nécessaire pour scanner des codes.</string>
     <string name="qr_code">QR code</string>
     <string name="qr_scan_title">Scanner un QR code</string>

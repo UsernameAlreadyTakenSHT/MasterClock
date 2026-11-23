@@ -86,6 +86,7 @@
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Alinhe o código no visor da câmara</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Nenhuma câmara disponível para ler códigos.</string>
     <string name="qr_camera_permission" tools:ignore="Typos">É necessária a permissão da câmara para ler códigos.</string>
     <string name="qr_code">Código QR</string>
     <string name="qr_scan_title">Ler um código QR</string>

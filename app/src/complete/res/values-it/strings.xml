@@ -83,6 +83,7 @@
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Allinea il codice nell\'inquadratura</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Nessuna fotocamera disponibile per la scansione.</string>
     <string name="qr_camera_permission" tools:ignore="Typos">Per scansionare i codici serve il permesso della fotocamera.</string>
     <string name="qr_code">Codice QR</string>
     <string name="qr_scan_title">Scansiona un codice QR</string>
