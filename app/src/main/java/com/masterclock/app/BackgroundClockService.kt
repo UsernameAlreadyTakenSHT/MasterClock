@@ -1,5 +1,6 @@
 package com.masterclock.app
 
+import com.masterclock.app.logic.WAKE_MARGIN_MS
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -96,11 +97,18 @@ class BackgroundClockService : Service() {
 
     override fun onDestroy() {
         scope.cancel()
-        wakeLock?.let { if (it.isHeld) it.release() }
+        // Let go, unless it is the flag that stopped the clock: the service stops with it under
+        // FREEZE, and released then, the lock went the instant the flag fell -- and the sound of the
+        // flag, a spoken "time is up" above all, which has to be put together first, waited for the
+        // phone's next wake. Kept, it lapses within its own limit, the margin left of it. A pause
+        // stops the service too, long before the end it waited for, and lets the phone sleep.
+        if (!flagJustFell()) flagLock?.let { if (it.isHeld) it.release() }
         super.onDestroy()
     }
 
-    private var wakeLock: PowerManager.WakeLock? = null
+    /** Whether the end the processor was kept awake for has come: the flag has just fallen. */
+    private fun flagJustFell(): Boolean =
+        awakeFor?.endsAtMs?.let { SystemClock.elapsedRealtime() >= it - FLAG_FELL_SLACK_MS } == true
 
     /** The end the processor is being kept awake for, to tell when it has moved. */
     private var awakeFor: NotifiedCountdown? = null
@@ -113,15 +121,19 @@ class BackgroundClockService : Service() {
     private fun keepAwake(clock: BackgroundClock?) {
         val wanted = NotifiedCountdown(null, clock?.soundsInMs?.let { SystemClock.elapsedRealtime() + it })
         if (awakeFor?.outOfStepWith(wanted) == false) return
+        val flagFell = flagJustFell()
         awakeFor = wanted
-        val lock = wakeLock ?: getSystemService(PowerManager::class.java)
+        val lock = flagLock ?: applicationContext.getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MasterClock:flag")
             .apply { setReferenceCounted(false) }
-            .also { wakeLock = it }
+            .also { flagLock = it }
         // Released first: a lock taken again keeps the earlier limit's release, which would let go of
         // it early.
         if (lock.isHeld) lock.release()
-        wakeForMs(clock)?.let { lock.acquire(it) }
+        // With nothing left to sound because the flag has just fallen -- the game going on, under
+        // FLAG, NEGATIVE or REVERSE -- held for the margin still, rather than let go: the margin is
+        // there for the sound the flag plays, and it was released as that sound began.
+        (wakeForMs(clock) ?: WAKE_MARGIN_MS.takeIf { flagFell })?.let { lock.acquire(it) }
     }
 
     private fun startInForeground(notification: Notification) {
@@ -166,6 +178,14 @@ class BackgroundClockService : Service() {
     }
 
     companion object {
+        /**
+         * The lock that keeps the processor up to the flag. The process's, not the service's: it
+         * outlives a service that stops as the flag falls, for the length of its own limit.
+         */
+        private var flagLock: PowerManager.WakeLock? = null
+
+        /** Early by this, an end still counts as reached: the clock is published a tick at a time. */
+        private const val FLAG_FELL_SLACK_MS = 1_000L
         private const val CHANNEL_ID = "running_game"
         const val NOTIFICATION_ID = 7031
         private const val ACTION_PAUSE = "com.masterclock.app.action.PAUSE_BACKGROUND_CLOCK"
