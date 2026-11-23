@@ -54,6 +54,9 @@ const val BULLET = '•'
 /** More runs than any note written by hand; a note is cut to it on import. */
 const val MAX_NOTE_SPANS = 20_000
 
+/** Markers times the longest line, past which a note of the old format is read as plain text. */
+private const val MAX_MARKUP_MATCHING_STEPS = 20_000_000L
+
 /** The note's text and formatting, converting a note written with the old markers. */
 fun NotebookNote.richTextOf(): RichText =
     if (richFormat) RichText(content, cleanSpans(richSpans, content.length)) else richTextFromMarkup(content)
@@ -62,13 +65,26 @@ fun NotebookNote.richTextOf(): RichText =
 fun NotebookNote.withRichText(rich: RichText): NotebookNote =
     copy(content = rich.text, richSpans = rich.spans, richFormat = true)
 
-/** [spans] held inside a text of [length], each with something to style, at most [MAX_NOTE_SPANS]. */
-fun cleanSpans(spans: List<NoteSpan>, length: Int): List<NoteSpan> =
-    spans.asSequence()
+/**
+ * [spans] held inside a text of [length], each with something to style, at most [MAX_NOTE_SPANS],
+ * and covering twice the text between them at most.
+ *
+ * The number alone was bounded. Every reading of a note's styles walks each span from end to end,
+ * at each keystroke and each move of the cursor, so twenty thousand spans each covering a note of
+ * a hundred thousand characters -- under a megabyte of an imported file -- were two thousand
+ * million steps a keystroke: the note could be deleted and not opened. The app writes runs that
+ * do not overlap, whose lengths add up to the text's at most; twice that is room for a file made
+ * by hand, and what goes past it is left out.
+ */
+fun cleanSpans(spans: List<NoteSpan>, length: Int): List<NoteSpan> {
+    var room = 2L * length
+    return spans.asSequence()
         .map { it.copy(start = it.start.coerceIn(0, length), end = it.end.coerceIn(0, length)) }
         .filter { it.start < it.end && (it.styles != 0 || it.color != 0L) }
         .take(MAX_NOTE_SPANS)
+        .takeWhile { room -= it.end - it.start; room >= 0 }
         .toList()
+}
 
 /** One style per character, and one colour; 0 for none. */
 private class CharStyles(val styles: IntArray, val colors: LongArray)
@@ -107,6 +123,12 @@ private fun spansOf(styles: IntArray, colors: LongArray): List<NoteSpan> {
  * starting a line, which nothing drew as a box, becomes the box.
  */
 fun richTextFromMarkup(markup: String): RichText {
+    // Read as plain text where the markers would cost too much to match. Each opener with nothing
+    // to close it is searched for to the end of its line: thirty thousand "<u>" on one line, in an
+    // imported note of the old format, were over a thousand million steps on the main thread as
+    // the note opened. No note written by hand comes near the bound.
+    val longestLine = markup.lineSequence().maxOfOrNull { it.length } ?: 0
+    if (markup.count { it == '*' || it == '<' }.toLong() * longestLine > MAX_MARKUP_MATCHING_STEPS) return RichText(markup)
     val n = markup.length
     val styles = IntArray(n)
     val colors = LongArray(n)

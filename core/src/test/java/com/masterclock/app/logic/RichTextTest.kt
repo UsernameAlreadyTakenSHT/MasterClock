@@ -198,4 +198,22 @@ class RichTextTest {
         assertEquals("9999. x\n10000. ", next.rich.text)
         assertEquals("10000. ", listPrefixOf("10000. y"))
     }
+
+    @Test
+    fun `spans that cover the text many times over are cut to what a note can need`() {
+        // Twenty thousand, each the whole of a long note: what an imported file can hold.
+        val hostile = List(MAX_NOTE_SPANS) { NoteSpan(0, 100_000, NoteStyle.BOLD) }
+        assertEquals(2, cleanSpans(hostile, 100_000).size)
+        // Runs that do not overlap, as the app writes them, are all kept.
+        val honest = List(1_000) { NoteSpan(it * 10, it * 10 + 10, if (it % 2 == 0) NoteStyle.BOLD else NoteStyle.ITALIC) }
+        assertEquals(honest, cleanSpans(honest, 10_000))
+    }
+
+    @Test
+    fun `a note of the old format with markers beyond counting is read as plain text`() {
+        val hostile = "<u>".repeat(33_000)
+        assertEquals(RichText(hostile), richTextFromMarkup(hostile))
+        // One with a few markers is still converted.
+        assertEquals("bold", richTextFromMarkup("**bold**").text)
+    }
 }
