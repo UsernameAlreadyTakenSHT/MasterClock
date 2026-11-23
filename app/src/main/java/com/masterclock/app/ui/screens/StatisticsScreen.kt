@@ -160,7 +160,7 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
 }
 
 @Composable
-fun StatisticsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () -> Unit) {
+fun StatisticsScreen(history: List<GameLog>, historyLoaded: Boolean, timePadding: TimePadding, onBack: () -> Unit) {
     // Worked out off the main thread: every move of every game, sorted, where the screen was being
     // opened -- with a long history, a screen that froze as it appeared. Null until it is ready.
     val computed by produceState<Pair<GameStatistics, List<MoveDuration>>?>(initialValue = null, history) {
@@ -170,6 +170,9 @@ fun StatisticsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: (
     }
 
     ToolScaffold(title = stringResource(R.string.stats_title), onBack = onBack) { padding ->
+        // Nothing while the history is still being read: opened in the moments after launch, the
+        // screen told someone with hundreds of games that there were none, then filled in.
+        if (!historyLoaded) return@ToolScaffold
         val (stats, recentDurations) = computed ?: return@ToolScaffold
         if (stats.isEmpty) {
             Box(

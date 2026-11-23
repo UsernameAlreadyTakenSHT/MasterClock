@@ -69,7 +69,7 @@ fun NotebookScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) = Unavail
 fun BluetoothBoardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) = Unavailable(onBack)
 
 @Composable
-fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () -> Unit) = Unavailable(onBack)
+fun GameLogsScreen(history: List<GameLog>, historyLoaded: Boolean, timePadding: TimePadding, onBack: () -> Unit) = Unavailable(onBack)
 
 @Composable
 fun QRShareScreen(data: String, onBack: () -> Unit) = Unavailable(onBack)

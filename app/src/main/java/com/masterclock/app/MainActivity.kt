@@ -607,6 +607,7 @@ class MainActivity : ComponentActivity() {
                         entry<Route.Statistics> { _ ->
                             StatisticsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
+                                historyLoaded = historyLoaded,
                                 timePadding = settings.effectiveTimePadding(),
                                 onBack = { navigator.goBack() }
                             )
@@ -614,6 +615,7 @@ class MainActivity : ComponentActivity() {
                         entry<Route.GameLogs> { _ ->
                             GameLogsScreen(
                                 history = timerViewModel.gameHistory.collectAsState().value,
+                                historyLoaded = historyLoaded,
                                 timePadding = settings.effectiveTimePadding(),
                                 onBack = { navigator.goBack() }
                             )

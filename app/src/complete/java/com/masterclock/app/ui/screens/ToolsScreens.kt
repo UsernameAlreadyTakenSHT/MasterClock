@@ -66,7 +66,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 
 @Composable
-fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () -> Unit) {
+fun GameLogsScreen(history: List<GameLog>, historyLoaded: Boolean, timePadding: TimePadding, onBack: () -> Unit) {
     // Hoisted: used from the share button callback, outside composable scope.
     val shareLogTitle = stringResource(R.string.tools_share_log)
     val shareFailedText = stringResource(R.string.toast_export_failed)
@@ -80,6 +80,8 @@ fun GameLogsScreen(history: List<GameLog>, timePadding: TimePadding, onBack: () 
     if (openLog == null) {
         val sortedHistory = remember(history) { history.sortedByDescending { it.startTime } }
         ToolScaffold(title = stringResource(R.string.tools_game_logs), onBack = onBack) { padding ->
+            // Nothing while the history is still being read, rather than "no games" over a full one.
+            if (!historyLoaded) return@ToolScaffold
             if (sortedHistory.isEmpty()) {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.tools_no_games), color = MaterialTheme.colorScheme.onSurfaceVariant)
