@@ -195,8 +195,8 @@ class BluetoothBoardManager(private val context: Context) {
     private val mtuFallback = Runnable { activeGatt?.let { discoverServices(it) } }
 
     // `as?`, not `as`, and for a reason that has nothing to do with boards. ChessTimerViewModel
-    // constructs this manager as an eager field for every consumer -- all four app flavours and
-    // paper -- so the cast runs on first composition even in builds whose manifests strip every
+    // constructed this manager as an eager field for every consumer -- all four app flavours and
+    // paper -- so the cast ran on first composition even in builds whose manifests strip every
     // Bluetooth permission and which ship no board screen at all. A device with no Bluetooth
     // returns null here, and a hard cast turned that into an NPE inside the ViewModel's field
     // initialisers, i.e. a crash before the first frame. BluetoothSerialBoardManager had always

@@ -123,12 +123,6 @@ enum class TimerMode {
 }
 
 /**
- * The settings with per-player customisation turned off when the game's mode runs one clock for
- * the table ([TimerMode.isWholeTable]), Player 1's settings becoming everyone's. Applied to every
- * settings change and to what is read back from storage, so neither the settings screens, a
- * preset nor an import can combine the two.
- */
-/**
  * These settings with the game's mode taken from [p1]: the mode, and the choices that make it one
  * game rather than several -- Fast Move's variant and whether its transfer accumulates, and whether
  * Gong plays at once. Only the mode itself used to follow player 1, so player 2 could play Fast Move's
@@ -156,6 +150,12 @@ fun ChessClockSettings.withSeatsForPlayers(): ChessClockSettings {
     return if (playerMapping.size == 4 && seated.sorted() == (1..n).toList()) this else copy(playerMapping = listOf(1, 2, 3, 4))
 }
 
+/**
+ * The settings with per-player customisation turned off when the game's mode runs one clock for
+ * the table ([TimerMode.isWholeTable]), Player 1's settings becoming everyone's. Applied to every
+ * settings change and to what is read back from storage, so neither the settings screens, a
+ * preset nor an import can combine the two.
+ */
 fun ChessClockSettings.wholeTableSettings(): ChessClockSettings = when {
     differentSettingsPerPlayer && p1Custom.mode.isWholeTable -> copy(differentSettingsPerPlayer = false, main = p1Custom, p2Custom = p1Custom, p3Custom = p1Custom, p4Custom = p1Custom)
     // With per-player settings on, the clock runs on player 1's and [main] is what turning them off
@@ -182,14 +182,6 @@ sealed interface ClockAnnouncement {
     data class ToMove(val playerIndex: Int, val byoyomiPeriodsRemaining: Int?) : ClockAnnouncement
 }
 
-/**
- * The state change worth announcing, or null when there is nothing to say yet.
- *
- * Deliberately a function of *state transitions only* -- whose turn it is, a flag, a pause, a
- * byoyomi period -- and never of the remaining time. A live region announces whenever its text
- * changes, so including the countdown would make the reader recite the seconds and drown out
- * everything else.
- */
 /** What the table's clock starts a game at: CHRONO's countdown, or the first phase of PHASES. */
 internal fun initialGlobalTimeMs(s1: PlayerSettings): Long = when (s1.mode) {
     TimerMode.CHRONO_COUNTDOWN -> s1.initialTimeMs
@@ -300,6 +292,13 @@ private const val MIN_RANDOM_BASE_MS = 1000L
 internal fun randomRangeOf(a: Long, b: Long): Pair<Long, Long> = minOf(a, b) to maxOf(a, b)
 
 /**
+ * The state change worth announcing, or null when there is nothing to say yet.
+ *
+ * Deliberately a function of *state transitions only* -- whose turn it is, a flag, a pause, a
+ * byoyomi period -- and never of the remaining time. A live region announces whenever its text
+ * changes, so including the countdown would make the reader recite the seconds and drown out
+ * everything else.
+ *
  * What the live region says for [state]. [flagBehavior] is the game's: it alone says whether a player
  * out of time plays on, and the screens pass it. The default is the settings' own, for the tests where
  * no flag is in question.
@@ -784,12 +783,6 @@ enum class TimePadding {
 }
 
 /**
- * Formats one unit of a clock reading under [padding].
- *
- * [isLeading] marks the largest unit actually being shown, which is the only one STANDARD and FULL
- * disagree about.
- */
-/**
  * The padding a build actually renders with.
  *
  * Only Complete and Standard offer the choice; Lite, Mini and the E-Ink build are fixed on FULL,
@@ -826,6 +819,12 @@ fun ChessClockSettings.showsTenthsAt(absTimeMs: Long): Boolean =
 fun ChessClockSettings.showsHundredthsAt(absTimeMs: Long): Boolean =
     showHundredths && (if (showHundredthsOnlyUnder10s) absTimeMs < 10_000L else showsTenthsAt(absTimeMs))
 
+/**
+ * Formats one unit of a clock reading under [padding].
+ *
+ * [isLeading] marks the largest unit actually being shown, which is the only one STANDARD and FULL
+ * disagree about.
+ */
 fun padTimeUnit(value: Long, isLeading: Boolean, padding: TimePadding): String = when (padding) {
     TimePadding.MINIMAL -> value.toString()
     TimePadding.FULL -> value.toString().padStart(2, '0')
@@ -1952,7 +1951,7 @@ internal fun eventFitsLog(count: Int, event: GameEvent): Boolean {
     return count < if (ending) MAX_IMPORTED_EVENTS_PER_LOG else MAX_IMPORTED_EVENTS_PER_LOG - ENDING_EVENTS_HEADROOM
 }
 
-/**
+/*
  * Ceilings on the parts of an imported notebook that the UI composes eagerly.
  *
  * A drawing is rendered by rebuilding a Path from its points on every frame, and the notebook list
@@ -2115,23 +2114,6 @@ internal fun sanitizeImportedLog(log: GameLog): GameLog = log.copy(
 )
 
 /**
- * The scoreboard was the one import channel reaching the UI with no validation at all.
- *
- * Its games live in memory rather than in Room, so unlike [GameLog] -- whose id is a primary key,
- * and whose uniqueness the database therefore enforces -- nothing else stops two imported games
- * from carrying the same id. The scoreboard list is keyed on that id, and Compose throws on a
- * duplicate key, so a crafted session would crash the screen the moment it was opened.
- *
- * Fresh ids on the way in, which is the same treatment [sanitizeImportedSettings] gives
- * [NotebookNote.id]. The games are held to [MAX_SCOREBOARD_GAMES], and it is the newest that are
- * kept: the list is oldest first, and taking its first five thousand dropped, at the next launch,
- * the games just played -- for good, since the next result saved the shortened list.
- *
- * The stored session goes through this too at every launch, since a restore is what usually wrote
- * it. Regenerating its ids there costs nothing: nothing refers to a scoreboard game by id but the
- * list's own keys.
- */
-/**
  * Saved presets from a backup, each one's settings through the same sanitiser an imported
  * configuration gets: applying a preset copies its time control onto the clock, so a crafted one
  * is exactly as dangerous as a crafted settings file. Presets never carry a notebook.
@@ -2239,6 +2221,23 @@ internal fun mergeImportedScoreboard(local: ScoreboardSession, imported: Scorebo
 
 // The ids were the only thing bounded: the number of games and the length of every string went
 // straight into the stored settings and the scoreboard screen, which composes each game.
+/**
+ * The scoreboard was the one import channel reaching the UI with no validation at all.
+ *
+ * Its games live in memory rather than in Room, so unlike [GameLog] -- whose id is a primary key,
+ * and whose uniqueness the database therefore enforces -- nothing else stops two imported games
+ * from carrying the same id. The scoreboard list is keyed on that id, and Compose throws on a
+ * duplicate key, so a crafted session would crash the screen the moment it was opened.
+ *
+ * Fresh ids on the way in, which is the same treatment [sanitizeImportedSettings] gives
+ * [NotebookNote.id]. The games are held to [MAX_SCOREBOARD_GAMES], and it is the newest that are
+ * kept: the list is oldest first, and taking its first five thousand dropped, at the next launch,
+ * the games just played -- for good, since the next result saved the shortened list.
+ *
+ * The stored session goes through this too at every launch, since a restore is what usually wrote
+ * it. Regenerating its ids there costs nothing: nothing refers to a scoreboard game by id but the
+ * list's own keys.
+ */
 internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardSession = session.copy(
     id = java.util.UUID.randomUUID().toString(),
     player1Name = session.player1Name.take(MAX_SCOREBOARD_TEXT_CHARS),
@@ -2248,14 +2247,6 @@ internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardS
     },
 )
 
-/**
- * Pure per-player time-transition function: given the current [PlayerState] and how much time
- * elapsed, returns the next [PlayerState] for every timer mode except the multi-player-coupled ones
- * (PHASES/GONG/HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED, handled inline in
- * [ChessTimerViewModel.tick]). Has no dependency on Android or ViewModel state, so it's called
- * directly from both [ChessTimerViewModel.tick] and [ChessTimerLogicTest]: the previous test file
- * duplicated this logic instead of exercising it, so a real bug here could drift undetected.
- */
 /**
  * Shared countdown + flag logic used both by [tickPlayer]'s default branch and by every mode that
  * has its own early-return in [ChessTimerViewModel.tick] (PHASES, MOVE_TIMER_SHARED,
@@ -2284,16 +2275,6 @@ internal fun applyFlagBehaviorDelta(currentTime: Long, isOut: Boolean, isNegativ
     return Triple(newTime, out, neg)
 }
 
-/**
- * The part of a tick left over when one countdown runs out goes on to the next one, rather than
- * being thrown away. A tick that finished the US delay with 20ms of it left, or emptied the main
- * clock into byoyomi, or ran a Japanese period out, used to drop the rest of its time: up to a
- * tick's worth (100ms) per move, never charged to anyone.
- *
- * Each step that carries a remainder over strictly reduces what is left to run -- the delay is
- * gone, main time is gone, a period is consumed -- so the recursion ends, even with a byoyomi
- * period of zero length.
- */
 /**
  * One tick of the move clock of MOVE_TIMER_GLOBAL and MOVE_TIMER_GLOBAL_SHARED.
  *
@@ -2354,6 +2335,23 @@ private fun PlayerState.finalFlag(overrunMs: Long, flagBehavior: FlagBehavior): 
     else -> copy(timeRemainingMs = 0, isOutOfTime = true)
 }
 
+/**
+ * Pure per-player time-transition function: given the current [PlayerState] and how much time
+ * elapsed, returns the next [PlayerState] for every timer mode except the multi-player-coupled ones
+ * (PHASES/GONG/HOURGLASS/CHRONO_COUNTDOWN/CHRONO_COUNTUP/MOVE_TIMER_SHARED/MOVE_TIMER_GLOBAL_SHARED, handled inline in
+ * [ChessTimerViewModel.tick]). Has no dependency on Android or ViewModel state, so it's called
+ * directly from both [ChessTimerViewModel.tick] and [ChessTimerLogicTest]: the previous test file
+ * duplicated this logic instead of exercising it, so a real bug here could drift undetected.
+ *
+ * The part of a tick left over when one countdown runs out goes on to the next one, rather than
+ * being thrown away. A tick that finished the US delay with 20ms of it left, or emptied the main
+ * clock into byoyomi, or ran a Japanese period out, used to drop the rest of its time: up to a
+ * tick's worth (100ms) per move, never charged to anyone.
+ *
+ * Each step that carries a remainder over strictly reduces what is left to run -- the delay is
+ * gone, main time is gone, a period is consumed -- so the recursion ends, even with a byoyomi
+ * period of zero length.
+ */
 internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings: ChessClockSettings): PlayerState {
     if (p.delayRemainingMs > 0) {
         // A delay ending on a clock with nothing behind it is the flag, not a tick more at 0:00.
@@ -2494,6 +2492,14 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
 }
 
 /**
+ * Whether a turn beginning under [mode] opens on a delay. US Delay's does, except for a clock that
+ * FLAG holds at zero: its press only passes the turn on, it gets no increment and no move time,
+ * and a delay counting down on a face that reads 0:00 was the one thing it still received.
+ */
+internal fun turnStartsWithDelay(mode: TimerMode, player: PlayerState, flagBehavior: FlagBehavior): Boolean =
+    mode == TimerMode.US_DELAY && !(flagBehavior == FlagBehavior.FLAG && player.isOutOfTime)
+
+/**
  * Whether flags have ended the game. FREEZE stops at the first flag; FLAG plays on until every
  * clock has run out; NEGATIVE and REVERSE never stop on a flag -- the overrun is shown and play
  * continues.
@@ -2502,14 +2508,6 @@ internal fun tickPlayer(p: PlayerState, delta: Long, s: PlayerSettings, settings
  * under another name. It marks who lost -- see [isFlagged] -- and the game goes on as it would at
  * a chess clock: turns still alternate, and only the flagged player's clock no longer runs.
  */
-/**
- * Whether a turn beginning under [mode] opens on a delay. US Delay's does, except for a clock that
- * FLAG holds at zero: its press only passes the turn on, it gets no increment and no move time,
- * and a delay counting down on a face that reads 0:00 was the one thing it still received.
- */
-internal fun turnStartsWithDelay(mode: TimerMode, player: PlayerState, flagBehavior: FlagBehavior): Boolean =
-    mode == TimerMode.US_DELAY && !(flagBehavior == FlagBehavior.FLAG && player.isOutOfTime)
-
 internal fun flagsEndGame(players: List<PlayerState>, flagBehavior: FlagBehavior, numberOfPlayers: Int): Boolean {
     val out = players.count { it.isOutOfTime }
     return when (flagBehavior) {
@@ -2842,11 +2840,6 @@ internal fun tickCoupled(state: ChessClockState, delta: Long, settings: ChessClo
     }
 }
 
-/**
- * Pure post-move state transition (increments/resets/period-advances the mover after
- * [ChessTimerViewModel.startOrSwitch] records a move) for every mode driven by [applyPostMoveLogic].
- * Exposed at the top level for the same testability reason as [tickPlayer].
- */
 /** Whether this player's [PlayerState.timeRemainingMs] is an overrun rather than time left. */
 private fun PlayerState.isOverrun(flagBehavior: FlagBehavior): Boolean =
     isOutOfTime && (isNegative || flagBehavior == FlagBehavior.REVERSE)
@@ -3369,11 +3362,6 @@ internal fun phaseTap(state: ChessClockState, tapped: PlayerState, settings: Che
 }
 
 /**
- * What [tickClock] decided: the next state, and the effects the ViewModel is to carry out for it.
- * [cue] is the states the beeps and the voice compare, [coupled] what a coupled mode added to it,
- * and [phaseChangedFrom] player 1 as they stood when this tick took PHASES to another stage.
- */
-/**
  * How much of [delta] a clock that passes the turn by itself can take in one step: up to the end of
  * the turn, or of the Gong phase, that is running.
  *
@@ -3467,6 +3455,11 @@ internal fun advanceClock(state: ChessClockState, delta: Long, settings: ChessCl
     return current
 }
 
+/**
+ * What [tickClock] decided: the next state, and the effects the ViewModel is to carry out for it.
+ * [cue] is the states the beeps and the voice compare, [coupled] what a coupled mode added to it,
+ * and [phaseChangedFrom] player 1 as they stood when this tick took PHASES to another stage.
+ */
 internal class ClockTick(
     val state: ChessClockState,
     val cue: TickCue? = null,
@@ -3576,6 +3569,11 @@ private fun tickPhases(state: ChessClockState, delta: Long, settings: ChessClock
     return ClockTick(state.copy(globalTimeMs = newGlobal), TickCue(p1.copy(timeRemainingMs = state.globalTimeMs), p1.copy(timeRemainingMs = newGlobal), 1))
 }
 
+/**
+ * Pure post-move state transition (increments/resets/period-advances the mover after
+ * [ChessTimerViewModel.startOrSwitch] records a move) for every mode driven by [applyPostMoveLogic].
+ * Exposed at the top level for the same testability reason as [tickPlayer].
+ */
 internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, timeSpentOnMove: Long, settings: ChessClockSettings, s: PlayerSettings): ChessClockState {
     val p = state.players[playerIndex - 1]
     val tempP = if (s.mode == TimerMode.MOVE_COUNTS_DOWN) {
@@ -3763,7 +3761,6 @@ internal fun computePostMoveState(state: ChessClockState, playerIndex: Int, time
     return state.copy(players = players, phasesFinished = state.phasesFinished || allPlayed)
 }
 
-/** Tick rate while the smallest digit on screen is hundredths of a second. */
 /**
  * How long until a clock reading [remainingMs] shows its next second, for a face that shows nothing
  * finer: the E Ink build's, minutes and seconds. It ticked every 100ms like the phone, ten wake-ups a
@@ -3829,6 +3826,7 @@ internal fun ticksOnTheSecond(mode: TimerMode, player: PlayerState, settings: Ch
     }
 }
 
+/** Tick rate while the smallest digit on screen is hundredths of a second. */
 private const val FAST_TICK_MS = 10L
 
 /** Tick rate the rest of the time: enough for tenths, and ten times cheaper. */
@@ -5460,7 +5458,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     fun playerMode(playerIndex: Int): TimerMode = getPlayerSettings(playerIndex).mode
 
     /**
-     * Called from [tick], which runs on the main thread, so nothing here may encode on the caller.
+     * Called on the main thread -- from [tick], and where a move, a pause or a correction is made
+     * -- so nothing here may encode on the caller.
      *
      * It used to. Both encodeToString calls sat outside the launch, and what they encode is the
      * whole of [ChessClockSettings] -- every notebook note and every drawing stroke ride along in
@@ -5650,8 +5649,8 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
                 _settings.value = resumedSettings
                 soundManager.loadSounds(resumedSettings)
 
-                // The autosave runs only from tick(), so every snapshot it takes is of a *running*
-                // clock. Installing one as-is produced a clock that looked like it was counting --
+                // A save taken from tick() is of a *running* clock; those taken at a pause, a
+                // correction or the arbiter's Save are of a paused one. Installing a running one as-is produced a clock that looked like it was counting --
                 // active side lit, pause icon showing -- with no timerJob behind it, so it never
                 // moved. And because isPaused was false, the first press did not take
                 // startOrSwitch's resume() branch either: it went straight to the switch and
