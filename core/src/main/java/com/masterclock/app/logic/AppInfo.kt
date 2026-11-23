@@ -757,6 +757,12 @@ object AppInfo {
 
     val OSS_LICENSES = listOf(
         OssLicense(
+            name = "Noto Sans, Noto Sans Mono",
+            copyright = "The Noto Project Authors",
+            license = "SIL Open Font License 1.1",
+            url = "https://notofonts.github.io/",
+        ),
+        OssLicense(
             name = "AndroidX / Jetpack Compose",
             copyright = "The Android Open Source Project",
             license = "Apache License 2.0",

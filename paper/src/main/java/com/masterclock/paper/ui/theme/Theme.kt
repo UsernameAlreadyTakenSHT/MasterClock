@@ -31,7 +31,8 @@ fun MasterClockTheme(
 
     ThemeMMD(
         colorScheme = if (eInkDarkMode) EInkDarkColorScheme else EInkLightColorScheme,
-        typography = eInkTypography,
+        // MMD's type scale, its sizes and weights, in Noto Sans rather than Lato: see NotoSans.
+        typography = eInkTypography.inFamily(NotoSans),
         content = content,
     )
 }
