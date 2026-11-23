@@ -132,7 +132,8 @@ class BoardFrameLog(private val capacity: Int = DEFAULT_CAPACITY, private val no
                 ?: return@mapNotNull null
             val direction = Direction.entries.firstOrNull { it.mark.toString() == parts[1] } ?: return@mapNotNull null
             val bytes = parts.drop(4).takeWhile { it != "..." }
-            if (bytes.isEmpty() || bytes.size > MAX_FRAME_BYTES || bytes.any { it.length != 2 || it.toIntOrNull(16) == null }) return@mapNotNull null
+            // Two hex digits each: "-5" and "+A" read as numbers in base 16 and were taken for bytes.
+            if (bytes.isEmpty() || bytes.size > MAX_FRAME_BYTES || bytes.any { it.length != 2 || !it.all { c -> c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F' } }) return@mapNotNull null
             Frame(atMs.coerceAtLeast(0), direction, parts[2], parts[3], bytes.joinToString(" ") { it.uppercase() })
         }.take(MAX_PARSED_FRAMES).toList()
 

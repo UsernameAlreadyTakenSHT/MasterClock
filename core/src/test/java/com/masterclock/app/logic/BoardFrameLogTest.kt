@@ -130,4 +130,10 @@ class BoardFrameLogTest {
         )
         assertEquals(emptyList<BoardFrameLog.Frame>(), BoardFrameLog.parse(""))
     }
+
+    @Test
+    fun `a signed number is not a byte`() {
+        val text = BoardFrameLog.HEADER + "\n0.000 < BLE Raw 0A -5\n0.100 < BLE Raw +A 0B\n0.200 < BLE Raw 0C 0D\n"
+        assertEquals(listOf("0C 0D"), BoardFrameLog.parse(text).map { it.hex })
+    }
 }
