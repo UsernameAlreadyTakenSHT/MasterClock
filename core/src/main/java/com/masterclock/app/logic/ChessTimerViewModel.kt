@@ -4375,7 +4375,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
             if (currentState.isPaused) { resume(); return }
             // The tick settleRunningClock ran just now ended the pause or the phase this tap was
             // meant for. Acting on it as well skipped the phase that had only just begun.
+            val beforeTap = _uiState.value
             _uiState.update { st -> phaseTap(st, beforeSettle.players[0], settings.value)?.also { onPhaseTransition(st.players[0], it) } ?: st }
+            // A tap that took is saved, as a move is: the last save still said "waiting for a tap",
+            // and a game closed in the ten seconds after came back with the phase not begun.
+            if (_uiState.value != beforeTap && FlavorConfig.savesGameInPlay()) saveClockForLater()
             return
         }
 
@@ -5794,6 +5798,10 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         if (!canBerserk(before, playerIndex, settings.value)) return
         _uiState.update { goBerserk(it, playerIndex, settings.value) }
         addEvent(GameEvent(eventType = "BERSERK", playerIndex = playerIndex))
+        // Saved now, as a move is. The alive mark goes on being written against the last save, and
+        // a resume replays only time from it: closed within ten seconds, the game came back with
+        // the clock whole and the Berserk gone from the log.
+        if (FlavorConfig.savesGameInPlay()) saveClockForLater()
     }
 
     fun updateScoreboardNames(p1: String, p2: String) {
