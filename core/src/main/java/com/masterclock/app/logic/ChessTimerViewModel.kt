@@ -2008,7 +2008,7 @@ private const val MAX_IMPORTED_EVENT_DETAIL_CHARS = 256
 private const val MAX_IMPORTED_EVENT_TYPE_CHARS = 64
 
 /** More than anyone has played, and far below what makes the history screen or the database suffer. */
-private const val MAX_IMPORTED_LOGS = 10_000
+internal const val MAX_IMPORTED_LOGS = 10_000
 
 /** How many imported games are prepared and stored at a time; see updateSettings. */
 private const val IMPORT_BATCH = 200

@@ -263,8 +263,12 @@ object ZipBackupManager {
                             // allowed to drop out on their own -- the games and presets one at a
                             // time, since one this version cannot read took every other with it.
                             name == SETTINGS_ENTRY -> settings = json.decodeFromString(content)
-                            name == LOGS_ENTRY || LOGS_PART.matches(name) -> try {
-                                logs = logs.orEmpty() + decodeEach(GameLog.serializer(), json.parseToJsonElement(content)).orEmpty()
+                            // No further than an import keeps: the first MAX_IMPORTED_LOGS. Every
+                            // game was decoded and held at once, and a history of thousands of long
+                            // games ran the heap out -- the backup refused, the app's own.
+                            (name == LOGS_ENTRY || LOGS_PART.matches(name)) && logs.orEmpty().size < MAX_IMPORTED_LOGS -> try {
+                                val room = MAX_IMPORTED_LOGS - logs.orEmpty().size
+                                logs = logs.orEmpty() + decodeEach(GameLog.serializer(), json.parseToJsonElement(content)).orEmpty().take(room)
                             } catch (e: Exception) {
                                 Log.w("ZipBackupManager", "Failed to parse $name from backup, skipping", e)
                             }
