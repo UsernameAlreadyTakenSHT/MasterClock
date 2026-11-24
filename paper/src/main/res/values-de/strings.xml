@@ -26,7 +26,7 @@
          size worth reading, and was cut in two. -->
     <string name="timer_resume">Weiter</string>
     <string name="timer_start">Starten</string>
-    <!-- "Einstellungen" at 13 characters does not fit the button beside Reset and Fortsetzen. -->
+    <!-- "Einstellungen" at 13 characters does not fit the button beside Reset and Weiter. -->
     <string name="timer_settings">Optionen</string>
     <string name="timer_time_up">ZEIT</string>
 

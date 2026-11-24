@@ -59,7 +59,8 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
 /**
  * [style] is the row's, from [sharedLabelStyle]: MMD pads a button's label by 16dp a side, which
  * left "Fischer" a third of the screen less 32dp, and cut it to "Fisch" at a large font. The label
- * gets the width, on one line, at the size the three cards share.
+ * gets the width, on one line, at the size the three cards share. The font cards pass their own
+ * face instead, one card to a line.
  */
 @Composable
 fun ModeCard(title: String, selected: Boolean, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.labelLarge, onClick: () -> Unit) {

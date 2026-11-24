@@ -31,7 +31,7 @@ you start rather than after a screenshot:
   deliberately: "Dernières", "Últimas", "Letzte".
 - **The three buttons under the E-Ink clock**, in `paper` only. They are narrow, and `paper` has its
   own copy of these strings so it can be shortened without touching the phone app. German needed
-  both "Reset" for `common_reset` and "Optionen" for `timer_settings`.
+  "Reset" for `common_reset`, "Optionen" for `timer_settings` and "Weiter" for `timer_resume`.
 
 Partial translations are fine. Android falls back **string by string**, so a file with ten lines
 translated works perfectly — those ten are shown in your language, the rest stay English. There is
