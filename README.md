@@ -51,19 +51,17 @@ Requires Android 7.0 (API 24) or later. Every screen and option is described in 
 | | Complete | Standard | Lite | Mini | E-Ink |
 |---|---|---|---|---|---|
 | Icon | <img src="branding/icon-complete.svg" alt="Complete icon" width="56"> | <img src="branding/icon-standard.svg" alt="Standard icon" width="56"> | <img src="branding/icon-lite.svg" alt="Lite icon" width="56"> | <img src="branding/icon-mini.svg" alt="Mini icon" width="56"> | <img src="branding/icon-paper.svg" alt="E-Ink icon" width="56"> |
-| Modes settings | ✅ | ✅ | ✅ | 🟡 (3 modes) | 🟡 (3 modes) |
+| Modes settings | ✅ | ✅ | ✅ | 🟡 | 🟡 |
 | Presets | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Arbiter's panel | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Behavior / Display / Audio settings | ✅ | ✅ | ❌ | ❌ | ❌ |
 | More (tools, backup, notebook…) | ✅ | ❌ | ❌ | ❌ | ❌ |
 
-🟡 in part: Mini and E-Ink have three of the modes, Sudden Death, Fischer and Move Timer Standard.
+🟡 in part: Mini and E-Ink have three of the modes, Sudden Death, Fischer and Move Timer.
 
 The icon is the same in every build, a knight in a clock's ring across the clock's two halves, and
 its colour tells the build as a medal would: gold, silver, bronze, iron. The E-Ink build has it in
 black, in the frame the icons of Mudita's own apps have.
-
-"3 modes" means Sudden Death, Fischer, and Move Timer Standard only — everything else supports the full set of timing modes.
 
 ## Translations
 
