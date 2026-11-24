@@ -22,13 +22,13 @@ bug: please open an issue.
 | | Complete | Standard | Lite | Mini | E-Ink |
 |---|---|---|---|---|---|
 | Icon | <img src="../../branding/icon-complete.svg" alt="Complete icon" width="56"> | <img src="../../branding/icon-standard.svg" alt="Standard icon" width="56"> | <img src="../../branding/icon-lite.svg" alt="Lite icon" width="56"> | <img src="../../branding/icon-mini.svg" alt="Mini icon" width="56"> | <img src="../../branding/icon-paper.svg" alt="E-Ink icon" width="56"> |
+| Modes | ✅ | ✅ | ✅ | 🟡 (3 modes) | 🟡 (3 modes) |
 | Home | ✅ | ✅ | ✅ | ✅ | ✅ (its own) |
-| Presets, arbiter's panel | ✅ | ✅ | ✅ | — | — |
-| Modes | ✅ all | ✅ all | ✅ all | 3 modes | 3 modes |
-| Behavior, Display, Audio | ✅ | ✅ | — | — | — |
-| More | ✅ | — | — | — | — |
+| Presets, arbiter's panel | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Behavior, Display, Audio | ✅ | ✅ | ❌ | ❌ | ❌ |
+| More | ✅ | ❌ | ❌ | ❌ | ❌ |
 
-The three modes of Mini and E-Ink are Sudden Death, Fischer and Move Timer Standard. The E-Ink app
+🟡 in part: the three modes of Mini and E-Ink are Sudden Death, Fischer and Move Timer Standard. The E-Ink app
 has a short settings page of its own, described at the end of [Home](home.md).
 
 ## Conventions
