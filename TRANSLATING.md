@@ -213,7 +213,8 @@ Please say whether you are a native speaker — not a requirement, just useful c
 
 ## A note on scale
 
-Most of the interface is still hardcoded English inside the Kotlin sources and is being moved into
-`strings.xml` screen by screen. So `values/strings.xml` will keep growing for a while, and a
-language that looks complete today will have new strings to pick up later. Nothing breaks in the
-meantime: new strings simply appear in English until translated.
+Every string the interface shows is in `strings.xml`: some 550 in the phone app, about 40 in the
+E-Ink app. A few words stay English on purpose and are not there: the names of the timing modes
+(Fischer, Byoyomi, Sudden Death…), as tournaments use them, and file formats such as ZIP and APK.
+New features add strings, so a language complete today may have a few new ones later; until they
+are translated they appear in English, and nothing breaks.
