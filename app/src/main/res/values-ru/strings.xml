@@ -2,9 +2,677 @@
 <!--
   MasterClock — ru (Russian)
 
-  Not translated yet: this file only marks where the Russian strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode names (Fischer, Byoyomi, Sudden Death…) and chess variant names are Kotlin literals rather
+  than resources, so they stay in English by construction — see the notes in values/strings.xml.
+
+  app_name and settings_app_version are left out on purpose: they are the product name.
+
+  Russian runs longer than English, so the labels in tight rows (the settings tabs, the presets
+  tabs, the clock chips) are deliberately short. Counted things carry the four plural categories
+  CLDR gives Russian: one, few, many and other (other is for fractions, and takes the genitive
+  singular, like few).
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Common -->
+    <string name="common_cancel">Отмена</string>
+    <string name="common_reset">Сбросить</string>
+    <string name="common_player_n">Игрок %d</string>
+    <string name="common_back_to_game">Вернуться к партии</string>
+    <string name="common_back">Назад</string>
+    <string name="common_save">Сохранить</string>
+    <string name="common_delete">Удалить</string>
+    <string name="common_rename">Переименовать</string>
+    <string name="common_name">Название</string>
+
+    <!-- Presets -->
+    <string name="preset_title">Шаблоны</string>
+    <string name="preset_tab_all">Все</string>
+    <string name="preset_tab_mine">Мои</string>
+    <!-- Short on purpose: the three tabs shrink together, and "Последние партии" would shrink all of them. -->
+    <string name="preset_tab_last_games">Недавние</string>
+    <string name="preset_save_current">Сохранить текущий контроль времени</string>
+    <string name="preset_save_title">Сохранить контроль времени</string>
+    <string name="preset_rename_title">Переименовать шаблон</string>
+    <string name="preset_empty_custom">Настройте контроль времени, затем сохраните его здесь.</string>
+    <string name="preset_long_press_hint">Нажмите и удерживайте шаблон, чтобы переименовать или удалить его.</string>
+    <string name="preset_manage_action">Переименовать или удалить</string>
+    <string name="preset_view_statistics">Статистика</string>
+    <string name="preset_empty_history">Сыгранных партий пока нет.</string>
+    <string name="preset_delete_title">Удалить «%s»?</string>
+    <string name="preset_delete_message">Этот шаблон будет удалён навсегда.</string>
+
+    <string name="common_clear">Очистить</string>
+    <string name="common_close">Закрыть</string>
+    <string name="common_remove">Убрать</string>
+    <string name="common_select">Выбрать</string>
+    <string name="common_optional">Необязательно</string>
+
+    <!-- Mode settings -->
+    <string name="settings_select_mode">Выберите режим игры</string>
+    <string name="settings_more_modes">Другие режимы</string>
+    <string name="settings_bonus_type">Тип бонуса</string>
+    <string name="settings_move_timer_type">Тип Move Timer</string>
+    <string name="settings_byoyomi_type">Тип Byoyomi</string>
+    <string name="settings_chrono_type">Тип Chronos</string>
+    <string name="settings_move_counts_type">Тип Move Counts</string>
+    <string name="settings_fast_move_type">Тип Fast Move</string>
+    <string name="settings_staircase_type">Тип Staircase</string>
+    <string name="settings_time_parameters">Параметры времени</string>
+    <string name="settings_initial_time">Начальное время</string>
+    <string name="settings_increment">Добавление</string>
+    <string name="settings_increment_bonus">Добавление / бонус</string>
+    <string name="settings_delay">Задержка</string>
+    <string name="settings_move_time">Время на ход</string>
+    <string name="settings_time_per_move">Время на каждый ход</string>
+    <string name="settings_time_to_move">Время до хода</string>
+    <string name="settings_starting_move_time">Начальное время на ход</string>
+    <string name="settings_time_cap">Предел времени</string>
+    <string name="settings_byoyomi_time">Время Byoyomi</string>
+    <string name="settings_periods_goal">Периоды / цель по ходам</string>
+    <string name="settings_progression">Прирост (ходы)</string>
+    <string name="settings_max_moves">Максимум ходов</string>
+    <string name="settings_decrement_per_move">Уменьшение за ход</string>
+    <string name="settings_min_time_floor">Нижний предел времени</string>
+    <string name="settings_increase_per_move">Увеличение за ход</string>
+    <string name="settings_max_time_ceiling">Верхний предел времени</string>
+    <string name="settings_grace_period">Льготный период (обычная скорость)</string>
+    <string name="settings_full_fast_starts">Полное ускорение начинается с</string>
+    <string name="settings_reflection_time">Время на обдумывание</string>
+    <string name="settings_simultaneous">Одновременная игра</string>
+    <string name="settings_duration">Длительность</string>
+    <string name="settings_base_duration_range">Диапазон основного времени</string>
+    <string name="settings_increment_range">Диапазон добавления (Fischer)</string>
+    <string name="settings_min_duration">Минимальная длительность</string>
+    <string name="settings_max_duration">Максимальная длительность</string>
+    <string name="settings_min_increment">Минимальное добавление</string>
+    <string name="settings_max_increment">Максимальное добавление</string>
+    <string name="settings_rounded_time">Округлённое время (минуты/секунды)</string>
+    <string name="settings_random_shared_draw">Оба игрока получают время, выпавшее Игроку 1: задайте диапазоны на вкладке Игрока 1.</string>
+    <string name="settings_random_config">Настройка режима Random</string>
+    <string name="settings_hidden_config">Настройка режима Hidden</string>
+    <string name="settings_show_percentage">Показывать оповещения в процентах</string>
+    <string name="settings_fide_config">Настройка FIDE Periods</string>
+    <string name="settings_add_period">Добавить период</string>
+    <string name="settings_actions">Действия</string>
+    <string name="settings_period_n">Период %d</string>
+    <string name="settings_moves_unlock">Ходов до следующего (0 = последний)</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Всего ходов до периода %d</string>
+    <plurals name="settings_moves_read_as_more">
+        <item quantity="one">Читается как ещё %1$d ход: всего %2$d</item>
+        <item quantity="few">Читается как ещё %1$d хода: всего %2$d</item>
+        <item quantity="many">Читается как ещё %1$d ходов: всего %2$d</item>
+        <item quantity="other">Читается как ещё %1$d хода: всего %2$d</item>
+    </plurals>
+    <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Название фазы %d</string>
+    <string name="settings_phase_n">Фаза %d</string>
+    <string name="settings_color_red">Красный: %d</string>
+    <string name="settings_color_green">Зелёный: %d</string>
+    <string name="settings_color_blue">Синий: %d</string>
+    <string name="settings_fast_accel_rate">Скорость ускорения (+%s с/с)</string>
+    <string name="settings_full_fast_accel_rate">Полное ускорение (+%s с/с)</string>
+    <string name="settings_version">Версия %s</string>
+    <string name="share_settings">Поделиться настройками</string>
+    <string name="share_restore_full_desc">Восстановить всё (настройки и медиафайлы) из архива .zip.</string>
+    <string name="settings_final_period">Это будет последний период партии.</string>
+    <string name="settings_flag_on_end">Флажок в конце (поражение)</string>
+    <string name="settings_phases_config">Настройка фаз</string>
+    <string name="settings_repeat_phases">Повторять фазы (по кругу)</string>
+    <string name="settings_pause_between_phases">Пауза между фазами</string>
+    <string name="settings_pause_until_tap">Пауза между фазами до касания</string>
+    <string name="settings_wait_tap_at_end">Ждать касания в конце</string>
+    <string name="settings_allow_skip">Разрешить пропуск (касание переходит дальше)</string>
+    <string name="settings_phase_placeholder">Подготовка, раунд X…</string>
+    <!-- "Transfer" is the variant's name and stays English; the manual names this switch the same way. -->
+    <string name="settings_cumulative_transfer">Накопительный Transfer</string>
+    <string name="settings_cumulative_explain">Каждый ход получает время на ход плюс время, которое соперник потратил на свой последний ход. Если включено, остаток от прежних ходов тоже сохраняется; если выключено, он теряется. Для постоянной суммы, где то, что тратит один игрок, получает другой, см. Hourglass.</string>
+    <string name="settings_one_for_all">One for All (без нажатий)</string>
+
+    <string name="settings_select_custom_color">Выберите свой цвет</string>
+    <string name="settings_pick_colour">Выбрать свой цвет</string>
+    <string name="settings_sound_custom">Выбран свой звук</string>
+    <string name="settings_sound_default">Звук по умолчанию</string>
+    <string name="settings_sound_clear">Убрать свой звук</string>
+    <string name="settings_sound_change">Сменить свой звук</string>
+    <string name="settings_sound_choose">Выбрать свой звук</string>
+
+    <string name="toast_backup_ok">Резервная копия создана!</string>
+    <string name="toast_import_ok">Импорт выполнен!</string>
+    <string name="toast_import_failed">Ошибка импорта: не удалось прочитать файл.</string>
+    <string name="toast_export_ok">Экспорт выполнен!</string>
+    <string name="toast_export_failed">Ошибка экспорта: не удалось записать файл.</string>
+    <string name="toast_backup_too_large">Резервная копия не сохранена: она слишком велика для восстановления.</string>
+    <string name="toast_export_too_large">Слишком много партий для файла настроек: используйте полную резервную копию.</string>
+    <string name="toast_no_voice">Нет голоса для синтеза речи. Установите его в настройках устройства, чтобы слышать объявления.</string>
+    <string name="toast_no_app_for_this">На этом устройстве нет приложения для этого действия.</string>
+    <string name="toast_sound_not_kept">Приложению не удалось сохранить доступ к этому файлу, поэтому после перезапуска он перестал бы воспроизводиться. Выберите звук из памяти устройства.</string>
+    <string name="qr_confirm_title">Применить отсканированные настройки?</string>
+    <string name="qr_confirm_message">Этот код заменит ваши текущие настройки и может добавить партии и таблицу счёта. Принимайте коды только от тех, кому доверяете.</string>
+    <string name="qr_confirm_apply">Применить</string>
+    <string name="import_confirm_title">Импортировать этот файл?</string>
+    <string name="import_confirm_message">Этот файл заменит ваши текущие настройки. Его партии, шаблоны, заметки и результаты таблицы счёта добавляются к вашим: ничего вашего не удаляется.</string>
+    <string name="import_confirm_action">Импорт</string>
+    <string name="confirm_also_ends_game">Это также завершит партию на часах или ту, что ждёт продолжения.</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Игрок %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Игрок %1$d, %2$s, ваш ход</string>
+    <string name="a11y_out_of_time">время вышло</string>
+    <string name="a11y_finished">завершено</string>
+    <string name="a11y_time_hidden">время скрыто</string>
+    <string name="a11y_no_time_left">времени не осталось</string>
+    <string name="a11y_announce_out_of_time">У игрока %d вышло время</string>
+    <string name="a11y_announce_finished">Партия окончена</string>
+    <string name="a11y_announce_paused">Пауза</string>
+    <string name="a11y_announce_running">Часы идут</string>
+    <string name="a11y_announce_to_move">Ход игрока %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <plurals name="a11y_hours">
+        <item quantity="one">%d час</item>
+        <item quantity="few">%d часа</item>
+        <item quantity="many">%d часов</item>
+        <item quantity="other">%d часа</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d минута</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+        <item quantity="other">%d минуты</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунды</item>
+        <item quantity="many">%d секунд</item>
+        <item quantity="other">%d секунды</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">остался %d период</item>
+        <item quantity="few">осталось %d периода</item>
+        <item quantity="many">осталось %d периодов</item>
+        <item quantity="other">осталось %d периода</item>
+    </plurals>
+
+    <!-- Timer chips: on the clock face, so as short as the English. -->
+    <string name="timer_cap">МАКС</string>
+    <string name="timer_global">ОБЩЕЕ</string>
+    <string name="timer_total">ВСЕГО</string>
+    <string name="timer_labeled_time">%1$s: %2$s</string>
+    <!-- "OT" labels the Overtime reserve, as in French and German: "РЕЗЕРВ". -->
+    <string name="timer_overtime">РЕЗЕРВ</string>
+    <string name="timer_switch_turn">Передать ход</string>
+    <string name="timer_presets">Шаблоны</string>
+    <string name="timer_settings">Настройки</string>
+    <string name="timer_pause">Пауза</string>
+
+    <!-- Settings tabs and dialogs -->
+    <string name="settings_tab_modes">Режимы</string>
+    <!-- Short like the French "Jeu" and German "Spiel": "Поведение" would shrink the whole tab row. -->
+    <string name="settings_tab_behavior">Игра</string>
+    <string name="settings_tab_display">Экран</string>
+    <string name="settings_tab_audio">Звук</string>
+    <string name="settings_tab_more">Ещё</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_clear_logs_title">Очистить все журналы партий?</string>
+    <string name="settings_clear_logs_message">Вся записанная история будет удалена навсегда.</string>
+    <string name="settings_reset_title">Сбросить все настройки?</string>
+    <string name="settings_reset_message">Это действие нельзя отменить.</string>
+    <string name="settings_reset_confirm">Сбросить</string>
+
+    <!-- Enum-backed option labels -->
+    <string name="flag_freeze">Стоп</string>
+    <string name="flag_flag">Флажок</string>
+    <string name="flag_negative">Минус</string>
+    <string name="flag_reverse">Реверс</string>
+
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_auto">Авто</string>
+
+    <string name="game_chess">Шахматы</string>
+    <string name="game_draughts">Шашки</string>
+    <string name="game_shogi">Сёги</string>
+
+    <string name="order_linear">Линейный</string>
+    <string name="order_snake">Змейка</string>
+    <string name="order_rotate">Ротация</string>
+    <string name="order_random">Случайный</string>
+
+    <!-- Settings: Display -->
+    <string name="settings_theme">Тема</string>
+    <string name="settings_font">Шрифт</string>
+    <string name="font_system">Системный</string>
+    <string name="settings_orientation">Ориентация</string>
+    <string name="settings_vert">Вертикаль</string>
+    <string name="settings_layout_scale">Макет и масштаб</string>
+    <string name="settings_active_side_bigger">Активная сторона крупнее</string>
+    <string name="settings_fullscreen">Во весь экран</string>
+    <string name="settings_flash_low_time">Мигать при нехватке времени (&lt;10 с)</string>
+    <string name="settings_keep_awake">Не гасить экран</string>
+    <string name="settings_force_brightness">Максимальная яркость</string>
+    <string name="settings_primary_colors">Основные цвета</string>
+    <string name="settings_active_bg">Фон активной стороны</string>
+    <string name="settings_inactive_bg">Фон неактивной стороны</string>
+    <string name="settings_active_text">Текст активных часов</string>
+    <string name="settings_inactive_text">Текст неактивных часов</string>
+    <string name="settings_secondary_info">Дополнительная информация</string>
+    <string name="settings_label_text_color">Цвет подписей (ходы, периоды, задержка)</string>
+    <string name="settings_alert_text_color">Цвет предупреждений (ВРЕМЯ ВЫШЛО, ХОДИТЕ!)</string>
+    <string name="settings_special_states">Особые состояния</string>
+    <string name="settings_loss_bg">Фон при поражении</string>
+    <string name="settings_gong_reflection_bg">Gong: фон обдумывания</string>
+    <string name="settings_time_format">Формат времени</string>
+    <string name="settings_always_hours">Всегда показывать часы</string>
+    <string name="settings_always_minutes">Всегда показывать минуты</string>
+    <string name="settings_leading_zeros">Ведущие нули</string>
+    <string name="settings_show_tenths">Показывать десятые доли секунды</string>
+    <string name="settings_show_hundredths">Показывать сотые</string>
+    <string name="settings_like_tenths">Как десятые</string>
+    <string name="settings_under_10s">Менее 10 с</string>
+    <string name="settings_threshold">Порог</string>
+    <string name="settings_all">Всегда</string>
+    <string name="settings_information">Информация</string>
+    <string name="settings_always_show_moves">Всегда показывать ходы</string>
+    <string name="settings_show_period" tools:ignore="TypographyFractions">Показывать период (1/3)</string>
+
+    <!-- Settings: Audio -->
+    <string name="settings_sound">Звук</string>
+    <string name="settings_voice_announcements">Голосовые объявления</string>
+    <string name="settings_spoken_byoyomi">Озвучивать byoyomi</string>
+    <string name="settings_in_japanese_soon">По-японски (скоро)</string>
+    <string name="settings_timer_alerts">Сигналы таймера</string>
+    <string name="settings_countdown_beep">Сигнал обратного отсчёта</string>
+    <string name="settings_triple_beep">Тройной сигнал, когда время вышло</string>
+    <string name="settings_play_switch_sound">Звук при передаче хода</string>
+    <string name="settings_haptics">Вибрация</string>
+    <string name="settings_haptic_countdown">Вибрация при обратном отсчёте</string>
+    <string name="settings_haptic_switch">Вибрация при передаче хода</string>
+    <string name="settings_haptic_feedback">Виброотклик</string>
+    <string name="settings_output_volume">Вывод и громкость</string>
+    <string name="settings_sounds_volume">Громкость звуков</string>
+    <string name="settings_voice_volume">Громкость голоса</string>
+    <string name="settings_voice_announcement">Голосовое объявление</string>
+    <string name="settings_use_media_output">Выводить как медиа (поток)</string>
+    <string name="settings_custom_sounds">Свои звуки</string>
+    <string name="settings_sound_previews">Прослушать звуки</string>
+    <string name="settings_gong_mode_sound">Гонг (режим Gong)</string>
+    <string name="settings_beep_countdown_sound">Сигнал (обратный отсчёт)</string>
+    <string name="settings_final_beep_sound">Финальный сигнал (время вышло)</string>
+    <string name="settings_switch_sound">Передача (ход игрока)</string>
+    <string name="settings_gong">Гонг</string>
+    <string name="settings_beep">Сигнал</string>
+    <string name="settings_final">Финал</string>
+    <string name="settings_switch">Передача</string>
+
+    <!-- Settings: Behavior -->
+    <string name="settings_flag_behavior">Когда падает флажок</string>
+    <string name="settings_flag_cap">Предел после флажка</string>
+    <string name="settings_flag_cap_desc">Насколько часы могут уйти за ноль. Там они останавливаются, а игра продолжается. Пусто: без предела.</string>
+    <string name="settings_tournament_rules">Турнирные правила</string>
+    <string name="settings_fischer_fide">Fischer FIDE (бонус на ходу 0)</string>
+    <string name="settings_forced_move_counter">Обязательный счётчик ходов</string>
+    <string name="settings_tournament_rules_explain">Первое относится только к Fischer: бонус начисляется до 1-го хода. Второе только к FIDE Periods: если включено, период заканчивается, когда сделано нужное число ходов; если выключено, когда истекает его время.</string>
+    <string name="settings_interaction">Управление</string>
+    <string name="settings_confirm_reset">Подтверждать сброс</string>
+    <string name="settings_trigger_on_press">Срабатывать при нажатии (иначе при отпускании)</string>
+    <string name="settings_pause_background">Пауза в фоновом режиме</string>
+    <string name="settings_keep_running">Работать в фоновом режиме</string>
+    <string name="settings_keep_running_desc">Если пауза выше выключена, уведомление поддерживает ход часов, пока приложение в фоне, чтобы Android его не закрыл. В нём видно, чей ход и сколько у него времени, и есть кнопка «Пауза».</string>
+    <string name="notif_channel_clock">Идёт партия</string>
+    <string name="settings_advanced">Дополнительно</string>
+    <string name="settings_different_per_player">Разные настройки для каждого игрока</string>
+    <string name="settings_more_players">Больше игроков (экспериментально)</string>
+    <string name="settings_players">Игроки</string>
+    <string name="settings_visuals">Внешний вид</string>
+    <string name="settings_single_player_top">Один игрок сверху</string>
+    <string name="settings_system_behavior">Поведение системы</string>
+
+    <!-- Export / import dialogs -->
+    <string name="share_export_title">Экспорт и отправка</string>
+    <string name="share_export_intro">Выберите, как отправить или сохранить ваши данные.</string>
+    <string name="share_file">Отправить файл</string>
+    <string name="share_file_desc">Отправить другу файл настроек .json.</string>
+    <string name="share_qr">Отправить QR-кодом</string>
+    <string name="share_qr_desc">Мгновенное сканирование на другом устройстве (только настройки).</string>
+    <string name="share_export_storage">Экспорт в память</string>
+    <string name="share_export_storage_desc">Сохранить файл .json в памяти устройства.</string>
+    <string name="share_export_full">Экспортировать всё (полная копия)</string>
+    <string name="share_export_full_desc">Все настройки, история, шаблоны И блокнот с фото, записями и видео в архиве .zip.</string>
+    <string name="share_include_history">Включить историю и текстовые заметки</string>
+    <string name="share_import_title">Импорт данных</string>
+    <string name="share_import_json">Импорт файла JSON</string>
+    <string name="share_import_json_desc">Загрузить ранее экспортированный файл настроек .json.</string>
+    <string name="share_scan_qr">Сканировать QR-код</string>
+    <string name="share_scan_qr_desc">Быстро импортировать настройки, отсканировав другой экран.</string>
+    <string name="share_import_full">Импорт полной копии</string>
+    <string name="share_import_full_desc">Восстановить свои настройки или перенести с другого устройства.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Авторы</string>
+    <string name="credits_tab_changes">Изменения</string>
+    <string name="credits_tab_licenses">Лицензии</string>
+    <string name="credits_rules_documents">Документы с правилами</string>
+    <string name="credits_libraries">MasterClock создан с помощью этих библиотек с открытым исходным кодом.</string>
+
+    <!-- Omni wizard (settings) -->
+    <string name="omni_cfg_previous">Назад</string>
+    <string name="omni_cfg_next_step">Далее</string>
+    <string name="omni_cfg_launch_game">Начать игру</string>
+    <string name="omni_cfg_ready">Всё готово</string>
+    <string name="omni_cfg_summary">Сводка</string>
+
+    <string name="omni_cfg_session_games">Сессия и партии</string>
+    <string name="omni_cfg_enable_session_timer">Таймер сессии</string>
+    <string name="omni_cfg_enable_game_timer">Таймер партии</string>
+    <string name="omni_cfg_enable_round_timer">Таймер раунда</string>
+    <string name="omni_cfg_enable_turn_timer">Таймер хода</string>
+    <string name="omni_cfg_enable_phase_timer">Таймер фазы</string>
+    <string name="omni_cfg_session_timer">Сессия</string>
+    <string name="omni_cfg_game_timer">Таймер партии</string>
+    <string name="omni_cfg_round_timer">Таймер раунда</string>
+    <string name="omni_cfg_turn_timer">Таймер хода</string>
+    <string name="omni_cfg_phase_timer">Таймер фазы</string>
+    <string name="omni_cfg_cutoff_session">Прерывать, когда истекает время сессии</string>
+    <string name="omni_cfg_cutoff_game">Прерывать, когда истекает время партии</string>
+    <string name="omni_cfg_cutoff_round">Прерывать, когда истекает время раунда</string>
+    <string name="omni_cfg_cutoff_turn">Прерывать, когда истекает время хода</string>
+    <string name="omni_cfg_cutoff_phase">Прерывать, когда истекает время фазы</string>
+    <string name="omni_cfg_turn_disabled">Часы хода выключены.</string>
+    <string name="omni_cfg_phase_disabled">Часы фазы выключены.</string>
+
+    <string name="omni_cfg_game">Партия</string>
+    <string name="omni_cfg_round">Раунд</string>
+    <string name="omni_cfg_rounds">Раунды</string>
+    <string name="omni_cfg_turn">Ход</string>
+    <string name="omni_cfg_turn_n">Ход %d</string>
+    <string name="omni_cfg_step">Шаг %1$d/%2$d</string>
+    <string name="omni_cfg_count">Количество: %d</string>
+    <!-- One letter each, for Игрок, Партия, Раунд and Ход. -->
+    <string name="omni_cfg_player_short">И%d</string>
+    <string name="omni_cfg_game_n">Партия %d</string>
+    <string name="omni_cfg_round_n">Раунд %d</string>
+    <string name="omni_cfg_phase_n">Фаза %d</string>
+    <string name="omni_cfg_game_short">П%d</string>
+    <string name="omni_cfg_round_short">Р%d</string>
+    <string name="omni_cfg_turn_short">Х%d</string>
+    <string name="omni_cfg_delete_game">Удалить партию %d</string>
+    <string name="omni_cfg_delete_round">Удалить раунд %d</string>
+    <string name="omni_cfg_delete_turn">Удалить ход %d</string>
+    <string name="omni_cfg_delete_phase">Удалить фазу %d</string>
+    <string name="omni_cfg_phase_budget">Всего: %1$d с / предел: %2$d с</string>
+    <string name="omni_cfg_summary_rounds_varied">• Раундов в партии: %s</string>
+    <string name="omni_cfg_summary_order">• Порядок: %s</string>
+    <string name="omni_cfg_phases_exceed">Партия «%1$s», раунд «%2$s», %3$s: фазы длиннее времени хода!</string>
+    <string name="omni_cfg_turns">Ходы</string>
+    <string name="omni_cfg_phases">Фазы</string>
+    <string name="omni_cfg_game_name">Название партии</string>
+    <string name="omni_cfg_round_name">Название раунда</string>
+    <string name="omni_cfg_phase_name">Название фазы</string>
+    <string name="omni_cfg_add_game">Добавить партию</string>
+    <string name="omni_cfg_add_round">Добавить раунд</string>
+    <string name="omni_cfg_add_turn">Добавить ход</string>
+    <string name="omni_cfg_add_phase">Добавить фазу</string>
+    <string name="omni_cfg_duration">Длительность</string>
+    <string name="omni_cfg_total_duration">Общая длительность</string>
+    <string name="omni_cfg_loop_turns">Ходы по кругу</string>
+    <string name="omni_cfg_end_round">Завершить раунд</string>
+
+    <string name="omni_cfg_players_order">Игроки и порядок</string>
+    <string name="omni_cfg_turn_order">Порядок ходов</string>
+    <string name="omni_cfg_pattern_linear">Схема (3 игрока): 123, 123, 123</string>
+    <string name="omni_cfg_pattern_snake">Схема (3 игрока): 123, 321, 123</string>
+    <string name="omni_cfg_pattern_rotate">Схема (3 игрока): 123, 231, 312</string>
+    <string name="omni_cfg_pattern_random_turn">Схема (3 игрока): 132, 312, 231 — игрок может быть пропущен или выпасть дважды</string>
+    <string name="omni_cfg_pattern_random_round">Схема (3 игрока): 231, 312, 123 — каждый ходит один раз за раунд</string>
+    <string name="omni_cfg_shuffle_per_round">Перемешивать каждый раунд</string>
+    <string name="omni_cfg_draw_per_turn">Жребий на каждый ход</string>
+    <string name="omni_cfg_balance_draw">Уравновешивать жребий</string>
+    <string name="omni_cfg_balance_explain">Кто отстаёт по ходам, тот вероятнее пойдёт следующим, так что разрыв сокращается, а не растёт.</string>
+    <string name="omni_cfg_no_repeat">Никогда один игрок дважды подряд</string>
+
+    <string name="omni_cfg_transitions">Переходы и паузы</string>
+    <string name="omni_cfg_enable_pauses">Включить паузы (буферы)</string>
+    <string name="omni_cfg_pauses_durations">Длительность пауз</string>
+    <string name="omni_cfg_turn_pause">Пауза хода</string>
+    <string name="omni_cfg_round_pause">Пауза раунда</string>
+    <string name="omni_cfg_game_pause">Пауза партии</string>
+    <string name="omni_cfg_pause_deducts_round">Пауза идёт за счёт раунда</string>
+    <string name="omni_cfg_pause_deducts_game">Пауза идёт за счёт партии</string>
+    <string name="omni_cfg_pause_deducts_global">Пауза идёт за счёт общего времени</string>
+    <string name="omni_cfg_launch_countdown">Отсчёт перед стартом</string>
+    <string name="omni_cfg_auto_restart">Автоматический перезапуск</string>
+
+    <string name="omni_cfg_pressure">Давление и экономия</string>
+    <string name="omni_cfg_advanced_rules">Дополнительные правила</string>
+    <string name="omni_cfg_time_bank">Банк времени</string>
+    <string name="omni_cfg_bank_per_player">У каждого</string>
+    <string name="omni_cfg_bank_shared">Общий</string>
+    <string name="omni_cfg_bank_clear">Обнулять банк в конце:</string>
+
+    <string name="omni_cfg_audio">Звуковые сигналы</string>
+    <string name="omni_cfg_turn_beep">Сигнал хода</string>
+    <string name="omni_cfg_final_beep">Финальный сигнал</string>
+    <string name="omni_cfg_round_gong">Гонг раунда</string>
+
+    <!-- "Without", not "no": the first of six segments, so no longer than "1 мин". -->
+    <string name="common_off">Без</string>
+    <string name="dur_10s">10 с</string>
+    <string name="dur_30s">30 с</string>
+    <string name="dur_1m">1 мин</string>
+    <string name="dur_2m">2 мин</string>
+    <string name="dur_5m">5 мин</string>
+
+    <!-- Settings: More tab -->
+    <string name="settings_more_help">Помощь и поддержка</string>
+    <string name="settings_more_manual">Руководство по режимам времени</string>
+    <string name="settings_more_game_tools">Игровые инструменты</string>
+    <string name="settings_more_variants">Генератор шахматных вариантов</string>
+    <string name="settings_more_rules">Немного правил</string>
+    <string name="settings_more_scoreboard">Таблица счёта</string>
+    <string name="settings_more_notebook">Блокнот</string>
+    <string name="settings_more_more_tools">Другие инструменты</string>
+    <string name="settings_more_coin_toss">Подбросить монету</string>
+    <string name="settings_more_dice">Бросок кубика</string>
+    <string name="settings_more_straw">Короткая соломинка</string>
+    <string name="settings_more_card">Случайная карта</string>
+    <string name="settings_more_stop">Остановись вовремя</string>
+    <string name="settings_more_blindfold">Тренажёр игры вслепую</string>
+    <string name="settings_more_knight">Путь коня</string>
+    <string name="settings_more_name_square">Назови поле</string>
+    <string name="settings_more_board">Подключение доски</string>
+    <string name="settings_more_link_board">Подключить доску (ещё не проверено)</string>
+    <string name="settings_more_auto_switch">Автоматически передавать ход после хода на доске</string>
+    <string name="settings_more_game">Игра</string>
+    <string name="settings_more_game_data">Данные партий</string>
+    <string name="settings_more_logs">Журналы и история партий</string>
+    <string name="settings_more_limit_count">Ограничить историю по числу</string>
+    <string name="settings_more_limit_age">Ограничить историю по давности</string>
+    <string name="settings_more_data_sharing">Данные и обмен</string>
+    <string name="settings_more_export">Экспорт / отправка</string>
+    <string name="settings_more_import">Импорт / сканирование</string>
+    <string name="settings_more_share_apk">Поделиться приложением</string>
+    <string name="settings_more_share_apk_via">Отправить APK через</string>
+    <string name="settings_more_share_apk_format_title">Отправить приложение как</string>
+    <string name="settings_more_share_apk_format_text">APK устанавливается сразу. Некоторые телефоны не принимают файлы APK по Bluetooth: тогда отправьте ZIP, а получатель извлечёт из него APK для установки.</string>
+    <string name="settings_more_danger">Опасная зона</string>
+    <string name="settings_more_clear_logs">Очистить журналы</string>
+    <string name="settings_more_reset_settings">Сбросить настройки</string>
+    <string name="toast_preparing_apk">Подготовка файла приложения…</string>
+    <string name="toast_apk_error">Ошибка: не удалось подготовить файл</string>
+
+    <!-- Compact age limits -->
+    <string name="age_one_day">1 дн</string>
+    <string name="age_one_week">1 нед</string>
+    <string name="age_one_month">1 мес</string>
+    <string name="age_six_months">6 мес</string>
+    <string name="age_one_year">1 год</string>
+
+    <!-- Omni station -->
+    <string name="omni_reset_title">Сбросить сессию?</string>
+    <string name="omni_reset_message">Весь прогресс по раундам и партиям будет потерян.</string>
+    <string name="omni_reset_confirm">СБРОСИТЬ</string>
+    <string name="omni_stop_title">Остановить сессию?</string>
+    <string name="omni_stop_confirm">СТОП</string>
+    <string name="omni_launch_title">Сессия идёт</string>
+    <string name="omni_launch_message">Сессия на паузе. Продолжить её с того же места или начать новую с этими настройками?</string>
+    <string name="omni_launch_resume">ПРОДОЛЖИТЬ</string>
+    <string name="omni_launch_new">НОВАЯ СЕССИЯ</string>
+    <string name="omni_cancel" tools:ignore="ButtonCase">ОТМЕНА</string>
+    <string name="omni_progress_session">Сессия</string>
+    <string name="omni_header">Omni: %s</string>
+    <string name="omni_progress_game">Партия %1$d/%2$d</string>
+    <string name="omni_progress_round">Раунд %1$d/%2$d</string>
+    <string name="omni_get_ready">ПРИГОТОВЬТЕСЬ</string>
+    <string name="omni_phase_default">Фаза</string>
+    <string name="omni_next">Далее</string>
+    <string name="omni_pause">Пауза</string>
+    <string name="omni_stop_session">Остановить сессию</string>
+    <string name="omni_reset_session">Сбросить сессию</string>
+    <string name="omni_running">ИДЁТ</string>
+    <string name="omni_paused">ПАУЗА</string>
+    <string name="omni_round_finished">РАУНД ОКОНЧЕН</string>
+    <string name="omni_game_finished">ПАРТИЯ ОКОНЧЕНА</string>
+    <string name="omni_session_complete">СЕССИЯ ЗАВЕРШЕНА</string>
+    <string name="omni_turn_finished">ХОД ОКОНЧЕН</string>
+    <string name="omni_prepare_round">Приготовьтесь к раунду %d</string>
+    <string name="omni_prepare_game">Приготовьтесь к партии %d</string>
+    <string name="omni_thanks">Спасибо за игру!</string>
+    <string name="omni_next_player">Далее: игрок %d</string>
+    <string name="omni_i_am_ready">Я ГОТОВ</string>
+    <string name="omni_close_session">ЗАКРЫТЬ СЕССИЮ</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">Статистика</string>
+    <string name="stats_empty">Завершённых партий пока нет.\n\nПартия записывается при сбросе: сыграйте партию и нажмите «Сбросить», чтобы увидеть здесь свою статистику.</string>
+    <string name="stats_games_played">Сыграно партий</string>
+    <string name="stats_moves">Ходы</string>
+    <string name="stats_average_move">Средний ход</string>
+    <string name="stats_median_move">Медианный ход</string>
+    <string name="stats_slowest_move">Самый долгий ход</string>
+    <string name="stats_time_on_clock">Время на часах</string>
+    <string name="stats_time_pressure" formatted="false">Ходы, сделанные при остатке меньше 10% начального времени</string>
+    <string name="stats_recent_game">Последняя партия</string>
+    <string name="stats_modes_played">Сыгранные режимы</string>
+    <plurals name="omni_cfg_summary_players">
+        <item quantity="one">• %d игрок</item>
+        <item quantity="few">• %d игрока</item>
+        <item quantity="many">• %d игроков</item>
+        <item quantity="other">• %d игрока</item>
+    </plurals>
+
+    <plurals name="omni_cfg_summary_games">
+        <item quantity="one">%d партия</item>
+        <item quantity="few">%d партии</item>
+        <item quantity="many">%d партий</item>
+        <item quantity="other">%d партии</item>
+    </plurals>
+
+    <plurals name="omni_cfg_summary_rounds_uniform">
+        <item quantity="one">• %d раунд в партии</item>
+        <item quantity="few">• %d раунда в партии</item>
+        <item quantity="many">• %d раундов в партии</item>
+        <item quantity="other">• %d раунда в партии</item>
+    </plurals>
+
+    <plurals name="stats_chart_moves">
+        <item quantity="one">%d ход</item>
+        <item quantity="few">%d хода</item>
+        <item quantity="many">%d ходов</item>
+        <item quantity="other">%d хода</item>
+    </plurals>
+
+    <plurals name="stats_chart_description">
+        <item quantity="one">Время на ход. Самый долгий %1$s из %2$d хода.</item>
+        <item quantity="few">Время на ход. Самый долгий %1$s из %2$d ходов.</item>
+        <item quantity="many">Время на ход. Самый долгий %1$s из %2$d ходов.</item>
+        <item quantity="other">Время на ход. Самый долгий %1$s из %2$d хода.</item>
+    </plurals>
+
+    <!-- Timer Screen -->
+    <string name="timer_reset_title">Сбросить партию?</string>
+    <string name="preset_end_game_title">Завершить текущую партию?</string>
+    <string name="preset_end_game_confirm">Завершить</string>
+    <string name="preset_end_waiting_game_title">Завершить прерванную партию?</string>
+    <string name="preset_end_waiting_game_message">Партия ждёт продолжения. Она будет потеряна.</string>
+    <string name="timer_reset_message">Текущее состояние будет потеряно.</string>
+    <string name="timer_berserk_title">Berserk для игрока %1$d?</string>
+    <string name="timer_berserk_message">На эту партию игрок теряет половину времени и добавление. Отменить это нельзя.</string>
+    <string name="timer_berserk_message_increment">На эту партию игрок теряет добавление: при 1+2 Berserk сохраняет время. Отменить это нельзя.</string>
+    <string name="a11y_berserk_player">Berserk, игрок %1$d</string>
+    <string name="timer_reroll">Новое случайное время</string>
+    <string name="timer_reroll_title">Вытянуть новое время?</string>
+    <string name="timer_reroll_confirm">Вытянуть</string>
+    <string name="timer_reroll_message">Партия начнётся заново с новым случайным временем.</string>
+    <string name="timer_arbitre_control">Управление арбитра</string>
+    <string name="timer_arbitre">Арбитр</string>
+    <string name="timer_save_clock">Сохранить</string>
+    <string name="timer_resume">Продолжить</string>
+    <string name="timer_restore_message">Всё, что было после этого, будет потеряно.</string>
+    <string name="timer_restore_title">Вернуться к сохранённым часам?</string>
+    <string name="timer_start">Старт</string>
+    <string name="timer_byoyomi">BYOYOMI</string>
+    <string name="timer_cycle">ЦИКЛ: %d</string>
+    <string name="timer_moves">ХОДЫ: %d</string>
+    <string name="timer_delay">ЗАДЕРЖКА: %s</string>
+    <string name="timer_flagged">ВРЕМЯ ВЫШЛО</string>
+    <string name="timer_finished">ЗАВЕРШЕНО</string>
+    <string name="timer_period_flag">КОНЕЦ ПЕРИОДА</string>
+    <string name="timer_period">ПЕРИОД: %1$d/%2$d</string>
+    <string name="timer_periods">ПЕРИОДЫ: %1$d</string>
+    <string name="timer_reflect">ОБДУМЫВАНИЕ</string>
+    <string name="timer_move_alert">ХОДИТЕ!</string>
+    <string name="timer_pause_label">ПАУЗА</string>
+    <string name="preset_desc_1_min">Sudden Death 1:00</string>
+    <string name="preset_desc_5_min">Sudden Death 5:00</string>
+    <string name="preset_desc_10_min">Sudden Death 10:00</string>
+    <string name="preset_desc_30_min">Sudden Death 30:00</string>
+    <string name="preset_desc_60_min">Sudden Death 60:00</string>
+    <string name="preset_desc_fisch_3_2s">Fischer 3:00 +2 с</string>
+    <string name="preset_desc_fisch_15_10s">Fischer 15:00 +10 с</string>
+    <string name="preset_desc_90_40_30_30s">90 мин/40 + 30 мин (Fischer 30 с)</string>
+    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 мин (Fischer 30 с с 61-го хода)</string>
+    <string name="preset_desc_us_5_2s">Sudden Death 5:00, задержка 2 с</string>
+    <string name="preset_desc_us_25_5s">Sudden Death 25:00, задержка 5 с</string>
+    <string name="preset_desc_us_80_40_30_30s">80 мин/40 + 30 мин (задержка 30 с)</string>
+    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, задержка 5 с</string>
+    <string name="preset_desc_jap_byo_20">Byoyomi Japanese: 20 мин + 1×30 с</string>
+    <string name="preset_desc_jap_byo_60">Byoyomi Japanese: 60 мин + 3×20 с</string>
+    <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 мин + 5 мин/20 ходов</string>
+    <string name="preset_desc_armag_5_4">Белые 5:00, чёрные 4:00</string>
+    <string name="preset_desc_hourgl_1_min">Hourglass по 1:00</string>
+    <string name="preset_desc_30s_move">Move Timer Standard 30 с/ход</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, после флажка Реверс до 10:00</string>
+    <string name="preset_desc_random_1_10">Random 1–10 мин, с округлением</string>
+    <string name="preset_shortcut_deleted">Этот шаблон был удалён</string>
+    <string name="arbiter_remove_minute">%1$s, минус 1 минута</string>
+    <string name="arbiter_add_minute">%1$s, плюс 1 минута</string>
+    <string name="arbiter_remove_second">%1$s, минус 1 секунда</string>
+    <string name="arbiter_add_second">%1$s, плюс 1 секунда</string>
+    <string name="arbiter_remove_move">%1$s, убрать ход</string>
+    <string name="arbiter_add_move">%1$s, добавить ход</string>
+    <string name="arbiter_step_minute">1 мин</string>
+    <string name="arbiter_step_second">1 с</string>
+    <string name="settings_horiz_left">Влево</string>
+    <string name="settings_horiz_right">Вправо</string>
+    <string name="omni_in_reserve">+%1$s в резерве</string>
+    <string name="omni_cfg_unbalanced_explain">Каждый игрок равновероятен на каждом ходу — один из них действительно может занять большую часть раунда.</string>
+    <string name="tools_player_short">И%d</string>
+    <string name="back_press_again_to_exit">Нажмите «Назад» ещё раз, чтобы выйти</string>
+    <string name="arbiter_clock">Часы</string>
+    <string name="label_per_move">/ ход</string>
+    <string name="label_moves">ходов</string>
+    <string name="game_shortcut_gone">Этой партии больше нет в истории</string>
+    <string name="color_green">Зелёный</string>
+    <string name="color_blue">Синий</string>
+    <string name="color_red">Красный</string>
+    <string name="color_yellow">Жёлтый</string>
+    <string name="color_orange">Оранжевый</string>
+    <string name="color_black">Чёрный</string>
+    <string name="color_grey">Серый</string>
+    <string name="color_white">Белый</string>
+    <string name="settings_allow_berserk">Разрешить Berserk</string>
+    <string name="settings_berserk_desc">До своего первого хода игрок может отказаться от половины времени и добавления. Тогда победа стоит на одно очко больше, если сделано не меньше 7 ходов.</string>
 </resources>

@@ -2,9 +2,95 @@
 <!--
   MasterClock Paper — ru (Russian)
 
-  Not translated yet: this file only marks where the Russian strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
+
+  The three buttons under the E-Ink clock are narrow, and Russian runs long: "Сбросить",
+  "Продолжить" and "Настройки" are all too wide for them. They are "Сброс", "Дальше" and "Опции"
+  here, the same kind of shortening German and Dutch needed; the app module has room and keeps the
+  full words.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Отмена</string>
+    <!-- "Сбросить" crowds the narrow clock button; the noun "Сброс" is usual on Russian buttons. -->
+    <string name="common_reset">Сброс</string>
+    <string name="timer_reset_title">Сбросить партию?</string>
+    <string name="timer_reset_message">Текущее состояние будет потеряно.</string>
+    <string name="common_back">Назад</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Передать ход</string>
+    <string name="timer_pause">Пауза</string>
+    <!-- One of three buttons across a Kompakt: "Продолжить" is ten characters, as "Fortsetzen" was. -->
+    <string name="timer_resume">Дальше</string>
+    <string name="timer_start">Старт</string>
+    <!-- "Настройки" at 9 characters does not fit the button beside Сброс and Дальше. -->
+    <string name="timer_settings">Опции</string>
+    <string name="timer_time_up">ВРЕМЯ</string>
+
+    <!-- Settings -->
+    <string name="settings_initial_time">Начальное время</string>
+    <string name="settings_increment">Добавление</string>
+    <string name="settings_move_time">Время на ход</string>
+    <string name="settings_system_behavior">Поведение системы</string>
+    <string name="settings_font">Шрифт</string>
+    <string name="font_system">Системный</string>
+    <string name="settings_sound">Звук</string>
+    <string name="settings_haptic_feedback">Виброотклик</string>
+    <string name="settings_keep_awake">Не гасить экран</string>
+    <string name="settings_fullscreen">Во весь экран</string>
+    <string name="settings_reverse_colors">Инвертировать цвета</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Авторы</string>
+    <string name="credits_tab_changes">Изменения</string>
+    <string name="credits_tab_licenses">Лицензии</string>
+    <string name="credits_rules_documents">Документы с правилами</string>
+    <string name="credits_libraries">MasterClock создан с помощью этих библиотек с открытым исходным кодом.</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Игрок %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Игрок %1$d, %2$s, ваш ход</string>
+    <string name="a11y_out_of_time">время вышло</string>
+    <string name="a11y_no_time_left">времени не осталось</string>
+    <string name="a11y_announce_out_of_time">У игрока %d вышло время</string>
+    <string name="a11y_announce_finished">Партия окончена</string>
+    <string name="a11y_announce_paused">Пауза</string>
+    <string name="a11y_announce_to_move">Ход игрока %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Russian four plural categories: one, few, many, and other for fractions. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d час</item>
+        <item quantity="few">%d часа</item>
+        <item quantity="many">%d часов</item>
+        <item quantity="other">%d часа</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d минута</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+        <item quantity="other">%d минуты</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунды</item>
+        <item quantity="many">%d секунд</item>
+        <item quantity="other">%d секунды</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">остался %d период</item>
+        <item quantity="few">осталось %d периода</item>
+        <item quantity="many">осталось %d периодов</item>
+        <item quantity="other">осталось %d периода</item>
+    </plurals>
+
+    <string name="settings_version">Версия %s</string>
+    <string name="back_press_again_to_exit">Нажмите «Назад» ещё раз, чтобы выйти</string>
+    <string name="a11y_field_minutes">%1$s, минуты</string>
+    <string name="a11y_field_seconds">%1$s, секунды</string>
+    <string name="toast_no_browser">Браузер не установлен</string>
 </resources>

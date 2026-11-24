@@ -2,9 +2,39 @@
 <!--
   MasterClock core — ru (Russian)
 
-  Not translated yet: this file only marks where the Russian strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  The voice strings are spoken aloud by the phone's text-to-speech, so they are written to be heard:
+  "Осталось периодов: 3" rather than a counted noun the number would have to agree with. The
+  byoyomi seconds are only ever called on a multiple of ten, which always takes "секунд".
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="voice_time_up">У игрока %1$d закончилось время</string>
+    <string name="voice_finished">Конец</string>
+    <string name="voice_one_minute_left">Осталась одна минута</string>
+    <string name="voice_thirty_seconds_left">Осталось тридцать секунд</string>
+    <string name="voice_ten_seconds_left">Осталось десять секунд</string>
+    <string name="voice_period">Период %1$d</string>
+    <string name="voice_byoyomi">Начинается byoyomi</string>
+    <string name="voice_byoyomi_periods_left">Осталось периодов: %1$d</string>
+    <string name="voice_byoyomi_seconds">%1$d секунд</string>
+    <string name="voice_move">Ходите</string>
+    <string name="voice_reflect">Обдумывание</string>
+    <string name="voice_phase">Фаза %1$d</string>
+    <string name="voice_test">Проверка громкости голоса</string>
+    <string name="board_error_connect_permission">Нужно разрешение Bluetooth на подключение</string>
+    <string name="board_error_scan_permission">Нужно разрешение Bluetooth на поиск</string>
+    <string name="board_error_no_connection">Не удалось подключиться к доске</string>
+    <string name="board_error_no_services">Не удалось прочитать службы доски</string>
+    <string name="board_error_nothing_to_hear">Это устройство не передаёт ничего, что приложение может принимать</string>
+    <string name="board_error_no_bluetooth">Bluetooth не поддерживается на этом устройстве</string>
+    <string name="board_error_bluetooth_off">Bluetooth выключен. Включите его.</string>
+    <string name="board_error_location_off">Включите геолокацию: этой версии Android она нужна, чтобы находить доски Bluetooth</string>
+    <string name="board_error_not_paired">Эта доска больше не сопряжена</string>
+    <string name="board_error_usb_refused">Доступ к USB отклонён</string>
+    <string name="board_error_unplugged">Эта доска больше не подключена</string>
+    <string name="board_error_needs_driver">Эта доска не использует стандартный последовательный порт USB, и ей нужен драйвер, которого в приложении нет</string>
+    <string name="board_error_cannot_open">Не удалось открыть доску</string>
+    <string name="board_error_in_use">Эту доску уже использует другое приложение</string>
+    <string name="board_error_nothing_to_read">Эта доска не передаёт ничего, что приложение может прочитать</string>
 </resources>
