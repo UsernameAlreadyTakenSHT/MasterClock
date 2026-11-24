@@ -5,6 +5,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -25,6 +27,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.res.stringResource
@@ -48,6 +51,9 @@ internal val BOARD_LIGHT = Color(0xFFEEEED2)
 
 /** Side of one square in the board note's grid. */
 private val BOARD_SQUARE_SIZE = 40.dp
+
+/** The smallest a square gets to leave room for the palette: below it a piece is too small to aim at. */
+private val MIN_BOARD_SQUARE = 24.dp
 
 /**
  * A piece being dragged, and where the finger currently is in the screen's own coordinates.
@@ -199,8 +205,31 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
     var boardBounds by remember { mutableStateOf<Rect?>(null) }
     // Ten squares of forty would run off a phone, so the bigger board gets smaller squares and both
     // end up the same width.
-    val squareSize = boardSquareSize(if (variant.side > 8) BOARD_SQUARE_SIZE * 8 / variant.side else BOARD_SQUARE_SIZE, variant.side, chrome = 50.dp)
+    //
+    // The height too: on a 360x640 screen at a large font, the title, the three games and a board
+    // sized by the width alone filled the screen, and the palette was under its foot, out of reach
+    // on a page that does not scroll. Without it no piece can be put down. The page and what sits
+    // around the board are measured, and the board takes what they leave; a frame late on first
+    // show, as a measure is. Where even squares of MIN_BOARD_SQUARE do not fit, the board stays at
+    // that size and the page scrolls instead, by the title or the palette: the board's own drag
+    // keeps the finger.
+    var pageHeight by remember { mutableIntStateOf(0) }
+    var aroundBoard by remember { mutableStateOf(IntArray(3)) }
+    val byWidth = boardSquareSize(if (variant.side > 8) BOARD_SQUARE_SIZE * 8 / variant.side else BOARD_SQUARE_SIZE, variant.side, chrome = 50.dp)
+    val density = LocalDensity.current
+    // Three gaps of 16 between the four parts, and the board's own 8 of padding a side and border.
+    val byHeight = if (pageHeight == 0 || aroundBoard.any { it == 0 }) null
+        else (with(density) { (pageHeight - aroundBoard.sum()).toDp() } - 16.dp * 3 - 18.dp) / variant.side
+    val pageScrolls = byHeight != null && byHeight < MIN_BOARD_SQUARE && byWidth > MIN_BOARD_SQUARE
+    val squareSize = when {
+        byHeight == null -> byWidth
+        pageScrolls -> MIN_BOARD_SQUARE
+        else -> minOf(byWidth, byHeight)
+    }
     val squarePx = with(LocalDensity.current) { squareSize.toPx() }
+    val measured: (Int, Int) -> Unit = { part, height ->
+        if (aroundBoard[part] != height) aroundBoard = aroundBoard.copyOf().also { it[part] = height }
+    }
 
     // Read inside the gesture detector rather than captured when it starts, so a drag is not
     // interrupted and restarted every time the board changes underneath it.
@@ -279,11 +308,12 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
       // The dragged piece is drawn in this Box rather than in the board or the palette, so it can
       // travel between the two and over everything else on the way.
       Box(Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), singleLine = true)
+        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp).onSizeChanged { pageHeight = it.height }
+            .then(if (pageScrolls) Modifier.verticalScroll(rememberScrollState()) else Modifier), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            OutlinedTextField(value = title, onValueChange = { title = it.take(MAX_NOTE_TITLE_CHARS) }, label = { Text(stringResource(R.string.tools_title)) }, modifier = Modifier.fillMaxWidth().onSizeChanged { measured(0, it.height) }, shape = RoundedCornerShape(12.dp), singleLine = true)
             // Chess first because that is what a board note has always been; ten by ten before
             // eight because international draughts is the one people mean by "draughts".
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.onSizeChanged { measured(1, it.height) }) {
                 VariantCard(stringResource(R.string.game_chess), variant == BoardNoteVariant.CHESS, Modifier.weight(1f)) {
                     changeVariant(BoardNoteVariant.CHESS)
                 }
@@ -294,7 +324,10 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                     changeVariant(BoardNoteVariant.DRAUGHTS_SMALL)
                 }
             }
-            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+            // Weighted, so the column measures the palette before it: last in line, the palette was
+            // measured in whatever the board had left, nothing at all on a small screen, and the
+            // board was then sized against a palette of no height.
+            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), modifier = if (pageScrolls) Modifier else Modifier.weight(1f, fill = false)) {
                 Column(
                     Modifier
                         .padding(8.dp)
@@ -360,6 +393,7 @@ fun BoardNoteEditor(note: NotebookNote, onUpdate: NoteChange, onBack: () -> Unit
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .onSizeChanged { measured(2, it.height) }
                     // Tapping the tray anywhere but on a piece puts the palette down. The piece
                     // buttons consume their own taps, so this only fires on the space around them.
                     // Without indication: a ripple across the whole tray would read as a control.
