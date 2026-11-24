@@ -685,6 +685,11 @@ object AppInfo {
             eInkOnly = true,
         ),
         CreditEntry(
+            title = "Fonts — Noto Sans, Noto Sans Mono",
+            detail = "The Noto Project Authors — SIL Open Font License 1.1. Bundled by every build, for the font setting.",
+            url = "https://notofonts.github.io/",
+        ),
+        CreditEntry(
             title = "Font — Lato",
             detail = "Łukasz Dziedzic — SIL Open Font License 1.1. Bundled by the E-Ink build, through MMD.",
             url = "https://www.latofonts.com/",
