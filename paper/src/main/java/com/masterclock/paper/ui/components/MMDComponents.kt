@@ -439,6 +439,11 @@ fun MMDAlertDialog(
  * The floor is 14dp, the size of the smallest style MMD has, and was 9: a label is not made
  * smaller than anything else the library would set on this screen. One still too wide there goes
  * onto a second line, which the buttons that use this allow.
+ *
+ * Except a word that does not fit on a line of its own at that size: it was cut in two, "Fische"
+ * over "r", "Nouveauté" over "s" -- in Noto Sans Mono, whose letters are wider, on a Kompakt. Such
+ * a word takes the group a little below the floor, as far as it needs and no further than 12dp. A
+ * word wider still is one to shorten where it is translated.
  */
 @Composable
 fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp): TextStyle {
@@ -447,9 +452,16 @@ fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp): Tex
     return remember(labels, style, cellWidth, density.density, density.fontScale) {
         val room = with(density) { cellWidth.toPx() }
         val floor = with(density) { 14.dp.toSp() }
+        val wordFloor = with(density) { 12.dp.toSp() }
         val widest = labels.maxOfOrNull { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width } ?: 0
+        val widestWord = labels.flatMap { it.split(' ') }.filter { it.isNotEmpty() }
+            .maxOfOrNull { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width } ?: 0
         if (!style.fontSize.isSpecified || room <= 0f || widest <= room) style
-        // A little under the ratio: letter spacing does not shrink with the size.
-        else style.copy(fontSize = (style.fontSize.value * room / widest * 0.96f).coerceAtLeast(floor.value).sp)
+        else {
+            // A little under the ratio: letter spacing does not shrink with the size.
+            val lines = (style.fontSize.value * room / widest * 0.96f).coerceAtLeast(floor.value)
+            val word = (style.fontSize.value * room / widestWord.coerceAtLeast(1) * 0.96f).coerceAtLeast(wordFloor.value)
+            style.copy(fontSize = minOf(lines, word).sp)
+        }
     }
 }
