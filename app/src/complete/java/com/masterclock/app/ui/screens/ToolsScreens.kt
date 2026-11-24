@@ -990,7 +990,14 @@ fun ScoreboardScreen(viewModel: ChessTimerViewModel, onBack: () -> Unit) {
                 else { LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(sortedGames, key = { it.id }) { game -> Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp), border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)) { Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text(game.result, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold); Text(isoDateTime(game.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } } } }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) { OutlinedTextField(value = newResultText, onValueChange = { newResultText = it.take(MAX_SCOREBOARD_TEXT_CHARS) }, placeholder = { OneLineText(stringResource(R.string.tools_add_result_placeholder)) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), singleLine = true); Button(onClick = { if (newResultText.isNotBlank()) { viewModel.addScoreboardGame(newResultText); newResultText = "" } }, shape = RoundedCornerShape(12.dp), modifier = Modifier.height(56.dp)) { Icon(Icons.Default.Add, stringResource(R.string.tools_add_result)) } }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Button(onClick = { viewModel.addScoreboardGame("1 - 0") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("1 - 0") }; Button(onClick = { viewModel.addScoreboardGame("½ - ½") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("½ - ½") }; Button(onClick = { viewModel.addScoreboardGame("0 - 1") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) { Text("0 - 1") } }
+            // Each result on one line: in Noto Sans Mono, on a narrow screen or at a large font, "1 -"
+            // stood over "0". Narrower padding first, then the label shrinks rather than wrap.
+            val resultPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("1 - 0", "½ - ½", "0 - 1").forEach { result ->
+                    Button(onClick = { viewModel.addScoreboardGame(result) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), contentPadding = resultPadding) { OneLineText(result) }
+                }
+            }
         }
     }
 }
