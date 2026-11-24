@@ -47,7 +47,6 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,6 +56,7 @@ import coil3.ImageLoader
 import coil3.svg.SvgDecoder
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
+import com.masterclock.app.ui.theme.LocalClockFontFamily
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
@@ -211,7 +211,7 @@ fun GameLogsScreen(history: List<GameLog>, historyLoaded: Boolean, timePadding: 
                             modifier = Modifier.width(LOG_TIME_COLUMN),
                             maxLines = 1,
                             textAlign = TextAlign.End,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = LocalClockFontFamily.current,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
@@ -219,7 +219,7 @@ fun GameLogsScreen(history: List<GameLog>, historyLoaded: Boolean, timePadding: 
                             modifier = Modifier.width(LOG_TIME_COLUMN),
                             maxLines = 1,
                             textAlign = TextAlign.End,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = LocalClockFontFamily.current
                         )
                     }
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -796,7 +796,7 @@ fun StopPrecisionScreen(onBack: () -> Unit) {
             Text(stringResource(R.string.tools_target_time), modifier = Modifier.align(Alignment.TopCenter).padding(top = 32.dp), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.Center) { if (!isRunning && displayTime > 0) { val diff = Math.abs(displayTime - 5000L); val color = when { diff <= 10 -> Color(0xFF2196F3); diff <= 20 -> Color(0xFF4CAF50); diff <= 50 -> Color(0xFFFFEB3B); diff <= 100 -> Color(0xFFFF9800); else -> MaterialTheme.colorScheme.error }; Text(text = stringResource(R.string.tools_offset, if (displayTime > 5000) "+" else "-", diff), color = color, fontWeight = FontWeight.Black, style = MaterialTheme.typography.headlineSmall) } }
-                OneLineText(text = String.format(locale, "%.3fs", displayTime / 1000f), modifier = Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.displayLarge.copy(fontSize = 90.sp, fontFamily = FontFamily.Monospace), minSize = 40.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                OneLineText(text = String.format(locale, "%.3fs", displayTime / 1000f), modifier = Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.displayLarge.copy(fontSize = 90.sp, fontFamily = LocalClockFontFamily.current), minSize = 40.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(72.dp)); Surface(onClick = { if (isRunning) { displayTime = SystemClock.elapsedRealtime() - startTime; isRunning = false } else { displayTime = 0; isRunning = true } }, modifier = Modifier.size(width = 240.dp, height = 72.dp), shape = RoundedCornerShape(20.dp), color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, shadowElevation = 8.dp) { Box(contentAlignment = Alignment.Center) { Text(if (isRunning) stringResource(R.string.tools_stop) else stringResource(R.string.tools_start), fontWeight = FontWeight.Black, fontSize = 24.sp, color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 2.sp) } }
                 Spacer(Modifier.height(48.dp))
             }
