@@ -36,6 +36,7 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
@@ -51,7 +52,6 @@ import androidx.compose.ui.unit.sp
 import com.masterclock.app.R
 import com.masterclock.app.logic.*
 import com.masterclock.app.ui.theme.clockFamily
-import com.masterclock.app.ui.theme.typography
 import com.masterclock.app.BuildConfig
 
 @Composable
@@ -63,8 +63,10 @@ fun FontChoice(currentSettings: ChessClockSettings, onSettingsChanged: (ChessClo
                     selected = currentSettings.appFont == f,
                     onClick = { onSettingsChanged(currentSettings.copy(appFont = f)) },
                     shape = SegmentedButtonDefaults.itemShape(i, AppFont.entries.size),
-                    // Each name in its own face, so that the row shows what each choice gives.
-                    label = { Text(f.label(), style = f.typography(MaterialTheme.typography).labelSmall.copy(fontFamily = if (f == AppFont.SYSTEM) null else f.clockFamily())) },
+                    // Each name in its own face, so that the row shows what each choice gives, at the
+                    // size every other choice row has. Default for System, not null: null would take
+                    // the theme's face, which is Noto once Noto is chosen.
+                    label = { Text(f.label(), fontFamily = if (f == AppFont.SYSTEM) FontFamily.Default else f.clockFamily()) },
                 )
             }
         }
