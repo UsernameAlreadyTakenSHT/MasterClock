@@ -853,38 +853,53 @@ fun ControlBar(
     onSettings: () -> Unit,
     onToggleArbitre: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.padding(16.dp).clip(CircleShape), 
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), 
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 12.dp, 
-        shadowElevation = 8.dp
-    ) {
-        Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (showPresets) {
-                ControlBarItem(onClick = onPresets, rotation = iconRotation) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.timer_presets)) }
-            }
-            ControlBarItem(onClick = onReset, rotation = iconRotation) { Icon(Icons.Default.Refresh, stringResource(R.string.common_reset)) }
-            LargeFloatingActionButton(
-                onClick = onPauseResume, 
-                shape = CircleShape, 
-                containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, 
-                contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary, 
-                modifier = Modifier.size(64.dp).graphicsLayer { rotationZ = iconRotation }
-            ) { 
-                // Spoken by TalkBack: it was a hard-coded English "Resume", even in a French app and
-                // even before the first move, when the button starts the game rather than resumes it.
-                val pauseResumeLabel = when {
-                    !isStarted -> stringResource(R.string.timer_start)
-                    isPaused -> stringResource(R.string.timer_resume)
-                    else -> stringResource(R.string.timer_pause)
+    // Tighter where the screen is narrow. With every button the bar is 360dp exactly -- its margins,
+    // its padding, four 48dp buttons, the 64dp one and the gaps between -- and below that its last
+    // button, Settings, went off the edge: a small phone at its largest display size could no longer
+    // reach the settings from the clock. The margins and gaps give way first, then the centre
+    // button to 56dp; the 48dp targets are kept.
+    BoxWithConstraints {
+        val small = 1 + (if (showPresets) 1 else 0) + (if (showArbitre) 1 else 0) + 1
+        val roomy = 16.dp * 2 + 12.dp * 2 + 48.dp * small + 64.dp + 12.dp * small
+        val tight = maxWidth < roomy
+        val outer = if (tight) 4.dp else 16.dp
+        val inner = if (tight) 6.dp else 12.dp
+        val spare = maxWidth - outer * 2 - inner * 2 - 48.dp * small
+        val centre = if (tight && spare < 64.dp) 56.dp else 64.dp
+        val gap = if (tight) ((spare - centre) / small).coerceIn(0.dp, 12.dp) else 12.dp
+        Surface(
+            modifier = Modifier.padding(horizontal = outer, vertical = 16.dp).clip(CircleShape),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 12.dp,
+            shadowElevation = 8.dp
+        ) {
+            Row(modifier = Modifier.padding(horizontal = inner, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(gap)) {
+                if (showPresets) {
+                    ControlBarItem(onClick = onPresets, rotation = iconRotation) { Icon(Icons.AutoMirrored.Filled.FormatListBulleted, stringResource(R.string.timer_presets)) }
                 }
-                Icon(imageVector = if (isPaused || !isStarted) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = pauseResumeLabel, modifier = Modifier.size(36.dp))
+                ControlBarItem(onClick = onReset, rotation = iconRotation) { Icon(Icons.Default.Refresh, stringResource(R.string.common_reset)) }
+                LargeFloatingActionButton(
+                    onClick = onPauseResume, 
+                    shape = CircleShape, 
+                    containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, 
+                    contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary, 
+                    modifier = Modifier.size(centre).graphicsLayer { rotationZ = iconRotation }
+                ) { 
+                    // Spoken by TalkBack: it was a hard-coded English "Resume", even in a French app and
+                    // even before the first move, when the button starts the game rather than resumes it.
+                    val pauseResumeLabel = when {
+                        !isStarted -> stringResource(R.string.timer_start)
+                        isPaused -> stringResource(R.string.timer_resume)
+                        else -> stringResource(R.string.timer_pause)
+                    }
+                    Icon(imageVector = if (isPaused || !isStarted) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = pauseResumeLabel, modifier = Modifier.size(36.dp))
+                }
+                if (showArbitre) {
+                    ControlBarItem(onClick = onToggleArbitre, rotation = iconRotation, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer, contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)) { Icon(imageVector = if (isArbitreMode) Icons.Default.Gavel else Icons.Default.Edit, contentDescription = stringResource(R.string.timer_arbitre), tint = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else LocalContentColor.current) }
+                }
+                ControlBarItem(onClick = onSettings, rotation = iconRotation) { Icon(Icons.Default.Settings, stringResource(R.string.timer_settings)) }
             }
-            if (showArbitre) {
-                ControlBarItem(onClick = onToggleArbitre, rotation = iconRotation, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = if (isArbitreMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer, contentColor = if (isArbitreMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)) { Icon(imageVector = if (isArbitreMode) Icons.Default.Gavel else Icons.Default.Edit, contentDescription = stringResource(R.string.timer_arbitre), tint = if (isArbitreMode) MaterialTheme.colorScheme.tertiary else LocalContentColor.current) }
-            }
-            ControlBarItem(onClick = onSettings, rotation = iconRotation) { Icon(Icons.Default.Settings, stringResource(R.string.timer_settings)) }
         }
     }
 }
