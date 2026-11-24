@@ -124,7 +124,7 @@ what each check proves and what it does not.
   - Beep: [Beep – u_edtmwfwu7c](https://pixabay.com/sound-effects/film-special-effects-beep-329314/)
   - Final beep: [Public Domain Beep Sound – qubodup](https://pixabay.com/sound-effects/public-domain-beep-sound-100267/)
   - Switch: [Light Switch – RutgerMuller (Freesound)](https://pixabay.com/sound-effects/film-special-effects-light-switch-82388/)
-- **Fonts**: [Noto Sans and Noto Sans Mono](https://notofonts.github.io/), regular and bold, by the Noto Project Authors, [SIL Open Font License 1.1](https://openfontlicense.org/). Bundled by every build, for the font setting. [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, same licence: the E-Ink build's own font, bundled through MMD.
+- **Fonts**: [Noto Sans and Noto Sans Mono](https://notofonts.github.io/), regular and bold, by the Noto Project Authors, [SIL Open Font License 1.1](https://openfontlicense.org/) (text in [licenses/Noto-OFL.txt](licenses/Noto-OFL.txt)). Bundled by every build, for the font setting, in `core/src/main/res/font`. [Lato](https://www.latofonts.com/) by Łukasz Dziedzic, same licence: the E-Ink build's own font, bundled through MMD.
 - **E-Ink interface**: built with [Mudita Mindful Design (MMD)](https://github.com/mudita/MMD), Mudita's component library for its E Ink devices.
 
 ### Rules documents
