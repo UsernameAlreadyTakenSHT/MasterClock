@@ -107,7 +107,7 @@ fun TimerScreen(
             // measured, so that the row does not change size when the game starts or pauses.
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val controlLabels = listOf(R.string.common_reset, R.string.timer_start, R.string.timer_resume, R.string.timer_pause, R.string.timer_settings).map { stringResource(it) }
-                val controlStyle = sharedLabelStyle(controlLabels, MaterialTheme.typography.labelLarge, (maxWidth - 24.dp) / 3 - 22.dp)
+                val controlStyle = sharedLabelStyle(controlLabels, MaterialTheme.typography.labelLarge, (maxWidth - 24.dp) / 3 - 22.dp, lineWidth = (maxWidth - 24.dp) / 3 - 8.dp)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),

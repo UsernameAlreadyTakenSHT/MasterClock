@@ -444,13 +444,19 @@ fun MMDAlertDialog(
  * over "r", "Nouveauté" over "s" -- in Noto Sans Mono, whose letters are wider, on a Kompakt. Such
  * a word takes the group a little below the floor, as far as it needs and no further than 12dp. A
  * word wider still is one to shorten where it is translated.
+ *
+ * A word is judged against [lineWidth], the width the label really gets, not [cellWidth]: the
+ * buttons pass a cell kept narrower than their label's room, which is right for choosing one size
+ * and wrong for asking whether a word will be cut. Judged against the cell, "Fischer" and
+ * "Reprendre" shrank in Lato, where they had always fitted.
  */
 @Composable
-fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp): TextStyle {
+fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp, lineWidth: Dp = cellWidth): TextStyle {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    return remember(labels, style, cellWidth, density.density, density.fontScale) {
+    return remember(labels, style, cellWidth, lineWidth, density.density, density.fontScale) {
         val room = with(density) { cellWidth.toPx() }
+        val line = with(density) { lineWidth.toPx() }
         val floor = with(density) { 14.dp.toSp() }
         val wordFloor = with(density) { 12.dp.toSp() }
         val widest = labels.maxOfOrNull { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width } ?: 0
@@ -460,7 +466,8 @@ fun sharedLabelStyle(labels: List<String>, style: TextStyle, cellWidth: Dp): Tex
         else {
             // A little under the ratio: letter spacing does not shrink with the size.
             val lines = (style.fontSize.value * room / widest * 0.96f).coerceAtLeast(floor.value)
-            val word = (style.fontSize.value * room / widestWord.coerceAtLeast(1) * 0.96f).coerceAtLeast(wordFloor.value)
+            val word = if (widestWord * lines / style.fontSize.value <= line) lines
+                else (style.fontSize.value * line / widestWord * 0.96f).coerceAtLeast(wordFloor.value)
             style.copy(fontSize = minOf(lines, word).sp)
         }
     }

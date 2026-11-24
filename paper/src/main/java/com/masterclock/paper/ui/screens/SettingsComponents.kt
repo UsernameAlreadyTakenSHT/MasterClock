@@ -186,7 +186,7 @@ fun ModeSelectionPanel(p: PlayerSettings, onUpdateP: (PlayerSettings) -> Unit) {
     }
 
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val cardStyle = sharedLabelStyle(listOf("Timer", "Fischer", "Move"), MaterialTheme.typography.labelLarge, (maxWidth - 16.dp) / 3 - 22.dp)
+        val cardStyle = sharedLabelStyle(listOf("Timer", "Fischer", "Move"), MaterialTheme.typography.labelLarge, (maxWidth - 16.dp) / 3 - 22.dp, lineWidth = (maxWidth - 16.dp) / 3 - 8.dp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ModeCard("Timer", mainMode == 0, Modifier.weight(1f), cardStyle) { onUpdateP(p.copy(mode = TimerMode.SUDDEN_DEATH)) }
             ModeCard("Fischer", mainMode == 1, Modifier.weight(1f), cardStyle) { onUpdateP(p.copy(mode = TimerMode.FISCHER)) }
