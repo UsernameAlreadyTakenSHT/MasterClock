@@ -6,6 +6,9 @@
 *.jpeg binary
 *.webp binary
 *.zip binary
+*.ttf binary
+*.mp3 binary
+*.pdf binary
 
 gradlew text eol=lf
 gradlew.bat text eol=crlf
