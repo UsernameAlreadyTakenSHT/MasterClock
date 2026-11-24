@@ -2,9 +2,96 @@
 <!--
   MasterClock Paper — uk (Ukrainian)
 
-  Not translated yet: this file only marks where the Ukrainian strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
+
+  The three buttons under the E-Ink clock are narrow: "Продовжити" and "Налаштування" are too wide
+  for them, and are "Далі" and "Опції" here, the same kind of shortening German and Dutch needed.
+  "Скинути" keeps the full verb: at seven characters it fits, as German "Optionen" does at eight.
+  The app module has room and keeps the full words.
+
+  Written from the English, not from the Russian.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Скасувати</string>
+    <string name="common_reset">Скинути</string>
+    <string name="timer_reset_title">Скинути партію?</string>
+    <string name="timer_reset_message">Поточний стан буде втрачено.</string>
+    <string name="common_back">Назад</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Передати хід</string>
+    <string name="timer_pause">Пауза</string>
+    <!-- One of three buttons across a Kompakt: "Продовжити" is ten characters, as "Fortsetzen" was. -->
+    <string name="timer_resume">Далі</string>
+    <string name="timer_start">Старт</string>
+    <!-- "Налаштування" at 12 characters does not fit the button beside Скинути and Далі. -->
+    <string name="timer_settings">Опції</string>
+    <string name="timer_time_up">ЧАС</string>
+
+    <!-- Settings -->
+    <string name="settings_initial_time">Початковий час</string>
+    <string name="settings_increment">Додавання</string>
+    <string name="settings_move_time">Час на хід</string>
+    <string name="settings_system_behavior">Поведінка системи</string>
+    <string name="settings_font">Шрифт</string>
+    <string name="font_system">Системний</string>
+    <string name="settings_sound">Звук</string>
+    <string name="settings_haptic_feedback">Тактильний відгук</string>
+    <string name="settings_keep_awake">Не вимикати екран</string>
+    <string name="settings_fullscreen">На весь екран</string>
+    <string name="settings_reverse_colors">Інвертувати кольори</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Автори</string>
+    <string name="credits_tab_changes">Зміни</string>
+    <string name="credits_tab_licenses">Ліцензії</string>
+    <string name="credits_rules_documents">Документи з правилами</string>
+    <string name="credits_libraries">MasterClock створено за допомогою цих бібліотек із відкритим кодом.</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Гравець %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Гравець %1$d, %2$s, ваш хід</string>
+    <string name="a11y_out_of_time">час вийшов</string>
+    <string name="a11y_no_time_left">часу не залишилося</string>
+    <string name="a11y_announce_out_of_time">У гравця %d вийшов час</string>
+    <string name="a11y_announce_finished">Партію завершено</string>
+    <string name="a11y_announce_paused">Пауза</string>
+    <string name="a11y_announce_to_move">Хід гравця %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Ukrainian four plural categories: one, few, many, and other for fractions. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d година</item>
+        <item quantity="few">%d години</item>
+        <item quantity="many">%d годин</item>
+        <item quantity="other">%d години</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d хвилина</item>
+        <item quantity="few">%d хвилини</item>
+        <item quantity="many">%d хвилин</item>
+        <item quantity="other">%d хвилини</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунди</item>
+        <item quantity="many">%d секунд</item>
+        <item quantity="other">%d секунди</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">залишився %d період</item>
+        <item quantity="few">залишилося %d періоди</item>
+        <item quantity="many">залишилося %d періодів</item>
+        <item quantity="other">залишилося %d періоду</item>
+    </plurals>
+
+    <string name="settings_version">Версія %s</string>
+    <string name="back_press_again_to_exit">Натисніть «Назад» ще раз, щоб вийти</string>
+    <string name="a11y_field_minutes">%1$s, хвилини</string>
+    <string name="a11y_field_seconds">%1$s, секунди</string>
+    <string name="toast_no_browser">Браузер не встановлено</string>
 </resources>

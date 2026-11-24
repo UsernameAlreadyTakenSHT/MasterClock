@@ -2,9 +2,331 @@
 <!--
   MasterClock Complete — uk (Ukrainian)
 
-  Not translated yet: this file only marks where the Ukrainian strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here, and the variants they name (Accelerate, Transfer, Down, Up) stay English inside
+  them.
+
+  app_name is left out on purpose — it is the product name.
+
+  Written from the English, not from the Russian, with the chess terms Ukrainian players use:
+  тура, кінь, пішак, рокіровка, нічия. The card suits are in the genitive plural, because they are
+  only ever read inside card_name: "Туз пік", "Дама чирв".
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Rules screen -->
+    <string name="rules_title">Трохи правил</string>
+    <string name="rules_intro">Довідкові документи, доступні офлайн.</string>
+    <string name="rules_group_chess">Шахи (офіційний документ)</string>
+    <string name="rules_group_draughts">Шашки (офіційний документ)</string>
+    <string name="rules_group_shogi">Сьоґі (офіційний документ)</string>
+    <string name="rules_group_more_games">Інші ігри</string>
+    <string name="rules_group_more_resources">Інші матеріали</string>
+    <string name="toast_pdf_open_failed">Не вдалося відкрити цей документ</string>
+    <string name="toast_no_pdf_viewer">Не встановлено застосунок для перегляду PDF</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_connected">Готово до приймання ходів</string>
+    <string name="board_connected_to">Підключено: %s</string>
+    <string name="board_connecting">Підключення…</string>
+    <string name="board_disconnect">Відключити</string>
+    <string name="board_share_log">Надіслати журнал дошки</string>
+    <string name="board_disconnected">Відключено</string>
+    <string name="board_error">Помилка: %s</string>
+    <string name="board_last_move">Останній хід: %s</string>
+    <string name="board_looking">Пошук дошок…</string>
+    <string name="board_nearby">Пристрої поблизу</string>
+    <string name="board_usb_section">Підключені</string>
+    <string name="board_paired_section">Сполучені</string>
+    <string name="board_needs_calibration">Розставте фігури в початкову позицію. Ця дошка зчитує чип під кожною фігурою, тож їй треба показати, де яка, перш ніж вона зможе стежити за партією.</string>
+    <string name="board_paired_none">Немає сполучених дошок. Спершу сполучіть дошку в системних налаштуваннях Bluetooth.</string>
+    <string name="board_usb_none">Дошку не підключено.</string>
+    <string name="board_usb_charging_warning">Поки дошка займає порт USB, телефон не заряджається.</string>
+    <string name="board_none_found">Пристроїв не знайдено. Натисніть «Оновити», щоб почати пошук.</string>
+    <string name="board_scan">Пошук</string>
+    <string name="board_scanning">Пошук дошок…</string>
+    <string name="board_title">Підключення шахової дошки</string>
+    <string name="board_unknown_device">Невідомий пристрій</string>
+    <string name="common_share">Поділитися</string>
+
+    <!-- Timing engines manual -->
+    <string name="guide_bonus_bronstein_desc">Повертає час, витрачений на хід, але не більше за задану затримку. Не накопичується.</string>
+    <string name="guide_bonus_fischer_desc">Додає фіксований час (додавання) ПІСЛЯ кожного ходу.</string>
+    <string name="guide_bonus_us_delay_desc">Затримка перед відліком. Годинник чекає, поки мине затримка, і лише тоді починає йти.</string>
+    <string name="guide_byoyomi_canadian_desc">Гравці мають зробити певну кількість ходів за один довший період.</string>
+    <string name="guide_byoyomi_japanese_desc">Після основного часу гравці отримують серію коротких періодів. Хід повертає період до початку.</string>
+    <string name="guide_byoyomi_progressive_desc">Кількість потрібних ходів зростає після кожного завершеного періоду.</string>
+    <string name="guide_chrono_countdown_desc">Головний таймер, що відлічує час назад на всю партію.</string>
+    <string name="guide_chrono_countup_desc">Режим секундоміра, що рахує весь час, який минув.</string>
+    <string name="guide_chrono_one_for_all_desc">Не окремий режим, а перемикач для Countdown і Countup. Якщо увімкнено, один годинник іде для всього столу, і натискання на нього не змінює гравця.</string>
+    <string name="guide_counts_down_desc">Починає з межі й лічить униз, доки не залишиться нуль ходів.</string>
+    <string name="guide_counts_up_desc">Показує загальну кількість ходів від початку партії.</string>
+    <string name="guide_fast_move_desc">Заохочує швидкі ходи. Accelerate: що довше ви думаєте, то швидше йде ваш годинник. Transfer: наступний хід суперника отримує час на хід плюс час, який ви щойно витратили, а ваш знову починається з часу на хід; з увімкненим «Накопичувальний Transfer» він додається до того, що в суперника залишилося, а ви зберігаєте те, що мали.</string>
+    <string name="guide_staircase_desc">Час на кожен хід змінюється на фіксований крок. Down: кожен хід отримує менше часу, до нижньої межі. Up: кожен хід отримує більше, до верхньої межі.</string>
+    <string name="guide_fide_desc">Турнірний контроль часу за періодами: наприклад, 90 хв на 40 ходів, потім 30 хв до кінця партії, з додаванням 30 с за хід.</string>
+    <string name="guide_gong_desc">Обов’язкові ходи через рівні проміжки (одночасно або по черзі).</string>
+    <string name="guide_hidden_desc">Випадає випадковий час, і його приховано. Якщо відсотки увімкнено, він ненадовго з’являється, коли минає 50, 25, 10, 5, 2 і 1%.</string>
+    <string name="guide_hourglass_desc">Час, який втрачає один гравець, додається суперникові. Загальний час сталий.</string>
+    <string name="guide_intro">Опис режимів часу MasterClock та їхніх варіантів, у порядку інтерфейсу.</string>
+    <string name="guide_move_global_desc">Час на хід і загальний час ідуть одночасно. Обидва мають залишатися більшими за нуль.</string>
+    <string name="guide_move_global_shared_desc">Усі гравці мають спільний запас часу і водночас власний таймер ходу.</string>
+    <string name="guide_move_overtime_desc">Перевищення часу на хід витрачає додатковий загальний запас.</string>
+    <string name="guide_move_save_cap_desc">Невикористаний час на хід переноситься на наступний хід, до верхньої межі на годиннику.</string>
+    <string name="guide_move_shared_desc">Один таймер для всіх гравців. Автоматично перемикається на 0:00.</string>
+    <string name="guide_move_standard_desc">Повертається до фіксованої тривалості на кожен хід.</string>
+    <string name="guide_omni_desc">Багаторівнева станція для складних ігрових структур: Сесія &gt; Партії &gt; Раунди &gt; Ходи &gt; Фази, кожен рівень зі своїм годинником, увімкненим чи ні. Кожен гравець грає кожен заданий хід у раунді. Банки часу, переривання й паузи між ходами, раундами та партіями; покинуту сесію можна продовжити, навіть після закриття застосунку.</string>
+    <string name="guide_phases_desc">Послідовність різних таймерів (наприклад, підготовка 5 хв → партія 20 хв → Sudden Death).</string>
+    <string name="guide_random_desc">Основний час і додавання вибираються випадково в заданому діапазоні.</string>
+    <string name="guide_section_advanced">Додаткові та експериментальні</string>
+    <string name="guide_section_bonus">Режими з бонусом</string>
+    <string name="guide_section_specialty">Особливі режими</string>
+    <string name="guide_sudden_death_standard_desc">Чистий зворотний відлік. Перший, чий час дійде до 0:00, програє: у нього падає прапорець.</string>
+
+    <!-- QR sharing -->
+    <string name="qr_align" tools:ignore="Typos">Помістіть код у кадр камери</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Немає камери, яку можна використати для сканування.</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">Для сканування кодів потрібен дозвіл на камеру.</string>
+    <string name="qr_code">QR-код</string>
+    <string name="qr_scan_title">Сканувати QR-код</string>
+    <string name="qr_share_hint">Відскануйте цей код на іншому пристрої, щоб імпортувати налаштування.</string>
+    <string name="qr_share_includes">Містить: налаштування шахового годинника</string>
+    <string name="qr_share_title">Надіслати QR-кодом</string>
+    <string name="qr_too_large">Не вдалося створити QR-код — ці налаштування для нього завеликі. Надішліть їх файлом.</string>
+    <string name="toast_audio_failed">Не вдалося відтворити звук</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">Потрібен дозвіл на камеру</string>
+    <string name="toast_fen_copied">FEN скопійовано</string>
+
+    <!-- Random card: the suits only ever appear inside card_name, hence the genitive. -->
+    <string name="card_suit_spades">пік</string>
+    <string name="card_suit_clubs">треф</string>
+    <string name="card_suit_hearts">чирв</string>
+    <string name="card_suit_diamonds">бубон</string>
+    <string name="card_rank_ace">Туз</string>
+    <string name="card_rank_jack">Валет</string>
+    <string name="card_rank_queen">Дама</string>
+    <string name="card_rank_king">Король</string>
+    <string name="card_name">%1$s %2$s</string>
+    <string name="a11y_piece_king">Король</string>
+    <string name="a11y_piece_queen">Ферзь</string>
+    <string name="a11y_piece_rook">Тура</string>
+    <string name="a11y_piece_bishop">Слон</string>
+    <string name="a11y_piece_knight">Кінь</string>
+    <string name="a11y_board_back_ranks">Білі, від a до h: %1$s. Чорні: %2$s.</string>
+
+    <!-- Tools and notebook -->
+    <string name="toast_mic_permission">Потрібен дозвіл на мікрофон.</string>
+    <string name="toast_note_deleted">Нотатку видалено</string>
+    <string name="toast_permission_granted">Дозвіл надано. Натисніть «Записати» ще раз.</string>
+    <string name="toast_start_failed">Не вдалося запустити</string>
+    <string name="tools_add_result">Додати результат</string>
+    <string name="tools_add_result_placeholder">Додайте результат або нотатку…</string>
+    <string name="tools_audio">Аудіо</string>
+    <string name="tools_audio_note">Аудіонотатка</string>
+    <string name="tools_board">Дошка</string>
+    <string name="tools_strikethrough">Закреслений</string>
+    <string name="tools_bullet_list">Маркований список</string>
+    <string name="tools_numbered_list">Нумерований список</string>
+    <string name="tools_color_default">Колір тексту</string>
+    <string name="tools_insert_pieces">Фігури</string>
+    <string name="tools_insert_annotations">Позначки</string>
+    <string name="tools_insert_quality">Оцінка ходу</string>
+    <string name="tools_insert_evaluation">Оцінка позиції</string>
+    <string name="tools_insert_other">Інше</string>
+    <string name="tools_insert_emojis">Емодзі</string>
+    <string name="tools_sym_brilliant">блискучий хід</string>
+    <string name="tools_sym_good">добрий хід</string>
+    <string name="tools_sym_interesting">цікавий хід</string>
+    <string name="tools_sym_dubious">сумнівний хід</string>
+    <string name="tools_sym_mistake">помилка</string>
+    <string name="tools_sym_blunder">груба помилка</string>
+    <string name="tools_sym_white_winning">у білих вирішальна перевага</string>
+    <string name="tools_sym_white_clearly">у білих явна перевага</string>
+    <string name="tools_sym_white_slightly">у білих невелика перевага</string>
+    <string name="tools_sym_equal">рівна позиція</string>
+    <string name="tools_sym_black_slightly">у чорних невелика перевага</string>
+    <string name="tools_sym_black_clearly">у чорних явна перевага</string>
+    <string name="tools_sym_black_winning">у чорних вирішальна перевага</string>
+    <string name="tools_sym_unclear">неясна позиція</string>
+    <string name="tools_sym_check">шах</string>
+    <string name="tools_sym_mate">мат</string>
+    <string name="tools_sym_castle_short">коротка рокіровка</string>
+    <string name="tools_sym_castle_long">довга рокіровка</string>
+    <string name="tools_sym_capture">взяття</string>
+    <string name="tools_sym_move_to">хід на</string>
+    <string name="tools_sym_only_move">єдиний хід</string>
+    <string name="tools_sym_novelty">новинка</string>
+    <string name="tools_sym_idea">з ідеєю</string>
+    <string name="tools_sym_attack">атака</string>
+    <string name="tools_sym_initiative">ініціатива</string>
+    <string name="tools_sym_counterplay">контргра</string>
+    <string name="tools_sym_zugzwang">цугцванг</string>
+    <string name="tools_sym_time_trouble">цейтнот</string>
+    <string name="tools_sym_white_won">білі виграли</string>
+    <string name="tools_sym_draw">нічия</string>
+    <string name="tools_sym_black_won">чорні виграли</string>
+    <string name="tools_piece_white_king">білий король</string>
+    <string name="tools_piece_white_queen">білий ферзь</string>
+    <string name="tools_piece_white_rook">біла тура</string>
+    <string name="tools_piece_white_bishop">білий слон</string>
+    <string name="tools_piece_white_knight">білий кінь</string>
+    <string name="tools_piece_white_pawn">білий пішак</string>
+    <string name="tools_piece_black_king">чорний король</string>
+    <string name="tools_piece_black_queen">чорний ферзь</string>
+    <string name="tools_piece_black_rook">чорна тура</string>
+    <string name="tools_piece_black_bishop">чорний слон</string>
+    <string name="tools_piece_black_knight">чорний кінь</string>
+    <string name="tools_piece_black_pawn">чорний пішак</string>
+    <string name="tools_piece_white_man">біла шашка</string>
+    <string name="tools_piece_white_dame">біла дамка</string>
+    <string name="tools_piece_black_man">чорна шашка</string>
+    <string name="tools_piece_black_dame">чорна дамка</string>
+    <string name="tools_emoji_game">Для гри</string>
+    <string name="tools_emoji_smileys">Смайлики й емоції</string>
+    <string name="tools_emoji_people">Люди й тіло</string>
+    <string name="tools_emoji_animals">Тварини й природа</string>
+    <string name="tools_emoji_food">Їжа й напої</string>
+    <string name="tools_emoji_travel">Подорожі й місця</string>
+    <string name="tools_emoji_activities">Заняття</string>
+    <string name="tools_emoji_objects">Предмети</string>
+    <string name="tools_emoji_symbols">Символи</string>
+    <string name="tools_emoji_flags">Прапори</string>
+    <string name="tools_bold">Жирний</string>
+    <string name="tools_checkbox">Прапорець</string>
+    <string name="tools_clear_board">Очистити дошку</string>
+    <string name="tools_color">Колір</string>
+    <string name="tools_copy_fen">КОПІЮВАТИ FEN</string>
+    <string name="tools_copy_format">Копіювати %s</string>
+    <string name="tools_dark_square">ТЕМНЕ</string>
+    <string name="tools_delete_recording">Видалити запис</string>
+    <string name="tools_delete_photo">Видалити фото</string>
+    <string name="tools_delete_video" tools:ignore="Typos">Видалити відео</string>
+    <string name="tools_record_again">Записати знову</string>
+    <string name="tools_delete_media_message">Це не можна скасувати.</string>
+    <string name="tools_detailed_moves">Докладні ходи</string>
+    <string name="tools_copied_to_clipboard">%1$s скопійовано в буфер обміну</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">усього %d хід</item>
+        <item quantity="few">усього %d ходи</item>
+        <item quantity="many">усього %d ходів</item>
+        <item quantity="other">усього %d ходу</item>
+    </plurals>
+    <string name="tools_dice_roll">Кидок кубика</string>
+    <string name="tools_draw">Малюнок</string>
+    <string name="tools_draw_again">Витягти ще</string>
+    <string name="tools_draw_note">Малюнок</string>
+    <string name="tools_edit_board">Змінити дошку</string>
+    <string name="tools_edit_note">Змінити нотатку</string>
+    <string name="tools_eraser">Гумка</string>
+    <string name="tools_pen">Перо</string>
+    <string name="tools_line">Лінія</string>
+    <string name="tools_arrow">Стрілка</string>
+    <string name="tools_rectangle">Прямокутник</string>
+    <string name="tools_ellipse">Еліпс</string>
+    <string name="tools_shape_done">Готово</string>
+    <string name="tools_shapes">Фігури</string>
+    <string name="tools_width">Товщина</string>
+    <string name="tools_custom_colours">Ваші кольори</string>
+    <string name="tools_background">Тло</string>
+    <string name="tools_background_none">Без тла</string>
+    <string name="tools_background_empty">Ще немає фото чи нотатки з дошкою, на яких можна малювати</string>
+    <string name="tools_final_score">Підсумковий рахунок: %d</string>
+    <string name="tools_format_hint">Виділіть текст і відформатуйте його панеллю…</string>
+    <string name="tools_game_logs">Журнали партій</string>
+    <string name="tools_game_over">ГРУ ЗАВЕРШЕНО</string>
+    <string name="tools_generate">СТВОРИТИ</string>
+    <string name="tools_heads">ГЕРБ</string>
+    <string name="tools_image">Фото</string>
+    <string name="tools_image_note">Фотонотатка</string>
+    <string name="tools_highlight">Виділення</string>
+    <string name="tools_highlight_none">Без виділення</string>
+    <string name="tools_highlight_yellow">Жовтий</string>
+    <string name="tools_highlight_orange">Помаранчевий</string>
+    <string name="tools_highlight_pink">Рожевий</string>
+    <string name="tools_highlight_blue">Синій</string>
+    <string name="tools_highlight_green">Зелений</string>
+    <string name="tools_center">По центру</string>
+    <string name="tools_italic">Курсив</string>
+    <string name="tools_large">Великий заголовок</string>
+    <!-- The column of time left on the clock, beside Spent. -->
+    <string name="tools_left">Залишок</string>
+    <string name="tools_log_details">Подробиці журналу</string>
+    <string name="tools_match_summary">Підсумки матчу</string>
+    <string name="tools_min_moves">Мін. ходів?</string>
+    <string name="tools_move">Хід</string>
+    <string name="tools_name_square_title">Назви поле</string>
+    <string name="tools_new_audio_note">Нова аудіонотатка</string>
+    <string name="tools_new_board_note">Нова нотатка з дошкою</string>
+    <string name="tools_new_draw_note">Новий малюнок</string>
+    <string name="tools_new_image_note">Нова фотонотатка</string>
+    <string name="tools_new_note">Нова нотатка</string>
+    <string name="tools_notebook_full">Блокнот заповнено. Видаліть нотатку, щоб додати нову.</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Нова відеонотатка</string>
+    <string name="tools_no_games">Записаних партій ще немає.</string>
+    <string name="tools_no_notes">Нотаток ще немає. Натисніть +, щоб створити.</string>
+    <string name="tools_no_photo">Фото ще немає</string>
+    <string name="tools_no_video" tools:ignore="Typos">Відео ще немає (макс. 1 хв)</string>
+    <string name="tools_note_image">Зображення нотатки</string>
+    <string name="tools_offset">Відхилення: %1$s%2$d мс</string>
+    <string name="tools_pick_straw">Витягти соломинку %d</string>
+    <string name="tools_play">Відтворити</string>
+    <string name="tools_prepare">ПРИГОТУЙТЕСЯ</string>
+    <string name="tools_random_card">Випадкова карта</string>
+    <string name="tools_record">Записати</string>
+    <string name="tools_record_video" tools:ignore="Typos">Записати відео</string>
+    <string name="tools_reset_scoreboard">Скинути таблицю рахунку</string>
+    <string name="tools_retake_photo">Перезняти фото</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Перезняти відео</string>
+    <string name="tools_roll_dice">Кинути кубики</string>
+    <string name="tools_score">Рахунок: %d</string>
+    <string name="tools_select_piece">Виберіть фігуру</string>
+    <string name="tools_board_eraser_hint">Фігуру не вибрано — торкніться поля, щоб очистити його</string>
+    <string name="tools_board_variant_draughts_10">Шашки 10×10</string>
+    <string name="tools_board_variant_draughts_8">Шашки 8×8</string>
+    <string name="tools_board_deselect">Зняти вибір фігури</string>
+    <string name="tools_select_text_color">Виберіть колір тексту</string>
+    <string name="tools_share_log">Надіслати журнал</string>
+    <string name="tools_short_straw">Коротка соломинка</string>
+    <string name="tools_straw_long">Довга</string>
+    <string name="tools_straw_short">Коротка</string>
+    <string name="tools_shred">Знищити</string>
+    <string name="tools_spent">Витрачено</string>
+    <string name="tools_start">СТАРТ</string>
+    <string name="tools_start_trial">ПОЧАТИ СПРОБУ</string>
+    <string name="tools_stop">СТОП</string>
+    <string name="tools_stop_precision">Точна зупинка</string>
+    <string name="tools_tails">ЦИФРА</string>
+    <string name="tools_take_photo">Зробити фото</string>
+    <string name="tools_target">ЦІЛЬ</string>
+    <string name="tools_target_time">Ціль: 5.000 с</string>
+    <string name="tools_text">Текст</string>
+    <string name="tools_time_per_move">Час на хід</string>
+    <string name="tools_title">Заголовок</string>
+    <string name="tools_caption">Підпис</string>
+    <string name="tools_toss_coin">Підкинути монету</string>
+    <string name="tools_underline">Підкреслений</string>
+    <string name="tools_undo">Скасувати</string>
+    <string name="tools_redo">Повторити</string>
+    <string name="tools_variant_generator">Генератор варіантів</string>
+    <string name="tools_video" tools:ignore="Typos">Відео</string>
+    <string name="tools_video_note" tools:ignore="Typos">Відеонотатка</string>
+    <string name="tools_white_square">СВІТЛЕ</string>
+    <string name="variant_chess2880_desc">Симетрично, різнопольні слони, король будь-де (без рокіровки).</string>
+    <string name="variant_chess960_desc">Симетрично, різнопольні слони, король між турами (з рокіровкою).</string>
+    <string name="variant_double960_desc">Асиметрично, різнопольні слони, король між турами (для досвідчених тактиків).</string>
+    <string name="variant_shuffle_desc">Симетрично, король і слони будь-де (повна випадковість).</string>
+    <string name="variant_transcendental_desc">Асиметрично, різнопольні слони, король будь-де (гостра тактика).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Соломинок: %d</item>
+        <item quantity="few">Соломинок: %d</item>
+        <item quantity="many">Соломинок: %d</item>
+        <item quantity="other">Соломинок: %d</item>
+    </plurals>
+    <string name="qr_open_settings">Відкрити налаштування застосунку</string>
+    <string name="toast_no_browser">Браузер не встановлено</string>
+    <string name="permission_open_settings">Відкрити налаштування</string>
 </resources>
