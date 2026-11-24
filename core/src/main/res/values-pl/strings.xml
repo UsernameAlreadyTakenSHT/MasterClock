@@ -1,10 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MasterClock core — pl (Polish)
+  MasterClock — pl (Polish)
 
-  Not translated yet: this file only marks where the Polish strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Spoken by the voice announcements, so the wording is written to be read aloud rather than shown.
+  voice_byoyomi_seconds is only ever called with a multiple of ten (10, 20, 30…), and every one of
+  those takes the genitive plural "sekund", so a plain string is grammatical there.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
+    <string name="voice_time_up">Koniec czasu gracza %1$d</string>
+    <string name="voice_finished">Koniec</string>
+    <string name="voice_one_minute_left">Została jedna minuta</string>
+    <string name="voice_thirty_seconds_left">Zostało trzydzieści sekund</string>
+    <string name="voice_ten_seconds_left">Zostało dziesięć sekund</string>
+    <string name="voice_period">Okres %1$d</string>
+    <string name="voice_byoyomi">Początek byoyomi</string>
+    <string name="voice_byoyomi_periods_left">Pozostałe okresy: %1$d</string>
+    <string name="voice_byoyomi_seconds">%1$d sekund</string>
+    <string name="voice_move">Ruch</string>
+    <string name="voice_reflect">Namysł</string>
+    <string name="voice_phase">Faza %1$d</string>
+    <string name="voice_test">Test głośności głosu</string>
+    <string name="board_error_connect_permission">Wymagane jest uprawnienie Bluetooth do łączenia</string>
+    <string name="board_error_scan_permission">Wymagane jest uprawnienie Bluetooth do wyszukiwania</string>
+    <string name="board_error_no_connection">Nie udało się połączyć z szachownicą</string>
+    <string name="board_error_no_services">Nie udało się odczytać usług szachownicy</string>
+    <string name="board_error_nothing_to_hear">To urządzenie nie udostępnia niczego, czego ta aplikacja mogłaby nasłuchiwać</string>
+    <string name="board_error_no_bluetooth">To urządzenie nie obsługuje Bluetooth</string>
+    <string name="board_error_bluetooth_off">Bluetooth jest wyłączony. Włącz go.</string>
+    <string name="board_error_location_off">Włącz lokalizację: ta wersja Androida potrzebuje jej, aby znaleźć szachownice Bluetooth</string>
+    <string name="board_error_not_paired">Ta szachownica nie jest już sparowana</string>
+    <string name="board_error_usb_refused">Odmówiono uprawnienia USB</string>
+    <string name="board_error_unplugged">Ta szachownica nie jest już podłączona</string>
+    <string name="board_error_needs_driver">Ta szachownica nie używa standardowego portu szeregowego USB, więc potrzebuje sterownika, którego ta aplikacja nie ma</string>
+    <string name="board_error_cannot_open">Nie udało się otworzyć szachownicy</string>
+    <string name="board_error_in_use">Inna aplikacja już używa tej szachownicy</string>
+    <string name="board_error_nothing_to_read">Ta szachownica nie wysyła niczego, co ta aplikacja mogłaby odczytać</string>
 </resources>

@@ -2,9 +2,334 @@
 <!--
   MasterClock Complete — pl (Polish)
 
-  Not translated yet: this file only marks where the Polish strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here. Variant names inside a sentence (Accelerate, Transfer, Down, Up) stay English
+  too, and the manual names the Cumulative Transfer switch as the Polish settings screen shows it,
+  "Transfer kumulatywny".
+
+  app_name is left out on purpose — it is the product name.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Rules screen -->
+    <string name="rules_title">Kilka przepisów</string>
+    <string name="rules_intro">Dokumenty źródłowe, dostępne offline.</string>
+    <string name="rules_group_chess">Szachy (oficjalny dokument)</string>
+    <string name="rules_group_draughts">Warcaby (oficjalny dokument)</string>
+    <string name="rules_group_shogi">Shogi (oficjalny dokument)</string>
+    <string name="rules_group_more_games">Więcej gier</string>
+    <string name="rules_group_more_resources">Więcej materiałów</string>
+    <string name="toast_pdf_open_failed">Nie udało się otworzyć tego dokumentu</string>
+    <string name="toast_no_pdf_viewer">Brak zainstalowanej przeglądarki PDF</string>
+
+    <!-- Bluetooth board -->
+    <string name="board_connected">Gotowa do odbioru ruchów</string>
+    <string name="board_connected_to">Połączono: %s</string>
+    <string name="board_connecting">Łączenie…</string>
+    <string name="board_disconnect">Rozłącz</string>
+    <string name="board_share_log">Udostępnij dziennik szachownicy</string>
+    <string name="board_disconnected">Rozłączono</string>
+    <string name="board_error">Błąd: %s</string>
+    <string name="board_last_move">Ostatni ruch: %s</string>
+    <string name="board_looking">Szukanie szachownic…</string>
+    <string name="board_nearby">Urządzenia w pobliżu</string>
+    <string name="board_usb_section">Podłączone</string>
+    <string name="board_paired_section">Sparowane</string>
+    <string name="board_needs_calibration">Ustaw bierki w pozycji początkowej. Ta szachownica odczytuje chip pod każdą bierką, więc musi się dowiedzieć, która jest która, zanim będzie mogła śledzić partię.</string>
+    <string name="board_paired_none">Brak sparowanej szachownicy. Najpierw sparuj ją w systemowych ustawieniach Bluetooth.</string>
+    <string name="board_usb_none">Nie podłączono szachownicy.</string>
+    <string name="board_usb_charging_warning">Gdy szachownica zajmuje port USB, telefon się nie ładuje.</string>
+    <string name="board_none_found">Nie znaleziono urządzeń. Dotknij odświeżania, aby wyszukać.</string>
+    <string name="board_scan">Skanuj</string>
+    <string name="board_scanning">Wyszukiwanie szachownic…</string>
+    <string name="board_title">Połączenie z szachownicą</string>
+    <string name="board_unknown_device">Nieznane urządzenie</string>
+    <string name="common_share">Udostępnij</string>
+
+    <!-- Mode guide: names stay English, descriptions are translated -->
+    <string name="guide_bonus_bronstein_desc">Oddaje czas zużyty na ruch, ale nigdy więcej niż ustawione opóźnienie. Niekumulatywny.</string>
+    <string name="guide_bonus_fischer_desc">Dodaje stałą ilość czasu (dodatek) PO każdym ruchu.</string>
+    <string name="guide_bonus_us_delay_desc">Opóźnienie z odliczaniem. Zegar czeka przez czas opóźnienia, zanim zacznie odmierzać czas.</string>
+    <string name="guide_byoyomi_canadian_desc">Gracze muszą wykonać określoną liczbę ruchów w jednym dłuższym okresie.</string>
+    <string name="guide_byoyomi_japanese_desc">Po czasie zasadniczym gracze dostają serię krótkich okresów. Okres zaczyna się od nowa po każdym ruchu.</string>
+    <string name="guide_byoyomi_progressive_desc">Liczba wymaganych ruchów rośnie po każdym ukończonym okresie.</string>
+    <string name="guide_chrono_countdown_desc">Główny zegar odliczający w dół przez całą partię.</string>
+    <string name="guide_chrono_countup_desc">Tryb stopera mierzący łączny upływ czasu.</string>
+    <string name="guide_chrono_one_for_all_desc">To nie osobny tryb, tylko przełącznik w Countdown i Countup. Gdy jest włączony, jeden zegar chodzi dla całego stołu, a naciśnięcie go nie zmienia gracza.</string>
+    <string name="guide_counts_down_desc">Zaczyna od limitu i odlicza do zera pozostałych ruchów.</string>
+    <string name="guide_counts_up_desc">Pokazuje łączną liczbę ruchów wykonanych od startu.</string>
+    <string name="guide_fast_move_desc">Nagradza szybkie ruchy. Accelerate: im dłużej myślisz, tym szybciej chodzi twój zegar. Transfer: następny ruch przeciwnika dostaje czas na ruch plus czas właśnie zużyty przez ciebie, a twój zaczyna się znów od czasu na ruch; z opcją Transfer kumulatywny jest on dodawany do tego, co przeciwnikowi zostało, a ty zachowujesz swoją resztę.</string>
+    <string name="guide_staircase_desc">Czas każdego ruchu zmienia się o stały krok. Down: każdy ruch dostaje mniej czasu, aż do dolnej granicy. Up: każdy ruch dostaje więcej, aż do górnej granicy.</string>
+    <string name="guide_fide_desc">Turniejowe tempo gry w okresach: na przykład 90 min na 40 ruchów, potem 30 min na resztę partii, z dodatkiem 30 s za każdy ruch.</string>
+    <string name="guide_gong_desc">Wymuszone ruchy w stałych odstępach (równocześnie lub na zmianę).</string>
+    <string name="guide_hidden_desc">Losowany jest czas, który pozostaje ukryty. Przy włączonych procentach pokazuje się na chwilę, gdy mija 50, 25, 10, 5, 2 i 1%.</string>
+    <string name="guide_hourglass_desc">Czas tracony przez jednego gracza jest dodawany przeciwnikowi. Łączny czas jest stały.</string>
+    <string name="guide_intro">Dokumentacja trybów czasu MasterClock i ich wariantów, w kolejności z interfejsu.</string>
+    <string name="guide_move_global_desc">Czas na ruch i czas globalny biegną jednocześnie. Oba muszą pozostać powyżej zera.</string>
+    <string name="guide_move_global_shared_desc">Wszyscy gracze dzielą wspólną rezerwę globalną, a każdy ma własny zegar ruchu.</string>
+    <string name="guide_move_overtime_desc">Przekroczenie czasu na ruch pobiera czas z dodatkowej rezerwy globalnej.</string>
+    <string name="guide_move_save_cap_desc">Niewykorzystany czas na ruch przechodzi na następny ruch, aż do górnego limitu zegara.</string>
+    <string name="guide_move_shared_desc">Jeden zegar dla wszystkich graczy. Przełącza się automatycznie przy 0:00.</string>
+    <string name="guide_move_standard_desc">Wraca do stałego czasu przy każdym ruchu.</string>
+    <string name="guide_omni_desc">Wielopoziomowa stacja dla złożonych struktur gry: Sesja &gt; Partie &gt; Rundy &gt; Tury &gt; Fazy, każdy poziom z własnym zegarem, włączonym lub nie. W każdej rundzie każdy gracz rozgrywa każdą ustawioną turę. Banki czasu, przerwania i pauzy między turami, rundami i partiami; przerwaną sesję można wznowić, nawet po zamknięciu aplikacji.</string>
+    <string name="guide_phases_desc">Sekwencja różnych zegarów (np. przygotowanie 5 min -&gt; partia 20 min -&gt; Sudden Death).</string>
+    <string name="guide_random_desc">Czas bazowy i dodatki są losowane w ustalonym zakresie.</string>
+    <string name="guide_section_advanced">Zaawansowane i eksperymentalne</string>
+    <string name="guide_section_bonus">Tryby z dodatkiem</string>
+    <string name="guide_section_specialty">Tryby specjalne</string>
+    <string name="guide_sudden_death_standard_desc">Czyste odliczanie. Pierwszy gracz, który dojdzie do 0:00, przegrywa albo spada mu flaga.</string>
+
+    <!-- QR sharing -->
+    <string name="qr_align" tools:ignore="Typos">Umieść kod w kadrze kamery</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Brak kamery, której można użyć do skanowania.</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">Do skanowania kodów wymagane jest uprawnienie do kamery.</string>
+    <string name="qr_code">Kod QR</string>
+    <string name="qr_scan_title">Skanuj kod QR</string>
+    <string name="qr_share_hint">Zeskanuj ten kod na innym urządzeniu, aby zaimportować konfigurację.</string>
+    <string name="qr_share_includes">Zawiera: konfigurację zegara szachowego</string>
+    <string name="qr_share_title">Udostępnij kodem QR</string>
+    <string name="qr_too_large">Nie udało się utworzyć kodu QR — te ustawienia są na niego zbyt duże. Udostępnij je jako plik.</string>
+
+    <!-- Toasts -->
+    <string name="toast_audio_failed">Nie udało się odtworzyć dźwięku</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">Wymagane uprawnienie do kamery</string>
+    <string name="toast_fen_copied">Skopiowano FEN</string>
+
+    <!-- Cards: card_name reads "As pik", "Dama kier", so the suits are in the form that follows a rank. -->
+    <string name="card_suit_spades">pik</string>
+    <string name="card_suit_clubs">trefl</string>
+    <string name="card_suit_hearts">kier</string>
+    <string name="card_suit_diamonds">karo</string>
+    <string name="card_rank_ace">As</string>
+    <string name="card_rank_jack">Walet</string>
+    <string name="card_rank_queen">Dama</string>
+    <string name="card_rank_king">Król</string>
+    <string name="card_name">%1$s %2$s</string>
+    <string name="a11y_piece_king">Król</string>
+    <string name="a11y_piece_queen">Hetman</string>
+    <string name="a11y_piece_rook">Wieża</string>
+    <string name="a11y_piece_bishop">Goniec</string>
+    <string name="a11y_piece_knight">Skoczek</string>
+    <string name="a11y_board_back_ranks">Białe, od a do h: %1$s. Czarne: %2$s.</string>
+    <string name="toast_mic_permission">Wymagane jest uprawnienie do mikrofonu.</string>
+    <string name="toast_note_deleted">Notatka usunięta</string>
+    <string name="toast_permission_granted">Przyznano uprawnienie. Dotknij Nagraj ponownie.</string>
+    <string name="toast_start_failed">Nie udało się uruchomić</string>
+
+    <!-- Tools -->
+    <string name="tools_add_result">Dodaj wynik</string>
+    <string name="tools_add_result_placeholder">Dodaj wynik lub notatkę…</string>
+    <string name="tools_audio">Audio</string>
+    <string name="tools_audio_note">Notatka głosowa</string>
+    <string name="tools_board">Szachownica</string>
+    <string name="tools_strikethrough">Przekreślenie</string>
+    <string name="tools_bullet_list">Lista punktowana</string>
+    <string name="tools_numbered_list">Lista numerowana</string>
+    <string name="tools_color_default">Kolor tekstu</string>
+    <string name="tools_insert_pieces">Bierki</string>
+    <string name="tools_insert_annotations">Adnotacje</string>
+    <string name="tools_insert_quality">Jakość ruchu</string>
+    <string name="tools_insert_evaluation">Ocena</string>
+    <string name="tools_insert_other">Inne</string>
+    <string name="tools_insert_emojis">Emoji</string>
+    <string name="tools_sym_brilliant">świetny ruch</string>
+    <string name="tools_sym_good">dobry ruch</string>
+    <string name="tools_sym_interesting">interesujący ruch</string>
+    <string name="tools_sym_dubious">wątpliwy ruch</string>
+    <string name="tools_sym_mistake">błąd</string>
+    <string name="tools_sym_blunder">poważny błąd</string>
+    <string name="tools_sym_white_winning">Białe wygrywają</string>
+    <string name="tools_sym_white_clearly">Białe mają wyraźną przewagę</string>
+    <string name="tools_sym_white_slightly">Białe stoją nieco lepiej</string>
+    <string name="tools_sym_equal">pozycja równa</string>
+    <string name="tools_sym_black_slightly">Czarne stoją nieco lepiej</string>
+    <string name="tools_sym_black_clearly">Czarne mają wyraźną przewagę</string>
+    <string name="tools_sym_black_winning">Czarne wygrywają</string>
+    <string name="tools_sym_unclear">pozycja niejasna</string>
+    <string name="tools_sym_check">szach</string>
+    <string name="tools_sym_mate">mat</string>
+    <string name="tools_sym_castle_short">krótka roszada</string>
+    <string name="tools_sym_castle_long">długa roszada</string>
+    <string name="tools_sym_capture">bicie</string>
+    <string name="tools_sym_move_to">ruch na</string>
+    <string name="tools_sym_only_move">jedyny ruch</string>
+    <string name="tools_sym_novelty">nowość</string>
+    <string name="tools_sym_idea">z ideą</string>
+    <string name="tools_sym_attack">atak</string>
+    <string name="tools_sym_initiative">inicjatywa</string>
+    <string name="tools_sym_counterplay">kontrgra</string>
+    <string name="tools_sym_zugzwang">zugzwang</string>
+    <string name="tools_sym_time_trouble">niedoczas</string>
+    <string name="tools_sym_white_won">Białe wygrały</string>
+    <string name="tools_sym_draw">remis</string>
+    <string name="tools_sym_black_won">Czarne wygrały</string>
+    <string name="tools_piece_white_king">biały król</string>
+    <string name="tools_piece_white_queen">biały hetman</string>
+    <string name="tools_piece_white_rook">biała wieża</string>
+    <string name="tools_piece_white_bishop">biały goniec</string>
+    <string name="tools_piece_white_knight">biały skoczek</string>
+    <string name="tools_piece_white_pawn">biały pionek</string>
+    <string name="tools_piece_black_king">czarny król</string>
+    <string name="tools_piece_black_queen">czarny hetman</string>
+    <string name="tools_piece_black_rook">czarna wieża</string>
+    <string name="tools_piece_black_bishop">czarny goniec</string>
+    <string name="tools_piece_black_knight">czarny skoczek</string>
+    <string name="tools_piece_black_pawn">czarny pionek</string>
+    <string name="tools_piece_white_man">biały pionek warcabowy</string>
+    <string name="tools_piece_white_dame">biała damka</string>
+    <string name="tools_piece_black_man">czarny pionek warcabowy</string>
+    <string name="tools_piece_black_dame">czarna damka</string>
+    <string name="tools_emoji_game">Do gry</string>
+    <string name="tools_emoji_smileys">Buźki i emocje</string>
+    <string name="tools_emoji_people">Ludzie i ciało</string>
+    <string name="tools_emoji_animals">Zwierzęta i przyroda</string>
+    <string name="tools_emoji_food">Jedzenie i napoje</string>
+    <string name="tools_emoji_travel">Podróże i miejsca</string>
+    <string name="tools_emoji_activities">Aktywności</string>
+    <string name="tools_emoji_objects">Przedmioty</string>
+    <string name="tools_emoji_symbols">Symbole</string>
+    <string name="tools_emoji_flags">Flagi</string>
+    <string name="tools_bold">Pogrubienie</string>
+    <string name="tools_checkbox">Pole wyboru</string>
+    <string name="tools_clear_board">Wyczyść szachownicę</string>
+    <string name="tools_color">Kolor</string>
+    <string name="tools_copy_fen">KOPIUJ FEN</string>
+    <string name="tools_copy_format">Kopiuj %s</string>
+    <!-- The two square colours, as "pole" (neuter) takes them: CZARNE, BIAŁE. -->
+    <string name="tools_dark_square">CZARNE</string>
+    <string name="tools_delete_recording">Usuń nagranie</string>
+    <string name="tools_delete_photo">Usuń zdjęcie</string>
+    <string name="tools_delete_video" tools:ignore="Typos">Usuń film</string>
+    <string name="tools_record_again">Nagraj ponownie</string>
+    <string name="tools_delete_media_message">Nie można tego cofnąć.</string>
+    <string name="tools_detailed_moves">Szczegóły ruchów</string>
+    <string name="tools_copied_to_clipboard">Skopiowano %1$s do schowka</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">łącznie %d ruch</item>
+        <item quantity="few">łącznie %d ruchy</item>
+        <item quantity="many">łącznie %d ruchów</item>
+        <item quantity="other">łącznie %d ruchu</item>
+    </plurals>
+    <string name="tools_dice_roll">Rzut kostką</string>
+    <string name="tools_draw">Rysuj</string>
+    <string name="tools_draw_again">Losuj ponownie</string>
+    <string name="tools_draw_note">Notatka rysunkowa</string>
+    <string name="tools_edit_board">Edytuj szachownicę</string>
+    <string name="tools_edit_note">Edytuj notatkę</string>
+    <string name="tools_eraser">Gumka</string>
+    <string name="tools_pen">Pióro</string>
+    <string name="tools_line">Linia</string>
+    <string name="tools_arrow">Strzałka</string>
+    <string name="tools_rectangle">Prostokąt</string>
+    <string name="tools_ellipse">Elipsa</string>
+    <string name="tools_shape_done">Gotowe</string>
+    <string name="tools_shapes">Kształty</string>
+    <string name="tools_width">Grubość</string>
+    <string name="tools_custom_colours">Twoje kolory</string>
+    <string name="tools_background">Tło</string>
+    <string name="tools_background_none">Bez tła</string>
+    <string name="tools_background_empty">Nie ma jeszcze zdjęcia ani notatki z szachownicą, na których można rysować</string>
+    <string name="tools_final_score">Wynik końcowy: %d</string>
+    <string name="tools_format_hint">Zaznacz tekst i sformatuj go paskiem narzędzi…</string>
+    <string name="tools_game_logs">Zapisy partii</string>
+    <string name="tools_game_over">KONIEC GRY</string>
+    <string name="tools_generate">GENERUJ</string>
+    <!-- A Polish coin lands orzeł or reszka; heads is ORZEŁ. -->
+    <string name="tools_heads">ORZEŁ</string>
+    <string name="tools_image">Obraz</string>
+    <string name="tools_image_note">Notatka z obrazem</string>
+    <string name="tools_highlight">Wyróżnienie</string>
+    <string name="tools_highlight_none">Bez wyróżnienia</string>
+    <string name="tools_highlight_yellow">Żółty</string>
+    <string name="tools_highlight_orange">Pomarańczowy</string>
+    <string name="tools_highlight_pink">Różowy</string>
+    <string name="tools_highlight_blue">Niebieski</string>
+    <string name="tools_highlight_green">Zielony</string>
+    <string name="tools_center">Do środka</string>
+    <string name="tools_italic">Kursywa</string>
+    <string name="tools_large">Duży nagłówek</string>
+    <string name="tools_left">Do lewej</string>
+    <string name="tools_log_details">Szczegóły zapisu</string>
+    <string name="tools_match_summary">Podsumowanie meczu</string>
+    <string name="tools_min_moves">Min. ruchów?</string>
+    <string name="tools_move">Ruch</string>
+    <string name="tools_name_square_title">Nazwij pole</string>
+    <string name="tools_new_audio_note">Nowa notatka głosowa</string>
+    <string name="tools_new_board_note">Nowa notatka z szachownicą</string>
+    <string name="tools_new_draw_note">Nowa notatka rysunkowa</string>
+    <string name="tools_new_image_note">Nowa notatka z obrazem</string>
+    <string name="tools_new_note">Nowa notatka</string>
+    <string name="tools_notebook_full">Notatnik jest pełny. Usuń notatkę, aby dodać kolejną.</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Nowa notatka wideo</string>
+    <string name="tools_no_games">Nie zapisano jeszcze żadnej partii.</string>
+    <string name="tools_no_notes">Brak notatek. Dotknij +, aby utworzyć notatkę.</string>
+    <string name="tools_no_photo">Brak zdjęcia</string>
+    <string name="tools_no_video" tools:ignore="Typos">Brak filmu (maks. 1 min)</string>
+    <string name="tools_note_image">Obraz notatki</string>
+    <string name="tools_offset">Odchylenie: %1$s%2$d ms</string>
+    <string name="tools_pick_straw">Wyciągnij zapałkę %d</string>
+    <string name="tools_play">Odtwórz</string>
+    <string name="tools_prepare">PRZYGOTUJ SIĘ</string>
+    <string name="tools_random_card">Losowa karta</string>
+    <string name="tools_record">Nagraj</string>
+    <string name="tools_record_video" tools:ignore="Typos">Nagraj film</string>
+    <string name="tools_reset_scoreboard">Resetuj tabelę wyników</string>
+    <string name="tools_retake_photo">Zrób zdjęcie ponownie</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Nagraj film ponownie</string>
+    <string name="tools_roll_dice">Rzuć kostką</string>
+    <string name="tools_score">Wynik: %d</string>
+    <string name="tools_select_piece">Wybierz bierkę</string>
+    <string name="tools_board_eraser_hint">Nie wybrano bierki — dotknij pola, aby je wyczyścić</string>
+    <string name="tools_board_variant_draughts_10">Warcaby 10×10</string>
+    <string name="tools_board_variant_draughts_8">Warcaby 8×8</string>
+    <string name="tools_board_deselect">Odznacz bierkę</string>
+    <string name="tools_select_text_color">Wybierz kolor tekstu</string>
+    <string name="tools_share_log">Udostępnij zapis</string>
+    <!-- Poles draw matches, not straws: "zapałka" throughout. -->
+    <string name="tools_short_straw">Krótka zapałka</string>
+    <string name="tools_straw_long">Długa</string>
+    <string name="tools_straw_short">Krótka</string>
+    <string name="tools_shred">Zniszcz</string>
+    <string name="tools_spent">Zużyto</string>
+    <string name="tools_start">START</string>
+    <string name="tools_start_trial">ROZPOCZNIJ PRÓBĘ</string>
+    <string name="tools_stop">STOP</string>
+    <string name="tools_stop_precision">Precyzja zatrzymania</string>
+    <string name="tools_tails">RESZKA</string>
+    <string name="tools_take_photo">Zrób zdjęcie</string>
+    <string name="tools_target">CEL</string>
+    <string name="tools_target_time">Cel: 5,000 s</string>
+    <string name="tools_text">Tekst</string>
+    <string name="tools_time_per_move">Czas na ruch</string>
+    <string name="tools_title">Tytuł</string>
+    <string name="tools_caption">Podpis</string>
+    <string name="tools_toss_coin">Rzuć monetą</string>
+    <string name="tools_underline">Podkreślenie</string>
+    <string name="tools_undo">Cofnij</string>
+    <string name="tools_redo">Ponów</string>
+    <string name="tools_variant_generator">Generator wariantów</string>
+    <string name="tools_video" tools:ignore="Typos">Wideo</string>
+    <string name="tools_video_note" tools:ignore="Typos">Notatka wideo</string>
+    <string name="tools_white_square">BIAŁE</string>
+
+    <!-- Chess variants: names stay English, descriptions are translated -->
+    <string name="variant_chess2880_desc">Symetryczne, gońce różnopolowe, król na dowolnym polu (bez roszady).</string>
+    <string name="variant_chess960_desc">Symetryczne, gońce różnopolowe, król między wieżami (z roszadą).</string>
+    <string name="variant_double960_desc">Asymetryczne, gońce różnopolowe, król między wieżami (taktyka dla zaawansowanych).</string>
+    <string name="variant_shuffle_desc">Symetryczne, król i gońce na dowolnych polach (pełna losowość).</string>
+    <string name="variant_transcendental_desc">Asymetryczne, gońce różnopolowe, król na dowolnym polu (bogata taktyka).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Zapałki: %d</item>
+        <item quantity="few">Zapałki: %d</item>
+        <item quantity="many">Zapałki: %d</item>
+        <item quantity="other">Zapałki: %d</item>
+    </plurals>
+    <string name="qr_open_settings">Otwórz ustawienia aplikacji</string>
+    <string name="toast_no_browser">Brak zainstalowanej przeglądarki</string>
+    <string name="permission_open_settings">Otwórz ustawienia</string>
 </resources>

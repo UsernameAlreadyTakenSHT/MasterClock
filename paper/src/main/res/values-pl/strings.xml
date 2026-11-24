@@ -1,10 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MasterClock Paper — pl (Polish)
+  MasterClock — pl (Polish)
 
-  Not translated yet: this file only marks where the Polish strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
+
+  The three buttons under the E-Ink clock are narrow. "Ustawienia" at 10 characters does not fit
+  there and is "Opcje" here, the same shortening German, Dutch, Italian and Portuguese needed;
+  "Wznów" (5) and "Resetuj" (7) are no wider than the English "Settings" (8) that the row already
+  holds. The app module has room and keeps the full word.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">Anuluj</string>
+    <string name="common_reset">Resetuj</string>
+    <string name="timer_reset_title">Zresetować partię?</string>
+    <string name="timer_reset_message">Obecny stan zostanie utracony.</string>
+    <string name="common_back">Wstecz</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Zmień turę</string>
+    <string name="timer_pause">Pauza</string>
+    <string name="timer_resume">Wznów</string>
+    <string name="timer_start">Start</string>
+    <!-- "Ustawienia" at 10 characters does not fit the button beside Resetuj and Wznów. -->
+    <string name="timer_settings">Opcje</string>
+    <string name="timer_time_up">CZAS</string>
+
+    <!-- Settings -->
+    <string name="settings_initial_time">Czas początkowy</string>
+    <string name="settings_increment">Dodatek</string>
+    <string name="settings_move_time">Czas na ruch</string>
+    <string name="settings_system_behavior">Zachowanie systemu</string>
+    <string name="settings_font">Czcionka</string>
+    <string name="font_system">Systemowa</string>
+    <string name="settings_sound">Dźwięk</string>
+    <string name="settings_haptic_feedback">Wibracje</string>
+    <string name="settings_keep_awake">Nie wygaszaj ekranu</string>
+    <string name="settings_fullscreen">Pełny ekran</string>
+    <string name="settings_reverse_colors">Odwróć kolory</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Twórcy</string>
+    <string name="credits_tab_changes">Zmiany</string>
+    <string name="credits_tab_licenses">Licencje</string>
+    <string name="credits_rules_documents">Przepisy</string>
+    <string name="credits_libraries">MasterClock powstał dzięki tym bibliotekom open source.</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Gracz %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Gracz %1$d, %2$s, twój ruch</string>
+    <string name="a11y_out_of_time">koniec czasu</string>
+    <string name="a11y_no_time_left">brak czasu</string>
+    <string name="a11y_announce_out_of_time">Graczowi %d skończył się czas</string>
+    <string name="a11y_announce_finished">Partia zakończona</string>
+    <string name="a11y_announce_paused">Wstrzymano</string>
+    <string name="a11y_announce_to_move">Ruch gracza %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Polish four categories: one (1), few (2–4, 22–24…), many (0, 5–21, 25…) and
+         other, which only fractions reach and which takes the genitive singular. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d godzina</item>
+        <item quantity="few">%d godziny</item>
+        <item quantity="many">%d godzin</item>
+        <item quantity="other">%d godziny</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d minuta</item>
+        <item quantity="few">%d minuty</item>
+        <item quantity="many">%d minut</item>
+        <item quantity="other">%d minuty</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d sekunda</item>
+        <item quantity="few">%d sekundy</item>
+        <item quantity="many">%d sekund</item>
+        <item quantity="other">%d sekundy</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">pozostał %d okres</item>
+        <item quantity="few">pozostały %d okresy</item>
+        <item quantity="many">pozostało %d okresów</item>
+        <item quantity="other">pozostało %d okresu</item>
+    </plurals>
+
+    <string name="settings_version">Wersja %s</string>
+    <string name="back_press_again_to_exit">Naciśnij Wstecz ponownie, aby wyjść</string>
+    <string name="a11y_field_minutes">%1$s, minuty</string>
+    <string name="a11y_field_seconds">%1$s, sekundy</string>
+    <string name="toast_no_browser">Brak zainstalowanej przeglądarki</string>
 </resources>
