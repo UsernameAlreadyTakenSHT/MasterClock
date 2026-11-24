@@ -64,12 +64,17 @@ fun AboutScreen(onBackClick: () -> Unit, onMessage: (String) -> Unit) {
                     // The app's name, and the version below where it can take a second line: the
                     // two together are some 270dp at this size against the 220 the bar leaves
                     // beside its arrow, and it was the version's end that went.
-                    Text(
-                        stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    // Smaller where it does not fit, rather than cut: in Noto Sans Mono on a Kompakt it
+                    // read "MasterClock Pa…".
+                    BoxWithConstraints {
+                        val name = stringResource(R.string.app_name)
+                        Text(
+                            name,
+                            style = sharedLabelStyle(listOf(name), MaterialTheme.typography.titleLarge, maxWidth),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
