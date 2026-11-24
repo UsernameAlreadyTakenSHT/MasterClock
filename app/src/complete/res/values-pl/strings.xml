@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MasterClock Complete — pl (Polish)
+
+  Not translated yet: this file only marks where the Polish strings go. Every string falls back to
+  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
+  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+</resources>
