@@ -173,5 +173,6 @@ Its settings are one page:
 | **Fullscreen** | off | Hides the status bar and the navigation bar. |
 | **Sound** | off | A sound at each move, and the triple beep when a clock runs out. |
 | **Haptic feedback** | off | A vibration at each move. |
+| **Font**: **System**, **Noto Sans**, **Noto Sans Mono** | System | The face of every text, the clock's included. System is the app's usual face. |
 
 It has no presets, no arbiter's panel, no history and no autosave.

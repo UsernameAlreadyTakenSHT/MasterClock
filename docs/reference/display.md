@@ -2,7 +2,7 @@
 
 How the clock looks. In Complete and Standard.
 
-- [Time Format](#time-format) · [Information](#information) · [Layout & Scale](#layout--scale) · [Theme](#theme) · [Colours](#colours)
+- [Time Format](#time-format) · [Information](#information) · [Layout & Scale](#layout--scale) · [Theme](#theme) · [Font](#font) · [Colours](#colours)
 
 ## Time Format
 
@@ -38,6 +38,17 @@ The clock updates as often as the smallest digit on show needs, and no more ofte
 
 **Light**, **Dark**, or **Auto**, which follows the system. *Auto* by default. It colours the
 settings and the dialogs; the clock's own colours are below.
+
+## Font
+
+**System**, **Noto Sans** or **Noto Sans Mono**. *System* by default. It sets the face of every
+text in the app, the clock's digits included, and takes effect at once; each choice is written in
+its own face. *System* is the phone's own font, with the clock's digits in its monospace face, as
+before the setting existed. The two Noto fonts ship with the app, so the clock looks the same on
+every phone. Noto Sans Mono gives every letter the same width, the digits' as much as any other.
+
+Lite and Mini have the same choice at the foot of their settings page, and the E-Ink app at the
+end of its own, where *System* is the app's usual face.
 
 ## Colours
 

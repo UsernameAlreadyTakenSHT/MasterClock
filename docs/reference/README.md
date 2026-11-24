@@ -29,7 +29,9 @@ bug: please open an issue.
 | More | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 🟡 in part: the three modes of Mini and E-Ink are Sudden Death, Fischer and Move Timer. The E-Ink app
-has a short settings page of its own, described at the end of [Home](home.md).
+has a short settings page of its own, described at the end of [Home](home.md). Every build has the
+[Font](display.md#font) setting: in Display for Complete and Standard, at the foot of the settings
+page for Lite, Mini and E-Ink.
 
 ## Conventions
 
