@@ -2,9 +2,661 @@
 <!--
   MasterClock — tr (Turkish)
 
-  Not translated yet: this file only marks where the Turkish strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode names (Fischer, Byoyomi, Sudden Death…) and chess variant names are Kotlin literals rather
+  than resources, so they stay in English by construction — see the notes in values/strings.xml.
+
+  app_name and settings_app_version are left out on purpose: they are the product name.
+
+  Turkish attaches its suffixes to words, and their vowels follow the word they attach to. A suffix
+  is never put on a number placeholder here: the sentences are built so that "Oyuncu %d" or
+  "Tur %d" reads correctly whatever the number is. The labels in tight rows (the settings tabs, the
+  presets tabs, the Omni segments) are deliberately short.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Common -->
+    <string name="common_cancel">İptal</string>
+    <string name="common_reset">Sıfırla</string>
+    <string name="common_player_n">Oyuncu %d</string>
+    <string name="common_back_to_game">Oyuna dön</string>
+    <string name="common_back">Geri</string>
+    <string name="common_save">Kaydet</string>
+    <string name="common_delete">Sil</string>
+    <string name="common_rename">Yeniden adlandır</string>
+    <string name="common_name">Ad</string>
+
+    <!-- Presets -->
+    <string name="preset_title">Hazır ayarlar</string>
+    <string name="preset_tab_all">Tümü</string>
+    <string name="preset_tab_mine">Benim</string>
+    <!-- Short on purpose: the third tab is narrow. "Son oyunlar" would crowd it; "Geçmiş" is the
+         everyday word for a list of past games. -->
+    <string name="preset_tab_last_games">Geçmiş</string>
+    <string name="preset_save_current">Geçerli zaman kontrolünü kaydet</string>
+    <string name="preset_save_title">Zaman kontrolünü kaydet</string>
+    <string name="preset_rename_title">Hazır ayarı yeniden adlandır</string>
+    <string name="preset_empty_custom">Bir zaman kontrolü ayarlayın, ardından buraya kaydedin.</string>
+    <string name="preset_long_press_hint">Yeniden adlandırmak ya da silmek için hazır ayara uzun basın.</string>
+    <string name="preset_manage_action">Yeniden adlandır ya da sil</string>
+    <string name="preset_view_statistics">İstatistikleri gör</string>
+    <string name="preset_empty_history">Henüz oyun oynanmadı.</string>
+    <string name="preset_delete_title">\"%s\" silinsin mi?</string>
+    <string name="preset_delete_message">Bu hazır ayar kalıcı olarak silinecek.</string>
+
+    <string name="common_clear">Temizle</string>
+    <string name="common_close">Kapat</string>
+    <string name="common_remove">Kaldır</string>
+    <string name="common_select">Seç</string>
+    <string name="common_optional">İsteğe bağlı</string>
+
+    <!-- Mode settings -->
+    <string name="settings_select_mode">Oyun modunu seçin</string>
+    <string name="settings_more_modes">Diğer modlar</string>
+    <string name="settings_bonus_type">Bonus türü</string>
+    <string name="settings_move_timer_type">Move Timer türü</string>
+    <string name="settings_byoyomi_type">Byoyomi türü</string>
+    <string name="settings_chrono_type">Chronos türü</string>
+    <string name="settings_move_counts_type">Move Counts türü</string>
+    <string name="settings_fast_move_type">Fast Move türü</string>
+    <string name="settings_staircase_type">Staircase türü</string>
+    <string name="settings_time_parameters">Süre ayarları</string>
+    <string name="settings_initial_time">Başlangıç süresi</string>
+    <string name="settings_increment">Artış</string>
+    <string name="settings_increment_bonus">Artış / bonus</string>
+    <string name="settings_delay">Gecikme</string>
+    <string name="settings_move_time">Hamle süresi</string>
+    <string name="settings_time_per_move">Hamle başına süre</string>
+    <string name="settings_time_to_move">Hamle için süre</string>
+    <string name="settings_starting_move_time">Başlangıç hamle süresi</string>
+    <string name="settings_time_cap">Süre tavanı</string>
+    <string name="settings_byoyomi_time">Byoyomi süresi</string>
+    <string name="settings_periods_goal">Periyot / hamle hedefi</string>
+    <string name="settings_progression">İlerleme (hamle)</string>
+    <string name="settings_max_moves">En fazla hamle</string>
+    <string name="settings_decrement_per_move">Hamle başına azalma</string>
+    <string name="settings_min_time_floor">En düşük süre sınırı</string>
+    <string name="settings_increase_per_move">Hamle başına artış</string>
+    <string name="settings_max_time_ceiling">En yüksek süre sınırı</string>
+    <string name="settings_grace_period">Tolerans süresi (normal hız)</string>
+    <string name="settings_full_fast_starts">Tam hızlı dönemin başlangıcı</string>
+    <string name="settings_reflection_time">Düşünme süresi</string>
+    <string name="settings_simultaneous">Eşzamanlı oyun</string>
+    <string name="settings_duration">Süre</string>
+    <string name="settings_base_duration_range">Temel süre aralığı</string>
+    <string name="settings_increment_range">Artış aralığı (Fischer)</string>
+    <string name="settings_min_duration">En kısa süre</string>
+    <string name="settings_max_duration">En uzun süre</string>
+    <string name="settings_min_increment">En düşük artış</string>
+    <string name="settings_max_increment">En yüksek artış</string>
+    <string name="settings_rounded_time">Yuvarlanmış süre (dakika/saniye)</string>
+    <string name="settings_random_shared_draw">İki oyuncu da Oyuncu 1\'in çekilişini alır: aralıkları Oyuncu 1 sekmesinde ayarlayın.</string>
+    <string name="settings_random_config">Random modu ayarları</string>
+    <string name="settings_hidden_config">Hidden modu ayarları</string>
+    <string name="settings_show_percentage">Yüzde uyarılarını göster</string>
+    <string name="settings_fide_config">FIDE Periods ayarları</string>
+    <string name="settings_add_period">Periyot ekle</string>
+    <string name="settings_actions">İşlemler</string>
+    <string name="settings_period_n">Periyot %d</string>
+    <string name="settings_moves_unlock">Sonrakini açan hamle sayısı (0 = son)</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Periyot %d öncesi toplam hamle</string>
+    <plurals name="settings_moves_read_as_more">
+        <item quantity="one">%1$d hamle daha olarak okunur: toplam %2$d</item>
+        <item quantity="other">%1$d hamle daha olarak okunur: toplam %2$d</item>
+    </plurals>
+    <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Aşama %d adı</string>
+    <string name="settings_phase_n">Aşama %d</string>
+    <string name="settings_color_red">Kırmızı: %d</string>
+    <string name="settings_color_green">Yeşil: %d</string>
+    <string name="settings_color_blue">Mavi: %d</string>
+    <string name="settings_fast_accel_rate">Hızlanma oranı (+%s sn/sn)</string>
+    <string name="settings_full_fast_accel_rate">Tam hızlanma oranı (+%s sn/sn)</string>
+    <string name="settings_version">Sürüm %s</string>
+    <string name="share_settings">Ayarları paylaş</string>
+    <string name="share_restore_full_desc">Her şeyi (ayarlar ve medya) bir .zip arşivinden geri yükleyin.</string>
+    <string name="settings_final_period">Bu, oyunun son periyodu olacak.</string>
+    <string name="settings_flag_on_end">Sonda bayrak düşer (yenilgi)</string>
+    <string name="settings_phases_config">Aşama ayarları</string>
+    <string name="settings_repeat_phases">Aşamaları tekrarla (döngü)</string>
+    <string name="settings_pause_between_phases">Aşamalar arasında duraklat</string>
+    <string name="settings_pause_until_tap">Aşamalar arasında dokunulana kadar duraklat</string>
+    <string name="settings_wait_tap_at_end">Sonda bir dokunuş bekle</string>
+    <string name="settings_allow_skip">Elle geçmeye izin ver (erken ilerlemek için dokunun)</string>
+    <string name="settings_phase_placeholder">Hazırlık, Tur X…</string>
+    <string name="settings_cumulative_transfer">Kümülatif Transfer</string>
+    <string name="settings_cumulative_explain">Her hamle, hamle süresine ek olarak rakibin son hamlesinde harcadığı süreyi alır. Açıkken önceki hamlelerden kalan süre de korunur; kapalıyken kaybolur. Bir oyuncunun harcadığını diğerinin kazandığı sabit bir toplam için Hourglass\'a bakın.</string>
+    <string name="settings_one_for_all">One for All (geçiş yok)</string>
+
+    <string name="settings_select_custom_color">Özel renk seçin</string>
+    <string name="settings_pick_colour">Özel bir renk seçin</string>
+    <string name="settings_sound_custom">Özel ses seçildi</string>
+    <string name="settings_sound_default">Varsayılan ses kullanılıyor</string>
+    <string name="settings_sound_clear">Özel sesi kaldır</string>
+    <string name="settings_sound_change">Özel sesi değiştir</string>
+    <string name="settings_sound_choose">Özel bir ses seçin</string>
+
+    <string name="toast_backup_ok">Yedekleme başarılı!</string>
+    <string name="toast_import_ok">İçe aktarma başarılı!</string>
+    <string name="toast_import_failed">İçe aktarma başarısız: dosya okunamadı.</string>
+    <string name="toast_export_ok">Dışa aktarma başarılı!</string>
+    <string name="toast_export_failed">Dışa aktarma başarısız: dosya yazılamadı.</string>
+    <string name="toast_backup_too_large">Yedek kaydedilmedi: geri yüklenemeyecek kadar büyük olurdu.</string>
+    <string name="toast_export_too_large">Bir ayar dosyası için çok fazla oyun var: bunun yerine tam yedeği kullanın.</string>
+    <string name="toast_no_voice">Kullanılabilir bir metin okuma sesi yok. Anonsları duymak için cihazın ayarlarından bir ses yükleyin.</string>
+    <string name="toast_no_app_for_this">Bu cihazda bunu yapabilecek bir uygulama yok.</string>
+    <string name="toast_sound_not_kept">Bu uygulama o dosyaya erişimi koruyamadı; yeniden başlatmadan sonra çalmayı bırakırdı. Bunun yerine cihazınızın depolama alanından bir ses seçin.</string>
+    <string name="qr_confirm_title">Taranan ayarlar uygulansın mı?</string>
+    <string name="qr_confirm_message">Bu kod mevcut ayarlarınızın yerini alır, oyunlar ve bir skor tablosu ekleyebilir. Yalnızca güvendiğiniz birinden gelen kodu kabul edin.</string>
+    <string name="qr_confirm_apply">Uygula</string>
+    <string name="import_confirm_title">Bu dosya içe aktarılsın mı?</string>
+    <string name="import_confirm_message">Bu dosya mevcut ayarlarınızın yerini alır. İçindeki oyunlar, hazır ayarlar, notlar ve skor tablosu sonuçları sizinkilere eklenir: sizin hiçbir şeyiniz silinmez.</string>
+    <string name="import_confirm_action">İçe aktar</string>
+    <string name="confirm_also_ends_game">Bu, saatteki oyunu ya da devam ettirilmeyi bekleyen oyunu da bitirir.</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Oyuncu %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Oyuncu %1$d, %2$s, sıra sizde</string>
+    <string name="a11y_out_of_time">süre doldu</string>
+    <string name="a11y_finished">bitti</string>
+    <string name="a11y_time_hidden">süre gizli</string>
+    <string name="a11y_no_time_left">süre kalmadı</string>
+    <string name="a11y_announce_out_of_time">Oyuncu %d, süre doldu</string>
+    <string name="a11y_announce_finished">Oyun bitti</string>
+    <string name="a11y_announce_paused">Duraklatıldı</string>
+    <string name="a11y_announce_running">Saat çalışıyor</string>
+    <string name="a11y_announce_to_move">Sıra: Oyuncu %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Turkish one and other; the noun stays singular after a number in both. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d saat</item>
+        <item quantity="other">%d saat</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d dakika</item>
+        <item quantity="other">%d dakika</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d saniye</item>
+        <item quantity="other">%d saniye</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">%d periyot kaldı</item>
+        <item quantity="other">%d periyot kaldı</item>
+    </plurals>
+
+    <!-- Timer chips -->
+    <string name="timer_cap">TAVAN</string>
+    <string name="timer_global">GENEL</string>
+    <string name="timer_total">TOPLAM</string>
+    <string name="timer_labeled_time">%1$s: %2$s</string>
+    <!-- "OT" labels the Overtime reserve, a fixed amount spent once a move clock runs out:
+         "EK SÜRE" is the plain word for it. -->
+    <string name="timer_overtime">EK SÜRE</string>
+    <string name="timer_switch_turn">Sırayı değiştir</string>
+    <string name="timer_presets">Hazır ayarlar</string>
+    <string name="timer_settings">Ayarlar</string>
+    <string name="timer_pause">Duraklat</string>
+
+    <!-- Settings tabs and dialogs -->
+    <string name="settings_tab_modes">Modlar</string>
+    <!-- Short like the French "Jeu" and German "Spiel": "Davranış" would crowd the tab row. -->
+    <string name="settings_tab_behavior">Oyun</string>
+    <string name="settings_tab_display">Görünüm</string>
+    <string name="settings_tab_audio">Ses</string>
+    <string name="settings_tab_more">Diğer</string>
+    <string name="settings_tab_omni">Omni</string>
+    <string name="settings_clear_logs_title">Tüm oyun kayıtları silinsin mi?</string>
+    <string name="settings_clear_logs_message">Kaydedilen tüm geçmiş kalıcı olarak silinecek.</string>
+    <string name="settings_reset_title">Tüm ayarlar sıfırlansın mı?</string>
+    <string name="settings_reset_message">Bu işlem geri alınamaz.</string>
+    <string name="settings_reset_confirm">Sıfırla</string>
+
+    <!-- Enum-backed option labels -->
+    <string name="flag_freeze">Dondur</string>
+    <string name="flag_flag">Bayrak</string>
+    <string name="flag_negative">Negatif</string>
+    <string name="flag_reverse">Ters</string>
+
+    <string name="theme_light">Açık</string>
+    <string name="theme_dark">Koyu</string>
+    <string name="theme_auto">Otomatik</string>
+
+    <string name="game_chess">Satranç</string>
+    <string name="game_draughts">Dama</string>
+    <string name="game_shogi">Shogi</string>
+
+    <string name="order_linear">Doğrusal</string>
+    <string name="order_snake">Yılan</string>
+    <string name="order_rotate">Döngüsel</string>
+    <string name="order_random">Rastgele</string>
+
+    <!-- Settings: Display -->
+    <string name="settings_theme">Tema</string>
+    <string name="settings_font">Yazı tipi</string>
+    <string name="font_system">Sistem</string>
+    <string name="settings_orientation">Yön</string>
+    <string name="settings_vert">Dikey</string>
+    <string name="settings_layout_scale">Düzen ve ölçek</string>
+    <string name="settings_active_side_bigger">Etkin taraf daha büyük</string>
+    <string name="settings_fullscreen">Tam ekran</string>
+    <string name="settings_flash_low_time">Süre azalınca yanıp sön (&lt;10 sn)</string>
+    <string name="settings_keep_awake">Ekranı açık tut</string>
+    <string name="settings_force_brightness">Tam parlaklığa zorla</string>
+    <string name="settings_primary_colors">Ana renkler</string>
+    <string name="settings_active_bg">Etkin taraf arka planı</string>
+    <string name="settings_inactive_bg">Etkin olmayan taraf arka planı</string>
+    <string name="settings_active_text">Etkin saat yazısı</string>
+    <string name="settings_inactive_text">Etkin olmayan saat yazısı</string>
+    <string name="settings_secondary_info">İkincil bilgiler</string>
+    <string name="settings_label_text_color">Etiket yazı rengi (hamleler, periyotlar, gecikme)</string>
+    <string name="settings_alert_text_color">Uyarı yazı rengi (SÜRE BİTTİ, OYNA!)</string>
+    <string name="settings_special_states">Özel durumlar</string>
+    <string name="settings_loss_bg">Yenilgi durumu arka planı</string>
+    <string name="settings_gong_reflection_bg">Gong: düşünme arka planı</string>
+    <string name="settings_time_format">Saat biçimi</string>
+    <string name="settings_always_hours">Saatleri her zaman göster</string>
+    <string name="settings_always_minutes">Dakikaları her zaman göster</string>
+    <string name="settings_leading_zeros">Baştaki sıfırlar</string>
+    <string name="settings_show_tenths">Saniyenin onda birini göster</string>
+    <string name="settings_show_hundredths">Saniyenin yüzde birini göster</string>
+    <string name="settings_like_tenths">Onda bir gibi</string>
+    <string name="settings_under_10s">10 sn altında</string>
+    <string name="settings_threshold">Eşik</string>
+    <string name="settings_all">Tümü</string>
+    <string name="settings_information">Bilgiler</string>
+    <string name="settings_always_show_moves">Hamleleri her zaman göster</string>
+    <string name="settings_show_period" tools:ignore="TypographyFractions">Periyodu göster (1/3)</string>
+
+    <!-- Settings: Audio -->
+    <string name="settings_sound">Ses</string>
+    <string name="settings_voice_announcements">Sesli anonslar</string>
+    <string name="settings_spoken_byoyomi">Sesli byoyomi</string>
+    <string name="settings_in_japanese_soon">Japonca (yakında)</string>
+    <string name="settings_timer_alerts">Saat uyarıları</string>
+    <string name="settings_countdown_beep">Geri sayım bip sesi</string>
+    <string name="settings_triple_beep">Süre bitince üç bip</string>
+    <string name="settings_play_switch_sound">Oyuncu değişince ses çal</string>
+    <string name="settings_haptics">Titreşim</string>
+    <string name="settings_haptic_countdown">Titreşimli geri sayım</string>
+    <string name="settings_haptic_switch">Geçişte dokunsal geri bildirim</string>
+    <string name="settings_haptic_feedback">Dokunsal geri bildirim</string>
+    <string name="settings_output_volume">Çıkış ve ses düzeyi</string>
+    <string name="settings_sounds_volume">Efekt ses düzeyi</string>
+    <string name="settings_voice_volume">Konuşma ses düzeyi</string>
+    <string name="settings_voice_announcement">Sesli anons</string>
+    <string name="settings_use_media_output">Medya çıkışını kullan (akış)</string>
+    <string name="settings_custom_sounds">Özel sesler</string>
+    <string name="settings_sound_previews">Ses önizlemeleri</string>
+    <string name="settings_gong_mode_sound">Gong (Gong modu)</string>
+    <string name="settings_beep_countdown_sound">Bip (geri sayım)</string>
+    <string name="settings_final_beep_sound">Son bip (süre doldu)</string>
+    <string name="settings_switch_sound">Geçiş (oyuncu hamlesi)</string>
+    <string name="settings_gong">Gong</string>
+    <string name="settings_beep">Bip</string>
+    <string name="settings_final">Son</string>
+    <string name="settings_switch">Geçiş</string>
+
+    <!-- Settings: Behavior -->
+    <string name="settings_flag_behavior">Bayrak davranışı</string>
+    <string name="settings_flag_cap">Bayrak sınırı</string>
+    <string name="settings_flag_cap_desc">Bir saatin sıfırın ne kadar ötesine geçebileceği. Saat orada durur ve oyun devam eder. Boş: sınır yok.</string>
+    <string name="settings_tournament_rules">Turnuva kuralları</string>
+    <string name="settings_fischer_fide">Fischer FIDE (0. hamlede bonus)</string>
+    <string name="settings_forced_move_counter">Zorunlu hamle sayacı</string>
+    <string name="settings_tournament_rules_explain">Birincisi yalnızca Fischer için geçerlidir: bonus 1. hamleden önce gelir. İkincisi yalnızca FIDE Periods için: açıkken bir periyot, hamle sayısına ulaşılınca biter; kapalıyken süresi dolunca.</string>
+    <string name="settings_interaction">Etkileşim</string>
+    <string name="settings_confirm_reset">Sıfırlamayı onayla</string>
+    <string name="settings_trigger_on_press">Basınca tetikle (yoksa bırakınca)</string>
+    <string name="settings_pause_background">Arka plandayken duraklat</string>
+    <string name="settings_keep_running">Arka planda çalışmaya devam et</string>
+    <string name="settings_keep_running_desc">Yukarıdaki duraklatma kapalıyken, uygulama arka plandayken bir bildirim saati çalışır durumda tutar; böylece Android onu kapatmaz. Bildirim, sıranın kimde olduğunu ve o oyuncunun süresini bir Duraklat düğmesiyle birlikte gösterir.</string>
+    <string name="notif_channel_clock">Devam eden oyun</string>
+    <string name="settings_advanced">Gelişmiş</string>
+    <string name="settings_different_per_player">Oyuncu başına farklı ayarlar</string>
+    <string name="settings_more_players">Daha fazla oyuncu (deneysel)</string>
+    <string name="settings_players">Oyuncular</string>
+    <string name="settings_visuals">Görsel</string>
+    <string name="settings_single_player_top">Tek oyuncu üstte</string>
+    <string name="settings_system_behavior">Sistem davranışı</string>
+
+    <!-- Export / import dialogs -->
+    <string name="share_export_title">Dışa aktar ve paylaş</string>
+    <string name="share_export_intro">Verilerinizi nasıl paylaşmak ya da yedeklemek istediğinizi seçin.</string>
+    <string name="share_file">Dosya paylaş</string>
+    <string name="share_file_desc">Bir arkadaşınıza .json yapılandırma dosyası gönderin.</string>
+    <string name="share_qr">QR kodu olarak paylaş</string>
+    <string name="share_qr_desc">Başka bir cihazla anında tarama (yalnızca ayarlar).</string>
+    <string name="share_export_storage">Depolamaya aktar</string>
+    <string name="share_export_storage_desc">.json dosyasını cihazınızın depolama alanına kaydedin.</string>
+    <string name="share_export_full">Tümünü dışa aktar (tam yedek)</string>
+    <string name="share_export_full_desc">Tüm ayarları, geçmişi, hazır ayarları VE fotoğrafları, kayıtları ve videolarıyla birlikte not defterini bir .zip arşivinde içerir.</string>
+    <string name="share_include_history">Geçmişi ve metin notlarını dahil et</string>
+    <string name="share_import_title">Veri içe aktar</string>
+    <string name="share_import_json">JSON dosyası içe aktar</string>
+    <string name="share_import_json_desc">Daha önce dışa aktarılmış bir .json yapılandırma dosyasını yükleyin.</string>
+    <string name="share_scan_qr">QR kodu tara</string>
+    <string name="share_scan_qr_desc">Başka bir ekranı tarayarak ayarları hızla içe aktarın.</string>
+    <string name="share_import_full">Tam yedeği içe aktar</string>
+    <string name="share_import_full_desc">Ayarlarınızı geri yükleyin ya da başka bir cihazdan içe aktarın.</string>
+
+    <!-- Credits dialog -->
+    <string name="credits_tab_credits">Katkılar</string>
+    <string name="credits_tab_changes">Yenilikler</string>
+    <string name="credits_tab_licenses">Lisanslar</string>
+    <string name="credits_rules_documents">Kural belgeleri</string>
+    <string name="credits_libraries">MasterClock bu açık kaynak kitaplıklarla geliştirildi.</string>
+
+    <!-- Omni wizard (settings) -->
+    <string name="omni_cfg_previous">Önceki</string>
+    <string name="omni_cfg_next_step">Sonraki adım</string>
+    <string name="omni_cfg_launch_game">Oyunu başlat</string>
+    <string name="omni_cfg_ready">Oynamaya hazır</string>
+    <string name="omni_cfg_summary">Özet</string>
+
+    <string name="omni_cfg_session_games">Oturum ve oyunlar</string>
+    <string name="omni_cfg_enable_session_timer">Oturum saatini etkinleştir</string>
+    <string name="omni_cfg_enable_game_timer">Oyun saatini etkinleştir</string>
+    <string name="omni_cfg_enable_round_timer">Tur saatini etkinleştir</string>
+    <string name="omni_cfg_enable_turn_timer">Sıra saatini etkinleştir</string>
+    <string name="omni_cfg_enable_phase_timer">Aşama saatini etkinleştir</string>
+    <string name="omni_cfg_session_timer">Oturum</string>
+    <string name="omni_cfg_game_timer">Oyun saati</string>
+    <string name="omni_cfg_round_timer">Tur saati</string>
+    <string name="omni_cfg_turn_timer">Sıra saati</string>
+    <string name="omni_cfg_phase_timer">Aşama saati</string>
+    <string name="omni_cfg_cutoff_session">Oturum süresi dolunca zorla kes</string>
+    <string name="omni_cfg_cutoff_game">Oyun süresi dolunca zorla kes</string>
+    <string name="omni_cfg_cutoff_round">Tur süresi dolunca zorla kes</string>
+    <string name="omni_cfg_cutoff_turn">Sıra süresi dolunca zorla kes</string>
+    <string name="omni_cfg_cutoff_phase">Aşama süresi dolunca zorla kes</string>
+    <string name="omni_cfg_turn_disabled">Sıra saati devre dışı.</string>
+    <string name="omni_cfg_phase_disabled">Aşama saati devre dışı.</string>
+
+    <string name="omni_cfg_game">Oyun</string>
+    <string name="omni_cfg_round">Tur</string>
+    <string name="omni_cfg_rounds">Turlar</string>
+    <string name="omni_cfg_turn">Sıra</string>
+    <string name="omni_cfg_turn_n">Sıra %d</string>
+    <string name="omni_cfg_step">Adım %1$d/%2$d</string>
+    <string name="omni_cfg_count">Sayı: %d</string>
+    <string name="omni_cfg_player_short">O%d</string>
+    <string name="omni_cfg_game_n">Oyun %d</string>
+    <string name="omni_cfg_round_n">Tur %d</string>
+    <string name="omni_cfg_phase_n">Aşama %d</string>
+    <string name="omni_cfg_game_short">Oy%d</string>
+    <string name="omni_cfg_round_short">T%d</string>
+    <string name="omni_cfg_turn_short">S%d</string>
+    <string name="omni_cfg_delete_game">Sil: oyun %d</string>
+    <string name="omni_cfg_delete_round">Sil: tur %d</string>
+    <string name="omni_cfg_delete_turn">Sil: sıra %d</string>
+    <string name="omni_cfg_delete_phase">Sil: aşama %d</string>
+    <string name="omni_cfg_phase_budget">Toplam: %1$d sn / Sınır: %2$d sn</string>
+    <string name="omni_cfg_summary_rounds_varied">• Oyun başına tur: %s</string>
+    <string name="omni_cfg_summary_order">• Sıra düzeni: %s</string>
+    <string name="omni_cfg_phases_exceed">Oyun \"%1$s\", tur \"%2$s\", %3$s: aşamalar sıra süresini aşıyor!</string>
+    <string name="omni_cfg_turns">Sıralar</string>
+    <string name="omni_cfg_phases">Aşamalar</string>
+    <string name="omni_cfg_game_name">Oyun adı</string>
+    <string name="omni_cfg_round_name">Tur adı</string>
+    <string name="omni_cfg_phase_name">Aşama adı</string>
+    <string name="omni_cfg_add_game">Oyun ekle</string>
+    <string name="omni_cfg_add_round">Tur ekle</string>
+    <string name="omni_cfg_add_turn">Sıra ekle</string>
+    <string name="omni_cfg_add_phase">Aşama ekle</string>
+    <string name="omni_cfg_duration">Süre</string>
+    <string name="omni_cfg_total_duration">Toplam süre</string>
+    <string name="omni_cfg_loop_turns">Sıraları tekrarla</string>
+    <string name="omni_cfg_end_round">Turu bitir</string>
+
+    <string name="omni_cfg_players_order">Oyuncular ve sıra düzeni</string>
+    <string name="omni_cfg_turn_order">Sıra düzeni</string>
+    <string name="omni_cfg_pattern_linear">Düzen (3 oyuncu): 123, 123, 123</string>
+    <string name="omni_cfg_pattern_snake">Düzen (3 oyuncu): 123, 321, 123</string>
+    <string name="omni_cfg_pattern_rotate">Düzen (3 oyuncu): 123, 231, 312</string>
+    <string name="omni_cfg_pattern_random_turn">Düzen (3 oyuncu): 132, 312, 231 — bir oyuncu atlanabilir ya da iki kez seçilebilir</string>
+    <string name="omni_cfg_pattern_random_round">Düzen (3 oyuncu): 231, 312, 123 — herkes her turda bir kez oynar</string>
+    <string name="omni_cfg_shuffle_per_round">Her turda karıştır</string>
+    <string name="omni_cfg_draw_per_turn">Her sırada çek</string>
+    <string name="omni_cfg_balance_draw">Çekilişi dengele</string>
+    <string name="omni_cfg_balance_explain">Sıralarda geride kalan oyuncunun sonraki olma olasılığı daha yüksektir; böylece farklar birikmek yerine kapanır.</string>
+    <string name="omni_cfg_no_repeat">Aynı oyuncu asla art arda iki kez gelmez</string>
+
+    <string name="omni_cfg_transitions">Geçişler ve molalar</string>
+    <string name="omni_cfg_enable_pauses">Molaları etkinleştir (ara süreler)</string>
+    <string name="omni_cfg_pauses_durations">Mola süreleri</string>
+    <string name="omni_cfg_turn_pause">Sıra arası mola</string>
+    <string name="omni_cfg_round_pause">Tur arası mola</string>
+    <string name="omni_cfg_game_pause">Oyun arası mola</string>
+    <string name="omni_cfg_pause_deducts_round">Mola tur süresinden düşer</string>
+    <string name="omni_cfg_pause_deducts_game">Mola oyun süresinden düşer</string>
+    <string name="omni_cfg_pause_deducts_global">Mola genel süreden düşer</string>
+    <string name="omni_cfg_launch_countdown">Başlangıç geri sayımı</string>
+    <string name="omni_cfg_auto_restart">Otomatik yeniden başlatma</string>
+
+    <string name="omni_cfg_pressure">Baskı ve ekonomi</string>
+    <string name="omni_cfg_advanced_rules">Gelişmiş kurallar</string>
+    <string name="omni_cfg_time_bank">Zaman bankası</string>
+    <string name="omni_cfg_bank_per_player">Oyuncu başına</string>
+    <string name="omni_cfg_bank_shared">Ortak havuz</string>
+    <string name="omni_cfg_bank_clear">Bankayı şunun sonunda boşalt:</string>
+
+    <string name="omni_cfg_audio">Sesli uyarılar</string>
+    <string name="omni_cfg_turn_beep">Sıra bip sesi</string>
+    <string name="omni_cfg_final_beep">Son bip</string>
+    <string name="omni_cfg_round_gong">Tur gongu</string>
+
+    <!-- "Yok" rather than "Kapalı": a state, and no longer than "1 dk" in a row of six segments. -->
+    <string name="common_off">Yok</string>
+    <string name="dur_10s">10 sn</string>
+    <string name="dur_30s">30 sn</string>
+    <string name="dur_1m">1 dk</string>
+    <string name="dur_2m">2 dk</string>
+    <string name="dur_5m">5 dk</string>
+
+    <!-- Settings: More tab -->
+    <string name="settings_more_help">Yardım ve destek</string>
+    <string name="settings_more_manual">Süre modları kılavuzu</string>
+    <string name="settings_more_game_tools">Oyun araçları</string>
+    <string name="settings_more_variants">Satranç varyantı üretici</string>
+    <string name="settings_more_rules">Bazı kurallar</string>
+    <string name="settings_more_scoreboard">Skor tablosu</string>
+    <string name="settings_more_notebook">Not defteri</string>
+    <string name="settings_more_more_tools">Diğer araçlar</string>
+    <string name="settings_more_coin_toss">Yazı tura</string>
+    <string name="settings_more_dice">Zar at</string>
+    <string name="settings_more_straw">Kısa çöp</string>
+    <string name="settings_more_card">Rastgele kart</string>
+    <string name="settings_more_stop">Doğru anda durdur</string>
+    <string name="settings_more_blindfold">Körleme antrenörü</string>
+    <string name="settings_more_knight">Atın yolu</string>
+    <string name="settings_more_name_square">Kareyi bil</string>
+    <string name="settings_more_board">Tahta bağlantısı</string>
+    <string name="settings_more_link_board">Tahta bağla (henüz denenmedi)</string>
+    <string name="settings_more_auto_switch">Hamlede sırayı otomatik değiştir</string>
+    <string name="settings_more_game">Oyun</string>
+    <string name="settings_more_game_data">Oyun verileri</string>
+    <string name="settings_more_logs">Oyun kayıtları ve geçmiş</string>
+    <string name="settings_more_limit_count">Geçmişi sayıyla sınırla</string>
+    <string name="settings_more_limit_age">Geçmişi yaşla sınırla</string>
+    <string name="settings_more_data_sharing">Veri ve paylaşım</string>
+    <string name="settings_more_export">Dışa aktar / paylaş</string>
+    <string name="settings_more_import">İçe aktar / tara</string>
+    <string name="settings_more_share_apk">Uygulamayı paylaş</string>
+    <string name="settings_more_share_apk_via">APK\'yı şununla paylaş</string>
+    <string name="settings_more_share_apk_format_title">Uygulamayı şu biçimde paylaş</string>
+    <string name="settings_more_share_apk_format_text">APK doğrudan yüklenir. Bazı telefonlar Bluetooth üzerinden APK dosyalarını reddeder: bu durumda bir ZIP gönderin; alıcı yüklemek için APK\'yı içinden çıkarır.</string>
+    <string name="settings_more_danger">Tehlikeli bölge</string>
+    <string name="settings_more_clear_logs">Kayıtları temizle</string>
+    <string name="settings_more_reset_settings">Ayarları sıfırla</string>
+    <string name="toast_preparing_apk">Uygulama dosyası hazırlanıyor…</string>
+    <string name="toast_apk_error">Hata: dosya hazırlanamadı</string>
+
+    <!-- Compact age limits: g(ün), h(afta), a(y), y(ıl). -->
+    <string name="age_one_day">1 g</string>
+    <string name="age_one_week">1 h</string>
+    <string name="age_one_month">1 a</string>
+    <string name="age_six_months">6 a</string>
+    <string name="age_one_year">1 y</string>
+
+    <!-- Omni station. The capitals keep the dotted İ: "İPTAL", "BİTTİ". -->
+    <string name="omni_reset_title">Oturum sıfırlansın mı?</string>
+    <string name="omni_reset_message">Turlar ve oyunlar boyunca tüm ilerleme kaybolacak.</string>
+    <string name="omni_reset_confirm">SIFIRLA</string>
+    <string name="omni_stop_title">Oturum durdurulsun mu?</string>
+    <string name="omni_stop_confirm">DURDUR</string>
+    <string name="omni_launch_title">Devam eden oturum</string>
+    <string name="omni_launch_message">Bir oturum duraklatılmış durumda. Olduğu gibi devam ettirilsin mi, yoksa bu ayarlarla yeni bir oturum mu başlatılsın?</string>
+    <string name="omni_launch_resume">DEVAM ET</string>
+    <string name="omni_launch_new">YENİ OTURUM</string>
+    <string name="omni_cancel" tools:ignore="ButtonCase">İPTAL</string>
+    <string name="omni_progress_session">Oturum</string>
+    <string name="omni_header">Omni: %s</string>
+    <string name="omni_progress_game">Oyun %1$d/%2$d</string>
+    <string name="omni_progress_round">Tur %1$d/%2$d</string>
+    <string name="omni_get_ready">HAZIRLANIN</string>
+    <string name="omni_phase_default">Aşama</string>
+    <string name="omni_next">Sonraki</string>
+    <string name="omni_pause">Duraklat</string>
+    <string name="omni_stop_session">Oturumu durdur</string>
+    <string name="omni_reset_session">Oturumu sıfırla</string>
+    <string name="omni_running">ÇALIŞIYOR</string>
+    <string name="omni_paused">DURAKLATILDI</string>
+    <string name="omni_round_finished">TUR BİTTİ</string>
+    <string name="omni_game_finished">OYUN BİTTİ</string>
+    <string name="omni_session_complete">OTURUM TAMAMLANDI</string>
+    <string name="omni_turn_finished">SIRA BİTTİ</string>
+    <string name="omni_prepare_round">Tur %d için hazırlanın</string>
+    <string name="omni_prepare_game">Oyun %d için hazırlanın</string>
+    <string name="omni_thanks">Oynadığınız için teşekkürler!</string>
+    <string name="omni_next_player">Sıradaki: Oyuncu %d</string>
+    <string name="omni_i_am_ready">HAZIRIM</string>
+    <string name="omni_close_session">OTURUMU KAPAT</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">İstatistikler</string>
+    <string name="stats_empty">Henüz biten oyun yok.\n\nBir oyun sıfırlandığında kaydedilir; istatistiklerinizi burada görmek için bir oyun oynayın ve Sıfırla\'ya basın.</string>
+    <string name="stats_games_played">Oynanan oyunlar</string>
+    <string name="stats_moves">Hamleler</string>
+    <string name="stats_average_move">Ortalama hamle</string>
+    <string name="stats_median_move">Medyan hamle</string>
+    <string name="stats_slowest_move">En yavaş hamle</string>
+    <string name="stats_time_on_clock">Saatteki süre</string>
+    <!-- "Yüzde 10" in words: Turkish writes the sign before the number, and "%10" in a resource
+         reads like a format placeholder. -->
+    <string name="stats_time_pressure" formatted="false">Başlangıç süresinin yüzde 10\'undan azı kalmışken oynanan hamleler</string>
+    <string name="stats_recent_game">En son oyun</string>
+    <string name="stats_modes_played">Oynanan modlar</string>
+
+    <plurals name="omni_cfg_summary_players">
+        <item quantity="one">• %d oyuncu</item>
+        <item quantity="other">• %d oyuncu</item>
+    </plurals>
+
+    <plurals name="omni_cfg_summary_games">
+        <item quantity="one">%d oyun</item>
+        <item quantity="other">%d oyun</item>
+    </plurals>
+
+    <plurals name="omni_cfg_summary_rounds_uniform">
+        <item quantity="one">• Oyun başına %d tur</item>
+        <item quantity="other">• Oyun başına %d tur</item>
+    </plurals>
+
+    <plurals name="stats_chart_moves">
+        <item quantity="one">%d hamle</item>
+        <item quantity="other">%d hamle</item>
+    </plurals>
+
+    <plurals name="stats_chart_description">
+        <item quantity="one">Hamle başına süre. %2$d hamle içinde en yavaşı: %1$s.</item>
+        <item quantity="other">Hamle başına süre. %2$d hamle içinde en yavaşı: %1$s.</item>
+    </plurals>
+
+    <!-- Timer Screen -->
+    <string name="timer_reset_title">Oyun sıfırlansın mı?</string>
+    <string name="preset_end_game_title">Mevcut oyun bitirilsin mi?</string>
+    <string name="preset_end_game_confirm">Oyunu bitir</string>
+    <string name="preset_end_waiting_game_title">Yarıda kalan oyun bitirilsin mi?</string>
+    <string name="preset_end_waiting_game_message">Devam ettirilmeyi bekleyen bir oyun var. Kaybolacak.</string>
+    <string name="timer_reset_message">Mevcut durum kaybolacak.</string>
+    <string name="timer_berserk_title">Oyuncu %1$d için Berserk?</string>
+    <string name="timer_berserk_message">Bu oyun için süresinin yarısı ve artışı gider. Geri alınamaz.</string>
+    <string name="timer_berserk_message_increment">Bu oyun için artışı gider: 1+2\'de Berserk süreye dokunmaz. Geri alınamaz.</string>
+    <string name="a11y_berserk_player">Berserk, oyuncu %1$d</string>
+    <string name="timer_reroll">Yeni rastgele süre</string>
+    <string name="timer_reroll_title">Yeni bir süre çekilsin mi?</string>
+    <string name="timer_reroll_confirm">Çek</string>
+    <string name="timer_reroll_message">Oyun yeni bir rastgele süreyle yeniden başlar.</string>
+    <string name="timer_arbitre_control">Hakem kontrolü</string>
+    <string name="timer_arbitre">Hakem</string>
+    <string name="timer_save_clock">Kaydet</string>
+    <string name="timer_resume">Devam et</string>
+    <string name="timer_restore_message">O andan bu yana olan her şey kaybolacak.</string>
+    <string name="timer_restore_title">Kaydedilen saatlere dönülsün mü?</string>
+    <string name="timer_start">Başlat</string>
+    <string name="timer_byoyomi">BYOYOMI</string>
+    <string name="timer_cycle">DÖNGÜ: %d</string>
+    <string name="timer_moves">HAMLE: %d</string>
+    <string name="timer_delay">GECİKME: %s</string>
+    <string name="timer_flagged">SÜRE BİTTİ</string>
+    <string name="timer_finished">BİTTİ</string>
+    <string name="timer_period_flag">PERİYOT DOLDU</string>
+    <string name="timer_period">PERİYOT: %1$d/%2$d</string>
+    <string name="timer_periods">PERİYOTLAR: %1$d</string>
+    <string name="timer_reflect">DÜŞÜN</string>
+    <string name="timer_move_alert">OYNA!</string>
+    <string name="timer_pause_label">DURDU</string>
+    <string name="preset_desc_1_min">Sudden Death 1:00</string>
+    <string name="preset_desc_5_min">Sudden Death 5:00</string>
+    <string name="preset_desc_10_min">Sudden Death 10:00</string>
+    <string name="preset_desc_30_min">Sudden Death 30:00</string>
+    <string name="preset_desc_60_min">Sudden Death 60:00</string>
+    <string name="preset_desc_fisch_3_2s">Fischer 3:00 +2 sn</string>
+    <string name="preset_desc_fisch_15_10s">Fischer 15:00 +10 sn</string>
+    <string name="preset_desc_90_40_30_30s">90 dk/40 + 30 dk (Fischer 30 sn)</string>
+    <string name="preset_desc_120_40_60_20_15_30s">120/40 + 60/20 + 15 dk (61. hamleden itibaren Fischer 30 sn)</string>
+    <string name="preset_desc_us_5_2s">Sudden Death 5:00, gecikme 2 sn</string>
+    <string name="preset_desc_us_25_5s">Sudden Death 25:00, gecikme 5 sn</string>
+    <string name="preset_desc_us_80_40_30_30s">80 dk/40 + 30 dk (gecikme 30 sn)</string>
+    <string name="preset_desc_bronst_90_5s">Bronstein 90:00, gecikme 5 sn</string>
+    <string name="preset_desc_jap_byo_20">Byoyomi Japanese: 20 dk + 1×30 sn</string>
+    <string name="preset_desc_jap_byo_60">Byoyomi Japanese: 60 dk + 3×20 sn</string>
+    <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 dk + 5 dk/20 hamle</string>
+    <string name="preset_desc_armag_5_4">Beyaz 5:00, Siyah 4:00</string>
+    <string name="preset_desc_hourgl_1_min">Hourglass, her biri 1:00</string>
+    <string name="preset_desc_30s_move">Move Timer Standard 30 sn/hamle</string>
+    <string name="preset_desc_scrabble_25">Sudden Death 25:00, bayrak: ters, en fazla 10:00</string>
+    <string name="preset_desc_random_1_10">Random 1–10 dk, yuvarlanmış</string>
+    <string name="preset_shortcut_deleted">Bu hazır ayar silindi</string>
+    <string name="arbiter_remove_minute">%1$s, eksi 1 dakika</string>
+    <string name="arbiter_add_minute">%1$s, artı 1 dakika</string>
+    <string name="arbiter_remove_second">%1$s, eksi 1 saniye</string>
+    <string name="arbiter_add_second">%1$s, artı 1 saniye</string>
+    <string name="arbiter_remove_move">Bir hamle çıkar: %1$s</string>
+    <string name="arbiter_add_move">Bir hamle ekle: %1$s</string>
+    <string name="arbiter_step_minute">1 dk</string>
+    <string name="arbiter_step_second">1 sn</string>
+    <string name="settings_horiz_left">Sol</string>
+    <string name="settings_horiz_right">Sağ</string>
+    <string name="omni_in_reserve">+%1$s yedekte</string>
+    <string name="omni_cfg_unbalanced_explain">Her sırada her oyuncunun olasılığı eşittir — içlerinden biri gerçekten bir turun çoğunu alabilir.</string>
+    <string name="tools_player_short">O%d</string>
+    <string name="back_press_again_to_exit">Çıkmak için Geri\'ye tekrar basın</string>
+    <string name="arbiter_clock">Saat</string>
+    <string name="label_per_move">/ hamle</string>
+    <string name="label_moves">hamle</string>
+    <string name="game_shortcut_gone">Bu oyun artık geçmişte yok</string>
+    <string name="color_green">Yeşil</string>
+    <string name="color_blue">Mavi</string>
+    <string name="color_red">Kırmızı</string>
+    <string name="color_yellow">Sarı</string>
+    <string name="color_orange">Turuncu</string>
+    <string name="color_black">Siyah</string>
+    <string name="color_grey">Gri</string>
+    <string name="color_white">Beyaz</string>
+    <string name="settings_allow_berserk">Berserk\'e izin ver</string>
+    <string name="settings_berserk_desc">İlk hamlesinden önce bir oyuncu süresinin yarısından ve artışından vazgeçebilir. Bu durumda galibiyet, 7. hamleden itibaren bir puan fazla değerindedir.</string>
 </resources>

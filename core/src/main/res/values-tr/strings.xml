@@ -2,9 +2,39 @@
 <!--
   MasterClock core — tr (Turkish)
 
-  Not translated yet: this file only marks where the Turkish strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  The voice strings are spoken aloud by the phone's text-to-speech, so they are written to be heard:
+  a player's number never carries a suffix ("Oyuncu 2, süre doldu" rather than an ordinal), which
+  would depend on how the number is pronounced.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="voice_time_up">Oyuncu %1$d, süre doldu</string>
+    <string name="voice_finished">Bitti</string>
+    <string name="voice_one_minute_left">Bir dakika kaldı</string>
+    <string name="voice_thirty_seconds_left">Otuz saniye kaldı</string>
+    <string name="voice_ten_seconds_left">On saniye kaldı</string>
+    <string name="voice_period">Periyot %1$d</string>
+    <string name="voice_byoyomi">Byoyomi başlıyor</string>
+    <string name="voice_byoyomi_periods_left">Kalan periyot: %1$d</string>
+    <string name="voice_byoyomi_seconds">%1$d saniye</string>
+    <string name="voice_move">Oyna</string>
+    <string name="voice_reflect">Düşün</string>
+    <string name="voice_phase">Aşama %1$d</string>
+    <string name="voice_test">Ses seviyesi deneniyor</string>
+    <string name="board_error_connect_permission">Bağlanmak için Bluetooth izni gerekiyor</string>
+    <string name="board_error_scan_permission">Taramak için Bluetooth izni gerekiyor</string>
+    <string name="board_error_no_connection">Tahtaya bağlanılamadı</string>
+    <string name="board_error_no_services">Tahtanın hizmetleri okunamadı</string>
+    <string name="board_error_nothing_to_hear">Bu cihaz, bu uygulamanın dinleyebileceği hiçbir şey bildirmiyor</string>
+    <string name="board_error_no_bluetooth">Bu cihaz Bluetooth\'u desteklemiyor</string>
+    <string name="board_error_bluetooth_off">Bluetooth kapalı. Lütfen açın.</string>
+    <string name="board_error_location_off">Konumu açın: bu Android sürümü Bluetooth tahtaları bulmak için konuma ihtiyaç duyuyor</string>
+    <string name="board_error_not_paired">Bu tahta artık eşlenmiş değil</string>
+    <string name="board_error_usb_refused">USB izni reddedildi</string>
+    <string name="board_error_unplugged">Bu tahta artık takılı değil</string>
+    <string name="board_error_needs_driver">Bu tahta standart USB seri bağlantı kullanmıyor; bu uygulamada olmayan bir sürücüye ihtiyaç duyuyor</string>
+    <string name="board_error_cannot_open">Tahta açılamadı</string>
+    <string name="board_error_in_use">Bu tahtayı başka bir uygulama kullanıyor</string>
+    <string name="board_error_nothing_to_read">Bu tahta, bu uygulamanın okuyabileceği hiçbir şey göndermiyor</string>
 </resources>

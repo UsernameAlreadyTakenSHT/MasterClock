@@ -2,9 +2,315 @@
 <!--
   MasterClock Complete — tr (Turkish)
 
-  Not translated yet: this file only marks where the Turkish strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode and sub-mode names (Fischer, Bronstein, Byoyomi, Hourglass, Shared, Overtime…) and chess
+  variant names carry translatable="false" in values/strings.xml: they are the fixed vocabulary
+  printed on tournament clocks and written in federation rulebooks. Only their descriptions are
+  translated here. The switch the manual names is "Kümülatif Transfer", as the settings screen
+  labels it in values-tr of src/main.
+
+  card_name puts the suit first, as Turkish names a card ("Maça As", "Kupa 7"), which also keeps
+  any suffix off the rank.
+
+  app_name is left out on purpose — it is the product name.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <string name="rules_title">Bazı kurallar</string>
+    <string name="rules_intro">Çevrimdışı okunabilen başvuru belgeleri.</string>
+    <string name="rules_group_chess">Satranç (resmi belge)</string>
+    <string name="rules_group_draughts">Dama (resmi belge)</string>
+    <string name="rules_group_shogi">Shogi (resmi belge)</string>
+    <string name="rules_group_more_games">Diğer oyunlar</string>
+    <string name="rules_group_more_resources">Diğer kaynaklar</string>
+    <string name="toast_pdf_open_failed">Bu belge açılamadı</string>
+    <string name="toast_no_pdf_viewer">Yüklü PDF görüntüleyici yok</string>
+
+    <string name="board_connected">Hamleleri almaya hazır</string>
+    <string name="board_connected_to">Bağlandı: %s</string>
+    <string name="board_connecting">Bağlanıyor…</string>
+    <string name="board_disconnect">Bağlantıyı kes</string>
+    <string name="board_share_log">Tahtanın kaydını paylaş</string>
+    <string name="board_disconnected">Bağlantı kesildi</string>
+    <string name="board_error">Hata: %s</string>
+    <string name="board_last_move">Son hamle: %s</string>
+    <string name="board_looking">Tahtalar aranıyor…</string>
+    <string name="board_nearby">Yakındaki cihazlar</string>
+    <string name="board_usb_section">Takılı</string>
+    <string name="board_paired_section">Eşlenmiş</string>
+    <string name="board_needs_calibration">Taşları başlangıç konumuna dizin. Bu tahta her taşın altındaki bir çipi okur; bu yüzden bir oyunu izleyebilmesi için önce hangi taşın hangisi olduğu ona gösterilmelidir.</string>
+    <string name="board_paired_none">Eşlenmiş tahta yok. Önce sistemin Bluetooth ayarlarından eşleyin.</string>
+    <string name="board_usb_none">Takılı tahta yok.</string>
+    <string name="board_usb_charging_warning">Bir tahta USB bağlantı noktasını kullanırken telefon şarj olmaz.</string>
+    <string name="board_none_found">Cihaz bulunamadı. Taramak için yenile düğmesine dokunun.</string>
+    <string name="board_scan">Tara</string>
+    <string name="board_scanning">Tahtalar taranıyor…</string>
+    <string name="board_title">Satranç tahtası bağlantısı</string>
+    <string name="board_unknown_device">Bilinmeyen cihaz</string>
+    <string name="common_share">Paylaş</string>
+    <string name="guide_bonus_bronstein_desc">Hamlede harcanan süreyi geri ekler, ama hiçbir zaman ayarlanan gecikmeden fazlasını değil. Birikmez.</string>
+    <string name="guide_bonus_fischer_desc">Her hamleden SONRA sabit bir süre (artış) ekler.</string>
+    <string name="guide_bonus_us_delay_desc">Geri sayımdan önce bir gecikme. Saat, işlemeye başlamadan önce gecikme süresi kadar bekler.</string>
+    <string name="guide_byoyomi_canadian_desc">Oyuncular tek ve daha uzun bir periyot içinde belirli sayıda hamle yapmalıdır.</string>
+    <string name="guide_byoyomi_japanese_desc">Ana süreden sonra oyuncular bir dizi kısa periyot alır. Periyot her hamlede yeniden başlar.</string>
+    <string name="guide_byoyomi_progressive_desc">Bir periyot her tamamlandığında gereken hamle sayısı artar.</string>
+    <string name="guide_chrono_countdown_desc">Tüm oyun boyunca geri sayan ana saat.</string>
+    <string name="guide_chrono_countup_desc">Geçen toplam süreyi ölçen kronometre modu.</string>
+    <string name="guide_chrono_one_for_all_desc">Kendi başına bir mod değil, Countdown ve Countup\'ın bir anahtarı. Açıkken tüm masa için tek bir saat çalışır ve ona basmak oyuncuyu değiştirmez.</string>
+    <string name="guide_counts_down_desc">Bir sınırdan başlar ve kalan hamle sıfır olana kadar geri sayar.</string>
+    <string name="guide_counts_up_desc">Başlangıçtan bu yana yapılan toplam hamle sayısını gösterir.</string>
+    <string name="guide_fast_move_desc">Hızlı hamleleri ödüllendirir. Accelerate: ne kadar uzun düşünürseniz saatiniz o kadar hızlı işler. Transfer: rakibinizin sonraki hamlesi, hamle süresine ek olarak sizin az önce harcadığınız süreyi alır ve sizinki yeniden hamle süresinden başlar; Kümülatif Transfer ile bu süre rakibin kalan süresine eklenir ve siz de kalanınızı korursunuz.</string>
+    <string name="guide_staircase_desc">Her hamlenin süresi sabit bir adımla değişir. Down: her hamle daha az süre alır, bir tabana kadar. Up: her hamle daha fazla alır, bir tavana kadar.</string>
+    <string name="guide_fide_desc">Periyotlu turnuva zaman kontrolleri: örneğin 40 hamle için 90 dk, ardından kalanı için 30 dk, hamle başına 30 sn eklenerek.</string>
+    <string name="guide_gong_desc">Sabit aralıklarla zorunlu hamleler (eşzamanlı ya da sırayla).</string>
+    <string name="guide_hidden_desc">Rastgele bir süre çekilir ve gizli tutulur. Yüzdeler açıkken süre yüzde 50, 25, 10, 5, 2 ve 1 eşiklerini geçerken bir anlığına görünür.</string>
+    <string name="guide_hourglass_desc">Bir oyuncunun kaybettiği süre rakibine eklenir. Toplam süre sabittir.</string>
+    <string name="guide_intro">MasterClock\'un süre modlarının ve varyantlarının, arayüzdeki sırayla belgelenmesi.</string>
+    <string name="guide_move_global_desc">Hamle süresi ve genel süre aynı anda işler. İkisi de sıfırın üzerinde kalmalıdır.</string>
+    <string name="guide_move_global_shared_desc">Tüm oyuncular ortak bir genel yedeği paylaşır, her birinin de kendi hamle saati vardır.</string>
+    <string name="guide_move_overtime_desc">Hamle süresini aşmak ikinci bir genel yedekten harcar.</string>
+    <string name="guide_move_save_cap_desc">Kullanılmayan hamle süresi, saatteki bir tavana kadar sonraki hamleye aktarılır.</string>
+    <string name="guide_move_shared_desc">Tüm oyuncular için tek bir saat. 0:00\'da otomatik olarak geçer.</string>
+    <string name="guide_move_standard_desc">Her hamlede sabit bir süreye sıfırlanır.</string>
+    <string name="guide_omni_desc">Karmaşık oyun yapıları için çok katmanlı istasyon: Oturum &gt; Oyunlar &gt; Turlar &gt; Sıralar &gt; Aşamalar; her katmanın kendi saati vardır, açık ya da kapalı. Her oyuncu, bir tur için belirlenen her sırayı oynar. Zaman bankaları, kesmeler ve sıralar, turlar ve oyunlar arasında molalar; yarıda bırakılan bir oturum, uygulama kapatıldıktan sonra bile sürdürülebilir.</string>
+    <string name="guide_phases_desc">Farklı saatlerden oluşan bir dizi (örneğin Hazırlık 5 dk -&gt; Oyun 20 dk -&gt; Sudden Death).</string>
+    <string name="guide_random_desc">Temel süre ve artışlar belirlenen bir aralıkta rastgele seçilir.</string>
+    <string name="guide_section_advanced">Gelişmiş ve deneysel</string>
+    <string name="guide_section_bonus">Bonuslu modlar</string>
+    <string name="guide_section_specialty">Özel modlar</string>
+    <string name="guide_sudden_death_standard_desc">Saf geri sayım. 0:00\'a ilk ulaşan oyuncu kaybeder ya da bayrağı düşer.</string>
+    <string name="qr_align" tools:ignore="Typos">Kodu kamera görüntüsünün içine hizalayın</string>
+    <string name="qr_no_camera" tools:ignore="Typos">Taramak için kullanılabilecek kamera yok.</string>
+    <string name="qr_camera_permission" tools:ignore="Typos">Kodları taramak için kamera izni gerekiyor.</string>
+    <string name="qr_code">QR kodu</string>
+    <string name="qr_scan_title">QR kodu tara</string>
+    <string name="qr_share_hint">Yapılandırmayı içe aktarmak için bu kodu başka bir cihazda tarayın.</string>
+    <string name="qr_share_includes">İçerik: satranç saati yapılandırması</string>
+    <string name="qr_share_title">QR koduyla paylaş</string>
+    <string name="qr_too_large">QR kodu oluşturulamadı — bu ayarlar tek bir kod için çok büyük. Bunun yerine dosya olarak paylaşın.</string>
+    <string name="toast_audio_failed">Ses çalınamadı</string>
+    <string name="toast_camera_permission" tools:ignore="Typos">Kamera izni gerekli</string>
+    <string name="toast_fen_copied">FEN kopyalandı</string>
+    <string name="card_suit_spades">Maça</string>
+    <string name="card_suit_clubs">Sinek</string>
+    <string name="card_suit_hearts">Kupa</string>
+    <string name="card_suit_diamonds">Karo</string>
+    <string name="card_rank_ace">As</string>
+    <string name="card_rank_jack">Vale</string>
+    <string name="card_rank_queen">Kız</string>
+    <string name="card_rank_king">Papaz</string>
+    <string name="card_name">%2$s %1$s</string>
+    <string name="a11y_piece_king">Şah</string>
+    <string name="a11y_piece_queen">Vezir</string>
+    <string name="a11y_piece_rook">Kale</string>
+    <string name="a11y_piece_bishop">Fil</string>
+    <string name="a11y_piece_knight">At</string>
+    <string name="a11y_board_back_ranks">Beyaz, a\'dan h\'ye: %1$s. Siyah: %2$s.</string>
+    <string name="toast_mic_permission">Mikrofon izni gerekiyor.</string>
+    <string name="toast_note_deleted">Not silindi</string>
+    <string name="toast_permission_granted">İzin verildi. Kayıt düğmesine yeniden dokunun.</string>
+    <string name="toast_start_failed">Başlatılamadı</string>
+    <string name="tools_add_result">Sonuç ekle</string>
+    <string name="tools_add_result_placeholder">Sonuç ya da not ekleyin…</string>
+    <string name="tools_audio">Ses</string>
+    <string name="tools_audio_note">Sesli not</string>
+    <string name="tools_board">Tahta</string>
+    <string name="tools_strikethrough">Üstü çizili</string>
+    <string name="tools_bullet_list">Madde işaretli liste</string>
+    <string name="tools_numbered_list">Numaralı liste</string>
+    <string name="tools_color_default">Yazı rengi</string>
+    <string name="tools_insert_pieces">Taşlar</string>
+    <string name="tools_insert_annotations">Açıklamalar</string>
+    <string name="tools_insert_quality">Hamle kalitesi</string>
+    <string name="tools_insert_evaluation">Değerlendirme</string>
+    <string name="tools_insert_other">Diğer</string>
+    <string name="tools_insert_emojis">Emojiler</string>
+    <string name="tools_sym_brilliant">parlak hamle</string>
+    <string name="tools_sym_good">iyi hamle</string>
+    <string name="tools_sym_interesting">ilginç hamle</string>
+    <string name="tools_sym_dubious">şüpheli hamle</string>
+    <string name="tools_sym_mistake">hata</string>
+    <string name="tools_sym_blunder">büyük hata</string>
+    <string name="tools_sym_white_winning">Beyaz kazanıyor</string>
+    <string name="tools_sym_white_clearly">Beyaz açıkça üstün</string>
+    <string name="tools_sym_white_slightly">Beyaz biraz üstün</string>
+    <string name="tools_sym_equal">eşit pozisyon</string>
+    <string name="tools_sym_black_slightly">Siyah biraz üstün</string>
+    <string name="tools_sym_black_clearly">Siyah açıkça üstün</string>
+    <string name="tools_sym_black_winning">Siyah kazanıyor</string>
+    <string name="tools_sym_unclear">belirsiz pozisyon</string>
+    <string name="tools_sym_check">şah</string>
+    <string name="tools_sym_mate">mat</string>
+    <string name="tools_sym_castle_short">kısa rok</string>
+    <string name="tools_sym_castle_long">uzun rok</string>
+    <string name="tools_sym_capture">alma</string>
+    <string name="tools_sym_move_to">gider</string>
+    <string name="tools_sym_only_move">tek hamle</string>
+    <string name="tools_sym_novelty">yenilik</string>
+    <string name="tools_sym_idea">fikriyle</string>
+    <string name="tools_sym_attack">saldırı</string>
+    <string name="tools_sym_initiative">inisiyatif</string>
+    <string name="tools_sym_counterplay">karşı oyun</string>
+    <string name="tools_sym_zugzwang">zugzwang</string>
+    <string name="tools_sym_time_trouble">zaman sıkıntısı</string>
+    <string name="tools_sym_white_won">Beyaz kazandı</string>
+    <string name="tools_sym_draw">beraberlik</string>
+    <string name="tools_sym_black_won">Siyah kazandı</string>
+    <string name="tools_piece_white_king">beyaz şah</string>
+    <string name="tools_piece_white_queen">beyaz vezir</string>
+    <string name="tools_piece_white_rook">beyaz kale</string>
+    <string name="tools_piece_white_bishop">beyaz fil</string>
+    <string name="tools_piece_white_knight">beyaz at</string>
+    <string name="tools_piece_white_pawn">beyaz piyon</string>
+    <string name="tools_piece_black_king">siyah şah</string>
+    <string name="tools_piece_black_queen">siyah vezir</string>
+    <string name="tools_piece_black_rook">siyah kale</string>
+    <string name="tools_piece_black_bishop">siyah fil</string>
+    <string name="tools_piece_black_knight">siyah at</string>
+    <string name="tools_piece_black_pawn">siyah piyon</string>
+    <string name="tools_piece_white_man">beyaz dama taşı</string>
+    <string name="tools_piece_white_dame">beyaz dama kralı</string>
+    <string name="tools_piece_black_man">siyah dama taşı</string>
+    <string name="tools_piece_black_dame">siyah dama kralı</string>
+    <string name="tools_emoji_game">Oyun için</string>
+    <string name="tools_emoji_smileys">İfadeler ve duygular</string>
+    <string name="tools_emoji_people">İnsanlar ve vücut</string>
+    <string name="tools_emoji_animals">Hayvanlar ve doğa</string>
+    <string name="tools_emoji_food">Yiyecek ve içecek</string>
+    <string name="tools_emoji_travel">Seyahat ve yerler</string>
+    <string name="tools_emoji_activities">Etkinlikler</string>
+    <string name="tools_emoji_objects">Nesneler</string>
+    <string name="tools_emoji_symbols">Simgeler</string>
+    <string name="tools_emoji_flags">Bayraklar</string>
+    <string name="tools_bold">Kalın</string>
+    <string name="tools_checkbox">Onay kutusu</string>
+    <string name="tools_clear_board">Tahtayı temizle</string>
+    <string name="tools_color">Renk</string>
+    <string name="tools_copy_fen">FEN KOPYALA</string>
+    <string name="tools_copy_format">%s kopyala</string>
+    <string name="tools_dark_square">SİYAH</string>
+    <string name="tools_delete_recording">Kaydı sil</string>
+    <string name="tools_delete_photo">Fotoğrafı sil</string>
+    <string name="tools_delete_video" tools:ignore="Typos">Videoyu sil</string>
+    <string name="tools_record_again">Yeniden kaydet</string>
+    <string name="tools_delete_media_message">Bu işlem geri alınamaz.</string>
+    <string name="tools_detailed_moves">Ayrıntılı hamleler</string>
+    <string name="tools_copied_to_clipboard">%1$s panoya kopyalandı</string>
+    <plurals name="tools_moves_total">
+        <item quantity="one">Toplam %d hamle</item>
+        <item quantity="other">Toplam %d hamle</item>
+    </plurals>
+    <string name="tools_dice_roll">Zar at</string>
+    <string name="tools_draw">Çek</string>
+    <string name="tools_draw_again">Yeniden çek</string>
+    <string name="tools_draw_note">Çizim notu</string>
+    <string name="tools_edit_board">Tahtayı düzenle</string>
+    <string name="tools_edit_note">Notu düzenle</string>
+    <string name="tools_eraser">Silgi</string>
+    <string name="tools_pen">Kalem</string>
+    <string name="tools_line">Çizgi</string>
+    <string name="tools_arrow">Ok</string>
+    <string name="tools_rectangle">Dikdörtgen</string>
+    <string name="tools_ellipse">Elips</string>
+    <string name="tools_shape_done">Bitti</string>
+    <string name="tools_shapes">Şekiller</string>
+    <string name="tools_width">Kalınlık</string>
+    <string name="tools_custom_colours">Renkleriniz</string>
+    <string name="tools_background">Arka plan</string>
+    <string name="tools_background_none">Arka plan yok</string>
+    <string name="tools_background_empty">Üzerine çizilecek bir fotoğraf ya da tahta notu henüz yok</string>
+    <string name="tools_final_score">Son skor: %d</string>
+    <string name="tools_format_hint">Metni seçin ve biçimlendirmek için araç çubuğunu kullanın…</string>
+    <string name="tools_game_logs">Oyun kayıtları</string>
+    <string name="tools_game_over">OYUN BİTTİ</string>
+    <string name="tools_generate">OLUŞTUR</string>
+    <string name="tools_heads">TURA</string>
+    <string name="tools_image">Görsel</string>
+    <string name="tools_image_note">Görsel notu</string>
+    <string name="tools_highlight">Vurgula</string>
+    <string name="tools_highlight_none">Vurgu yok</string>
+    <string name="tools_highlight_yellow">Sarı</string>
+    <string name="tools_highlight_orange">Turuncu</string>
+    <string name="tools_highlight_pink">Pembe</string>
+    <string name="tools_highlight_blue">Mavi</string>
+    <string name="tools_highlight_green">Yeşil</string>
+    <string name="tools_center">Ortala</string>
+    <string name="tools_italic">İtalik</string>
+    <string name="tools_large">Büyük başlık</string>
+    <string name="tools_left">Sola</string>
+    <string name="tools_log_details">Kayıt ayrıntıları</string>
+    <string name="tools_match_summary">Maç özeti</string>
+    <string name="tools_min_moves">En az hamle?</string>
+    <string name="tools_move">Hamle</string>
+    <string name="tools_name_square_title">Kareyi bil</string>
+    <string name="tools_new_audio_note">Yeni sesli not</string>
+    <string name="tools_new_board_note">Yeni tahta notu</string>
+    <string name="tools_new_draw_note">Yeni çizim notu</string>
+    <string name="tools_new_image_note">Yeni görsel notu</string>
+    <string name="tools_new_note">Yeni not</string>
+    <string name="tools_notebook_full">Not defteri dolu. Yeni bir not eklemek için bir notu silin.</string>
+    <string name="tools_new_video_note" tools:ignore="Typos">Yeni video notu</string>
+    <string name="tools_no_games">Henüz kaydedilmiş oyun yok.</string>
+    <string name="tools_no_notes">Henüz not yok. Oluşturmak için + düğmesine dokunun.</string>
+    <string name="tools_no_photo">Henüz fotoğraf yok</string>
+    <string name="tools_no_video" tools:ignore="Typos">Henüz video yok (en fazla 1 dk)</string>
+    <string name="tools_note_image">Not görseli</string>
+    <string name="tools_offset">Sapma: %1$s%2$d ms</string>
+    <string name="tools_pick_straw">Çöp seç: %d</string>
+    <string name="tools_play">Oynat</string>
+    <string name="tools_prepare">HAZIRLAN</string>
+    <string name="tools_random_card">Rastgele kart</string>
+    <string name="tools_record">Kayıt</string>
+    <string name="tools_record_video" tools:ignore="Typos">Video kaydet</string>
+    <string name="tools_reset_scoreboard">Skor tablosunu sıfırla</string>
+    <string name="tools_retake_photo">Fotoğrafı yeniden çek</string>
+    <string name="tools_retake_video" tools:ignore="Typos">Videoyu yeniden çek</string>
+    <string name="tools_roll_dice">Zarı at</string>
+    <string name="tools_score">Skor: %d</string>
+    <string name="tools_select_piece">Taş seçin</string>
+    <string name="tools_board_eraser_hint">Seçili taş yok — temizlemek için bir kareye dokunun</string>
+    <string name="tools_board_variant_draughts_10">Dama 10×10</string>
+    <string name="tools_board_variant_draughts_8">Dama 8×8</string>
+    <string name="tools_board_deselect">Taşın seçimini kaldır</string>
+    <string name="tools_select_text_color">Yazı rengini seçin</string>
+    <string name="tools_share_log">Kaydı paylaş</string>
+    <string name="tools_short_straw">Kısa çöp</string>
+    <string name="tools_straw_long">Uzun</string>
+    <string name="tools_straw_short">Kısa</string>
+    <string name="tools_shred">Parçala</string>
+    <string name="tools_spent">Harcanan</string>
+    <string name="tools_start">BAŞLAT</string>
+    <string name="tools_start_trial">DENEMEYİ BAŞLAT</string>
+    <string name="tools_stop">DURDUR</string>
+    <string name="tools_stop_precision">Durdurma hassasiyeti</string>
+    <string name="tools_tails">YAZI</string>
+    <string name="tools_take_photo">Fotoğraf çek</string>
+    <string name="tools_target">HEDEF</string>
+    <string name="tools_target_time">Hedef: 5,000 sn</string>
+    <string name="tools_text">Metin</string>
+    <string name="tools_time_per_move">Hamle başına süre</string>
+    <string name="tools_title">Başlık</string>
+    <string name="tools_caption">Açıklama</string>
+    <string name="tools_toss_coin">Parayı at</string>
+    <string name="tools_underline">Altı çizili</string>
+    <string name="tools_undo">Geri al</string>
+    <string name="tools_redo">Yinele</string>
+    <string name="tools_variant_generator">Varyant üretici</string>
+    <string name="tools_video" tools:ignore="Typos">Video</string>
+    <string name="tools_video_note" tools:ignore="Typos">Video notu</string>
+    <string name="tools_white_square">BEYAZ</string>
+    <string name="variant_chess2880_desc">Simetrik, zıt renkli filler, şah herhangi bir yerde (rok yok).</string>
+    <string name="variant_chess960_desc">Simetrik, zıt renkli filler, şah kaleler arasında (rok var).</string>
+    <string name="variant_double960_desc">Asimetrik, zıt renkli filler, şah kaleler arasında (ileri düzey taktik).</string>
+    <string name="variant_shuffle_desc">Simetrik, şah ve filler herhangi bir yerde (tam rastgelelik).</string>
+    <string name="variant_transcendental_desc">Asimetrik, zıt renkli filler, şah herhangi bir yerde (yoğun taktik).</string>
+
+    <plurals name="tools_straws">
+        <item quantity="one">Çöp: %d</item>
+        <item quantity="other">Çöp: %d</item>
+    </plurals>
+    <string name="qr_open_settings">Uygulama ayarlarını aç</string>
+    <string name="toast_no_browser">Yüklü tarayıcı yok</string>
+    <string name="permission_open_settings">Ayarları aç</string>
 </resources>

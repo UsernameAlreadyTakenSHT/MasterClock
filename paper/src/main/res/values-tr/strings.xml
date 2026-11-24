@@ -2,9 +2,86 @@
 <!--
   MasterClock Paper — tr (Turkish)
 
-  Not translated yet: this file only marks where the Turkish strings go. Every string falls back to
-  English until it is filled in, string by string. See TRANSLATING.md for the rules: mode names
-  stay English, apostrophes are escaped, the E-Ink buttons need short words.
+  Mode names (Timer, Fischer, Move) are Kotlin literals, not resources, so they stay in English by
+  construction — see the note in values/strings.xml.
+
+  The three buttons under the E-Ink clock are narrow, so they take the shortest everyday words:
+  "Sıfırla", "Başlat" / "Duraklat" / "Devam" and "Ayarlar". "Devam et", which the app module uses
+  for Resume, is cut to "Devam" here, as German cut "Fortsetzen" to "Weiter". "Ayarlar" also has
+  no letter i, which matters because the settings screen upper-cases it in Kotlin without a
+  locale: a word with an i would come out with I where Turkish wants İ.
+
+  Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="common_cancel">İptal</string>
+    <string name="common_reset">Sıfırla</string>
+    <string name="timer_reset_title">Oyun sıfırlansın mı?</string>
+    <string name="timer_reset_message">Mevcut durum kaybolacak.</string>
+    <string name="common_back">Geri</string>
+
+    <!-- Timer -->
+    <string name="timer_switch_turn">Sırayı değiştir</string>
+    <string name="timer_pause">Duraklat</string>
+    <!-- One of three buttons across a Kompakt: "Devam et" is cut to "Devam". -->
+    <string name="timer_resume">Devam</string>
+    <string name="timer_start">Başlat</string>
+    <string name="timer_settings">Ayarlar</string>
+    <string name="timer_time_up">SÜRE</string>
+
+    <!-- Settings -->
+    <string name="settings_initial_time">Başlangıç süresi</string>
+    <string name="settings_increment">Artış</string>
+    <string name="settings_move_time">Hamle süresi</string>
+    <string name="settings_system_behavior">Sistem davranışı</string>
+    <string name="settings_font">Yazı tipi</string>
+    <string name="font_system">Sistem</string>
+    <string name="settings_sound">Ses</string>
+    <string name="settings_haptic_feedback">Dokunsal geri bildirim</string>
+    <string name="settings_keep_awake">Ekranı açık tut</string>
+    <string name="settings_fullscreen">Tam ekran</string>
+    <string name="settings_reverse_colors">Renkleri ters çevir</string>
+
+    <!-- About screen -->
+    <string name="credits_tab_credits">Katkılar</string>
+    <string name="credits_tab_changes">Yenilikler</string>
+    <string name="credits_tab_licenses">Lisanslar</string>
+    <string name="credits_rules_documents">Kural belgeleri</string>
+    <string name="credits_libraries">MasterClock bu açık kaynak kitaplıklarla geliştirildi.</string>
+
+    <!-- Screen-reader wording -->
+    <string name="a11y_player_clock">Oyuncu %1$d, %2$s</string>
+    <string name="a11y_player_clock_active">Oyuncu %1$d, %2$s, sıra sizde</string>
+    <string name="a11y_out_of_time">süre doldu</string>
+    <string name="a11y_no_time_left">süre kalmadı</string>
+    <string name="a11y_announce_out_of_time">Oyuncu %d, süre doldu</string>
+    <string name="a11y_announce_finished">Oyun bitti</string>
+    <string name="a11y_announce_paused">Duraklatıldı</string>
+    <string name="a11y_announce_to_move">Sıra: Oyuncu %d</string>
+    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+
+    <!-- CLDR gives Turkish one and other; the noun stays singular after a number in both. -->
+    <plurals name="a11y_hours">
+        <item quantity="one">%d saat</item>
+        <item quantity="other">%d saat</item>
+    </plurals>
+    <plurals name="a11y_minutes">
+        <item quantity="one">%d dakika</item>
+        <item quantity="other">%d dakika</item>
+    </plurals>
+    <plurals name="a11y_seconds">
+        <item quantity="one">%d saniye</item>
+        <item quantity="other">%d saniye</item>
+    </plurals>
+    <plurals name="a11y_periods_left">
+        <item quantity="one">%d periyot kaldı</item>
+        <item quantity="other">%d periyot kaldı</item>
+    </plurals>
+
+    <string name="settings_version">Sürüm %s</string>
+    <string name="back_press_again_to_exit">Çıkmak için Geri\'ye tekrar basın</string>
+    <string name="a11y_field_minutes">%1$s, dakika</string>
+    <string name="a11y_field_seconds">%1$s, saniye</string>
+    <string name="toast_no_browser">Yüklü tarayıcı yok</string>
 </resources>
