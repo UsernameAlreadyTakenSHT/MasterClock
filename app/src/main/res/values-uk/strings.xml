@@ -170,7 +170,7 @@
     <string name="a11y_announce_running">Годинник іде</string>
     <string name="a11y_announce_to_move">Хід гравця %d</string>
     <string name="a11y_announce_byoyomi">%1$s, бйойомі</string>
-    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, бйойомі, %2$s</string>
 
     <plurals name="a11y_hours">
         <item quantity="one">%d година</item>
@@ -263,7 +263,7 @@
     <string name="settings_label_text_color">Колір підписів (ходи, періоди, затримка)</string>
     <string name="settings_alert_text_color">Колір попереджень (ЧАС ВИЙШОВ, ХОДІТЬ!)</string>
     <string name="settings_special_states">Особливі стани</string>
-    <string name="settings_loss_bg">Тло при поразці</string>
+    <string name="settings_loss_bg">Тло в разі поразки</string>
     <string name="settings_gong_reflection_bg">Gong: тло обдумування</string>
     <string name="settings_time_format">Формат часу</string>
     <string name="settings_always_hours">Завжди показувати години</string>
@@ -458,7 +458,7 @@
     <string name="omni_cfg_final_beep">Фінальний сигнал</string>
     <string name="omni_cfg_round_gong">Гонг раунду</string>
 
-    <!-- "Without", not "no": the first of six segments, so no longer than "1 хв". -->
+    <!-- A state, as the English asks: "Вимк.", the first of six segments, about as short as "1 хв". -->
     <string name="common_off">Вимк.</string>
     <string name="dur_10s">10 с</string>
     <string name="dur_30s">30 с</string>
@@ -467,7 +467,7 @@
     <string name="dur_5m">5 хв</string>
 
     <!-- Settings: More tab -->
-    <string name="settings_more_help">Довідка і підтримка</string>
+    <string name="settings_more_help">Довідка й підтримка</string>
     <string name="settings_more_manual">Посібник із режимів часу</string>
     <string name="settings_more_game_tools">Ігрові інструменти</string>
     <string name="settings_more_variants">Генератор шахових варіантів</string>
@@ -601,7 +601,7 @@
     <string name="timer_reset_message">Поточний стан буде втрачено.</string>
     <string name="timer_berserk_title">Berserk для гравця %1$d?</string>
     <string name="timer_berserk_message">На цю партію гравець втрачає половину часу й додавання. Скасувати це не можна.</string>
-    <string name="timer_berserk_message_increment">На цю партію гравець втрачає додавання: при 1+2 Berserk зберігає час. Скасувати це не можна.</string>
+    <string name="timer_berserk_message_increment">На цю партію гравець втрачає додавання: за контролю 1+2 Berserk зберігає час. Скасувати це не можна.</string>
     <string name="a11y_berserk_player">Berserk, гравець %1$d</string>
     <string name="timer_reroll">Новий випадковий час</string>
     <string name="timer_reroll_title">Витягти новий час?</string>

@@ -61,7 +61,7 @@
     <string name="a11y_announce_paused">Пауза</string>
     <string name="a11y_announce_to_move">Хід гравця %d</string>
     <string name="a11y_announce_byoyomi">%1$s, бйойомі</string>
-    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, бйойомі, %2$s</string>
 
     <!-- CLDR gives Ukrainian four plural categories: one, few, many, and other for fractions. -->
     <plurals name="a11y_hours">
