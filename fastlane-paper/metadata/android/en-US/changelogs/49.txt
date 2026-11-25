@@ -1,0 +1,4 @@
+New: a Font setting at the end of the settings: System (Lato), Noto Sans or Noto Sans Mono.
+A clock that ran out says TIME, and the middle button starts the next game.
+Messages come one at a time and are read to TalkBack.
+A label too wide is made smaller rather than cut in two.

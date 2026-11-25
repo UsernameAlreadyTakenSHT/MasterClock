@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-20"
+    const val BUILD_DATE = "2026-11-25"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,25 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.48",
+            date = "2026-11-25",
+            notes = listOf(
+                Note("Font, in Display: System, Noto Sans or Noto Sans Mono, for every text and the clock's digits. The Noto fonts ship with the app, so the clock looks the same on every phone.", BEHAVIOUR_TAB),
+                Note("Font, at the foot of the settings: System, Noto Sans or Noto Sans Mono, for every text and the clock's digits.", setOf(AppFlavor.LITE, AppFlavor.MINI)),
+                Note("Font, at the end of the settings: System (Lato, as before), Noto Sans or Noto Sans Mono.", E_INK_ONLY),
+                Note("On a narrow screen the clock's button bar gives way rather than push Settings off the edge. A full disk no longer closes the app.", PHONE),
+                Note("Screen off, the phone stays awake long enough for the flag's sound: a spoken \"time is up\" could come late, or not at all. \"No voice\" is said once.", BEHAVIOUR_TAB),
+                Note("Arbiter: what Save kept survives Clear logs; a correction that changed nothing is not logged, one on a table clock is; Resume is offered only with something to resume, and leaves the panel as it was.", FULL_MODES),
+                Note("A game waiting behind Resume is asked about before a settings change or a preset ends it, and the question says it is that game. Berserk and a phase's tap are saved as they happen.", FULL_MODES),
+                Note("Move Counts, Count Down: nobody is shown flagged before every player has played. Omni: a game or a round is not deleted by one stray tap.", FULL_MODES),
+                Note("Notebook: the board editor's pieces stay in reach on a small screen; a text note shows its text with the keyboard up; headings, centring and numbered lists behave; a voice note stops recording when the app is left; an imported note can no longer stall the editor.", COMPLETE_ONLY),
+                Note("An import, a scanned code and Reset settings ask before ending a game. A file shared with someone else no longer names your custom sounds in its games. Statistics and Game Logs wait for the history to be read.", COMPLETE_ONLY),
+                Note("Connected board, still not tried on a real one: a Certabo over Bluetooth LE keeps its protocol, a DGT Pegasus is read raw, a refused permission is said, and the frame log marks what the board refused.", COMPLETE_ONLY),
+                Note("A clock that ran out says TIME, and the middle button then starts the next game, after Reset's question. A paused clock still shows whose move it is; 0:00 and the flag come together.", E_INK_ONLY),
+                Note("Messages come one at a time, are read to TalkBack, and never take a press meant for the clock. A label too wide is made smaller rather than cut in two. German Resume reads \"Weiter\".", E_INK_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.47",
             date = "2026-11-20",

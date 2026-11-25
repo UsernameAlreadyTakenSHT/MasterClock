@@ -1,3 +1,30 @@
+## v0.8.48 — 2026-11-25
+
+A font setting in every build, a hundred small corrections to the E-Ink app, and a long list of
+fixes: the arbiter's Save and Resume, the notebook, connected boards, and the sound of the flag
+with the screen off.
+
+### Added
+- **Font.** System, Noto Sans or Noto Sans Mono, for every text and the clock's digits. System is the phone's own font, and Lato on E-Ink, as before; the two Noto fonts ship with the app, so the clock looks the same on every phone. In Display on Complete and Standard, at the foot of the settings on Lite, Mini and E-Ink.
+
+### Changed
+- **E-Ink, a finished game.** A clock that ran out says TIME, where a slash stood, and the middle button then starts the next game, after Reset's question. A paused clock still shows whose move it is. The face rounds its seconds up, so 0:00 and the flag come together.
+- **E-Ink, messages.** One at a time, the newest; read to TalkBack; never in the way of a press on the clock below. The second Back waits until its message has been heard.
+- **Store listings.** New screenshots for the five builds, and banners that show each build's own icon and name.
+
+### Fixed
+- **Screen off, the flag.** The phone stays awake long enough for the flag's sound: a spoken "time is up" could come late, or not at all.
+- **Arbiter.** What Save kept survives Clear logs. A correction that changed nothing is not logged; one on a table clock is, and the log names the clock corrected. Resume is offered only with something to resume, and leaves the panel as it was.
+- **A game waiting behind Resume** is asked about before a settings change, a preset, an import, a scanned code or Reset settings ends it, and the question says it is that game.
+- **Saving.** A full disk no longer closes the app. Berserk and a phase's tap are saved as they happen. A resumed game's log is cut back by its moves, not by the phone's clock.
+- **Move Counts, Count Down.** Nobody is shown flagged before every player has played.
+- **Clock.** On a narrow screen the button bar gives way rather than push Settings off the edge.
+- **Notebook.** The board editor's pieces stay in reach on a small screen, and a text note shows its text with the keyboard up. Headings, centring and numbered lists behave; a letter typed in front of its like keeps the style it was typed in; a voice note stops recording when the app is left; an imported note can no longer stall the editor.
+- **Sharing.** A file for someone else no longer names your custom sounds in its games either.
+- **Connected boards**, still not tried on a real one. A Certabo over Bluetooth LE keeps its protocol; a DGT Pegasus is read raw rather than not at all; a refused Bluetooth permission is said; the frame log marks what the board refused.
+- **E-Ink.** A label too wide is made smaller rather than cut in two; the About screen's title and tabs fit; the buttons of a question are 48dp like every other; German Resume reads "Weiter".
+- **Smaller things.** A file picker or a camera that no app answers is said, not a crash; the QR scanner says when the camera cannot be used; Omni no longer deletes a game or a round on one stray tap; Statistics and Game Logs wait for the history to be read; a slider taken up again keeps its value; a backup restore reads no more games than an import keeps; "no voice" is said once.
+
 ## v0.8.47 — 2026-11-20
 
 A new icon for the five apps, and the E-Ink app brought into line with Mudita's design guide before

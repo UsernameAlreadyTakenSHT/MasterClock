@@ -1,0 +1,3 @@
+New: a Font setting at the foot of the settings: System, Noto Sans or Noto Sans Mono.
+Arbiter: Save and Resume put right, and a game waiting behind Resume is asked about before anything ends it.
+On a narrow screen the clock's buttons all fit.

@@ -1,0 +1,2 @@
+New: a Font setting at the foot of the settings: System, Noto Sans or Noto Sans Mono.
+On a narrow screen the clock's buttons all fit. A full disk no longer closes the app.

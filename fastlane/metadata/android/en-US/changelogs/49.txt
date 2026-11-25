@@ -1,0 +1,5 @@
+New: a Font setting in Display: System, Noto Sans or Noto Sans Mono.
+Screen off, the flag's sound is heard on time.
+Arbiter: Save and Resume put right, and a game waiting behind Resume is asked about before anything ends it.
+Notebook: the board editor fits a small screen, and many smaller fixes.
+Connected boards: a Certabo over Bluetooth LE and a DGT Pegasus are read.
