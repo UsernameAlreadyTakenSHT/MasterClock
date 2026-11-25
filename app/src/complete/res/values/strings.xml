@@ -270,6 +270,8 @@
     <string name="tools_center">Center</string>
     <string name="tools_italic">Italic</string>
     <string name="tools_large">Large heading</string>
+    <!-- A column header in a game log's list of moves, beside Spent: the time left on the player's
+         clock after that move. Not a direction: every language had it as "to the left". -->
     <string name="tools_left">Left</string>
     <string name="tools_log_details">Log Details</string>
     <string name="tools_match_summary">Match Summary</string>

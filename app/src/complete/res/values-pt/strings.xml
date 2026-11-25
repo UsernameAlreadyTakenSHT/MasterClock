@@ -250,7 +250,7 @@
     <string name="tools_center">Centrar</string>
     <string name="tools_italic">Itálico</string>
     <string name="tools_large">Título grande</string>
-    <string name="tools_left">Esquerda</string>
+    <string name="tools_left">Restante</string>
     <string name="tools_log_details">Detalhes do registo</string>
     <string name="tools_match_summary">Resumo do encontro</string>
     <string name="tools_min_moves">Lances mínimos?</string>
