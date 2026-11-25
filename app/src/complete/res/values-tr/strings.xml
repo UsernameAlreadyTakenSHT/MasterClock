@@ -57,7 +57,7 @@
     <string name="guide_byoyomi_progressive_desc">Bir periyot her tamamlandığında gereken hamle sayısı artar.</string>
     <string name="guide_chrono_countdown_desc">Tüm oyun boyunca geri sayan ana saat.</string>
     <string name="guide_chrono_countup_desc">Geçen toplam süreyi ölçen kronometre modu.</string>
-    <string name="guide_chrono_one_for_all_desc">Kendi başına bir mod değil, Countdown ve Countup\'ın bir anahtarı. Açıkken tüm masa için tek bir saat çalışır ve ona basmak oyuncuyu değiştirmez.</string>
+    <string name="guide_chrono_one_for_all_desc">Kendi başına bir mod değil, Countdown ve Countup\'a ait bir seçenek. Açıkken tüm masa için tek bir saat çalışır ve ona basmak oyuncuyu değiştirmez.</string>
     <string name="guide_counts_down_desc">Bir sınırdan başlar ve kalan hamle sıfır olana kadar geri sayar.</string>
     <string name="guide_counts_up_desc">Başlangıçtan bu yana yapılan toplam hamle sayısını gösterir.</string>
     <string name="guide_fast_move_desc">Hızlı hamleleri ödüllendirir. Accelerate: ne kadar uzun düşünürseniz saatiniz o kadar hızlı işler. Transfer: rakibinizin sonraki hamlesi, hamle süresine ek olarak sizin az önce harcadığınız süreyi alır ve sizinki yeniden hamle süresinden başlar; Kümülatif Transfer ile bu süre rakibin kalan süresine eklenir ve siz de kalanınızı korursunuz.</string>
@@ -66,12 +66,12 @@
     <string name="guide_gong_desc">Sabit aralıklarla zorunlu hamleler (eşzamanlı ya da sırayla).</string>
     <string name="guide_hidden_desc">Rastgele bir süre çekilir ve gizli tutulur. Yüzdeler açıkken süre yüzde 50, 25, 10, 5, 2 ve 1 eşiklerini geçerken bir anlığına görünür.</string>
     <string name="guide_hourglass_desc">Bir oyuncunun kaybettiği süre rakibine eklenir. Toplam süre sabittir.</string>
-    <string name="guide_intro">MasterClock\'un süre modlarının ve varyantlarının, arayüzdeki sırayla belgelenmesi.</string>
+    <string name="guide_intro">MasterClock\'un süre modları ve varyantları, arayüzdeki sırayla.</string>
     <string name="guide_move_global_desc">Hamle süresi ve genel süre aynı anda işler. İkisi de sıfırın üzerinde kalmalıdır.</string>
     <string name="guide_move_global_shared_desc">Tüm oyuncular ortak bir genel yedeği paylaşır, her birinin de kendi hamle saati vardır.</string>
-    <string name="guide_move_overtime_desc">Hamle süresini aşmak ikinci bir genel yedekten harcar.</string>
+    <string name="guide_move_overtime_desc">Hamle süresi aşılınca ikinci bir genel yedekten harcanır.</string>
     <string name="guide_move_save_cap_desc">Kullanılmayan hamle süresi, saatteki bir tavana kadar sonraki hamleye aktarılır.</string>
-    <string name="guide_move_shared_desc">Tüm oyuncular için tek bir saat. 0:00\'da otomatik olarak geçer.</string>
+    <string name="guide_move_shared_desc">Tüm oyuncular için tek bir saat. 0:00\'da sıra kendiliğinden geçer.</string>
     <string name="guide_move_standard_desc">Her hamlede sabit bir süreye sıfırlanır.</string>
     <string name="guide_omni_desc">Karmaşık oyun yapıları için çok katmanlı istasyon: Oturum &gt; Oyunlar &gt; Turlar &gt; Sıralar &gt; Aşamalar; her katmanın kendi saati vardır, açık ya da kapalı. Her oyuncu, bir tur için belirlenen her sırayı oynar. Zaman bankaları, kesmeler ve sıralar, turlar ve oyunlar arasında molalar; yarıda bırakılan bir oturum, uygulama kapatıldıktan sonra bile sürdürülebilir.</string>
     <string name="guide_phases_desc">Farklı saatlerden oluşan bir dizi (örneğin Hazırlık 5 dk -&gt; Oyun 20 dk -&gt; Sudden Death).</string>
@@ -96,10 +96,10 @@
     <string name="card_suit_clubs">Sinek</string>
     <string name="card_suit_hearts">Kupa</string>
     <string name="card_suit_diamonds">Karo</string>
-    <string name="card_rank_ace">As</string>
-    <string name="card_rank_jack">Vale</string>
-    <string name="card_rank_queen">Kız</string>
-    <string name="card_rank_king">Papaz</string>
+    <string name="card_rank_ace">ası</string>
+    <string name="card_rank_jack">valesi</string>
+    <string name="card_rank_queen">kızı</string>
+    <string name="card_rank_king">papazı</string>
     <string name="card_name">%2$s %1$s</string>
     <string name="a11y_piece_king">Şah</string>
     <string name="a11y_piece_queen">Vezir</string>
@@ -121,7 +121,7 @@
     <string name="tools_numbered_list">Numaralı liste</string>
     <string name="tools_color_default">Yazı rengi</string>
     <string name="tools_insert_pieces">Taşlar</string>
-    <string name="tools_insert_annotations">Açıklamalar</string>
+    <string name="tools_insert_annotations">İşaretler</string>
     <string name="tools_insert_quality">Hamle kalitesi</string>
     <string name="tools_insert_evaluation">Değerlendirme</string>
     <string name="tools_insert_other">Diğer</string>
@@ -170,9 +170,9 @@
     <string name="tools_piece_black_knight">siyah at</string>
     <string name="tools_piece_black_pawn">siyah piyon</string>
     <string name="tools_piece_white_man">beyaz dama taşı</string>
-    <string name="tools_piece_white_dame">beyaz dama kralı</string>
+    <string name="tools_piece_white_dame">beyaz dama (kral)</string>
     <string name="tools_piece_black_man">siyah dama taşı</string>
-    <string name="tools_piece_black_dame">siyah dama kralı</string>
+    <string name="tools_piece_black_dame">siyah dama (kral)</string>
     <string name="tools_emoji_game">Oyun için</string>
     <string name="tools_emoji_smileys">İfadeler ve duygular</string>
     <string name="tools_emoji_people">İnsanlar ve vücut</string>
@@ -190,7 +190,7 @@
     <string name="tools_copy_fen">FEN KOPYALA</string>
     <string name="tools_copy_format">%s kopyala</string>
     <string name="tools_dark_square">SİYAH</string>
-    <string name="tools_delete_recording">Kaydı sil</string>
+    <string name="tools_delete_recording">Ses kaydını sil</string>
     <string name="tools_delete_photo">Fotoğrafı sil</string>
     <string name="tools_delete_video" tools:ignore="Typos">Videoyu sil</string>
     <string name="tools_record_again">Yeniden kaydet</string>
@@ -257,7 +257,7 @@
     <string name="tools_no_video" tools:ignore="Typos">Henüz video yok (en fazla 1 dk)</string>
     <string name="tools_note_image">Not görseli</string>
     <string name="tools_offset">Sapma: %1$s%2$d ms</string>
-    <string name="tools_pick_straw">Çöp seç: %d</string>
+    <string name="tools_pick_straw">%d. çöpü seç</string>
     <string name="tools_play">Oynat</string>
     <string name="tools_prepare">HAZIRLAN</string>
     <string name="tools_random_card">Rastgele kart</string>
@@ -296,7 +296,7 @@
     <string name="tools_underline">Altı çizili</string>
     <string name="tools_undo">Geri al</string>
     <string name="tools_redo">Yinele</string>
-    <string name="tools_variant_generator">Varyant üretici</string>
+    <string name="tools_variant_generator">Varyant üreteci</string>
     <string name="tools_video" tools:ignore="Typos">Video</string>
     <string name="tools_video_note" tools:ignore="Typos">Video notu</string>
     <string name="tools_white_square">BEYAZ</string>

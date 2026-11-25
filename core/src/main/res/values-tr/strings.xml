@@ -21,7 +21,7 @@
     <string name="voice_move">Oyna</string>
     <string name="voice_reflect">Düşün</string>
     <string name="voice_phase">Aşama %1$d</string>
-    <string name="voice_test">Ses seviyesi deneniyor</string>
+    <string name="voice_test">Ses düzeyi deneniyor</string>
     <string name="board_error_connect_permission">Bağlanmak için Bluetooth izni gerekiyor</string>
     <string name="board_error_scan_permission">Taramak için Bluetooth izni gerekiyor</string>
     <string name="board_error_no_connection">Tahtaya bağlanılamadı</string>
@@ -30,7 +30,7 @@
     <string name="board_error_no_bluetooth">Bu cihaz Bluetooth\'u desteklemiyor</string>
     <string name="board_error_bluetooth_off">Bluetooth kapalı. Lütfen açın.</string>
     <string name="board_error_location_off">Konumu açın: bu Android sürümü Bluetooth tahtaları bulmak için konuma ihtiyaç duyuyor</string>
-    <string name="board_error_not_paired">Bu tahta artık eşlenmiş değil</string>
+    <string name="board_error_not_paired">Bu tahtanın eşlemesi kaldırılmış</string>
     <string name="board_error_usb_refused">USB izni reddedildi</string>
     <string name="board_error_unplugged">Bu tahta artık takılı değil</string>
     <string name="board_error_needs_driver">Bu tahta standart USB seri bağlantı kullanmıyor; bu uygulamada olmayan bir sürücüye ihtiyaç duyuyor</string>

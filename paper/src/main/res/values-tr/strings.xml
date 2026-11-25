@@ -47,7 +47,7 @@
     <string name="credits_tab_changes">Yenilikler</string>
     <string name="credits_tab_licenses">Lisanslar</string>
     <string name="credits_rules_documents">Kural belgeleri</string>
-    <string name="credits_libraries">MasterClock bu açık kaynak kitaplıklarla geliştirildi.</string>
+    <string name="credits_libraries">MasterClock bu açık kaynak kütüphanelerle geliştirildi.</string>
 
     <!-- Screen-reader wording -->
     <string name="a11y_player_clock">Oyuncu %1$d, %2$s</string>

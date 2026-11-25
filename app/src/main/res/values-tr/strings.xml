@@ -30,7 +30,7 @@
     <!-- Presets -->
     <string name="preset_title">Hazır ayarlar</string>
     <string name="preset_tab_all">Tümü</string>
-    <string name="preset_tab_mine">Benim</string>
+    <string name="preset_tab_mine">Benimkiler</string>
     <!-- Short on purpose: the third tab is narrow. "Son oyunlar" would crowd it; "Geçmiş" is the
          everyday word for a list of past games. -->
     <string name="preset_tab_last_games">Geçmiş</string>
@@ -80,7 +80,7 @@
     <string name="settings_increase_per_move">Hamle başına artış</string>
     <string name="settings_max_time_ceiling">En yüksek süre sınırı</string>
     <string name="settings_grace_period">Tolerans süresi (normal hız)</string>
-    <string name="settings_full_fast_starts">Tam hızlı dönemin başlangıcı</string>
+    <string name="settings_full_fast_starts">Tam hızlı aşamanın başlangıcı</string>
     <string name="settings_reflection_time">Düşünme süresi</string>
     <string name="settings_simultaneous">Eşzamanlı oyun</string>
     <string name="settings_duration">Süre</string>
@@ -91,7 +91,7 @@
     <string name="settings_min_increment">En düşük artış</string>
     <string name="settings_max_increment">En yüksek artış</string>
     <string name="settings_rounded_time">Yuvarlanmış süre (dakika/saniye)</string>
-    <string name="settings_random_shared_draw">İki oyuncu da Oyuncu 1\'in çekilişini alır: aralıkları Oyuncu 1 sekmesinde ayarlayın.</string>
+    <string name="settings_random_shared_draw">İki oyuncu da Oyuncu 1 için çekilen süreyi alır: aralıkları Oyuncu 1 sekmesinde ayarlayın.</string>
     <string name="settings_random_config">Random modu ayarları</string>
     <string name="settings_hidden_config">Hidden modu ayarları</string>
     <string name="settings_show_percentage">Yüzde uyarılarını göster</string>
@@ -100,7 +100,7 @@
     <string name="settings_actions">İşlemler</string>
     <string name="settings_period_n">Periyot %d</string>
     <string name="settings_moves_unlock">Sonrakini açan hamle sayısı (0 = son)</string>
-    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Periyot %d öncesi toplam hamle</string>
+    <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">%d. periyottan önceki toplam hamle</string>
     <plurals name="settings_moves_read_as_more">
         <item quantity="one">%1$d hamle daha olarak okunur: toplam %2$d</item>
         <item quantity="other">%1$d hamle daha olarak okunur: toplam %2$d</item>
@@ -126,7 +126,7 @@
     <string name="settings_phase_placeholder">Hazırlık, Tur X…</string>
     <string name="settings_cumulative_transfer">Kümülatif Transfer</string>
     <string name="settings_cumulative_explain">Her hamle, hamle süresine ek olarak rakibin son hamlesinde harcadığı süreyi alır. Açıkken önceki hamlelerden kalan süre de korunur; kapalıyken kaybolur. Bir oyuncunun harcadığını diğerinin kazandığı sabit bir toplam için Hourglass\'a bakın.</string>
-    <string name="settings_one_for_all">One for All (geçiş yok)</string>
+    <string name="settings_one_for_all">One for All (dokunmadan)</string>
 
     <string name="settings_select_custom_color">Özel renk seçin</string>
     <string name="settings_pick_colour">Özel bir renk seçin</string>
@@ -194,7 +194,7 @@
     <string name="timer_labeled_time">%1$s: %2$s</string>
     <!-- "OT" labels the Overtime reserve, a fixed amount spent once a move clock runs out:
          "EK SÜRE" is the plain word for it. -->
-    <string name="timer_overtime">EK SÜRE</string>
+    <string name="timer_overtime">YEDEK</string>
     <string name="timer_switch_turn">Sırayı değiştir</string>
     <string name="timer_presets">Hazır ayarlar</string>
     <string name="timer_settings">Ayarlar</string>
@@ -256,7 +256,7 @@
     <string name="settings_special_states">Özel durumlar</string>
     <string name="settings_loss_bg">Yenilgi durumu arka planı</string>
     <string name="settings_gong_reflection_bg">Gong: düşünme arka planı</string>
-    <string name="settings_time_format">Saat biçimi</string>
+    <string name="settings_time_format">Süre biçimi</string>
     <string name="settings_always_hours">Saatleri her zaman göster</string>
     <string name="settings_always_minutes">Dakikaları her zaman göster</string>
     <string name="settings_leading_zeros">Baştaki sıfırlar</string>
@@ -347,7 +347,7 @@
     <string name="credits_tab_changes">Yenilikler</string>
     <string name="credits_tab_licenses">Lisanslar</string>
     <string name="credits_rules_documents">Kural belgeleri</string>
-    <string name="credits_libraries">MasterClock bu açık kaynak kitaplıklarla geliştirildi.</string>
+    <string name="credits_libraries">MasterClock bu açık kaynak kütüphanelerle geliştirildi.</string>
 
     <!-- Omni wizard (settings) -->
     <string name="omni_cfg_previous">Önceki</string>
@@ -386,13 +386,13 @@
     <string name="omni_cfg_game_n">Oyun %d</string>
     <string name="omni_cfg_round_n">Tur %d</string>
     <string name="omni_cfg_phase_n">Aşama %d</string>
-    <string name="omni_cfg_game_short">Oy%d</string>
+    <string name="omni_cfg_game_short">M%d</string>
     <string name="omni_cfg_round_short">T%d</string>
     <string name="omni_cfg_turn_short">S%d</string>
-    <string name="omni_cfg_delete_game">Sil: oyun %d</string>
-    <string name="omni_cfg_delete_round">Sil: tur %d</string>
-    <string name="omni_cfg_delete_turn">Sil: sıra %d</string>
-    <string name="omni_cfg_delete_phase">Sil: aşama %d</string>
+    <string name="omni_cfg_delete_game">%d. oyunu sil</string>
+    <string name="omni_cfg_delete_round">%d. turu sil</string>
+    <string name="omni_cfg_delete_turn">%d. sırayı sil</string>
+    <string name="omni_cfg_delete_phase">%d. aşamayı sil</string>
     <string name="omni_cfg_phase_budget">Toplam: %1$d sn / Sınır: %2$d sn</string>
     <string name="omni_cfg_summary_rounds_varied">• Oyun başına tur: %s</string>
     <string name="omni_cfg_summary_order">• Sıra düzeni: %s</string>
@@ -419,8 +419,8 @@
     <string name="omni_cfg_pattern_random_turn">Düzen (3 oyuncu): 132, 312, 231 — bir oyuncu atlanabilir ya da iki kez seçilebilir</string>
     <string name="omni_cfg_pattern_random_round">Düzen (3 oyuncu): 231, 312, 123 — herkes her turda bir kez oynar</string>
     <string name="omni_cfg_shuffle_per_round">Her turda karıştır</string>
-    <string name="omni_cfg_draw_per_turn">Her sırada çek</string>
-    <string name="omni_cfg_balance_draw">Çekilişi dengele</string>
+    <string name="omni_cfg_draw_per_turn">Her sırada kura çek</string>
+    <string name="omni_cfg_balance_draw">Kurayı dengele</string>
     <string name="omni_cfg_balance_explain">Sıralarda geride kalan oyuncunun sonraki olma olasılığı daha yüksektir; böylece farklar birikmek yerine kapanır.</string>
     <string name="omni_cfg_no_repeat">Aynı oyuncu asla art arda iki kez gelmez</string>
 
@@ -441,7 +441,7 @@
     <string name="omni_cfg_time_bank">Zaman bankası</string>
     <string name="omni_cfg_bank_per_player">Oyuncu başına</string>
     <string name="omni_cfg_bank_shared">Ortak havuz</string>
-    <string name="omni_cfg_bank_clear">Bankayı şunun sonunda boşalt:</string>
+    <string name="omni_cfg_bank_clear">Bankanın boşaltılacağı an:</string>
 
     <string name="omni_cfg_audio">Sesli uyarılar</string>
     <string name="omni_cfg_turn_beep">Sıra bip sesi</string>
@@ -460,7 +460,7 @@
     <string name="settings_more_help">Yardım ve destek</string>
     <string name="settings_more_manual">Süre modları kılavuzu</string>
     <string name="settings_more_game_tools">Oyun araçları</string>
-    <string name="settings_more_variants">Satranç varyantı üretici</string>
+    <string name="settings_more_variants">Satranç varyantı üreteci</string>
     <string name="settings_more_rules">Bazı kurallar</string>
     <string name="settings_more_scoreboard">Skor tablosu</string>
     <string name="settings_more_notebook">Not defteri</string>
@@ -470,7 +470,7 @@
     <string name="settings_more_straw">Kısa çöp</string>
     <string name="settings_more_card">Rastgele kart</string>
     <string name="settings_more_stop">Doğru anda durdur</string>
-    <string name="settings_more_blindfold">Körleme antrenörü</string>
+    <string name="settings_more_blindfold">Körleme alıştırması</string>
     <string name="settings_more_knight">Atın yolu</string>
     <string name="settings_more_name_square">Kareyi bil</string>
     <string name="settings_more_board">Tahta bağlantısı</string>
@@ -479,8 +479,8 @@
     <string name="settings_more_game">Oyun</string>
     <string name="settings_more_game_data">Oyun verileri</string>
     <string name="settings_more_logs">Oyun kayıtları ve geçmiş</string>
-    <string name="settings_more_limit_count">Geçmişi sayıyla sınırla</string>
-    <string name="settings_more_limit_age">Geçmişi yaşla sınırla</string>
+    <string name="settings_more_limit_count">Geçmişi sayıya göre sınırla</string>
+    <string name="settings_more_limit_age">Geçmişi tarihe göre sınırla</string>
     <string name="settings_more_data_sharing">Veri ve paylaşım</string>
     <string name="settings_more_export">Dışa aktar / paylaş</string>
     <string name="settings_more_import">İçe aktar / tara</string>
@@ -495,11 +495,11 @@
     <string name="toast_apk_error">Hata: dosya hazırlanamadı</string>
 
     <!-- Compact age limits: g(ün), h(afta), a(y), y(ıl). -->
-    <string name="age_one_day">1 g</string>
-    <string name="age_one_week">1 h</string>
-    <string name="age_one_month">1 a</string>
-    <string name="age_six_months">6 a</string>
-    <string name="age_one_year">1 y</string>
+    <string name="age_one_day">1 gün</string>
+    <string name="age_one_week">1 hf</string>
+    <string name="age_one_month">1 ay</string>
+    <string name="age_six_months">6 ay</string>
+    <string name="age_one_year">1 yıl</string>
 
     <!-- Omni station. The capitals keep the dotted İ: "İPTAL", "BİTTİ". -->
     <string name="omni_reset_title">Oturum sıfırlansın mı?</string>
@@ -582,7 +582,7 @@
     <string name="preset_end_waiting_game_title">Yarıda kalan oyun bitirilsin mi?</string>
     <string name="preset_end_waiting_game_message">Devam ettirilmeyi bekleyen bir oyun var. Kaybolacak.</string>
     <string name="timer_reset_message">Mevcut durum kaybolacak.</string>
-    <string name="timer_berserk_title">Oyuncu %1$d için Berserk?</string>
+    <string name="timer_berserk_title">Oyuncu %1$d Berserk yapsın mı?</string>
     <string name="timer_berserk_message">Bu oyun için süresinin yarısı ve artışı gider. Geri alınamaz.</string>
     <string name="timer_berserk_message_increment">Bu oyun için artışı gider: 1+2\'de Berserk süreye dokunmaz. Geri alınamaz.</string>
     <string name="a11y_berserk_player">Berserk, oyuncu %1$d</string>
@@ -608,7 +608,7 @@
     <string name="timer_periods">PERİYOTLAR: %1$d</string>
     <string name="timer_reflect">DÜŞÜN</string>
     <string name="timer_move_alert">OYNA!</string>
-    <string name="timer_pause_label">DURDU</string>
+    <string name="timer_pause_label">DURAKLADI</string>
     <string name="preset_desc_1_min">Sudden Death 1:00</string>
     <string name="preset_desc_5_min">Sudden Death 5:00</string>
     <string name="preset_desc_10_min">Sudden Death 10:00</string>
@@ -626,7 +626,7 @@
     <string name="preset_desc_jap_byo_60">Byoyomi Japanese: 60 dk + 3×20 sn</string>
     <string name="preset_desc_can_byo_60">Byoyomi Canadian: 60 dk + 5 dk/20 hamle</string>
     <string name="preset_desc_armag_5_4">Beyaz 5:00, Siyah 4:00</string>
-    <string name="preset_desc_hourgl_1_min">Hourglass, her biri 1:00</string>
+    <string name="preset_desc_hourgl_1_min">Hourglass, oyuncu başına 1:00</string>
     <string name="preset_desc_30s_move">Move Timer Standard 30 sn/hamle</string>
     <string name="preset_desc_scrabble_25">Sudden Death 25:00, bayrak: ters, en fazla 10:00</string>
     <string name="preset_desc_random_1_10">Random 1–10 dk, yuvarlanmış</string>
@@ -658,5 +658,5 @@
     <string name="color_grey">Gri</string>
     <string name="color_white">Beyaz</string>
     <string name="settings_allow_berserk">Berserk\'e izin ver</string>
-    <string name="settings_berserk_desc">İlk hamlesinden önce bir oyuncu süresinin yarısından ve artışından vazgeçebilir. Bu durumda galibiyet, 7. hamleden itibaren bir puan fazla değerindedir.</string>
+    <string name="settings_berserk_desc">İlk hamlesinden önce bir oyuncu süresinin yarısından ve artışından vazgeçebilir. Bu durumda galibiyet, 7. hamleden itibaren bir ek puan getirir.</string>
 </resources>
