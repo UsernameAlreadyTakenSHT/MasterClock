@@ -4164,12 +4164,15 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var isLoaded = false
     private var pendingShortcutId: String? = null
 
-    // These three were declared far below, after the init block, and Kotlin initialises a class in
+    // These four were declared far below, after the init block, and Kotlin initialises a class in
     // the order it is written: the init block's launch can reach resumeSavedClock, which writes
     // them, before their own initialisers have run. On Mini, which resumes a saved game by itself,
     // a ViewModel built off the main thread (as a test can) met a null _hasKeptClocks and threw,
     // and resumeGeneration, once counted, would have been set back to 0 by its initialiser. Above
     // the init block, they exist before anything can touch them.
+    //
+    // So the rule: a property anything in the init block can reach, its launch included, is
+    // declared above it. Nothing checks this but ClockFlowsTest on Mini, and only by chance.
 
     /**
      * The arbiter's own save, apart from the one a game is resumed from after the app closed. Save
