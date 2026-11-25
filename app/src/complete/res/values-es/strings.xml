@@ -42,7 +42,7 @@
     <string name="board_usb_none">Ningún tablero conectado.</string>
     <string name="board_usb_charging_warning">Mientras un tablero ocupa el puerto USB, el teléfono no se carga.</string>
     <string name="board_none_found">No se ha encontrado ningún dispositivo. Pulsa actualizar para buscar.</string>
-    <string name="board_scan">Buscar</string>
+    <string name="board_scan">Actualizar</string>
     <string name="board_scanning">Buscando tableros…</string>
     <string name="board_title">Conexión con el tablero</string>
     <string name="board_unknown_device">Dispositivo desconocido</string>

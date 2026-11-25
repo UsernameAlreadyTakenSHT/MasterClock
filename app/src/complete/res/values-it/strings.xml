@@ -42,7 +42,7 @@
     <string name="board_usb_none">Nessuna scacchiera collegata.</string>
     <string name="board_usb_charging_warning">Finché una scacchiera occupa la porta USB, il telefono non si ricarica.</string>
     <string name="board_none_found">Nessun dispositivo trovato. Tocca aggiorna per cercare.</string>
-    <string name="board_scan">Cerca</string>
+    <string name="board_scan">Aggiorna</string>
     <string name="board_scanning">Ricerca di scacchiere…</string>
     <string name="board_title">Connessione alla scacchiera</string>
     <string name="board_unknown_device">Dispositivo sconosciuto</string>

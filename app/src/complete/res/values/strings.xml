@@ -43,7 +43,9 @@
     <string name="board_usb_none">No board plugged in.</string>
     <string name="board_usb_charging_warning">While a board occupies the USB port, the phone does not charge.</string>
     <string name="board_none_found">No devices found. Tap refresh to scan.</string>
-    <string name="board_scan">Scan</string>
+    <!-- What TalkBack calls the Bluetooth screen's refresh icon. board_none_found tells the
+         user to tap "refresh": the two must agree, as the icon does. It was "Scan". -->
+    <string name="board_scan">Refresh</string>
     <string name="board_scanning">Scanning for boards…</string>
     <string name="board_title">Chessboard Connection</string>
     <string name="board_unknown_device">Unknown Device</string>

@@ -42,7 +42,7 @@
     <string name="board_usb_none">Kein Brett angeschlossen.</string>
     <string name="board_usb_charging_warning">Solange ein Brett den USB-Anschluss belegt, lädt das Telefon nicht.</string>
     <string name="board_none_found">Kein Gerät gefunden. Zum Suchen auf Aktualisieren tippen.</string>
-    <string name="board_scan">Suchen</string>
+    <string name="board_scan">Aktualisieren</string>
     <string name="board_scanning">Suche nach Brettern…</string>
     <string name="board_title">Brettverbindung</string>
     <string name="board_unknown_device">Unbekanntes Gerät</string>

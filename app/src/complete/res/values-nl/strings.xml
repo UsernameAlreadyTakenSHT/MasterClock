@@ -42,7 +42,7 @@
     <string name="board_usb_none">Geen bord aangesloten.</string>
     <string name="board_usb_charging_warning">Zolang een bord de USB-poort bezet, laadt de telefoon niet op.</string>
     <string name="board_none_found">Geen apparaat gevonden. Tik op vernieuwen om te zoeken.</string>
-    <string name="board_scan">Zoeken</string>
+    <string name="board_scan">Vernieuwen</string>
     <string name="board_scanning">Zoeken naar borden…</string>
     <string name="board_title">Bordverbinding</string>
     <string name="board_unknown_device">Onbekend apparaat</string>
