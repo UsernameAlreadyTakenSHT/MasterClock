@@ -4164,6 +4164,33 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     private var isLoaded = false
     private var pendingShortcutId: String? = null
 
+    // These three were declared far below, after the init block, and Kotlin initialises a class in
+    // the order it is written: the init block's launch can reach resumeSavedClock, which writes
+    // them, before their own initialisers have run. On Mini, which resumes a saved game by itself,
+    // a ViewModel built off the main thread (as a test can) met a null _hasKeptClocks and threw,
+    // and resumeGeneration, once counted, would have been set back to 0 by its initialiser. Above
+    // the init block, they exist before anything can touch them.
+
+    /**
+     * The arbiter's own save, apart from the one a game is resumed from after the app closed. Save
+     * wrote that one, which every move, pause, correction and ten seconds write again: Resume, pressed
+     * to take a correction back, read the save the correction itself had just written, and nothing
+     * came back. Held for the game in play and in memory alone -- it is a way back within a sitting,
+     * and the game that survives the app is the other save's.
+     */
+    private var keptClocks: KeptClocks? = null
+    private val _hasKeptClocks = MutableStateFlow(false)
+    val hasKeptClocks: StateFlow<Boolean> = _hasKeptClocks.asStateFlow()
+
+    /**
+     * Counts what starts a game: a resume, a shortcut, a first press. A resume reads its save off
+     * the main thread and installs it some moments later; a game started in those moments was
+     * replaced by the old one. On Mini, which resumes by itself at launch, a launcher shortcut
+     * gave the shortcut's game or the interrupted one as the timing fell. A resume that finds the
+     * count moved on leaves what started since alone.
+     */
+    private var resumeGeneration = 0
+
     init {
         // A notation waiting for a press must not outlive the board that supplied it. Held while
         // auto-switch is off, it is claimed by the player's next press -- and if the board goes out
@@ -5533,17 +5560,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
     /** What the arbiter's Save kept: the clocks, how far into the move, the game they are of, when, and how much of its log. */
     private class KeptClocks(val state: ChessClockState, val moveElapsedMs: Long, val logId: String?, val at: Long, val eventCount: Int)
 
-    /**
-     * The arbiter's own save, apart from the one a game is resumed from after the app closed. Save
-     * wrote that one, which every move, pause, correction and ten seconds write again: Resume, pressed
-     * to take a correction back, read the save the correction itself had just written, and nothing
-     * came back. Held for the game in play and in memory alone -- it is a way back within a sitting,
-     * and the game that survives the app is the other save's.
-     */
-    private var keptClocks: KeptClocks? = null
-    private val _hasKeptClocks = MutableStateFlow(false)
-    val hasKeptClocks: StateFlow<Boolean> = _hasKeptClocks.asStateFlow()
-
     /** The arbiter's Save: the clocks as they stand, to come back to with [restoreKeptClocks]. */
     fun keepClocks() {
         val state = _uiState.value
@@ -5600,15 +5616,6 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         aliveSaveId = 0L
         historyWrites.trySend(HistoryWrite.ClearClock)
     }
-
-    /**
-     * Counts what starts a game: a resume, a shortcut, a first press. A resume reads its save off
-     * the main thread and installs it some moments later; a game started in those moments was
-     * replaced by the old one. On Mini, which resumes by itself at launch, a launcher shortcut
-     * gave the shortcut's game or the interrupted one as the timing fell. A resume that finds the
-     * count moved on leaves what started since alone.
-     */
-    private var resumeGeneration = 0
 
     fun resumeSavedClock() {
         // The game on the clock is about to be replaced, and what the arbiter kept was of it.
