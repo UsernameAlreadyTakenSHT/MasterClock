@@ -43,8 +43,8 @@
     <string name="board_paired_none">Eşlenmiş tahta yok. Önce sistemin Bluetooth ayarlarından eşleyin.</string>
     <string name="board_usb_none">Takılı tahta yok.</string>
     <string name="board_usb_charging_warning">Bir tahta USB bağlantı noktasını kullanırken telefon şarj olmaz.</string>
-    <string name="board_none_found">Cihaz bulunamadı. Taramak için yenile düğmesine dokunun.</string>
-    <string name="board_scan">Tara</string>
+    <string name="board_none_found">Cihaz bulunamadı. Taramak için Yenile düğmesine dokunun.</string>
+    <string name="board_scan">Yenile</string>
     <string name="board_scanning">Tahtalar taranıyor…</string>
     <string name="board_title">Satranç tahtası bağlantısı</string>
     <string name="board_unknown_device">Bilinmeyen cihaz</string>
@@ -73,7 +73,7 @@
     <string name="guide_move_save_cap_desc">Kullanılmayan hamle süresi, saatteki bir tavana kadar sonraki hamleye aktarılır.</string>
     <string name="guide_move_shared_desc">Tüm oyuncular için tek bir saat. 0:00\'da sıra kendiliğinden geçer.</string>
     <string name="guide_move_standard_desc">Her hamlede sabit bir süreye sıfırlanır.</string>
-    <string name="guide_omni_desc">Karmaşık oyun yapıları için çok katmanlı istasyon: Oturum &gt; Oyunlar &gt; Turlar &gt; Sıralar &gt; Aşamalar; her katmanın kendi saati vardır, açık ya da kapalı. Her oyuncu, bir tur için belirlenen her sırayı oynar. Zaman bankaları, kesmeler ve sıralar, turlar ve oyunlar arasında molalar; yarıda bırakılan bir oturum, uygulama kapatıldıktan sonra bile sürdürülebilir.</string>
+    <string name="guide_omni_desc">Karmaşık oyun yapıları için çok katmanlı istasyon: Oturum &gt; Oyunlar &gt; Turlar &gt; Sıralar &gt; Aşamalar; her katmanın kendi saati vardır, açık ya da kapalı. Her oyuncu, bir tur için belirlenen her sırayı oynar. Zaman bankaları, kesmeler; sıralar, turlar ve oyunlar arasında molalar; yarıda bırakılan bir oturum, uygulama kapatıldıktan sonra bile sürdürülebilir.</string>
     <string name="guide_phases_desc">Farklı saatlerden oluşan bir dizi (örneğin Hazırlık 5 dk -&gt; Oyun 20 dk -&gt; Sudden Death).</string>
     <string name="guide_random_desc">Temel süre ve artışlar belirlenen bir aralıkta rastgele seçilir.</string>
     <string name="guide_section_advanced">Gelişmiş ve deneysel</string>
@@ -170,9 +170,9 @@
     <string name="tools_piece_black_knight">siyah at</string>
     <string name="tools_piece_black_pawn">siyah piyon</string>
     <string name="tools_piece_white_man">beyaz dama taşı</string>
-    <string name="tools_piece_white_dame">beyaz dama kralı</string>
+    <string name="tools_piece_white_dame">beyaz dama</string>
     <string name="tools_piece_black_man">siyah dama taşı</string>
-    <string name="tools_piece_black_dame">siyah dama kralı</string>
+    <string name="tools_piece_black_dame">siyah dama</string>
     <string name="tools_emoji_game">Oyun için</string>
     <string name="tools_emoji_smileys">İfadeler ve duygular</string>
     <string name="tools_emoji_people">İnsanlar ve vücut</string>
@@ -202,7 +202,7 @@
         <item quantity="other">Toplam %d hamle</item>
     </plurals>
     <string name="tools_dice_roll">Zar at</string>
-    <string name="tools_draw">Çek</string>
+    <string name="tools_draw">Çizim</string>
     <string name="tools_draw_again">Yeniden çek</string>
     <string name="tools_draw_note">Çizim notu</string>
     <string name="tools_edit_board">Tahtayı düzenle</string>
@@ -278,7 +278,7 @@
     <string name="tools_short_straw">Kısa çöp</string>
     <string name="tools_straw_long">Uzun</string>
     <string name="tools_straw_short">Kısa</string>
-    <string name="tools_shred">Parçala</string>
+    <string name="tools_shred">Kalıcı olarak sil</string>
     <string name="tools_spent">Harcanan</string>
     <string name="tools_start">BAŞLAT</string>
     <string name="tools_start_trial">DENEMEYİ BAŞLAT</string>

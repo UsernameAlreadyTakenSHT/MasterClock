@@ -27,7 +27,7 @@
     <string name="timer_resume">Devam</string>
     <string name="timer_start">Başlat</string>
     <string name="timer_settings">Ayarlar</string>
-    <string name="timer_time_up">SÜRE</string>
+    <string name="timer_time_up">SÜRE BİTTİ</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Başlangıç süresi</string>

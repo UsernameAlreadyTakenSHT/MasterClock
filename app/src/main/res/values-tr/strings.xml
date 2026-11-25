@@ -145,12 +145,12 @@
     <string name="toast_export_too_large">Bir ayar dosyası için çok fazla oyun var: bunun yerine tam yedeği kullanın.</string>
     <string name="toast_no_voice">Kullanılabilir bir metin okuma sesi yok. Anonsları duymak için cihazın ayarlarından bir ses yükleyin.</string>
     <string name="toast_no_app_for_this">Bu cihazda bunu yapabilecek bir uygulama yok.</string>
-    <string name="toast_sound_not_kept">Bu uygulama o dosyaya erişimi koruyamadı; yeniden başlatmadan sonra çalmayı bırakırdı. Bunun yerine cihazınızın depolama alanından bir ses seçin.</string>
+    <string name="toast_sound_not_kept">Bu uygulama o dosyaya erişimi koruyamadı; yeniden başlatmadan sonra çalmayı bırakacaktı. Bunun yerine cihazınızın depolama alanından bir ses seçin.</string>
     <string name="qr_confirm_title">Taranan ayarlar uygulansın mı?</string>
     <string name="qr_confirm_message">Bu kod mevcut ayarlarınızın yerini alır, oyunlar ve bir skor tablosu ekleyebilir. Yalnızca güvendiğiniz birinden gelen kodu kabul edin.</string>
     <string name="qr_confirm_apply">Uygula</string>
     <string name="import_confirm_title">Bu dosya içe aktarılsın mı?</string>
-    <string name="import_confirm_message">Bu dosya mevcut ayarlarınızın yerini alır. İçindeki oyunlar, hazır ayarlar, notlar ve skor tablosu sonuçları sizinkilere eklenir: sizin hiçbir şeyiniz silinmez.</string>
+    <string name="import_confirm_message">Bu dosya mevcut ayarlarınızın yerini alır. İçindeki oyunlar, hazır ayarlar, notlar ve skor tablosu sonuçları sizinkilere eklenir: sizin verilerinizden hiçbiri silinmez.</string>
     <string name="import_confirm_action">İçe aktar</string>
     <string name="confirm_also_ends_game">Bu, saatteki oyunu ya da devam ettirilmeyi bekleyen oyunu da bitirir.</string>
 
@@ -262,7 +262,7 @@
     <string name="settings_leading_zeros">Baştaki sıfırlar</string>
     <string name="settings_show_tenths">Saniyenin onda birini göster</string>
     <string name="settings_show_hundredths">Saniyenin yüzde birini göster</string>
-    <string name="settings_like_tenths">Onda bir gibi</string>
+    <string name="settings_like_tenths">Onda birle aynı</string>
     <string name="settings_under_10s">10 sn altında</string>
     <string name="settings_threshold">Eşik</string>
     <string name="settings_all">Tümü</string>
@@ -305,7 +305,7 @@
     <string name="settings_flag_cap_desc">Bir saatin sıfırın ne kadar ötesine geçebileceği. Saat orada durur ve oyun devam eder. Boş: sınır yok.</string>
     <string name="settings_tournament_rules">Turnuva kuralları</string>
     <string name="settings_fischer_fide">Fischer FIDE (0. hamlede bonus)</string>
-    <string name="settings_forced_move_counter">Zorunlu hamle sayacı</string>
+    <string name="settings_forced_move_counter">Periyodu hamle sayısı bitirir</string>
     <string name="settings_tournament_rules_explain">Birincisi yalnızca Fischer için geçerlidir: bonus 1. hamleden önce gelir. İkincisi yalnızca FIDE Periods için: açıkken bir periyot, hamle sayısına ulaşılınca biter; kapalıyken süresi dolunca.</string>
     <string name="settings_interaction">Etkileşim</string>
     <string name="settings_confirm_reset">Sıfırlamayı onayla</string>
@@ -332,7 +332,7 @@
     <string name="share_export_storage">Depolamaya aktar</string>
     <string name="share_export_storage_desc">.json dosyasını cihazınızın depolama alanına kaydedin.</string>
     <string name="share_export_full">Tümünü dışa aktar (tam yedek)</string>
-    <string name="share_export_full_desc">Tüm ayarları, geçmişi, hazır ayarları VE fotoğrafları, kayıtları ve videolarıyla birlikte not defterini bir .zip arşivinde içerir.</string>
+    <string name="share_export_full_desc">Tüm ayarları, geçmişi, hazır ayarları VE fotoğrafları, ses kayıtları ve videolarıyla birlikte not defterini bir .zip arşivinde içerir.</string>
     <string name="share_include_history">Geçmişi ve metin notlarını dahil et</string>
     <string name="share_import_title">Veri içe aktar</string>
     <string name="share_import_json">JSON dosyası içe aktar</string>
@@ -442,7 +442,7 @@
     <string name="omni_cfg_time_bank">Zaman bankası</string>
     <string name="omni_cfg_bank_per_player">Oyuncu başına</string>
     <string name="omni_cfg_bank_shared">Ortak havuz</string>
-    <string name="omni_cfg_bank_clear">Bankayı şunun sonunda boşalt:</string>
+    <string name="omni_cfg_bank_clear">Bankayı boşaltma zamanı:</string>
 
     <string name="omni_cfg_audio">Sesli uyarılar</string>
     <string name="omni_cfg_turn_beep">Sıra bip sesi</string>
@@ -486,7 +486,7 @@
     <string name="settings_more_export">Dışa aktar / paylaş</string>
     <string name="settings_more_import">İçe aktar / tara</string>
     <string name="settings_more_share_apk">Uygulamayı paylaş</string>
-    <string name="settings_more_share_apk_via">APK\'yı şununla paylaş</string>
+    <string name="settings_more_share_apk_via">APK\'yı paylaş</string>
     <string name="settings_more_share_apk_format_title">Uygulamayı şu biçimde paylaş</string>
     <string name="settings_more_share_apk_format_text">APK doğrudan yüklenir. Bazı telefonlar Bluetooth üzerinden APK dosyalarını reddeder: bu durumda bir ZIP gönderin; alıcı yüklemek için APK\'yı içinden çıkarır.</string>
     <string name="settings_more_danger">Tehlikeli bölge</string>
@@ -596,7 +596,7 @@
     <string name="timer_save_clock">Kaydet</string>
     <string name="timer_resume">Devam et</string>
     <string name="timer_restore_message">O andan bu yana olan her şey kaybolacak.</string>
-    <string name="timer_restore_title">Kaydedilen saatlere dönülsün mü?</string>
+    <string name="timer_restore_title">Kaydedilen duruma dönülsün mü?</string>
     <string name="timer_start">Başlat</string>
     <string name="timer_byoyomi">BYOYOMI</string>
     <string name="timer_cycle">DÖNGÜ: %d</string>

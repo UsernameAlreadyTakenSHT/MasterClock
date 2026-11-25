@@ -21,7 +21,7 @@
     <string name="voice_move">Oyna</string>
     <string name="voice_reflect">Düşün</string>
     <string name="voice_phase">Aşama %1$d</string>
-    <string name="voice_test">Ses düzeyi deneniyor</string>
+    <string name="voice_test">Ses düzeyi testi</string>
     <string name="board_error_connect_permission">Bağlanmak için Bluetooth izni gerekiyor</string>
     <string name="board_error_scan_permission">Taramak için Bluetooth izni gerekiyor</string>
     <string name="board_error_no_connection">Tahtaya bağlanılamadı</string>
