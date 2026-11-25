@@ -39,7 +39,7 @@
     <string name="board_last_move">Последний ход: %s</string>
     <string name="board_looking">Поиск досок…</string>
     <string name="board_nearby">Устройства поблизости</string>
-    <string name="board_usb_section">Подключённые</string>
+    <string name="board_usb_section">По USB</string>
     <string name="board_paired_section">Сопряжённые</string>
     <string name="board_needs_calibration">Расставьте фигуры в начальную позицию. Эта доска считывает чип под каждой фигурой, поэтому ей нужно показать, где какая, прежде чем она сможет следить за партией.</string>
     <string name="board_paired_none">Нет сопряжённых досок. Сначала выполните сопряжение в системных настройках Bluetooth.</string>
@@ -64,7 +64,7 @@
     <string name="guide_chrono_one_for_all_desc">Не отдельный режим, а переключатель для Countdown и Countup. Если включён, одни часы идут для всего стола, и нажатие на них не меняет игрока.</string>
     <string name="guide_counts_down_desc">Начинается с предела и считает вниз, пока не останется ноль ходов.</string>
     <string name="guide_counts_up_desc">Показывает общее число ходов с начала партии.</string>
-    <string name="guide_fast_move_desc">Поощряет быстрые ходы. Accelerate: чем дольше вы думаете, тем быстрее идут ваши часы. Transfer: следующий ход соперника получает время на ход плюс время, которое вы только что потратили, а ваш снова начинается с времени на ход; с включённым «Накопительный Transfer» оно добавляется к тому, что у соперника осталось, а вы сохраняете то, что было у вас.</string>
+    <string name="guide_fast_move_desc">Поощряет быстрые ходы. Accelerate: чем дольше вы думаете, тем быстрее идут ваши часы. Transfer: следующий ход соперника получает время на ход плюс время, которое вы только что потратили, а ваш снова начинается со времени на ход; с включённым «Накопительный Transfer» оно добавляется к тому, что у соперника осталось, а вы сохраняете то, что было у вас.</string>
     <string name="guide_staircase_desc">Время на каждый ход меняется на фиксированный шаг. Down: каждый ход получает меньше времени, до нижнего предела. Up: каждый ход получает больше, до верхнего предела.</string>
     <string name="guide_fide_desc">Турнирный контроль времени по периодам: например, 90 мин на 40 ходов, затем 30 мин до конца партии, с добавлением 30 с за ход.</string>
     <string name="guide_gong_desc">Обязательные ходы через равные промежутки (одновременно или по очереди).</string>
@@ -75,15 +75,15 @@
     <string name="guide_move_global_shared_desc">У всех игроков общий запас времени и при этом свой таймер хода.</string>
     <string name="guide_move_overtime_desc">Превышение времени на ход расходует дополнительный общий запас.</string>
     <string name="guide_move_save_cap_desc">Неиспользованное время на ход переносится на следующий ход, до верхнего предела на часах.</string>
-    <string name="guide_move_shared_desc">Один таймер для всех игроков. Автоматически переключается на 0:00.</string>
+    <string name="guide_move_shared_desc">Один таймер для всех игроков. Автоматически переключается при 0:00.</string>
     <string name="guide_move_standard_desc">Возвращается к фиксированной длительности на каждый ход.</string>
-    <string name="guide_omni_desc">Многоуровневая станция для сложных игровых структур: Сессия &gt; Партии &gt; Раунды &gt; Ходы &gt; Фазы, у каждого уровня свои часы, включённые или нет. Каждый игрок играет каждый заданный ход в раунде. Банки времени, прерывания и паузы между ходами, раундами и партиями; оставленную сессию можно продолжить, даже после закрытия приложения.</string>
+    <string name="guide_omni_desc">Многоуровневые часы для сложных игровых структур: Сессия &gt; Партии &gt; Раунды &gt; Ходы &gt; Фазы, у каждого уровня свои часы, включённые или нет. В каждом раунде каждый игрок проходит все заданные ходы. Банки времени, прерывания и паузы между ходами, раундами и партиями; оставленную сессию можно продолжить, даже после закрытия приложения.</string>
     <string name="guide_phases_desc">Последовательность разных таймеров (например, подготовка 5 мин → партия 20 мин → Sudden Death).</string>
     <string name="guide_random_desc">Основное время и добавления выбираются случайно в заданном диапазоне.</string>
     <string name="guide_section_advanced">Дополнительные и экспериментальные</string>
     <string name="guide_section_bonus">Режимы с бонусом</string>
     <string name="guide_section_specialty">Особые режимы</string>
-    <string name="guide_sudden_death_standard_desc">Чистый обратный отсчёт. Первый, чьё время дойдёт до 0:00, проигрывает: у него падает флажок.</string>
+    <string name="guide_sudden_death_standard_desc">Чистый обратный отсчёт. Первый, чьё время дойдёт до 0:00, проигрывает или у него падает флажок.</string>
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Поместите код в кадр камеры</string>
@@ -215,7 +215,7 @@
     </plurals>
     <string name="tools_dice_roll">Бросок кубика</string>
     <string name="tools_draw">Рисунок</string>
-    <string name="tools_draw_again">Тянуть ещё</string>
+    <string name="tools_draw_again">Вытянуть ещё</string>
     <string name="tools_draw_note">Рисунок</string>
     <string name="tools_edit_board">Изменить доску</string>
     <string name="tools_edit_note">Изменить заметку</string>
@@ -269,7 +269,7 @@
     <string name="tools_no_video" tools:ignore="Typos">Видео пока нет (макс. 1 мин)</string>
     <string name="tools_note_image">Изображение заметки</string>
     <string name="tools_offset">Отклонение: %1$s%2$d мс</string>
-    <string name="tools_pick_straw">Тянуть соломинку %d</string>
+    <string name="tools_pick_straw">Вытянуть соломинку %d</string>
     <string name="tools_play">Воспроизвести</string>
     <string name="tools_prepare">ПРИГОТОВЬТЕСЬ</string>
     <string name="tools_random_card">Случайная карта</string>
@@ -299,7 +299,7 @@
     <string name="tools_tails">РЕШКА</string>
     <string name="tools_take_photo">Сделать фото</string>
     <string name="tools_target">ЦЕЛЬ</string>
-    <string name="tools_target_time">Цель: 5.000 с</string>
+    <string name="tools_target_time">Цель: 5,000 с</string>
     <string name="tools_text">Текст</string>
     <string name="tools_time_per_move">Время на ход</string>
     <string name="tools_title">Заголовок</string>
@@ -312,11 +312,11 @@
     <string name="tools_video" tools:ignore="Typos">Видео</string>
     <string name="tools_video_note" tools:ignore="Typos">Видеозаметка</string>
     <string name="tools_white_square">СВЕТЛОЕ</string>
-    <string name="variant_chess2880_desc">Симметрично, разноцветные слоны, король где угодно (без рокировки).</string>
-    <string name="variant_chess960_desc">Симметрично, разноцветные слоны, король между ладьями (с рокировкой).</string>
-    <string name="variant_double960_desc">Асимметрично, разноцветные слоны, король между ладьями (для опытных тактиков).</string>
+    <string name="variant_chess2880_desc">Симметрично, разнопольные слоны, король где угодно (без рокировки).</string>
+    <string name="variant_chess960_desc">Симметрично, разнопольные слоны, король между ладьями (с рокировкой).</string>
+    <string name="variant_double960_desc">Асимметрично, разнопольные слоны, король между ладьями (для опытных тактиков).</string>
     <string name="variant_shuffle_desc">Симметрично, король и слоны где угодно (полная случайность).</string>
-    <string name="variant_transcendental_desc">Асимметрично, разноцветные слоны, король где угодно (острая тактика).</string>
+    <string name="variant_transcendental_desc">Асимметрично, разнопольные слоны, король где угодно (острая тактика).</string>
 
     <plurals name="tools_straws">
         <item quantity="one">Соломинок: %d</item>

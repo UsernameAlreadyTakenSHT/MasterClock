@@ -6,6 +6,9 @@
   "Осталось периодов: 3" rather than a counted noun the number would have to agree with. The
   byoyomi seconds are only ever called on a multiple of ten, which always takes "секунд".
 
+  "Byoyomi" is spoken as "бёёми", the Russian go players' spelling: a mode name stays English
+  on the screen, but a Russian voice reads the Latin word by guesswork. TalkBack's line too.
+
   Translated without a native reviewer, like every language here except the French.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
@@ -15,11 +18,11 @@
     <string name="voice_thirty_seconds_left">Осталось тридцать секунд</string>
     <string name="voice_ten_seconds_left">Осталось десять секунд</string>
     <string name="voice_period">Период %1$d</string>
-    <string name="voice_byoyomi">Начинается byoyomi</string>
+    <string name="voice_byoyomi">Начинается бёёми</string>
     <string name="voice_byoyomi_periods_left">Осталось периодов: %1$d</string>
     <string name="voice_byoyomi_seconds">%1$d секунд</string>
     <string name="voice_move">Ходите</string>
-    <string name="voice_reflect">Обдумывание</string>
+    <string name="voice_reflect">Думайте</string>
     <string name="voice_phase">Фаза %1$d</string>
     <string name="voice_test">Проверка громкости голоса</string>
     <string name="board_error_connect_permission">Нужно разрешение Bluetooth на подключение</string>

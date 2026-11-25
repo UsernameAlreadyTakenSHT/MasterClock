@@ -6,7 +6,7 @@
   construction — see the note in values/strings.xml.
 
   The three buttons under the E-Ink clock are narrow, and Russian runs long: "Сбросить",
-  "Продолжить" and "Настройки" are all too wide for them. They are "Сброс", "Дальше" and "Опции"
+  "Продолжить" and "Настройки" are all too wide for them. They are "Сброс", "Далее" and "Опции"
   here, the same kind of shortening German and Dutch needed; the app module has room and keeps the
   full words.
 
@@ -24,9 +24,9 @@
     <string name="timer_switch_turn">Передать ход</string>
     <string name="timer_pause">Пауза</string>
     <!-- One of three buttons across a Kompakt: "Продолжить" is ten characters, as "Fortsetzen" was. -->
-    <string name="timer_resume">Дальше</string>
+    <string name="timer_resume">Далее</string>
     <string name="timer_start">Старт</string>
-    <!-- "Настройки" at 9 characters does not fit the button beside Сброс and Дальше. -->
+    <!-- "Настройки" at 9 characters does not fit the button beside Сброс and Далее. -->
     <string name="timer_settings">Опции</string>
     <string name="timer_time_up">ВРЕМЯ</string>
 
@@ -59,7 +59,7 @@
     <string name="a11y_announce_finished">Партия окончена</string>
     <string name="a11y_announce_paused">Пауза</string>
     <string name="a11y_announce_to_move">Ход игрока %d</string>
-    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi">%1$s, бёёми</string>
     <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
 
     <!-- CLDR gives Russian four plural categories: one, few, many, and other for fractions. -->
