@@ -75,7 +75,7 @@
     <string name="guide_move_save_cap_desc">Niewykorzystany czas na ruch przechodzi na następny ruch, aż do górnego limitu zegara.</string>
     <string name="guide_move_shared_desc">Jeden zegar dla wszystkich graczy. Przełącza się automatycznie przy 0:00.</string>
     <string name="guide_move_standard_desc">Wraca do stałego czasu przy każdym ruchu.</string>
-    <string name="guide_omni_desc">Wielopoziomowy zegar dla złożonych struktur gry: Sesja &gt; Partie &gt; Rundy &gt; Tury &gt; Fazy, każdy poziom z własnym zegarem, włączonym lub nie. W każdej rundzie każdy gracz rozgrywa każdą ustawioną turę. Banki czasu, przerwania i pauzy między turami, rundami i partiami; przerwaną sesję można wznowić, nawet po zamknięciu aplikacji.</string>
+    <string name="guide_omni_desc">Wielopoziomowy system dla złożonych struktur gry: Sesja &gt; Partie &gt; Rundy &gt; Tury &gt; Fazy, każdy poziom z własnym zegarem, włączonym lub nie. W każdej rundzie każdy gracz rozgrywa każdą ustawioną turę. Banki czasu, przerwania i pauzy między turami, rundami i partiami; przerwaną sesję można wznowić, nawet po zamknięciu aplikacji.</string>
     <string name="guide_phases_desc">Sekwencja różnych zegarów (np. przygotowanie 5 min -&gt; partia 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">Czas bazowy i dodatki są losowane w ustalonym zakresie.</string>
     <string name="guide_section_advanced">Zaawansowane i eksperymentalne</string>
@@ -249,10 +249,10 @@
     <string name="tools_highlight_pink">Różowy</string>
     <string name="tools_highlight_blue">Niebieski</string>
     <string name="tools_highlight_green">Zielony</string>
-    <string name="tools_center">Wyśrodkuj</string>
+    <string name="tools_center">Wyśrodkowanie</string>
     <string name="tools_italic">Kursywa</string>
     <string name="tools_large">Duży nagłówek</string>
-    <string name="tools_left">Wyrównaj do lewej</string>
+    <string name="tools_left">Zostało</string>
     <string name="tools_log_details">Szczegóły zapisu</string>
     <string name="tools_match_summary">Podsumowanie partii</string>
     <string name="tools_min_moves">Min. ruchów?</string>
@@ -294,7 +294,7 @@
     <string name="tools_straw_long">Długa</string>
     <string name="tools_straw_short">Krótka</string>
     <string name="tools_shred">Usuń trwale</string>
-    <string name="tools_spent">Zużyty czas</string>
+    <string name="tools_spent">Zużyto</string>
     <string name="tools_start">START</string>
     <string name="tools_start_trial">ROZPOCZNIJ PRÓBĘ</string>
     <string name="tools_stop">STOP</string>

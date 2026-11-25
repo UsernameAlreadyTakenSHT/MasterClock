@@ -78,7 +78,7 @@
     <string name="settings_min_time_floor">Minimalny czas</string>
     <string name="settings_increase_per_move">Wzrost na ruch</string>
     <string name="settings_max_time_ceiling">Maksymalny czas</string>
-    <string name="settings_grace_period">Czas bez przyspieszenia (zwykłe tempo)</string>
+    <string name="settings_grace_period">Czas bez przyspieszenia (zwykła prędkość)</string>
     <string name="settings_full_fast_starts">Pełne przyspieszenie od</string>
     <string name="settings_reflection_time">Czas do namysłu</string>
     <string name="settings_simultaneous">Gra równoczesna</string>
@@ -461,7 +461,7 @@
     <string name="omni_cfg_final_beep">Sygnał końcowy</string>
     <string name="omni_cfg_round_gong">Gong rundy</string>
 
-    <!-- "Bez" is "without": a state, as the English note asks, and shorter than "1 min". -->
+    <!-- "Brak" is "none": a state, as the English note asks, not the answer "Nie", and shorter than "1 min". -->
     <string name="common_off">Brak</string>
     <string name="dur_10s">10 s</string>
     <string name="dur_30s">30 s</string>
@@ -487,7 +487,7 @@
     <string name="settings_more_knight">Ścieżka skoczka</string>
     <string name="settings_more_name_square">Nazwij pole</string>
     <string name="settings_more_board">Połączenie z szachownicą</string>
-    <string name="settings_more_link_board">Połącz szachownicę (jeszcze nietestowane)</string>
+    <string name="settings_more_link_board">Połącz szachownicę (jeszcze nie testowano)</string>
     <string name="settings_more_auto_switch">Automatyczna zmiana tury po ruchu</string>
     <string name="settings_more_game">Partia</string>
     <string name="settings_more_game_data">Dane partii</string>
@@ -507,7 +507,7 @@
     <string name="toast_preparing_apk">Przygotowywanie pliku aplikacji…</string>
     <string name="toast_apk_error">Błąd: nie udało się przygotować pliku</string>
 
-    <!-- Compact age limits: d for dzień, t for tydzień, m for miesiąc, r for rok. -->
+    <!-- Age limits in the standard Polish abbreviations, dz., tydz., mies.; rok is short enough in full. -->
     <string name="age_one_day">1 dz.</string>
     <string name="age_one_week">1 tydz.</string>
     <string name="age_one_month">1 mies.</string>
@@ -545,7 +545,7 @@
     <string name="omni_prepare_game">Przygotuj się do partii %d</string>
     <string name="omni_thanks">Dziękujemy za grę!</string>
     <string name="omni_next_player">Następny: gracz %d</string>
-    <!-- "Jestem gotowy" is masculine and would need a feminine twin; "GOTOWE" says the same for anyone. -->
+    <!-- "Jestem gotowy" is masculine and would need a feminine twin; "ZACZYNAM" (I am starting) is the same for anyone. -->
     <string name="omni_i_am_ready">ZACZYNAM</string>
     <string name="omni_close_session">ZAMKNIJ SESJĘ</string>
 
