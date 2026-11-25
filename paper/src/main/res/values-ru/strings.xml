@@ -6,7 +6,7 @@
   construction — see the note in values/strings.xml.
 
   The three buttons under the E-Ink clock are narrow, and Russian runs long: "Сбросить",
-  "Продолжить" and "Настройки" are all too wide for them. They are "Сброс", "Пуск" and "Опции"
+  "Продолжить" and "Настройки" are all too wide for them. They are "Сброс", "Далее" and "Опции"
   here, the same kind of shortening German and Dutch needed; the app module has room and keeps the
   full words.
 
@@ -23,12 +23,14 @@
     <!-- Timer -->
     <string name="timer_switch_turn">Передать ход</string>
     <string name="timer_pause">Пауза</string>
-    <!-- One of three buttons across a Kompakt: "Продолжить" is ten characters, as "Fortsetzen" was. -->
-    <string name="timer_resume">Пуск</string>
+    <!-- One of three buttons across a Kompakt: "Продолжить" is ten characters, as "Fortsetzen" was.
+         "Пуск" read as starting over; "Далее" says the game goes on, as Ukrainian "Далі" does. -->
+    <string name="timer_resume">Далее</string>
     <string name="timer_start">Старт</string>
-    <!-- "Настройки" at 9 characters does not fit the button beside Сброс and Пуск. -->
+    <!-- "Настройки" at 9 characters does not fit the button beside Сброс and Далее. -->
     <string name="timer_settings">Опции</string>
-    <string name="timer_time_up">ВРЕМЯ</string>
+    <!-- "ВРЕМЯ" alone reads as "time", not as time run out; two words still fit at 288 dp. -->
+    <string name="timer_time_up">ВРЕМЯ ВЫШЛО</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Начальное время</string>

@@ -29,7 +29,8 @@
     <string name="timer_start">Старт</string>
     <!-- "Налаштування" at 12 characters does not fit the button beside Скинути and Далі. -->
     <string name="timer_settings">Опції</string>
-    <string name="timer_time_up">ЧАС</string>
+    <!-- "ЧАС" alone reads as "time", not as time run out; two words still fit at 288 dp. -->
+    <string name="timer_time_up">ЧАС ВИЙШОВ</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Початковий час</string>
