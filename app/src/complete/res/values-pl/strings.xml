@@ -43,7 +43,7 @@
     <string name="board_paired_none">Brak sparowanej szachownicy. Najpierw sparuj ją w systemowych ustawieniach Bluetooth.</string>
     <string name="board_usb_none">Nie podłączono szachownicy.</string>
     <string name="board_usb_charging_warning">Gdy szachownica zajmuje port USB, telefon się nie ładuje.</string>
-    <string name="board_none_found">Nie znaleziono urządzeń. Dotknij odświeżania, aby wyszukać.</string>
+    <string name="board_none_found">Nie znaleziono urządzeń. Dotknij ikony odświeżania, aby wyszukać.</string>
     <string name="board_scan">Skanuj</string>
     <string name="board_scanning">Wyszukiwanie szachownic…</string>
     <string name="board_title">Połączenie z szachownicą</string>
@@ -64,7 +64,7 @@
     <string name="guide_counts_up_desc">Pokazuje łączną liczbę ruchów wykonanych od startu.</string>
     <string name="guide_fast_move_desc">Nagradza szybkie ruchy. Accelerate: im dłużej myślisz, tym szybciej chodzi twój zegar. Transfer: następny ruch przeciwnika dostaje czas na ruch plus czas właśnie zużyty przez ciebie, a twój zaczyna się znów od czasu na ruch; z opcją Transfer kumulatywny jest on dodawany do tego, co przeciwnikowi zostało, a ty zachowujesz swoją resztę.</string>
     <string name="guide_staircase_desc">Czas każdego ruchu zmienia się o stały krok. Down: każdy ruch dostaje mniej czasu, aż do dolnej granicy. Up: każdy ruch dostaje więcej, aż do górnej granicy.</string>
-    <string name="guide_fide_desc">Turniejowe tempo gry w okresach: na przykład 90 min na 40 ruchów, potem 30 min na resztę partii, z dodatkiem 30 s za każdy ruch.</string>
+    <string name="guide_fide_desc">Turniejowe tempo gry w okresach: na przykład 90 min na 40 ruchów, potem 30 min do końca partii, z dodatkiem 30 s za każdy ruch.</string>
     <string name="guide_gong_desc">Wymuszone ruchy w stałych odstępach (równocześnie lub na zmianę).</string>
     <string name="guide_hidden_desc">Losowany jest czas, który pozostaje ukryty. Przy włączonych procentach pokazuje się na chwilę, gdy mija 50, 25, 10, 5, 2 i 1%.</string>
     <string name="guide_hourglass_desc">Czas tracony przez jednego gracza jest dodawany przeciwnikowi. Łączny czas jest stały.</string>
@@ -75,7 +75,7 @@
     <string name="guide_move_save_cap_desc">Niewykorzystany czas na ruch przechodzi na następny ruch, aż do górnego limitu zegara.</string>
     <string name="guide_move_shared_desc">Jeden zegar dla wszystkich graczy. Przełącza się automatycznie przy 0:00.</string>
     <string name="guide_move_standard_desc">Wraca do stałego czasu przy każdym ruchu.</string>
-    <string name="guide_omni_desc">Wielopoziomowa stacja dla złożonych struktur gry: Sesja &gt; Partie &gt; Rundy &gt; Tury &gt; Fazy, każdy poziom z własnym zegarem, włączonym lub nie. W każdej rundzie każdy gracz rozgrywa każdą ustawioną turę. Banki czasu, przerwania i pauzy między turami, rundami i partiami; przerwaną sesję można wznowić, nawet po zamknięciu aplikacji.</string>
+    <string name="guide_omni_desc">Wielopoziomowy zegar dla złożonych struktur gry: Sesja &gt; Partie &gt; Rundy &gt; Tury &gt; Fazy, każdy poziom z własnym zegarem, włączonym lub nie. W każdej rundzie każdy gracz rozgrywa każdą ustawioną turę. Banki czasu, przerwania i pauzy między turami, rundami i partiami; przerwaną sesję można wznowić, nawet po zamknięciu aplikacji.</string>
     <string name="guide_phases_desc">Sekwencja różnych zegarów (np. przygotowanie 5 min -&gt; partia 20 min -&gt; Sudden Death).</string>
     <string name="guide_random_desc">Czas bazowy i dodatki są losowane w ustalonym zakresie.</string>
     <string name="guide_section_advanced">Zaawansowane i eksperymentalne</string>
@@ -215,7 +215,7 @@
         <item quantity="other">łącznie %d ruchu</item>
     </plurals>
     <string name="tools_dice_roll">Rzut kostką</string>
-    <string name="tools_draw">Rysuj</string>
+    <string name="tools_draw">Rysunek</string>
     <string name="tools_draw_again">Losuj ponownie</string>
     <string name="tools_draw_note">Notatka rysunkowa</string>
     <string name="tools_edit_board">Edytuj szachownicę</string>
@@ -249,12 +249,12 @@
     <string name="tools_highlight_pink">Różowy</string>
     <string name="tools_highlight_blue">Niebieski</string>
     <string name="tools_highlight_green">Zielony</string>
-    <string name="tools_center">Do środka</string>
+    <string name="tools_center">Wyśrodkuj</string>
     <string name="tools_italic">Kursywa</string>
     <string name="tools_large">Duży nagłówek</string>
-    <string name="tools_left">Do lewej</string>
+    <string name="tools_left">Wyrównaj do lewej</string>
     <string name="tools_log_details">Szczegóły zapisu</string>
-    <string name="tools_match_summary">Podsumowanie meczu</string>
+    <string name="tools_match_summary">Podsumowanie partii</string>
     <string name="tools_min_moves">Min. ruchów?</string>
     <string name="tools_move">Ruch</string>
     <string name="tools_name_square_title">Nazwij pole</string>
@@ -293,8 +293,8 @@
     <string name="tools_short_straw">Krótka zapałka</string>
     <string name="tools_straw_long">Długa</string>
     <string name="tools_straw_short">Krótka</string>
-    <string name="tools_shred">Zniszcz</string>
-    <string name="tools_spent">Zużyto</string>
+    <string name="tools_shred">Usuń trwale</string>
+    <string name="tools_spent">Zużyty czas</string>
     <string name="tools_start">START</string>
     <string name="tools_start_trial">ROZPOCZNIJ PRÓBĘ</string>
     <string name="tools_stop">STOP</string>
@@ -317,11 +317,11 @@
     <string name="tools_white_square">BIAŁE</string>
 
     <!-- Chess variants: names stay English, descriptions are translated -->
-    <string name="variant_chess2880_desc">Symetryczne, gońce różnopolowe, król na dowolnym polu (bez roszady).</string>
-    <string name="variant_chess960_desc">Symetryczne, gońce różnopolowe, król między wieżami (z roszadą).</string>
-    <string name="variant_double960_desc">Asymetryczne, gońce różnopolowe, król między wieżami (taktyka dla zaawansowanych).</string>
+    <string name="variant_chess2880_desc">Symetryczne, gońce na polach różnych kolorów, król na dowolnym polu (bez roszady).</string>
+    <string name="variant_chess960_desc">Symetryczne, gońce na polach różnych kolorów, król między wieżami (z roszadą).</string>
+    <string name="variant_double960_desc">Asymetryczne, gońce na polach różnych kolorów, król między wieżami (taktyka dla zaawansowanych).</string>
     <string name="variant_shuffle_desc">Symetryczne, król i gońce na dowolnych polach (pełna losowość).</string>
-    <string name="variant_transcendental_desc">Asymetryczne, gońce różnopolowe, król na dowolnym polu (bogata taktyka).</string>
+    <string name="variant_transcendental_desc">Asymetryczne, gońce na polach różnych kolorów, król na dowolnym polu (bogata taktyka).</string>
 
     <plurals name="tools_straws">
         <item quantity="one">Zapałki: %d</item>

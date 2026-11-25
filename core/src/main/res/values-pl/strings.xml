@@ -16,7 +16,7 @@
     <string name="voice_ten_seconds_left">Zostało dziesięć sekund</string>
     <string name="voice_period">Okres %1$d</string>
     <string name="voice_byoyomi">Początek byoyomi</string>
-    <string name="voice_byoyomi_periods_left">Pozostałe okresy: %1$d</string>
+    <string name="voice_byoyomi_periods_left">Pozostało okresów: %1$d</string>
     <string name="voice_byoyomi_seconds">%1$d sekund</string>
     <string name="voice_move">Ruch</string>
     <string name="voice_reflect">Namysł</string>
