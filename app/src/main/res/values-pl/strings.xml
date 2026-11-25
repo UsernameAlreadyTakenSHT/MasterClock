@@ -69,12 +69,12 @@
     <string name="settings_time_per_move">Czas na każdy ruch</string>
     <string name="settings_time_to_move">Czas na wykonanie ruchu</string>
     <string name="settings_starting_move_time">Początkowy czas na ruch</string>
-    <string name="settings_time_cap">Limit czasu</string>
+    <string name="settings_time_cap">Górny limit czasu</string>
     <string name="settings_byoyomi_time">Czas byoyomi</string>
     <string name="settings_periods_goal">Okresy / cel ruchów</string>
     <string name="settings_progression">Progresja (ruchy)</string>
     <string name="settings_max_moves">Maks. liczba ruchów</string>
-    <string name="settings_decrement_per_move">Spadek na ruch</string>
+    <string name="settings_decrement_per_move">Zmniejszenie na ruch</string>
     <string name="settings_min_time_floor">Minimalny czas</string>
     <string name="settings_increase_per_move">Wzrost na ruch</string>
     <string name="settings_max_time_ceiling">Maksymalny czas</string>
@@ -101,10 +101,10 @@
     <string name="settings_moves_unlock">Ruchy do następnego okresu (0 = ostatni)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Łączna liczba ruchów przed okresem %d</string>
     <plurals name="settings_moves_read_as_more">
-        <item quantity="one">Odczytane jako jeszcze %1$d ruch: łącznie %2$d</item>
-        <item quantity="few">Odczytane jako jeszcze %1$d ruchy: łącznie %2$d</item>
-        <item quantity="many">Odczytane jako jeszcze %1$d ruchów: łącznie %2$d</item>
-        <item quantity="other">Odczytane jako jeszcze %1$d ruchu: łącznie %2$d</item>
+        <item quantity="one">Liczone jako jeszcze %1$d ruch: łącznie %2$d</item>
+        <item quantity="few">Liczone jako jeszcze %1$d ruchy: łącznie %2$d</item>
+        <item quantity="many">Liczone jako jeszcze %1$d ruchów: łącznie %2$d</item>
+        <item quantity="other">Liczone jako jeszcze %1$d ruchu: łącznie %2$d</item>
     </plurals>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Nazwa fazy %d</string>
     <string name="settings_phase_n">Faza %d</string>
@@ -161,7 +161,7 @@
     <string name="a11y_player_clock">Gracz %1$d, %2$s</string>
     <string name="a11y_player_clock_active">Gracz %1$d, %2$s, twój ruch</string>
     <string name="a11y_out_of_time">koniec czasu</string>
-    <string name="a11y_finished">zakończono</string>
+    <string name="a11y_finished">koniec</string>
     <string name="a11y_time_hidden">czas ukryty</string>
     <string name="a11y_no_time_left">brak czasu</string>
     <string name="a11y_announce_out_of_time">Graczowi %d skończył się czas</string>
@@ -169,8 +169,8 @@
     <string name="a11y_announce_paused">Wstrzymano</string>
     <string name="a11y_announce_running">Zegar chodzi</string>
     <string name="a11y_announce_to_move">Ruch gracza %d</string>
-    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
-    <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
+    <string name="a11y_announce_byoyomi">%1$s, bjojomi</string>
+    <string name="a11y_announce_byoyomi_periods">%1$s, bjojomi, %2$s</string>
 
     <!-- CLDR gives Polish four categories: one (1), few (2–4, 22–24…), many (0, 5–21, 25…) and
          other, which only fractions reach and which takes the genitive singular. -->
@@ -201,7 +201,7 @@
 
     <!-- Timer chips -->
     <string name="timer_cap">LIMIT</string>
-    <string name="timer_global">GLOBALNY</string>
+    <string name="timer_global">WSPÓLNY</string>
     <string name="timer_total">ŁĄCZNIE</string>
     <string name="timer_labeled_time">%1$s: %2$s</string>
     <string name="timer_overtime">REZERWA</string>
@@ -318,7 +318,7 @@
     <string name="settings_tournament_rules">Przepisy turniejowe</string>
     <string name="settings_fischer_fide">Fischer FIDE (dodatek przy ruchu 0)</string>
     <string name="settings_forced_move_counter">Wymuszaj licznik ruchów</string>
-    <string name="settings_tournament_rules_explain">Pierwsza opcja dotyczy tylko trybu Fischer: dodatek przychodzi przed ruchem 1. Druga tylko FIDE Periods: włączona, okres kończy się po osiągnięciu jego liczby ruchów; wyłączona, gdy skończy się jego czas.</string>
+    <string name="settings_tournament_rules_explain">Pierwsza opcja dotyczy tylko trybu Fischer: dodatek przychodzi przed ruchem 1. Druga dotyczy tylko FIDE Periods: po włączeniu okres kończy się po osiągnięciu jego liczby ruchów, po wyłączeniu – gdy skończy się jego czas.</string>
     <string name="settings_interaction">Interakcja</string>
     <string name="settings_confirm_reset">Potwierdzaj reset</string>
     <string name="settings_trigger_on_press">Reaguj na naciśnięcie (inaczej na zwolnienie)</string>
@@ -364,7 +364,7 @@
     <!-- Omni wizard (settings) -->
     <string name="omni_cfg_previous">Wstecz</string>
     <string name="omni_cfg_next_step">Dalej</string>
-    <string name="omni_cfg_launch_game">Rozpocznij partię</string>
+    <string name="omni_cfg_launch_game">Rozpocznij grę</string>
     <string name="omni_cfg_ready">Wszystko gotowe do gry</string>
     <string name="omni_cfg_summary">Podsumowanie</string>
 
@@ -493,7 +493,7 @@
     <string name="settings_more_game_data">Dane partii</string>
     <string name="settings_more_logs">Zapisy i historia partii</string>
     <string name="settings_more_limit_count">Limit historii: liczba partii</string>
-    <string name="settings_more_limit_age">Limit historii: wiek</string>
+    <string name="settings_more_limit_age">Limit historii: wiek partii</string>
     <string name="settings_more_data_sharing">Dane i udostępnianie</string>
     <string name="settings_more_export">Eksport / udostępnianie</string>
     <string name="settings_more_import">Import / skanowanie</string>

@@ -44,7 +44,7 @@
     <string name="board_usb_none">Nie podłączono szachownicy.</string>
     <string name="board_usb_charging_warning">Gdy szachownica zajmuje port USB, telefon się nie ładuje.</string>
     <string name="board_none_found">Nie znaleziono urządzeń. Dotknij ikony odświeżania, aby wyszukać.</string>
-    <string name="board_scan">Skanuj</string>
+    <string name="board_scan">Odśwież</string>
     <string name="board_scanning">Wyszukiwanie szachownic…</string>
     <string name="board_title">Połączenie z szachownicą</string>
     <string name="board_unknown_device">Nieznane urządzenie</string>
@@ -117,7 +117,7 @@
     <string name="a11y_board_back_ranks">Białe, od a do h: %1$s. Czarne: %2$s.</string>
     <string name="toast_mic_permission">Wymagane jest uprawnienie do mikrofonu.</string>
     <string name="toast_note_deleted">Notatka usunięta</string>
-    <string name="toast_permission_granted">Przyznano uprawnienie. Dotknij Nagraj ponownie.</string>
+    <string name="toast_permission_granted">Przyznano uprawnienie. Dotknij ponownie „Nagraj”.</string>
     <string name="toast_start_failed">Nie udało się uruchomić</string>
 
     <!-- Tools -->
@@ -255,7 +255,7 @@
     <string name="tools_left">Zostało</string>
     <string name="tools_log_details">Szczegóły zapisu</string>
     <string name="tools_match_summary">Podsumowanie partii</string>
-    <string name="tools_min_moves">Min. ruchów?</string>
+    <string name="tools_min_moves">Najmniej ruchów?</string>
     <string name="tools_move">Ruch</string>
     <string name="tools_name_square_title">Nazwij pole</string>
     <string name="tools_new_audio_note">Nowa notatka głosowa</string>

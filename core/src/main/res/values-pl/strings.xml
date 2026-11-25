@@ -6,6 +6,9 @@
   voice_byoyomi_seconds is only ever called with a multiple of ten (10, 20, 30…), and every one of
   those takes the genitive plural "sekund", so a plain string is grammatical there.
 
+  "Byoyomi" is spoken as "bjojomi", as Polish go players say it: a mode name stays English on the
+  screen, but a Polish voice reads its "y" as the Polish vowel. TalkBack's lines too.
+
   Translated without a native reviewer, like every language here except the French.
 -->
 <resources>
@@ -15,13 +18,13 @@
     <string name="voice_thirty_seconds_left">Zostało trzydzieści sekund</string>
     <string name="voice_ten_seconds_left">Zostało dziesięć sekund</string>
     <string name="voice_period">Okres %1$d</string>
-    <string name="voice_byoyomi">Początek byoyomi</string>
+    <string name="voice_byoyomi">Początek bjojomi</string>
     <string name="voice_byoyomi_periods_left">Pozostało okresów: %1$d</string>
     <string name="voice_byoyomi_seconds">%1$d sekund</string>
     <string name="voice_move">Ruch</string>
     <string name="voice_reflect">Namysł</string>
     <string name="voice_phase">Faza %1$d</string>
-    <string name="voice_test">Test głośności głosu</string>
+    <string name="voice_test">Test głośności komunikatów</string>
     <string name="board_error_connect_permission">Wymagane jest uprawnienie Bluetooth do łączenia</string>
     <string name="board_error_scan_permission">Wymagane jest uprawnienie Bluetooth do wyszukiwania</string>
     <string name="board_error_no_connection">Nie udało się połączyć z szachownicą</string>
