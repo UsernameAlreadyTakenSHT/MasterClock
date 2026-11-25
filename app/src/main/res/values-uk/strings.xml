@@ -68,11 +68,11 @@
     <string name="settings_delay">Затримка</string>
     <string name="settings_move_time">Час на хід</string>
     <string name="settings_time_per_move">Час на кожен хід</string>
-    <string name="settings_time_to_move">Час до ходу</string>
+    <string name="settings_time_to_move">Час на хід</string>
     <string name="settings_starting_move_time">Початковий час на хід</string>
     <string name="settings_time_cap">Межа часу</string>
     <string name="settings_byoyomi_time">Час Byoyomi</string>
-    <string name="settings_periods_goal">Періоди / ціль за ходами</string>
+    <string name="settings_periods_goal">Періоди / кількість ходів</string>
     <string name="settings_progression">Приріст (ходи)</string>
     <string name="settings_max_moves">Максимум ходів</string>
     <string name="settings_decrement_per_move">Зменшення за хід</string>
@@ -169,7 +169,7 @@
     <string name="a11y_announce_paused">Пауза</string>
     <string name="a11y_announce_running">Годинник іде</string>
     <string name="a11y_announce_to_move">Хід гравця %d</string>
-    <string name="a11y_announce_byoyomi">%1$s, byoyomi</string>
+    <string name="a11y_announce_byoyomi">%1$s, бйойомі</string>
     <string name="a11y_announce_byoyomi_periods">%1$s, byoyomi, %2$s</string>
 
     <plurals name="a11y_hours">
@@ -199,7 +199,7 @@
 
     <!-- Timer chips: on the clock face, so as short as the English. -->
     <string name="timer_cap">МАКС</string>
-    <string name="timer_global">ЗАГАЛЬНИЙ</string>
+    <string name="timer_global">СПІЛЬНИЙ</string>
     <string name="timer_total">УСЬОГО</string>
     <string name="timer_labeled_time">%1$s: %2$s</string>
     <!-- "OT" labels the Overtime reserve, as in French and German: "РЕЗЕРВ". -->
@@ -292,7 +292,7 @@
     <string name="settings_haptic_countdown">Вібрація під час зворотного відліку</string>
     <string name="settings_haptic_switch">Вібрація під час передачі ходу</string>
     <string name="settings_haptic_feedback">Тактильний відгук</string>
-    <string name="settings_output_volume">Виведення і гучність</string>
+    <string name="settings_output_volume">Виведення й гучність</string>
     <string name="settings_sounds_volume">Гучність звуків</string>
     <string name="settings_voice_volume">Гучність голосу</string>
     <string name="settings_voice_announcement">Голосове оголошення</string>
@@ -313,12 +313,12 @@
     <string name="settings_flag_cap">Межа після прапорця</string>
     <string name="settings_flag_cap_desc">Наскільки годинник може піти за нуль. Там він зупиняється, а гра триває. Порожньо: без межі.</string>
     <string name="settings_tournament_rules">Турнірні правила</string>
-    <string name="settings_fischer_fide">Fischer FIDE (бонус на ході 0)</string>
+    <string name="settings_fischer_fide">Fischer FIDE (бонус до 1-го ходу)</string>
     <string name="settings_forced_move_counter">Обов’язковий лічильник ходів</string>
     <string name="settings_tournament_rules_explain">Перше стосується лише Fischer: бонус нараховується до 1-го ходу. Друге лише FIDE Periods: якщо увімкнено, період закінчується, коли зроблено потрібну кількість ходів; якщо вимкнено, коли спливає його час.</string>
     <string name="settings_interaction">Керування</string>
     <string name="settings_confirm_reset">Підтверджувати скидання</string>
-    <string name="settings_trigger_on_press">Спрацьовувати при натисканні (інакше при відпусканні)</string>
+    <string name="settings_trigger_on_press">Спрацьовувати під час натискання (інакше — під час відпускання)</string>
     <string name="settings_pause_background">Пауза у фоновому режимі</string>
     <string name="settings_keep_running">Працювати у фоновому режимі</string>
     <string name="settings_keep_running_desc">Якщо паузу вище вимкнено, сповіщення підтримує хід годинника, поки застосунок у фоні, щоб Android його не закрив. У ньому видно, чий хід і скільки в нього часу, і є кнопка «Пауза».</string>
@@ -365,7 +365,7 @@
     <string name="omni_cfg_ready">Усе готово</string>
     <string name="omni_cfg_summary">Підсумок</string>
 
-    <string name="omni_cfg_session_games">Сесія і партії</string>
+    <string name="omni_cfg_session_games">Сесія й партії</string>
     <string name="omni_cfg_enable_session_timer">Таймер сесії</string>
     <string name="omni_cfg_enable_game_timer">Таймер партії</string>
     <string name="omni_cfg_enable_round_timer">Таймер раунду</string>
@@ -428,11 +428,11 @@
     <string name="omni_cfg_pattern_rotate">Схема (3 гравці): 123, 231, 312</string>
     <string name="omni_cfg_pattern_random_turn">Схема (3 гравці): 132, 312, 231 — гравця можуть пропустити або вибрати двічі</string>
     <string name="omni_cfg_pattern_random_round">Схема (3 гравці): 231, 312, 123 — кожен ходить один раз за раунд</string>
-    <string name="omni_cfg_shuffle_per_round">Перемішувати щораунду</string>
+    <string name="omni_cfg_shuffle_per_round">Перемішувати в кожному раунді</string>
     <string name="omni_cfg_draw_per_turn">Жереб на кожен хід</string>
     <string name="omni_cfg_balance_draw">Урівноважувати жереб</string>
     <string name="omni_cfg_balance_explain">Хто відстає за ходами, той імовірніше піде наступним, тож розрив скорочується, а не зростає.</string>
-    <string name="omni_cfg_no_repeat">Ніколи той самий гравець двічі поспіль</string>
+    <string name="omni_cfg_no_repeat">Той самий гравець не ходить двічі поспіль</string>
 
     <string name="omni_cfg_transitions">Переходи й паузи</string>
     <string name="omni_cfg_enable_pauses">Увімкнути паузи (буфери)</string>
@@ -459,7 +459,7 @@
     <string name="omni_cfg_round_gong">Гонг раунду</string>
 
     <!-- "Without", not "no": the first of six segments, so no longer than "1 хв". -->
-    <string name="common_off">Без</string>
+    <string name="common_off">Вимк.</string>
     <string name="dur_10s">10 с</string>
     <string name="dur_30s">30 с</string>
     <string name="dur_1m">1 хв</string>
@@ -485,7 +485,7 @@
     <string name="settings_more_name_square">Назви поле</string>
     <string name="settings_more_board">Підключення дошки</string>
     <string name="settings_more_link_board">Підключити дошку (ще не перевірено)</string>
-    <string name="settings_more_auto_switch">Автоматично передавати хід після ходу на дошці</string>
+    <string name="settings_more_auto_switch">Перемикати годинник після ходу на дошці</string>
     <string name="settings_more_game">Гра</string>
     <string name="settings_more_game_data">Дані партій</string>
     <string name="settings_more_logs">Журнали й історія партій</string>
@@ -513,7 +513,7 @@
 
     <!-- Omni station -->
     <string name="omni_reset_title">Скинути сесію?</string>
-    <string name="omni_reset_message">Увесь поступ у раундах і партіях буде втрачено.</string>
+    <string name="omni_reset_message">Увесь прогрес у раундах і партіях буде втрачено.</string>
     <string name="omni_reset_confirm">СКИНУТИ</string>
     <string name="omni_stop_title">Зупинити сесію?</string>
     <string name="omni_stop_confirm">СТОП</string>
@@ -542,7 +542,7 @@
     <string name="omni_prepare_game">Приготуйтеся до партії %d</string>
     <string name="omni_thanks">Дякуємо за гру!</string>
     <string name="omni_next_player">Далі: гравець %d</string>
-    <string name="omni_i_am_ready">Я ГОТОВИЙ</string>
+    <string name="omni_i_am_ready">ГОТОВО</string>
     <string name="omni_close_session">ЗАКРИТИ СЕСІЮ</string>
 
     <!-- Statistics -->
@@ -620,10 +620,10 @@
     <string name="timer_delay">ЗАТРИМКА: %s</string>
     <string name="timer_flagged">ЧАС ВИЙШОВ</string>
     <string name="timer_finished">ЗАВЕРШЕНО</string>
-    <string name="timer_period_flag">КІНЕЦЬ ПЕРІОДУ</string>
+    <string name="timer_period_flag">ПРАПОРЕЦЬ УПАВ</string>
     <string name="timer_period">ПЕРІОД: %1$d/%2$d</string>
     <string name="timer_periods">ПЕРІОДИ: %1$d</string>
-    <string name="timer_reflect">ОБДУМУВАННЯ</string>
+    <string name="timer_reflect">ДУМАЙТЕ</string>
     <string name="timer_move_alert">ХОДІТЬ!</string>
     <string name="timer_pause_label">ПАУЗА</string>
     <string name="preset_desc_1_min">Sudden Death 1:00</string>
@@ -664,7 +664,7 @@
     <string name="back_press_again_to_exit">Натисніть «Назад» ще раз, щоб вийти</string>
     <string name="arbiter_clock">Годинник</string>
     <string name="label_per_move">/ хід</string>
-    <string name="label_moves">ходів</string>
+    <string name="label_moves">ход.</string>
     <string name="game_shortcut_gone">Цієї партії вже немає в історії</string>
     <string name="color_green">Зелений</string>
     <string name="color_blue">Синій</string>
@@ -675,5 +675,5 @@
     <string name="color_grey">Сірий</string>
     <string name="color_white">Білий</string>
     <string name="settings_allow_berserk">Дозволити Berserk</string>
-    <string name="settings_berserk_desc">До свого першого ходу гравець може відмовитися від половини часу й додавання. Тоді перемога вартує на одне очко більше, якщо зроблено щонайменше 7 ходів.</string>
+    <string name="settings_berserk_desc">До свого першого ходу гравець може відмовитися від половини часу й додавання. Тоді перемога приносить на одне очко більше, якщо зроблено щонайменше 7 ходів.</string>
 </resources>

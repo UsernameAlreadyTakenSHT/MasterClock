@@ -6,6 +6,9 @@
   "Залишилося періодів: 3" rather than a counted noun the number would have to agree with. The
   byoyomi seconds are only ever called on a multiple of ten, which always takes "секунд".
 
+  "Byoyomi" is spoken as "бйойомі": a mode name stays English on the screen, but a Ukrainian
+  voice reads the Latin word by guesswork. TalkBack's line too.
+
   Written from the English, not from the Russian.
 
   Translated without a native reviewer, like every language here except the French.
@@ -17,11 +20,11 @@
     <string name="voice_thirty_seconds_left">Залишилося тридцять секунд</string>
     <string name="voice_ten_seconds_left">Залишилося десять секунд</string>
     <string name="voice_period">Період %1$d</string>
-    <string name="voice_byoyomi">Починається byoyomi</string>
+    <string name="voice_byoyomi">Починається бйойомі</string>
     <string name="voice_byoyomi_periods_left">Залишилося періодів: %1$d</string>
     <string name="voice_byoyomi_seconds">%1$d секунд</string>
     <string name="voice_move">Ходіть</string>
-    <string name="voice_reflect">Обдумування</string>
+    <string name="voice_reflect">Думайте</string>
     <string name="voice_phase">Фаза %1$d</string>
     <string name="voice_test">Перевірка гучності голосу</string>
     <string name="board_error_connect_permission">Потрібен дозвіл Bluetooth на підключення</string>
@@ -32,9 +35,9 @@
     <string name="board_error_no_bluetooth">Bluetooth не підтримується на цьому пристрої</string>
     <string name="board_error_bluetooth_off">Bluetooth вимкнено. Увімкніть його.</string>
     <string name="board_error_location_off">Увімкніть геолокацію: цій версії Android вона потрібна, щоб знаходити дошки Bluetooth</string>
-    <string name="board_error_not_paired">Ця дошка більше не сполучена</string>
+    <string name="board_error_not_paired">Ця дошка вже не сполучена</string>
     <string name="board_error_usb_refused">Доступ до USB відхилено</string>
-    <string name="board_error_unplugged">Ця дошка більше не підключена</string>
+    <string name="board_error_unplugged">Ця дошка вже не підключена</string>
     <string name="board_error_needs_driver">Ця дошка не використовує стандартний послідовний порт USB, тож їй потрібен драйвер, якого в застосунку немає</string>
     <string name="board_error_cannot_open">Не вдалося відкрити дошку</string>
     <string name="board_error_in_use">Цю дошку вже використовує інший застосунок</string>

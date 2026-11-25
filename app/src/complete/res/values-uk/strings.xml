@@ -76,15 +76,15 @@
     <string name="guide_move_global_shared_desc">Усі гравці мають спільний запас часу і водночас власний таймер ходу.</string>
     <string name="guide_move_overtime_desc">Перевищення часу на хід витрачає додатковий загальний запас.</string>
     <string name="guide_move_save_cap_desc">Невикористаний час на хід переноситься на наступний хід, до верхньої межі на годиннику.</string>
-    <string name="guide_move_shared_desc">Один таймер для всіх гравців. Автоматично перемикається на 0:00.</string>
+    <string name="guide_move_shared_desc">Один таймер для всіх гравців. Автоматично перемикається, коли сягає 0:00.</string>
     <string name="guide_move_standard_desc">Повертається до фіксованої тривалості на кожен хід.</string>
-    <string name="guide_omni_desc">Багаторівнева станція для складних ігрових структур: Сесія &gt; Партії &gt; Раунди &gt; Ходи &gt; Фази, кожен рівень зі своїм годинником, увімкненим чи ні. Кожен гравець грає кожен заданий хід у раунді. Банки часу, переривання й паузи між ходами, раундами та партіями; покинуту сесію можна продовжити, навіть після закриття застосунку.</string>
+    <string name="guide_omni_desc">Багаторівневий годинник для складних ігрових структур: Сесія &gt; Партії &gt; Раунди &gt; Ходи &gt; Фази, кожен рівень зі своїм годинником, увімкненим чи ні. У кожному раунді кожен гравець проходить усі задані ходи. Банки часу, переривання й паузи між ходами, раундами та партіями; покинуту сесію можна продовжити, навіть після закриття застосунку.</string>
     <string name="guide_phases_desc">Послідовність різних таймерів (наприклад, підготовка 5 хв → партія 20 хв → Sudden Death).</string>
     <string name="guide_random_desc">Основний час і додавання вибираються випадково в заданому діапазоні.</string>
     <string name="guide_section_advanced">Додаткові та експериментальні</string>
     <string name="guide_section_bonus">Режими з бонусом</string>
     <string name="guide_section_specialty">Особливі режими</string>
-    <string name="guide_sudden_death_standard_desc">Чистий зворотний відлік. Перший, чий час дійде до 0:00, програє: у нього падає прапорець.</string>
+    <string name="guide_sudden_death_standard_desc">Чистий зворотний відлік. Перший, чий час дійде до 0:00, програє або в нього падає прапорець.</string>
 
     <!-- QR sharing -->
     <string name="qr_align" tools:ignore="Typos">Помістіть код у кадр камери</string>
@@ -301,7 +301,7 @@
     <string name="tools_tails">ЦИФРА</string>
     <string name="tools_take_photo">Зробити фото</string>
     <string name="tools_target">ЦІЛЬ</string>
-    <string name="tools_target_time">Ціль: 5.000 с</string>
+    <string name="tools_target_time">Ціль: 5,000 с</string>
     <string name="tools_text">Текст</string>
     <string name="tools_time_per_move">Час на хід</string>
     <string name="tools_title">Заголовок</string>
