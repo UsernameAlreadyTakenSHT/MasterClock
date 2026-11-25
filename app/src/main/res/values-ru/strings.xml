@@ -93,7 +93,7 @@
     <string name="settings_random_shared_draw">Оба игрока получают время, выпавшее Игроку 1: задайте диапазоны на вкладке Игрока 1.</string>
     <string name="settings_random_config">Настройка режима Random</string>
     <string name="settings_hidden_config">Настройка режима Hidden</string>
-    <string name="settings_show_percentage">Показывать оповещения в процентах</string>
+    <string name="settings_show_percentage">Показывать проценты</string>
     <string name="settings_fide_config">Настройка FIDE Periods</string>
     <string name="settings_add_period">Добавить период</string>
     <string name="settings_actions">Действия</string>
@@ -101,10 +101,10 @@
     <string name="settings_moves_unlock">Ходов до следующего (0 = последний)</string>
     <string name="settings_moves_until_period" tools:ignore="PluralsCandidate">Всего ходов до периода %d</string>
     <plurals name="settings_moves_read_as_more">
-        <item quantity="one">Читается как ещё %1$d ход: всего %2$d</item>
-        <item quantity="few">Читается как ещё %1$d хода: всего %2$d</item>
-        <item quantity="many">Читается как ещё %1$d ходов: всего %2$d</item>
-        <item quantity="other">Читается как ещё %1$d хода: всего %2$d</item>
+        <item quantity="one">Считается как ещё %1$d ход: всего %2$d</item>
+        <item quantity="few">Считается как ещё %1$d хода: всего %2$d</item>
+        <item quantity="many">Считается как ещё %1$d ходов: всего %2$d</item>
+        <item quantity="other">Считается как ещё %1$d хода: всего %2$d</item>
     </plurals>
     <string name="settings_phase_n_name" tools:ignore="PluralsCandidate">Название фазы %d</string>
     <string name="settings_phase_n">Фаза %d</string>
@@ -152,7 +152,7 @@
     <string name="qr_confirm_message">Этот код заменит ваши текущие настройки и может добавить партии и таблицу счёта. Принимайте коды только от тех, кому доверяете.</string>
     <string name="qr_confirm_apply">Применить</string>
     <string name="import_confirm_title">Импортировать этот файл?</string>
-    <string name="import_confirm_message">Этот файл заменит ваши текущие настройки. Его партии, шаблоны, заметки и результаты таблицы счёта добавляются к вашим: ничего вашего не удаляется.</string>
+    <string name="import_confirm_message">Этот файл заменит ваши текущие настройки. Его партии, шаблоны, заметки и результаты таблицы счёта будут добавлены к вашим — ваши данные не удаляются.</string>
     <string name="import_confirm_action">Импорт</string>
     <string name="confirm_also_ends_game">Это также завершит партию на часах или ту, что ждёт продолжения.</string>
 
@@ -246,7 +246,7 @@
     <string name="settings_font">Шрифт</string>
     <string name="font_system">Системный</string>
     <string name="settings_orientation">Ориентация</string>
-    <string name="settings_vert">Вертикаль</string>
+    <string name="settings_vert">Вертикально</string>
     <string name="settings_layout_scale">Макет и масштаб</string>
     <string name="settings_active_side_bigger">Активная сторона крупнее</string>
     <string name="settings_fullscreen">Во весь экран</string>
@@ -314,7 +314,7 @@
     <string name="settings_tournament_rules">Турнирные правила</string>
     <string name="settings_fischer_fide">Fischer FIDE (бонус до 1-го хода)</string>
     <string name="settings_forced_move_counter">Обязательный счётчик ходов</string>
-    <string name="settings_tournament_rules_explain">Первое относится только к Fischer: бонус начисляется до 1-го хода. Второе только к FIDE Periods: если включено, период заканчивается, когда сделано нужное число ходов; если выключено, когда истекает его время.</string>
+    <string name="settings_tournament_rules_explain">Первое относится только к Fischer: бонус начисляется до 1-го хода. Второе — только к FIDE Periods: если включено, период заканчивается, когда сделано нужное число ходов; если выключено — когда истекает его время.</string>
     <string name="settings_interaction">Управление</string>
     <string name="settings_confirm_reset">Подтверждать сброс</string>
     <string name="settings_trigger_on_press">Срабатывать при нажатии (иначе при отпускании)</string>
@@ -445,7 +445,7 @@
     <string name="omni_cfg_launch_countdown">Отсчёт перед стартом</string>
     <string name="omni_cfg_auto_restart">Автоматический перезапуск</string>
 
-    <string name="omni_cfg_pressure">Давление и экономия</string>
+    <string name="omni_cfg_pressure">Расход и запас времени</string>
     <string name="omni_cfg_advanced_rules">Дополнительные правила</string>
     <string name="omni_cfg_time_bank">Банк времени</string>
     <string name="omni_cfg_bank_per_player">У каждого</string>
@@ -469,8 +469,8 @@
     <string name="settings_more_help">Помощь и поддержка</string>
     <string name="settings_more_manual">Руководство по режимам времени</string>
     <string name="settings_more_game_tools">Игровые инструменты</string>
-    <string name="settings_more_variants">Генератор шахматных вариантов</string>
-    <string name="settings_more_rules">Немного правил</string>
+    <string name="settings_more_variants">Генератор начальных позиций</string>
+    <string name="settings_more_rules">Правила</string>
     <string name="settings_more_scoreboard">Таблица счёта</string>
     <string name="settings_more_notebook">Блокнот</string>
     <string name="settings_more_more_tools">Другие инструменты</string>
@@ -516,7 +516,7 @@
     <string name="omni_reset_confirm">СБРОСИТЬ</string>
     <string name="omni_stop_title">Остановить сессию?</string>
     <string name="omni_stop_confirm">СТОП</string>
-    <string name="omni_launch_title">Сессия идёт</string>
+    <string name="omni_launch_title">Незавершённая сессия</string>
     <string name="omni_launch_message">Сессия на паузе. Продолжить её с того же места или начать новую с этими настройками?</string>
     <string name="omni_launch_resume">ПРОДОЛЖИТЬ</string>
     <string name="omni_launch_new">НОВАЯ СЕССИЯ</string>
@@ -552,7 +552,7 @@
     <string name="stats_average_move">Средний ход</string>
     <string name="stats_median_move">Медианный ход</string>
     <string name="stats_slowest_move">Самый долгий ход</string>
-    <string name="stats_time_on_clock">Время на часах</string>
+    <string name="stats_time_on_clock">Время раздумий</string>
     <string name="stats_time_pressure" formatted="false">Ходы, сделанные при остатке меньше 10% начального времени</string>
     <string name="stats_recent_game">Последняя партия</string>
     <string name="stats_modes_played">Сыгранные режимы</string>
@@ -585,10 +585,10 @@
     </plurals>
 
     <plurals name="stats_chart_description">
-        <item quantity="one">Время на ход. Самый долгий %1$s из %2$d хода.</item>
-        <item quantity="few">Время на ход. Самый долгий %1$s из %2$d ходов.</item>
-        <item quantity="many">Время на ход. Самый долгий %1$s из %2$d ходов.</item>
-        <item quantity="other">Время на ход. Самый долгий %1$s из %2$d хода.</item>
+        <item quantity="one">Время на ход. Самый долгий ход — %1$s, всего %2$d ход.</item>
+        <item quantity="few">Время на ход. Самый долгий ход — %1$s, всего %2$d хода.</item>
+        <item quantity="many">Время на ход. Самый долгий ход — %1$s, всего %2$d ходов.</item>
+        <item quantity="other">Время на ход. Самый долгий ход — %1$s, всего %2$d хода.</item>
     </plurals>
 
     <!-- Timer Screen -->
@@ -606,7 +606,7 @@
     <string name="timer_reroll_title">Вытянуть новое время?</string>
     <string name="timer_reroll_confirm">Вытянуть</string>
     <string name="timer_reroll_message">Партия начнётся заново с новым случайным временем.</string>
-    <string name="timer_arbitre_control">Управление арбитра</string>
+    <string name="timer_arbitre_control">Панель арбитра</string>
     <string name="timer_arbitre">Арбитр</string>
     <string name="timer_save_clock">Сохранить</string>
     <string name="timer_resume">Продолжить</string>
