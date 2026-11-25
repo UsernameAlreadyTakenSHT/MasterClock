@@ -80,7 +80,7 @@
     <string name="settings_increase_per_move">Hamle başına artış</string>
     <string name="settings_max_time_ceiling">En yüksek süre sınırı</string>
     <string name="settings_grace_period">Tolerans süresi (normal hız)</string>
-    <string name="settings_full_fast_starts">Tam hızlı aşamanın başlangıcı</string>
+    <string name="settings_full_fast_starts">Tam hız döneminin başlangıcı</string>
     <string name="settings_reflection_time">Düşünme süresi</string>
     <string name="settings_simultaneous">Eşzamanlı oyun</string>
     <string name="settings_duration">Süre</string>
@@ -193,7 +193,7 @@
     <string name="timer_total">TOPLAM</string>
     <string name="timer_labeled_time">%1$s: %2$s</string>
     <!-- "OT" labels the Overtime reserve, a fixed amount spent once a move clock runs out:
-         "EK SÜRE" is the plain word for it. -->
+         "YEDEK", as the guide calls it. "EK SÜRE" read as time added. -->
     <string name="timer_overtime">YEDEK</string>
     <string name="timer_switch_turn">Sırayı değiştir</string>
     <string name="timer_presets">Hazır ayarlar</string>
@@ -386,6 +386,7 @@
     <string name="omni_cfg_game_n">Oyun %d</string>
     <string name="omni_cfg_round_n">Tur %d</string>
     <string name="omni_cfg_phase_n">Aşama %d</string>
+    <!-- M for maç: O is the player's (O%d), and "Oy" reads as a vote. -->
     <string name="omni_cfg_game_short">M%d</string>
     <string name="omni_cfg_round_short">T%d</string>
     <string name="omni_cfg_turn_short">S%d</string>
@@ -441,7 +442,7 @@
     <string name="omni_cfg_time_bank">Zaman bankası</string>
     <string name="omni_cfg_bank_per_player">Oyuncu başına</string>
     <string name="omni_cfg_bank_shared">Ortak havuz</string>
-    <string name="omni_cfg_bank_clear">Bankanın boşaltılacağı an:</string>
+    <string name="omni_cfg_bank_clear">Bankayı şunun sonunda boşalt:</string>
 
     <string name="omni_cfg_audio">Sesli uyarılar</string>
     <string name="omni_cfg_turn_beep">Sıra bip sesi</string>
@@ -494,9 +495,9 @@
     <string name="toast_preparing_apk">Uygulama dosyası hazırlanıyor…</string>
     <string name="toast_apk_error">Hata: dosya hazırlanamadı</string>
 
-    <!-- Compact age limits: g(ün), h(afta), a(y), y(ıl). -->
+    <!-- Age limits: gün, hafta, ay, yıl, written out. Single letters read wrong ("1 h" as an hour). -->
     <string name="age_one_day">1 gün</string>
-    <string name="age_one_week">1 hf</string>
+    <string name="age_one_week">1 hafta</string>
     <string name="age_one_month">1 ay</string>
     <string name="age_six_months">6 ay</string>
     <string name="age_one_year">1 yıl</string>
@@ -608,7 +609,7 @@
     <string name="timer_periods">PERİYOTLAR: %1$d</string>
     <string name="timer_reflect">DÜŞÜN</string>
     <string name="timer_move_alert">OYNA!</string>
-    <string name="timer_pause_label">DURAKLADI</string>
+    <string name="timer_pause_label">MOLA</string>
     <string name="preset_desc_1_min">Sudden Death 1:00</string>
     <string name="preset_desc_5_min">Sudden Death 5:00</string>
     <string name="preset_desc_10_min">Sudden Death 10:00</string>

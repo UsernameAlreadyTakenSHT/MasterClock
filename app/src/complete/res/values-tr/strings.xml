@@ -8,8 +8,8 @@
   translated here. The switch the manual names is "Kümülatif Transfer", as the settings screen
   labels it in values-tr of src/main.
 
-  card_name puts the suit first, as Turkish names a card ("Maça As", "Kupa 7"), which also keeps
-  any suffix off the rank.
+  card_name puts the suit first, as Turkish names a card ("Maça ası", "Kupa 7"): the ranks carry
+  the possessive (ası, valesi, kızı, papazı), and are only ever read inside card_name.
 
   app_name is left out on purpose — it is the product name.
 
@@ -170,9 +170,9 @@
     <string name="tools_piece_black_knight">siyah at</string>
     <string name="tools_piece_black_pawn">siyah piyon</string>
     <string name="tools_piece_white_man">beyaz dama taşı</string>
-    <string name="tools_piece_white_dame">beyaz dama (kral)</string>
+    <string name="tools_piece_white_dame">beyaz dama kralı</string>
     <string name="tools_piece_black_man">siyah dama taşı</string>
-    <string name="tools_piece_black_dame">siyah dama (kral)</string>
+    <string name="tools_piece_black_dame">siyah dama kralı</string>
     <string name="tools_emoji_game">Oyun için</string>
     <string name="tools_emoji_smileys">İfadeler ve duygular</string>
     <string name="tools_emoji_people">İnsanlar ve vücut</string>
@@ -238,7 +238,7 @@
     <string name="tools_center">Ortala</string>
     <string name="tools_italic">İtalik</string>
     <string name="tools_large">Büyük başlık</string>
-    <string name="tools_left">Sola</string>
+    <string name="tools_left">Kalan</string>
     <string name="tools_log_details">Kayıt ayrıntıları</string>
     <string name="tools_match_summary">Maç özeti</string>
     <string name="tools_min_moves">En az hamle?</string>
