@@ -26,7 +26,8 @@
     <string name="timer_start">Start</string>
     <!-- "Ustawienia" at 10 characters does not fit the button beside Resetuj and Wznów. -->
     <string name="timer_settings">Opcje</string>
-    <string name="timer_time_up">CZAS</string>
+    <!-- "CZAS" alone reads as "time", not as time run out; two words, as Turkish has, still fit at 288 dp. -->
+    <string name="timer_time_up">KONIEC CZASU</string>
 
     <!-- Settings -->
     <string name="settings_initial_time">Czas początkowy</string>
