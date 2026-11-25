@@ -19,7 +19,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
 
     <!-- Rules screen -->
-    <string name="rules_title">Трохи правил</string>
+    <string name="rules_title">Правила</string>
     <string name="rules_intro">Довідкові документи, доступні офлайн.</string>
     <string name="rules_group_chess">Шахи (офіційний документ)</string>
     <string name="rules_group_draughts">Шашки (офіційний документ)</string>
@@ -47,7 +47,7 @@
     <string name="board_usb_none">Дошку не підключено.</string>
     <string name="board_usb_charging_warning">Поки дошка займає порт USB, телефон не заряджається.</string>
     <string name="board_none_found">Пристроїв не знайдено. Натисніть «Оновити», щоб почати пошук.</string>
-    <string name="board_scan">Пошук</string>
+    <string name="board_scan">Оновити</string>
     <string name="board_scanning">Пошук дошок…</string>
     <string name="board_title">Підключення шахової дошки</string>
     <string name="board_unknown_device">Невідомий пристрій</string>
@@ -55,17 +55,17 @@
 
     <!-- Timing engines manual -->
     <string name="guide_bonus_bronstein_desc">Повертає час, витрачений на хід, але не більше за задану затримку. Не накопичується.</string>
-    <string name="guide_bonus_fischer_desc">Додає фіксований час (додавання) ПІСЛЯ кожного ходу.</string>
+    <string name="guide_bonus_fischer_desc">Нараховує фіксований час (додавання) ПІСЛЯ кожного ходу.</string>
     <string name="guide_bonus_us_delay_desc">Затримка перед відліком. Годинник чекає, поки мине затримка, і лише тоді починає йти.</string>
     <string name="guide_byoyomi_canadian_desc">Гравці мають зробити певну кількість ходів за один довший період.</string>
-    <string name="guide_byoyomi_japanese_desc">Після основного часу гравці отримують серію коротких періодів. Хід повертає період до початку.</string>
+    <string name="guide_byoyomi_japanese_desc">Після основного часу гравці отримують серію коротких періодів. Після кожного ходу період починається спочатку.</string>
     <string name="guide_byoyomi_progressive_desc">Кількість потрібних ходів зростає після кожного завершеного періоду.</string>
     <string name="guide_chrono_countdown_desc">Головний таймер, що відлічує час назад на всю партію.</string>
     <string name="guide_chrono_countup_desc">Режим секундоміра, що рахує весь час, який минув.</string>
     <string name="guide_chrono_one_for_all_desc">Не окремий режим, а перемикач для Countdown і Countup. Якщо увімкнено, один годинник іде для всього столу, і натискання на нього не змінює гравця.</string>
-    <string name="guide_counts_down_desc">Починає з межі й лічить униз, доки не залишиться нуль ходів.</string>
+    <string name="guide_counts_down_desc">Починає із заданої кількості ходів і відлічує їх до нуля.</string>
     <string name="guide_counts_up_desc">Показує загальну кількість ходів від початку партії.</string>
-    <string name="guide_fast_move_desc">Заохочує швидкі ходи. Accelerate: що довше ви думаєте, то швидше йде ваш годинник. Transfer: наступний хід суперника отримує час на хід плюс час, який ви щойно витратили, а ваш знову починається з часу на хід; з увімкненим «Накопичувальний Transfer» він додається до того, що в суперника залишилося, а ви зберігаєте те, що мали.</string>
+    <string name="guide_fast_move_desc">Заохочує швидкі ходи. Accelerate: що довше ви думаєте, то швидше йде ваш годинник. Transfer: наступний хід суперника отримує час на хід плюс час, який ви щойно витратили, а ваш знову починається з часу на хід; якщо увімкнено «Накопичувальний Transfer», він додається до того, що в суперника залишилося, а ви зберігаєте те, що мали.</string>
     <string name="guide_staircase_desc">Час на кожен хід змінюється на фіксований крок. Down: кожен хід отримує менше часу, до нижньої межі. Up: кожен хід отримує більше, до верхньої межі.</string>
     <string name="guide_fide_desc">Турнірний контроль часу за періодами: наприклад, 90 хв на 40 ходів, потім 30 хв до кінця партії, з додаванням 30 с за хід.</string>
     <string name="guide_gong_desc">Обов’язкові ходи через рівні проміжки (одночасно або по черзі).</string>
@@ -227,16 +227,16 @@
     <string name="tools_rectangle">Прямокутник</string>
     <string name="tools_ellipse">Еліпс</string>
     <string name="tools_shape_done">Готово</string>
-    <string name="tools_shapes">Фігури</string>
+    <string name="tools_shapes">Форми</string>
     <string name="tools_width">Товщина</string>
     <string name="tools_custom_colours">Ваші кольори</string>
     <string name="tools_background">Тло</string>
     <string name="tools_background_none">Без тла</string>
     <string name="tools_background_empty">Ще немає фото чи нотатки з дошкою, на яких можна малювати</string>
     <string name="tools_final_score">Підсумковий рахунок: %d</string>
-    <string name="tools_format_hint">Виділіть текст і відформатуйте його панеллю…</string>
+    <string name="tools_format_hint">Виділіть текст і відформатуйте його за допомогою панелі…</string>
     <string name="tools_game_logs">Журнали партій</string>
-    <string name="tools_game_over">ГРУ ЗАВЕРШЕНО</string>
+    <string name="tools_game_over">КІНЕЦЬ ГРИ</string>
     <string name="tools_generate">СТВОРИТИ</string>
     <string name="tools_heads">ГЕРБ</string>
     <string name="tools_image">Фото</string>
@@ -273,14 +273,14 @@
     <string name="tools_offset">Відхилення: %1$s%2$d мс</string>
     <string name="tools_pick_straw">Витягти соломинку %d</string>
     <string name="tools_play">Відтворити</string>
-    <string name="tools_prepare">ПРИГОТУЙТЕСЯ</string>
+    <string name="tools_prepare">ПЕРЕМІШАТИ</string>
     <string name="tools_random_card">Випадкова карта</string>
     <string name="tools_record">Записати</string>
     <string name="tools_record_video" tools:ignore="Typos">Записати відео</string>
     <string name="tools_reset_scoreboard">Скинути таблицю рахунку</string>
     <string name="tools_retake_photo">Перезняти фото</string>
     <string name="tools_retake_video" tools:ignore="Typos">Перезняти відео</string>
-    <string name="tools_roll_dice">Кинути кубики</string>
+    <string name="tools_roll_dice">Кинути кубик</string>
     <string name="tools_score">Рахунок: %d</string>
     <string name="tools_select_piece">Виберіть фігуру</string>
     <string name="tools_board_eraser_hint">Фігуру не вибрано — торкніться поля, щоб очистити його</string>
@@ -310,7 +310,7 @@
     <string name="tools_underline">Підкреслений</string>
     <string name="tools_undo">Скасувати</string>
     <string name="tools_redo">Повторити</string>
-    <string name="tools_variant_generator">Генератор варіантів</string>
+    <string name="tools_variant_generator">Генератор позицій</string>
     <string name="tools_video" tools:ignore="Typos">Відео</string>
     <string name="tools_video_note" tools:ignore="Typos">Відеонотатка</string>
     <string name="tools_white_square">СВІТЛЕ</string>
