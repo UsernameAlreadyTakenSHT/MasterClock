@@ -1561,11 +1561,16 @@ data class ScoreboardGame(
     @EncodeDefault val timestamp: Long = System.currentTimeMillis()
 )
 
+/**
+ * The scoreboard's two names are empty until typed: the screen shows each field's own label, "Player
+ * 1" in the app's language, where a name would be. They defaulted to the English "Player 1" and
+ * "Player 2", which every language showed as typed text; see [OLD_DEFAULT_PLAYER_NAMES].
+ */
 @Serializable
 data class ScoreboardSession(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val player1Name: String = "Player 1",
-    val player2Name: String = "Player 2",
+    val player1Name: String = "",
+    val player2Name: String = "",
     val games: List<ScoreboardGame> = emptyList()
 )
 
@@ -2250,10 +2255,19 @@ internal fun mergeImportedScoreboard(local: ScoreboardSession, imported: Scorebo
  * it. Regenerating its ids there costs nothing: nothing refers to a scoreboard game by id but the
  * list's own keys.
  */
+/**
+ * What the two names defaulted to before they were empty. A store or a backup that still holds them
+ * holds no name anyone typed -- the stored session passes through [sanitizeImportedScoreboard] at
+ * each launch -- so they are read as empty, and the fields show their translated labels instead of
+ * the English text in every language. A name typed by hand, "Player 1" among them on purpose, is
+ * the one thing this cannot tell apart, and it is the rarer case.
+ */
+internal val OLD_DEFAULT_PLAYER_NAMES = "Player 1" to "Player 2"
+
 internal fun sanitizeImportedScoreboard(session: ScoreboardSession): ScoreboardSession = session.copy(
     id = java.util.UUID.randomUUID().toString(),
-    player1Name = session.player1Name.take(MAX_SCOREBOARD_TEXT_CHARS),
-    player2Name = session.player2Name.take(MAX_SCOREBOARD_TEXT_CHARS),
+    player1Name = session.player1Name.takeUnless { it == OLD_DEFAULT_PLAYER_NAMES.first }.orEmpty().take(MAX_SCOREBOARD_TEXT_CHARS),
+    player2Name = session.player2Name.takeUnless { it == OLD_DEFAULT_PLAYER_NAMES.second }.orEmpty().take(MAX_SCOREBOARD_TEXT_CHARS),
     games = session.games.takeLast(MAX_SCOREBOARD_GAMES).map { game ->
         game.copy(id = java.util.UUID.randomUUID().toString(), result = game.result.take(MAX_SCOREBOARD_TEXT_CHARS))
     },
