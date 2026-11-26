@@ -4,9 +4,9 @@ Translations are welcome, and you do not need to be able to build the app to con
 files are plain XML.
 
 The app ships in **English**, **French**, **Spanish**, **German**, **Italian**, **Portuguese** — in
-both its European and Brazilian forms — **Dutch**, **Polish** and **Turkish**. Every language the
-app was prepared for is now filled in, so what remains is correcting what is there and adding
-languages that are not listed yet.
+both its European and Brazilian forms — **Dutch**, **Polish**, **Turkish**, **Russian** and
+**Ukrainian**. Every language the app was prepared for is now filled in, so what remains is
+correcting what is there and adding languages that are not listed yet.
 
 The finished files are a good model to copy from: they cover the same strings you would be starting
 on, in the same order as the English source. The German one is the most useful to read first,
@@ -58,8 +58,8 @@ app/src/main/res/values-de/strings.xml      ← German
 …
 ```
 
-Eight languages have these files filled in: French, German, Spanish, Italian, Portuguese, Dutch,
-Polish and Turkish.
+Ten languages have these files filled in: French, German, Spanish, Italian, Portuguese, Dutch,
+Polish, Turkish, Russian and Ukrainian.
 
 ## How to translate
 
