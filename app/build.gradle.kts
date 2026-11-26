@@ -176,6 +176,19 @@ android {
         includeInApk = false
         includeInBundle = false
     }
+
+    // The app has no native code of its own, but AndroidX DataStore ships one small library per ABI,
+    // and AGP strips it again on any machine that has an NDK. The CI APK held AndroidX's copy as it
+    // came; a Windows build of the same tag, with an NDK installed, stripped the x86_64 one from 7424
+    // bytes to 7416 -- the one difference in the APK. F-Droid rebuilds on its own server and checks
+    // the result against the published APK, byte for byte, before it will carry our signature, and
+    // what NDK that server has is not ours to know. Left as AndroidX built it, the library is the
+    // same wherever the app is built. It is stripped already, so this costs nothing in size.
+    packaging {
+        jniLibs {
+            keepDebugSymbols += "**/*.so"
+        }
+    }
 }
 
 // compileOptions above only sets the language level and the class-file version; it does not decide

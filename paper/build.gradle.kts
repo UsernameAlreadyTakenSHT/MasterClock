@@ -90,6 +90,14 @@ android {
         includeInApk = false
         includeInBundle = false
     }
+
+    // See app/build.gradle.kts: DataStore's native library, left as AndroidX built it so that every
+    // machine packages the same bytes.
+    packaging {
+        jniLibs {
+            keepDebugSymbols += "**/*.so"
+        }
+    }
 }
 
 // See app/build.gradle.kts for why this is here as well as compileOptions.
