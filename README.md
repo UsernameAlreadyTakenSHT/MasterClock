@@ -74,10 +74,10 @@ and E-Ink. "System" is the device's own font on the phone, and Lato on E-Ink.
 ## Translations
 
 The app is in **English, French, Spanish, German, Italian, Portuguese** — in both its European and
-Brazilian forms — **and Dutch**. None of the translations has been reviewed by a native speaker, so
-corrections are especially welcome, and are the easiest contribution to make: the files are plain
-XML and you do not need to build the app. See **[TRANSLATING.md](TRANSLATING.md)**, which also
-covers adding a language that is not listed yet.
+Brazilian forms — **Dutch and Polish**. None of the translations has been reviewed by a native
+speaker, so corrections are especially welcome, and are the easiest contribution to make: the files
+are plain XML and you do not need to build the app. See **[TRANSLATING.md](TRANSLATING.md)**, which
+also covers adding a language that is not listed yet.
 
 Partial translations are useful: Android falls back string by string, so ten translated lines are
 ten lines in your language and the rest stay English. See **[TRANSLATING.md](TRANSLATING.md)**.
