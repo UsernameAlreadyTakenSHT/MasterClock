@@ -59,7 +59,6 @@ Requires Android 7.0 (API 24) or later. Every screen and option is described in 
 | Presets | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Arbiter's panel | ✅ | ✅ | ✅ | ❌ | ❌ |
 | Behavior / Display / Audio settings | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Font (System, Noto Sans, Noto Sans Mono) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | More (tools, backup, notebook…) | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 🟡 in part: Mini and E-Ink have three of the modes, Sudden Death, Fischer and Move Timer.
