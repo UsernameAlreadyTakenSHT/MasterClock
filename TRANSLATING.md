@@ -181,6 +181,11 @@ If you cannot build, send the file anyway — it will be checked before merging.
    files are", copying the header from an existing one.
 2. Add `<locale android:name="XX" />` to **both** `app/src/main/res/xml/locales_config.xml` and
    the identical file in `paper`.
+3. Add `"XX"` to `TRANSLATED_LANGUAGES` in `core/.../logic/VoiceManager.kt`. The voice speaks
+   only the languages listed there and reads English in any other, so a translation without this
+   line is silent in its own language. `VoiceCandidatesTest` fails until the list matches core's
+   `values-XX` folders, but only `:core:test` runs it: Polish, Russian, Ukrainian and Turkish all
+   passed lint without it.
 
 Use the plain language code (`pt`, not `pt-BR`) unless the difference genuinely matters for your
 language.
