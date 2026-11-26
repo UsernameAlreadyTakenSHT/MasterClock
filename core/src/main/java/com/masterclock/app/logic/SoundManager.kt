@@ -141,11 +141,20 @@ class SoundManager(private val context: Context) {
         if (switchId in loadedIds) add("switch")
     }
 
-    fun playShortBeep() = play(beepId)
-    fun playLongBeep() = play(finalBeepId)
-    fun playTripleBeep() = play(finalBeepId)
-    fun playGong() = play(gongId)
+    /**
+     * Told of every sound the clock asks for, by name -- "beep", "long", "triple", "gong", "switch" --
+     * as it is asked, before the pool: so with the sound still loading, or none loaded at all. Nothing
+     * in the app listens; it is how a test hears whether a setting reached the clock's sounds, as
+     * VoiceManager.heard does for the voice.
+     */
+    var heard: ((String) -> Unit)? = null
+
+    fun playShortBeep() { heard?.invoke("beep"); play(beepId) }
+    fun playLongBeep() { heard?.invoke("long"); play(finalBeepId) }
+    fun playTripleBeep() { heard?.invoke("triple"); play(finalBeepId) }
+    fun playGong() { heard?.invoke("gong"); play(gongId) }
     fun playSwitch() {
+        heard?.invoke("switch")
         if (switchId <= 0) {
             Log.w("SoundManager", "Switch sound not loaded, attempting reload...")
             switchId = loadSound(null, R.raw.switch_sound)

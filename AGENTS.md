@@ -84,9 +84,10 @@ adb install -r -t app/build/outputs/apk/androidTest/complete/debug/app-complete-
 adb shell am instrument -w <applicationId>.debug.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
-Two things a test can now hear that only an ear could: `ChessTimerViewModel.listenToTheVoice`
-reports everything the clock asks its voice to say, as it is asked (`SpokenByoyomiFlowTest`), and
-`SoundManager.readySounds` which sounds have loaded (`SoundFallbackFlowTest`). Neither is used by
+Three things a test can now hear that only an ear could: `ChessTimerViewModel.listenToTheVoice`
+reports everything the clock asks its voice to say, as it is asked (`SpokenByoyomiFlowTest`),
+`ChessTimerViewModel.listenToTheSounds` every sound it asks for, by name (`ClockSettingsFlowTest`),
+and `SoundManager.readySounds` which sounds have loaded (`SoundFallbackFlowTest`). None is used by
 the app.
 
 To watch TalkBack itself on an emulator, keep `uiautomator` away from it: a UiAutomation session

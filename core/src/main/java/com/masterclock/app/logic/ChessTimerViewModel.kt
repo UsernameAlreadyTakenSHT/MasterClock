@@ -5379,6 +5379,11 @@ class ChessTimerViewModel(application: Application) : AndroidViewModel(applicati
         voiceManager.heard = listener
     }
 
+    /** For a test to hear the clock's sounds by name; see SoundManager.heard. */
+    fun listenToTheSounds(listener: ((String) -> Unit)?) {
+        soundManager.heard = listener
+    }
+
     fun previewSwitchSound() = soundManager.playSwitch()
     fun previewBeep() = soundManager.playShortBeep()
     fun previewFinalBeep() = soundManager.playTripleBeep()
