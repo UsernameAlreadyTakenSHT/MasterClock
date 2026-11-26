@@ -10,7 +10,7 @@ import androidx.annotation.StringRes
 import java.util.*
 
 /** The languages of core's spoken strings, one per values-XX folder; VoiceCandidatesTest holds them to it. */
-internal val TRANSLATED_LANGUAGES = setOf("en", "de", "es", "fr", "it", "nl", "pt", "pl", "tr")
+internal val TRANSLATED_LANGUAGES = setOf("en", "de", "es", "fr", "it", "nl", "pt", "pl", "tr", "ru", "uk")
 
 /**
  * The voices to try, best first: the device's language if the app speaks it, then English, then the
