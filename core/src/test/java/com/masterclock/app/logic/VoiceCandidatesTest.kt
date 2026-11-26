@@ -8,27 +8,29 @@ import java.util.Locale
 /** Which voice the announcements get, and the languages they can be said in. */
 class VoiceCandidatesTest {
 
-    private val polish = Locale.forLanguageTag("pl-PL")
+    // A language the app does not speak. It was Polish, until Polish was translated: pick one no
+    // values-XX folder is planned for.
+    private val greek = Locale.forLanguageTag("el-GR")
     private val spanish = Locale.forLanguageTag("es-ES")
     private val french = Locale.forLanguageTag("fr-FR")
 
     @Test
     fun `the device's language comes first, if the app speaks it`() {
         assertEquals(listOf(french, Locale.US), voiceCandidates(french, null, emptyList()).take(2))
-        assertEquals(Locale.US, voiceCandidates(polish, null, emptyList()).first())
+        assertEquals(Locale.US, voiceCandidates(greek, null, emptyList()).first())
     }
 
     @Test
     fun `an engine's voice in a language the app has beats one it does not`() {
-        // A Polish phone whose engine has Polish and Spanish, and no English: Spanish, read in Spanish,
-        // rather than a Polish voice reading English strings.
-        val tried = voiceCandidates(polish, polish, setOf(polish, spanish))
-        assertEquals(listOf(Locale.US, spanish, polish), tried)
+        // A Greek phone whose engine has Greek and Spanish, and no English: Spanish, read in Spanish,
+        // rather than a Greek voice reading English strings.
+        val tried = voiceCandidates(greek, greek, setOf(greek, spanish))
+        assertEquals(listOf(Locale.US, spanish, greek), tried)
     }
 
     @Test
     fun `any voice is still tried before none`() {
-        assertEquals(listOf(Locale.US, polish), voiceCandidates(polish, null, setOf(polish)))
+        assertEquals(listOf(Locale.US, greek), voiceCandidates(greek, null, setOf(greek)))
     }
 
     @Test

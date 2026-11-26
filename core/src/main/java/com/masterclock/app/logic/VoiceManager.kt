@@ -15,8 +15,8 @@ internal val TRANSLATED_LANGUAGES = setOf("en", "de", "es", "fr", "it", "nl", "p
 /**
  * The voices to try, best first: the device's language if the app speaks it, then English, then the
  * engine's own voices in a language the app has, and only then any other, since a voice in the wrong
- * language beats none. The engine's were taken in whatever order its set came in, so a phone in Polish
- * whose engine had no English could get a Polish voice reading English strings with Spanish on offer.
+ * language beats none. The engine's were taken in whatever order its set came in, so a phone in Greek
+ * whose engine had no English could get a Greek voice reading English strings with Spanish on offer.
  */
 internal fun voiceCandidates(device: Locale, engineDefault: Locale?, engineLanguages: Collection<Locale>): List<Locale> {
     val engine = (listOfNotNull(engineDefault) + engineLanguages.sortedBy { it.toLanguageTag() }).distinct()
