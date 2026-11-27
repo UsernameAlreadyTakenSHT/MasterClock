@@ -513,7 +513,7 @@
     <string name="omni_stop_title">Parar a sessão?</string>
     <string name="omni_stop_confirm">PARAR</string>
     <string name="omni_launch_title">Sessão em curso</string>
-    <string name="omni_launch_message">Há uma sessão em pausa. Retomar tal como está, ou começar uma nova com estas definições?</string>
+    <string name="omni_launch_message">Há uma sessão em pausa. Retomá-la onde parou, com as alterações acabadas de fazer, ou começar uma nova com estas definições?</string>
     <string name="omni_launch_resume">RETOMAR</string>
     <string name="omni_launch_new">NOVA SESSÃO</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">CANCELAR</string>

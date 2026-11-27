@@ -503,7 +503,7 @@
     <string name="omni_stop_title">Sessie stoppen?</string>
     <string name="omni_stop_confirm">STOPPEN</string>
     <string name="omni_launch_title">Sessie bezig</string>
-    <string name="omni_launch_message">Er staat een sessie op pauze. Wil je die hervatten zoals die is, of een nieuwe beginnen met deze instellingen?</string>
+    <string name="omni_launch_message">Er staat een sessie op pauze. Wil je die hervatten waar die stopte, met de wijzigingen die je net maakte, of een nieuwe beginnen met deze instellingen?</string>
     <string name="omni_launch_resume">HERVATTEN</string>
     <string name="omni_launch_new">NIEUWE SESSIE</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANNULEREN</string>

@@ -509,7 +509,7 @@
     <string name="omni_stop_title">Oturum durdurulsun mu?</string>
     <string name="omni_stop_confirm">DURDUR</string>
     <string name="omni_launch_title">Devam eden oturum</string>
-    <string name="omni_launch_message">Bir oturum duraklatılmış durumda. Olduğu gibi devam ettirilsin mi, yoksa bu ayarlarla yeni bir oturum mu başlatılsın?</string>
+    <string name="omni_launch_message">Bir oturum duraklatılmış durumda. Az önce yapılan değişikliklerle kaldığı yerden devam ettirilsin mi, yoksa bu ayarlarla yeni bir oturum mu başlatılsın?</string>
     <string name="omni_launch_resume">DEVAM ET</string>
     <string name="omni_launch_new">YENİ OTURUM</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">İPTAL</string>

@@ -517,7 +517,7 @@
     <string name="omni_stop_title">Остановить сессию?</string>
     <string name="omni_stop_confirm">СТОП</string>
     <string name="omni_launch_title">Незавершённая сессия</string>
-    <string name="omni_launch_message">Сессия на паузе. Продолжить её с того же места или начать новую с этими настройками?</string>
+    <string name="omni_launch_message">Сессия на паузе. Продолжить её с того же места, уже с внесёнными изменениями, или начать новую с этими настройками?</string>
     <string name="omni_launch_resume">ПРОДОЛЖИТЬ</string>
     <string name="omni_launch_new">НОВАЯ СЕССИЯ</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ОТМЕНА</string>

@@ -527,7 +527,7 @@
     <string name="omni_stop_title">Arrêter la session\u00A0?</string>
     <string name="omni_stop_confirm">ARRÊTER</string>
     <string name="omni_launch_title">Session en cours</string>
-    <string name="omni_launch_message">Une session est en pause. La reprendre telle quelle, ou en commencer une nouvelle avec ces réglages\u00A0?</string>
+    <string name="omni_launch_message">Une session est en pause. La reprendre là où elle s\'est arrêtée, avec les changements faits, ou en commencer une nouvelle avec ces réglages\u00A0?</string>
     <string name="omni_launch_resume">REPRENDRE</string>
     <string name="omni_launch_new">NOUVELLE SESSION</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANNULER</string>

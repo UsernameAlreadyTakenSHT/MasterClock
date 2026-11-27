@@ -559,7 +559,10 @@
     <string name="omni_stop_title">Stop Session?</string>
     <string name="omni_stop_confirm">STOP</string>
     <string name="omni_launch_title">Session in progress</string>
-    <string name="omni_launch_message">A session is paused. Resume it as it stands, or start a new one with these settings?</string>
+    <!-- Before resuming a paused session: changes made in the wizard since apply to it, from where
+         it stands: a round removed is not played, a player removed has no turn. It said "as it
+         stands", which they did not. -->
+    <string name="omni_launch_message">A session is paused. Resume it where it stopped, with the changes just made, or start a new one with these settings?</string>
     <string name="omni_launch_resume">RESUME</string>
     <string name="omni_launch_new">NEW SESSION</string>
     <!--

@@ -510,7 +510,7 @@
     <string name="omni_stop_title">Fermare la sessione?</string>
     <string name="omni_stop_confirm">FERMA</string>
     <string name="omni_launch_title">Sessione in corso</string>
-    <string name="omni_launch_message">C\'è una sessione in pausa. La riprendi così com\'è o ne inizi una nuova con queste impostazioni?</string>
+    <string name="omni_launch_message">C\'è una sessione in pausa. La riprendi da dove si era fermata, con le modifiche appena fatte, o ne inizi una nuova con queste impostazioni?</string>
     <string name="omni_launch_resume">RIPRENDI</string>
     <string name="omni_launch_new">NUOVA SESSIONE</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANNULLA</string>

@@ -518,7 +518,7 @@
     <string name="omni_stop_title">Зупинити сесію?</string>
     <string name="omni_stop_confirm">СТОП</string>
     <string name="omni_launch_title">Незавершена сесія</string>
-    <string name="omni_launch_message">Сесію призупинено. Продовжити її з того ж місця чи почати нову з цими налаштуваннями?</string>
+    <string name="omni_launch_message">Сесію призупинено. Продовжити її з того ж місця, уже з внесеними змінами, чи почати нову з цими налаштуваннями?</string>
     <string name="omni_launch_resume">ПРОДОВЖИТИ</string>
     <string name="omni_launch_new">НОВА СЕСІЯ</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">СКАСУВАТИ</string>

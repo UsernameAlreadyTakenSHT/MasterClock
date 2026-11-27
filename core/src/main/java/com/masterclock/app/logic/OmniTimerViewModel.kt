@@ -830,7 +830,12 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
         return state.hasStarted && !(state.isInTransition && state.transitionLabel == "SESSION")
     }
 
-    /** Launch with the settings as they stand now. A paused session keeps its own structure otherwise. */
+    /**
+     * Launch with the settings as they stand now. Resuming instead keeps the paused session's place --
+     * its clocks and where it was -- but not its structure: the wizard's changes apply to it from there,
+     * and the question before Launch says so. It said "as it stands", and this said the session kept
+     * its own structure; neither was true.
+     */
     fun launchNewSession() {
         resetOmni()
         startOmni()

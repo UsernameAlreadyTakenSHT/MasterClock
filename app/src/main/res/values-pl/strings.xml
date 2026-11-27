@@ -521,7 +521,7 @@
     <string name="omni_stop_title">Zatrzymać sesję?</string>
     <string name="omni_stop_confirm">ZATRZYMAJ</string>
     <string name="omni_launch_title">Sesja w toku</string>
-    <string name="omni_launch_message">Sesja jest wstrzymana. Wznowić ją w obecnym stanie czy rozpocząć nową z tymi ustawieniami?</string>
+    <string name="omni_launch_message">Sesja jest wstrzymana. Wznowić ją od miejsca, w którym stanęła, z wprowadzonymi właśnie zmianami, czy rozpocząć nową z tymi ustawieniami?</string>
     <string name="omni_launch_resume">WZNÓW</string>
     <string name="omni_launch_new">NOWA SESJA</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ANULUJ</string>

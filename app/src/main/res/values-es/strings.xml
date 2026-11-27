@@ -516,7 +516,7 @@
     <string name="omni_stop_title">¿Detener la sesión?</string>
     <string name="omni_stop_confirm">DETENER</string>
     <string name="omni_launch_title">Sesión en curso</string>
-    <string name="omni_launch_message">Hay una sesión en pausa. ¿La reanudas tal como está o empiezas una nueva con estos ajustes?</string>
+    <string name="omni_launch_message">Hay una sesión en pausa. ¿La reanudas donde se quedó, con los cambios que acabas de hacer, o empiezas una nueva con estos ajustes?</string>
     <string name="omni_launch_resume">REANUDAR</string>
     <string name="omni_launch_new">NUEVA SESIÓN</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">CANCELAR</string>

@@ -504,7 +504,7 @@
     <string name="omni_stop_title">Sitzung beenden?</string>
     <string name="omni_stop_confirm">BEENDEN</string>
     <string name="omni_launch_title">Sitzung läuft</string>
-    <string name="omni_launch_message">Eine Sitzung ist pausiert. Möchtest du sie unverändert fortsetzen oder mit diesen Einstellungen eine neue beginnen?</string>
+    <string name="omni_launch_message">Eine Sitzung ist pausiert. Möchtest du sie dort fortsetzen, wo sie stand, mit den eben gemachten Änderungen, oder mit diesen Einstellungen eine neue beginnen?</string>
     <string name="omni_launch_resume">FORTSETZEN</string>
     <string name="omni_launch_new">NEUE SITZUNG</string>
     <string name="omni_cancel" tools:ignore="ButtonCase">ABBRECHEN</string>
