@@ -50,7 +50,9 @@ class StaircaseFlowTest {
         rule.waitUntil(TIMEOUT_MS) { viewModel.isReady.value }
         // The modes past the first few are not in Mini.
         assumeTrue(FlavorConfig.isModeAllowed(TimerMode.FAST_MOVE) && FlavorConfig.currentFlavor != com.masterclock.app.logic.AppFlavor.MINI)
-        rule.runOnUiThread { viewModel.resetAllSettings() }
+        // And the clock, as every other test starts: a game a test before this one left waiting to be
+        // resumed made the first mode chosen ask "End the interrupted game?", and the mode never came.
+        rule.runOnUiThread { viewModel.resetAllSettings(); viewModel.reset() }
         await(hasContentDescription(say(R.string.timer_settings)))
     }
 
