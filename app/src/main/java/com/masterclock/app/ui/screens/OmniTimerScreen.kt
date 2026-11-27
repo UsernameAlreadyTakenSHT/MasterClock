@@ -16,6 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -116,7 +121,63 @@ fun OmniTimerScreen(
                 onReset = { stopping = false; if (state.hasStarted) showResetDialog = true else viewModel.resetOmni() }
             )
         }
+        OmniAnnouncer(state, settings)
     }
+}
+
+/**
+ * What TalkBack is told without being asked: whose turn it is and the phase, a pause and what comes
+ * after it, the countdown before the start, a session paused. The screen said none of it -- no live
+ * region anywhere -- so a player who cannot see it heard nothing as the turn passed or a pause began,
+ * and had to feel round the screen to find out whose turn it was. The words are the screen's own.
+ *
+ * One node, there from the start, its text changing: a live region speaks when its text does, and
+ * one that only appears with its first announcement may say nothing for it. See the clock's
+ * ClockAnnouncer for the same reasoning.
+ */
+@Composable
+private fun OmniAnnouncer(state: OmniState, settings: OmniSettings) {
+    val message = when {
+        state.isLaunching -> stringResource(R.string.omni_get_ready)
+        state.isInTransition -> omniTransitionTitle(state) + ". " + omniTransitionMessage(state, settings)
+        !state.hasStarted -> ""
+        !state.isRunning -> stringResource(R.string.a11y_announce_paused)
+        else -> {
+            val player = stringResource(R.string.common_player_n, state.currentPlayerIndex % settings.numberOfPlayers.coerceAtLeast(1) + 1)
+            val phase = if (settings.usePhaseClock) {
+                omniTurnsOf(omniCurrentRound(settings, state), settings.numberOfPlayers)
+                    .getOrNull(state.turnCounterInRound)?.phases?.getOrNull(state.currentPhaseIndex)?.name
+            } else null
+            if (phase != null) "$player, $phase" else player
+        }
+    }
+    Box(
+        Modifier
+            .zIndex(1f)
+            .size(1.dp)
+            .semantics {
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = message
+            }
+    )
+}
+
+/** What the pause is after, as its overlay heads it. */
+@Composable
+private fun omniTransitionTitle(state: OmniState): String = when (state.transitionLabel) {
+    "ROUND" -> stringResource(R.string.omni_round_finished)
+    "GAME" -> stringResource(R.string.omni_game_finished)
+    "SESSION" -> stringResource(R.string.omni_session_complete)
+    else -> stringResource(R.string.omni_turn_finished)
+}
+
+/** What comes after the pause, as its overlay says it. */
+@Composable
+private fun omniTransitionMessage(state: OmniState, settings: OmniSettings): String = when (state.transitionLabel) {
+    "ROUND" -> stringResource(R.string.omni_prepare_round, state.currentRoundIndex + 1)
+    "GAME" -> stringResource(R.string.omni_prepare_game, state.currentGameIndex + 1)
+    "SESSION" -> stringResource(R.string.omni_thanks)
+    else -> stringResource(R.string.omni_next_player, (state.currentPlayerIndex % settings.numberOfPlayers.coerceAtLeast(1)) + 1)
 }
 
 @Composable
@@ -283,22 +344,8 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
 
 @Composable
 fun TransitionOverlay(state: OmniState, settings: OmniSettings, onReady: () -> Unit) {
-    val title = when(state.transitionLabel) {
-        "ROUND" -> stringResource(R.string.omni_round_finished)
-        "GAME" -> stringResource(R.string.omni_game_finished)
-        "SESSION" -> stringResource(R.string.omni_session_complete)
-        else -> stringResource(R.string.omni_turn_finished)
-    }
-
-    val numPlayers = settings.numberOfPlayers.coerceAtLeast(1)
-    val nextPlayerNumber = (state.currentPlayerIndex % numPlayers) + 1
-
-    val message = when(state.transitionLabel) {
-        "ROUND" -> stringResource(R.string.omni_prepare_round, state.currentRoundIndex + 1)
-        "GAME" -> stringResource(R.string.omni_prepare_game, state.currentGameIndex + 1)
-        "SESSION" -> stringResource(R.string.omni_thanks)
-        else -> stringResource(R.string.omni_next_player, nextPlayerNumber)
-    }
+    val title = omniTransitionTitle(state)
+    val message = omniTransitionMessage(state, settings)
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.98f)), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
