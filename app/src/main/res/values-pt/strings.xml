@@ -448,7 +448,7 @@
     <string name="omni_cfg_time_bank">Banco de tempo</string>
     <string name="omni_cfg_bank_per_player">Por jogador</string>
     <string name="omni_cfg_bank_shared">Reserva comum</string>
-    <string name="omni_cfg_bank_clear">Esvaziar o banco no fim de:</string>
+    <string name="omni_cfg_bank_lasts">O tempo no banco dura:</string>
 
     <string name="omni_cfg_audio">Alertas sonoros</string>
     <string name="omni_cfg_turn_beep">Bip de turno</string>

@@ -451,7 +451,7 @@
     <string name="omni_cfg_time_bank">Банк часу</string>
     <string name="omni_cfg_bank_per_player">Окремий</string>
     <string name="omni_cfg_bank_shared">Спільний</string>
-    <string name="omni_cfg_bank_clear">Обнуляти банк наприкінці:</string>
+    <string name="omni_cfg_bank_lasts">Час у банку діє:</string>
 
     <string name="omni_cfg_audio">Звукові сигнали</string>
     <string name="omni_cfg_turn_beep">Сигнал ходу</string>

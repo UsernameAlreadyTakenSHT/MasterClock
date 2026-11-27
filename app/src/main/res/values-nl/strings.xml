@@ -438,7 +438,7 @@
     <string name="omni_cfg_time_bank">Tijdbank</string>
     <string name="omni_cfg_bank_per_player">Per speler</string>
     <string name="omni_cfg_bank_shared">Gedeelde voorraad</string>
-    <string name="omni_cfg_bank_clear">Bank legen aan het eind van:</string>
+    <string name="omni_cfg_bank_lasts">Tijd op de bank geldt voor:</string>
 
     <string name="omni_cfg_audio">Geluidswaarschuwingen</string>
     <string name="omni_cfg_turn_beep">Beurtpiep</string>

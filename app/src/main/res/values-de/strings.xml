@@ -439,7 +439,7 @@
     <string name="omni_cfg_time_bank">Zeitkonto</string>
     <string name="omni_cfg_bank_per_player">Pro Spieler</string>
     <string name="omni_cfg_bank_shared">Gemeinsamer Vorrat</string>
-    <string name="omni_cfg_bank_clear">Konto leeren am Ende von:</string>
+    <string name="omni_cfg_bank_lasts">Zeit auf dem Konto gilt für:</string>
 
     <string name="omni_cfg_audio">Tonwarnungen</string>
     <string name="omni_cfg_turn_beep">Zugton</string>

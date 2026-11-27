@@ -454,7 +454,7 @@
     <string name="omni_cfg_time_bank">Bank czasu</string>
     <string name="omni_cfg_bank_per_player">Na gracza</string>
     <string name="omni_cfg_bank_shared">Wspólna pula</string>
-    <string name="omni_cfg_bank_clear">Zeruj bank na końcu:</string>
+    <string name="omni_cfg_bank_lasts">Czas w banku ważny przez:</string>
 
     <string name="omni_cfg_audio">Alerty dźwiękowe</string>
     <string name="omni_cfg_turn_beep">Sygnał tury</string>

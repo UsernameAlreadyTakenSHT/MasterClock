@@ -450,7 +450,7 @@
     <string name="omni_cfg_time_bank">Банк времени</string>
     <string name="omni_cfg_bank_per_player">У каждого</string>
     <string name="omni_cfg_bank_shared">Общий</string>
-    <string name="omni_cfg_bank_clear">Обнулять банк в конце:</string>
+    <string name="omni_cfg_bank_lasts">Время в банке действует:</string>
 
     <string name="omni_cfg_audio">Звуковые сигналы</string>
     <string name="omni_cfg_turn_beep">Сигнал хода</string>

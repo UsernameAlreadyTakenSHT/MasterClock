@@ -442,7 +442,7 @@
     <string name="omni_cfg_time_bank">Zaman bankası</string>
     <string name="omni_cfg_bank_per_player">Oyuncu başına</string>
     <string name="omni_cfg_bank_shared">Ortak havuz</string>
-    <string name="omni_cfg_bank_clear">Bankayı boşaltma zamanı:</string>
+    <string name="omni_cfg_bank_lasts">Bankadaki süre geçerli:</string>
 
     <string name="omni_cfg_audio">Sesli uyarılar</string>
     <string name="omni_cfg_turn_beep">Sıra bip sesi</string>

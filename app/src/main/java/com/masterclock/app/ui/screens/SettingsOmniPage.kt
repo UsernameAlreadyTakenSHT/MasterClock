@@ -929,7 +929,7 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
     }
 
     if (settings.timeBankMode != TimeBankMode.NONE) {
-        SettingsSection(stringResource(R.string.omni_cfg_bank_clear)) {
+        SettingsSection(stringResource(R.string.omni_cfg_bank_lasts)) {
             ChoiceRow(Modifier.fillMaxWidth()) {
                 TimeBankScope.entries.forEachIndexed { index, scope ->
                     val label = when(scope) {
