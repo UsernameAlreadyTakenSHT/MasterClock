@@ -340,7 +340,7 @@ class OmniSimulationTest {
             rule("the turn is one of the round's", if (turns.isEmpty()) s.turnCounterInRound == 0 else s.turnCounterInRound in turns.indices) { "turn ${s.turnCounterInRound} of ${turns.size}" }
             val phases = turns.getOrNull(s.turnCounterInRound)?.phases.orEmpty()
             rule("the phase is one of the turn's", if (settings.usePhaseClock) s.currentPhaseIndex in 0..(phases.size - 1).coerceAtLeast(0) else s.currentPhaseIndex == 0) { "phase ${s.currentPhaseIndex} of ${phases.size}" }
-            rule("the player on turn is the one the order gives this turn", s.currentPlayerIndex == omniPlayerForTurn(s.roundPlayerOrder, s.turnCounterInRound, s.currentRoundIndex, settings)) {
+            rule("the player on turn is the one the order gives this turn", s.currentPlayerIndex == omniPlayerForTurn(s.roundPlayerOrder, s.turnCounterInRound, s.tablePass, settings)) {
                 "player ${s.currentPlayerIndex}, order ${s.roundPlayerOrder}"
             }
             val bankKeysFit = when (settings.timeBankMode) {

@@ -127,12 +127,17 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
     }
 }
 
-internal fun calculateNextPlayerIndex(turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int {
+/**
+ * The player for [turnIndex] of the round, on the session's [tablePass]: SNAKE turns back at every
+ * pass round the table and ROTATE moves on by one, as the wizard's patterns say. See
+ * [OmniState.tablePass], and [omniTablePassAt] for when a pass begins.
+ */
+internal fun calculateNextPlayerIndex(turnIndex: Int, tablePass: Int, settings: OmniSettings): Int {
     val numPlayers = settings.numberOfPlayers.coerceAtLeast(1)
     return when (settings.playerOrderType) {
         PlayerOrderType.LINEAR -> turnIndex % numPlayers
-        PlayerOrderType.SNAKE -> if (roundIndex % 2 == 0) turnIndex % numPlayers else (numPlayers - 1) - (turnIndex % numPlayers)
-        PlayerOrderType.ROTATE -> (turnIndex + roundIndex) % numPlayers
+        PlayerOrderType.SNAKE -> if (tablePass % 2 == 0) turnIndex % numPlayers else (numPlayers - 1) - (turnIndex % numPlayers)
+        PlayerOrderType.ROTATE -> (turnIndex + tablePass) % numPlayers
         // RANDOM is drawn once per round into OmniState.roundPlayerOrder; this branch is only the
         // fallback for a state whose order is missing (and stays deterministic on purpose).
         PlayerOrderType.RANDOM -> turnIndex % numPlayers
@@ -244,12 +249,21 @@ internal fun omniRoundOrderFor(
  * named players who were gone: the screen wrapped them onto someone else, and their banked time went
  * where nobody drew it.
  */
-internal fun omniPlayerForTurn(order: List<Int>, turnIndex: Int, roundIndex: Int, settings: OmniSettings): Int =
+internal fun omniPlayerForTurn(order: List<Int>, turnIndex: Int, tablePass: Int, settings: OmniSettings): Int =
     if (settings.playerOrderType == PlayerOrderType.RANDOM) {
-        order.getOrNull(turnIndex)?.takeIf { it < settings.numberOfPlayers } ?: calculateNextPlayerIndex(turnIndex, roundIndex, settings)
+        order.getOrNull(turnIndex)?.takeIf { it < settings.numberOfPlayers } ?: calculateNextPlayerIndex(turnIndex, tablePass, settings)
     } else {
-        calculateNextPlayerIndex(turnIndex, roundIndex, settings)
+        calculateNextPlayerIndex(turnIndex, tablePass, settings)
     }
+
+/**
+ * The table pass of [nextTurnIdx], the turn about to begin, after the one [state] was in. A pass
+ * begins with every round's first turn -- a LOOP round's next pass, a new round, a new game -- and
+ * within a round at each multiple of the player count: a round of two turns a player is two passes.
+ * A round cut short in the middle of a pass ends that pass with it.
+ */
+internal fun omniTablePassAt(state: OmniState, nextTurnIdx: Int, settings: OmniSettings): Int =
+    if (nextTurnIdx % settings.numberOfPlayers.coerceAtLeast(1) == 0) state.tablePass + 1 else state.tablePass
 
 /**
  * Advances the Omni session by exactly one step (phase, or turn/round/game/session if the current
@@ -339,12 +353,13 @@ internal fun computeOmniAdvance(
                     }
                     val gameBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "GAME")
                     val nextGameOrder = omniRoundOrderFor(settings, nextFinalGameIdx, 0, state.currentPlayerIndex, random)
-                    val nextGamePlayerIdx = omniPlayerForTurn(nextGameOrder, 0, 0, settings)
+                    val nextGamePass = omniTablePassAt(state, 0, settings)
+                    val nextGamePlayerIdx = omniPlayerForTurn(nextGameOrder, 0, nextGamePass, settings)
                     val (drawnBanks, bankedMs) = drawOmniBank(gameBanks, settings, nextGamePlayerIdx)
                     return state.copy(
                         currentGameIndex = nextFinalGameIdx, currentRoundIndex = 0, currentPlayerIndex = nextGamePlayerIdx,
                         currentPhaseIndex = 0, turnCounterInRound = 0, roundPlayerOrder = nextGameOrder,
-                        isInTransition = settings.interGamePauseMs > 0, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME", roundPasses = 0,
+                        isInTransition = settings.interGamePauseMs > 0, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME", roundPasses = 0, tablePass = nextGamePass,
                         currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = nextFinalGameIdx, roundIdx = 0),
                         currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
                         currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0, phaseIdx = 0),
@@ -361,12 +376,13 @@ internal fun computeOmniAdvance(
                     currentRound.roundEndBehavior == RoundEndBehavior.ADVANCE && turnsList.size <= settings.numberOfPlayers
                 val roundBanks = if (nobodyPlaysTwice) updatedBanks else handleTimeBankScope(updatedBanks, settings.timeBankScope, "ROUND")
                 val nextRoundOrder = omniRoundOrderFor(settings, currentGameIdx, nextRoundIdx, state.currentPlayerIndex, random)
-                val nextPlayerIdx = omniPlayerForTurn(nextRoundOrder, nextTurnIdx, nextRoundIdx, settings)
+                val nextRoundPass = omniTablePassAt(state, nextTurnIdx, settings)
+                val nextPlayerIdx = omniPlayerForTurn(nextRoundOrder, nextTurnIdx, nextRoundPass, settings)
                 val (drawnBanks, bankedMs) = drawOmniBank(roundBanks, settings, nextPlayerIdx)
                 return state.copy(
                     currentRoundIndex = nextRoundIdx, currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx,
                     turnCounterInRound = nextTurnIdx, roundPlayerOrder = nextRoundOrder,
-                    isInTransition = settings.interRoundPauseMs > 0, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND", roundPasses = 0,
+                    isInTransition = settings.interRoundPauseMs > 0, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND", roundPasses = 0, tablePass = nextRoundPass,
                     currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
                     currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
                     currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = 0),
@@ -378,7 +394,8 @@ internal fun computeOmniAdvance(
         // A LOOP round starting its turns over is a fresh pass, so it gets a fresh draw; an
         // ordinary turn keeps reading the order drawn when the round started.
         val turnOrder = if (loopedRound) omniRoundOrderFor(settings, currentGameIdx, nextRoundIdx, state.currentPlayerIndex, random) else state.roundPlayerOrder
-        val nextPlayerIdx = omniPlayerForTurn(turnOrder, nextTurnIdx, nextRoundIdx, settings)
+        val nextPass = omniTablePassAt(state, nextTurnIdx, settings)
+        val nextPlayerIdx = omniPlayerForTurn(turnOrder, nextTurnIdx, nextPass, settings)
         val (drawnBanks, bankedMs) = drawOmniBank(turnBanks, settings, nextPlayerIdx)
         return state.copy(
             currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx, turnCounterInRound = nextTurnIdx, roundPlayerOrder = turnOrder,
@@ -387,6 +404,7 @@ internal fun computeOmniAdvance(
             // them, stopped the game on "I AM READY" after every turn with nothing to wait for.
             isInTransition = settings.interTurnPauseMs > 0, transitionTimeRemainingMs = settings.interTurnPauseMs, transitionLabel = "TURN",
             roundPasses = if (loopedRound) state.roundPasses + 1 else state.roundPasses,
+            tablePass = nextPass,
             currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
             // Without this, the new turn inherited the old turn's spent phase clock (usually 0):
             // the phase display froze at 00:00 for the rest of the session and the <10s

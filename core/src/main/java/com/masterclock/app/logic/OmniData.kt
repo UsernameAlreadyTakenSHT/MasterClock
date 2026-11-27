@@ -196,6 +196,12 @@ data class OmniState(
     val roundPlayerOrder: List<Int> = emptyList(),
     // How many times a LOOP round has gone back to its first turn; see omniTurnNumber.
     val roundPasses: Int = 0,
+    // How many times the turn has gone round the table in this session, the current pass being
+    // this one: it goes up as each pass begins, in a round, a LOOP round's next pass, a new round
+    // or a new game. SNAKE turns back and ROTATE moves on at each. They read the round's index,
+    // which a LOOP round, a round of several turns a player and every new game left alone: three
+    // players went 123, 123, 123 where the wizard promises 123, 321, 123.
+    val tablePass: Int = 0,
 
     // Buffer States
     val isInTransition: Boolean = false,
