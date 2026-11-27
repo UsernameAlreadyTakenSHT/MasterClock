@@ -279,6 +279,28 @@ internal fun omniTablePassAt(state: OmniState, nextTurnIdx: Int, settings: OmniS
     if (nextTurnIdx % settings.numberOfPlayers.coerceAtLeast(1) == 0) state.tablePass + 1 else state.tablePass
 
 /**
+ * Whether, in [round], each player plays once and keeps a bank of their own: their deposit is then
+ * drawn on their turn in the next round, and the end of the round must not empty it.
+ */
+internal fun omniNobodyPlaysTwice(settings: OmniSettings, round: OmniRoundSettings): Boolean =
+    settings.timeBankMode == TimeBankMode.ACCUMULATIVE && round.roundEndBehavior == RoundEndBehavior.ADVANCE &&
+        omniTurnsOf(round, settings.numberOfPlayers).size <= settings.numberOfPlayers
+
+/**
+ * What the turn now ending puts by. Under "one turn", and under "one round" where each player plays
+ * once a round, saved time is for the player's next turn only: what they drew from the bank and did
+ * not spend goes, and only what they saved of the turn's own time is put by -- their own time spent
+ * first, the drawn time after it. It was all put by again, so time drawn and left over went on from
+ * turn to turn: "one round" kept a player's savings to the end of the game, as "one game" did, and
+ * "one turn" let them build up. Under "one game" and "the whole session" savings are meant to build.
+ */
+internal fun omniTurnSavings(state: OmniState, settings: OmniSettings): Long {
+    val oneTurnOnly = settings.timeBankScope == TimeBankScope.TURN_TO_TURN ||
+        (settings.timeBankScope == TimeBankScope.ROUND_TO_ROUND && omniNobodyPlaysTwice(settings, omniCurrentRound(settings, state)))
+    return if (oneTurnOnly) (state.currentTurnTimeMs - state.turnDrawnMs).coerceAtLeast(0) else state.currentTurnTimeMs
+}
+
+/**
  * Advances the Omni session by exactly one step (phase, or turn/round/game/session if the current
  * one is exhausted), normally called from the manual Next button.
  *
@@ -311,7 +333,7 @@ internal fun computeOmniAdvance(
     val bankBase = if (settings.timeBankScope == TimeBankScope.TURN_TO_TURN)
         state.copy(playerTimeBanks = state.playerTimeBanks - bankKeyFor(settings, state.currentPlayerIndex))
     else state
-    val updatedBanks = applyOmniTimeBanking(bankBase, settings, state.currentPlayerIndex, state.currentTurnTimeMs)
+    val updatedBanks = applyOmniTimeBanking(bankBase, settings, state.currentPlayerIndex, omniTurnSavings(state, settings))
 
     if (forceLevel == "SESSION") {
         return state.copy(isRunning = false, isInTransition = true, transitionLabel = "SESSION", playerTimeBanks = handleTimeBankScope(updatedBanks, settings.timeBankScope, "SESSION"))
@@ -377,7 +399,7 @@ internal fun computeOmniAdvance(
                         currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
                         currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, nextFinalGameIdx, 0, 0, bankedMs),
                         currentGameTimeMs = settings.games.getOrNull(nextFinalGameIdx)?.durationMs ?: settings.gameDurationMs,
-                        playerTimeBanks = drawnBanks
+                        playerTimeBanks = drawnBanks, turnDrawnMs = bankedMs
                     )
                 }
                 // A player's own bank is drawn on their next turn, and in a round where nobody plays
@@ -385,8 +407,7 @@ internal fun computeOmniAdvance(
                 // through the other players' turns and then gone, and banking did nothing in the
                 // default scope. The shared reserve can be drawn by whoever is next, and ends with the
                 // round as the scope says.
-                val nobodyPlaysTwice = settings.timeBankMode == TimeBankMode.ACCUMULATIVE &&
-                    currentRound.roundEndBehavior == RoundEndBehavior.ADVANCE && turnsList.size <= settings.numberOfPlayers
+                val nobodyPlaysTwice = omniNobodyPlaysTwice(settings, currentRound)
                 val roundBanks = if (nobodyPlaysTwice) updatedBanks else handleTimeBankScope(updatedBanks, settings.timeBankScope, "ROUND")
                 val nextRoundOrder = omniRoundOrderFor(settings, currentGameIdx, nextRoundIdx, state.currentPlayerIndex, random)
                 val nextRoundPass = omniTablePassAt(state, nextTurnIdx, settings)
@@ -399,7 +420,7 @@ internal fun computeOmniAdvance(
                     currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
                     currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
                     currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, currentGameIdx, nextRoundIdx, nextTurnIdx, bankedMs),
-                    playerTimeBanks = drawnBanks
+                    playerTimeBanks = drawnBanks, turnDrawnMs = bankedMs
                 )
             }
         }
@@ -423,7 +444,7 @@ internal fun computeOmniAdvance(
             // the phase display froze at 00:00 for the rest of the session and the <10s
             // fast-tick path kept the ticker at 10ms permanently.
             currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, currentGameIdx, nextRoundIdx, nextTurnIdx, bankedMs),
-            playerTimeBanks = drawnBanks
+            playerTimeBanks = drawnBanks, turnDrawnMs = bankedMs
         )
     }
     return state.copy(currentPhaseIndex = nextPhaseIdx, currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = nextPhaseIdx))
@@ -600,7 +621,9 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
             // had been, its whole fresh turn went into the incoming player's bank -- a free
             // turn's worth. What they drew from their bank goes back; nothing more.
             val fresh = getOmniDuration(settings, "TURN", gameIdx = newState.currentGameIndex, roundIdx = newState.currentRoundIndex, playerIdx = newState.turnCounterInRound)
-            newState = computeOmniAdvance(newState.copy(currentTurnTimeMs = (newState.currentTurnTimeMs - fresh).coerceAtLeast(0)), settings, pausedForce)
+            // What is left is that drawn time, unspent and owed back whole: not drawn time the
+            // player had and did not use, which omniTurnSavings lets go.
+            newState = computeOmniAdvance(newState.copy(currentTurnTimeMs = (newState.currentTurnTimeMs - fresh).coerceAtLeast(0), turnDrawnMs = 0), settings, pausedForce)
         } else if (newTransition <= 0 && settings.transitionType == TransitionType.AUTOMATIC) { newState = newState.copy(isInTransition = false) }
         return OmniTick(newState, sounds)
     }

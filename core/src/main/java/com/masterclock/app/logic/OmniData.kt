@@ -202,6 +202,8 @@ data class OmniState(
     // which a LOOP round, a round of several turns a player and every new game left alone: three
     // players went 123, 123, 123 where the wizard promises 123, 321, 123.
     val tablePass: Int = 0,
+    // What the turn being played drew from the bank as it began; see omniTurnSavings.
+    val turnDrawnMs: Long = 0,
 
     // Buffer States
     val isInTransition: Boolean = false,
