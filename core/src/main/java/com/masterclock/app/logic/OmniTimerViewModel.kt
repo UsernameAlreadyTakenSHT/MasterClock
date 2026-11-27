@@ -463,13 +463,33 @@ fun omniBackgroundClockOf(state: OmniState, settings: OmniSettings): BackgroundC
  * between turns and the launch countdown were, too -- a session came back from a ten-second pause
  * minutes late -- and during a pause only the clocks told to run through it count.
  */
+/** Which clocks run through a pause; see [omniPauseClocks]. */
+internal class OmniPauseClocks(val global: Boolean, val game: Boolean, val round: Boolean)
+
+/**
+ * The clocks a pause of [transitionLabel] runs: those its pauseDeductsFrom* switch is on for, and of
+ * those only a clock that is the same on both sides of the pause. A pause between turns is inside its
+ * round, so it can cost the round; one between rounds is in no round, and between games in no game.
+ *
+ * The round and game clocks were run through every pause. By the pause between rounds the next round
+ * is already loaded, so it was the round still to come that paid: a 60-second pause before a 30-second
+ * round emptied it, and with a cutoff or a looping round it ended before anyone had played in it. The
+ * pause between games did the same to the next game's clock.
+ */
+internal fun omniPauseClocks(settings: OmniSettings, transitionLabel: String) = OmniPauseClocks(
+    global = settings.pauseDeductsFromGlobal && settings.useGlobalClock,
+    game = settings.pauseDeductsFromGame && settings.useGameClock && transitionLabel != "GAME",
+    round = settings.pauseDeductsFromRound && settings.useRoundClock && transitionLabel == "TURN",
+)
+
 internal fun omniNextDueMs(state: OmniState, settings: OmniSettings): Long? {
     if (state.isLaunching) return state.launchTimeRemainingMs.takeIf { it > 0 }
+    val pause = omniPauseClocks(settings, state.transitionLabel)
     val counting = if (state.isInTransition) listOf(
         state.transitionTimeRemainingMs,
-        state.currentGlobalTimeMs.takeIf { settings.pauseDeductsFromGlobal && settings.useGlobalClock },
-        state.currentGameTimeMs.takeIf { settings.pauseDeductsFromGame && settings.useGameClock },
-        state.currentRoundTimeMs.takeIf { settings.pauseDeductsFromRound && settings.useRoundClock },
+        state.currentGlobalTimeMs.takeIf { pause.global },
+        state.currentGameTimeMs.takeIf { pause.game },
+        state.currentRoundTimeMs.takeIf { pause.round },
     ) else listOf(
         state.currentGlobalTimeMs.takeIf { settings.useGlobalClock },
         state.currentGameTimeMs.takeIf { settings.useGameClock },
@@ -526,13 +546,15 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
 
     if (state.isInTransition) {
         val newTransition = (state.transitionTimeRemainingMs - delta).coerceAtLeast(0)
+        // Only from clocks in use. A clock switched off still drained during the pauses:
+        // hidden, it ran out after enough of them, and ended its round or game unannounced.
+        // Nor from the round or game still to come; see omniPauseClocks.
+        val pause = omniPauseClocks(settings, state.transitionLabel)
         newState = newState.copy(
             transitionTimeRemainingMs = newTransition,
-            // Only from clocks in use. A clock switched off still drained during the pauses:
-            // hidden, it ran out after enough of them, and ended its round or game unannounced.
-            currentGlobalTimeMs = if (settings.pauseDeductsFromGlobal && settings.useGlobalClock) (state.currentGlobalTimeMs - delta).coerceAtLeast(0) else state.currentGlobalTimeMs,
-            currentGameTimeMs = if (settings.pauseDeductsFromGame && settings.useGameClock) (state.currentGameTimeMs - delta).coerceAtLeast(0) else state.currentGameTimeMs,
-            currentRoundTimeMs = if (settings.pauseDeductsFromRound && settings.useRoundClock) (state.currentRoundTimeMs - delta).coerceAtLeast(0) else state.currentRoundTimeMs
+            currentGlobalTimeMs = if (pause.global) (state.currentGlobalTimeMs - delta).coerceAtLeast(0) else state.currentGlobalTimeMs,
+            currentGameTimeMs = if (pause.game) (state.currentGameTimeMs - delta).coerceAtLeast(0) else state.currentGameTimeMs,
+            currentRoundTimeMs = if (pause.round) (state.currentRoundTimeMs - delta).coerceAtLeast(0) else state.currentRoundTimeMs
         )
         // A clock drained to zero by pauseDeductsFrom* during the pause still owes its
         // end-of-level sound and cutoff; without these checks the crossing happened

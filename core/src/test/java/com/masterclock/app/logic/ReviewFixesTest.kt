@@ -86,7 +86,8 @@ class ReviewFixesTest {
         assertNull(omniNextDueMs(running, OmniSettings(useTurnClock = false, useRoundClock = false, useGameClock = false)))
         assertEquals(30_000L, omniNextDueMs(running.copy(currentRoundTimeMs = 0), both))
         // In a pause, the pause -- and a clock only if it is told to run through pauses.
-        val paused = running.copy(isInTransition = true, transitionTimeRemainingMs = 25_000)
+        // Between turns: inside the round, which a pause can cost. See omniPauseClocks.
+        val paused = running.copy(isInTransition = true, transitionTimeRemainingMs = 25_000, transitionLabel = "TURN")
         assertEquals(25_000L, omniNextDueMs(paused, both))
         assertEquals(20_000L, omniNextDueMs(paused, both.copy(pauseDeductsFromRound = true)))
         // A pause that waits for a hand, with a round still running through it.

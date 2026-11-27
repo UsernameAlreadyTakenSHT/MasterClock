@@ -212,10 +212,11 @@ class OmniSimulationTest {
             fun crosses(clock: Long, runs: Boolean) = runs && clock > 0 && clock <= delta
             val loops = omniCurrentRound(settings, before).roundEndBehavior == RoundEndBehavior.LOOP
             if (before.isInTransition) {
+                val pause = omniPauseClocks(settings, before.transitionLabel)
                 return when {
-                    settings.globalForcesCutoff && crosses(before.currentGlobalTimeMs, settings.pauseDeductsFromGlobal && settings.useGlobalClock) -> "SESSION"
-                    settings.gameForcesCutoff && crosses(before.currentGameTimeMs, settings.pauseDeductsFromGame && settings.useGameClock) -> "GAME"
-                    (settings.roundForcesCutoff || loops) && crosses(before.currentRoundTimeMs, settings.pauseDeductsFromRound && settings.useRoundClock) -> "ROUND"
+                    settings.globalForcesCutoff && crosses(before.currentGlobalTimeMs, pause.global) -> "SESSION"
+                    settings.gameForcesCutoff && crosses(before.currentGameTimeMs, pause.game) -> "GAME"
+                    (settings.roundForcesCutoff || loops) && crosses(before.currentRoundTimeMs, pause.round) -> "ROUND"
                     else -> null
                 }
             }
@@ -234,10 +235,11 @@ class OmniSimulationTest {
             if (before.isLaunching && before.launchTimeRemainingMs > delta) return emptyList()
             fun crosses(clock: Long, runs: Boolean) = runs && clock > 0 && clock <= delta
             val paused = before.isInTransition
+            val pause = omniPauseClocks(settings, before.transitionLabel)
             val owed = ArrayList<OmniSound>()
-            if (settings.soundGameEnd && crosses(before.currentGlobalTimeMs, settings.useGlobalClock && (!paused || settings.pauseDeductsFromGlobal))) owed += OmniSound.GAME_END
-            if (settings.soundGameEnd && crosses(before.currentGameTimeMs, settings.useGameClock && (!paused || settings.pauseDeductsFromGame))) owed += OmniSound.GAME_END
-            if (settings.soundRoundEnd && crosses(before.currentRoundTimeMs, settings.useRoundClock && (!paused || settings.pauseDeductsFromRound))) owed += OmniSound.ROUND_END
+            if (settings.soundGameEnd && crosses(before.currentGlobalTimeMs, settings.useGlobalClock && (!paused || pause.global))) owed += OmniSound.GAME_END
+            if (settings.soundGameEnd && crosses(before.currentGameTimeMs, settings.useGameClock && (!paused || pause.game))) owed += OmniSound.GAME_END
+            if (settings.soundRoundEnd && crosses(before.currentRoundTimeMs, settings.useRoundClock && (!paused || pause.round))) owed += OmniSound.ROUND_END
             // One beep when a turn and its phase end together.
             if (!paused && settings.soundTurnEnd && (crosses(before.currentTurnTimeMs, settings.useTurnClock) || crosses(before.currentPhaseTimeMs, settings.usePhaseClock))) owed += OmniSound.TURN_END
             return owed
@@ -268,11 +270,12 @@ class OmniSimulationTest {
             if (owed == null) {
                 val launching = before.isLaunching && before.launchTimeRemainingMs > delta
                 val paused = before.isInTransition
+                val pause = omniPauseClocks(settings, before.transitionLabel)
                 fun after(clock: Long, runs: Boolean) = if (runs && !launching) (clock - delta).coerceAtLeast(0) else clock
                 rule("each clock in use loses exactly the time that passed, and no other moves",
-                    state.currentGlobalTimeMs == after(before.currentGlobalTimeMs, settings.useGlobalClock && (!paused || settings.pauseDeductsFromGlobal)) &&
-                        state.currentGameTimeMs == after(before.currentGameTimeMs, settings.useGameClock && (!paused || settings.pauseDeductsFromGame)) &&
-                        state.currentRoundTimeMs == after(before.currentRoundTimeMs, settings.useRoundClock && (!paused || settings.pauseDeductsFromRound)) &&
+                    state.currentGlobalTimeMs == after(before.currentGlobalTimeMs, settings.useGlobalClock && (!paused || pause.global)) &&
+                        state.currentGameTimeMs == after(before.currentGameTimeMs, settings.useGameClock && (!paused || pause.game)) &&
+                        state.currentRoundTimeMs == after(before.currentRoundTimeMs, settings.useRoundClock && (!paused || pause.round)) &&
                         state.currentTurnTimeMs == after(before.currentTurnTimeMs, settings.useTurnClock && !paused) &&
                         state.currentPhaseTimeMs == after(before.currentPhaseTimeMs, settings.usePhaseClock && !paused)) { "from $before" }
                 rule("the banks do not change while a turn is played", state.playerTimeBanks == before.playerTimeBanks)
