@@ -321,8 +321,12 @@ class OmniSimulationTest {
                 "expected $label for $pauseMs, got ${state.transitionLabel} for ${state.transitionTimeRemainingMs}, pausing ${state.isInTransition}"
             }
             val round = omniCurrentRound(settings, state)
+            // With what the turn drew from the bank ([drawn], above), for a turn with no phases: its one
+            // phase is the turn.
+            val phased = omniTurnsOf(round, settings.numberOfPlayers).getOrNull(there.turn)?.phases?.isNotEmpty() == true
             rule("a new turn starts at its first phase, with that phase's time",
-                state.currentPhaseIndex == 0 && state.currentPhaseTimeMs == getOmniDuration(settings, "PHASE", gameIdx = there.game, roundIdx = there.round, playerIdx = there.turn, phaseIdx = 0))
+                state.currentPhaseIndex == 0 && state.currentPhaseTimeMs ==
+                    getOmniDuration(settings, "PHASE", gameIdx = there.game, roundIdx = there.round, playerIdx = there.turn, phaseIdx = 0) + if (phased) 0L else drawn)
             if (there.game != here.game || there.round != here.round) {
                 rule("a new round starts with its own round clock", state.currentRoundTimeMs == round.durationMs)
             }

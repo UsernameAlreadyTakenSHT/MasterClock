@@ -128,6 +128,19 @@ internal fun getOmniDuration(settings: OmniSettings, level: String, gameIdx: Int
 }
 
 /**
+ * The clock of the first phase of a turn about to begin, with [bankedMs] drawn into the turn. A turn
+ * with no phases is one phase as long as the turn (see [getOmniDuration]), so what is drawn into the
+ * turn goes onto that phase as well. It went onto the turn alone: with the phase clock on, a 1:00 turn
+ * given 0:20 from the bank sounded its end at 1:00, the turn clock still reading 0:20.
+ */
+internal fun omniFirstPhaseTimeMs(settings: OmniSettings, gameIdx: Int, roundIdx: Int, turnIdx: Int, bankedMs: Long): Long {
+    val game = settings.games.getOrNull(gameIdx) ?: settings.games.lastOrNull() ?: OmniGameSettings()
+    val round = game.rounds.getOrNull(roundIdx) ?: game.rounds.lastOrNull() ?: OmniRoundSettings()
+    val hasPhases = omniTurnsOf(round, settings.numberOfPlayers).getOrNull(turnIdx)?.phases?.isNotEmpty() == true
+    return getOmniDuration(settings, "PHASE", gameIdx = gameIdx, roundIdx = roundIdx, playerIdx = turnIdx, phaseIdx = 0) + if (hasPhases) 0L else bankedMs
+}
+
+/**
  * The player for [turnIndex] of the round, on the session's [tablePass]: SNAKE turns back at every
  * pass round the table and ROTATE moves on by one, as the wizard's patterns say. See
  * [OmniState.tablePass], and [omniTablePassAt] for when a pass begins.
@@ -362,7 +375,7 @@ internal fun computeOmniAdvance(
                         isInTransition = settings.interGamePauseMs > 0, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME", roundPasses = 0, tablePass = nextGamePass,
                         currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = nextFinalGameIdx, roundIdx = 0),
                         currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
-                        currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0, phaseIdx = 0),
+                        currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, nextFinalGameIdx, 0, 0, bankedMs),
                         currentGameTimeMs = settings.games.getOrNull(nextFinalGameIdx)?.durationMs ?: settings.gameDurationMs,
                         playerTimeBanks = drawnBanks
                     )
@@ -385,7 +398,7 @@ internal fun computeOmniAdvance(
                     isInTransition = settings.interRoundPauseMs > 0, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND", roundPasses = 0, tablePass = nextRoundPass,
                     currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
                     currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
-                    currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = 0),
+                    currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, currentGameIdx, nextRoundIdx, nextTurnIdx, bankedMs),
                     playerTimeBanks = drawnBanks
                 )
             }
@@ -409,7 +422,7 @@ internal fun computeOmniAdvance(
             // Without this, the new turn inherited the old turn's spent phase clock (usually 0):
             // the phase display froze at 00:00 for the rest of the session and the <10s
             // fast-tick path kept the ticker at 10ms permanently.
-            currentPhaseTimeMs = getOmniDuration(settings, "PHASE", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx, phaseIdx = 0),
+            currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, currentGameIdx, nextRoundIdx, nextTurnIdx, bankedMs),
             playerTimeBanks = drawnBanks
         )
     }
