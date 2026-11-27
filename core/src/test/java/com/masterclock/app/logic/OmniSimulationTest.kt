@@ -312,8 +312,9 @@ class OmniSimulationTest {
             }
             if (settings.timeBankMode == TimeBankMode.NONE) rule("with no bank a turn starts with exactly its own time", drawn == 0L)
             val (label, pauseMs) = when {
-                there.game != here.game -> "GAME" to settings.interGamePauseMs
-                there.round != here.round -> "ROUND" to settings.interRoundPauseMs
+                // At least the pause between turns: the end of a round or game is also a turn's.
+                there.game != here.game -> "GAME" to maxOf(settings.interGamePauseMs, settings.interTurnPauseMs)
+                there.round != here.round -> "ROUND" to maxOf(settings.interRoundPauseMs, settings.interTurnPauseMs)
                 else -> "TURN" to settings.interTurnPauseMs
             }
             rule("a pause stands between turns, rounds and games only where one is set, and is the one set",

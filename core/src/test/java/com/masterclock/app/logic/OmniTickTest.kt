@@ -107,6 +107,30 @@ class OmniTickTest {
     }
 
     @Test
+    fun `the pause between turns is the least there is at the end of a round or a game`() {
+        // Ten seconds to pass the device between turns, nothing set between rounds or games: the last
+        // turn of a round went straight to the next player.
+        val s = settings().copy(interTurnPauseMs = 10_000, games = List(2) { OmniGameSettings(rounds = List(2) { OmniRoundSettings() }) })
+        var state = running(s)
+        state = computeOmniAdvance(state, s)
+        state = computeOmniAdvance(state.copy(isInTransition = false), s)
+        assertEquals(1, state.currentRoundIndex)
+        assertEquals("ROUND", state.transitionLabel)
+        assertTrue(state.isInTransition)
+        assertEquals(10_000, state.transitionTimeRemainingMs)
+        repeat(2) { state = computeOmniAdvance(state.copy(isInTransition = false), s) }
+        assertEquals(1, state.currentGameIndex)
+        assertEquals("GAME", state.transitionLabel)
+        assertEquals(10_000, state.transitionTimeRemainingMs)
+        // A longer one of their own still stands.
+        val longer = s.copy(interRoundPauseMs = 30_000)
+        var other = running(longer)
+        other = computeOmniAdvance(other, longer)
+        other = computeOmniAdvance(other.copy(isInTransition = false), longer)
+        assertEquals(30_000, other.transitionTimeRemainingMs)
+    }
+
+    @Test
     fun `the session's end still shows, with no pause at all`() {
         val s = settings()
         val over = computeOmniAdvance(computeOmniAdvance(running(s), s), s)

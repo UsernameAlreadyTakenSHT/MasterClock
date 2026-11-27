@@ -372,7 +372,7 @@ internal fun computeOmniAdvance(
                     return state.copy(
                         currentGameIndex = nextFinalGameIdx, currentRoundIndex = 0, currentPlayerIndex = nextGamePlayerIdx,
                         currentPhaseIndex = 0, turnCounterInRound = 0, roundPlayerOrder = nextGameOrder,
-                        isInTransition = settings.interGamePauseMs > 0, transitionTimeRemainingMs = settings.interGamePauseMs, transitionLabel = "GAME", roundPasses = 0, tablePass = nextGamePass,
+                        isInTransition = omniGamePauseMs(settings) > 0, transitionTimeRemainingMs = omniGamePauseMs(settings), transitionLabel = "GAME", roundPasses = 0, tablePass = nextGamePass,
                         currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = nextFinalGameIdx, roundIdx = 0),
                         currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = nextFinalGameIdx, roundIdx = 0, playerIdx = 0) + bankedMs,
                         currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, nextFinalGameIdx, 0, 0, bankedMs),
@@ -395,7 +395,7 @@ internal fun computeOmniAdvance(
                 return state.copy(
                     currentRoundIndex = nextRoundIdx, currentPlayerIndex = nextPlayerIdx, currentPhaseIndex = nextPhaseIdx,
                     turnCounterInRound = nextTurnIdx, roundPlayerOrder = nextRoundOrder,
-                    isInTransition = settings.interRoundPauseMs > 0, transitionTimeRemainingMs = settings.interRoundPauseMs, transitionLabel = "ROUND", roundPasses = 0, tablePass = nextRoundPass,
+                    isInTransition = omniRoundPauseMs(settings) > 0, transitionTimeRemainingMs = omniRoundPauseMs(settings), transitionLabel = "ROUND", roundPasses = 0, tablePass = nextRoundPass,
                     currentRoundTimeMs = getOmniDuration(settings, "ROUND", gameIdx = currentGameIdx, roundIdx = nextRoundIdx),
                     currentTurnTimeMs = getOmniDuration(settings, "TURN", gameIdx = currentGameIdx, roundIdx = nextRoundIdx, playerIdx = nextTurnIdx) + bankedMs,
                     currentPhaseTimeMs = omniFirstPhaseTimeMs(settings, currentGameIdx, nextRoundIdx, nextTurnIdx, bankedMs),
@@ -476,6 +476,17 @@ fun omniBackgroundClockOf(state: OmniState, settings: OmniSettings): BackgroundC
  * between turns and the launch countdown were, too -- a session came back from a ten-second pause
  * minutes late -- and during a pause only the clocks told to run through it count.
  */
+/**
+ * The pause at the end of a round, and of a game: their own, and never less than the one between turns.
+ * Every one of them is also a turn ending and another beginning -- the device passed on all the same --
+ * and with a pause set between turns but none between rounds, the last turn of a round went straight
+ * to the next player with no pause at all.
+ */
+internal fun omniRoundPauseMs(settings: OmniSettings): Long = maxOf(settings.interRoundPauseMs, settings.interTurnPauseMs)
+
+/** See [omniRoundPauseMs]. */
+internal fun omniGamePauseMs(settings: OmniSettings): Long = maxOf(settings.interGamePauseMs, settings.interTurnPauseMs)
+
 /** Which clocks run through a pause; see [omniPauseClocks]. */
 internal class OmniPauseClocks(val global: Boolean, val game: Boolean, val round: Boolean)
 
