@@ -51,7 +51,9 @@ fun SettingsOmniPage(
     val phasesExceedTemplate = stringResource(R.string.omni_cfg_phases_exceed)
 
     fun validatePhases(): Boolean {
-        if (!settings.usePhaseClock) return true
+        // Nor with the turn clock off: the turn then has no length for its phases to run past, and
+        // Launch was refused for a duration the wizard no longer lets anyone see or change.
+        if (!settings.usePhaseClock || !settings.useTurnClock) return true
         
         settings.games.forEach { game ->
             game.rounds.forEach { round ->
@@ -552,11 +554,12 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
         }
     }
 
+    // With the turn clock off the step went no further, and with it went what a round's turns are
+    // without a clock: whether it loops, and how many turns each player has. "Ten minutes a round,
+    // pass it round" could not be set to loop, which needs the round clock alone. Only each turn's
+    // duration goes, there being no clock to give it to.
     if (!settings.useTurnClock) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.omni_cfg_turn_disabled), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        return
+        Text(stringResource(R.string.omni_cfg_turn_disabled), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 8.dp))
     }
 
     var gameTab by rememberSaveable { mutableIntStateOf(0) }
@@ -637,7 +640,7 @@ fun StepTurns(settings: OmniSettings, onSettingsChanged: (OmniSettings) -> Unit)
                         }
                     }
                     
-                    HMSInput("", turn.durationMs) { duration ->
+                    if (settings.useTurnClock) HMSInput("", turn.durationMs) { duration ->
                         val newList = turns.toMutableList().apply { this[tIdx] = turn.copy(durationMs = duration) }
                         onSettingsChanged(settings.copy(games = settings.games.toMutableList().apply {
                             this[selectedGameIdx] = currentGame.copy(rounds = currentGame.rounds.toMutableList().apply {

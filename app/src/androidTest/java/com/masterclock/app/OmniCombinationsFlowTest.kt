@@ -240,6 +240,36 @@ class OmniCombinationsFlowTest {
         rule.runOnUiThread { fresh.pauseOmni() }
     }
 
+    // --- The wizard with the turn clock off ---
+
+    @Test
+    fun withTheTurnClockOffTheWizardStillOffersLoopAndLaunchesWithPhases() {
+        // Phases longer than the turn's hidden duration: Launch was refused for a length nobody could
+        // see or change, and the round could not be set to loop.
+        val phases = listOf(OmniPhaseSettings(name = "Draw", durationMs = 45_000), OmniPhaseSettings(name = "Play", durationMs = 45_000))
+        setUp(OmniSettings(numberOfPlayers = 2, useTurnClock = false, usePhaseClock = true,
+            games = listOf(OmniGameSettings(rounds = listOf(OmniRoundSettings(turnLogic = RoundTurnLogic.FIXED, turnDurationMs = 60_000, fixedTurnPhases = phases))))))
+
+        control(R.string.timer_settings).performClick()
+        await(hasTestTag("more_modes"))
+        rule.onNode(hasTestTag("more_modes")).performScrollTo().performClick()
+        await(hasText("Omni-Timer", substring = true))
+        rule.onNode(hasText("Omni-Timer", substring = true) and hasClickAction()).performScrollTo().performClick()
+        val next = hasText(say(R.string.omni_cfg_next_step)) and hasClickAction()
+        val launch = hasText(say(R.string.omni_cfg_launch_game)) and hasClickAction()
+        await(next)
+        var sawLoop = false
+        repeat(MAX_WIZARD_STEPS) {
+            if (exists(hasText(say(R.string.omni_cfg_loop_turns)))) sawLoop = true
+            if (exists(next)) rule.onNode(next).performClick()
+            rule.waitForIdle()
+        }
+        assertTrue("the turns step offered no Loop with the turn clock off", sawLoop)
+        await(launch)
+        rule.onNode(launch).performClick()
+        await(hasText(say(R.string.omni_running)))
+    }
+
     // --- Next before Play ---
 
     @Test
