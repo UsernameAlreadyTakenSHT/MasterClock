@@ -809,6 +809,10 @@ class OmniTimerViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun advanceOmni() {
+        // Only in a session under way. Before Play the Next button moved the turn on -- three taps
+        // showed player 2 -- and Play then started from player 1 as if nothing had happened; after
+        // Stop it moved a session that was over.
+        if (!_omniState.value.hasStarted) return
         _omniState.update { state -> computeOmniAdvance(state, _omniSettings.value) }
         saveSession()
     }
