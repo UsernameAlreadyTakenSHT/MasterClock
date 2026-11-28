@@ -1,3 +1,33 @@
+## v0.8.49 — 2026-11-28
+
+Four new languages in every build, Omni's shared reserve made a reserve, and a build F-Droid can
+reproduce byte for byte.
+
+### Added
+- **Polish, Turkish, Russian and Ukrainian**, in all five builds, the voice included. Each was translated, then read through by three independent reviews, twice over, and checked on screen.
+- **Omni, the time bank explained** (Complete, Standard, Lite). Under the choice, a line says what Per-player and the shared reserve do.
+- **Ticking clock (soon)** (Complete, Standard). Its place in Audio, greyed, as In Japanese (soon) keeps the Japanese byoyomi's.
+
+### Changed
+- **Omni, the shared reserve** (Complete, Standard, Lite). It was handed whole to whoever played next: the player after a quick one got time they had not saved, and a slow one could take what the whole table had put by. Now unspent turn time still goes into it, but nobody is given it: a player runs on it once their own turn time is out, the turn clock running on, and the turn ends only when the reserve is gone too. What they do not use stays for the others.
+- **Omni, saved time** (Complete, Standard, Lite). The setting reads "Saved time lasts": a turn, a round, a game or the session. Saved for one turn or one round, it is what the turn saved of its own time, so it no longer builds up from turn to turn.
+- **Omni, the turn clock off** (Complete, Standard, Lite). The Turns step still sets whether a round loops and how many turns each player has.
+- **Omni, resuming an edited session** (Complete, Standard, Lite). The question says the changes made since apply from where the session stood.
+- **Scoreboard** (Complete). The two names start empty and show "Player 1" and "Player 2" in the app's language.
+
+### Fixed
+- **Omni** (Complete, Standard, Lite):
+  - Snake and Rotate turn at every pass round the table, in a looping round and at each new game, not only at a new round.
+  - A pause deducted from the round or the game is taken from that clock only when it is the same on both sides of the pause: the round still to come no longer paid for the pause before it.
+  - With a pause between turns and none between rounds or games, the last turn of a round or game is followed by that pause too.
+  - Time drawn from the bank lengthens a phaseless turn's phase as well as its clock: the end no longer sounded early.
+  - Next does nothing before a session has started.
+  - TalkBack hears whose turn it is, the pause and what comes after it.
+- **Game log** (Complete). The column beside Spent is the time left, in every language: it was translated as the direction "left".
+- **Connected boards** (Complete). TalkBack calls the refresh icon Refresh, as the message sending you to it does.
+- **Reproducible build.** DataStore's native library is packaged as AndroidX built it, so an APK built anywhere matches the published one. F-Droid checks exactly that.
+- **Tests.** Over a hundred new ones: screen tests for the E-Ink app, the small tools, the clock's Display and Audio settings and Omni's combinations; unit tests for the least-tested modes; and a test holding every language to English's placeholders.
+
 ## v0.8.48 — 2026-11-25
 
 A font setting in every build, a hundred small corrections to the E-Ink app, and a long list of

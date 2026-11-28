@@ -1,0 +1,4 @@
+New languages: Polish, Turkish, Russian and Ukrainian, the voice included.
+Omni: the shared reserve is drawn on once a player's own turn time is out, rather than handed to whoever plays next.
+Omni: Snake and Rotate turn at every pass round the table, and TalkBack hears whose turn it is.
+Scoreboard names and the game log's "Left" column read right in every language.

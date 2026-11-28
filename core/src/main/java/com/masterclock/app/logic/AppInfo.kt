@@ -3,7 +3,7 @@ package com.masterclock.app.logic
 // Single source of truth for the version footer shown in Settings (More or Modes page,
 // depending on flavor). Update BUILD_DATE and append to CHANGELOG on every release.
 object AppInfo {
-    const val BUILD_DATE = "2026-11-25"
+    const val BUILD_DATE = "2026-11-28"
 
     /**
      * One release's notes. [notes] are every build's, unless [perFlavor] gives a build its own: the
@@ -49,6 +49,17 @@ object AppInfo {
     private val NOWHERE = emptySet<AppFlavor>()
 
     val CHANGELOG = listOf(
+        ChangelogEntry(
+            version = "0.8.49",
+            date = "2026-11-28",
+            notes = listOf(
+                Note("New languages: Polish, Turkish, Russian and Ukrainian, the voice included.", ALL),
+                Note("Omni: the shared reserve is drawn on once a player's own turn time is out, rather than handed to whoever plays next; a line under the time bank says what each choice does.", FULL_MODES),
+                Note("Omni: Snake and Rotate turn at every pass round the table; a pause is taken only from a clock it does not straddle; time from the bank lengthens a phaseless turn's phase; TalkBack hears whose turn it is.", FULL_MODES),
+                Note("Ticking clock (soon) has its place in Audio, greyed.", BEHAVIOUR_TAB),
+                Note("Scoreboard names start empty and show Player 1 and Player 2 in the app's language. A game log's \"Left\" column is the time left in every language.", COMPLETE_ONLY),
+            ),
+        ),
         ChangelogEntry(
             version = "0.8.48",
             date = "2026-11-25",
