@@ -189,4 +189,6 @@
     <string name="settings_moves_until_period">Lances no total até o período %d</string>
     <string name="toast_no_app_for_this">Nenhum app deste aparelho consegue fazer isso.</string>
     <string name="settings_font">Fonte</string>
+    <string name="omni_cfg_bank_per_player_hint">O tempo que você não usa é somado ao seu próximo turno.</string>
+    <string name="omni_cfg_bank_shared_hint">O tempo que ninguém usa vai para uma reserva comum, usada quando o próprio tempo acaba.</string>
 </resources>

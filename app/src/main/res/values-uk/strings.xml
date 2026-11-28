@@ -451,6 +451,8 @@
     <string name="omni_cfg_time_bank">Банк часу</string>
     <string name="omni_cfg_bank_per_player">Окремий</string>
     <string name="omni_cfg_bank_shared">Спільний</string>
+    <string name="omni_cfg_bank_per_player_hint">Невикористаний час додається до вашого наступного ходу.</string>
+    <string name="omni_cfg_bank_shared_hint">Час, який ніхто не використав, іде до спільного запасу; з нього беруть, коли власний час скінчився.</string>
     <string name="omni_cfg_bank_lasts">Час у банку діє:</string>
 
     <string name="omni_cfg_audio">Звукові сигнали</string>

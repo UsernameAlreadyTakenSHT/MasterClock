@@ -442,6 +442,8 @@
     <string name="omni_cfg_time_bank">Zaman bankası</string>
     <string name="omni_cfg_bank_per_player">Oyuncu başına</string>
     <string name="omni_cfg_bank_shared">Ortak havuz</string>
+    <string name="omni_cfg_bank_per_player_hint">Kullanmadığın süre bir sonraki turuna eklenir.</string>
+    <string name="omni_cfg_bank_shared_hint">Kimsenin kullanmadığı süre ortak havuza gider; kendi süresi biten oyuncu buradan kullanır.</string>
     <string name="omni_cfg_bank_lasts">Bankadaki süre geçerli:</string>
 
     <string name="omni_cfg_audio">Sesli uyarılar</string>

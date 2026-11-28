@@ -445,6 +445,8 @@
     <string name="omni_cfg_time_bank">Banca del tempo</string>
     <string name="omni_cfg_bank_per_player">Per giocatore</string>
     <string name="omni_cfg_bank_shared">Riserva comune</string>
+    <string name="omni_cfg_bank_per_player_hint">Il tempo che non usi si aggiunge al tuo turno successivo.</string>
+    <string name="omni_cfg_bank_shared_hint">Il tempo che nessuno usa va in una riserva comune, a cui si attinge quando il proprio tempo è finito.</string>
     <string name="omni_cfg_bank_lasts">Il tempo in banca dura:</string>
 
     <string name="omni_cfg_audio">Avvisi sonori</string>

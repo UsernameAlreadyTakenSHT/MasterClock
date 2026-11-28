@@ -924,6 +924,16 @@ fun StepAdvancedRules(settings: OmniSettings, onSettingsChanged: (OmniSettings) 
                         )
                     }
                 }
+                // What the choice does, as the order's pattern line says what that choice does: the shared
+                // reserve is not handed to the next player, and nothing on screen said what it was.
+                val bankHint = when (settings.timeBankMode) {
+                    TimeBankMode.NONE -> null
+                    TimeBankMode.ACCUMULATIVE -> stringResource(R.string.omni_cfg_bank_per_player_hint)
+                    TimeBankMode.GLOBAL_RESERVE -> stringResource(R.string.omni_cfg_bank_shared_hint)
+                }
+                if (bankHint != null) {
+                    Text(bankHint, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                }
             }
         }
     }

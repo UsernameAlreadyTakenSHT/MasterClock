@@ -438,6 +438,8 @@
     <string name="omni_cfg_time_bank">Tijdbank</string>
     <string name="omni_cfg_bank_per_player">Per speler</string>
     <string name="omni_cfg_bank_shared">Gedeelde voorraad</string>
+    <string name="omni_cfg_bank_per_player_hint">Tijd die je niet gebruikt, komt bij je volgende beurt.</string>
+    <string name="omni_cfg_bank_shared_hint">Tijd die niemand gebruikt, gaat naar een gedeelde voorraad, waaruit je put zodra je eigen tijd op is.</string>
     <string name="omni_cfg_bank_lasts">Tijd op de bank geldt voor:</string>
 
     <string name="omni_cfg_audio">Geluidswaarschuwingen</string>

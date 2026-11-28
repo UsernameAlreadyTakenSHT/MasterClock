@@ -454,6 +454,8 @@
     <string name="omni_cfg_time_bank">Bank czasu</string>
     <string name="omni_cfg_bank_per_player">Na gracza</string>
     <string name="omni_cfg_bank_shared">Wspólna pula</string>
+    <string name="omni_cfg_bank_per_player_hint">Niewykorzystany czas dolicza się do twojej następnej tury.</string>
+    <string name="omni_cfg_bank_shared_hint">Czas, którego nikt nie wykorzysta, trafia do wspólnej puli; korzysta się z niej, gdy skończy się własny czas.</string>
     <string name="omni_cfg_bank_lasts">Czas w banku ważny przez:</string>
 
     <string name="omni_cfg_audio">Alerty dźwiękowe</string>

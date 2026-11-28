@@ -469,6 +469,10 @@
     <string name="omni_cfg_time_bank">Time Bank</string>
     <string name="omni_cfg_bank_per_player">Per-player</string>
     <string name="omni_cfg_bank_shared">Shared pool</string>
+    <!-- Under the time-bank choice, for the one chosen: what a bank of one's own does, and what the
+         shared one does, which is drawn on only once a player's own turn time is out. -->
+    <string name="omni_cfg_bank_per_player_hint">Time you don\'t use is added to your next turn.</string>
+    <string name="omni_cfg_bank_shared_hint">Time nobody uses goes into a common pool, drawn on once a player\'s own time runs out.</string>
     <!-- Over the four choices of how long a time bank keeps what a player saved: Turn, Round, Game,
          Session. It read "Clear Bank at end of", which Round did not do where each player plays once
          a round: there a round's savings serve the next round's turn. -->

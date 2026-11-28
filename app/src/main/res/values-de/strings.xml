@@ -439,6 +439,8 @@
     <string name="omni_cfg_time_bank">Zeitkonto</string>
     <string name="omni_cfg_bank_per_player">Pro Spieler</string>
     <string name="omni_cfg_bank_shared">Gemeinsamer Vorrat</string>
+    <string name="omni_cfg_bank_per_player_hint">Zeit, die du nicht nutzt, kommt zu deinem nächsten Zug hinzu.</string>
+    <string name="omni_cfg_bank_shared_hint">Zeit, die niemand nutzt, kommt in einen gemeinsamen Vorrat, aus dem schöpft, wessen eigene Zeit abgelaufen ist.</string>
     <string name="omni_cfg_bank_lasts">Zeit auf dem Konto gilt für:</string>
 
     <string name="omni_cfg_audio">Tonwarnungen</string>

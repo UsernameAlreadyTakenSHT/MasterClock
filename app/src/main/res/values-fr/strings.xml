@@ -462,6 +462,8 @@
     <string name="omni_cfg_time_bank">Banque de temps</string>
     <string name="omni_cfg_bank_per_player">Par joueur</string>
     <string name="omni_cfg_bank_shared">Réserve commune</string>
+    <string name="omni_cfg_bank_per_player_hint">Le temps que vous n\'utilisez pas s\'ajoute à votre tour suivant.</string>
+    <string name="omni_cfg_bank_shared_hint">Le temps que personne n\'utilise va dans une réserve commune, où l\'on puise quand son propre temps est écoulé.</string>
     <string name="omni_cfg_bank_lasts">Le temps mis en banque dure\u00A0:</string>
 
     <string name="omni_cfg_audio">Alertes sonores</string>
