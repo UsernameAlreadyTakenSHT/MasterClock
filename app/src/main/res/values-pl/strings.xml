@@ -291,6 +291,7 @@
     <string name="settings_countdown_beep">Sygnał odliczania</string>
     <string name="settings_triple_beep">Potrójny sygnał po upływie czasu</string>
     <string name="settings_play_switch_sound">Dźwięk przy zmianie gracza</string>
+    <string name="settings_ticking_clock_soon">Tykanie zegara (wkrótce)</string>
     <string name="settings_haptics">Wibracje</string>
     <string name="settings_haptic_countdown">Wibracje przy odliczaniu</string>
     <string name="settings_haptic_switch">Wibracje przy zmianie gracza</string>

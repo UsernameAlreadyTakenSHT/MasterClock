@@ -62,6 +62,9 @@ fun AudioSettingsPage(
         SettingsSection(stringResource(R.string.settings_sound)) {
             Column {
                 BehaviorSwitch(stringResource(R.string.settings_play_switch_sound), currentSettings.playSwitchSound, topRounded = true) { onSettingsChanged(currentSettings.copy(playSwitchSound = it)) }
+                // A tick-tock while the clock runs is not built yet, and keeps its place as the Japanese
+                // reading below does: off, unanswering, nothing stored.
+                BehaviorSwitch(stringResource(R.string.settings_ticking_clock_soon), false, enabled = false) {}
                 BehaviorSwitch(stringResource(R.string.settings_voice_announcements), currentSettings.voiceAnnouncementsEnabled) { onSettingsChanged(currentSettings.copy(voiceAnnouncementsEnabled = it)) }
                 // The byoyomi seconds read aloud as a shogi timekeeper reads them, on its own switch:
                 // it speaks with the announcements off. Reading them in Japanese whatever the app's

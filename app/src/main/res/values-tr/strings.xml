@@ -279,6 +279,7 @@
     <string name="settings_countdown_beep">Geri sayım bip sesi</string>
     <string name="settings_triple_beep">Süre bitince üç bip</string>
     <string name="settings_play_switch_sound">Oyuncu değişince ses çal</string>
+    <string name="settings_ticking_clock_soon">Saat tik takı (yakında)</string>
     <string name="settings_haptics">Titreşim</string>
     <string name="settings_haptic_countdown">Titreşimli geri sayım</string>
     <string name="settings_haptic_switch">Geçişte dokunsal geri bildirim</string>

@@ -298,6 +298,7 @@
     <string name="settings_countdown_beep">Bip de décompte</string>
     <string name="settings_triple_beep">Triple bip à la fin du temps</string>
     <string name="settings_play_switch_sound">Son au changement de joueur</string>
+    <string name="settings_ticking_clock_soon">Tic-tac de l\'horloge (bientôt)</string>
     <string name="settings_haptics">Retour haptique</string>
     <string name="settings_haptic_countdown">Décompte haptique</string>
     <string name="settings_haptic_switch">Vibration au changement</string>

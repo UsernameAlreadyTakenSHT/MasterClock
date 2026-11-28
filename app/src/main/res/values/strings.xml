@@ -306,6 +306,7 @@
     <string name="settings_countdown_beep">Countdown beep</string>
     <string name="settings_triple_beep">Triple beep when times up</string>
     <string name="settings_play_switch_sound">Play sound on player switch</string>
+    <string name="settings_ticking_clock_soon">Ticking clock (soon)</string>
     <string name="settings_haptics">Haptics</string>
     <string name="settings_haptic_countdown">Haptic countdown</string>
     <string name="settings_haptic_switch">Haptic feedback on switch</string>

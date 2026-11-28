@@ -288,6 +288,7 @@
     <string name="settings_countdown_beep">Сигнал зворотного відліку</string>
     <string name="settings_triple_beep">Потрійний сигнал, коли час вийшов</string>
     <string name="settings_play_switch_sound">Звук під час передачі ходу</string>
+    <string name="settings_ticking_clock_soon">Цокання годинника (згодом)</string>
     <string name="settings_haptics">Вібрація</string>
     <string name="settings_haptic_countdown">Вібрація під час зворотного відліку</string>
     <string name="settings_haptic_switch">Вібрація під час передачі ходу</string>

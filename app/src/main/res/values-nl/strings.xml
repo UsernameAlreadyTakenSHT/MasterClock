@@ -274,6 +274,7 @@
     <string name="settings_countdown_beep">Aftelpiep</string>
     <string name="settings_triple_beep">Drievoudige piep bij tijd op</string>
     <string name="settings_play_switch_sound">Geluid bij spelerwissel</string>
+    <string name="settings_ticking_clock_soon">Tikkende klok (binnenkort)</string>
     <string name="settings_haptics">Haptiek</string>
     <string name="settings_haptic_countdown">Haptisch aftellen</string>
     <string name="settings_haptic_switch">Trilling bij wisselen</string>

@@ -284,6 +284,7 @@
     <string name="settings_countdown_beep">Bip da contagem decrescente</string>
     <string name="settings_triple_beep">Bip triplo ao esgotar o tempo</string>
     <string name="settings_play_switch_sound">Som ao trocar de jogador</string>
+    <string name="settings_ticking_clock_soon">Tique-taque do relógio (em breve)</string>
     <string name="settings_haptics">Retorno tátil</string>
     <string name="settings_haptic_countdown">Contagem decrescente tátil</string>
     <string name="settings_haptic_switch">Vibração ao trocar</string>

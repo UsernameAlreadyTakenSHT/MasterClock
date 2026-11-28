@@ -281,6 +281,7 @@
     <string name="settings_countdown_beep">Bip del conto alla rovescia</string>
     <string name="settings_triple_beep">Triplo bip a tempo scaduto</string>
     <string name="settings_play_switch_sound">Suono al cambio di giocatore</string>
+    <string name="settings_ticking_clock_soon">Tic-tac dell\'orologio (presto)</string>
     <string name="settings_haptics">Feedback aptico</string>
     <string name="settings_haptic_countdown">Conto alla rovescia aptico</string>
     <string name="settings_haptic_switch">Vibrazione al cambio</string>

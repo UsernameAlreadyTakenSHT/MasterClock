@@ -275,6 +275,7 @@
     <string name="settings_countdown_beep">Countdown-Piepton</string>
     <string name="settings_triple_beep">Dreifachton bei Zeitablauf</string>
     <string name="settings_play_switch_sound">Ton beim Spielerwechsel</string>
+    <string name="settings_ticking_clock_soon">Ticken der Uhr (bald)</string>
     <string name="settings_haptics">Haptik</string>
     <string name="settings_haptic_countdown">Haptischer Countdown</string>
     <string name="settings_haptic_switch">Vibration beim Wechsel</string>

@@ -287,6 +287,7 @@
     <string name="settings_countdown_beep">Pitido de cuenta atrás</string>
     <string name="settings_triple_beep">Triple pitido al agotarse el tiempo</string>
     <string name="settings_play_switch_sound">Sonido al cambiar de jugador</string>
+    <string name="settings_ticking_clock_soon">Tictac del reloj (pronto)</string>
     <string name="settings_haptics">Respuesta háptica</string>
     <string name="settings_haptic_countdown">Cuenta atrás háptica</string>
     <string name="settings_haptic_switch">Vibración al cambiar</string>

@@ -287,6 +287,7 @@
     <string name="settings_countdown_beep">Сигнал обратного отсчёта</string>
     <string name="settings_triple_beep">Тройной сигнал, когда время вышло</string>
     <string name="settings_play_switch_sound">Звук при передаче хода</string>
+    <string name="settings_ticking_clock_soon">Тиканье часов (скоро)</string>
     <string name="settings_haptics">Вибрация</string>
     <string name="settings_haptic_countdown">Вибрация при обратном отсчёте</string>
     <string name="settings_haptic_switch">Вибрация при передаче хода</string>
