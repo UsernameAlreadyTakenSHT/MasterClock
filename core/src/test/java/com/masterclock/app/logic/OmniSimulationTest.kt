@@ -224,7 +224,8 @@ class OmniSimulationTest {
                 settings.globalForcesCutoff && crosses(before.currentGlobalTimeMs, settings.useGlobalClock) -> "SESSION"
                 settings.gameForcesCutoff && crosses(before.currentGameTimeMs, settings.useGameClock) -> "GAME"
                 (settings.roundForcesCutoff || loops) && crosses(before.currentRoundTimeMs, settings.useRoundClock) -> "ROUND"
-                settings.turnForcesCutoff && crosses(before.currentTurnTimeMs, settings.useTurnClock) -> "TURN"
+                // The turn's own time and the shared reserve behind it, both gone.
+                settings.turnForcesCutoff && crosses(omniTurnLeftMs(before, settings), settings.useTurnClock) -> "TURN"
                 settings.phaseForcesCutoff && before.currentPhaseIndex < omniCurrentTurnPhases(settings, before).size - 1 &&
                     crosses(before.currentPhaseTimeMs, settings.usePhaseClock) -> "PHASE"
                 else -> null
@@ -241,7 +242,10 @@ class OmniSimulationTest {
             if (settings.soundGameEnd && crosses(before.currentGameTimeMs, settings.useGameClock && (!paused || pause.game))) owed += OmniSound.GAME_END
             if (settings.soundRoundEnd && crosses(before.currentRoundTimeMs, settings.useRoundClock && (!paused || pause.round))) owed += OmniSound.ROUND_END
             // One beep when a turn and its phase end together.
-            if (!paused && settings.soundTurnEnd && (crosses(before.currentTurnTimeMs, settings.useTurnClock) || crosses(before.currentPhaseTimeMs, settings.usePhaseClock))) owed += OmniSound.TURN_END
+            // A turn with no phases is its own one phase, and the turn's sound is its end.
+            val phaseIsTheTurn = settings.useTurnClock && omniCurrentTurnPhases(settings, before).isEmpty()
+            if (!paused && settings.soundTurnEnd && (crosses(omniTurnLeftMs(before, settings), settings.useTurnClock) ||
+                    (!phaseIsTheTurn && crosses(before.currentPhaseTimeMs, settings.usePhaseClock)))) owed += OmniSound.TURN_END
             return owed
         }
 
@@ -278,7 +282,13 @@ class OmniSimulationTest {
                         state.currentRoundTimeMs == after(before.currentRoundTimeMs, settings.useRoundClock && (!paused || pause.round)) &&
                         state.currentTurnTimeMs == after(before.currentTurnTimeMs, settings.useTurnClock && !paused) &&
                         state.currentPhaseTimeMs == after(before.currentPhaseTimeMs, settings.usePhaseClock && !paused)) { "from $before" }
-                rule("the banks do not change while a turn is played", state.playerTimeBanks == before.playerTimeBanks)
+                // But for the shared reserve, which pays for what the tick ran past the turn's own time.
+                val pool = omniSharedPoolMs(before, settings)
+                val past = if (settings.useTurnClock && !paused && !launching) (delta - before.currentTurnTimeMs).coerceAtLeast(0) else 0L
+                val expectedBanks = if (pool > 0 && past > 0) before.playerTimeBanks + (OMNI_GLOBAL_TIME_BANK_KEY to (pool - past).coerceAtLeast(0)) else before.playerTimeBanks
+                rule("the banks do not change while a turn is played, but for the shared reserve running down", state.playerTimeBanks == expectedBanks) {
+                    "banks ${before.playerTimeBanks} then ${state.playerTimeBanks}, expected $expectedBanks"
+                }
                 if (paused && !before.over && !launching) {
                     val ends = settings.transitionType == TransitionType.AUTOMATIC && before.transitionTimeRemainingMs <= delta
                     rule("an automatic pause ends when its time is up, and a Ready pause waits", state.isInTransition == !ends) { "from $before" }
@@ -293,7 +303,13 @@ class OmniSimulationTest {
             val here = before.place
             val there = state.place
             if (!state.over && there.sameTurnAs(here)) {
-                rule("a phase ending leaves the turn clock and the banks alone", state.playerTimeBanks == before.playerTimeBanks && state.currentTurnTimeMs <= before.currentTurnTimeMs)
+                // The shared reserve may have run down in the tick that ended the phase, the player being
+                // on it already; it never grows here, and no other bank moves.
+                val poolBefore = before.playerTimeBanks[OMNI_GLOBAL_TIME_BANK_KEY] ?: 0L
+                val poolAfter = state.playerTimeBanks[OMNI_GLOBAL_TIME_BANK_KEY] ?: 0L
+                rule("a phase ending leaves the turn clock and the banks alone, but for the shared reserve running down",
+                    state.playerTimeBanks - OMNI_GLOBAL_TIME_BANK_KEY == before.playerTimeBanks - OMNI_GLOBAL_TIME_BANK_KEY &&
+                        poolAfter <= poolBefore && state.currentTurnTimeMs <= before.currentTurnTimeMs)
                 return
             }
             // A turn interrupted during the pause before it was never played: only what its player

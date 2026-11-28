@@ -14,6 +14,19 @@ import kotlin.time.Duration.Companion.milliseconds
 internal fun bankKeyFor(settings: OmniSettings, playerIndex: Int): Int =
     if (settings.timeBankMode == TimeBankMode.GLOBAL_RESERVE) OMNI_GLOBAL_TIME_BANK_KEY else playerIndex
 
+/**
+ * The shared reserve, as a reserve: everyone's unspent turn time goes into it, and a player draws on it
+ * only once their own turn clock has run out, for as long as it lasts. It was handed whole to whoever
+ * played next, as their turn began: the player after a quick one was given time they had not saved,
+ * and a slow one could take what the whole table had put by. Only with the turn clock on: without it
+ * a turn has no time to run out of.
+ */
+fun omniSharedPoolMs(state: OmniState, settings: OmniSettings): Long =
+    if (settings.timeBankMode == TimeBankMode.GLOBAL_RESERVE && settings.useTurnClock) state.playerTimeBanks[OMNI_GLOBAL_TIME_BANK_KEY] ?: 0L else 0L
+
+/** What the turn on the clock has left before it ends: its own time, and the shared reserve behind it. */
+fun omniTurnLeftMs(state: OmniState, settings: OmniSettings): Long = state.currentTurnTimeMs + omniSharedPoolMs(state, settings)
+
 internal fun applyOmniTimeBanking(state: OmniState, settings: OmniSettings, playerIndex: Int, timeRemainingInTurn: Long): Map<Int, Long> {
     // Nor from a turn that has no clock: its time is never spent, so every Next banked the whole of
     // it, and the reserve grew by a turn at each press with no turn clock on screen to draw it into.
@@ -31,7 +44,8 @@ internal fun applyOmniTimeBanking(state: OmniState, settings: OmniSettings, play
  * displayed it -- purely cosmetic.
  */
 internal fun drawOmniBank(banks: Map<Int, Long>, settings: OmniSettings, nextPlayerIndex: Int): Pair<Map<Int, Long>, Long> {
-    if (settings.timeBankMode == TimeBankMode.NONE) return banks to 0L
+    // The shared reserve is not handed to anyone as their turn begins; see omniSharedPoolMs.
+    if (settings.timeBankMode == TimeBankMode.NONE || settings.timeBankMode == TimeBankMode.GLOBAL_RESERVE) return banks to 0L
     val key = bankKeyFor(settings, nextPlayerIndex)
     val banked = banks[key] ?: 0L
     if (banked <= 0L) return banks to 0L
@@ -477,8 +491,9 @@ internal fun omniSessionToRestore(saved: OmniState?, settings: OmniSettings): Om
  */
 fun omniBackgroundClockOf(state: OmniState, settings: OmniSettings): BackgroundClock? {
     if (!state.isRunning || !state.hasStarted) return null
-    val counting = settings.useTurnClock && !state.isInTransition && !state.isLaunching && state.currentTurnTimeMs > 0
-    val countdown = state.currentTurnTimeMs.takeIf { counting }
+    val turnLeft = omniTurnLeftMs(state, settings)
+    val counting = settings.useTurnClock && !state.isInTransition && !state.isLaunching && turnLeft > 0
+    val countdown = turnLeft.takeIf { counting }
     return BackgroundClock(
         playerIndex = state.currentPlayerIndex % settings.numberOfPlayers.coerceAtLeast(1) + 1,
         countdownMs = countdown,
@@ -539,7 +554,7 @@ internal fun omniNextDueMs(state: OmniState, settings: OmniSettings): Long? {
         state.currentGlobalTimeMs.takeIf { settings.useGlobalClock },
         state.currentGameTimeMs.takeIf { settings.useGameClock },
         state.currentRoundTimeMs.takeIf { settings.useRoundClock },
-        state.currentTurnTimeMs.takeIf { settings.useTurnClock },
+        omniTurnLeftMs(state, settings).takeIf { settings.useTurnClock },
         state.currentPhaseTimeMs.takeIf { settings.usePhaseClock },
     )
     // A clock at zero has already said what it had to say; see computeOmniTick, which sounds a
@@ -628,20 +643,31 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
         return OmniTick(newState, sounds)
     }
 
-    val oldGlobal = state.currentGlobalTimeMs; val oldGame = state.currentGameTimeMs; val oldRound = state.currentRoundTimeMs; val oldTurn = state.currentTurnTimeMs; val oldPhase = state.currentPhaseTimeMs
+    val oldGlobal = state.currentGlobalTimeMs; val oldGame = state.currentGameTimeMs; val oldRound = state.currentRoundTimeMs; val oldTurn = omniTurnLeftMs(state, settings); val oldPhase = state.currentPhaseTimeMs
     if (settings.useGlobalClock) newState = newState.copy(currentGlobalTimeMs = (newState.currentGlobalTimeMs - delta).coerceAtLeast(0))
     if (settings.useGameClock) newState = newState.copy(currentGameTimeMs = (newState.currentGameTimeMs - delta).coerceAtLeast(0))
     if (settings.useRoundClock) newState = newState.copy(currentRoundTimeMs = (newState.currentRoundTimeMs - delta).coerceAtLeast(0))
-    if (settings.useTurnClock) newState = newState.copy(currentTurnTimeMs = (newState.currentTurnTimeMs - delta).coerceAtLeast(0))
+    if (settings.useTurnClock) {
+        // What the tick runs past the turn's own time comes off the shared reserve, while there is one.
+        val past = (delta - newState.currentTurnTimeMs).coerceAtLeast(0)
+        val pool = omniSharedPoolMs(newState, settings)
+        newState = newState.copy(currentTurnTimeMs = (newState.currentTurnTimeMs - delta).coerceAtLeast(0))
+        if (past > 0 && pool > 0) newState = newState.copy(playerTimeBanks = newState.playerTimeBanks + (OMNI_GLOBAL_TIME_BANK_KEY to (pool - past).coerceAtLeast(0)))
+    }
     if (settings.usePhaseClock) newState = newState.copy(currentPhaseTimeMs = (newState.currentPhaseTimeMs - delta).coerceAtLeast(0))
 
     if (oldGlobal > 0 && newState.currentGlobalTimeMs <= 0 && settings.soundGameEnd) sounds += OmniSound.GAME_END
     if (oldGame > 0 && newState.currentGameTimeMs <= 0 && settings.soundGameEnd) sounds += OmniSound.GAME_END
     if (oldRound > 0 && newState.currentRoundTimeMs <= 0 && settings.soundRoundEnd) sounds += OmniSound.ROUND_END
-    if (oldTurn > 0 && newState.currentTurnTimeMs <= 0 && settings.soundTurnEnd) sounds += OmniSound.TURN_END
+    // The turn ends with its own time and the shared reserve behind it both gone.
+    val newTurn = omniTurnLeftMs(newState, settings)
+    if (oldTurn > 0 && newTurn <= 0 && settings.soundTurnEnd) sounds += OmniSound.TURN_END
     // The same sound, so one is enough when both end together, as a turn with no phases always does.
-    val turnEnded = oldTurn > 0 && newState.currentTurnTimeMs <= 0
-    if (oldPhase > 0 && newState.currentPhaseTimeMs <= 0 && settings.soundTurnEnd && !turnEnded) sounds += OmniSound.TURN_END
+    val turnEnded = oldTurn > 0 && newTurn <= 0
+    // A turn with no phases is one phase, the turn itself, whose end the turn's own sound says: it
+    // runs on into the shared reserve, and its phase clock, run out with the turn's own time, rang early.
+    val phaseIsTheTurn = settings.useTurnClock && omniCurrentTurnPhases(settings, state).isEmpty()
+    if (oldPhase > 0 && newState.currentPhaseTimeMs <= 0 && settings.soundTurnEnd && !turnEnded && !phaseIsTheTurn) sounds += OmniSound.TURN_END
 
     // Whichever level with *ForcesCutoff enabled crossed to zero this tick forces an advance,
     // outermost first (a session/game/round cutoff already implies whatever is nested inside
@@ -655,7 +681,7 @@ internal fun computeOmniTick(state: OmniState, delta: Long, settings: OmniSettin
         settings.globalForcesCutoff && oldGlobal > 0 && newState.currentGlobalTimeMs <= 0 -> "SESSION"
         settings.gameForcesCutoff && oldGame > 0 && newState.currentGameTimeMs <= 0 -> "GAME"
         (settings.roundForcesCutoff || loopRoundEnds) && oldRound > 0 && newState.currentRoundTimeMs <= 0 -> "ROUND"
-        settings.turnForcesCutoff && oldTurn > 0 && newState.currentTurnTimeMs <= 0 -> "TURN"
+        settings.turnForcesCutoff && oldTurn > 0 && newTurn <= 0 -> "TURN"
         // The phase cutoff switch alone. The phase's own "auto advance" was read beside
         // it, and that one is true by default with nothing in the wizard to change it: every
         // phase with a duration advanced on its own, the switch did nothing, and a turn

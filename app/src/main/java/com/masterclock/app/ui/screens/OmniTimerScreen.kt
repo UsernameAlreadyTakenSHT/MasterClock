@@ -283,7 +283,9 @@ fun ActiveTimerLayout(state: OmniState, settings: OmniSettings, onAdvance: () ->
             // On one line, smaller where it must be: from an hour up the reading is wider than a
             // 360 dp screen at this size, and broke in two.
             OneLineText(
-                formatTime(state.currentTurnTimeMs),
+                // Once the turn's own time is out it runs on the shared reserve, and the clock with it:
+                // it stood at 00:00 while the player went on playing. See omniSharedPoolMs.
+                formatTime(if (state.currentTurnTimeMs > 0) state.currentTurnTimeMs else omniTurnLeftMs(state, settings)),
                 style = LocalTextStyle.current.copy(fontSize = 84.sp),
                 minSize = 36.sp,
                 fontWeight = FontWeight.Black,

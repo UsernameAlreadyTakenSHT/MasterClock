@@ -240,6 +240,35 @@ class OmniCombinationsFlowTest {
         rule.runOnUiThread { fresh.pauseOmni() }
     }
 
+    // --- The shared reserve ---
+
+    @Test
+    fun aTurnWhoseOwnTimeIsOutGoesOnOnTheSharedReserve() {
+        // Twenty-second turns, the reserve shared. Player 1 passes at once and saves nearly all of theirs.
+        // Long enough not to start in the last ten seconds, where the clock redraws every 10ms and the
+        // screen is never idle for the test to read it.
+        setUp(OmniSettings(numberOfPlayers = 2, timeBankMode = com.masterclock.app.logic.TimeBankMode.GLOBAL_RESERVE,
+            timeBankScope = com.masterclock.app.logic.TimeBankScope.GAME_TO_GAME, turnForcesCutoff = true,
+            games = listOf(OmniGameSettings(rounds = List(3) { OmniRoundSettings(turnLogic = RoundTurnLogic.FIXED, turnDurationMs = 20_000) }))))
+        launchASession()
+        next()
+        // Player 2 starts with their own twenty seconds: the reserve is not handed over.
+        assertEquals(2, shownPlayer(2))
+        assertTrue("player 2 started with ${state.currentTurnTimeMs}", state.currentTurnTimeMs in 15_000..20_000)
+
+        // Past those twenty seconds, still player 2's turn, on the reserve, the clock still running.
+        Thread.sleep(22_000)
+        rule.waitForIdle()
+        assertEquals(2, shownPlayer(2))
+        assertEquals(0, state.currentTurnTimeMs)
+        val pool = com.masterclock.app.logic.omniSharedPoolMs(state, omni.omniSettings.value)
+        assertTrue("the reserve read $pool", pool in 1_000..20_000)
+        assertFalse("the clock stood at 00:00", exists(hasText("00:00")))
+
+        // With the reserve gone too, the turn's cutoff passes it on.
+        rule.waitUntil(30_000) { shownPlayer(2) == 1 }
+    }
+
     // --- The wizard with the turn clock off ---
 
     @Test

@@ -85,12 +85,15 @@ class OmniTimerLogicTest {
             timeBankMode = TimeBankMode.GLOBAL_RESERVE,
             timeBankScope = TimeBankScope.TURN_TO_TURN,
         )
-        // P1 ends their turn with 0:20 left: the next turn starts at 1:00 + 0:20.
+        // P1 ends their turn with 0:20 left: the next turn starts at its own 1:00, the 0:20 in the shared
+        // reserve behind it, to fall back on once that minute is gone. See omniSharedPoolMs.
         val second = computeOmniAdvance(OmniState(turnCounterInRound = 0, currentTurnTimeMs = 20_000), settings)
-        assertEquals(80_000, second.currentTurnTimeMs)
-        // That turn ends with nothing left: the turn after it starts at 1:00, the 0:20 already spent.
+        assertEquals(60_000, second.currentTurnTimeMs)
+        assertEquals(20_000L, omniSharedPoolMs(second, settings))
+        // That turn ends with nothing of its own left: the turn after it has no reserve, the scope being one turn.
         val third = computeOmniAdvance(second.copy(isInTransition = false, currentTurnTimeMs = 0), settings)
         assertEquals(60_000, third.currentTurnTimeMs)
+        assertEquals(0L, omniSharedPoolMs(third, settings))
     }
 
     @Test
